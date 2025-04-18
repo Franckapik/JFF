@@ -9,7 +9,7 @@ export class VehicleManager {
     // Initialize the vehicle with a Seek behavior
     this.seekBehavior = new YUKA.SeekBehavior(this.target);
     this.vehicle.steering.add(this.seekBehavior);
-    this.vehicle.maxSpeed = 0.5; // Set max speed for visible movement
+    this.vehicle.maxSpeed = 0.001; // Set max speed for visible movement
     this.entityManager.add(this.vehicle);
 
     // Set an initial random target
