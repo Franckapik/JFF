@@ -5,8 +5,8 @@ import AnimatedHexTile from "./AnimatedHexTile";
 import { generateHexPositions } from "../utils/utils";
 import { VehicleManager } from "../GameAI/VehicleManager"; // Import VehicleManager
 
-const Scene = ({ setSelectedIndex }) => {
-  const hexPositions = useMemo(() => generateHexPositions(2, 0.1), []); // Increase radius to 2 for a second ring
+const Scene = ({ setSelectedTile }) => {
+  const hexPositions = useMemo(() => generateHexPositions(2, 0.1), []); // Génère les tuiles avec les nouvelles propriétés
   const [animatedIndex, setAnimatedIndex] = useState(Math.floor(Math.random() * hexPositions.length)); // Index de la tuile animée
   const [randomTileIndex] = useState(Math.floor(Math.random() * hexPositions.length)); // Reintroduce randomTileIndex
 
@@ -59,7 +59,16 @@ const Scene = ({ setSelectedIndex }) => {
             isHighTile={isHighTile} // Passe l'information si c'est la tuile animée
             onClick={() => {
               setAnimatedIndex(index); // Change l'animation sur clic
-              setSelectedIndex(index); // Met à jour l'index sélectionné pour le HUD
+              setSelectedTile({
+                index,
+                position: hex.position,
+                coordinates: { r: hex.r, q: hex.q }, // Pass r and q coordinates to HUD
+                walkable: hex.walkable,
+                explored: hex.explored,
+                danger: hex.danger,
+                neighbors: hex.neighbors,
+              });
+              console.log("Neighbors of clicked tile:", hex.neighbors); // Log neighbors to console
             }}
           />
         );

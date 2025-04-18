@@ -2,15 +2,42 @@ export function generateHexPositions(radius, spacing) {
   const hexPositions = [];
   const sqrt3 = Math.sqrt(3);
 
+  // Directions pour calculer les voisins
+  const directions = [
+    { q: 1, r: 0 },
+    { q: -1, r: 0 },
+    { q: 0, r: 1 },
+    { q: 0, r: -1 },
+    { q: 1, r: -1 },
+    { q: -1, r: 1 },
+  ];
+
   for (let q = -radius; q <= radius; q++) {
     for (let r = -radius; r <= radius; r++) {
       const s = -q - r;
       if (Math.abs(s) <= radius) {
-        const x = (q + r / 2) * (1.7 + spacing); // Further increase spacing to x
-        const z = r * (sqrt3 / 2) * (1.7 + spacing); // Further increase spacing to z
+        const x = (q + r / 2) * (1.7 + spacing);
+        const z = r * (sqrt3 / 2) * (1.7 + spacing);
+
+        // Calcul des voisins
+        const neighbors = directions
+          .map((dir) => ({ q: q + dir.q, r: r + dir.r }))
+          .filter(
+            (neighbor) =>
+              Math.abs(neighbor.q) <= radius &&
+              Math.abs(neighbor.r) <= radius &&
+              Math.abs(-neighbor.q - neighbor.r) <= radius
+          );
+
         hexPositions.push({
-          position: { x, y: 0, z }, // 3D position
-          color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Random color
+          q,
+          r,
+          position: { x, y: 0, z },
+          walkable: true, // Par défaut, la tuile est accessible
+          explored: false, // Par défaut, la tuile n'est pas explorée
+          danger: Math.random() < 0.1, // 10% de chance d'avoir un danger
+          neighbors, // Coordonnées des voisins
+          color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Couleur aléatoire
         });
       }
     }
