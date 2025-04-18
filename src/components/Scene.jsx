@@ -21,7 +21,6 @@ const Scene = ({ setSelectedTile }) => {
 
   // Fonction pour calculer un chemin segmenté
   const calculatePath = (startTile, targetTile) => {
-    console.log("Calculating path from:", startTile, "to:", targetTile);
     const path = [];
     let currentTile = startTile;
 
@@ -33,26 +32,21 @@ const Scene = ({ setSelectedTile }) => {
       );
 
       if (!nextNeighbor) {
-        console.log("No valid neighbor found. Breaking path calculation.");
         break;
       }
 
       currentTile = findTileByCoordinates(nextNeighbor.q, nextNeighbor.r);
       if (currentTile) {
-        console.log("Adding tile to path:", currentTile);
         path.push(new Vector3(currentTile.position.x, currentTile.position.y, currentTile.position.z));
       }
     }
 
-    console.log("Final path:", path);
     return path;
   };
 
   // Fonction pour déplacer le véhicule vers la tuile cliquée
   const moveVehicleToTile = (targetTile) => {
-    console.log("Moving vehicle to tile:", targetTile);
     const vehiclePosition = vehicleManager.current.getVehiclePosition();
-    console.log("Current vehicle position:", vehiclePosition);
 
     const startTile = findTileByCoordinates(
       Math.round(vehiclePosition.x),
@@ -60,15 +54,11 @@ const Scene = ({ setSelectedTile }) => {
     );
 
     if (startTile && targetTile) {
-      console.log("Start tile:", startTile, "Target tile:", targetTile);
-
-      // Vérifiez si la tuile cible est adjacente
       const isAdjacent = startTile.neighbors.some(
         (neighbor) => neighbor.q === targetTile.q && neighbor.r === targetTile.r
       );
 
       if (isAdjacent) {
-        console.log("Target tile is adjacent. Moving directly.");
         vehicleManager.current.setPath([
           new Vector3(targetTile.position.x, targetTile.position.y, targetTile.position.z),
         ]);
@@ -78,11 +68,7 @@ const Scene = ({ setSelectedTile }) => {
       const path = calculatePath(startTile, targetTile);
       if (path.length > 0) {
         vehicleManager.current.setPath(path);
-      } else {
-        console.log("Path is empty. No movement will occur.");
       }
-    } else {
-      console.log("Start or target tile is undefined. Cannot move vehicle.");
     }
   };
 
@@ -144,7 +130,6 @@ const Scene = ({ setSelectedTile }) => {
                 danger: hex.danger,
                 neighbors: hex.neighbors,
               });
-              console.log("Neighbors of clicked tile:", hex.neighbors); // Log neighbors to console
               moveVehicleToTile(hex); // Déplacer le véhicule vers la tuile cliquée
             }}
           />
