@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { GridHelper } from "three";
 import { useThree } from "@react-three/fiber"; // Import useThree hook
+import { Vector3 } from "yuka"; // Import Yuka Vector3
 import AnimatedHexTile from "./AnimatedHexTile";
 import { generateHexPositions } from "../utils/utils";
 import { VehicleManager } from "../GameAI/VehicleManager"; // Import VehicleManager
@@ -13,6 +14,78 @@ const Scene = ({ setSelectedTile }) => {
   const movingCubeRef = useRef(); // Ref for the moving cube
   const vehicleManager = useRef(null); // VehicleManager instance
 
+  // Fonction pour trouver une tuile par ses coordonnées q/r
+  const findTileByCoordinates = (q, r) => {
+    return hexPositions.find((tile) => tile.q === q && tile.r === r);
+  };
+
+  // Fonction pour calculer un chemin segmenté
+  const calculatePath = (startTile, targetTile) => {
+    console.log("Calculating path from:", startTile, "to:", targetTile);
+    const path = [];
+    let currentTile = startTile;
+
+    while (currentTile.q !== targetTile.q || currentTile.r !== targetTile.r) {
+      const nextNeighbor = currentTile.neighbors.find(
+        (neighbor) =>
+          Math.abs(neighbor.q - targetTile.q) + Math.abs(neighbor.r - targetTile.r) <
+          Math.abs(currentTile.q - targetTile.q) + Math.abs(currentTile.r - targetTile.r)
+      );
+
+      if (!nextNeighbor) {
+        console.log("No valid neighbor found. Breaking path calculation.");
+        break;
+      }
+
+      currentTile = findTileByCoordinates(nextNeighbor.q, nextNeighbor.r);
+      if (currentTile) {
+        console.log("Adding tile to path:", currentTile);
+        path.push(new Vector3(currentTile.position.x, currentTile.position.y, currentTile.position.z));
+      }
+    }
+
+    console.log("Final path:", path);
+    return path;
+  };
+
+  // Fonction pour déplacer le véhicule vers la tuile cliquée
+  const moveVehicleToTile = (targetTile) => {
+    console.log("Moving vehicle to tile:", targetTile);
+    const vehiclePosition = vehicleManager.current.getVehiclePosition();
+    console.log("Current vehicle position:", vehiclePosition);
+
+    const startTile = findTileByCoordinates(
+      Math.round(vehiclePosition.x),
+      Math.round(vehiclePosition.z)
+    );
+
+    if (startTile && targetTile) {
+      console.log("Start tile:", startTile, "Target tile:", targetTile);
+
+      // Vérifiez si la tuile cible est adjacente
+      const isAdjacent = startTile.neighbors.some(
+        (neighbor) => neighbor.q === targetTile.q && neighbor.r === targetTile.r
+      );
+
+      if (isAdjacent) {
+        console.log("Target tile is adjacent. Moving directly.");
+        vehicleManager.current.setPath([
+          new Vector3(targetTile.position.x, targetTile.position.y, targetTile.position.z),
+        ]);
+        return;
+      }
+
+      const path = calculatePath(startTile, targetTile);
+      if (path.length > 0) {
+        vehicleManager.current.setPath(path);
+      } else {
+        console.log("Path is empty. No movement will occur.");
+      }
+    } else {
+      console.log("Start or target tile is undefined. Cannot move vehicle.");
+    }
+  };
+
   // Configure the camera using useThree
   const { camera } = useThree();
   useEffect(() => {
@@ -21,11 +94,14 @@ const Scene = ({ setSelectedTile }) => {
   }, [camera]);
 
   useEffect(() => {
-    // Initialize VehicleManager with hex positions
-    vehicleManager.current = new VehicleManager(hexPositions);
+    // Initialize VehicleManager only once
+    if (!vehicleManager.current) {
+      vehicleManager.current = new VehicleManager();
+    }
 
     // Start update loop
     const animate = (delta) => {
+      delta = Math.min(delta, 0.1); // Limit delta to avoid abnormal movements
       vehicleManager.current.update(delta);
 
       // Synchronize the Three.js mesh position with the Yuka vehicle
@@ -40,7 +116,7 @@ const Scene = ({ setSelectedTile }) => {
     return () => {
       vehicleManager.current.clear(); // Cleanup on unmount
     };
-  }, [hexPositions]);
+  }, []); // Ensure this effect runs only once
 
   return (
     <>
@@ -69,6 +145,7 @@ const Scene = ({ setSelectedTile }) => {
                 neighbors: hex.neighbors,
               });
               console.log("Neighbors of clicked tile:", hex.neighbors); // Log neighbors to console
+              moveVehicleToTile(hex); // Déplacer le véhicule vers la tuile cliquée
             }}
           />
         );
