@@ -13,8 +13,8 @@ const App = () => {
       <HUD selectedTile={selectedTile} /> {/* Use the HUD component */}
       <div className="canvas-container">
         <Canvas camera={{ fov: 70, position: [5, 5, 5] }}>
-          <OrbitControls makeDefault />
-          <Scene setSelectedTile={setSelectedTile} />
+{/*           <OrbitControls makeDefault />
+ */}          <Scene setSelectedTile={setSelectedTile} />
         </Canvas>
       </div>
     </>
