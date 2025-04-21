@@ -11,6 +11,55 @@
   font-size: 14px;
 }
 
+/* Style pour le bouton de toggle HUD */
+.hud-toggle-button {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #222;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Style pour le conteneur HUD */
+.hud-container {
+  position: fixed;
+  top: 50px;
+  right: 10px;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.85);
+  color: #0f0;
+  padding: 12px;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 12px;
+  max-height: 80vh;
+  overflow-y: auto;
+  max-width: 300px;
+}
+
+.hud-container strong {
+  color: #fff;
+}
+
+.hud-container ul {
+  padding: 0;
+  margin: 8px 0;
+  list-style: none;
+}
+
+.hud-container li {
+  margin-bottom: 4px;
+}
+
+.hud-container li span {
+  color: #0ff;
+}
+
 /* Style pour le conteneur principal */
 .canvas-container {
   width: 100vw;
