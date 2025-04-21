@@ -8,4 +8,13 @@ export const useTileStore = create((set, get) => ({
     const tile = get().tiles[coord];
     return tile ? tile.neighbors.map((neighbor) => get().tiles[neighbor]) : [];
   },
+  updateTileColor: (coord, color) => {
+    set((state) => {
+      const updatedTiles = { ...state.tiles };
+      if (updatedTiles[coord]) {
+        updatedTiles[coord] = { ...updatedTiles[coord], color };
+      }
+      return { tiles: updatedTiles };
+    });
+  },
 }));
