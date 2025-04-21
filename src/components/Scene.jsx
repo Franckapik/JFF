@@ -5,6 +5,7 @@ import Tile from "./Tile";
 import { generateHexPositions } from "../utils/utils";
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { Box } from "@react-three/drei"; // Import Box from drei
+import RandomMovement from "../Mouvement/RandomMovement"; // Import RandomMovement component
 
 const Scene = ({ setSelectedTile }) => {
   const radius = 2; // Define the radius value
@@ -13,7 +14,7 @@ const Scene = ({ setSelectedTile }) => {
 
   const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
   const [animatedIndex, setAnimatedIndex] = useState(Math.floor(Math.random() * hexPositions.length)); // Index de la tuile animée
-  const [cubePosition, setCubePosition] = useState(null); // State for cube position
+  const [cubePosition, setCubePosition] = useState(null); // State for initial cube position
 
   useEffect(() => {
     // Map hexPositions to the Zustand store format
@@ -33,7 +34,7 @@ const Scene = ({ setSelectedTile }) => {
   }, [hexPositions, setTiles]);
 
   useEffect(() => {
-    // Set the cube position to the center of a random tile
+    // Set the initial position of the vehicule to the center of a random tile
     if (hexPositions.length > 0) {
       const randomTile = hexPositions[Math.floor(Math.random() * hexPositions.length)];
       setCubePosition(randomTile.position);
@@ -74,9 +75,11 @@ const Scene = ({ setSelectedTile }) => {
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow /> {/* Adjusted directional light */}
       <pointLight position={[-5, 10, -5]} intensity={0.8} /> {/* Adjusted point light */}
       {cubePosition && (
-        <Box position={[cubePosition.x, 0.5, cubePosition.z]} args={[0.5, 0.5, 0.5]} castShadow>
-          <meshStandardMaterial attach="material" color="blue" />
-        </Box>
+        <RandomMovement initialPosition={cubePosition}>
+          <Box args={[0.5, 0.5, 0.5]} castShadow>
+            <meshStandardMaterial attach="material" color="blue" />
+          </Box>
+        </RandomMovement>
       )}
       {Object.values(tiles).map((tile) => {
         const isHighTile = tile.coord === Object.keys(tiles)[animatedIndex]; // Match by coord
