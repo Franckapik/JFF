@@ -1,7 +1,7 @@
 import React from "react";
 import "../styles/App.css"; // Import CSS for styling
 
-const HUD = ({ selectedTile }) => {
+const SelectedHUD = ({ selectedTile }) => {
   if (!selectedTile) {
     return (
       <div
@@ -65,4 +65,4 @@ const HUD = ({ selectedTile }) => {
   );
 };
 
-export default HUD;
+export default SelectedHUD;

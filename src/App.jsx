@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import Scene from "./components/Scene";
-import HUD from "./components/HUD"; // Import the HUD component
+import SelectedHUD from "./components/HUD"; // Import renamed SelectedHUD
 import "./styles/App.css";
 import StoreHUD from "./components/storeHUD"; // Import the StoreHUD component
 
@@ -11,7 +11,7 @@ const App = () => {
 
   return (
     <>
-      <HUD selectedTile={selectedTile} /> {/* Use the HUD component */}
+      <SelectedHUD selectedTile={selectedTile} /> {/* Use the renamed SelectedHUD component */}
       <StoreHUD />
       <div className="canvas-container">
         <Canvas camera={{ fov: 70, position: [5, 5, 5] }}>
