@@ -12,6 +12,11 @@ export function generateHexPositions(radius, spacing) {
     { q: -1, r: 1 },
   ];
 
+  const encodeCoord = (q, r) => {
+    const letter = String.fromCharCode(65 + q + radius); // Offset q to ensure it's non-negative
+    return `${letter}${r + radius}`; // Offset r to ensure it's non-negative
+  };
+
   for (let q = -radius; q <= radius; q++) {
     for (let r = -radius; r <= radius; r++) {
       const s = -q - r;
@@ -27,16 +32,16 @@ export function generateHexPositions(radius, spacing) {
               Math.abs(neighbor.q) <= radius &&
               Math.abs(neighbor.r) <= radius &&
               Math.abs(-neighbor.q - neighbor.r) <= radius
-          );
+          )
+          .map((neighbor) => encodeCoord(neighbor.q, neighbor.r)); // Encode neighbors
 
         hexPositions.push({
-          q,
-          r,
+          coord: encodeCoord(q, r), // Encode q and r as a letter-number coordinate
           position: { x, y: 0, z },
           walkable: true, // Par défaut, la tuile est accessible
           explored: false, // Par défaut, la tuile n'est pas explorée
           danger: Math.random() < 0.1, // 10% de chance d'avoir un danger
-          neighbors, // Coordonnées des voisins
+          neighbors, // Encoded neighbors
           color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Couleur aléatoire
         });
       }

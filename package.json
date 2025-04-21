@@ -21,7 +21,8 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "three": "0.170.0",
-    "yuka": "^0.7.8"
+    "yuka": "^0.7.8",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.3",
