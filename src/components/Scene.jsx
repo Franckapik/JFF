@@ -5,8 +5,12 @@ import { Vector3 } from "yuka"; // Import Yuka Vector3
 import AnimatedHexTile from "./AnimatedHexTile";
 import { generateHexPositions } from "../utils/utils";
 import { VehicleManager } from "../GameAI/VehicleManager"; // Import VehicleManager
+import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 
 const Scene = ({ setSelectedTile }) => {
+  const setTiles = useTileStore((state) => state.setTiles); // Zustand setter for tiles
+  const tiles = useTileStore((state) => state.tiles); // Zustand tiles state
+
   const hexPositions = useMemo(() => generateHexPositions(2, 0.1), []); // Génère les tuiles avec les nouvelles propriétés
   const [animatedIndex, setAnimatedIndex] = useState(Math.floor(Math.random() * hexPositions.length)); // Index de la tuile animée
   const [randomTileIndex] = useState(Math.floor(Math.random() * hexPositions.length)); // Reintroduce randomTileIndex
@@ -14,9 +18,26 @@ const Scene = ({ setSelectedTile }) => {
   const movingCubeRef = useRef(); // Ref for the moving cube
   const vehicleManager = useRef(null); // VehicleManager instance
 
+  useEffect(() => {
+    // Map hexPositions to the Zustand store format
+    const tileData = hexPositions.reduce((acc, hex, index) => {
+      acc[`tile-${index}`] = {
+        coord: `tile-${index}`,
+        position: hex.position,
+        neighbors: hex.neighbors.map((n) => `tile-${n.index}`), // Map neighbors to keys
+        walkable: hex.walkable,
+        explored: hex.explored,
+        danger: hex.danger,
+        color: hex.color,
+      };
+      return acc;
+    }, {});
+    setTiles(tileData); // Store tiles in Zustand
+  }, [hexPositions, setTiles]);
+
   // Fonction pour trouver une tuile par ses coordonnées q/r
   const findTileByCoordinates = (q, r) => {
-    return hexPositions.find((tile) => tile.q === q && tile.r === r);
+    return Object.values(tiles).find((tile) => tile.position.q === q && tile.position.r === r);
   };
 
   // Fonction pour calculer un chemin segmenté
@@ -110,27 +131,27 @@ const Scene = ({ setSelectedTile }) => {
       <ambientLight intensity={1} /> {/* Increased ambient light intensity */}
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow /> {/* Adjusted directional light */}
       <pointLight position={[-5, 10, -5]} intensity={0.8} /> {/* Adjusted point light */}
-      {hexPositions.map((hex, index) => {
+      {Object.values(tiles).map((tile, index) => {
         const isHighTile = index === animatedIndex; // Vérifie si c'est la tuile animée
         return (
           <AnimatedHexTile
-            key={index}
-            position={[hex.position.x, isHighTile ? 0.2 : 0, hex.position.z]} // Fixed position access
+            key={tile.coord}
+            position={[tile.position.x, isHighTile ? 0.2 : 0, tile.position.z]} // Fixed position access
             radius={1}
-            color={hex.color}
+            color={tile.color}
             isHighTile={isHighTile} // Passe l'information si c'est la tuile animée
             onClick={() => {
               setAnimatedIndex(index); // Change l'animation sur clic
               setSelectedTile({
                 index,
-                position: hex.position,
-                coordinates: { r: hex.r, q: hex.q }, // Pass r and q coordinates to HUD
-                walkable: hex.walkable,
-                explored: hex.explored,
-                danger: hex.danger,
-                neighbors: hex.neighbors,
+                position: tile.position,
+                coordinates: { r: tile.position.r, q: tile.position.q }, // Pass r and q coordinates to HUD
+                walkable: tile.walkable,
+                explored: tile.explored,
+                danger: tile.danger,
+                neighbors: tile.neighbors,
               });
-              moveVehicleToTile(hex); // Déplacer le véhicule vers la tuile cliquée
+              moveVehicleToTile(tile); // Déplacer le véhicule vers la tuile cliquée
             }}
           />
         );
