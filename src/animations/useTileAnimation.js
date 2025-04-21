@@ -1,7 +1,7 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 
-const AnimatedHexTile = ({ position, radius, color, isHighTile, onClick }) => {
+export const useTileAnimation = (isHighTile) => {
   const meshRef = useRef();
   const [progress, setProgress] = useState(0); // Progression de l'animation (0 à 1)
   const [direction, setDirection] = useState(1); // Direction de l'animation (1 = montée, -1 = descente)
@@ -28,16 +28,5 @@ const AnimatedHexTile = ({ position, radius, color, isHighTile, onClick }) => {
     }
   });
 
-  return (
-    <mesh ref={meshRef} position={position} onClick={onClick}>
-      <cylinderGeometry args={[radius, radius, 0.2, 6]} /> {/* Épaisseur de 0.2 */}
-      <meshStandardMaterial
-        color={color}
-        metalness={0.1} // Faible effet métallique
-        roughness={0.8} // Rugosité élevée pour un aspect plastique/silicone
-      />
-    </mesh>
-  );
+  return meshRef;
 };
-
-export default AnimatedHexTile;

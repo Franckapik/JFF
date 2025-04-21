@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import Scene from "./components/Scene";
-import SelectedHUD from "./components/HUD"; // Import renamed SelectedHUD
+import SelectedHUD from "./components/SelectedHUD"; // Import renamed SelectedHUD
 import "./styles/App.css";
 import StoreHUD from "./components/storeHUD"; // Import the StoreHUD component
 

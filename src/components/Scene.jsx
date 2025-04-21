@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { GridHelper } from "three";
 import { useThree } from "@react-three/fiber"; // Import useThree hook
-import AnimatedHexTile from "./AnimatedHexTile";
+import Tile from "./Tile";
 import { generateHexPositions } from "../utils/utils";
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 
@@ -66,7 +66,7 @@ const Scene = ({ setSelectedTile }) => {
       {Object.values(tiles).map((tile) => {
         const isHighTile = tile.coord === Object.keys(tiles)[animatedIndex]; // Match by coord
         return (
-          <AnimatedHexTile
+          <Tile
             key={tile.coord}
             position={[tile.position.x, isHighTile ? 0.2 : 0, tile.position.z]}
             radius={1}
