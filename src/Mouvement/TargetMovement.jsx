@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { useFrame } from "@react-three/fiber";
-import { Vector3 } from "three";
+import { Vector3, Euler } from "three";
 
 const TargetMovement = ({ initialPosition, children }) => {
   const groupRef = useRef();
+  const rotationRef = useRef(new Euler(0, 0, 0)); // Track the current rotation
   const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle from store
   const targetVehicleTargetTile = useTileStore((state) => state.targetVehicleTargetTile); // Get target tile coord
   const tiles = useTileStore((state) => state.tiles); // Get tiles from store
@@ -13,6 +14,7 @@ const TargetMovement = ({ initialPosition, children }) => {
   const setTargetVehicleProgress = useTileStore((state) => state.setTargetVehicleProgress); // Zustand setter for progress
 
   const speed = 0.5; // Movement speed (units per second)
+  const rotationSpeed = 2; // Rotation interpolation speed
   const [path, setPath] = useState([]); // Liste des tuiles intermédiaires
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index de la tuile cible actuelle
   const [initialTilePosition, setInitialTilePosition] = useState(null); // Position of the initial tile
@@ -88,6 +90,15 @@ const TargetMovement = ({ initialPosition, children }) => {
           direction.normalize();
           const moveDistance = Math.min(speed * delta, distance);
           groupRef.current.position.addScaledVector(direction, moveDistance);
+
+          // Interpolate rotation to face the target
+          const targetAngle = Math.atan2(direction.x, direction.z);
+          const currentAngle = rotationRef.current.y;
+          const interpolatedAngle = currentAngle + (targetAngle - currentAngle) * Math.min(rotationSpeed * delta, 1);
+
+          // Update the rotation
+          rotationRef.current.set(0, interpolatedAngle, 0);
+          groupRef.current.rotation.copy(rotationRef.current);
 
           // Update the distance traveled
           setDistanceTraveled((prev) => prev + moveDistance);
