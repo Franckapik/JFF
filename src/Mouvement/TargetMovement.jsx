@@ -9,6 +9,8 @@ const TargetMovement = ({ initialPosition, children }) => {
   const targetVehicleTargetTile = useTileStore((state) => state.targetVehicleTargetTile); // Get target tile coord
   const tiles = useTileStore((state) => state.tiles); // Get tiles from store
 
+  const speed = 0.5; // Movement speed (units per second)
+
   useEffect(() => {
     // Ensure the vehicle starts at the initial position
     if (targetVehicle?.position) {
@@ -20,17 +22,27 @@ const TargetMovement = ({ initialPosition, children }) => {
     }
   }, [targetVehicle]);
 
-  useFrame(() => {
-    // Update the group's position dynamically
-    if (groupRef.current && targetVehicle?.position) {
-      groupRef.current.position.lerp(
-        new Vector3(
-          targetVehicle.position.x,
-          targetVehicle.position.y,
-          targetVehicle.position.z
-        ),
-        0.1
-      );
+  useFrame((_, delta) => {
+    if (groupRef.current && targetVehicle?.position && targetVehicleTargetTile) {
+      const targetTile = tiles[targetVehicleTargetTile];
+      if (targetTile) {
+        const targetPosition = new Vector3(
+          targetTile.position.x,
+          targetTile.position.y,
+          targetTile.position.z
+        );
+
+        // Calculate the direction vector to the target position
+        const direction = new Vector3().subVectors(targetPosition, groupRef.current.position);
+        const distance = direction.length();
+
+        if (distance > 0.01) {
+          // Normalize the direction and move at a constant speed
+          direction.normalize();
+          const moveDistance = Math.min(speed * delta, distance); // Ensure we don't overshoot the target
+          groupRef.current.position.addScaledVector(direction, moveDistance);
+        }
+      }
     }
   });
 
