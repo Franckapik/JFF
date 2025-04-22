@@ -16,7 +16,7 @@ const Scene = ({ setSelectedTile }) => {
   const setTargetVehicleInStore = useTileStore((state) => state.setTargetVehicle); // Zustand setter
 
   const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
-  const [animatedIndex, setAnimatedIndex] = useState(Math.floor(Math.random() * hexPositions.length)); // Index de la tuile animée
+  const [animatedIndex, setAnimatedIndex] = useState(null); // Removed random initialization
   const [randomVehiclePosition, setRandomVehiclePosition] = useState(null); // Renamed from cubePosition
   const [targetVehiclePosition, setTargetVehiclePosition] = useState(null); // State for target vehicle position
 
@@ -104,22 +104,15 @@ const Scene = ({ setSelectedTile }) => {
           </Box>
         </TargetMovement>
       )}
-      {Object.values(tiles).map((tile) => {
-        const isHighTile = tile.coord === Object.keys(tiles)[animatedIndex]; // Match by coord
-        return (
-          <Tile
-            key={tile.coord}
-            position={[tile.position.x, isHighTile ? 0.2 : 0, tile.position.z]}
-            radius={1}
-            color={tile.color}
-            isHighTile={isHighTile}
-            onClick={() => {
-              setAnimatedIndex(Object.keys(tiles).indexOf(tile.coord)); // Update by coord
-              handleTileClick(tile.coord); // Fetch and update selected tile
-            }}
-          />
-        );
-      })}
+      {Object.values(tiles).map((tile) => (
+        <Tile
+          key={tile.coord}
+          position={[tile.position.x, 0, tile.position.z]} // Removed animation logic
+          radius={1}
+          color={tile.color}
+          onClick={() => handleTileClick(tile.coord)} // Removed animation trigger
+        />
+      ))}
     </>
   );
 };
