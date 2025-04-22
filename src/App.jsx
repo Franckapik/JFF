@@ -2,7 +2,7 @@ import React from "react";
 import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
 import "./styles/App.css";
-import StoreHUD from "./components/storeHUD";
+import StoreHUD from "./components/StoreHUD";
 import UserHUD from "./components/UserHUD";
 
 const App = () => {
