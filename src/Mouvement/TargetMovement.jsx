@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { useFrame } from "@react-three/fiber";
 import { Vector3 } from "three";
@@ -10,6 +10,27 @@ const TargetMovement = ({ initialPosition, children }) => {
   const tiles = useTileStore((state) => state.tiles); // Get tiles from store
 
   const speed = 0.5; // Movement speed (units per second)
+  const [path, setPath] = useState([]); // Liste des tuiles intermédiaires
+  const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index de la tuile cible actuelle
+
+  const calculatePath = () => {
+    if (groupRef.current && targetVehicleTargetTile) {
+      // Trouver la tuile actuelle basée sur la position actuelle du véhicule
+      const currentTile = Object.values(tiles).find(
+        (tile) =>
+          Math.abs(tile.position.x - groupRef.current.position.x) < 0.1 &&
+          Math.abs(tile.position.z - groupRef.current.position.z) < 0.1
+      );
+      const targetTile = tiles[targetVehicleTargetTile];
+
+      if (currentTile && targetTile) {
+        // Utiliser une fonction de recherche de chemin (ex. A*)
+        const newPath = findPath(currentTile.coord, targetTile.coord, tiles);
+        setPath(newPath);
+        setCurrentTargetIndex(0); // Réinitialiser l'index
+      }
+    }
+  };
 
   useEffect(() => {
     // Ensure the vehicle starts at the initial position
@@ -22,25 +43,33 @@ const TargetMovement = ({ initialPosition, children }) => {
     }
   }, [targetVehicle]);
 
+  useEffect(() => {
+    calculatePath(); // Recalculer le chemin lorsque la cible change
+  }, [targetVehicleTargetTile, tiles]);
+
   useFrame((_, delta) => {
-    if (groupRef.current && targetVehicle?.position && targetVehicleTargetTile) {
-      const targetTile = tiles[targetVehicleTargetTile];
-      if (targetTile) {
+    if (groupRef.current && path.length > 0) {
+      const currentTargetCoord = path[currentTargetIndex];
+      const currentTargetTile = tiles[currentTargetCoord];
+
+      if (currentTargetTile) {
         const targetPosition = new Vector3(
-          targetTile.position.x,
-          targetTile.position.y,
-          targetTile.position.z
+          currentTargetTile.position.x,
+          currentTargetTile.position.y,
+          currentTargetTile.position.z
         );
 
-        // Calculate the direction vector to the target position
+        // Calculer la direction et la distance
         const direction = new Vector3().subVectors(targetPosition, groupRef.current.position);
         const distance = direction.length();
 
         if (distance > 0.01) {
-          // Normalize the direction and move at a constant speed
           direction.normalize();
-          const moveDistance = Math.min(speed * delta, distance); // Ensure we don't overshoot the target
+          const moveDistance = Math.min(speed * delta, distance);
           groupRef.current.position.addScaledVector(direction, moveDistance);
+        } else if (currentTargetIndex < path.length - 1) {
+          // Passer à la prochaine tuile dans le chemin
+          setCurrentTargetIndex(currentTargetIndex + 1);
         }
       }
     }
@@ -66,6 +95,33 @@ const TargetMovement = ({ initialPosition, children }) => {
       <group ref={groupRef}>{children}</group>
     </>
   );
+};
+
+// Fonction de recherche de chemin (exemple simplifié)
+const findPath = (startCoord, targetCoord, tiles) => {
+  const queue = [[startCoord]];
+  const visited = new Set();
+
+  while (queue.length > 0) {
+    const path = queue.shift();
+    const currentCoord = path[path.length - 1];
+
+    if (currentCoord === targetCoord) {
+      return path; // Chemin trouvé
+    }
+
+    if (!visited.has(currentCoord)) {
+      visited.add(currentCoord);
+      const neighbors = tiles[currentCoord]?.neighbors || [];
+      neighbors.forEach((neighbor) => {
+        if (!visited.has(neighbor)) {
+          queue.push([...path, neighbor]);
+        }
+      });
+    }
+  }
+
+  return []; // Aucun chemin trouvé
 };
 
 export default TargetMovement;
