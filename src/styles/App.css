@@ -14,9 +14,9 @@
 /* Style pour le bouton de toggle HUD */
 .hud-toggle-button {
   position: fixed;
-  top: 10px;
+  bottom: 220px; /* Adjusted to stay above the store-hud */
   right: 10px;
-  z-index: 1000;
+  z-index: 1001; /* Ensure it is above the store-hud */
   padding: 6px 10px;
   border-radius: 6px;
   background: #222;
@@ -62,7 +62,120 @@
 
 /* Style pour le conteneur principal */
 .canvas-container {
+  position: relative; /* Ensure stacking context for UserHUD */
   width: 100vw;
   height: 100vh;
   background-color: #2c3e50; /* Background color */
+  overflow: hidden; /* Prevent scrollbars */
+}
+
+/* Style pour le UserHUD */
+.user-hud {
+  position: absolute; /* Ensure it overlays the canvas */
+  top: 0; /* Position at the top */
+  left: 0;
+  width: 100%; /* Full width */
+  height: 150px; /* Reduced height */
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  z-index: 1000; /* Ensure it is above the canvas */
+}
+
+.hud-column {
+  flex: 1;
+  text-align: left; /* Align content to the left */
+  padding: 10px;
+}
+
+.hud-column h3 {
+  text-align: center; /* Center the title */
+  margin: 0;
+  font-size: 16px; /* Adjusted font size for the title */
+  font-family: Arial, sans-serif;
+}
+
+.user-hud ul {
+  font-size: 12px; /* Adjusted font size for the content */
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Style pour le StoreHUD */
+.store-hud {
+  position: absolute; /* Ensure it overlays the canvas */
+  bottom: 0; /* Position at the bottom */
+  left: 0;
+  width: 100%; /* Full width */
+  height: 200px; /* Fixed height */
+  background-color: rgba(0, 0, 0, 0.9); /* Slightly darker background */
+  color: white;
+  padding: 15px; /* Increased padding for better spacing */
+  box-sizing: border-box;
+  z-index: 1000; /* Ensure it is below the toggle button */
+  overflow-y: auto; /* Enable vertical scrolling */
+  font-family: Arial, sans-serif; /* Consistent font */
+  font-size: 14px;
+}
+
+.store-hud strong {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #ffcc00; /* Highlighted title color */
+}
+
+.store-hud ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.store-hud-item {
+  margin-bottom: 12px; /* Add spacing between items */
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1); /* Subtle background for each item */
+  border-radius: 6px; /* Rounded corners */
+}
+
+.store-hud-key {
+  font-weight: bold;
+  color: #00e6e6; /* Highlighted key color */
+}
+
+.store-hud-value {
+  margin-top: 5px;
+  color: #fff; /* Value color */
+}
+
+.store-hud-sublist {
+  padding-left: 15px; /* Indent for sublist */
+  margin-top: 5px;
+}
+
+.store-hud-subkey {
+  font-weight: bold;
+  color: #ffcc00; /* Highlighted subkey color */
+}
+
+.store-hud li {
+  margin-bottom: 8px; /* Increased spacing between items */
+  padding: 5px;
+  background: rgba(255, 255, 255, 0.1); /* Subtle background for each item */
+  border-radius: 4px; /* Rounded corners */
+}
+
+.store-hud li span {
+  font-weight: bold;
+  color: #00e6e6; /* Highlighted key color */
+}
+
+.store-hud li span + span {
+  font-weight: normal;
+  color: #fff; /* Value color */
 }

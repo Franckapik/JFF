@@ -7,9 +7,10 @@ import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { Box } from "@react-three/drei"; // Import Box from drei
 import RandomMovement from "../Mouvement/RandomMovement"; // Import RandomMovement component
 
-const Scene = ({ setSelectedTile }) => {
+const Scene = () => {
   const radius = 2; // Define the radius value
   const setTiles = useTileStore((state) => state.setTiles); // Zustand setter for tiles
+  const setSelectedTile = useTileStore((state) => state.setSelectedTile); // Zustand setter for selectedTile
   const tiles = useTileStore((state) => state.tiles); // Zustand tiles state
 
   const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here

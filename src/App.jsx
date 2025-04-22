@@ -1,22 +1,18 @@
-import React, { useState } from "react";
+import React from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
 import Scene from "./components/Scene";
-import SelectedHUD from "./components/SelectedHUD"; // Import renamed SelectedHUD
 import "./styles/App.css";
-import StoreHUD from "./components/storeHUD"; // Import the StoreHUD component
+import StoreHUD from "./components/storeHUD";
+import UserHUD from "./components/UserHUD";
 
 const App = () => {
-  const [selectedTile, setSelectedTile] = useState(null); // Tile object containing index, position, and coordinates
-
   return (
     <>
-      <SelectedHUD selectedTile={selectedTile} /> {/* Use the renamed SelectedHUD component */}
+      <UserHUD />
       <StoreHUD />
       <div className="canvas-container">
         <Canvas camera={{ fov: 70, position: [5, 5, 5] }}>
-{/*           <OrbitControls makeDefault />
- */}          <Scene setSelectedTile={setSelectedTile} />
+          <Scene />
         </Canvas>
       </div>
     </>
