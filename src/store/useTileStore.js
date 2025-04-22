@@ -12,6 +12,8 @@ export const useTileStore = create((set, get) => ({
   targetVehicleProgress: 0, // Progress of the target vehicle
   randomVehicleStartCoord: null, // Starting coord for the random vehicle
   targetVehicleStartCoord: null, // Starting coord for the target vehicle
+  targetFuel: 100, // Initial fuel level for the target vehicle
+  targetDamage: 0, // Initial damage level for the target vehicle
 
   setTiles: (newTiles) => set({ tiles: newTiles }),
   setSelectedTile: (tile) => set({ selectedTile: tile }), // Setter for selectedTile
@@ -24,6 +26,8 @@ export const useTileStore = create((set, get) => ({
   setTargetVehicleProgress: (progress) => set({ targetVehicleProgress: progress }), // Setter for progress
   setRandomVehicleStartCoord: (coord) => set({ randomVehicleStartCoord: coord }), // Setter for random vehicle start coord
   setTargetVehicleStartCoord: (coord) => set({ targetVehicleStartCoord: coord }), // Setter for target vehicle start coord
+  setTargetFuel: (fuel) => set({ targetFuel: fuel }), // Setter for targetFuel
+  setTargetDamage: (damage) => set({ targetDamage: damage }), // Setter for targetDamage
 
   getTile: (coord) => get().tiles[coord], // Return the tile directly
   getNeighbors: (coord) => {
@@ -38,5 +42,11 @@ export const useTileStore = create((set, get) => ({
       }
       return { tiles: updatedTiles };
     });
+  },
+  checkVehicleOverlap: () => {
+    const { randomVehicle, targetVehicle, setTargetDamage, targetDamage } = get();
+    if (randomVehicle?.coord && targetVehicle?.coord && randomVehicle.coord === targetVehicle.coord) {
+      setTargetDamage(Math.min(targetDamage + 10, 100)); // Increase damage by 10%, max 100%
+    }
   },
 }));

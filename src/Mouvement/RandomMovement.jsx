@@ -16,8 +16,12 @@ const RandomMovement = ({ initialPosition, children }) => {
   const setRandomVehicleTargetTile = useTileStore((state) => state.setRandomVehicleTargetTile); // Zustand setter
   const setRandomVehicleIsMoving = useTileStore((state) => state.setRandomVehicleIsMoving); // Zustand setter for isMoving
   const setRandomVehicle = useTileStore((state) => state.setRandomVehicle); // Zustand setter for random vehicle
+  const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle from the store
+  const setTargetDamage = useTileStore((state) => state.setTargetDamage); // Setter for targetDamage
+  const targetDamage = useTileStore((state) => state.targetDamage); // Get targetDamage from the store
   const speed = 0.5; // Movement speed (units per second)
   const rotationSpeed = 2; // Rotation interpolation speed
+  const [processedOverlap, setProcessedOverlap] = useState(false); // Track if overlap has been processed for the current tile
 
   const setNextTarget = () => {
     // Find the current tile based on the position
@@ -53,7 +57,17 @@ const RandomMovement = ({ initialPosition, children }) => {
 
         // Save the target tile's coord in the store
         setRandomVehicleTargetTile(randomNeighbor.coord);
+
+        // Reset overlap processing for the new tile
+        setProcessedOverlap(false);
       }
+    }
+  };
+
+  const checkOverlapWithTarget = () => {
+    if (targetVehicle?.coord && previousTileCoord.current === targetVehicle.coord && !processedOverlap) {
+      setTargetDamage(Math.min(targetDamage + 10, 100)); // Increase damage by 10%, max 100%
+      setProcessedOverlap(true); // Mark overlap as processed for the current tile
     }
   };
 
@@ -87,6 +101,9 @@ const RandomMovement = ({ initialPosition, children }) => {
       }
 
       setRandomVehicleIsMoving(true); // Set isMoving to true
+
+      // Continuously check for overlap with the target vehicle
+      checkOverlapWithTarget();
     } else {
       // If the target is reached, immediately set the next target
       setRandomVehicle({
@@ -97,6 +114,8 @@ const RandomMovement = ({ initialPosition, children }) => {
         },
         coord: previousTileCoord.current,
       }); // Update the vehicle's position in the store
+
+      checkOverlapWithTarget(); // Check for overlap with the target vehicle
       setNextTarget();
       setRandomVehicleIsMoving(false); // Set isMoving to false when target is reached
     }

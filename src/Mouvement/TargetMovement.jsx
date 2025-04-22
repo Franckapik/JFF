@@ -12,18 +12,20 @@ const TargetMovement = ({ initialPosition, children }) => {
   const setTargetVehicle = useTileStore((state) => state.setTargetVehicle); // Zustand setter for target vehicle
   const setTargetVehicleIsMoving = useTileStore((state) => state.setTargetVehicleIsMoving); // Zustand setter for isMoving
   const setTargetVehicleProgress = useTileStore((state) => state.setTargetVehicleProgress); // Zustand setter for progress
+  const targetFuel = useTileStore((state) => state.targetFuel); // Get targetFuel from the store
+  const setTargetFuel = useTileStore((state) => state.setTargetFuel); // Setter for targetFuel
 
   const speed = 0.5; // Movement speed (units per second)
   const rotationSpeed = 2; // Rotation interpolation speed
-  const [path, setPath] = useState([]); // Liste des tuiles intermédiaires
-  const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index de la tuile cible actuelle
+  const [path, setPath] = useState([]); // List of intermediate tiles
+  const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index of the current target tile
   const [initialTilePosition, setInitialTilePosition] = useState(null); // Position of the initial tile
   const [totalPathDistance, setTotalPathDistance] = useState(0); // Total distance of the path
   const [distanceTraveled, setDistanceTraveled] = useState(0); // Distance traveled so far
 
   const calculatePath = () => {
     if (groupRef.current && targetVehicleTargetTile) {
-      // Trouver la tuile actuelle basée sur la position actuelle du véhicule
+      // Find the current tile based on the vehicle's current position
       const currentTile = Object.values(tiles).find(
         (tile) =>
           Math.abs(tile.position.x - groupRef.current.position.x) < 0.1 &&
@@ -32,10 +34,10 @@ const TargetMovement = ({ initialPosition, children }) => {
       const targetTile = tiles[targetVehicleTargetTile];
 
       if (currentTile && targetTile) {
-        // Utiliser une fonction de recherche de chemin (ex. A*)
+        // Use a pathfinding function (e.g., A*)
         const newPath = findPath(currentTile.coord, targetTile.coord, tiles);
         setPath(newPath);
-        setCurrentTargetIndex(0); // Réinitialiser l'index
+        setCurrentTargetIndex(0); // Reset the index
         setTargetVehicleProgress(0); // Reset progress
 
         // Calculate the total distance of the path
@@ -66,10 +68,16 @@ const TargetMovement = ({ initialPosition, children }) => {
   }, [targetVehicle, initialTilePosition]);
 
   useEffect(() => {
-    calculatePath(); // Recalculer le chemin lorsque la cible change
+    calculatePath(); // Recalculate the path when the target changes
   }, [targetVehicleTargetTile, tiles]);
 
   useFrame((_, delta) => {
+    // Prevent movement if fuel is 0%
+    if (targetFuel <= 0) {
+      setTargetVehicleIsMoving(false); // Ensure the vehicle is not marked as moving
+      return;
+    }
+
     if (groupRef.current && path.length > 0) {
       const currentTargetCoord = path[currentTargetIndex];
       const currentTargetTile = tiles[currentTargetCoord];
@@ -81,7 +89,7 @@ const TargetMovement = ({ initialPosition, children }) => {
           currentTargetTile.position.z
         );
 
-        // Calculer la direction et la distance
+        // Calculate direction and distance
         const direction = new Vector3().subVectors(targetPosition, groupRef.current.position);
         const distance = direction.length();
 
@@ -107,8 +115,11 @@ const TargetMovement = ({ initialPosition, children }) => {
           const progress = (distanceTraveled / totalPathDistance) * 100;
           setTargetVehicleProgress(progress.toFixed(2)); // Update progress in the store
         } else if (currentTargetIndex < path.length - 1) {
-          // Passer à la prochaine tuile dans le chemin
+          // Move to the next tile in the path
           setCurrentTargetIndex(currentTargetIndex + 1);
+
+          // Decrease fuel by 10% when moving to the next tile
+          setTargetFuel(Math.max(targetFuel - 10, 0)); // Ensure fuel does not go below 0
         } else {
           setTargetVehicle({
             position: {
@@ -155,7 +166,7 @@ const TargetMovement = ({ initialPosition, children }) => {
   );
 };
 
-// Fonction de recherche de chemin (exemple simplifié)
+// Simplified pathfinding function
 const findPath = (startCoord, targetCoord, tiles) => {
   const queue = [[startCoord]];
   const visited = new Set();
@@ -165,7 +176,7 @@ const findPath = (startCoord, targetCoord, tiles) => {
     const currentCoord = path[path.length - 1];
 
     if (currentCoord === targetCoord) {
-      return path; // Chemin trouvé
+      return path; // Path found
     }
 
     if (!visited.has(currentCoord)) {
@@ -179,7 +190,7 @@ const findPath = (startCoord, targetCoord, tiles) => {
     }
   }
 
-  return []; // Aucun chemin trouvé
+  return []; // No path found
 };
 
 export default TargetMovement;
