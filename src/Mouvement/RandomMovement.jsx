@@ -12,6 +12,7 @@ const RandomMovement = ({ initialPosition, children }) => {
   const [startMarker, setStartMarker] = useState(null); // Position of the start marker
   const [endMarker, setEndMarker] = useState(null); // Position of the end marker
   const getNeighbors = useTileStore((state) => state.getNeighbors); // Get neighbors from the store
+  const setRandomVehicleTargetTile = useTileStore((state) => state.setRandomVehicleTargetTile); // Zustand setter
   const speed = 0.5; // Movement speed (units per second)
 
   const setNextTarget = () => {
@@ -45,6 +46,9 @@ const RandomMovement = ({ initialPosition, children }) => {
 
         // Update the end marker to the target tile's position
         setEndMarker(randomNeighbor.position);
+
+        // Save the target tile's coord in the store
+        setRandomVehicleTargetTile(randomNeighbor.coord);
       }
     }
   };

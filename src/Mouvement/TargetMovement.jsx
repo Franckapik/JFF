@@ -1,34 +1,52 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
+import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { useFrame } from "@react-three/fiber";
 import { Vector3 } from "three";
 
 const TargetMovement = ({ initialPosition, children }) => {
-  const currentPosition = useRef(new Vector3(initialPosition.x, initialPosition.y, initialPosition.z));
   const groupRef = useRef();
-  const [firstTilePosition, setFirstTilePosition] = useState(null); // Static position of the first tile
+  const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle from store
+  const targetVehicleTargetTile = useTileStore((state) => state.targetVehicleTargetTile); // Get target tile coord
+  const tiles = useTileStore((state) => state.tiles); // Get tiles from store
 
   useEffect(() => {
     // Ensure the vehicle starts at the initial position
-    currentPosition.current.set(initialPosition.x, initialPosition.y, initialPosition.z);
-
-    // Set the first tile position
-    setFirstTilePosition(initialPosition);
-  }, [initialPosition]);
+    if (targetVehicle?.position) {
+      groupRef.current.position.set(
+        targetVehicle.position.x,
+        targetVehicle.position.y,
+        targetVehicle.position.z
+      );
+    }
+  }, [targetVehicle]);
 
   useFrame(() => {
-    // Update the group's position directly
-    if (groupRef.current) {
-      groupRef.current.position.copy(currentPosition.current);
+    // Update the group's position dynamically
+    if (groupRef.current && targetVehicle?.position) {
+      groupRef.current.position.lerp(
+        new Vector3(
+          targetVehicle.position.x,
+          targetVehicle.position.y,
+          targetVehicle.position.z
+        ),
+        0.1
+      );
     }
   });
 
   return (
     <>
-      {/* Render the static ring on the first tile */}
-      {firstTilePosition && (
-        <mesh position={[firstTilePosition.x, 0.2, firstTilePosition.z]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.6, 0.7, 32]} />
-          <meshBasicMaterial color="red" side={2} />
+      {/* Render the helper dynamically */}
+      {targetVehicleTargetTile && tiles[targetVehicleTargetTile] && (
+        <mesh
+          position={[
+            tiles[targetVehicleTargetTile].position.x,
+            0.2,
+            tiles[targetVehicleTargetTile].position.z,
+          ]}
+        >
+          <sphereGeometry args={[0.1, 16, 16]} />
+          <meshStandardMaterial color="yellow" /> {/* Updated color to yellow */}
         </mesh>
       )}
 

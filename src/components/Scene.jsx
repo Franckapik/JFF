@@ -14,6 +14,7 @@ const Scene = ({ setSelectedTile }) => {
   const tiles = useTileStore((state) => state.tiles); // Zustand tiles state
   const setRandomVehicleInStore = useTileStore((state) => state.setRandomVehicle); // Zustand setter
   const setTargetVehicleInStore = useTileStore((state) => state.setTargetVehicle); // Zustand setter
+  const setTargetVehicleTargetTile = useTileStore((state) => state.setTargetVehicleTargetTile); // Zustand setter
 
   const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
   const [animatedIndex, setAnimatedIndex] = useState(null); // Removed random initialization
@@ -79,6 +80,9 @@ const Scene = ({ setSelectedTile }) => {
         danger: tile.danger,
         neighbors: tile.neighbors,
       });
+
+      // Update the target vehicle's destination in the store
+      setTargetVehicleTargetTile(tile.coord);
     } else {
       console.error("Invalid tile or coord:", tile);
     }
