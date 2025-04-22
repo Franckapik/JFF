@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { Vector3 } from "three";
@@ -6,10 +6,11 @@ import { Vector3 } from "three";
 const RandomMovement = ({ initialPosition, children }) => {
   const currentPosition = useRef(new Vector3(initialPosition.x, initialPosition.y, initialPosition.z));
   const targetPosition = useRef(new Vector3(initialPosition.x, initialPosition.y, initialPosition.z));
-  const previousPosition = useRef(null); // Track the previous position
+  const previousTileCoord = useRef(null); // Track the previous tile's coord
   const groupRef = useRef();
+  const [startMarker, setStartMarker] = useState(null); // Position of the start marker
+  const [endMarker, setEndMarker] = useState(null); // Position of the end marker
   const getNeighbors = useTileStore((state) => state.getNeighbors); // Get neighbors from the store
-  const updateTileColor = useTileStore((state) => state.updateTileColor); // Update tile color
   const speed = 0.5; // Movement speed (units per second)
 
   const setNextTarget = () => {
@@ -21,29 +22,23 @@ const RandomMovement = ({ initialPosition, children }) => {
     );
 
     if (currentTile) {
-      // Reset the color of the previous tile
-      if (previousPosition.current) {
-        updateTileColor(previousPosition.current.coord, "white"); // Reset to default color
-      }
+      // Update the start marker to the current tile's position
+      setStartMarker(currentTile.position);
 
       // Get neighboring tiles
       const neighbors = getNeighbors(currentTile.coord).filter((neighbor) => {
-        // Exclude the previous position
-        return (
-          !previousPosition.current ||
-          neighbor.position.x !== previousPosition.current.x ||
-          neighbor.position.z !== previousPosition.current.z
-        );
+        // Exclude the previous tile
+        return neighbor.coord !== previousTileCoord.current;
       });
 
       if (neighbors.length > 0) {
         // Choose a random neighbor and set it as the target position
         const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
-        previousPosition.current = { ...currentTile }; // Update the previous position
+        previousTileCoord.current = currentTile.coord; // Update the previous tile's coord
         targetPosition.current.set(randomNeighbor.position.x, randomNeighbor.position.y, randomNeighbor.position.z);
 
-        // Highlight the target tile
-        updateTileColor(randomNeighbor.coord, "yellow");
+        // Update the end marker to the target tile's position
+        setEndMarker(randomNeighbor.position);
       }
     }
   };
@@ -67,28 +62,34 @@ const RandomMovement = ({ initialPosition, children }) => {
       if (groupRef.current) {
         groupRef.current.position.copy(currentPosition.current);
       }
-
-      // Change the color of the current tile during movement
-      const progress = 1 - distance / direction.length();
-      if (progress < 0.5 && previousPosition.current) {
-        updateTileColor(previousPosition.current.coord, "blue"); // Midway color
-      } else {
-        const currentTile = Object.values(useTileStore.getState().tiles).find(
-          (tile) =>
-            Math.abs(tile.position.x - currentPosition.current.x) < 0.1 &&
-            Math.abs(tile.position.z - currentPosition.current.z) < 0.1
-        );
-        if (currentTile) {
-          updateTileColor(currentTile.coord, "green"); // Final color
-        }
-      }
     } else {
       // If the target is reached, immediately set the next target
       setNextTarget();
     }
   });
 
-  return <group ref={groupRef}>{children}</group>;
+  return (
+    <>
+      {/* Render the start marker */}
+      {startMarker && (
+        <mesh position={[startMarker.x, 0.2, startMarker.z]}>
+          <sphereGeometry args={[0.1, 16, 16]} />
+          <meshStandardMaterial color="blue" />
+        </mesh>
+      )}
+
+      {/* Render the end marker */}
+      {endMarker && (
+        <mesh position={[endMarker.x, 0.2, endMarker.z]}>
+          <sphereGeometry args={[0.1, 16, 16]} />
+          <meshStandardMaterial color="green" />
+        </mesh>
+      )}
+
+      {/* Render the moving object */}
+      <group ref={groupRef}>{children}</group>
+    </>
+  );
 };
 
 export default RandomMovement;
