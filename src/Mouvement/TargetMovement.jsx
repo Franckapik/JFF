@@ -14,6 +14,7 @@ const TargetMovement = ({ initialPosition, children }) => {
   const setTargetVehicleProgress = useTileStore((state) => state.setTargetVehicleProgress); // Zustand setter for progress
   const targetFuel = useTileStore((state) => state.targetFuel); // Get targetFuel from the store
   const setTargetFuel = useTileStore((state) => state.setTargetFuel); // Setter for targetFuel
+  const targetVehicleStartCoord = useTileStore((state) => state.targetVehicleStartCoord); // Get initial coord
 
   const speed = 0.5; // Movement speed (units per second)
   const rotationSpeed = 2; // Rotation interpolation speed
@@ -131,6 +132,7 @@ const TargetMovement = ({ initialPosition, children }) => {
           // Decrease fuel by 10% when moving to the next tile
           setTargetFuel(Math.max(targetFuel - 10, 0)); // Ensure fuel does not go below 0
         } else {
+          // Final position update
           setTargetVehicle({
             position: {
               x: groupRef.current.position.x,
@@ -138,7 +140,13 @@ const TargetMovement = ({ initialPosition, children }) => {
               z: groupRef.current.position.z,
             },
             coord: currentTargetCoord,
-          }); // Update the vehicle's position in the store
+          });
+
+          // Reset fuel to 100% if the target vehicle returns to its initial position
+          if (currentTargetCoord === targetVehicleStartCoord) {
+            setTargetFuel(100); // Reset fuel to 100%
+          }
+
           setTargetVehicleIsMoving(false); // Set isMoving to false when target is reached
           setTargetVehicleProgress(100); // Set progress to 100% when target is reached
         }
