@@ -16,6 +16,7 @@ const Scene = () => {
   const setRandomVehicleInStore = useTileStore((state) => state.setRandomVehicle); // Zustand setter
   const setTargetVehicleInStore = useTileStore((state) => state.setTargetVehicle); // Zustand setter
   const setTargetVehicleTargetTile = useTileStore((state) => state.setTargetVehicleTargetTile); // Zustand setter
+  const targetVehicleIsMoving = useTileStore((state) => state.targetVehicleIsMoving); // Zustand state for movement
 
   const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
   const [animatedIndex, setAnimatedIndex] = useState(null); // Removed random initialization
@@ -67,6 +68,11 @@ const Scene = () => {
   }, [camera]);
 
   const handleTileClick = (tileCoord) => {
+    if (targetVehicleIsMoving) {
+      console.warn("Cannot set a new target while the target vehicle is moving.");
+      return; // Prevent setting a new target if the vehicle is moving
+    }
+
     const tile = tiles[tileCoord]; // Fetch the latest tile data from the store
     if (tile && tile.coord) { // Ensure tile and tile.coord are valid
       setSelectedTile({

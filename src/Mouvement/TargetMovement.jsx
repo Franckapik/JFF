@@ -8,6 +8,7 @@ const TargetMovement = ({ initialPosition, children }) => {
   const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle from store
   const targetVehicleTargetTile = useTileStore((state) => state.targetVehicleTargetTile); // Get target tile coord
   const tiles = useTileStore((state) => state.tiles); // Get tiles from store
+  const setTargetVehicleIsMoving = useTileStore((state) => state.setTargetVehicleIsMoving); // Get setTargetVehicleIsMoving from store
 
   const speed = 0.5; // Movement speed (units per second)
   const [path, setPath] = useState([]); // Liste des tuiles intermédiaires
@@ -64,12 +65,15 @@ const TargetMovement = ({ initialPosition, children }) => {
         const distance = direction.length();
 
         if (distance > 0.01) {
+          setTargetVehicleIsMoving(true); // Set isMoving to true
           direction.normalize();
           const moveDistance = Math.min(speed * delta, distance);
           groupRef.current.position.addScaledVector(direction, moveDistance);
         } else if (currentTargetIndex < path.length - 1) {
           // Passer à la prochaine tuile dans le chemin
           setCurrentTargetIndex(currentTargetIndex + 1);
+        } else {
+          setTargetVehicleIsMoving(false); // Set isMoving to false when target is reached
         }
       }
     }

@@ -13,6 +13,7 @@ const RandomMovement = ({ initialPosition, children }) => {
   const [endMarker, setEndMarker] = useState(null); // Position of the end marker
   const getNeighbors = useTileStore((state) => state.getNeighbors); // Get neighbors from the store
   const setRandomVehicleTargetTile = useTileStore((state) => state.setRandomVehicleTargetTile); // Zustand setter
+  const setRandomVehicleIsMoving = useTileStore((state) => state.setRandomVehicleIsMoving); // Zustand setter for isMoving
   const speed = 0.5; // Movement speed (units per second)
 
   const setNextTarget = () => {
@@ -72,9 +73,12 @@ const RandomMovement = ({ initialPosition, children }) => {
       if (groupRef.current) {
         groupRef.current.position.copy(currentPosition.current);
       }
+
+      setRandomVehicleIsMoving(true); // Set isMoving to true
     } else {
       // If the target is reached, immediately set the next target
       setNextTarget();
+      setRandomVehicleIsMoving(false); // Set isMoving to false when target is reached
     }
   });
 
