@@ -53,15 +53,15 @@ const TargetMovement = ({ initialPosition, children }) => {
 
   useEffect(() => {
     // Ensure the vehicle starts at the initial position
-    if (targetVehicle?.position) {
+    if (targetVehicle?.position && !initialTilePosition) {
       groupRef.current.position.set(
         targetVehicle.position.x,
         targetVehicle.position.y,
         targetVehicle.position.z
       );
-      setInitialTilePosition(targetVehicle.position); // Save the initial position for the red ring
+      setInitialTilePosition(targetVehicle.position); // Save the initial position for the red ring only once
     }
-  }, [targetVehicle]);
+  }, [targetVehicle, initialTilePosition]);
 
   useEffect(() => {
     calculatePath(); // Recalculer le chemin lorsque la cible change

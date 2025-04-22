@@ -17,6 +17,8 @@ const Scene = () => {
   const setTargetVehicleInStore = useTileStore((state) => state.setTargetVehicle); // Zustand setter
   const setTargetVehicleTargetTile = useTileStore((state) => state.setTargetVehicleTargetTile); // Zustand setter
   const targetVehicleIsMoving = useTileStore((state) => state.targetVehicleIsMoving); // Zustand state for movement
+  const setRandomVehicleStartCoord = useTileStore((state) => state.setRandomVehicleStartCoord); // Zustand setter
+  const setTargetVehicleStartCoord = useTileStore((state) => state.setTargetVehicleStartCoord); // Zustand setter
 
   const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
   const [animatedIndex, setAnimatedIndex] = useState(null); // Removed random initialization
@@ -47,8 +49,9 @@ const Scene = () => {
       const randomVehicle = { position: randomTile.position, coord: randomTile.coord };
       setRandomVehiclePosition(randomTile.position); // Update local state
       setRandomVehicleInStore(randomVehicle); // Store combined data in Zustand
+      setRandomVehicleStartCoord(randomTile.coord); // Store starting coord in Zustand
     }
-  }, [hexPositions, setRandomVehicleInStore]);
+  }, [hexPositions, setRandomVehicleInStore, setRandomVehicleStartCoord]);
 
   useEffect(() => {
     // Set the initial target vehicle data (position and coord)
@@ -57,8 +60,9 @@ const Scene = () => {
       const targetVehicle = { position: randomTile.position, coord: randomTile.coord };
       setTargetVehiclePosition(randomTile.position); // Update local state
       setTargetVehicleInStore(targetVehicle); // Store combined data in Zustand
+      setTargetVehicleStartCoord(randomTile.coord); // Store starting coord in Zustand
     }
-  }, [hexPositions, setTargetVehicleInStore]);
+  }, [hexPositions, setTargetVehicleInStore, setTargetVehicleStartCoord]);
 
   // Configure the camera using useThree
   const { camera } = useThree();
