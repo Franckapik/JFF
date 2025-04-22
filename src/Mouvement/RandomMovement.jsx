@@ -80,7 +80,7 @@ const RandomMovement = ({ initialPosition, children }) => {
       {firstTilePosition && (
         <mesh position={[firstTilePosition.x, 0.2, firstTilePosition.z]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.6, 0.7, 32]} />
-          <meshBasicMaterial color="red" side={2} />
+          <meshBasicMaterial color="blue" side={2} /> {/* Updated color to blue */}
         </mesh>
       )}
 

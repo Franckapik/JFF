@@ -6,15 +6,19 @@ import { generateHexPositions } from "../utils/utils";
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { Box } from "@react-three/drei"; // Import Box from drei
 import RandomMovement from "../Mouvement/RandomMovement"; // Import RandomMovement component
+import TargetMovement from "../Mouvement/TargetMovement"; // Import TargetMovement component
 
 const Scene = ({ setSelectedTile }) => {
   const radius = 2; // Define the radius value
   const setTiles = useTileStore((state) => state.setTiles); // Zustand setter for tiles
   const tiles = useTileStore((state) => state.tiles); // Zustand tiles state
+  const setRandomVehicleInStore = useTileStore((state) => state.setRandomVehicle); // Zustand setter
+  const setTargetVehicleInStore = useTileStore((state) => state.setTargetVehicle); // Zustand setter
 
   const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
   const [animatedIndex, setAnimatedIndex] = useState(Math.floor(Math.random() * hexPositions.length)); // Index de la tuile animée
-  const [cubePosition, setCubePosition] = useState(null); // State for initial cube position
+  const [randomVehiclePosition, setRandomVehiclePosition] = useState(null); // Renamed from cubePosition
+  const [targetVehiclePosition, setTargetVehiclePosition] = useState(null); // State for target vehicle position
 
   useEffect(() => {
     // Map hexPositions to the Zustand store format
@@ -34,12 +38,24 @@ const Scene = ({ setSelectedTile }) => {
   }, [hexPositions, setTiles]);
 
   useEffect(() => {
-    // Set the initial position of the vehicule to the center of a random tile
+    // Set the initial random vehicle data (position and coord)
     if (hexPositions.length > 0) {
       const randomTile = hexPositions[Math.floor(Math.random() * hexPositions.length)];
-      setCubePosition(randomTile.position);
+      const randomVehicle = { position: randomTile.position, coord: randomTile.coord };
+      setRandomVehiclePosition(randomTile.position); // Update local state
+      setRandomVehicleInStore(randomVehicle); // Store combined data in Zustand
     }
-  }, [hexPositions]);
+  }, [hexPositions, setRandomVehicleInStore]);
+
+  useEffect(() => {
+    // Set the initial target vehicle data (position and coord)
+    if (hexPositions.length > 0) {
+      const randomTile = hexPositions[Math.floor(Math.random() * hexPositions.length)];
+      const targetVehicle = { position: randomTile.position, coord: randomTile.coord };
+      setTargetVehiclePosition(randomTile.position); // Update local state
+      setTargetVehicleInStore(targetVehicle); // Store combined data in Zustand
+    }
+  }, [hexPositions, setTargetVehicleInStore]);
 
   // Configure the camera using useThree
   const { camera } = useThree();
@@ -74,12 +90,19 @@ const Scene = ({ setSelectedTile }) => {
       <ambientLight intensity={1} /> {/* Increased ambient light intensity */}
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow /> {/* Adjusted directional light */}
       <pointLight position={[-5, 10, -5]} intensity={0.8} /> {/* Adjusted point light */}
-      {cubePosition && (
-        <RandomMovement initialPosition={cubePosition}>
+      {randomVehiclePosition && ( // Updated variable name
+        <RandomMovement initialPosition={randomVehiclePosition}> {/* Updated variable name */}
           <Box args={[0.5, 0.5, 0.5]} castShadow>
             <meshStandardMaterial attach="material" color="blue" />
           </Box>
         </RandomMovement>
+      )}
+      {targetVehiclePosition && (
+        <TargetMovement initialPosition={targetVehiclePosition}>
+          <Box args={[0.5, 0.5, 0.5]} castShadow>
+            <meshStandardMaterial attach="material" color="red" />
+          </Box>
+        </TargetMovement>
       )}
       {Object.values(tiles).map((tile) => {
         const isHighTile = tile.coord === Object.keys(tiles)[animatedIndex]; // Match by coord
