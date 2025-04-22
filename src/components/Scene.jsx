@@ -16,6 +16,9 @@ const Scene = () => {
   const setRandomVehicleInStore = useTileStore((state) => state.setRandomVehicle); // Zustand setter
   const setTargetVehicleInStore = useTileStore((state) => state.setTargetVehicle); // Zustand setter
   const setTargetVehicleTargetTile = useTileStore((state) => state.setTargetVehicleTargetTile); // Zustand setter
+  const targetVehicleIsMoving = useTileStore((state) => state.targetVehicleIsMoving); // Zustand state for movement
+  const setRandomVehicleStartCoord = useTileStore((state) => state.setRandomVehicleStartCoord); // Zustand setter
+  const setTargetVehicleStartCoord = useTileStore((state) => state.setTargetVehicleStartCoord); // Zustand setter
 
   const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
   const [animatedIndex, setAnimatedIndex] = useState(null); // Removed random initialization
@@ -46,8 +49,9 @@ const Scene = () => {
       const randomVehicle = { position: randomTile.position, coord: randomTile.coord };
       setRandomVehiclePosition(randomTile.position); // Update local state
       setRandomVehicleInStore(randomVehicle); // Store combined data in Zustand
+      setRandomVehicleStartCoord(randomTile.coord); // Store starting coord in Zustand
     }
-  }, [hexPositions, setRandomVehicleInStore]);
+  }, [hexPositions, setRandomVehicleInStore, setRandomVehicleStartCoord]);
 
   useEffect(() => {
     // Set the initial target vehicle data (position and coord)
@@ -56,8 +60,9 @@ const Scene = () => {
       const targetVehicle = { position: randomTile.position, coord: randomTile.coord };
       setTargetVehiclePosition(randomTile.position); // Update local state
       setTargetVehicleInStore(targetVehicle); // Store combined data in Zustand
+      setTargetVehicleStartCoord(randomTile.coord); // Store starting coord in Zustand
     }
-  }, [hexPositions, setTargetVehicleInStore]);
+  }, [hexPositions, setTargetVehicleInStore, setTargetVehicleStartCoord]);
 
   // Configure the camera using useThree
   const { camera } = useThree();
@@ -67,6 +72,11 @@ const Scene = () => {
   }, [camera]);
 
   const handleTileClick = (tileCoord) => {
+    if (targetVehicleIsMoving) {
+      console.warn("Cannot set a new target while the target vehicle is moving.");
+      return; // Prevent setting a new target if the vehicle is moving
+    }
+
     const tile = tiles[tileCoord]; // Fetch the latest tile data from the store
     if (tile && tile.coord) { // Ensure tile and tile.coord are valid
       setSelectedTile({

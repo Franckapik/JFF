@@ -1,17 +1,25 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { useFrame } from "@react-three/fiber";
-import { Vector3 } from "three";
+import { Vector3, Euler } from "three";
 
 const TargetMovement = ({ initialPosition, children }) => {
   const groupRef = useRef();
+  const rotationRef = useRef(new Euler(0, 0, 0)); // Track the current rotation
   const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle from store
   const targetVehicleTargetTile = useTileStore((state) => state.targetVehicleTargetTile); // Get target tile coord
   const tiles = useTileStore((state) => state.tiles); // Get tiles from store
+  const setTargetVehicle = useTileStore((state) => state.setTargetVehicle); // Zustand setter for target vehicle
+  const setTargetVehicleIsMoving = useTileStore((state) => state.setTargetVehicleIsMoving); // Zustand setter for isMoving
+  const setTargetVehicleProgress = useTileStore((state) => state.setTargetVehicleProgress); // Zustand setter for progress
 
   const speed = 0.5; // Movement speed (units per second)
+  const rotationSpeed = 2; // Rotation interpolation speed
   const [path, setPath] = useState([]); // Liste des tuiles intermédiaires
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index de la tuile cible actuelle
+  const [initialTilePosition, setInitialTilePosition] = useState(null); // Position of the initial tile
+  const [totalPathDistance, setTotalPathDistance] = useState(0); // Total distance of the path
+  const [distanceTraveled, setDistanceTraveled] = useState(0); // Distance traveled so far
 
   const calculatePath = () => {
     if (groupRef.current && targetVehicleTargetTile) {
@@ -28,20 +36,34 @@ const TargetMovement = ({ initialPosition, children }) => {
         const newPath = findPath(currentTile.coord, targetTile.coord, tiles);
         setPath(newPath);
         setCurrentTargetIndex(0); // Réinitialiser l'index
+        setTargetVehicleProgress(0); // Reset progress
+
+        // Calculate the total distance of the path
+        let totalDistance = 0;
+        for (let i = 0; i < newPath.length - 1; i++) {
+          const tileA = tiles[newPath[i]];
+          const tileB = tiles[newPath[i + 1]];
+          totalDistance += new Vector3(tileA.position.x, tileA.position.y, tileA.position.z).distanceTo(
+            new Vector3(tileB.position.x, tileB.position.y, tileB.position.z)
+          );
+        }
+        setTotalPathDistance(totalDistance);
+        setDistanceTraveled(0); // Reset traveled distance
       }
     }
   };
 
   useEffect(() => {
     // Ensure the vehicle starts at the initial position
-    if (targetVehicle?.position) {
+    if (targetVehicle?.position && !initialTilePosition) {
       groupRef.current.position.set(
         targetVehicle.position.x,
         targetVehicle.position.y,
         targetVehicle.position.z
       );
+      setInitialTilePosition(targetVehicle.position); // Save the initial position for the red ring only once
     }
-  }, [targetVehicle]);
+  }, [targetVehicle, initialTilePosition]);
 
   useEffect(() => {
     calculatePath(); // Recalculer le chemin lorsque la cible change
@@ -64,12 +86,40 @@ const TargetMovement = ({ initialPosition, children }) => {
         const distance = direction.length();
 
         if (distance > 0.01) {
+          setTargetVehicleIsMoving(true); // Set isMoving to true
           direction.normalize();
           const moveDistance = Math.min(speed * delta, distance);
           groupRef.current.position.addScaledVector(direction, moveDistance);
+
+          // Interpolate rotation to face the target
+          const targetAngle = Math.atan2(direction.x, direction.z);
+          const currentAngle = rotationRef.current.y;
+          const interpolatedAngle = currentAngle + (targetAngle - currentAngle) * Math.min(rotationSpeed * delta, 1);
+
+          // Update the rotation
+          rotationRef.current.set(0, interpolatedAngle, 0);
+          groupRef.current.rotation.copy(rotationRef.current);
+
+          // Update the distance traveled
+          setDistanceTraveled((prev) => prev + moveDistance);
+
+          // Calculate progress based on the total path distance
+          const progress = (distanceTraveled / totalPathDistance) * 100;
+          setTargetVehicleProgress(progress.toFixed(2)); // Update progress in the store
         } else if (currentTargetIndex < path.length - 1) {
           // Passer à la prochaine tuile dans le chemin
           setCurrentTargetIndex(currentTargetIndex + 1);
+        } else {
+          setTargetVehicle({
+            position: {
+              x: groupRef.current.position.x,
+              y: groupRef.current.position.y,
+              z: groupRef.current.position.z,
+            },
+            coord: currentTargetCoord,
+          }); // Update the vehicle's position in the store
+          setTargetVehicleIsMoving(false); // Set isMoving to false when target is reached
+          setTargetVehicleProgress(100); // Set progress to 100% when target is reached
         }
       }
     }
@@ -77,6 +127,14 @@ const TargetMovement = ({ initialPosition, children }) => {
 
   return (
     <>
+      {/* Render the red ring on the initial tile */}
+      {initialTilePosition && (
+        <mesh position={[initialTilePosition.x, 0.2, initialTilePosition.z]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.6, 0.7, 32]} />
+          <meshBasicMaterial color="red" side={2} /> {/* Red ring */}
+        </mesh>
+      )}
+
       {/* Render the helper dynamically */}
       {targetVehicleTargetTile && tiles[targetVehicleTargetTile] && (
         <mesh

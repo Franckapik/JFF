@@ -1,19 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
-import { Vector3 } from "three";
+import { Vector3, Euler } from "three";
 
 const RandomMovement = ({ initialPosition, children }) => {
   const currentPosition = useRef(new Vector3(initialPosition.x, initialPosition.y, initialPosition.z));
   const targetPosition = useRef(new Vector3(initialPosition.x, initialPosition.y, initialPosition.z));
   const previousTileCoord = useRef(null); // Track the previous tile's coord
   const groupRef = useRef();
+  const rotationRef = useRef(new Euler(0, 0, 0)); // Track the current rotation
   const [firstTilePosition, setFirstTilePosition] = useState(null); // Static position of the first tile
   const [startMarker, setStartMarker] = useState(null); // Position of the start marker
   const [endMarker, setEndMarker] = useState(null); // Position of the end marker
   const getNeighbors = useTileStore((state) => state.getNeighbors); // Get neighbors from the store
   const setRandomVehicleTargetTile = useTileStore((state) => state.setRandomVehicleTargetTile); // Zustand setter
+  const setRandomVehicleIsMoving = useTileStore((state) => state.setRandomVehicleIsMoving); // Zustand setter for isMoving
+  const setRandomVehicle = useTileStore((state) => state.setRandomVehicle); // Zustand setter for random vehicle
   const speed = 0.5; // Movement speed (units per second)
+  const rotationSpeed = 2; // Rotation interpolation speed
 
   const setNextTarget = () => {
     // Find the current tile based on the position
@@ -71,10 +75,30 @@ const RandomMovement = ({ initialPosition, children }) => {
       // Update the group's position directly
       if (groupRef.current) {
         groupRef.current.position.copy(currentPosition.current);
+
+        // Calculate the target rotation
+        const targetAngle = Math.atan2(direction.x, direction.z);
+        const currentAngle = rotationRef.current.y;
+        const interpolatedAngle = currentAngle + (targetAngle - currentAngle) * Math.min(rotationSpeed * delta, 1);
+
+        // Update the rotation
+        rotationRef.current.set(0, interpolatedAngle, 0);
+        groupRef.current.rotation.copy(rotationRef.current);
       }
+
+      setRandomVehicleIsMoving(true); // Set isMoving to true
     } else {
       // If the target is reached, immediately set the next target
+      setRandomVehicle({
+        position: {
+          x: currentPosition.current.x,
+          y: currentPosition.current.y,
+          z: currentPosition.current.z,
+        },
+        coord: previousTileCoord.current,
+      }); // Update the vehicle's position in the store
       setNextTarget();
+      setRandomVehicleIsMoving(false); // Set isMoving to false when target is reached
     }
   });
 
