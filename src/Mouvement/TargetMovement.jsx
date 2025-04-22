@@ -14,6 +14,7 @@ const TargetMovement = ({ initialPosition, children }) => {
   const speed = 0.5; // Movement speed (units per second)
   const [path, setPath] = useState([]); // Liste des tuiles intermédiaires
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index de la tuile cible actuelle
+  const [initialTilePosition, setInitialTilePosition] = useState(null); // Position of the initial tile
 
   const calculatePath = () => {
     if (groupRef.current && targetVehicleTargetTile) {
@@ -42,6 +43,7 @@ const TargetMovement = ({ initialPosition, children }) => {
         targetVehicle.position.y,
         targetVehicle.position.z
       );
+      setInitialTilePosition(targetVehicle.position); // Save the initial position for the red ring
     }
   }, [targetVehicle]);
 
@@ -90,6 +92,14 @@ const TargetMovement = ({ initialPosition, children }) => {
 
   return (
     <>
+      {/* Render the red ring on the initial tile */}
+      {initialTilePosition && (
+        <mesh position={[initialTilePosition.x, 0.2, initialTilePosition.z]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.6, 0.7, 32]} />
+          <meshBasicMaterial color="red" side={2} /> {/* Red ring */}
+        </mesh>
+      )}
+
       {/* Render the helper dynamically */}
       {targetVehicleTargetTile && tiles[targetVehicleTargetTile] && (
         <mesh
