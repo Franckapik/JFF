@@ -8,7 +8,8 @@ const TargetMovement = ({ initialPosition, children }) => {
   const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle from store
   const targetVehicleTargetTile = useTileStore((state) => state.targetVehicleTargetTile); // Get target tile coord
   const tiles = useTileStore((state) => state.tiles); // Get tiles from store
-  const setTargetVehicleIsMoving = useTileStore((state) => state.setTargetVehicleIsMoving); // Get setTargetVehicleIsMoving from store
+  const setTargetVehicle = useTileStore((state) => state.setTargetVehicle); // Zustand setter for target vehicle
+  const setTargetVehicleIsMoving = useTileStore((state) => state.setTargetVehicleIsMoving); // Zustand setter for isMoving
 
   const speed = 0.5; // Movement speed (units per second)
   const [path, setPath] = useState([]); // Liste des tuiles intermédiaires
@@ -73,6 +74,14 @@ const TargetMovement = ({ initialPosition, children }) => {
           // Passer à la prochaine tuile dans le chemin
           setCurrentTargetIndex(currentTargetIndex + 1);
         } else {
+          setTargetVehicle({
+            position: {
+              x: groupRef.current.position.x,
+              y: groupRef.current.position.y,
+              z: groupRef.current.position.z,
+            },
+            coord: currentTargetCoord,
+          }); // Update the vehicle's position in the store
           setTargetVehicleIsMoving(false); // Set isMoving to false when target is reached
         }
       }

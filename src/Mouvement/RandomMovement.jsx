@@ -14,6 +14,7 @@ const RandomMovement = ({ initialPosition, children }) => {
   const getNeighbors = useTileStore((state) => state.getNeighbors); // Get neighbors from the store
   const setRandomVehicleTargetTile = useTileStore((state) => state.setRandomVehicleTargetTile); // Zustand setter
   const setRandomVehicleIsMoving = useTileStore((state) => state.setRandomVehicleIsMoving); // Zustand setter for isMoving
+  const setRandomVehicle = useTileStore((state) => state.setRandomVehicle); // Zustand setter for random vehicle
   const speed = 0.5; // Movement speed (units per second)
 
   const setNextTarget = () => {
@@ -77,6 +78,14 @@ const RandomMovement = ({ initialPosition, children }) => {
       setRandomVehicleIsMoving(true); // Set isMoving to true
     } else {
       // If the target is reached, immediately set the next target
+      setRandomVehicle({
+        position: {
+          x: currentPosition.current.x,
+          y: currentPosition.current.y,
+          z: currentPosition.current.z,
+        },
+        coord: previousTileCoord.current,
+      }); // Update the vehicle's position in the store
       setNextTarget();
       setRandomVehicleIsMoving(false); // Set isMoving to false when target is reached
     }
