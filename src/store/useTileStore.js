@@ -9,6 +9,7 @@ export const useTileStore = create((set, get) => ({
   targetVehicleTargetTile: null, // Tile coord of the target vehicle's destination
   randomVehicleIsMoving: false, // Movement status for the random vehicle
   targetVehicleIsMoving: false, // Movement status for the target vehicle
+  targetVehicleProgress: 0, // Progress of the target vehicle
 
   setTiles: (newTiles) => set({ tiles: newTiles }),
   setSelectedTile: (tile) => set({ selectedTile: tile }), // Setter for selectedTile
@@ -18,6 +19,7 @@ export const useTileStore = create((set, get) => ({
   setTargetVehicleTargetTile: (tileCoord) => set({ targetVehicleTargetTile: tileCoord }), // Setter for target tile
   setRandomVehicleIsMoving: (isMoving) => set({ randomVehicleIsMoving: isMoving }), // Setter for random vehicle movement
   setTargetVehicleIsMoving: (isMoving) => set({ targetVehicleIsMoving: isMoving }), // Setter for target vehicle movement
+  setTargetVehicleProgress: (progress) => set({ targetVehicleProgress: progress }), // Setter for progress
 
   getTile: (coord) => get().tiles[coord], // Return the tile directly
   getNeighbors: (coord) => {

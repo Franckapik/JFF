@@ -10,11 +10,14 @@ const TargetMovement = ({ initialPosition, children }) => {
   const tiles = useTileStore((state) => state.tiles); // Get tiles from store
   const setTargetVehicle = useTileStore((state) => state.setTargetVehicle); // Zustand setter for target vehicle
   const setTargetVehicleIsMoving = useTileStore((state) => state.setTargetVehicleIsMoving); // Zustand setter for isMoving
+  const setTargetVehicleProgress = useTileStore((state) => state.setTargetVehicleProgress); // Zustand setter for progress
 
   const speed = 0.5; // Movement speed (units per second)
   const [path, setPath] = useState([]); // Liste des tuiles intermédiaires
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index de la tuile cible actuelle
   const [initialTilePosition, setInitialTilePosition] = useState(null); // Position of the initial tile
+  const [totalPathDistance, setTotalPathDistance] = useState(0); // Total distance of the path
+  const [distanceTraveled, setDistanceTraveled] = useState(0); // Distance traveled so far
 
   const calculatePath = () => {
     if (groupRef.current && targetVehicleTargetTile) {
@@ -31,6 +34,19 @@ const TargetMovement = ({ initialPosition, children }) => {
         const newPath = findPath(currentTile.coord, targetTile.coord, tiles);
         setPath(newPath);
         setCurrentTargetIndex(0); // Réinitialiser l'index
+        setTargetVehicleProgress(0); // Reset progress
+
+        // Calculate the total distance of the path
+        let totalDistance = 0;
+        for (let i = 0; i < newPath.length - 1; i++) {
+          const tileA = tiles[newPath[i]];
+          const tileB = tiles[newPath[i + 1]];
+          totalDistance += new Vector3(tileA.position.x, tileA.position.y, tileA.position.z).distanceTo(
+            new Vector3(tileB.position.x, tileB.position.y, tileB.position.z)
+          );
+        }
+        setTotalPathDistance(totalDistance);
+        setDistanceTraveled(0); // Reset traveled distance
       }
     }
   };
@@ -72,6 +88,13 @@ const TargetMovement = ({ initialPosition, children }) => {
           direction.normalize();
           const moveDistance = Math.min(speed * delta, distance);
           groupRef.current.position.addScaledVector(direction, moveDistance);
+
+          // Update the distance traveled
+          setDistanceTraveled((prev) => prev + moveDistance);
+
+          // Calculate progress based on the total path distance
+          const progress = (distanceTraveled / totalPathDistance) * 100;
+          setTargetVehicleProgress(progress.toFixed(2)); // Update progress in the store
         } else if (currentTargetIndex < path.length - 1) {
           // Passer à la prochaine tuile dans le chemin
           setCurrentTargetIndex(currentTargetIndex + 1);
@@ -85,6 +108,7 @@ const TargetMovement = ({ initialPosition, children }) => {
             coord: currentTargetCoord,
           }); // Update the vehicle's position in the store
           setTargetVehicleIsMoving(false); // Set isMoving to false when target is reached
+          setTargetVehicleProgress(100); // Set progress to 100% when target is reached
         }
       }
     }

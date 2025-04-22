@@ -8,6 +8,7 @@ const UserHUD = () => {
   const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle data
   const randomVehicleIsMoving = useTileStore((state) => state.randomVehicleIsMoving); // Get random vehicle movement status
   const targetVehicleIsMoving = useTileStore((state) => state.targetVehicleIsMoving); // Get target vehicle movement status
+  const targetVehicleProgress = useTileStore((state) => state.targetVehicleProgress); // Get target vehicle progress
 
   return (
     <div className="user-hud">
@@ -75,6 +76,9 @@ const UserHUD = () => {
               </li>
               <li>
                 <strong>Is Moving:</strong> {targetVehicleIsMoving ? "Yes" : "No"}
+              </li>
+              <li>
+                <strong>Progress:</strong> {targetVehicleProgress}%
               </li>
             </ul>
           </li>
