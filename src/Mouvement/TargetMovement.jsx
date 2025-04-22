@@ -118,6 +118,16 @@ const TargetMovement = ({ initialPosition, children }) => {
           // Move to the next tile in the path
           setCurrentTargetIndex(currentTargetIndex + 1);
 
+          // Update the target vehicle's position in the store at intermediate tiles
+          setTargetVehicle({
+            position: {
+              x: currentTargetTile.position.x,
+              y: currentTargetTile.position.y,
+              z: currentTargetTile.position.z,
+            },
+            coord: currentTargetCoord,
+          });
+
           // Decrease fuel by 10% when moving to the next tile
           setTargetFuel(Math.max(targetFuel - 10, 0)); // Ensure fuel does not go below 0
         } else {
