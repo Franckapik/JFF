@@ -8,6 +8,7 @@ const RandomMovement = ({ initialPosition, children }) => {
   const targetPosition = useRef(new Vector3(initialPosition.x, initialPosition.y, initialPosition.z));
   const previousTileCoord = useRef(null); // Track the previous tile's coord
   const groupRef = useRef();
+  const [firstTilePosition, setFirstTilePosition] = useState(null); // Static position of the first tile
   const [startMarker, setStartMarker] = useState(null); // Position of the start marker
   const [endMarker, setEndMarker] = useState(null); // Position of the end marker
   const getNeighbors = useTileStore((state) => state.getNeighbors); // Get neighbors from the store
@@ -22,6 +23,11 @@ const RandomMovement = ({ initialPosition, children }) => {
     );
 
     if (currentTile) {
+      // Set the first tile position if not already set
+      if (!firstTilePosition) {
+        setFirstTilePosition(currentTile.position);
+      }
+
       // Update the start marker to the current tile's position
       setStartMarker(currentTile.position);
 
@@ -70,6 +76,14 @@ const RandomMovement = ({ initialPosition, children }) => {
 
   return (
     <>
+      {/* Render the static ring on the first tile */}
+      {firstTilePosition && (
+        <mesh position={[firstTilePosition.x, 0.2, firstTilePosition.z]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.6, 0.7, 32]} />
+          <meshBasicMaterial color="red" side={2} />
+        </mesh>
+      )}
+
       {/* Render the start marker */}
       {startMarker && (
         <mesh position={[startMarker.x, 0.2, startMarker.z]}>
