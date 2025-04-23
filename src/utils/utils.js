@@ -52,6 +52,8 @@ export function generateHexPositions(radius, spacing) {
             debris: Math.floor(Math.random() * 10001), // Random debris quantity (0-10000)
             special: Math.floor(Math.random() * 3), // Random special quantity (0-2)
           },
+          randomVehicleStart: false, // Default value
+          targetVehicleStart: false, // Default value
         });
       }
     }
@@ -78,16 +80,14 @@ export function generateHexPositions(radius, spacing) {
     targetVehicleTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
   } while (targetVehicleTile.coord === randomVehicleTile.coord);
 
-  const startingTiles = {
-    randomVehicle: randomVehicleTile.coord,
-    targetVehicle: targetVehicleTile.coord,
-  };
+  randomVehicleTile.randomVehicleStart = true;
+  targetVehicleTile.targetVehicleStart = true;
 
   hexPositions.forEach((tile) => {
-    if (tile.coord === startingTiles.randomVehicle || tile.coord === startingTiles.targetVehicle) {
+    if (tile.randomVehicleStart || tile.targetVehicleStart) {
       tile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on starting tiles
     }
   });
 
-  return { hexPositions, startingTiles };
+  return hexPositions;
 }

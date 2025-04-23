@@ -20,7 +20,7 @@ const Scene = () => {
   const setRandomVehicleStartCoord = useTileStore((state) => state.setRandomVehicleStartCoord); // Zustand setter
   const setTargetVehicleStartCoord = useTileStore((state) => state.setTargetVehicleStartCoord); // Zustand setter
 
-  const { hexPositions, startingTiles } = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
+  const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
   const [randomVehiclePosition, setRandomVehiclePosition] = useState(null); // State for random vehicle position
   const [targetVehiclePosition, setTargetVehiclePosition] = useState(null); // State for target vehicle position
 
@@ -37,6 +37,8 @@ const Scene = () => {
         color: hex.color,
         outer: hex.outer, // Use the outer property from generation
         resources: hex.resources, // Include resources (food, debris, special)
+        randomVehicleStart: hex.randomVehicleStart, // Include random vehicle start flag
+        targetVehicleStart: hex.targetVehicleStart, // Include target vehicle start flag
       };
       return acc;
     }, {});
@@ -46,25 +48,25 @@ const Scene = () => {
 
   useEffect(() => {
     // Set the initial random vehicle data (position and coord)
-    const randomTile = hexPositions.find((tile) => tile.coord === startingTiles.randomVehicle);
+    const randomTile = hexPositions.find((tile) => tile.randomVehicleStart);
     if (randomTile) {
       const randomVehicle = { position: randomTile.position, coord: randomTile.coord };
       setRandomVehiclePosition(randomTile.position); // Update local state
       setRandomVehicleInStore(randomVehicle); // Store combined data in Zustand
       setRandomVehicleStartCoord(randomTile.coord); // Store starting coord in Zustand
     }
-  }, [hexPositions, startingTiles, setRandomVehicleInStore, setRandomVehicleStartCoord]);
+  }, [hexPositions, setRandomVehicleInStore, setRandomVehicleStartCoord]);
 
   useEffect(() => {
     // Set the initial target vehicle data (position and coord)
-    const targetTile = hexPositions.find((tile) => tile.coord === startingTiles.targetVehicle);
+    const targetTile = hexPositions.find((tile) => tile.targetVehicleStart);
     if (targetTile) {
       const targetVehicle = { position: targetTile.position, coord: targetTile.coord };
       setTargetVehiclePosition(targetTile.position); // Update local state
       setTargetVehicleInStore(targetVehicle); // Store combined data in Zustand
       setTargetVehicleStartCoord(targetTile.coord); // Store starting coord in Zustand
     }
-  }, [hexPositions, startingTiles, setTargetVehicleInStore, setTargetVehicleStartCoord]);
+  }, [hexPositions, setTargetVehicleInStore, setTargetVehicleStartCoord]);
 
   // Configure the camera using useThree
   const { camera } = useThree();
