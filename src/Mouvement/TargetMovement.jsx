@@ -15,6 +15,7 @@ const TargetMovement = ({ initialPosition, children }) => {
   const targetFuel = useTileStore((state) => state.targetFuel); // Get targetFuel from the store
   const setTargetFuel = useTileStore((state) => state.setTargetFuel); // Setter for targetFuel
   const targetVehicleStartCoord = useTileStore((state) => state.targetVehicleStartCoord); // Get initial coord
+  const setTargetVehicleResources = useTileStore((state) => state.setTargetVehicleResources); // Setter for target vehicle resources
 
   const speed = 0.5; // Movement speed (units per second)
   const rotationSpeed = 2; // Rotation interpolation speed
@@ -23,6 +24,7 @@ const TargetMovement = ({ initialPosition, children }) => {
   const [initialTilePosition, setInitialTilePosition] = useState(null); // Position of the initial tile
   const [totalPathDistance, setTotalPathDistance] = useState(0); // Total distance of the path
   const [distanceTraveled, setDistanceTraveled] = useState(0); // Distance traveled so far
+  const [resourcesCollected, setResourcesCollected] = useState(false); // Track if resources have been collected
 
   const calculatePath = () => {
     if (groupRef.current && targetVehicleTargetTile) {
@@ -72,6 +74,7 @@ const TargetMovement = ({ initialPosition, children }) => {
     // Recalculate the path when the target changes
     if (targetVehicleTargetTile && tiles[targetVehicleTargetTile]) {
       calculatePath(); // Ensure the path is recalculated when the target tile changes
+      setResourcesCollected(false); // Reset resourcesCollected for the new target
     }
   }, [targetVehicleTargetTile, tiles]);
 
@@ -144,6 +147,15 @@ const TargetMovement = ({ initialPosition, children }) => {
             },
             coord: currentTargetCoord,
           });
+
+          // Add the resources of the destination tile to the target vehicle's resources
+          if (!resourcesCollected) {
+            const destinationTile = tiles[currentTargetCoord];
+            if (destinationTile && destinationTile.resources) {
+              setTargetVehicleResources(destinationTile.resources); // Add resources to the target vehicle
+            }
+            setResourcesCollected(true); // Mark resources as collected
+          }
 
           // Reset fuel to 100% if the target vehicle returns to its initial position
           if (currentTargetCoord === targetVehicleStartCoord) {
