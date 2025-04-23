@@ -37,10 +37,10 @@ const Scene = () => {
         danger: hex.danger,
         color: hex.color,
         outer: hex.outer, // Use the outer property from generation
+        resources: hex.resources, // Include resources (food, debris, special)
       };
       return acc;
     }, {});
-
 
     setTiles(tileData); // Store tiles in Zustand
   }, [hexPositions, setTiles]);

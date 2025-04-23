@@ -14,6 +14,7 @@ const UserHUD = () => {
   const targetVehicleStartCoord = useTileStore((state) => state.targetVehicleStartCoord); // Get target vehicle start coord
   const targetFuel = useTileStore((state) => state.targetFuel); // Get targetFuel from the store
   const targetDamage = useTileStore((state) => state.targetDamage); // Get targetDamage from the store
+  const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
 
   return (
     <div className="user-hud">
@@ -46,6 +47,20 @@ const UserHUD = () => {
             </li>
             <li>
               <strong>Neighbors :</strong> {tile.neighbors?.join(", ") || "N/A"}
+            </li>
+            <li>
+              <strong>Resources:</strong>
+              <ul>
+                <li>
+                  <strong>Food:</strong> {tile.resources?.food || 0}
+                </li>
+                <li>
+                  <strong>Debris:</strong> {tile.resources?.debris || 0}
+                </li>
+                <li>
+                  <strong>Special:</strong> {tile.resources?.special || 0}
+                </li>
+              </ul>
             </li>
           </ul>
         ) : (
@@ -106,6 +121,20 @@ const UserHUD = () => {
           </li>
           <li>
             <strong>Damage:</strong> {targetDamage}%
+          </li>
+          <li>
+            <strong>Resources:</strong>
+            <ul>
+              <li>
+                <strong>Food:</strong> {targetVehicleResources.food}
+              </li>
+              <li>
+                <strong>Debris:</strong> {targetVehicleResources.debris}
+              </li>
+              <li>
+                <strong>Special:</strong> {targetVehicleResources.special}
+              </li>
+            </ul>
           </li>
         </ul>
       </div>
