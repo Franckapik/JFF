@@ -138,15 +138,17 @@ const Scene = () => {
           </Box>
         </TargetMovement>
       )}
-      {Object.values(tiles).map((tile) => (
-        <Tile
-          key={tile.coord}
-          position={[tile.position.x, 0, tile.position.z]} // Removed animation logic
-          radius={1}
-          color={tile.color}
-          onClick={() => handleTileClick(tile.coord)} // Removed animation trigger
-        />
-      ))}
+      {Object.values(tiles)
+        .filter((tile) => tile.walkable) // Only render walkable tiles
+        .map((tile) => (
+          <Tile
+            key={tile.coord}
+            position={[tile.position.x, 0, tile.position.z]} // Removed animation logic
+            radius={1}
+            color={tile.color}
+            onClick={() => handleTileClick(tile.coord)} // Removed animation trigger
+          />
+        ))}
     </>
   );
 };
