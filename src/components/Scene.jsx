@@ -36,33 +36,40 @@ const Scene = () => {
         explored: hex.explored,
         danger: hex.danger,
         color: hex.color,
+        outer: hex.outer, // Use the outer property from generation
       };
       return acc;
     }, {});
+
+
     setTiles(tileData); // Store tiles in Zustand
   }, [hexPositions, setTiles]);
 
   useEffect(() => {
     // Set the initial random vehicle data (position and coord)
-    if (hexPositions.length > 0) {
-      const randomTile = hexPositions[Math.floor(Math.random() * hexPositions.length)];
+    const tileData = useTileStore.getState().tiles; // Access the latest tile data
+    const walkableTiles = Object.values(tileData).filter((tile) => tile.walkable); // Filter walkable tiles
+    if (walkableTiles.length > 0) {
+      const randomTile = walkableTiles[Math.floor(Math.random() * walkableTiles.length)];
       const randomVehicle = { position: randomTile.position, coord: randomTile.coord };
       setRandomVehiclePosition(randomTile.position); // Update local state
       setRandomVehicleInStore(randomVehicle); // Store combined data in Zustand
       setRandomVehicleStartCoord(randomTile.coord); // Store starting coord in Zustand
     }
-  }, [hexPositions, setRandomVehicleInStore, setRandomVehicleStartCoord]);
+  }, [setRandomVehicleInStore, setRandomVehicleStartCoord]);
 
   useEffect(() => {
     // Set the initial target vehicle data (position and coord)
-    if (hexPositions.length > 0) {
-      const randomTile = hexPositions[Math.floor(Math.random() * hexPositions.length)];
+    const tileData = useTileStore.getState().tiles; // Access the latest tile data
+    const walkableTiles = Object.values(tileData).filter((tile) => tile.walkable); // Filter walkable tiles
+    if (walkableTiles.length > 0) {
+      const randomTile = walkableTiles[Math.floor(Math.random() * walkableTiles.length)];
       const targetVehicle = { position: randomTile.position, coord: randomTile.coord };
       setTargetVehiclePosition(randomTile.position); // Update local state
       setTargetVehicleInStore(targetVehicle); // Store combined data in Zustand
       setTargetVehicleStartCoord(randomTile.coord); // Store starting coord in Zustand
     }
-  }, [hexPositions, setTargetVehicleInStore, setTargetVehicleStartCoord]);
+  }, [setTargetVehicleInStore, setTargetVehicleStartCoord]);
 
   // Configure the camera using useThree
   const { camera } = useThree();
@@ -77,26 +84,8 @@ const Scene = () => {
       return; // Prevent setting a new target if the vehicle is moving
     }
 
-    const tile = tiles[tileCoord]; // Fetch the latest tile data from the store
-    if (tile && tile.coord) { // Ensure tile and tile.coord are valid
-      setSelectedTile({
-        coord: tile.coord,
-        position: tile.position,
-        coordinates: {
-          q: tile.coord.charCodeAt(0) - 65 - radius, // Decode q using charCodeAt
-          r: parseInt(tile.coord.slice(1)) - radius, // Decode r using parseInt
-        },
-        walkable: tile.walkable,
-        explored: tile.explored,
-        danger: tile.danger,
-        neighbors: tile.neighbors,
-      });
-
-      // Update the target vehicle's destination in the store
-      setTargetVehicleTargetTile(tile.coord);
-    } else {
-      console.error("Invalid tile or coord:", tile);
-    }
+    setSelectedTile(tileCoord); // Store only the tile's coordinate
+    setTargetVehicleTargetTile(tileCoord); // Mark the selected tile as the target destination
   };
 
   return (
@@ -119,15 +108,17 @@ const Scene = () => {
           </Box>
         </TargetMovement>
       )}
-      {Object.values(tiles).map((tile) => (
-        <Tile
-          key={tile.coord}
-          position={[tile.position.x, 0, tile.position.z]} // Removed animation logic
-          radius={1}
-          color={tile.color}
-          onClick={() => handleTileClick(tile.coord)} // Removed animation trigger
-        />
-      ))}
+      {Object.values(tiles)
+        .filter((tile) => tile.walkable) // Only render walkable tiles
+        .map((tile) => (
+          <Tile
+            key={tile.coord}
+            position={[tile.position.x, 0, tile.position.z]} // Removed animation logic
+            radius={1}
+            color={tile.color}
+            onClick={() => handleTileClick(tile.coord)} // Removed animation trigger
+          />
+        ))}
     </>
   );
 };

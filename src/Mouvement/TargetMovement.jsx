@@ -69,7 +69,10 @@ const TargetMovement = ({ initialPosition, children }) => {
   }, [targetVehicle, initialTilePosition]);
 
   useEffect(() => {
-    calculatePath(); // Recalculate the path when the target changes
+    // Recalculate the path when the target changes
+    if (targetVehicleTargetTile && tiles[targetVehicleTargetTile]) {
+      calculatePath(); // Ensure the path is recalculated when the target tile changes
+    }
   }, [targetVehicleTargetTile, tiles]);
 
   useFrame((_, delta) => {
@@ -201,7 +204,8 @@ const findPath = (startCoord, targetCoord, tiles) => {
       visited.add(currentCoord);
       const neighbors = tiles[currentCoord]?.neighbors || [];
       neighbors.forEach((neighbor) => {
-        if (!visited.has(neighbor)) {
+        if (!visited.has(neighbor) && tiles[neighbor]?.walkable !== false) {
+          // Only consider walkable tiles
           queue.push([...path, neighbor]);
         }
       });

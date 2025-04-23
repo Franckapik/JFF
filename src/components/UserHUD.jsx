@@ -3,7 +3,8 @@ import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import "../styles/App.css"; // Import CSS for styling
 
 const UserHUD = () => {
-  const selectedTile = useTileStore((state) => state.selectedTile); // Read selectedTile from the store
+  const selectedTileCoord = useTileStore((state) => state.selectedTile); // Get the selected tile's coordinate
+  const tile = useTileStore((state) => (selectedTileCoord ? state.tiles[selectedTileCoord] : null)); // Fetch the full tile data
   const randomVehicle = useTileStore((state) => state.randomVehicle); // Get random vehicle data
   const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle data
   const randomVehicleIsMoving = useTileStore((state) => state.randomVehicleIsMoving); // Get random vehicle movement status
@@ -18,30 +19,33 @@ const UserHUD = () => {
     <div className="user-hud">
       <div className="hud-column">
         <h3>Selection</h3>
-        {selectedTile ? (
+        {tile ? (
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             <li>
-              <strong>Coord :</strong> {selectedTile.coord}
+              <strong>Coord :</strong> {tile.coord || "N/A"}
             </li>
             <li>
-              <strong>Position :</strong> x: {selectedTile.position.x.toFixed(2)}, y:{" "}
-              {selectedTile.position.y.toFixed(2)}, z: {selectedTile.position.z.toFixed(2)}
+              <strong>Position :</strong> x: {tile.position?.x.toFixed(2) || "N/A"}, y:{" "}
+              {tile.position?.y.toFixed(2) || "N/A"}, z: {tile.position?.z.toFixed(2) || "N/A"}
             </li>
             <li>
-              <strong>Coordinates :</strong> q: {selectedTile.coordinates.q}, r:{" "}
-              {selectedTile.coordinates.r}
+              <strong>Coordinates :</strong> q: {tile.coordinates?.q || "N/A"}, r:{" "}
+              {tile.coordinates?.r || "N/A"}
             </li>
             <li>
-              <strong>Walkable :</strong> {selectedTile.walkable ? "Oui" : "Non"}
+              <strong>Walkable :</strong> {tile.walkable ? "Oui" : "Non"}
             </li>
             <li>
-              <strong>Explored :</strong> {selectedTile.explored ? "Oui" : "Non"}
+              <strong>Explored :</strong> {tile.explored ? "Oui" : "Non"}
             </li>
             <li>
-              <strong>Danger :</strong> {selectedTile.danger ? "Oui" : "Non"}
+              <strong>Danger :</strong> {tile.danger ? "Oui" : "Non"}
             </li>
             <li>
-              <strong>Neighbors :</strong> {selectedTile.neighbors.join(", ")}
+              <strong>Outer :</strong> {tile.outer ? "Oui" : "Non"}
+            </li>
+            <li>
+              <strong>Neighbors :</strong> {tile.neighbors?.join(", ") || "N/A"}
             </li>
           </ul>
         ) : (

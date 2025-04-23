@@ -16,7 +16,7 @@ export const useTileStore = create((set, get) => ({
   targetDamage: 0, // Initial damage level for the target vehicle
 
   setTiles: (newTiles) => set({ tiles: newTiles }),
-  setSelectedTile: (tile) => set({ selectedTile: tile }), // Setter for selectedTile
+  setSelectedTile: (tileCoord) => set({ selectedTile: tileCoord }), // Ensure selectedTile is a coordinate
   setRandomVehicle: (vehicle) => set({ randomVehicle: vehicle }), // Setter for random vehicle
   setTargetVehicle: (vehicle) => set({ targetVehicle: vehicle }), // Setter for target vehicle
   setRandomVehicleTargetTile: (tileCoord) => set({ randomVehicleTargetTile: tileCoord }), // Setter for target tile
