@@ -11,6 +11,8 @@ const UserHUD = () => {
   const targetVehicleProgress = useTileStore((state) => state.targetVehicleProgress); // Get target vehicle progress
   const randomVehicleStartCoord = useTileStore((state) => state.randomVehicleStartCoord); // Get random vehicle start coord
   const targetVehicleStartCoord = useTileStore((state) => state.targetVehicleStartCoord); // Get target vehicle start coord
+  const targetFuel = useTileStore((state) => state.targetFuel); // Get targetFuel from the store
+  const targetDamage = useTileStore((state) => state.targetDamage); // Get targetDamage from the store
 
   return (
     <div className="user-hud">
@@ -94,7 +96,14 @@ const UserHUD = () => {
       </div>
       <div className="hud-column">
         <h3>Indicateur</h3>
-        {/* Add content for Indicateur */}
+        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+          <li>
+            <strong>Fuel:</strong> {targetFuel}%
+          </li>
+          <li>
+            <strong>Damage:</strong> {targetDamage}%
+          </li>
+        </ul>
       </div>
     </div>
   );
