@@ -69,7 +69,10 @@ const TargetMovement = ({ initialPosition, children }) => {
   }, [targetVehicle, initialTilePosition]);
 
   useEffect(() => {
-    calculatePath(); // Recalculate the path when the target changes
+    // Recalculate the path when the target changes
+    if (targetVehicleTargetTile && tiles[targetVehicleTargetTile]) {
+      calculatePath(); // Ensure the path is recalculated when the target tile changes
+    }
   }, [targetVehicleTargetTile, tiles]);
 
   useFrame((_, delta) => {

@@ -36,6 +36,7 @@ const Scene = () => {
         explored: hex.explored,
         danger: hex.danger,
         color: hex.color,
+        outer: hex.outer, // Use the outer property from generation
       };
       return acc;
     }, {});
@@ -96,26 +97,8 @@ const Scene = () => {
       return; // Prevent setting a new target if the vehicle is moving
     }
 
-    const tile = tiles[tileCoord]; // Fetch the latest tile data from the store
-    if (tile && tile.coord) { // Ensure tile and tile.coord are valid
-      setSelectedTile({
-        coord: tile.coord,
-        position: tile.position,
-        coordinates: {
-          q: tile.coord.charCodeAt(0) - 65 - radius, // Decode q using charCodeAt
-          r: parseInt(tile.coord.slice(1)) - radius, // Decode r using parseInt
-        },
-        walkable: tile.walkable,
-        explored: tile.explored,
-        danger: tile.danger,
-        neighbors: tile.neighbors,
-      });
-
-      // Update the target vehicle's destination in the store
-      setTargetVehicleTargetTile(tile.coord);
-    } else {
-      console.error("Invalid tile or coord:", tile);
-    }
+    setSelectedTile(tileCoord); // Store only the tile's coordinate
+    setTargetVehicleTargetTile(tileCoord); // Mark the selected tile as the target destination
   };
 
   return (

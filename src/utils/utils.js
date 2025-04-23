@@ -35,6 +35,9 @@ export function generateHexPositions(radius, spacing) {
           )
           .map((neighbor) => encodeCoord(neighbor.q, neighbor.r)); // Encode neighbors
 
+        // Déterminer si la tuile est "outer"
+        const outer = neighbors.length < 6;
+
         hexPositions.push({
           coord: encodeCoord(q, r), // Encode q and r as a letter-number coordinate
           position: { x, y: 0, z },
@@ -43,6 +46,7 @@ export function generateHexPositions(radius, spacing) {
           danger: Math.random() < 0.1, // 10% de chance d'avoir un danger
           neighbors, // Encoded neighbors
           color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Couleur aléatoire
+          outer, // Propriété outer
         });
       }
     }
