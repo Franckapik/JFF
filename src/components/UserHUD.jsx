@@ -15,6 +15,7 @@ const UserHUD = () => {
   const targetFuel = useTileStore((state) => state.targetFuel); // Get targetFuel from the store
   const targetDamage = useTileStore((state) => state.targetDamage); // Get targetDamage from the store
   const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
+  const playerResources = useTileStore((state) => state.playerResources); // Get player resources from the store
 
   return (
     <div className="user-hud">
@@ -123,7 +124,7 @@ const UserHUD = () => {
             <strong>Damage:</strong> {targetDamage}%
           </li>
           <li>
-            <strong>Resources:</strong>
+            <strong>Target Vehicle Resources:</strong>
             <ul>
               <li>
                 <strong>Food:</strong> {targetVehicleResources.food}
@@ -133,6 +134,20 @@ const UserHUD = () => {
               </li>
               <li>
                 <strong>Special:</strong> {targetVehicleResources.special}
+              </li>
+            </ul>
+          </li>
+          <li>
+            <strong>Player Resources:</strong>
+            <ul>
+              <li>
+                <strong>Food:</strong> {playerResources.food}
+              </li>
+              <li>
+                <strong>Debris:</strong> {playerResources.debris}
+              </li>
+              <li>
+                <strong>Special:</strong> {playerResources.special}
               </li>
             </ul>
           </li>

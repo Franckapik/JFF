@@ -15,6 +15,7 @@ export const useTileStore = create((set, get) => ({
   targetFuel: 100, // Initial fuel level for the target vehicle
   targetDamage: 0, // Initial damage level for the target vehicle
   targetVehicleResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the target vehicle
+  playerResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the player
 
   setTiles: (newTiles) => set({ tiles: newTiles }),
   setSelectedTile: (tileCoord) => set({ selectedTile: tileCoord }), // Ensure selectedTile is a coordinate
@@ -35,6 +36,14 @@ export const useTileStore = create((set, get) => ({
         food: state.targetVehicleResources.food + (resources.food || 0),
         debris: state.targetVehicleResources.debris + (resources.debris || 0),
         special: state.targetVehicleResources.special + (resources.special || 0),
+      },
+    })),
+  setPlayerResources: (resources) =>
+    set((state) => ({
+      playerResources: {
+        food: state.playerResources.food + (resources.food || 0),
+        debris: state.playerResources.debris + (resources.debris || 0),
+        special: state.playerResources.special + (resources.special || 0),
       },
     })),
 
