@@ -46,6 +46,10 @@ export const useTileStore = create((set, get) => ({
         special: state.playerResources.special + (resources.special || 0),
       },
     })),
+  resetTargetVehicleResources: () =>
+    set(() => ({
+      targetVehicleResources: { food: 0, debris: 0, special: 0 },
+    })),
 
   getTile: (coord) => get().tiles[coord], // Return the tile directly
   getNeighbors: (coord) => {
