@@ -201,7 +201,8 @@ const findPath = (startCoord, targetCoord, tiles) => {
       visited.add(currentCoord);
       const neighbors = tiles[currentCoord]?.neighbors || [];
       neighbors.forEach((neighbor) => {
-        if (!visited.has(neighbor)) {
+        if (!visited.has(neighbor) && tiles[neighbor]?.walkable !== false) {
+          // Only consider walkable tiles
           queue.push([...path, neighbor]);
         }
       });
