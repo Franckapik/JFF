@@ -52,5 +52,18 @@ export function generateHexPositions(radius, spacing) {
     }
   }
 
+  // Randomly set two tiles as non-walkable
+  const walkableTiles = hexPositions.filter((tile) => tile.walkable && !tile.outer);
+  const randomIndices = [];
+  while (randomIndices.length < 2 && walkableTiles.length > 0) {
+    const randomIndex = Math.floor(Math.random() * walkableTiles.length);
+    if (!randomIndices.includes(randomIndex)) {
+      randomIndices.push(randomIndex);
+    }
+  }
+  randomIndices.forEach((index) => {
+    walkableTiles[index].walkable = false;
+  });
+
   return hexPositions;
 }
