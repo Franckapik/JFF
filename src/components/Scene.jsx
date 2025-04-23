@@ -59,25 +59,29 @@ const Scene = () => {
 
   useEffect(() => {
     // Set the initial random vehicle data (position and coord)
-    if (hexPositions.length > 0) {
-      const randomTile = hexPositions[Math.floor(Math.random() * hexPositions.length)];
+    const tileData = useTileStore.getState().tiles; // Access the latest tile data
+    const walkableTiles = Object.values(tileData).filter((tile) => tile.walkable); // Filter walkable tiles
+    if (walkableTiles.length > 0) {
+      const randomTile = walkableTiles[Math.floor(Math.random() * walkableTiles.length)];
       const randomVehicle = { position: randomTile.position, coord: randomTile.coord };
       setRandomVehiclePosition(randomTile.position); // Update local state
       setRandomVehicleInStore(randomVehicle); // Store combined data in Zustand
       setRandomVehicleStartCoord(randomTile.coord); // Store starting coord in Zustand
     }
-  }, [hexPositions, setRandomVehicleInStore, setRandomVehicleStartCoord]);
+  }, [setRandomVehicleInStore, setRandomVehicleStartCoord]);
 
   useEffect(() => {
     // Set the initial target vehicle data (position and coord)
-    if (hexPositions.length > 0) {
-      const randomTile = hexPositions[Math.floor(Math.random() * hexPositions.length)];
+    const tileData = useTileStore.getState().tiles; // Access the latest tile data
+    const walkableTiles = Object.values(tileData).filter((tile) => tile.walkable); // Filter walkable tiles
+    if (walkableTiles.length > 0) {
+      const randomTile = walkableTiles[Math.floor(Math.random() * walkableTiles.length)];
       const targetVehicle = { position: randomTile.position, coord: randomTile.coord };
       setTargetVehiclePosition(randomTile.position); // Update local state
       setTargetVehicleInStore(targetVehicle); // Store combined data in Zustand
       setTargetVehicleStartCoord(randomTile.coord); // Store starting coord in Zustand
     }
-  }, [hexPositions, setTargetVehicleInStore, setTargetVehicleStartCoord]);
+  }, [setTargetVehicleInStore, setTargetVehicleStartCoord]);
 
   // Configure the camera using useThree
   const { camera } = useThree();
