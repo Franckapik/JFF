@@ -39,6 +39,21 @@ const Scene = () => {
       };
       return acc;
     }, {});
+
+    // Randomly set two tiles as non-walkable and change their color to black
+    const tileCoords = Object.keys(tileData);
+    const randomIndices = [];
+    while (randomIndices.length < 2) {
+      const randomIndex = Math.floor(Math.random() * tileCoords.length);
+      if (!randomIndices.includes(randomIndex)) {
+        randomIndices.push(randomIndex);
+      }
+    }
+    randomIndices.forEach((index) => {
+      tileData[tileCoords[index]].walkable = false;
+      tileData[tileCoords[index]].color = "black"; // Set color to black
+    });
+
     setTiles(tileData); // Store tiles in Zustand
   }, [hexPositions, setTiles]);
 
