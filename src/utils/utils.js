@@ -84,7 +84,7 @@ export function generateHexPositions(radius, spacing) {
   targetVehicleTile.targetVehicleStart = true;
 
   hexPositions.forEach((tile) => {
-    if (tile.randomVehicleStart || tile.targetVehicleStart) {
+    if (tile.targetVehicleStart) {
       tile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on starting tiles
     }
   });
