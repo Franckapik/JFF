@@ -70,5 +70,24 @@ export function generateHexPositions(radius, spacing) {
     walkableTiles[index].walkable = false;
   });
 
-  return hexPositions;
+  // Randomly assign starting tiles for the random vehicle and the target vehicle
+  const availableTiles = hexPositions.filter((tile) => tile.walkable && !tile.outer);
+  const randomVehicleTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
+  let targetVehicleTile;
+  do {
+    targetVehicleTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
+  } while (targetVehicleTile.coord === randomVehicleTile.coord);
+
+  const startingTiles = {
+    randomVehicle: randomVehicleTile.coord,
+    targetVehicle: targetVehicleTile.coord,
+  };
+
+  hexPositions.forEach((tile) => {
+    if (tile.coord === startingTiles.randomVehicle || tile.coord === startingTiles.targetVehicle) {
+      tile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on starting tiles
+    }
+  });
+
+  return { hexPositions, startingTiles };
 }
