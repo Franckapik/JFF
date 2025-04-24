@@ -202,8 +202,8 @@
   height: 100vh;
 }
 
-/* Conteneur du Vehicle Selector */
-.vehicle-selector-container {
+/* Conteneur des sélecteurs */
+.selector-container {
   width: 100px;
   background-color: #f0f0f0;
   position: fixed; /* Fixe le conteneur sur le côté gauche */
@@ -233,4 +233,29 @@
 
 .vehicle-selector button:hover {
   background-color: #0056b3;
+}
+
+/* Boutons du Message Selector */
+.message-selector button {
+  margin-bottom: 10px;
+  padding: 10px;
+  cursor: pointer;
+  background-color: #28a745; /* Green background */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.message-selector button:hover {
+  background-color: #218838; /* Darker green on hover */
+}
+
+/* Style pour le Message Selector */
+.message-selector {
+  position: relative; /* Ensure proper positioning */
+  width: 100%; /* Match the width of the container */
+  display: flex;
+  justify-content: center;
 }
