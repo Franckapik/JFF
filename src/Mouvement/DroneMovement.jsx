@@ -24,6 +24,7 @@ const DroneMovement = ({ drone, children }) => {
     if (drone.targetTile) {
       // Si le drone a une tuile cible
       const targetTile = tiles[drone.targetTile];
+      
       if (targetTile) {
         targetPosition = new Vector3(
           targetTile.position.x,
@@ -39,12 +40,17 @@ const DroneMovement = ({ drone, children }) => {
         targetVehicle.position.z
       );
     }
+   
 
     if (targetPosition) {
-      const direction = new Vector3().subVectors(targetPosition, currentPosition);
+      // Ignore the y component when calculating the distance
+      const flatCurrentPosition = new Vector3(currentPosition.x, 0, currentPosition.z);
+      const flatTargetPosition = new Vector3(targetPosition.x, 0, targetPosition.z);
+      const direction = new Vector3().subVectors(flatTargetPosition, flatCurrentPosition);
       const distance = direction.length();
 
-      if (distance > 0.1) {
+
+      if (distance > 0.1) { // Adjust this threshold if necessary
         direction.normalize();
         groupRef.current.position.addScaledVector(direction, delta * 2); // Vitesse du drone
         groupRef.current.position.y = 1.5; // Maintain height of +1.5
@@ -52,8 +58,11 @@ const DroneMovement = ({ drone, children }) => {
       } else {
         groupRef.current.position.y = 1.5; // Maintain height of +1.5
         updateDrone(drone.id, { isMoving: false, targetTile: null });
+
       }
     }
+
+    
   });
 
   return (
