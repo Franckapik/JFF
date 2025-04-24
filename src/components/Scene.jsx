@@ -59,7 +59,11 @@ const Scene = () => {
 
   useEffect(() => {
     const initialDrones = generateInitialDrones(1, 2); // Generate only 1 drone
-    setDrones(initialDrones);
+    if (Array.isArray(initialDrones)) {
+      setDrones(initialDrones); // Ensure setDrones is called with an array
+    } else {
+      console.error("generateInitialDrones did not return an array:", initialDrones);
+    }
   }, [setDrones]);
 
   // Configure the camera using useThree
@@ -70,13 +74,27 @@ const Scene = () => {
   }, [camera]);
 
   const handleTileClick = (tileCoord) => {
-    if (targetVehicleIsMoving) {
-      console.warn("Cannot set a new target while the target vehicle is moving.");
-      return; // Prevent setting a new target if the vehicle is moving
+    if (!selectedVehicle) {
+      console.warn("No vehicle selected. Please select a vehicle first.");
+      return; // Prevent setting a target if no vehicle is selected
     }
-
-    setSelectedTile(tileCoord); // Store only the tile's coordinate
-    setTargetVehicleTargetTile(tileCoord); // Mark the selected tile as the target destination
+  
+    if (selectedVehicle.id === "targetVehicle") {
+      if (targetVehicleIsMoving) {
+        console.warn("Cannot set a new target while the target vehicle is moving.");
+        return; // Prevent setting a new target if the vehicle is moving
+      }
+      setTargetVehicleTargetTile(tileCoord); // Set the target tile for the target vehicle
+    } else {
+      // Handle drones
+      setDrones((prevDrones) =>
+        prevDrones.map((drone) =>
+          drone.id === selectedVehicle.id ? { ...drone, targetTile: tileCoord } : drone
+        )
+      );
+    }
+  
+    setSelectedTile(tileCoord); // Store the clicked tile's coordinate
   };
 
   const handleVehicleClick = (vehicle) => {

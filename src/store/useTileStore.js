@@ -16,7 +16,7 @@ export const useTileStore = create((set, get) => ({
   targetDamage: 0, // Initial damage level for the target vehicle
   targetVehicleResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the target vehicle
   playerResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the player
-  drones: [], // Liste des drones
+  drones: [], // Ensure drones is initialized as an empty array
   selectedVehicle: null, // Currently selected vehicle (drone or target vehicle)
 
   setTiles: (newTiles) => set({ tiles: newTiles }),
@@ -52,7 +52,15 @@ export const useTileStore = create((set, get) => ({
     set(() => ({
       targetVehicleResources: { food: 0, debris: 0, special: 0 },
     })),
-  setDrones: (newDrones) => set({ drones: newDrones }),
+  setDrones: (newDrones) => {
+    if (typeof newDrones === "function") {
+      set((state) => ({ drones: newDrones(state.drones) })); // Allow functional updates
+    } else if (Array.isArray(newDrones)) {
+      set({ drones: newDrones }); // Ensure only arrays are set
+    } else {
+      console.error("setDrones expects an array or a function but received:", newDrones);
+    }
+  },
   updateDrone: (id, updates) =>
     set((state) => ({
       drones: state.drones.map((drone) =>

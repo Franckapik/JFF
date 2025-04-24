@@ -95,16 +95,16 @@ export function generateHexPositions(radius, spacing) {
 
 export function generateInitialDrones(count, spacing = 1) {
   const drones = [];
-  // for (let i = 0; i < count; i++) { // Commented out loop for multiple drones
-  const angle = 0; // Single drone at angle 0
-  const x = Math.cos(angle) * spacing;
-  const z = Math.sin(angle) * spacing;
-  drones.push({
-    id: 1, // Single drone with ID 1
-    position: { x, y: 0, z },
-    isMoving: false,
-    targetTile: null,
-  });
-  // }
-  return drones;
+  if (count > 0) {
+    const angle = 0; // Single drone at angle 0
+    const x = Math.cos(angle) * spacing;
+    const z = Math.sin(angle) * spacing;
+    drones.push({
+      id: 1, // Single drone with ID 1
+      position: { x, y: 0, z },
+      isMoving: false,
+      targetTile: null,
+    });
+  }
+  return drones; // Always return an array
 }
