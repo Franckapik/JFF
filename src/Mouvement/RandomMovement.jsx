@@ -19,7 +19,7 @@ const RandomMovement = ({ initialPosition, children }) => {
   const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle from the store
   const setTargetDamage = useTileStore((state) => state.setTargetDamage); // Setter for targetDamage
   const targetDamage = useTileStore((state) => state.targetDamage); // Get targetDamage from the store
-  const speed = 0.5; // Movement speed (units per second)
+  const speed = 0.08; // Movement speed (units per second)
   const rotationSpeed = 2; // Rotation interpolation speed
   const [processedOverlap, setProcessedOverlap] = useState(false); // Track if overlap has been processed for the current tile
 

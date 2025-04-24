@@ -10,7 +10,7 @@ import TargetMovement from "../Mouvement/TargetMovement"; // Import TargetMoveme
 import DroneMovement from "../Mouvement/DroneMovement"; // Import DroneMovement component
 
 const Scene = () => {
-  const radius = 2; // Define the radius value
+  const radius = 3; // Augmentez le rayon à 3 pour inclure un troisième cercle de tuiles
   const setTiles = useTileStore((state) => state.setTiles); // Zustand setter for tiles
   const setSelectedTile = useTileStore((state) => state.setSelectedTile); // Zustand setter for selectedTile
   const tiles = useTileStore((state) => state.tiles); // Zustand tiles state
