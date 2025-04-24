@@ -54,8 +54,9 @@ const Scene = () => {
       setTargetVehiclePosition(targetTile.position); // Update local state
       setTargetVehicleInStore(targetVehicle); // Store combined data in Zustand
       setTargetVehicleStartCoord(targetTile.coord); // Store starting coord in Zustand
+      setSelectedVehicle({ id: "targetVehicle", type: "Vaisseau", ...targetVehicle }); // Select target vehicle by default
     }
-  }, [hexPositions, setTargetVehicleInStore, setTargetVehicleStartCoord]);
+  }, [hexPositions, setTargetVehicleInStore, setTargetVehicleStartCoord, setSelectedVehicle]);
 
   useEffect(() => {
     const initialDrones = generateInitialDrones(1, 2); // Generate only 1 drone
