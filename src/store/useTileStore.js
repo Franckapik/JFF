@@ -71,4 +71,12 @@ export const useTileStore = create((set, get) => ({
       setTargetDamage(Math.min(targetDamage + 10, 100)); // Increase damage by 10%, max 100%
     }
   },
+  markTileAsCollected: (coord) =>
+    set((state) => {
+      const updatedTiles = { ...state.tiles };
+      if (updatedTiles[coord]) {
+        updatedTiles[coord].collected = true; // Mark the tile as collected
+      }
+      return { tiles: updatedTiles };
+    }),
 }));

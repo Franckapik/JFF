@@ -19,6 +19,7 @@ const TargetMovement = ({ initialPosition, children }) => {
   const setPlayerResources = useTileStore((state) => state.setPlayerResources); // Setter for player resources
   const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
   const resetTargetVehicleResources = useTileStore((state) => state.resetTargetVehicleResources); // Import reset function
+  const markTileAsCollected = useTileStore((state) => state.markTileAsCollected); // Import markTileAsCollected function
 
   const speed = 1; // Movement speed (units per second)
   const rotationSpeed = 2; // Rotation interpolation speed
@@ -153,10 +154,11 @@ const TargetMovement = ({ initialPosition, children }) => {
           });
 
           // Add the resources of the destination tile to the target vehicle's resources
-          if (!resourcesCollected) {
+          if (!resourcesCollected && !currentTargetTile.collected) {
             const destinationTile = tiles[currentTargetCoord];
             if (destinationTile && destinationTile.resources) {
               setTargetVehicleResources(destinationTile.resources); // Add resources to the target vehicle
+              markTileAsCollected(currentTargetCoord); // Mark the tile as collected
             }
             setResourcesCollected(true); // Mark resources as collected
           }

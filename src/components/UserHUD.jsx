@@ -41,6 +41,9 @@ const UserHUD = () => {
               <strong>Explored :</strong> {tile.explored ? "Oui" : "Non"}
             </li>
             <li>
+              <strong>Collected :</strong> {tile.collected ? "Oui" : "Non"}
+            </li>
+            <li>
               <strong>Danger :</strong> {tile.danger ? "Oui" : "Non"}
             </li>
             <li>

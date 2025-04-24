@@ -43,6 +43,7 @@ export function generateHexPositions(radius, spacing) {
           position: { x, y: 0, z },
           walkable: true, // Par défaut, la tuile est accessible
           explored: false, // Par défaut, la tuile n'est pas explorée
+          collected: false, // Par défaut, la tuile n'est pas collectée
           danger: Math.random() < 0.1, // 10% de chance d'avoir un danger
           neighbors, // Encoded neighbors
           color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Couleur aléatoire
