@@ -58,6 +58,9 @@ const UserHUD = () => {
               <strong>Target Vehicle Start :</strong> {tile.targetVehicleStart ? "Oui" : "Non"}
             </li>
             <li>
+              <strong>Immunity :</strong> {tile.immunity ? "Oui" : "Non"}
+            </li>
+            <li>
               <strong>Neighbors :</strong> {tile.neighbors?.join(", ") || "N/A"}
             </li>
             <li>

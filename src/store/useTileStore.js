@@ -104,9 +104,16 @@ export const useTileStore = create((set, get) => ({
     });
   },
   checkVehicleOverlap: () => {
-    const { randomVehicle, targetVehicle, setTargetDamage, targetDamage } = get();
-    if (randomVehicle?.coord && targetVehicle?.coord && randomVehicle.coord === targetVehicle.coord) {
-      setTargetDamage(Math.min(targetDamage + 10, 100)); // Increase damage by 10%, max 100%
+    const { randomVehicle, targetVehicle, setTargetDamage, targetDamage, tiles } = get();
+    if (
+      randomVehicle?.coord &&
+      targetVehicle?.coord &&
+      randomVehicle.coord === targetVehicle.coord
+    ) {
+      const targetTile = tiles[targetVehicle.coord];
+      if (!targetTile?.immunity) {
+        setTargetDamage(Math.min(targetDamage + 10, 100)); // Increase damage by 10%, max 100%
+      }
     }
   },
   markTileAsCollected: (coord) =>

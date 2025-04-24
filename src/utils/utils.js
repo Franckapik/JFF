@@ -55,6 +55,8 @@ export function generateHexPositions(radius, spacing) {
           },
           randomVehicleStart: false, // Default value
           targetVehicleStart: false, // Default value
+          fuelStation: false, // Default value for fuel station
+          immunity: Math.random() < 0.1, // 10% chance of immunity
         });
       }
     }
@@ -89,6 +91,28 @@ export function generateHexPositions(radius, spacing) {
       tile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on starting tiles
     }
   });
+
+  // Place a fuel station at exactly three tiles away from the target vehicle's starting tile,
+  // excluding its neighbors
+  const targetVehicleNeighbors = new Set(targetVehicleTile.neighbors);
+  const fuelStationCandidates = hexPositions.filter((tile) => {
+    const distance = Math.abs(tile.coord.charCodeAt(0) - targetVehicleTile.coord.charCodeAt(0)) +
+                     Math.abs(parseInt(tile.coord.slice(1)) - parseInt(targetVehicleTile.coord.slice(1)));
+    return (
+      distance === 3 &&
+      tile.walkable &&
+      !tile.targetVehicleStart &&
+      !targetVehicleNeighbors.has(tile.coord) // Exclude neighbors of the target vehicle's starting tile
+    );
+  });
+
+  if (fuelStationCandidates.length > 0) {
+    const fuelStationTile = fuelStationCandidates[Math.floor(Math.random() * fuelStationCandidates.length)];
+    fuelStationTile.fuelStation = true;
+    fuelStationTile.color = "black"; // Bright red color for the fuel station
+    fuelStationTile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on the fuel station tile
+    fuelStationTile.immunity = true; // Set immunity to true for the fuel station tile
+  }
 
   return hexPositions;
 }
