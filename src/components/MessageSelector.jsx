@@ -1,8 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
+import MessageModal from "./MessageModal";
 
 const MessageSelector = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const messages = [
+    { droneId: 1, text: "Mission accomplie sur la tuile A3." },
+    { droneId: 2, text: "Obstacle détecté sur la route vers B4." },
+    { droneId: 3, text: "Ressources collectées sur la tuile C2." },
+  ];
+
   const handleViewMessages = () => {
-    alert("Voici les messages envoyés par les drones !");
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
   };
 
   return (
@@ -17,6 +30,7 @@ const MessageSelector = () => {
           </button>
         </li>
       </ul>
+      {isModalOpen && <MessageModal messages={messages} onClose={handleCloseModal} />}
     </div>
   );
 };
