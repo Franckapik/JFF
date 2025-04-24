@@ -153,8 +153,8 @@ const TargetMovement = ({ initialPosition, children }) => {
             coord: currentTargetCoord,
           });
 
-          // Add the resources of the destination tile to the target vehicle's resources
-          if (!resourcesCollected && !currentTargetTile.collected) {
+          // Prevent resource collection on the starting tile
+          if (!currentTargetTile.targetVehicleStart && !resourcesCollected && !currentTargetTile.collected) {
             const destinationTile = tiles[currentTargetCoord];
             if (destinationTile && destinationTile.resources) {
               setTargetVehicleResources(destinationTile.resources); // Add resources to the target vehicle
