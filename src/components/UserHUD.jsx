@@ -14,6 +14,8 @@ const UserHUD = () => {
   const targetVehicleStartCoord = useTileStore((state) => state.targetVehicleStartCoord); // Get target vehicle start coord
   const targetFuel = useTileStore((state) => state.targetFuel); // Get targetFuel from the store
   const targetDamage = useTileStore((state) => state.targetDamage); // Get targetDamage from the store
+  const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
+  const playerResources = useTileStore((state) => state.playerResources); // Get player resources from the store
 
   return (
     <div className="user-hud">
@@ -39,13 +41,36 @@ const UserHUD = () => {
               <strong>Explored :</strong> {tile.explored ? "Oui" : "Non"}
             </li>
             <li>
+              <strong>Collected :</strong> {tile.collected ? "Oui" : "Non"}
+            </li>
+            <li>
               <strong>Danger :</strong> {tile.danger ? "Oui" : "Non"}
             </li>
             <li>
               <strong>Outer :</strong> {tile.outer ? "Oui" : "Non"}
             </li>
             <li>
+              <strong>Random Vehicle Start :</strong> {tile.randomVehicleStart ? "Oui" : "Non"}
+            </li>
+            <li>
+              <strong>Target Vehicle Start :</strong> {tile.targetVehicleStart ? "Oui" : "Non"}
+            </li>
+            <li>
               <strong>Neighbors :</strong> {tile.neighbors?.join(", ") || "N/A"}
+            </li>
+            <li>
+              <strong>Resources:</strong>
+              <ul>
+                <li>
+                  <strong>Food:</strong> {tile.resources?.food || 0}
+                </li>
+                <li>
+                  <strong>Debris:</strong> {tile.resources?.debris || 0}
+                </li>
+                <li>
+                  <strong>Special:</strong> {tile.resources?.special || 0}
+                </li>
+              </ul>
             </li>
           </ul>
         ) : (
@@ -106,6 +131,34 @@ const UserHUD = () => {
           </li>
           <li>
             <strong>Damage:</strong> {targetDamage}%
+          </li>
+          <li>
+            <strong>Target Vehicle Resources:</strong>
+            <ul>
+              <li>
+                <strong>Food:</strong> {targetVehicleResources.food}
+              </li>
+              <li>
+                <strong>Debris:</strong> {targetVehicleResources.debris}
+              </li>
+              <li>
+                <strong>Special:</strong> {targetVehicleResources.special}
+              </li>
+            </ul>
+          </li>
+          <li>
+            <strong>Player Resources:</strong>
+            <ul>
+              <li>
+                <strong>Food:</strong> {playerResources.food}
+              </li>
+              <li>
+                <strong>Debris:</strong> {playerResources.debris}
+              </li>
+              <li>
+                <strong>Special:</strong> {playerResources.special}
+              </li>
+            </ul>
           </li>
         </ul>
       </div>

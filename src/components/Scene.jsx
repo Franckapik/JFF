@@ -21,55 +21,35 @@ const Scene = () => {
   const setTargetVehicleStartCoord = useTileStore((state) => state.setTargetVehicleStartCoord); // Zustand setter
 
   const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
-  const [animatedIndex, setAnimatedIndex] = useState(null); // Removed random initialization
-  const [randomVehiclePosition, setRandomVehiclePosition] = useState(null); // Renamed from cubePosition
+  const [randomVehiclePosition, setRandomVehiclePosition] = useState(null); // State for random vehicle position
   const [targetVehiclePosition, setTargetVehiclePosition] = useState(null); // State for target vehicle position
 
   useEffect(() => {
-    // Map hexPositions to the Zustand store format
-    const tileData = hexPositions.reduce((acc, hex) => {
-      acc[hex.coord] = {
-        coord: hex.coord, // Use encoded coord
-        position: hex.position,
-        neighbors: hex.neighbors, // Already encoded
-        walkable: hex.walkable,
-        explored: hex.explored,
-        danger: hex.danger,
-        color: hex.color,
-        outer: hex.outer, // Use the outer property from generation
-      };
-      return acc;
-    }, {});
-
-
-    setTiles(tileData); // Store tiles in Zustand
+    // Directly set tiles in Zustand store
+    setTiles(hexPositions.reduce((acc, tile) => ({ ...acc, [tile.coord]: tile }), {}));
   }, [hexPositions, setTiles]);
 
   useEffect(() => {
     // Set the initial random vehicle data (position and coord)
-    const tileData = useTileStore.getState().tiles; // Access the latest tile data
-    const walkableTiles = Object.values(tileData).filter((tile) => tile.walkable); // Filter walkable tiles
-    if (walkableTiles.length > 0) {
-      const randomTile = walkableTiles[Math.floor(Math.random() * walkableTiles.length)];
+    const randomTile = hexPositions.find((tile) => tile.randomVehicleStart);
+    if (randomTile) {
       const randomVehicle = { position: randomTile.position, coord: randomTile.coord };
       setRandomVehiclePosition(randomTile.position); // Update local state
       setRandomVehicleInStore(randomVehicle); // Store combined data in Zustand
       setRandomVehicleStartCoord(randomTile.coord); // Store starting coord in Zustand
     }
-  }, [setRandomVehicleInStore, setRandomVehicleStartCoord]);
+  }, [hexPositions, setRandomVehicleInStore, setRandomVehicleStartCoord]);
 
   useEffect(() => {
     // Set the initial target vehicle data (position and coord)
-    const tileData = useTileStore.getState().tiles; // Access the latest tile data
-    const walkableTiles = Object.values(tileData).filter((tile) => tile.walkable); // Filter walkable tiles
-    if (walkableTiles.length > 0) {
-      const randomTile = walkableTiles[Math.floor(Math.random() * walkableTiles.length)];
-      const targetVehicle = { position: randomTile.position, coord: randomTile.coord };
-      setTargetVehiclePosition(randomTile.position); // Update local state
+    const targetTile = hexPositions.find((tile) => tile.targetVehicleStart);
+    if (targetTile) {
+      const targetVehicle = { position: targetTile.position, coord: targetTile.coord };
+      setTargetVehiclePosition(targetTile.position); // Update local state
       setTargetVehicleInStore(targetVehicle); // Store combined data in Zustand
-      setTargetVehicleStartCoord(randomTile.coord); // Store starting coord in Zustand
+      setTargetVehicleStartCoord(targetTile.coord); // Store starting coord in Zustand
     }
-  }, [setTargetVehicleInStore, setTargetVehicleStartCoord]);
+  }, [hexPositions, setTargetVehicleInStore, setTargetVehicleStartCoord]);
 
   // Configure the camera using useThree
   const { camera } = useThree();
@@ -94,8 +74,8 @@ const Scene = () => {
       <ambientLight intensity={1} /> {/* Increased ambient light intensity */}
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow /> {/* Adjusted directional light */}
       <pointLight position={[-5, 10, -5]} intensity={0.8} /> {/* Adjusted point light */}
-      {randomVehiclePosition && ( // Updated variable name
-        <RandomMovement initialPosition={randomVehiclePosition}> {/* Updated variable name */}
+      {randomVehiclePosition && (
+        <RandomMovement initialPosition={randomVehiclePosition}>
           <Box args={[0.5, 0.5, 0.5]} castShadow>
             <meshStandardMaterial attach="material" color="blue" />
           </Box>
@@ -109,14 +89,14 @@ const Scene = () => {
         </TargetMovement>
       )}
       {Object.values(tiles)
-        .filter((tile) => tile.walkable) // Only render walkable tiles
+        .filter((tile) => tile.walkable) // Ensure only walkable tiles are rendered
         .map((tile) => (
           <Tile
             key={tile.coord}
-            position={[tile.position.x, 0, tile.position.z]} // Removed animation logic
+            position={[tile.position.x, 0, tile.position.z]}
             radius={1}
             color={tile.color}
-            onClick={() => handleTileClick(tile.coord)} // Removed animation trigger
+            onClick={() => handleTileClick(tile.coord)}
           />
         ))}
     </>

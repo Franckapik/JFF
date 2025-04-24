@@ -14,6 +14,8 @@ export const useTileStore = create((set, get) => ({
   targetVehicleStartCoord: null, // Starting coord for the target vehicle
   targetFuel: 100, // Initial fuel level for the target vehicle
   targetDamage: 0, // Initial damage level for the target vehicle
+  targetVehicleResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the target vehicle
+  playerResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the player
 
   setTiles: (newTiles) => set({ tiles: newTiles }),
   setSelectedTile: (tileCoord) => set({ selectedTile: tileCoord }), // Ensure selectedTile is a coordinate
@@ -28,6 +30,26 @@ export const useTileStore = create((set, get) => ({
   setTargetVehicleStartCoord: (coord) => set({ targetVehicleStartCoord: coord }), // Setter for target vehicle start coord
   setTargetFuel: (fuel) => set({ targetFuel: fuel }), // Setter for targetFuel
   setTargetDamage: (damage) => set({ targetDamage: damage }), // Setter for targetDamage
+  setTargetVehicleResources: (resources) =>
+    set((state) => ({
+      targetVehicleResources: {
+        food: state.targetVehicleResources.food + (resources.food || 0),
+        debris: state.targetVehicleResources.debris + (resources.debris || 0),
+        special: state.targetVehicleResources.special + (resources.special || 0),
+      },
+    })),
+  setPlayerResources: (resources) =>
+    set((state) => ({
+      playerResources: {
+        food: state.playerResources.food + (resources.food || 0),
+        debris: state.playerResources.debris + (resources.debris || 0),
+        special: state.playerResources.special + (resources.special || 0),
+      },
+    })),
+  resetTargetVehicleResources: () =>
+    set(() => ({
+      targetVehicleResources: { food: 0, debris: 0, special: 0 },
+    })),
 
   getTile: (coord) => get().tiles[coord], // Return the tile directly
   getNeighbors: (coord) => {
@@ -49,4 +71,12 @@ export const useTileStore = create((set, get) => ({
       setTargetDamage(Math.min(targetDamage + 10, 100)); // Increase damage by 10%, max 100%
     }
   },
+  markTileAsCollected: (coord) =>
+    set((state) => {
+      const updatedTiles = { ...state.tiles };
+      if (updatedTiles[coord]) {
+        updatedTiles[coord].collected = true; // Mark the tile as collected
+      }
+      return { tiles: updatedTiles };
+    }),
 }));

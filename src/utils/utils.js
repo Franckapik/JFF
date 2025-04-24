@@ -43,10 +43,18 @@ export function generateHexPositions(radius, spacing) {
           position: { x, y: 0, z },
           walkable: true, // Par défaut, la tuile est accessible
           explored: false, // Par défaut, la tuile n'est pas explorée
+          collected: false, // Par défaut, la tuile n'est pas collectée
           danger: Math.random() < 0.1, // 10% de chance d'avoir un danger
           neighbors, // Encoded neighbors
           color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Couleur aléatoire
           outer, // Propriété outer
+          resources: {
+            food: Math.floor(Math.random() * 101), // Random food quantity (0-100)
+            debris: Math.floor(Math.random() * 10001), // Random debris quantity (0-10000)
+            special: Math.floor(Math.random() * 3), // Random special quantity (0-2)
+          },
+          randomVehicleStart: false, // Default value
+          targetVehicleStart: false, // Default value
         });
       }
     }
@@ -63,6 +71,23 @@ export function generateHexPositions(radius, spacing) {
   }
   randomIndices.forEach((index) => {
     walkableTiles[index].walkable = false;
+  });
+
+  // Randomly assign starting tiles for the random vehicle and the target vehicle
+  const availableTiles = hexPositions.filter((tile) => tile.walkable && !tile.outer);
+  const randomVehicleTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
+  let targetVehicleTile;
+  do {
+    targetVehicleTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
+  } while (targetVehicleTile.coord === randomVehicleTile.coord);
+
+  randomVehicleTile.randomVehicleStart = true;
+  targetVehicleTile.targetVehicleStart = true;
+
+  hexPositions.forEach((tile) => {
+    if (tile.targetVehicleStart) {
+      tile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on starting tiles
+    }
   });
 
   return hexPositions;

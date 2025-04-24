@@ -15,14 +15,21 @@ const TargetMovement = ({ initialPosition, children }) => {
   const targetFuel = useTileStore((state) => state.targetFuel); // Get targetFuel from the store
   const setTargetFuel = useTileStore((state) => state.setTargetFuel); // Setter for targetFuel
   const targetVehicleStartCoord = useTileStore((state) => state.targetVehicleStartCoord); // Get initial coord
+  const setTargetVehicleResources = useTileStore((state) => state.setTargetVehicleResources); // Setter for target vehicle resources
+  const setPlayerResources = useTileStore((state) => state.setPlayerResources); // Setter for player resources
+  const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
+  const resetTargetVehicleResources = useTileStore((state) => state.resetTargetVehicleResources); // Import reset function
+  const markTileAsCollected = useTileStore((state) => state.markTileAsCollected); // Import markTileAsCollected function
 
-  const speed = 0.5; // Movement speed (units per second)
+  const speed = 1; // Movement speed (units per second)
   const rotationSpeed = 2; // Rotation interpolation speed
   const [path, setPath] = useState([]); // List of intermediate tiles
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index of the current target tile
   const [initialTilePosition, setInitialTilePosition] = useState(null); // Position of the initial tile
   const [totalPathDistance, setTotalPathDistance] = useState(0); // Total distance of the path
   const [distanceTraveled, setDistanceTraveled] = useState(0); // Distance traveled so far
+  const [resourcesCollected, setResourcesCollected] = useState(false); // Track if resources have been collected
+  const [resourcesTransferred, setResourcesTransferred] = useState(false); // Track if resources have been transferred
 
   const calculatePath = () => {
     if (groupRef.current && targetVehicleTargetTile) {
@@ -72,6 +79,7 @@ const TargetMovement = ({ initialPosition, children }) => {
     // Recalculate the path when the target changes
     if (targetVehicleTargetTile && tiles[targetVehicleTargetTile]) {
       calculatePath(); // Ensure the path is recalculated when the target tile changes
+      setResourcesCollected(false); // Reset resourcesCollected for the new target
     }
   }, [targetVehicleTargetTile, tiles]);
 
@@ -145,9 +153,25 @@ const TargetMovement = ({ initialPosition, children }) => {
             coord: currentTargetCoord,
           });
 
-          // Reset fuel to 100% if the target vehicle returns to its initial position
-          if (currentTargetCoord === targetVehicleStartCoord) {
+          // Prevent resource collection on the starting tile
+          if (!currentTargetTile.targetVehicleStart && !resourcesCollected && !currentTargetTile.collected) {
+            const destinationTile = tiles[currentTargetCoord];
+            if (destinationTile && destinationTile.resources) {
+              setTargetVehicleResources(destinationTile.resources); // Add resources to the target vehicle
+              markTileAsCollected(currentTargetCoord); // Mark the tile as collected
+            }
+            setResourcesCollected(true); // Mark resources as collected
+          }
+
+          // Reset fuel to 100%, transfer resources to the player, and reset target vehicle resources
+          const isStartingTile = tiles[currentTargetCoord]?.targetVehicleStart;
+          if (isStartingTile && !resourcesTransferred) {
             setTargetFuel(100); // Reset fuel to 100%
+            setPlayerResources(targetVehicleResources); // Transfer resources to the player's resources
+            resetTargetVehicleResources(); // Reset target vehicle resources using the store function
+            setResourcesTransferred(true); // Mark resources as transferred
+          } else if (!isStartingTile) {
+            setResourcesTransferred(false); // Reset the transfer flag when leaving the starting tile
           }
 
           setTargetVehicleIsMoving(false); // Set isMoving to false when target is reached
