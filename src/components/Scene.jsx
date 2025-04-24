@@ -25,25 +25,8 @@ const Scene = () => {
   const [targetVehiclePosition, setTargetVehiclePosition] = useState(null); // State for target vehicle position
 
   useEffect(() => {
-    // Map hexPositions to the Zustand store format
-    const tileData = hexPositions.reduce((acc, hex) => {
-      acc[hex.coord] = {
-        coord: hex.coord, // Use encoded coord
-        position: hex.position,
-        neighbors: hex.neighbors, // Already encoded
-        walkable: hex.walkable,
-        explored: hex.explored,
-        danger: hex.danger,
-        color: hex.color,
-        outer: hex.outer, // Use the outer property from generation
-        resources: hex.resources, // Include resources (food, debris, special)
-        randomVehicleStart: hex.randomVehicleStart, // Include random vehicle start flag
-        targetVehicleStart: hex.targetVehicleStart, // Include target vehicle start flag
-      };
-      return acc;
-    }, {});
-
-    setTiles(tileData); // Store tiles in Zustand
+    // Directly set tiles in Zustand store
+    setTiles(hexPositions.reduce((acc, tile) => ({ ...acc, [tile.coord]: tile }), {}));
   }, [hexPositions, setTiles]);
 
   useEffect(() => {
