@@ -202,8 +202,8 @@
   height: 100vh;
 }
 
-/* Conteneur du Vehicle Selector */
-.vehicle-selector-container {
+/* Conteneur des sélecteurs */
+.selector-container {
   width: 100px;
   background-color: #f0f0f0;
   position: fixed; /* Fixe le conteneur sur le côté gauche */
@@ -232,5 +232,163 @@
 }
 
 .vehicle-selector button:hover {
+  background-color: #0056b3;
+}
+
+/* Boutons du Message Selector */
+.message-selector button {
+  margin-bottom: 10px;
+  padding: 10px;
+  cursor: pointer;
+  background-color: #28a745; /* Green background */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.message-selector button:hover {
+  background-color: #218838; /* Darker green on hover */
+}
+
+/* Style pour le Message Selector */
+.message-selector {
+  position: relative; /* Ensure proper positioning */
+  width: 100%; /* Match the width of the container */
+  display: flex;
+  justify-content: center;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed; /* Fixed position to cover the entire viewport */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  z-index: 2000;
+}
+
+/* Modal content */
+.modal-content {
+  position: fixed; /* Ensure the modal stays fixed in the center */
+  top: 50%; /* Center vertically */
+  left: 50%; /* Center horizontally */
+  transform: translate(-50%, -50%); /* Adjust for the modal's size */
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  font-size: 20px;
+}
+
+.message-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.message-item {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.message-item:last-child {
+  border-bottom: none;
+}
+
+.message-item:hover {
+  background-color: #f1f1f1;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.message-index {
+  font-weight: bold;
+  color: #007bff;
+  margin-right: 10px;
+}
+
+.message-title {
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+}
+
+.message-tile {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+}
+
+/* Style pour l'horaire des messages */
+.message-timestamp {
+  font-size: 10px; /* Smaller font size */
+  color: #888; /* Light gray color for subtle appearance */
+  margin-top: 5px; /* Add spacing above the timestamp */
+  text-align: right; /* Align to the right for a cleaner look */
+}
+
+.message-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.message-item {
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+/* Style pour les messages non lus */
+.message-item.unread {
+  background-color: #f9f9f9;
+  font-weight: bold;
+  border-left: 4px solid #007bff;
+}
+
+/* Style pour les messages lus */
+.message-item.read {
+  background-color: #e9ecef;
+  font-weight: normal;
+  border-left: 4px solid #6c757d;
+}
+
+.close-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.close-button:hover {
   background-color: #0056b3;
 }

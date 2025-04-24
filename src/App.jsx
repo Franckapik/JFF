@@ -5,13 +5,15 @@ import "./styles/App.css";
 import StoreHUD from "./components/StoreHUD";
 import UserHUD from "./components/UserHUD";
 import VehicleSelector from "./components/VehicleSelector"; // Import VehicleSelector
+import MessageSelector from "./components/MessageSelector"; // Import MessageSelector
 
 const App = () => {
   return (
     <div className="app-container">
-      {/* Vehicle Selector on the left */}
-      <div className="vehicle-selector-container">
+      {/* Selector container for VehicleSelector and MessageSelector */}
+      <div className="selector-container">
         <VehicleSelector />
+        <MessageSelector /> {/* Add the MessageSelector below the VehicleSelector */}
       </div>
 
       {/* Main content area */}

@@ -18,6 +18,7 @@ export const useTileStore = create((set, get) => ({
   playerResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the player
   drones: [], // Ensure drones is initialized as an empty array
   selectedVehicle: null, // Currently selected vehicle (drone or target vehicle)
+  playerMessages: [], // Array to store player messages
 
   setTiles: (newTiles) => set({ tiles: newTiles }),
   setSelectedTile: (tileCoord) => set({ selectedTile: tileCoord }), // Ensure selectedTile is a coordinate
@@ -68,6 +69,25 @@ export const useTileStore = create((set, get) => ({
       ),
     })),
   setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }), // Setter for selected vehicle
+
+  addPlayerMessage: (message) =>
+    set((state) => ({
+      playerMessages: [...state.playerMessages, { ...message, isRead: false }], // Add a new message with isRead: false
+    })),
+
+  markMessageAsRead: (index) =>
+    set((state) => {
+      const updatedMessages = [...state.playerMessages];
+      if (updatedMessages[index]) {
+        updatedMessages[index].isRead = true; // Mark the message as read
+      }
+      return { playerMessages: updatedMessages };
+    }),
+
+  clearPlayerMessages: () =>
+    set(() => ({
+      playerMessages: [], // Clear all messages
+    })),
 
   getTile: (coord) => get().tiles[coord], // Return the tile directly
   getNeighbors: (coord) => {

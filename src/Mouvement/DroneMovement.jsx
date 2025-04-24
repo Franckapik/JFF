@@ -9,6 +9,7 @@ const DroneMovement = ({ drone, children }) => {
   const targetVehicle = useTileStore((state) => state.targetVehicle);
   const tiles = useTileStore((state) => state.tiles);
   const updateDrone = useTileStore((state) => state.updateDrone);
+  const addPlayerMessage = useTileStore((state) => state.addPlayerMessage); // Import addPlayerMessage from the store
 
   useFrame((_, delta) => {
     if (!groupRef.current || !drone.position) return; // Ensure drone.position is defined
@@ -54,11 +55,30 @@ const DroneMovement = ({ drone, children }) => {
         direction.normalize();
         groupRef.current.position.addScaledVector(direction, delta * 2); // Vitesse du drone
         groupRef.current.position.y = 1.5; // Maintain height of +1.5
-        updateDrone(drone.id, { isMoving: true });
-      } else {
+        updateDrone(drone.id, { isMoving: true, hasReachedTarget: false });
+      } else if (!drone.hasReachedTarget) {
         groupRef.current.position.y = 1.5; // Maintain height of +1.5
-        updateDrone(drone.id, { isMoving: false, targetTile: null });
 
+        // Sauvegarder la tuile cible avant de la réinitialiser
+        const reachedTile = drone.targetTile;
+        const reachedTileName = tiles[reachedTile]?.name || `Tuile ${reachedTile}`; // Nom de la tuile ou fallback
+        const resources = tiles[reachedTile]?.resources || { food: 0, debris: 0, special: 0 }; // Récupérer les ressources
+
+        updateDrone(drone.id, { isMoving: false, targetTile: null, hasReachedTarget: true });
+
+        // Ajouter un message à la liste des messages du joueur
+        if (reachedTile) {
+          addPlayerMessage({
+            droneId: drone.id,
+            title: `Drone ${drone.id} a atteint ${reachedTileName}.`,
+            body: `Le drone ${drone.id} a terminé sa mission et a atteint ${reachedTileName}. Voici les ressources trouvées :\n\n` +
+                  `- Nourriture : ${resources.food}\n` +
+                  `- Débris : ${resources.debris}\n` +
+                  `- Spécial : ${resources.special}`,
+            tileName: reachedTileName, // Inclure le nom de la tuile
+            timestamp: Date.now(), // Ajouter un timestamp pour le tri et l'affichage
+          });
+        }
       }
     }
 
