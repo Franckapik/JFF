@@ -156,7 +156,7 @@ const TargetMovement = ({ initialPosition, children }) => {
           // Prevent resource collection on the starting tile
           if (!currentTargetTile.targetVehicleStart && !resourcesCollected && !currentTargetTile.collected) {
             const destinationTile = tiles[currentTargetCoord];
-            if (destinationTile && destinationTile.resources) {
+            if (destinationTile && destinationTile.resources && destinationTile.collectable) {
               setTargetVehicleResources(destinationTile.resources); // Add resources to the target vehicle
               markTileAsCollected(currentTargetCoord); // Mark the tile as collected
             }
