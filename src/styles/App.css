@@ -344,6 +344,14 @@
   margin-top: 5px;
 }
 
+/* Style pour l'horaire des messages */
+.message-timestamp {
+  font-size: 10px; /* Smaller font size */
+  color: #888; /* Light gray color for subtle appearance */
+  margin-top: 5px; /* Add spacing above the timestamp */
+  text-align: right; /* Align to the right for a cleaner look */
+}
+
 .message-list {
   list-style: none;
   padding: 0;
