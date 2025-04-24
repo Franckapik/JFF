@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { GridHelper } from "three";
 import { useThree } from "@react-three/fiber"; // Import useThree hook
 import Tile from "./Tile";
-import { generateHexPositions } from "../utils/utils";
+import { generateHexPositions, generateInitialDrones } from "../utils/utils"; // Import generateInitialDrones
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { Box, Torus } from "@react-three/drei"; // Import Box and Torus from drei
 import RandomMovement from "../Mouvement/RandomMovement"; // Import RandomMovement component
@@ -58,10 +58,7 @@ const Scene = () => {
   }, [hexPositions, setTargetVehicleInStore, setTargetVehicleStartCoord]);
 
   useEffect(() => {
-    const initialDrones = [
-      { id: 1, position: { x: 0, y: 0, z: 0 }, isMoving: false, targetTile: null },
-      { id: 2, position: { x: 1, y: 0, z: 1 }, isMoving: false, targetTile: null },
-    ];
+    const initialDrones = generateInitialDrones(1, 2); // Generate only 1 drone
     setDrones(initialDrones);
   }, [setDrones]);
 
