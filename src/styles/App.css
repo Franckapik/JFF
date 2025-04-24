@@ -179,3 +179,42 @@
   font-weight: normal;
   color: #fff; /* Value color */
 }
+
+/* Conteneur principal */
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Conteneur du Vehicle Selector */
+.vehicle-selector-container {
+  width: 100px;
+  background-color: #f0f0f0;
+  position: fixed; /* Fixe le conteneur sur le côté gauche */
+  left: 0;
+  top: 50%; /* Centre verticalement */
+  transform: translateY(-50%); /* Ajuste pour centrer parfaitement */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centre horizontalement */
+  padding: 10px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Ajout d'une ombre pour séparer visuellement */
+  z-index: 1000; /* Ensure it is above other elements */
+}
+
+/* Boutons du Vehicle Selector */
+.vehicle-selector button {
+  margin-bottom: 10px;
+  padding: 10px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.vehicle-selector button:hover {
+  background-color: #0056b3;
+}

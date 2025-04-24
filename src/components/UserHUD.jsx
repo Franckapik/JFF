@@ -16,6 +16,7 @@ const UserHUD = () => {
   const targetDamage = useTileStore((state) => state.targetDamage); // Get targetDamage from the store
   const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
   const playerResources = useTileStore((state) => state.playerResources); // Get player resources from the store
+  const selectedVehicle = useTileStore((state) => state.selectedVehicle); // Get selected vehicle from the store
 
   return (
     <div className="user-hud">
@@ -120,6 +121,28 @@ const UserHUD = () => {
                 <strong>Start Coord:</strong> {targetVehicleStartCoord || "N/A"}
               </li>
             </ul>
+          </li>
+          <li>
+            <strong>Véhicule Sélectionné:</strong>
+            {selectedVehicle ? (
+              <ul>
+                <li>
+                  <strong>ID :</strong> {selectedVehicle.id || "N/A"}
+                </li>
+                <li>
+                  <strong>Type :</strong> {selectedVehicle.type || "N/A"}
+                </li>
+                <li>
+                  <strong>Position :</strong> x: {selectedVehicle.position?.x.toFixed(2) || "N/A"}, y:{" "}
+                  {selectedVehicle.position?.y.toFixed(2) || "N/A"}, z: {selectedVehicle.position?.z.toFixed(2) || "N/A"}
+                </li>
+                <li>
+                  <strong>Target Tile :</strong> {selectedVehicle.targetTile || "N/A"}
+                </li>
+              </ul>
+            ) : (
+              <p>Aucun véhicule sélectionné</p>
+            )}
           </li>
         </ul>
       </div>
