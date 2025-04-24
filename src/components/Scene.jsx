@@ -24,6 +24,7 @@ const Scene = () => {
   const setDrones = useTileStore((state) => state.setDrones); // Get setDrones from the store
   const setSelectedVehicle = useTileStore((state) => state.setSelectedVehicle); // Zustand setter for selected vehicle
   const randomVehicle = useTileStore((state) => state.randomVehicle); // Get random vehicle from the store
+  const selectedVehicle = useTileStore((state) => state.selectedVehicle); // Get the selected vehicle from the store
 
   const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
   const [randomVehiclePosition, setRandomVehiclePosition] = useState(null); // State for random vehicle position
@@ -105,7 +106,10 @@ const Scene = () => {
             castShadow
             onClick={() => handleVehicleClick({ id: "targetVehicle", type: "Vaisseau", ...targetVehicle })}
           >
-            <meshStandardMaterial attach="material" color="red" />
+            <meshStandardMaterial
+              attach="material"
+              color={selectedVehicle?.id === "targetVehicle" ? "hotpink" : "red"} // Highlight if selected
+            />
           </Box>
         </TargetMovement>
       )}
@@ -128,7 +132,10 @@ const Scene = () => {
             castShadow
             onClick={() => handleVehicleClick({ id: drone.id, type: "Drone", ...drone })}
           >
-            <meshStandardMaterial attach="material" color="orange" />
+            <meshStandardMaterial
+              attach="material"
+              color={selectedVehicle?.id === drone.id ? "hotpink" : "white"} // Highlight if selected
+            />
           </Torus>
         </DroneMovement>
       ))}
