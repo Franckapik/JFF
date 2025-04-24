@@ -22,6 +22,8 @@ const Scene = () => {
   const setTargetVehicleStartCoord = useTileStore((state) => state.setTargetVehicleStartCoord); // Zustand setter
   const drones = useTileStore((state) => state.drones); // Get drones from the store
   const setDrones = useTileStore((state) => state.setDrones); // Get setDrones from the store
+  const setSelectedVehicle = useTileStore((state) => state.setSelectedVehicle); // Zustand setter for selected vehicle
+  const randomVehicle = useTileStore((state) => state.randomVehicle); // Get random vehicle from the store
 
   const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
   const [randomVehiclePosition, setRandomVehiclePosition] = useState(null); // State for random vehicle position
@@ -79,13 +81,17 @@ const Scene = () => {
     setTargetVehicleTargetTile(tileCoord); // Mark the selected tile as the target destination
   };
 
+  const handleVehicleClick = (vehicle) => {
+    setSelectedVehicle(vehicle); // Update the selected vehicle in the store
+  };
+
   return (
     <>
       <primitive object={new GridHelper(10, 10)} visible={true} /> {/* GridHelper visible for debugging */}
       <ambientLight intensity={1} /> {/* Increased ambient light intensity */}
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow /> {/* Adjusted directional light */}
       <pointLight position={[-5, 10, -5]} intensity={0.8} /> {/* Adjusted point light */}
-      {randomVehiclePosition && (
+      {randomVehiclePosition && randomVehicle && (
         <RandomMovement initialPosition={randomVehiclePosition}>
           <Box args={[0.5, 0.5, 0.5]} castShadow>
             <meshStandardMaterial attach="material" color="blue" />
@@ -94,7 +100,11 @@ const Scene = () => {
       )}
       {targetVehiclePosition && (
         <TargetMovement initialPosition={targetVehiclePosition}>
-          <Box args={[0.5, 0.5, 0.5]} castShadow>
+          <Box
+            args={[0.5, 0.5, 0.5]}
+            castShadow
+            onClick={() => handleVehicleClick({ id: "targetVehicle", type: "Vaisseau", ...targetVehicle })}
+          >
             <meshStandardMaterial attach="material" color="red" />
           </Box>
         </TargetMovement>
@@ -112,7 +122,12 @@ const Scene = () => {
         ))}
       {drones.map((drone) => (
         <DroneMovement key={drone.id} drone={drone}>
-          <Torus args={[0.2, 0.05, 16, 100]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
+          <Torus
+            args={[0.2, 0.05, 16, 100]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            castShadow
+            onClick={() => handleVehicleClick({ id: drone.id, type: "Drone", ...drone })}
+          >
             <meshStandardMaterial attach="material" color="orange" />
           </Torus>
         </DroneMovement>

@@ -17,6 +17,7 @@ export const useTileStore = create((set, get) => ({
   targetVehicleResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the target vehicle
   playerResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the player
   drones: [], // Liste des drones
+  selectedVehicle: null, // Currently selected vehicle (drone or target vehicle)
 
   setTiles: (newTiles) => set({ tiles: newTiles }),
   setSelectedTile: (tileCoord) => set({ selectedTile: tileCoord }), // Ensure selectedTile is a coordinate
@@ -58,6 +59,7 @@ export const useTileStore = create((set, get) => ({
         drone.id === id ? { ...drone, ...updates } : drone
       ),
     })),
+  setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }), // Setter for selected vehicle
 
   getTile: (coord) => get().tiles[coord], // Return the tile directly
   getNeighbors: (coord) => {
