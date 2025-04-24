@@ -16,6 +16,7 @@ export const useTileStore = create((set, get) => ({
   targetDamage: 0, // Initial damage level for the target vehicle
   targetVehicleResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the target vehicle
   playerResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the player
+  drones: [], // Liste des drones
 
   setTiles: (newTiles) => set({ tiles: newTiles }),
   setSelectedTile: (tileCoord) => set({ selectedTile: tileCoord }), // Ensure selectedTile is a coordinate
@@ -49,6 +50,13 @@ export const useTileStore = create((set, get) => ({
   resetTargetVehicleResources: () =>
     set(() => ({
       targetVehicleResources: { food: 0, debris: 0, special: 0 },
+    })),
+  setDrones: (newDrones) => set({ drones: newDrones }),
+  updateDrone: (id, updates) =>
+    set((state) => ({
+      drones: state.drones.map((drone) =>
+        drone.id === id ? { ...drone, ...updates } : drone
+      ),
     })),
 
   getTile: (coord) => get().tiles[coord], // Return the tile directly

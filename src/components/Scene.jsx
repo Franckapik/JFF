@@ -4,9 +4,10 @@ import { useThree } from "@react-three/fiber"; // Import useThree hook
 import Tile from "./Tile";
 import { generateHexPositions } from "../utils/utils";
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
-import { Box } from "@react-three/drei"; // Import Box from drei
+import { Box, Torus } from "@react-three/drei"; // Import Box and Torus from drei
 import RandomMovement from "../Mouvement/RandomMovement"; // Import RandomMovement component
 import TargetMovement from "../Mouvement/TargetMovement"; // Import TargetMovement component
+import DroneMovement from "../Mouvement/DroneMovement"; // Import DroneMovement component
 
 const Scene = () => {
   const radius = 2; // Define the radius value
@@ -19,6 +20,8 @@ const Scene = () => {
   const targetVehicleIsMoving = useTileStore((state) => state.targetVehicleIsMoving); // Zustand state for movement
   const setRandomVehicleStartCoord = useTileStore((state) => state.setRandomVehicleStartCoord); // Zustand setter
   const setTargetVehicleStartCoord = useTileStore((state) => state.setTargetVehicleStartCoord); // Zustand setter
+  const drones = useTileStore((state) => state.drones); // Get drones from the store
+  const setDrones = useTileStore((state) => state.setDrones); // Get setDrones from the store
 
   const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
   const [randomVehiclePosition, setRandomVehiclePosition] = useState(null); // State for random vehicle position
@@ -57,6 +60,14 @@ const Scene = () => {
     camera.position.set(0, 10, 10); // Adjusted camera position for better visibility
     camera.lookAt(0, 0, 0); // Make the camera look at the center of the scene
   }, [camera]);
+
+  useEffect(() => {
+    const initialDrones = [
+      { id: 1, position: { x: 0, y: 0, z: 0 }, isMoving: false, targetTile: null },
+      { id: 2, position: { x: 1, y: 0, z: 1 }, isMoving: false, targetTile: null },
+    ];
+    setDrones(initialDrones);
+  }, [setDrones]);
 
   const handleTileClick = (tileCoord) => {
     if (targetVehicleIsMoving) {
@@ -99,6 +110,13 @@ const Scene = () => {
             onClick={() => handleTileClick(tile.coord)}
           />
         ))}
+      {/* Add a Torus mesh with dimensions half the size of the TargetMovement box */}
+      <Torus args={[0.25, 0.1, 16, 100]} position={[0, 0.5, 0]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
+        <meshStandardMaterial attach="material" color="purple" />
+      </Torus>
+      {drones.map((drone) => (
+      <DroneMovement key={drone.id} drone={drone} />
+    ))}
     </>
   );
 };
