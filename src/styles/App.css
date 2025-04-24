@@ -300,11 +300,75 @@
   margin: 20px 0;
   max-height: 200px;
   overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.message-item {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.message-item:last-child {
+  border-bottom: none;
+}
+
+.message-item:hover {
+  background-color: #f1f1f1;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.message-index {
+  font-weight: bold;
+  color: #007bff;
+  margin-right: 10px;
+}
+
+.message-title {
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+}
+
+.message-tile {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.message-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .message-item {
   margin-bottom: 10px;
   text-align: left;
+}
+
+/* Style pour les messages non lus */
+.message-item.unread {
+  background-color: #f9f9f9;
+  font-weight: bold;
+  border-left: 4px solid #007bff;
+}
+
+/* Style pour les messages lus */
+.message-item.read {
+  background-color: #e9ecef;
+  font-weight: normal;
+  border-left: 4px solid #6c757d;
 }
 
 .close-button {
