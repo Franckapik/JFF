@@ -1,16 +1,17 @@
 import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Vector3 } from "three";
+import { Vector3, Euler } from "three";
 import { useTileStore } from "../store/useTileStore";
+import { Torus } from "@react-three/drei"; // Import Torus from drei
 
-const DroneMovement = ({ drone }) => {
+const DroneMovement = ({ drone, children }) => {
   const groupRef = useRef();
   const targetVehicle = useTileStore((state) => state.targetVehicle);
   const tiles = useTileStore((state) => state.tiles);
   const updateDrone = useTileStore((state) => state.updateDrone);
 
   useFrame((_, delta) => {
-    if (!groupRef.current) return;
+    if (!groupRef.current || !drone.position) return; // Ensure drone.position is defined
 
     const currentPosition = new Vector3(
       groupRef.current.position.x,
@@ -46,19 +47,25 @@ const DroneMovement = ({ drone }) => {
       if (distance > 0.1) {
         direction.normalize();
         groupRef.current.position.addScaledVector(direction, delta * 2); // Vitesse du drone
+        groupRef.current.position.y = 1.5; // Maintain height of +1.5
         updateDrone(drone.id, { isMoving: true });
       } else {
+        groupRef.current.position.y = 1.5; // Maintain height of +1.5
         updateDrone(drone.id, { isMoving: false, targetTile: null });
       }
     }
   });
 
   return (
-    <group ref={groupRef} position={[drone.position.x, drone.position.y, drone.position.z]}>
-      <mesh>
-        <sphereGeometry args={[0.2, 16, 16]} />
-        <meshStandardMaterial color="green" />
-      </mesh>
+    <group
+      ref={groupRef}
+      position={[
+        drone.position?.x || 0,
+        1.5, // Ensure the drone starts at height +1.5
+        drone.position?.z || 0,
+      ]}
+    >
+      {children}
     </group>
   );
 };

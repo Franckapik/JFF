@@ -54,13 +54,6 @@ const Scene = () => {
     }
   }, [hexPositions, setTargetVehicleInStore, setTargetVehicleStartCoord]);
 
-  // Configure the camera using useThree
-  const { camera } = useThree();
-  useEffect(() => {
-    camera.position.set(0, 10, 10); // Adjusted camera position for better visibility
-    camera.lookAt(0, 0, 0); // Make the camera look at the center of the scene
-  }, [camera]);
-
   useEffect(() => {
     const initialDrones = [
       { id: 1, position: { x: 0, y: 0, z: 0 }, isMoving: false, targetTile: null },
@@ -68,6 +61,13 @@ const Scene = () => {
     ];
     setDrones(initialDrones);
   }, [setDrones]);
+
+  // Configure the camera using useThree
+  const { camera } = useThree();
+  useEffect(() => {
+    camera.position.set(0, 10, 10); // Adjusted camera position for better visibility
+    camera.lookAt(0, 0, 0); // Make the camera look at the center of the scene
+  }, [camera]);
 
   const handleTileClick = (tileCoord) => {
     if (targetVehicleIsMoving) {
@@ -110,13 +110,13 @@ const Scene = () => {
             onClick={() => handleTileClick(tile.coord)}
           />
         ))}
-      {/* Add a Torus mesh with dimensions half the size of the TargetMovement box */}
-      <Torus args={[0.25, 0.1, 16, 100]} position={[0, 0.5, 0]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
-        <meshStandardMaterial attach="material" color="purple" />
-      </Torus>
       {drones.map((drone) => (
-      <DroneMovement key={drone.id} drone={drone} />
-    ))}
+        <DroneMovement key={drone.id} drone={drone}>
+          <Torus args={[0.2, 0.05, 16, 100]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
+            <meshStandardMaterial attach="material" color="orange" />
+          </Torus>
+        </DroneMovement>
+      ))}
     </>
   );
 };
