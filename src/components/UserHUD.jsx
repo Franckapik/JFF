@@ -17,6 +17,7 @@ const UserHUD = () => {
   const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
   const playerResources = useTileStore((state) => state.playerResources); // Get player resources from the store
   const selectedVehicle = useTileStore((state) => state.selectedVehicle); // Get selected vehicle from the store
+  const drones = useTileStore((state) => state.drones); // Get drones from the store
 
   return (
     <div className="user-hud">
@@ -120,6 +121,25 @@ const UserHUD = () => {
               <li>
                 <strong>Start Coord:</strong> {targetVehicleStartCoord || "N/A"}
               </li>
+            </ul>
+          </li>
+          <li>
+            <strong>Drones:</strong>
+            <ul>
+              {drones.map((drone) => (
+                <li key={drone.id}>
+                  <strong>ID:</strong> {drone.id} <br />
+                  <strong>Position:</strong>{" "}
+                  {drone.position
+                    ? `x: ${drone.position.x.toFixed(2)}, y: ${drone.position.y.toFixed(
+                        2
+                      )}, z: ${drone.position.z.toFixed(2)}`
+                    : "N/A"}{" "}
+                  <br />
+                  <strong>Target Tile:</strong> {drone.targetTile || "N/A"} <br />
+                  <strong>Is Moving:</strong> {drone.isMoving ? "Yes" : "No"}
+                </li>
+              ))}
             </ul>
           </li>
           <li>

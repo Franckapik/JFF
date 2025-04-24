@@ -90,6 +90,22 @@
   flex: 1;
   text-align: left; /* Align content to the left */
   padding: 10px;
+  max-height: 125px; /* Set a maximum height for the column */
+  overflow-y: auto; /* Enable vertical scrolling */
+}
+
+/* Optional: Add a scrollbar style for better appearance */
+.hud-column::-webkit-scrollbar {
+  width: 6px;
+}
+
+.hud-column::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 3px;
+}
+
+.hud-column::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
 .hud-column h3 {
