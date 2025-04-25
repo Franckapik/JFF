@@ -1,6 +1,10 @@
 import { Vector3 } from "three";
+// Remove the redundant import of calculatePathData
+// import { calculatePathData } from "./utils"; 
+import usePlayerStore from "../stores/usePlayerStore"; // Import player store
 
 export function generateHexPositions(radius, spacing) {
+  
   const hexPositions = [];
   const sqrt3 = Math.sqrt(3);
 
@@ -55,8 +59,6 @@ export function generateHexPositions(radius, spacing) {
             debris: Math.floor(Math.random() * 10001), // Random debris quantity (0-10000)
             special: Math.floor(Math.random() * 3), // Random special quantity (0-2)
           },
-          randomVehicleStart: false, // Default value
-          targetVehicleStart: false, // Default value
           immunity: Math.random() < 0.1, // 10% chance of immunity
         });
       }
@@ -142,6 +144,7 @@ export function generateInitialDrones(count, spacing = 1) {
 }
 
 export function findPath(startCoord, targetCoord, tiles) {
+  console.log("Finding path from", startCoord, "to", targetCoord);
   const queue = [[startCoord]];
   const visited = new Set();
 
@@ -150,7 +153,8 @@ export function findPath(startCoord, targetCoord, tiles) {
     const currentCoord = path[path.length - 1];
 
     if (currentCoord === targetCoord) {
-      return path;
+      console.log("Path found:", path);
+      return path; // Return the path if the target is reached
     }
 
     if (!visited.has(currentCoord)) {
@@ -158,13 +162,14 @@ export function findPath(startCoord, targetCoord, tiles) {
       const neighbors = tiles[currentCoord]?.neighbors || [];
       neighbors.forEach((neighbor) => {
         if (!visited.has(neighbor) && tiles[neighbor]?.walkable !== false) {
-          queue.push([...path, neighbor]);
+          queue.push([...path, neighbor]); // Add the neighbor to the path
         }
       });
     }
   }
 
-  return [];
+  console.log("No path found");
+  return []; // Return an empty array if no path is found
 }
 
 export function calculatePathData(currentTile, targetTile, tiles) {
@@ -180,4 +185,29 @@ export function calculatePathData(currentTile, targetTile, tiles) {
   }
 
   return { path, totalDistance };
+}
+
+// Remove the getInitialVehiclePosition function
+// Instead, search for tiles with type "depart" directly in the store or logic where needed.
+
+export function calculatePath(tiles, selectedTile) {
+  const playerVehicle = usePlayerStore.getState().players.player1.vehicles.ship; // Access player vehicle
+  const setPlayerVehicleProgress = usePlayerStore.getState().setTargetVehicleProgress; // Access progress setter
+
+  if (!playerVehicle || !selectedTile) return { path: [], totalDistance: 0 };
+
+  const currentTile = Object.values(tiles).find(
+    (tile) =>
+      Math.abs(tile.position.x - playerVehicle.position.x) < 0.1 &&
+      Math.abs(tile.position.z - playerVehicle.position.z) < 0.1
+  );
+  const targetTile = tiles[selectedTile];
+
+  if (currentTile && targetTile) {
+    const { path, totalDistance } = calculatePathData(currentTile, targetTile, tiles);
+    setPlayerVehicleProgress(0, totalDistance); // Reset progress and set total distance
+    return { path, totalDistance };
+  }
+
+  return { path: [], totalDistance: 0 };
 }

@@ -1,21 +1,20 @@
 import React from "react";
-import { useTileStore } from "../store/useTileStore"; // Import Zustand store
+import { useTileStore } from "../stores/useNewTileStore"; // Import tile store
+import usePlayerStore from "../stores/usePlayerStore"; // Import player store
 import "../styles/App.css"; // Import CSS for styling
 
 const UserHUD = () => {
   const selectedTileCoord = useTileStore((state) => state.selectedTile); // Get the selected tile's coordinate
   const tile = useTileStore((state) => (selectedTileCoord ? state.tiles[selectedTileCoord] : null)); // Fetch the full tile data
-  const randomVehicle = useTileStore((state) => state.randomVehicle); // Get random vehicle data
-  const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle data
-  const randomVehicleIsMoving = useTileStore((state) => state.randomVehicleIsMoving); // Get random vehicle movement status
-  const targetVehicleIsMoving = useTileStore((state) => state.targetVehicleIsMoving); // Get target vehicle movement status
-  const targetVehicleProgress = useTileStore((state) => state.targetVehicleProgress); // Get target vehicle progress
-  const targetFuel = useTileStore((state) => state.targetFuel); // Get targetFuel from the store
-  const targetDamage = useTileStore((state) => state.targetDamage); // Get targetDamage from the store
-  const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
-  const playerResources = useTileStore((state) => state.playerResources); // Get player resources from the store
-  const selectedVehicle = useTileStore((state) => state.selectedVehicle); // Get selected vehicle from the store
-  const drones = useTileStore((state) => state.drones); // Get drones from the store
+  const ship = usePlayerStore((state) => state.players.player1.vehicles.ship); // Get ship data
+  const selectedVehicleId = usePlayerStore((state) => state.players.player1.vehicles.selectedVehicle); // Get selected vehicle ID
+  const drones = usePlayerStore((state) => state.players.player1.vehicles.drones); // Get drones
+  const playerResources = usePlayerStore((state) => state.players.player1.score.ressources); // Get player resources
+
+  const selectedVehicle =
+    selectedVehicleId === "ship"
+      ? ship
+      : drones.find((drone) => drone.id === selectedVehicleId) || null; // Determine the selected vehicle
 
   return (
     <div className="user-hud">
@@ -71,37 +70,27 @@ const UserHUD = () => {
         <h3>Véhicules</h3>
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           <li>
-            <strong>Véhicule Aléatoire:</strong>
+            <strong>Véhicule Cible (Ship):</strong>
             <ul>
               <li>
                 <strong>Position:</strong>{" "}
-                {randomVehicle
-                  ? `x: ${randomVehicle.position.x.toFixed(2)}, y: ${randomVehicle.position.y.toFixed(
+                {ship.position
+                  ? `x: ${ship.position.x.toFixed(2)}, y: ${ship.position.y.toFixed(
                       2
-                    )}, z: ${randomVehicle.position.z.toFixed(2)} (Coord: ${randomVehicle.coord})`
+                    )}, z: ${ship.position.z.toFixed(2)} (Coord: ${ship.coord})`
                   : "N/A"}
               </li>
               <li>
-                <strong>En Mouvement:</strong> {randomVehicleIsMoving ? "Oui" : "Non"}
-              </li>
-            </ul>
-          </li>
-          <li>
-            <strong>Véhicule Cible:</strong>
-            <ul>
-              <li>
-                <strong>Position:</strong>{" "}
-                {targetVehicle
-                  ? `x: ${targetVehicle.position.x.toFixed(2)}, y: ${targetVehicle.position.y.toFixed(
-                      2
-                    )}, z: ${targetVehicle.position.z.toFixed(2)} (Coord: ${targetVehicle.coord})`
-                  : "N/A"}
+                <strong>En Mouvement:</strong> {ship.isMoving ? "Oui" : "Non"}
               </li>
               <li>
-                <strong>En Mouvement:</strong> {targetVehicleIsMoving ? "Oui" : "Non"}
+                <strong>Progression:</strong> {ship.progress}%
               </li>
               <li>
-                <strong>Progression:</strong> {targetVehicleProgress}%
+                <strong>Carburant:</strong> {ship.fuel}%
+              </li>
+              <li>
+                <strong>Dommages:</strong> {ship.damage}%
               </li>
             </ul>
           </li>
@@ -136,7 +125,7 @@ const UserHUD = () => {
               <strong>ID :</strong> {selectedVehicle.id || "N/A"}
             </li>
             <li>
-              <strong>Type :</strong> {selectedVehicle.type || "N/A"}
+              <strong>Type :</strong> {selectedVehicle.id === "ship" ? "Ship" : "Drone"}
             </li>
             <li>
               <strong>Position :</strong> x: {selectedVehicle.position?.x.toFixed(2) || "N/A"}, y:{" "}
@@ -151,43 +140,18 @@ const UserHUD = () => {
         )}
       </div>
 
-      {/* Section: Indicators */}
+      {/* Section: Player Resources */}
       <div className="hud-column">
-        <h3>Indicateurs</h3>
+        <h3>Ressources Joueur</h3>
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           <li>
-            <strong>Carburant:</strong> {targetFuel}%
+            <strong>Nourriture:</strong> {playerResources.food}
           </li>
           <li>
-            <strong>Dommages:</strong> {targetDamage}%
+            <strong>Débris:</strong> {playerResources.debris}
           </li>
           <li>
-            <strong>Ressources Véhicule Cible:</strong>
-            <ul>
-              <li>
-                <strong>Nourriture:</strong> {targetVehicleResources.food}
-              </li>
-              <li>
-                <strong>Débris:</strong> {targetVehicleResources.debris}
-              </li>
-              <li>
-                <strong>Spécial:</strong> {targetVehicleResources.special}
-              </li>
-            </ul>
-          </li>
-          <li>
-            <strong>Ressources Joueur:</strong>
-            <ul>
-              <li>
-                <strong>Nourriture:</strong> {playerResources.food}
-              </li>
-              <li>
-                <strong>Débris:</strong> {playerResources.debris}
-              </li>
-              <li>
-                <strong>Spécial:</strong> {playerResources.special}
-              </li>
-            </ul>
+            <strong>Spécial:</strong> {playerResources.special}
           </li>
         </ul>
       </div>

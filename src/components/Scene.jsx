@@ -3,15 +3,24 @@ import { GridHelper } from "three";
 import { useThree } from "@react-three/fiber";
 import Tile from "./Tile";
 import { useTileStore } from "../stores/useNewTileStore";
+import usePlayerStore from "../stores/usePlayerStore";
 
 const Scene = () => {
   const initializeTiles = useTileStore((state) => state.initializeTiles); // Zustand initializer for tiles
   const tiles = useTileStore((state) => state.tiles); // Zustand tiles state
+  const initializePlayer = usePlayerStore((state) => state.initializePlayer); // Player initialization method
+  const shipPosition = usePlayerStore((state) => state.players.player1.vehicles.ship.position); // Ship position
   const setSelectedTile = useTileStore((state) => state.setSelectedTile); // Zustand setter for selectedTile
 
   useEffect(() => {
     initializeTiles(3, 0.1); // Initialize tiles with radius and spacing
   }, [initializeTiles]);
+
+  useEffect(() => {
+    if (Object.keys(tiles).length > 0) {
+      initializePlayer(tiles); // Initialize player once tiles are available
+    }
+  }, [tiles, initializePlayer]);
 
   const { camera } = useThree();
   useEffect(() => {
@@ -29,6 +38,12 @@ const Scene = () => {
       <ambientLight intensity={1} />
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
+      {shipPosition && (
+        <mesh position={[shipPosition.x, 0.5, shipPosition.z]} castShadow>
+          <boxGeometry args={[0.5, 0.5, 0.5]} /> {/* Vehicle dimensions */}
+          <meshStandardMaterial color="blue" /> {/* Blue color for the vehicle */}
+        </mesh>
+      )}
       {Object.values(tiles)
         .filter((tile) => tile.walkable)
         .map((tile) => (
