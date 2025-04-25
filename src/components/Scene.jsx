@@ -12,60 +12,25 @@ import DroneMovement from "../Mouvement/DroneMovement"; // Import DroneMovement 
 const Scene = () => {
   const radius = 3; // Augmentez le rayon à 3 pour inclure un troisième cercle de tuiles
   const setTiles = useTileStore((state) => state.setTiles); // Zustand setter for tiles
+  const initializeVehiclesAndDrones = useTileStore((state) => state.initializeVehiclesAndDrones); // Zustand initializer
   const setSelectedTile = useTileStore((state) => state.setSelectedTile); // Zustand setter for selectedTile
   const tiles = useTileStore((state) => state.tiles); // Zustand tiles state
-  const setRandomVehicleInStore = useTileStore((state) => state.setRandomVehicle); // Zustand setter
-  const setTargetVehicleInStore = useTileStore((state) => state.setTargetVehicle); // Zustand setter
-  const setTargetVehicleTargetTile = useTileStore((state) => state.setTargetVehicleTargetTile); // Zustand setter
   const targetVehicleIsMoving = useTileStore((state) => state.targetVehicleIsMoving); // Zustand state for movement
-  const setRandomVehicleStartCoord = useTileStore((state) => state.setRandomVehicleStartCoord); // Zustand setter
-  const setTargetVehicleStartCoord = useTileStore((state) => state.setTargetVehicleStartCoord); // Zustand setter
   const drones = useTileStore((state) => state.drones); // Get drones from the store
   const setDrones = useTileStore((state) => state.setDrones); // Get setDrones from the store
   const setSelectedVehicle = useTileStore((state) => state.setSelectedVehicle); // Zustand setter for selected vehicle
-  const randomVehicle = useTileStore((state) => state.randomVehicle); // Get random vehicle from the store
   const selectedVehicle = useTileStore((state) => state.selectedVehicle); // Get the selected vehicle from the store
+  const randomVehicle = useTileStore((state) => state.randomVehicle); // Get random vehicle from the store
+  const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle from the store
+  const setTargetVehicleTargetTile = useTileStore((state) => state.setTargetVehicleTargetTile); // Correctly retrieve the setter
 
   const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
-  const [randomVehiclePosition, setRandomVehiclePosition] = useState(null); // State for random vehicle position
-  const [targetVehiclePosition, setTargetVehiclePosition] = useState(null); // State for target vehicle position
 
   useEffect(() => {
     // Directly set tiles in Zustand store
     setTiles(hexPositions.reduce((acc, tile) => ({ ...acc, [tile.coord]: tile }), {}));
-  }, [hexPositions, setTiles]);
-
-  useEffect(() => {
-    // Set the initial random vehicle data (position and coord)
-    const randomTile = hexPositions.find((tile) => tile.randomVehicleStart);
-    if (randomTile) {
-      const randomVehicle = { position: randomTile.position, coord: randomTile.coord };
-      setRandomVehiclePosition(randomTile.position); // Update local state
-      setRandomVehicleInStore(randomVehicle); // Store combined data in Zustand
-      setRandomVehicleStartCoord(randomTile.coord); // Store starting coord in Zustand
-    }
-  }, [hexPositions, setRandomVehicleInStore, setRandomVehicleStartCoord]);
-
-  useEffect(() => {
-    // Set the initial target vehicle data (position and coord)
-    const targetTile = hexPositions.find((tile) => tile.targetVehicleStart);
-    if (targetTile) {
-      const targetVehicle = { position: targetTile.position, coord: targetTile.coord };
-      setTargetVehiclePosition(targetTile.position); // Update local state
-      setTargetVehicleInStore(targetVehicle); // Store combined data in Zustand
-      setTargetVehicleStartCoord(targetTile.coord); // Store starting coord in Zustand
-      setSelectedVehicle({ id: "targetVehicle", type: "Vaisseau", ...targetVehicle }); // Select target vehicle by default
-    }
-  }, [hexPositions, setTargetVehicleInStore, setTargetVehicleStartCoord, setSelectedVehicle]);
-
-  useEffect(() => {
-    const initialDrones = generateInitialDrones(1, 2); // Generate only 1 drone
-    if (Array.isArray(initialDrones)) {
-      setDrones(initialDrones); // Ensure setDrones is called with an array
-    } else {
-      console.error("generateInitialDrones did not return an array:", initialDrones);
-    }
-  }, [setDrones]);
+    initializeVehiclesAndDrones(hexPositions); // Initialize vehicles and drones
+  }, [hexPositions, setTiles, initializeVehiclesAndDrones]);
 
   // Configure the camera using useThree
   const { camera } = useThree();
@@ -79,7 +44,7 @@ const Scene = () => {
       console.warn("No vehicle selected. Please select a vehicle first.");
       return; // Prevent setting a target if no vehicle is selected
     }
-  
+
     if (selectedVehicle.id === "targetVehicle") {
       if (targetVehicleIsMoving) {
         console.warn("Cannot set a new target while the target vehicle is moving.");
@@ -94,7 +59,7 @@ const Scene = () => {
         )
       );
     }
-  
+
     setSelectedTile(tileCoord); // Store the clicked tile's coordinate
   };
 
@@ -108,15 +73,15 @@ const Scene = () => {
       <ambientLight intensity={1} /> {/* Increased ambient light intensity */}
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow /> {/* Adjusted directional light */}
       <pointLight position={[-5, 10, -5]} intensity={0.8} /> {/* Adjusted point light */}
-      {randomVehiclePosition && randomVehicle && (
-        <RandomMovement initialPosition={randomVehiclePosition}>
+      {randomVehicle && randomVehicle.position && (
+        <RandomMovement initialPosition={randomVehicle.position}>
           <Box args={[0.5, 0.5, 0.5]} castShadow>
             <meshStandardMaterial attach="material" color="blue" />
           </Box>
         </RandomMovement>
       )}
-      {targetVehiclePosition && (
-        <TargetMovement initialPosition={targetVehiclePosition}>
+      {targetVehicle && targetVehicle.position && (
+        <TargetMovement initialPosition={targetVehicle.position}>
           <Box
             args={[0.5, 0.5, 0.5]}
             castShadow

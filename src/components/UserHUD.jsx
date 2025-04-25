@@ -21,8 +21,9 @@ const UserHUD = () => {
 
   return (
     <div className="user-hud">
+      {/* Section: Tile Information */}
       <div className="hud-column">
-        <h3>Selection</h3>
+        <h3>Tuile Sélectionnée</h3>
         {tile ? (
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             <li>
@@ -31,6 +32,9 @@ const UserHUD = () => {
             <li>
               <strong>Position :</strong> x: {tile.position?.x.toFixed(2) || "N/A"}, y:{" "}
               {tile.position?.y.toFixed(2) || "N/A"}, z: {tile.position?.z.toFixed(2) || "N/A"}
+            </li>
+            <li>
+              <strong>Type :</strong> {tile.type || "N/A"}
             </li>
             <li>
               <strong>Walkable :</strong> {tile.walkable ? "Oui" : "Non"}
@@ -42,34 +46,7 @@ const UserHUD = () => {
               <strong>Collected :</strong> {tile.collected ? "Oui" : "Non"}
             </li>
             <li>
-              <strong>Collectable :</strong> {tile.collectable ? "Oui" : "Non"}
-            </li>
-            <li>
-              <strong>Danger :</strong> {tile.danger ? "Oui" : "Non"}
-            </li>
-            <li>
               <strong>Neighbors :</strong> {tile.neighbors?.join(", ") || "N/A"}
-            </li>
-            <li>
-              <strong>Color :</strong> {tile.color || "N/A"}
-            </li>
-            <li>
-              <strong>Outer :</strong> {tile.outer ? "Oui" : "Non"}
-            </li>
-            <li>
-              <strong>Random Vehicle Start :</strong> {tile.randomVehicleStart ? "Oui" : "Non"}
-            </li>
-            <li>
-              <strong>Target Vehicle Start :</strong> {tile.targetVehicleStart ? "Oui" : "Non"}
-            </li>
-            <li>
-              <strong>Fuel Station :</strong> {tile.fuelStation ? "Oui" : "Non"}
-            </li>
-            <li>
-              <strong>Repair Station :</strong> {tile.repairStation ? "Oui" : "Non"}
-            </li>
-            <li>
-              <strong>Immunity :</strong> {tile.immunity ? "Oui" : "Non"}
             </li>
             <li>
               <strong>Resources:</strong>
@@ -90,11 +67,13 @@ const UserHUD = () => {
           <p>Aucune tuile sélectionnée</p>
         )}
       </div>
+
+      {/* Section: Vehicle Information */}
       <div className="hud-column">
-        <h3>Mouvement</h3>
+        <h3>Véhicules</h3>
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           <li>
-            <strong>Random Vehicle:</strong>
+            <strong>Véhicule Aléatoire:</strong>
             <ul>
               <li>
                 <strong>Position:</strong>{" "}
@@ -105,15 +84,15 @@ const UserHUD = () => {
                   : "N/A"}
               </li>
               <li>
-                <strong>Is Moving:</strong> {randomVehicleIsMoving ? "Yes" : "No"}
+                <strong>En Mouvement:</strong> {randomVehicleIsMoving ? "Oui" : "Non"}
               </li>
               <li>
-                <strong>Start Coord:</strong> {randomVehicleStartCoord || "N/A"}
+                <strong>Coord Départ:</strong> {randomVehicleStartCoord || "N/A"}
               </li>
             </ul>
           </li>
           <li>
-            <strong>Target Vehicle:</strong>
+            <strong>Véhicule Cible:</strong>
             <ul>
               <li>
                 <strong>Position:</strong>{" "}
@@ -124,13 +103,13 @@ const UserHUD = () => {
                   : "N/A"}
               </li>
               <li>
-                <strong>Is Moving:</strong> {targetVehicleIsMoving ? "Yes" : "No"}
+                <strong>En Mouvement:</strong> {targetVehicleIsMoving ? "Oui" : "Non"}
               </li>
               <li>
-                <strong>Progress:</strong> {targetVehicleProgress}%
+                <strong>Progression:</strong> {targetVehicleProgress}%
               </li>
               <li>
-                <strong>Start Coord:</strong> {targetVehicleStartCoord || "N/A"}
+                <strong>Coord Départ:</strong> {targetVehicleStartCoord || "N/A"}
               </li>
             </ul>
           </li>
@@ -147,70 +126,74 @@ const UserHUD = () => {
                       )}, z: ${drone.position.z.toFixed(2)}`
                     : "N/A"}{" "}
                   <br />
-                  <strong>Target Tile:</strong> {drone.targetTile || "N/A"} <br />
-                  <strong>Is Moving:</strong> {drone.isMoving ? "Yes" : "No"}
+                  <strong>Tuile Cible:</strong> {drone.targetTile || "N/A"} <br />
+                  <strong>En Mouvement:</strong> {drone.isMoving ? "Oui" : "Non"}
                 </li>
               ))}
             </ul>
           </li>
-          <li>
-            <strong>Véhicule Sélectionné:</strong>
-            {selectedVehicle ? (
-              <ul>
-                <li>
-                  <strong>ID :</strong> {selectedVehicle.id || "N/A"}
-                </li>
-                <li>
-                  <strong>Type :</strong> {selectedVehicle.type || "N/A"}
-                </li>
-                <li>
-                  <strong>Position :</strong> x: {selectedVehicle.position?.x.toFixed(2) || "N/A"}, y:{" "}
-                  {selectedVehicle.position?.y.toFixed(2) || "N/A"}, z: {selectedVehicle.position?.z.toFixed(2) || "N/A"}
-                </li>
-                <li>
-                  <strong>Target Tile :</strong> {selectedVehicle.targetTile || "N/A"}
-                </li>
-              </ul>
-            ) : (
-              <p>Aucun véhicule sélectionné</p>
-            )}
-          </li>
         </ul>
       </div>
+
+      {/* Section: Selected Vehicle */}
       <div className="hud-column">
-        <h3>Indicateur</h3>
+        <h3>Véhicule Sélectionné</h3>
+        {selectedVehicle ? (
+          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+            <li>
+              <strong>ID :</strong> {selectedVehicle.id || "N/A"}
+            </li>
+            <li>
+              <strong>Type :</strong> {selectedVehicle.type || "N/A"}
+            </li>
+            <li>
+              <strong>Position :</strong> x: {selectedVehicle.position?.x.toFixed(2) || "N/A"}, y:{" "}
+              {selectedVehicle.position?.y.toFixed(2) || "N/A"}, z: {selectedVehicle.position?.z.toFixed(2) || "N/A"}
+            </li>
+            <li>
+              <strong>Tuile Cible :</strong> {selectedVehicle.targetTile || "N/A"}
+            </li>
+          </ul>
+        ) : (
+          <p>Aucun véhicule sélectionné</p>
+        )}
+      </div>
+
+      {/* Section: Indicators */}
+      <div className="hud-column">
+        <h3>Indicateurs</h3>
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           <li>
-            <strong>Fuel:</strong> {targetFuel}%
+            <strong>Carburant:</strong> {targetFuel}%
           </li>
           <li>
-            <strong>Damage:</strong> {targetDamage}%
+            <strong>Dommages:</strong> {targetDamage}%
           </li>
           <li>
-            <strong>Target Vehicle Resources:</strong>
+            <strong>Ressources Véhicule Cible:</strong>
             <ul>
               <li>
-                <strong>Food:</strong> {targetVehicleResources.food}
+                <strong>Nourriture:</strong> {targetVehicleResources.food}
               </li>
               <li>
-                <strong>Debris:</strong> {targetVehicleResources.debris}
+                <strong>Débris:</strong> {targetVehicleResources.debris}
               </li>
               <li>
-                <strong>Special:</strong> {targetVehicleResources.special}
+                <strong>Spécial:</strong> {targetVehicleResources.special}
               </li>
             </ul>
           </li>
           <li>
-            <strong>Player Resources:</strong>
+            <strong>Ressources Joueur:</strong>
             <ul>
               <li>
-                <strong>Food:</strong> {playerResources.food}
+                <strong>Nourriture:</strong> {playerResources.food}
               </li>
               <li>
-                <strong>Debris:</strong> {playerResources.debris}
+                <strong>Débris:</strong> {playerResources.debris}
               </li>
               <li>
-                <strong>Special:</strong> {playerResources.special}
+                <strong>Spécial:</strong> {playerResources.special}
               </li>
             </ul>
           </li>

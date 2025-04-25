@@ -137,4 +137,44 @@ export const useTileStore = create((set, get) => ({
     const tiles = get().tiles;
     return tiles[coord]?.repairStation === true;
   },
+  initializeVehiclesAndDrones: (hexPositions) => {
+    const setRandomVehicle = get().setRandomVehicle;
+    const setTargetVehicle = get().setTargetVehicle;
+    const setDrones = get().setDrones;
+    const setSelectedVehicle = get().setSelectedVehicle; // Setter for selected vehicle
+
+    // Trouver les tuiles de départ pour les véhicules
+    const randomVehicleTile = hexPositions.find((tile) => tile.randomVehicleStart);
+    const targetVehicleTile = hexPositions.find((tile) => tile.targetVehicleStart);
+
+    if (randomVehicleTile) {
+      setRandomVehicle({
+        position: randomVehicleTile.position,
+        coord: randomVehicleTile.coord,
+      });
+    }
+
+    if (targetVehicleTile) {
+      const targetVehicle = {
+        position: targetVehicleTile.position,
+        coord: targetVehicleTile.coord,
+      };
+      setTargetVehicle(targetVehicle);
+      setSelectedVehicle({ id: "targetVehicle", type: "Vaisseau", ...targetVehicle }); // Sélectionner le véhicule cible par défaut
+    }
+
+    // Initialiser les drones
+    const drones = hexPositions
+      .filter((tile) => tile.walkable && !tile.outer) // Utiliser uniquement les tuiles accessibles
+      .slice(0, 2) // Limiter à 2 drones pour l'exemple
+      .map((tile, index) => ({
+        id: `drone-${index + 1}`,
+        position: tile.position,
+        coord: tile.coord,
+        isMoving: false,
+        targetTile: null,
+      }));
+
+    setDrones(drones);
+  },
 }));

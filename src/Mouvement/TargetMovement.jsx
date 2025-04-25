@@ -29,13 +29,16 @@ const TargetMovement = ({ initialPosition, children }) => {
 
   const [fuelRefilled, setFuelRefilled] = useState(false); // Track if fuel has been refilled
   const [damageRepaired, setDamageRepaired] = useState(false); // Track if damage has been repaired
+  const [resourcesCollected, setResourcesCollected] = useState(false); // Track if resources have been collected
+  const [resourcesTransferred, setResourcesTransferred] = useState(false); // Track if resources have been transferred
+
+  
   const [path, setPath] = useState([]); // List of intermediate tiles
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index of the current target tile
   const [initialTilePosition, setInitialTilePosition] = useState(null); // Position of the initial tile
   const [totalPathDistance, setTotalPathDistance] = useState(0); // Total distance of the path
   const [distanceTraveled, setDistanceTraveled] = useState(0); // Distance traveled so far
-  const [resourcesCollected, setResourcesCollected] = useState(false); // Track if resources have been collected
-  const [resourcesTransferred, setResourcesTransferred] = useState(false); // Track if resources have been transferred
+
 
   const speed = 1; // Movement speed (units per second)
   const rotationSpeed = 2; // Rotation interpolation speed
@@ -147,6 +150,21 @@ const TargetMovement = ({ initialPosition, children }) => {
             coord: currentTargetCoord,
           });
 
+          // Vérifiez si le vaisseau est sur sa tuile de départ
+          const isStartingTile = tiles[currentTargetCoord]?.targetVehicleStart;
+          if (isStartingTile && !resourcesTransferred) {
+            setTargetFuel(100); // Remplir le carburant
+            setPlayerResources((prevResources) => ({
+              food: prevResources.food + targetVehicleResources.food,
+              debris: prevResources.debris + targetVehicleResources.debris,
+              special: prevResources.special + targetVehicleResources.special,
+            })); // Transférer les ressources au joueur
+            resetTargetVehicleResources(); // Réinitialiser les ressources du vaisseau
+            setResourcesTransferred(true); // Marquer les ressources comme transférées
+          } else if (!isStartingTile) {
+            setResourcesTransferred(false); // Réinitialiser l'état si le vaisseau quitte la tuile de départ
+          }
+
           if (!currentTargetTile.targetVehicleStart && !resourcesCollected && !currentTargetTile.collected) {
             const destinationTile = tiles[currentTargetCoord];
             if (destinationTile && destinationTile.resources && destinationTile.collectable) {
@@ -156,15 +174,6 @@ const TargetMovement = ({ initialPosition, children }) => {
             setResourcesCollected(true);
           }
 
-          const isStartingTile = tiles[currentTargetCoord]?.targetVehicleStart;
-          if (isStartingTile && !resourcesTransferred) {
-            setTargetFuel(100);
-            setPlayerResources(targetVehicleResources);
-            resetTargetVehicleResources();
-            setResourcesTransferred(true);
-          } else if (!isStartingTile) {
-            setResourcesTransferred(false);
-          }
 
           if (isFuelStation(currentTargetCoord) && !fuelRefilled && targetFuel < 100) {
             setTargetFuel(100);
