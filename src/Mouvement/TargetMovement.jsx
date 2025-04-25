@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { useFrame } from "@react-three/fiber";
 import { Vector3, Euler } from "three";
+import useMessageManager from "../hooks/useMessageManager"; // Import the custom hook
 
 const TargetMovement = ({ initialPosition, children }) => {
   const groupRef = useRef();
@@ -23,7 +24,8 @@ const TargetMovement = ({ initialPosition, children }) => {
   const markTileAsCollected = useTileStore((state) => state.markTileAsCollected); // Import markTileAsCollected function
   const isFuelStation = useTileStore((state) => state.isFuelStation); // Check if a tile is a fuel station
   const isRepairStation = useTileStore((state) => state.isRepairStation); // Check if a tile is a repair station
-  const addPlayerMessage = useTileStore((state) => state.addPlayerMessage); // Add player messages
+
+  const { sendVehicleMessage } = useMessageManager(); // Use the custom hook
 
   const [fuelRefilled, setFuelRefilled] = useState(false); // Track if fuel has been refilled
   const [damageRepaired, setDamageRepaired] = useState(false); // Track if damage has been repaired
@@ -167,11 +169,7 @@ const TargetMovement = ({ initialPosition, children }) => {
           if (isFuelStation(currentTargetCoord) && !fuelRefilled && targetFuel < 100) {
             setTargetFuel(100);
             setFuelRefilled(true);
-            addPlayerMessage({
-              text: "Le réservoir de carburant a été rempli à 100 % !",
-              type: "info",
-              timestamp: Date.now(),
-            });
+            sendVehicleMessage("targetVehicle", "fuel");
           } else if (!isFuelStation(currentTargetCoord)) {
             setFuelRefilled(false);
           }
@@ -179,11 +177,7 @@ const TargetMovement = ({ initialPosition, children }) => {
           if (isRepairStation(currentTargetCoord) && !damageRepaired && targetDamage > 0) {
             setTargetDamage(0);
             setDamageRepaired(true);
-            addPlayerMessage({
-              text: "Les dégâts du vaisseau ont été réparés !",
-              type: "info",
-              timestamp: Date.now(),
-            });
+            sendVehicleMessage("targetVehicle", "repair");
           } else if (!isRepairStation(currentTargetCoord)) {
             setDamageRepaired(false);
           }
@@ -196,49 +190,13 @@ const TargetMovement = ({ initialPosition, children }) => {
                 setPlayerResources(targetVehicleResources); // Transférer les ressources au joueur
                 resetTargetVehicleResources(); // Réinitialiser les ressources du véhicule cible
                 setResourcesTransferred(true); // Marquer les ressources comme transférées
-                addPlayerMessage({
-                  vehiculeId: "targetVehicle",
-                  title: "Ressources transférées.",
-                  body: "Le véhicule cible est revenu à la tuile de départ et a transféré ses ressources au joueur.",
-                  timestamp: Date.now(),
-                });
-              }
-              break;
-
-            case "fuel":
-              if (!fuelRefilled && targetFuel < 100) {
-                setTargetFuel(100); // Remplir le carburant à 100 %
-                setFuelRefilled(true);
-                addPlayerMessage({
-                  vehiculeId: "targetVehicle",
-                  title: "Le réservoir de carburant a été rempli.",
-                  body: "Le véhicule cible a atteint une station de carburant et a rempli son réservoir à 100 %.",
-                  timestamp: Date.now(),
-                });
-              }
-              break;
-
-            case "repair":
-              if (!damageRepaired && targetDamage > 0) {
-                setTargetDamage(0); // Réparer les dégâts
-                setDamageRepaired(true);
-                addPlayerMessage({
-                  vehiculeId: "targetVehicle",
-                  title: "Les dégâts ont été réparés.",
-                  body: "Le véhicule cible a atteint une station de réparation et a réparé tous ses dégâts.",
-                  timestamp: Date.now(),
-                });
+                sendVehicleMessage("targetVehicle", "depart");
               }
               break;
 
             case "danger":
               setTargetDamage(Math.min(targetDamage + 10, 100)); // Augmenter les dégâts
-              addPlayerMessage({
-                vehiculeId: "targetVehicle",
-                title: "Le véhicule cible a traversé une zone dangereuse.",
-                body: "Le véhicule cible a subi des dégâts en traversant une zone dangereuse.",
-                timestamp: Date.now(),
-              });
+              sendVehicleMessage("targetVehicle", "danger");
               break;
 
             case "resource":
@@ -246,12 +204,7 @@ const TargetMovement = ({ initialPosition, children }) => {
                 setTargetVehicleResources(currentTargetTile.resources); // Collecter les ressources
                 markTileAsCollected(currentTargetCoord);
                 setResourcesCollected(true);
-                addPlayerMessage({
-                  vehiculeId: "targetVehicle",
-                  title: "Ressources collectées.",
-                  body: `Le véhicule cible a collecté des ressources :\n- Nourriture : ${currentTargetTile.resources.food}\n- Débris : ${currentTargetTile.resources.debris}\n- Spécial : ${currentTargetTile.resources.special}`,
-                  timestamp: Date.now(),
-                });
+                sendVehicleMessage("targetVehicle", "resource", currentTargetTile.resources);
               }
               break;
 

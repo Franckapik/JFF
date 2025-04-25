@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { Vector3, Euler } from "three";
+import useMessageManager from "../hooks/useMessageManager"; // Import the custom hook
 
 const RandomMovement = ({ initialPosition, children }) => {
   const currentPosition = useRef(new Vector3(initialPosition.x, initialPosition.y, initialPosition.z));
@@ -19,7 +20,7 @@ const RandomMovement = ({ initialPosition, children }) => {
   const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle from the store
   const setTargetDamage = useTileStore((state) => state.setTargetDamage); // Setter for targetDamage
   const targetDamage = useTileStore((state) => state.targetDamage); // Get targetDamage from the store
-  const addPlayerMessage = useTileStore((state) => state.addPlayerMessage); // Add player messages
+  const { sendVehicleMessage } = useMessageManager(); // Use the custom hook
   const speed = 0.08; // Movement speed (units per second)
   const rotationSpeed = 2; // Rotation interpolation speed
   const [processedOverlap, setProcessedOverlap] = useState(false); // Track if overlap has been processed for the current tile
@@ -60,30 +61,20 @@ const RandomMovement = ({ initialPosition, children }) => {
         // Reset overlap processing for the new tile
         setProcessedOverlap(false);
 
-        // Handle tile types
+        /* // Handle tile types
         switch (currentTile.type) {
           case "depart":
-            addPlayerMessage({
-              vehiculeId: "randomVehicle",
-              title: "Le véhicule aléatoire est revenu à la tuile de départ.",
-              body: "Le véhicule aléatoire est revenu à sa position de départ.",
-              timestamp: Date.now(),
-            });
+            sendVehicleMessage("randomVehicle", "depart");
             break;
 
           case "danger":
-            addPlayerMessage({
-              vehiculeId: "randomVehicle",
-              title: "Le véhicule aléatoire a traversé une zone dangereuse.",
-              body: "Le véhicule a subi des dégâts en traversant une zone dangereuse.",
-              timestamp: Date.now(),
-            });
             setTargetDamage(Math.min(targetDamage + 10, 100)); // Augmenter les dégâts
+            sendVehicleMessage("randomVehicle", "danger");
             break;
 
           default:
             break;
-        }
+        } */
       }
     }
   };

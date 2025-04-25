@@ -17,6 +17,9 @@ const MessageModal = ({ messages, onClose }) => {
     return date.toLocaleString(); // Convert timestamp to a human-readable format
   };
 
+  // Trier les messages par timestamp décroissant
+  const sortedMessages = [...messages].sort((a, b) => b.timestamp - a.timestamp);
+
   return ReactDOM.createPortal(
     <div className="modal-overlay">
       <div className="modal-content">
@@ -60,8 +63,8 @@ const MessageModal = ({ messages, onClose }) => {
           </div>
         ) : (
           <ul className="message-list">
-            {messages.length > 0 ? (
-              messages.map((message, index) => (
+            {sortedMessages.length > 0 ? (
+              sortedMessages.map((message, index) => (
                 <li
                   key={index}
                   className={`message-item ${message.isRead ? "read" : "unread"}`} // Apply different styles
