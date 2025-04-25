@@ -7,7 +7,7 @@ const usePlayerStore = create((set, get) => ({
       id: 'player1',
       vehicles: {
         ship: {
-          id: 'ship', // Add an ID for the ship
+          id: 'ship1', // Unique ID for player 1's ship
           fuel: 100,
           damage: 0,
           position: null, // Initialize as null until tiles are available
@@ -46,12 +46,38 @@ const usePlayerStore = create((set, get) => ({
       },
       messages: [],
     },
+    player2: {
+      id: 'player2',
+      vehicles: {
+        ship: {
+          id: 'ship2', // Unique ID for player 2's ship
+          fuel: 100,
+          damage: 0,
+          position: null,
+          coord: null,
+          isMoving: false,
+          progress: 0,
+          totalDistance: 0,
+          path: [],
+          resources: { food: 0, debris: 0, special: 0 },
+          startCoord: null,
+        },
+      },
+      score: {
+        resources: { food: 0, debris: 0, special: 0 },
+      },
+      memory: {
+        knownResources: [],
+        knownDangers: [],
+      },
+      messages: [],
+    },
   },
   initializePlayer: (tiles) => {
-    // Find a random starting tile of type "depart"
-    const startingTile = Object.values(tiles).find((tile) => tile.type === "depart");
-    if (!startingTile) {
-      throw new Error("No starting tile of type 'depart' found.");
+    // Find starting tiles for both players
+    const startingTiles = Object.values(tiles).filter((tile) => tile.type === "depart");
+    if (startingTiles.length < 2) {
+      throw new Error("Not enough starting tiles of type 'depart' found.");
     }
 
     set((state) => ({
@@ -63,9 +89,21 @@ const usePlayerStore = create((set, get) => ({
             ...state.players.player1.vehicles,
             ship: {
               ...state.players.player1.vehicles.ship,
-              position: startingTile.position,
-              coord: startingTile.coord,
-              startCoord: startingTile.coord,
+              position: startingTiles[0].position,
+              coord: startingTiles[0].coord,
+              startCoord: startingTiles[0].coord,
+            },
+          },
+        },
+        player2: {
+          ...state.players.player2,
+          vehicles: {
+            ...state.players.player2.vehicles,
+            ship: {
+              ...state.players.player2.vehicles.ship,
+              position: startingTiles[1].position,
+              coord: startingTiles[1].coord,
+              startCoord: startingTiles[1].coord,
             },
           },
         },

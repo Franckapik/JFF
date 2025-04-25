@@ -4,9 +4,9 @@ import usePlayerStore from "../stores/usePlayerStore"; // Import player store
 import { useFrame } from "@react-three/fiber";
 import { Vector3 } from "three";
 
-const TargetMovement = ({ children }) => {
+const TargetMovement = ({ playerId, children }) => {
   const groupRef = useRef();
-  const playerVehicle = usePlayerStore((state) => state.players.player1.vehicles.ship); // Get player vehicle
+  const playerVehicle = usePlayerStore((state) => state.players[playerId].vehicles.ship); // Get player-specific vehicle
   const updateShip = usePlayerStore((state) => state.updateShip); // Use the generic updateShip function
   const tiles = useTileStore((state) => state.tiles); // Get tiles from the store
   const selectedTile = useTileStore((state) => state.selectedTile); // Get the selected tile

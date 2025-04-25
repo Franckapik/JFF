@@ -39,13 +39,21 @@ const Scene = () => {
       <ambientLight intensity={1} />
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
-      {shipPosition && (
-        <TargetMovement>
-          <mesh  castShadow>
-            <boxGeometry args={[0.5, 0.5, 0.5]} /> {/* Vehicle dimensions */}
-            <meshStandardMaterial color="blue" /> {/* Blue color for the vehicle */}
-          </mesh>
-        </TargetMovement>
+      {Object.keys(tiles).length > 0 && (
+        <>
+          <TargetMovement playerId="player1">
+            <mesh castShadow>
+              <boxGeometry args={[0.5, 0.5, 0.5]} />
+              <meshStandardMaterial color="blue" />
+            </mesh>
+          </TargetMovement>
+          <TargetMovement playerId="player2">
+            <mesh castShadow>
+              <boxGeometry args={[0.5, 0.5, 0.5]} />
+              <meshStandardMaterial color="red" />
+            </mesh>
+          </TargetMovement>
+        </>
       )}
       {Object.values(tiles)
         .filter((tile) => tile.walkable)
