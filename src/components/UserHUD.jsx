@@ -33,10 +33,6 @@ const UserHUD = () => {
               {tile.position?.y.toFixed(2) || "N/A"}, z: {tile.position?.z.toFixed(2) || "N/A"}
             </li>
             <li>
-              <strong>Coordinates :</strong> q: {tile.coordinates?.q || "N/A"}, r:{" "}
-              {tile.coordinates?.r || "N/A"}
-            </li>
-            <li>
               <strong>Walkable :</strong> {tile.walkable ? "Oui" : "Non"}
             </li>
             <li>
@@ -46,7 +42,16 @@ const UserHUD = () => {
               <strong>Collected :</strong> {tile.collected ? "Oui" : "Non"}
             </li>
             <li>
+              <strong>Collectable :</strong> {tile.collectable ? "Oui" : "Non"}
+            </li>
+            <li>
               <strong>Danger :</strong> {tile.danger ? "Oui" : "Non"}
+            </li>
+            <li>
+              <strong>Neighbors :</strong> {tile.neighbors?.join(", ") || "N/A"}
+            </li>
+            <li>
+              <strong>Color :</strong> {tile.color || "N/A"}
             </li>
             <li>
               <strong>Outer :</strong> {tile.outer ? "Oui" : "Non"}
@@ -58,10 +63,13 @@ const UserHUD = () => {
               <strong>Target Vehicle Start :</strong> {tile.targetVehicleStart ? "Oui" : "Non"}
             </li>
             <li>
-              <strong>Immunity :</strong> {tile.immunity ? "Oui" : "Non"}
+              <strong>Fuel Station :</strong> {tile.fuelStation ? "Oui" : "Non"}
             </li>
             <li>
-              <strong>Neighbors :</strong> {tile.neighbors?.join(", ") || "N/A"}
+              <strong>Repair Station :</strong> {tile.repairStation ? "Oui" : "Non"}
+            </li>
+            <li>
+              <strong>Immunity :</strong> {tile.immunity ? "Oui" : "Non"}
             </li>
             <li>
               <strong>Resources:</strong>
