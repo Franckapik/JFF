@@ -11,7 +11,6 @@ export const useTileStore = create((set, get) => ({
   targetVehicleIsMoving: false, // Movement status for the target vehicle
   targetVehicleProgress: 0, // Progress of the target vehicle
   randomVehicleStartCoord: null, // Starting coord for the random vehicle
-  targetVehicleStartCoord: null, // Starting coord for the target vehicle
   targetFuel: 100, // Initial fuel level for the target vehicle
   targetDamage: 0, // Initial damage level for the target vehicle
   targetVehicleResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the target vehicle
@@ -32,7 +31,6 @@ export const useTileStore = create((set, get) => ({
   setTargetVehicleIsMoving: (isMoving) => set({ targetVehicleIsMoving: isMoving }), // Setter for target vehicle movement
   setTargetVehicleProgress: (progress) => set({ targetVehicleProgress: progress }), // Setter for progress
   setRandomVehicleStartCoord: (coord) => set({ randomVehicleStartCoord: coord }), // Setter for random vehicle start coord
-  setTargetVehicleStartCoord: (coord) => set({ targetVehicleStartCoord: coord }), // Setter for target vehicle start coord
   setTargetFuel: (fuel) => set({ targetFuel: fuel }), // Setter for targetFuel
   setTargetDamage: (damage) => set({ targetDamage: damage }), // Setter for targetDamage
   setTargetVehicleResources: (resources) =>

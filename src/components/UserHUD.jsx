@@ -10,8 +10,6 @@ const UserHUD = () => {
   const randomVehicleIsMoving = useTileStore((state) => state.randomVehicleIsMoving); // Get random vehicle movement status
   const targetVehicleIsMoving = useTileStore((state) => state.targetVehicleIsMoving); // Get target vehicle movement status
   const targetVehicleProgress = useTileStore((state) => state.targetVehicleProgress); // Get target vehicle progress
-  const randomVehicleStartCoord = useTileStore((state) => state.randomVehicleStartCoord); // Get random vehicle start coord
-  const targetVehicleStartCoord = useTileStore((state) => state.targetVehicleStartCoord); // Get target vehicle start coord
   const targetFuel = useTileStore((state) => state.targetFuel); // Get targetFuel from the store
   const targetDamage = useTileStore((state) => state.targetDamage); // Get targetDamage from the store
   const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
@@ -86,9 +84,6 @@ const UserHUD = () => {
               <li>
                 <strong>En Mouvement:</strong> {randomVehicleIsMoving ? "Oui" : "Non"}
               </li>
-              <li>
-                <strong>Coord Départ:</strong> {randomVehicleStartCoord || "N/A"}
-              </li>
             </ul>
           </li>
           <li>
@@ -107,9 +102,6 @@ const UserHUD = () => {
               </li>
               <li>
                 <strong>Progression:</strong> {targetVehicleProgress}%
-              </li>
-              <li>
-                <strong>Coord Départ:</strong> {targetVehicleStartCoord || "N/A"}
               </li>
             </ul>
           </li>
