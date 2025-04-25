@@ -20,6 +20,9 @@ const TargetMovement = ({ initialPosition, children }) => {
   const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
   const resetTargetVehicleResources = useTileStore((state) => state.resetTargetVehicleResources); // Import reset function
   const markTileAsCollected = useTileStore((state) => state.markTileAsCollected); // Import markTileAsCollected function
+  const isFuelStation = useTileStore((state) => state.isFuelStation); // Importer la fonction pour vérifier les stations de carburant
+  const [fuelRefilled, setFuelRefilled] = useState(false); // Suivre si le carburant a été rempli
+  const addPlayerMessage = useTileStore((state) => state.addPlayerMessage); // Ajouter un message pour informer le joueur
 
   const speed = 1; // Movement speed (units per second)
   const rotationSpeed = 2; // Rotation interpolation speed
@@ -172,6 +175,19 @@ const TargetMovement = ({ initialPosition, children }) => {
             setResourcesTransferred(true); // Mark resources as transferred
           } else if (!isStartingTile) {
             setResourcesTransferred(false); // Reset the transfer flag when leaving the starting tile
+          }
+
+          // Vérifiez si la tuile actuelle est une station de carburant
+          if (isFuelStation(currentTargetCoord) && !fuelRefilled && targetFuel < 100) {
+            setTargetFuel(100); // Remplir le carburant à 100 %
+            setFuelRefilled(true); // Marquer comme rempli
+            addPlayerMessage({
+              text: "Le réservoir de carburant a été rempli à 100 % !",
+              type: "info",
+              timestamp: Date.now(),
+            });
+          } else if (!isFuelStation(currentTargetCoord)) {
+            setFuelRefilled(false); // Réinitialiser l'état lorsque le véhicule quitte la station
           }
 
           setTargetVehicleIsMoving(false); // Set isMoving to false when target is reached

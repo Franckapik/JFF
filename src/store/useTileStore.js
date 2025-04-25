@@ -70,10 +70,15 @@ export const useTileStore = create((set, get) => ({
     })),
   setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }), // Setter for selected vehicle
 
-  addPlayerMessage: (message) =>
+  addPlayerMessage: (message) => {
+    if (!message || typeof message.text !== "string") {
+      console.error("Message invalide :", message);
+      return;
+    }
     set((state) => ({
-      playerMessages: [...state.playerMessages, { ...message, isRead: false }], // Add a new message with isRead: false
-    })),
+      playerMessages: [...state.playerMessages, { ...message, isRead: false }],
+    }));
+  },
 
   markMessageAsRead: (index) =>
     set((state) => {
@@ -124,4 +129,8 @@ export const useTileStore = create((set, get) => ({
       }
       return { tiles: updatedTiles };
     }),
+  isFuelStation: (coord) => {
+    const tiles = get().tiles;
+    return tiles[coord]?.fuelStation === true;
+  },
 }));
