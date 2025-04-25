@@ -23,7 +23,8 @@ const TargetMovement = ({ initialPosition, children }) => {
   const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
   const resetTargetVehicleResources = useTileStore((state) => state.resetTargetVehicleResources); // Import reset function
   const markTileAsCollected = useTileStore((state) => state.markTileAsCollected); // Import markTileAsCollected function
-  const updateProgress = useTileStore((state) => state.updateProgress); // Import the store method
+  const isFuelStation = useTileStore((state) => state.isFuelStation); // Check if a tile is a fuel station
+  const isRepairStation = useTileStore((state) => state.isRepairStation); // Check if a tile is a repair station
 
   const { sendVehicleMessage } = useMessageManager(); // Use the custom hook
 
@@ -36,6 +37,8 @@ const TargetMovement = ({ initialPosition, children }) => {
   const [path, setPath] = useState([]); // List of intermediate tiles
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index of the current target tile
   const [initialTilePosition, setInitialTilePosition] = useState(null); // Position of the initial tile
+  const [totalPathDistance, setTotalPathDistance] = useState(0); // Total distance of the path
+  const [distanceTraveled, setDistanceTraveled] = useState(0); // Distance traveled so far
 
 
   const speed = 1; // Movement speed (units per second)
@@ -54,7 +57,9 @@ const TargetMovement = ({ initialPosition, children }) => {
         const { path, totalDistance } = calculatePathData(currentTile, targetTile, tiles);
         setPath(path);
         setCurrentTargetIndex(0); // Reset the index
-        updateProgress(0, totalDistance); // Reset progress and set total distance
+        setTargetVehicleProgress(0); // Reset progress
+        setTotalPathDistance(totalDistance);
+        setDistanceTraveled(0); // Reset traveled distance
       }
     }
   };
@@ -110,7 +115,10 @@ const TargetMovement = ({ initialPosition, children }) => {
           rotationRef.current.set(0, interpolatedAngle, 0);
           groupRef.current.rotation.copy(rotationRef.current);
 
-          updateProgress(moveDistance); // Delegate progress calculation to the store
+          setDistanceTraveled((prev) => prev + moveDistance);
+
+          const progress = (distanceTraveled / totalPathDistance) * 100;
+          setTargetVehicleProgress(progress.toFixed(2));
         } else if (currentTargetIndex < path.length - 1) {
           setCurrentTargetIndex(currentTargetIndex + 1);
 
@@ -133,6 +141,47 @@ const TargetMovement = ({ initialPosition, children }) => {
             },
             coord: currentTargetCoord,
           });
+
+          // Vérifiez si le vaisseau est sur sa tuile de départ
+          const isStartingTile = tiles[currentTargetCoord]?.targetVehicleStart;
+          if (isStartingTile && !resourcesTransferred) {
+            setTargetFuel(100); // Remplir le carburant
+            setPlayerResources((prevResources) => ({
+              food: prevResources.food + targetVehicleResources.food,
+              debris: prevResources.debris + targetVehicleResources.debris,
+              special: prevResources.special + targetVehicleResources.special,
+            })); // Transférer les ressources au joueur
+            resetTargetVehicleResources(); // Réinitialiser les ressources du vaisseau
+            setResourcesTransferred(true); // Marquer les ressources comme transférées
+          } else if (!isStartingTile) {
+            setResourcesTransferred(false); // Réinitialiser l'état si le vaisseau quitte la tuile de départ
+          }
+
+          if (!currentTargetTile.targetVehicleStart && !resourcesCollected && !currentTargetTile.collected) {
+            const destinationTile = tiles[currentTargetCoord];
+            if (destinationTile && destinationTile.resources && destinationTile.collectable) {
+              setTargetVehicleResources(destinationTile.resources);
+              markTileAsCollected(currentTargetCoord);
+            }
+            setResourcesCollected(true);
+          }
+
+
+          if (isFuelStation(currentTargetCoord) && !fuelRefilled && targetFuel < 100) {
+            setTargetFuel(100);
+            setFuelRefilled(true);
+            sendVehicleMessage("targetVehicle", "fuel");
+          } else if (!isFuelStation(currentTargetCoord)) {
+            setFuelRefilled(false);
+          }
+
+          if (isRepairStation(currentTargetCoord) && !damageRepaired && targetDamage > 0) {
+            setTargetDamage(0);
+            setDamageRepaired(true);
+            sendVehicleMessage("targetVehicle", "repair");
+          } else if (!isRepairStation(currentTargetCoord)) {
+            setDamageRepaired(false);
+          }
 
           // Gérer les types de tuiles
           switch (currentTargetTile.type) {
@@ -157,22 +206,6 @@ const TargetMovement = ({ initialPosition, children }) => {
                 markTileAsCollected(currentTargetCoord);
                 setResourcesCollected(true);
                 sendVehicleMessage("targetVehicle", "resource", currentTargetTile.resources);
-              }
-              break;
-
-            case "fuel":
-              if (!fuelRefilled && targetFuel < 100) {
-                setTargetFuel(100);
-                setFuelRefilled(true);
-                sendVehicleMessage("targetVehicle", "fuel");
-              }
-              break;
-
-            case "repair":
-              if (!damageRepaired && targetDamage > 0) {
-                setTargetDamage(0);
-                setDamageRepaired(true);
-                sendVehicleMessage("targetVehicle", "repair");
               }
               break;
 
