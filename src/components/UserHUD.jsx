@@ -11,8 +11,7 @@ const UserHUD = () => {
   const drones = usePlayerStore((state) => state.players.player1.vehicles.drones); // Get drones
   const playerResources = usePlayerStore((state) => state.players.player1.score.resources); // Get player resources
 
-  console.log(tile);
-  
+ 
   const selectedVehicle =
     selectedVehicleId === "ship"
       ? ship
