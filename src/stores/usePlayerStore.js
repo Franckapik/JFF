@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { calculatePathData } from '../utils/utils'; // Import utility functions
 
 const usePlayerStore = create((set, get) => ({
+  selectedVehicle: { playerId: null, vehicleId: null }, // Global selected vehicle
   players: {
     player1: {
       id: 'player1',
@@ -26,6 +27,7 @@ const usePlayerStore = create((set, get) => ({
             coord: null,
             isMoving: false,
             progress: 0,
+            resources: { food: 0, debris: 0, special: 0 }, // Add resources for drones
           },
           {
             id: 'drone2', // Add another drone with an ID
@@ -33,9 +35,9 @@ const usePlayerStore = create((set, get) => ({
             coord: null,
             isMoving: false,
             progress: 0,
+            resources: { food: 0, debris: 0, special: 0 }, // Add resources for drones
           },
         ],
-        selectedVehicle: 'ship', // Default selected vehicle is the ship
       },
       score: {
         resources: { food: 0, debris: 0, special: 0 },
@@ -62,6 +64,24 @@ const usePlayerStore = create((set, get) => ({
           resources: { food: 0, debris: 0, special: 0 },
           startCoord: null,
         },
+        drones: [
+          {
+            id: 'drone3', // Add an ID for player 2's first drone
+            position: null,
+            coord: null,
+            isMoving: false,
+            progress: 0,
+            resources: { food: 0, debris: 0, special: 0 }, // Add resources for drones
+          },
+          {
+            id: 'drone4', // Add another drone for player 2
+            position: null,
+            coord: null,
+            isMoving: false,
+            progress: 0,
+            resources: { food: 0, debris: 0, special: 0 }, // Add resources for drones
+          },
+        ],
       },
       score: {
         resources: { food: 0, debris: 0, special: 0 },
@@ -74,7 +94,6 @@ const usePlayerStore = create((set, get) => ({
     },
   },
   initializePlayer: (tiles) => {
-    // Find starting tiles for both players
     const startingTiles = Object.values(tiles).filter((tile) => tile.type === "depart");
     if (startingTiles.length < 2) {
       throw new Error("Not enough starting tiles of type 'depart' found.");
@@ -132,7 +151,6 @@ const usePlayerStore = create((set, get) => ({
             vehicles: {
               ...state.players[playerId].vehicles,
               ship: {
-                ...state.players[playerId].vehicles.ship,
                 path, // Store the calculated path
                 totalDistance, // Set total distance
                 progress: 0, // Reset progress
@@ -202,18 +220,9 @@ const usePlayerStore = create((set, get) => ({
       };
     });
   },
-  selectVehicle: (vehicleId) => {
-    set((state) => ({
-      players: {
-        ...state.players,
-        player1: {
-          ...state.players.player1,
-          vehicles: {
-            ...state.players.player1.vehicles,
-            selectedVehicle: vehicleId, // Update the selected vehicle
-          },
-        },
-      },
+  selectVehicle: (playerId, vehicleId) => {
+    set(() => ({
+      selectedVehicle: { playerId, vehicleId }, // Update the globally selected vehicle
     }));
   },
 }));

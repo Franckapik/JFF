@@ -12,6 +12,7 @@ const Scene = () => {
   const initializePlayer = usePlayerStore((state) => state.initializePlayer); // Player initialization method
   const shipPosition = usePlayerStore((state) => state.players.player1.vehicles.ship.position); // Ship position
   const setSelectedTile = useTileStore((state) => state.setSelectedTile); // Zustand setter for selectedTile
+  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
 
   useEffect(() => {
     initializeTiles(); // Initialize tiles with default radius and spacing
@@ -44,13 +45,17 @@ const Scene = () => {
           <TargetMovement playerId="player1">
             <mesh castShadow>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
-              <meshStandardMaterial color="blue" />
+              <meshStandardMaterial
+                color={selectedVehicle.playerId === "player1" && selectedVehicle.vehicleId === "ship" ? "yellow" : "blue"}
+              />
             </mesh>
           </TargetMovement>
           <TargetMovement playerId="player2">
             <mesh castShadow>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
-              <meshStandardMaterial color="red" />
+              <meshStandardMaterial
+                color={selectedVehicle.playerId === "player2" && selectedVehicle.vehicleId === "ship" ? "yellow" : "red"}
+              />
             </mesh>
           </TargetMovement>
         </>

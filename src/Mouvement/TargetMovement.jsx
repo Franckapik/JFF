@@ -6,7 +6,12 @@ import { Vector3 } from "three";
 
 const TargetMovement = ({ playerId, children }) => {
   const groupRef = useRef();
-  const playerVehicle = usePlayerStore((state) => state.players[playerId].vehicles.ship); // Get player-specific vehicle
+  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
+  const playerVehicles = usePlayerStore((state) => state.players[playerId].vehicles); // Get all vehicles for the player
+  const playerVehicle =
+    selectedVehicle.playerId === playerId && selectedVehicle.vehicleId === "ship"
+      ? playerVehicles.ship
+      : playerVehicles.drones.find((drone) => drone.id === selectedVehicle.vehicleId); // Get the selected vehicle
   const updateShip = usePlayerStore((state) => state.updateShip); // Use the generic updateShip function
   const tiles = useTileStore((state) => state.tiles); // Get tiles from the store
   const selectedTile = useTileStore((state) => state.selectedTile); // Get the selected tile
@@ -70,7 +75,7 @@ const TargetMovement = ({ playerId, children }) => {
 
   // Move the vehicle along the path
   useFrame((_, delta) => {
-    if (!path || path.length === 0 || !groupRef.current) return;
+    if (!path || path.length === 0 || !groupRef.current || !playerVehicle) return; // Ensure playerVehicle is defined
 
     const currentTargetCoord = path[currentTargetIndex];
     const currentTargetTile = tiles[currentTargetCoord];
@@ -122,7 +127,7 @@ const TargetMovement = ({ playerId, children }) => {
       } else {
         // Add resources from the destination tile to the ship
         const destinationTile = tiles[currentTargetCoord];
-        const updatedResources = { ...playerVehicle.resources };
+        const updatedResources = playerVehicle.resources ? { ...playerVehicle.resources } : {}; // Ensure resources exist
 
         if (destinationTile?.resources && !destinationTile.collected && !resourcesCollected) {
           updatedResources.food += destinationTile.resources.food || 0;
