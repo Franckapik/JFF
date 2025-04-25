@@ -86,12 +86,17 @@ const TargetMovement = ({ children }) => {
         const moveDistance = Math.min(speed * delta, distance);
         groupRef.current.position.addScaledVector(direction, moveDistance);
 
+        // Calculate progress as a percentage of the path completed
+        const progress =
+          ((currentTargetIndex + (1 - distance / targetPosition.length())) / path.length) * 100;
+
         updateShip({
           position: {
             x: groupRef.current.position.x,
             y: groupRef.current.position.y,
             z: groupRef.current.position.z,
           },
+          progress: Math.min(progress, 100), // Ensure progress does not exceed 100%
           isMoving: true,
         });
       } else if (currentTargetIndex < path.length - 1) {
@@ -113,6 +118,7 @@ const TargetMovement = ({ children }) => {
             z: currentTargetTile.position.z,
           },
           coord: currentTargetCoord,
+          progress: 100, // Set progress to 100% when the target is reached
           isMoving: false,
         });
       }
