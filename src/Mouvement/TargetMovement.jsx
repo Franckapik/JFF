@@ -25,6 +25,7 @@ const TargetMovement = ({ initialPosition, children }) => {
   const markTileAsCollected = useTileStore((state) => state.markTileAsCollected); // Import markTileAsCollected function
   const isFuelStation = useTileStore((state) => state.isFuelStation); // Check if a tile is a fuel station
   const isRepairStation = useTileStore((state) => state.isRepairStation); // Check if a tile is a repair station
+  const updateProgress = useTileStore((state) => state.updateProgress); // Import the store method
 
   const { sendVehicleMessage } = useMessageManager(); // Use the custom hook
 
@@ -37,8 +38,6 @@ const TargetMovement = ({ initialPosition, children }) => {
   const [path, setPath] = useState([]); // List of intermediate tiles
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index of the current target tile
   const [initialTilePosition, setInitialTilePosition] = useState(null); // Position of the initial tile
-  const [totalPathDistance, setTotalPathDistance] = useState(0); // Total distance of the path
-  const [distanceTraveled, setDistanceTraveled] = useState(0); // Distance traveled so far
 
 
   const speed = 1; // Movement speed (units per second)
@@ -57,9 +56,7 @@ const TargetMovement = ({ initialPosition, children }) => {
         const { path, totalDistance } = calculatePathData(currentTile, targetTile, tiles);
         setPath(path);
         setCurrentTargetIndex(0); // Reset the index
-        setTargetVehicleProgress(0); // Reset progress
-        setTotalPathDistance(totalDistance);
-        setDistanceTraveled(0); // Reset traveled distance
+        updateProgress(0, totalDistance); // Reset progress and set total distance
       }
     }
   };
@@ -115,10 +112,7 @@ const TargetMovement = ({ initialPosition, children }) => {
           rotationRef.current.set(0, interpolatedAngle, 0);
           groupRef.current.rotation.copy(rotationRef.current);
 
-          setDistanceTraveled((prev) => prev + moveDistance);
-
-          const progress = (distanceTraveled / totalPathDistance) * 100;
-          setTargetVehicleProgress(progress.toFixed(2));
+          updateProgress(moveDistance); // Delegate progress calculation to the store
         } else if (currentTargetIndex < path.length - 1) {
           setCurrentTargetIndex(currentTargetIndex + 1);
 
@@ -250,32 +244,6 @@ const TargetMovement = ({ initialPosition, children }) => {
       <group ref={groupRef}>{children}</group>
     </>
   );
-};
-
-const findPath = (startCoord, targetCoord, tiles) => {
-  const queue = [[startCoord]];
-  const visited = new Set();
-
-  while (queue.length > 0) {
-    const path = queue.shift();
-    const currentCoord = path[path.length - 1];
-
-    if (currentCoord === targetCoord) {
-      return path;
-    }
-
-    if (!visited.has(currentCoord)) {
-      visited.add(currentCoord);
-      const neighbors = tiles[currentCoord]?.neighbors || [];
-      neighbors.forEach((neighbor) => {
-        if (!visited.has(neighbor) && tiles[neighbor]?.walkable !== false) {
-          queue.push([...path, neighbor]);
-        }
-      });
-    }
-  }
-
-  return [];
 };
 
 export default TargetMovement;

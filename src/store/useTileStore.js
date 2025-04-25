@@ -19,6 +19,8 @@ export const useTileStore = create((set, get) => ({
   drones: [], // Ensure drones is initialized as an empty array
   selectedVehicle: null, // Currently selected vehicle (drone or target vehicle)
   playerMessages: [], // Array to store player messages
+  totalPathDistance: 0, // Total distance of the path
+  distanceTraveled: 0, // Distance traveled so far
 
   setTiles: (newTiles) => set({ tiles: newTiles }),
   setSelectedTile: (tileCoord) => set({ selectedTile: tileCoord }), // Ensure selectedTile is a coordinate
@@ -137,6 +139,22 @@ export const useTileStore = create((set, get) => ({
     const tiles = get().tiles;
     return tiles[coord]?.repairStation === true;
   },
+
+  updateProgress: (moveDistance, totalDistance = null) => {
+    set((state) => {
+      const newDistanceTraveled = totalDistance !== null ? 0 : state.distanceTraveled + moveDistance;
+      const newTotalPathDistance = totalDistance !== null ? totalDistance : state.totalPathDistance;
+
+      const progress = (newDistanceTraveled / newTotalPathDistance) * 100;
+
+      return {
+        distanceTraveled: newDistanceTraveled,
+        totalPathDistance: newTotalPathDistance,
+        targetVehicleProgress: progress.toFixed(2),
+      };
+    });
+  },
+
   initializeVehiclesAndDrones: (hexPositions) => {
     const setRandomVehicle = get().setRandomVehicle;
     const setTargetVehicle = get().setTargetVehicle;
