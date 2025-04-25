@@ -1,15 +1,15 @@
 import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Vector3, Euler } from "three";
+import { Vector3 } from "three";
 import { useTileStore } from "../store/useTileStore";
-import { Torus } from "@react-three/drei"; // Import Torus from drei
+import useMessageManager from "../hooks/useMessageManager"; // Import the custom hook
 
 const DroneMovement = ({ drone, children }) => {
   const groupRef = useRef();
   const targetVehicle = useTileStore((state) => state.targetVehicle);
   const tiles = useTileStore((state) => state.tiles);
   const updateDrone = useTileStore((state) => state.updateDrone);
-  const addPlayerMessage = useTileStore((state) => state.addPlayerMessage); // Import addPlayerMessage from the store
+  const { sendVehicleMessage } = useMessageManager(); // Use the custom hook
 
   useFrame((_, delta) => {
     if (!groupRef.current || !drone.position) return; // Ensure drone.position is defined
@@ -25,7 +25,6 @@ const DroneMovement = ({ drone, children }) => {
     if (drone.targetTile) {
       // Si le drone a une tuile cible
       const targetTile = tiles[drone.targetTile];
-      
       if (targetTile) {
         targetPosition = new Vector3(
           targetTile.position.x,
@@ -41,7 +40,6 @@ const DroneMovement = ({ drone, children }) => {
         targetVehicle.position.z
       );
     }
-   
 
     if (targetPosition) {
       // Ignore the y component when calculating the distance
@@ -49,7 +47,6 @@ const DroneMovement = ({ drone, children }) => {
       const flatTargetPosition = new Vector3(targetPosition.x, 0, targetPosition.z);
       const direction = new Vector3().subVectors(flatTargetPosition, flatCurrentPosition);
       const distance = direction.length();
-
 
       if (distance > 0.1) { // Adjust this threshold if necessary
         direction.normalize();
@@ -67,37 +64,18 @@ const DroneMovement = ({ drone, children }) => {
 
           updateDrone(drone.id, { isMoving: false, targetTile: null, hasReachedTarget: true });
 
-          // Ajouter un message à la liste des messages du joueur
-          addPlayerMessage({
-            droneId: drone.id,
-            title: `Drone ${drone.id} a atteint ${reachedTileName}.`,
-            body: `Le drone ${drone.id} a terminé sa mission et a atteint ${reachedTileName}. Voici les ressources trouvées :\n\n` +
-                  `- Nourriture : ${resources.food}\n` +
-                  `- Débris : ${resources.debris}\n` +
-                  `- Spécial : ${resources.special}`,
-            tileName: reachedTileName, // Inclure le nom de la tuile
-            timestamp: Date.now(), // Ajouter un timestamp pour le tri et l'affichage
-          });
+          // Envoyer un message via le hook
+          sendVehicleMessage(drone.id, "resource", resources);
 
           // Gérer les types de tuiles
           if (reachedTile.type) {
             switch (reachedTile.type) {
               case "resource":
-                addPlayerMessage({
-                  droneId: drone.id,
-                  title: `Drone ${drone.id} a collecté des ressources.`,
-                  body: `Ressources collectées :\n- Nourriture : ${resources.food}\n- Débris : ${resources.debris}\n- Spécial : ${resources.special}`,
-                  timestamp: Date.now(),
-                });
+                sendVehicleMessage(drone.id, "resource", resources);
                 break;
 
               case "danger":
-                addPlayerMessage({
-                  droneId: drone.id,
-                  title: `Drone ${drone.id} a traversé une zone dangereuse.`,
-                  body: `Le drone a subi des dégâts en traversant une zone dangereuse.`,
-                  timestamp: Date.now(),
-                });
+                sendVehicleMessage(drone.id, "danger");
                 break;
 
               default:
@@ -107,8 +85,6 @@ const DroneMovement = ({ drone, children }) => {
         }
       }
     }
-
-    
   });
 
   return (
