@@ -190,6 +190,21 @@ const TargetMovement = ({ initialPosition, children }) => {
 
           // Gérer les types de tuiles
           switch (currentTargetTile.type) {
+            case "depart":
+              if (!resourcesTransferred) {
+                setTargetFuel(100); // Remplir le carburant à 100 %
+                setPlayerResources(targetVehicleResources); // Transférer les ressources au joueur
+                resetTargetVehicleResources(); // Réinitialiser les ressources du véhicule cible
+                setResourcesTransferred(true); // Marquer les ressources comme transférées
+                addPlayerMessage({
+                  vehiculeId: "targetVehicle",
+                  title: "Ressources transférées.",
+                  body: "Le véhicule cible est revenu à la tuile de départ et a transféré ses ressources au joueur.",
+                  timestamp: Date.now(),
+                });
+              }
+              break;
+
             case "fuel":
               if (!fuelRefilled && targetFuel < 100) {
                 setTargetFuel(100); // Remplir le carburant à 100 %
@@ -247,6 +262,7 @@ const TargetMovement = ({ initialPosition, children }) => {
           // Réinitialiser les états si la tuile n'est plus pertinente
           if (currentTargetTile.type !== "fuel") setFuelRefilled(false);
           if (currentTargetTile.type !== "repair") setDamageRepaired(false);
+          if (currentTargetTile.type !== "depart") setResourcesTransferred(false);
 
           setTargetVehicleIsMoving(false);
           setTargetVehicleProgress(100);

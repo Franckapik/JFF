@@ -83,11 +83,12 @@ export function generateHexPositions(radius, spacing) {
   } while (targetVehicleTile.coord === randomVehicleTile.coord);
 
   randomVehicleTile.randomVehicleStart = true;
+  randomVehicleTile.type = "depart"; // Set type to "depart"
   targetVehicleTile.targetVehicleStart = true;
-  targetVehicleTile.type = null; // Starting tile has no type
+  targetVehicleTile.type = "depart"; // Set type to "depart"
 
   hexPositions.forEach((tile) => {
-    if (tile.targetVehicleStart) {
+    if (tile.targetVehicleStart || tile.randomVehicleStart) {
       tile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on starting tiles
     }
   });

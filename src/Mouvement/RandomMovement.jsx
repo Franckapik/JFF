@@ -19,6 +19,7 @@ const RandomMovement = ({ initialPosition, children }) => {
   const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle from the store
   const setTargetDamage = useTileStore((state) => state.setTargetDamage); // Setter for targetDamage
   const targetDamage = useTileStore((state) => state.targetDamage); // Get targetDamage from the store
+  const addPlayerMessage = useTileStore((state) => state.addPlayerMessage); // Add player messages
   const speed = 0.08; // Movement speed (units per second)
   const rotationSpeed = 2; // Rotation interpolation speed
   const [processedOverlap, setProcessedOverlap] = useState(false); // Track if overlap has been processed for the current tile
@@ -31,17 +32,45 @@ const RandomMovement = ({ initialPosition, children }) => {
     );
 
     if (currentTile) {
+      // Set the first tile position if not already set
+      if (!firstTilePosition) {
+        setFirstTilePosition(currentTile.position);
+      }
+
+      // Update the start marker to the current tile's position
+      setStartMarker(currentTile.position);
+
+      // Get neighboring tiles
       const neighbors = getNeighbors(currentTile.coord).filter(
         (neighbor) => neighbor.coord !== previousTileCoord.current
       );
 
       if (neighbors.length > 0) {
+        // Choose a random neighbor and set it as the target position
         const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
-        previousTileCoord.current = currentTile.coord;
+        previousTileCoord.current = currentTile.coord; // Update the previous tile's coord
         targetPosition.current.set(randomNeighbor.position.x, randomNeighbor.position.y, randomNeighbor.position.z);
 
-        // Gérer les types de tuiles
+        // Update the end marker to the target tile's position
+        setEndMarker(randomNeighbor.position);
+
+        // Save the target tile's coord in the store
+        setRandomVehicleTargetTile(randomNeighbor.coord);
+
+        // Reset overlap processing for the new tile
+        setProcessedOverlap(false);
+
+        // Handle tile types
         switch (currentTile.type) {
+          case "depart":
+            addPlayerMessage({
+              vehiculeId: "randomVehicle",
+              title: "Le véhicule aléatoire est revenu à la tuile de départ.",
+              body: "Le véhicule aléatoire est revenu à sa position de départ.",
+              timestamp: Date.now(),
+            });
+            break;
+
           case "danger":
             addPlayerMessage({
               vehiculeId: "randomVehicle",
