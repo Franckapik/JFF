@@ -131,14 +131,6 @@ export const useTileStore = create((set, get) => ({
       }
       return { tiles: updatedTiles };
     }),
-  isFuelStation: (coord) => {
-    const tiles = get().tiles;
-    return tiles[coord]?.fuelStation === true;
-  },
-  isRepairStation: (coord) => {
-    const tiles = get().tiles;
-    return tiles[coord]?.repairStation === true;
-  },
 
   updateProgress: (moveDistance, totalDistance = null) => {
     set((state) => {

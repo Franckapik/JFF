@@ -23,8 +23,6 @@ const TargetMovement = ({ initialPosition, children }) => {
   const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
   const resetTargetVehicleResources = useTileStore((state) => state.resetTargetVehicleResources); // Import reset function
   const markTileAsCollected = useTileStore((state) => state.markTileAsCollected); // Import markTileAsCollected function
-  const isFuelStation = useTileStore((state) => state.isFuelStation); // Check if a tile is a fuel station
-  const isRepairStation = useTileStore((state) => state.isRepairStation); // Check if a tile is a repair station
   const updateProgress = useTileStore((state) => state.updateProgress); // Import the store method
 
   const { sendVehicleMessage } = useMessageManager(); // Use the custom hook
@@ -136,47 +134,6 @@ const TargetMovement = ({ initialPosition, children }) => {
             coord: currentTargetCoord,
           });
 
-          // Vérifiez si le vaisseau est sur sa tuile de départ
-          const isStartingTile = tiles[currentTargetCoord]?.targetVehicleStart;
-          if (isStartingTile && !resourcesTransferred) {
-            setTargetFuel(100); // Remplir le carburant
-            setPlayerResources((prevResources) => ({
-              food: prevResources.food + targetVehicleResources.food,
-              debris: prevResources.debris + targetVehicleResources.debris,
-              special: prevResources.special + targetVehicleResources.special,
-            })); // Transférer les ressources au joueur
-            resetTargetVehicleResources(); // Réinitialiser les ressources du vaisseau
-            setResourcesTransferred(true); // Marquer les ressources comme transférées
-          } else if (!isStartingTile) {
-            setResourcesTransferred(false); // Réinitialiser l'état si le vaisseau quitte la tuile de départ
-          }
-
-          if (!currentTargetTile.targetVehicleStart && !resourcesCollected && !currentTargetTile.collected) {
-            const destinationTile = tiles[currentTargetCoord];
-            if (destinationTile && destinationTile.resources && destinationTile.collectable) {
-              setTargetVehicleResources(destinationTile.resources);
-              markTileAsCollected(currentTargetCoord);
-            }
-            setResourcesCollected(true);
-          }
-
-
-          if (isFuelStation(currentTargetCoord) && !fuelRefilled && targetFuel < 100) {
-            setTargetFuel(100);
-            setFuelRefilled(true);
-            sendVehicleMessage("targetVehicle", "fuel");
-          } else if (!isFuelStation(currentTargetCoord)) {
-            setFuelRefilled(false);
-          }
-
-          if (isRepairStation(currentTargetCoord) && !damageRepaired && targetDamage > 0) {
-            setTargetDamage(0);
-            setDamageRepaired(true);
-            sendVehicleMessage("targetVehicle", "repair");
-          } else if (!isRepairStation(currentTargetCoord)) {
-            setDamageRepaired(false);
-          }
-
           // Gérer les types de tuiles
           switch (currentTargetTile.type) {
             case "depart":
@@ -200,6 +157,22 @@ const TargetMovement = ({ initialPosition, children }) => {
                 markTileAsCollected(currentTargetCoord);
                 setResourcesCollected(true);
                 sendVehicleMessage("targetVehicle", "resource", currentTargetTile.resources);
+              }
+              break;
+
+            case "fuel":
+              if (!fuelRefilled && targetFuel < 100) {
+                setTargetFuel(100);
+                setFuelRefilled(true);
+                sendVehicleMessage("targetVehicle", "fuel");
+              }
+              break;
+
+            case "repair":
+              if (!damageRepaired && targetDamage > 0) {
+                setTargetDamage(0);
+                setDamageRepaired(true);
+                sendVehicleMessage("targetVehicle", "repair");
               }
               break;
 
