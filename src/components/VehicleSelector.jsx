@@ -4,6 +4,7 @@ import usePlayerStore from "../stores/usePlayerStore"; // Import player store
 const VehicleSelector = () => {
   const players = usePlayerStore((state) => state.players); // Get all players
   const selectVehicle = usePlayerStore((state) => state.selectVehicle); // Function to select a vehicle
+  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get the globally selected vehicle
 
   const handleSelect = (playerId, vehicleId) => {
     selectVehicle(playerId, vehicleId); // Update the globally selected vehicle
@@ -19,7 +20,17 @@ const VehicleSelector = () => {
             <li>
               <button
                 onClick={() => handleSelect(playerId, "ship")}
-                style={{ marginBottom: "10px", padding: "10px", cursor: "pointer" }}
+                style={{
+                  marginBottom: "10px",
+                  padding: "10px",
+                  cursor: "pointer",
+                  backgroundColor:
+                    selectedVehicle.playerId === playerId && selectedVehicle.vehicleId === "ship"
+                      ? "yellow"
+                      : "#f0f0f0", // Use a light gray color for unselected buttons
+                  color: "black", // Ensure text is always black for readability
+                  border: "1px solid black",
+                }}
               >
                 Vaisseau (Ship)
               </button>
@@ -29,7 +40,17 @@ const VehicleSelector = () => {
                 <li key={drone.id}>
                   <button
                     onClick={() => handleSelect(playerId, drone.id)}
-                    style={{ marginBottom: "10px", padding: "10px", cursor: "pointer" }}
+                    style={{
+                      marginBottom: "10px",
+                      padding: "10px",
+                      cursor: "pointer",
+                      backgroundColor:
+                        selectedVehicle.playerId === playerId && selectedVehicle.vehicleId === drone.id
+                          ? "yellow"
+                          : "#f0f0f0", // Use a light gray color for unselected buttons
+                      color: "black", // Ensure text is always black for readability
+                      border: "1px solid black",
+                    }}
                   >
                     Drone {drone.id}
                   </button>
