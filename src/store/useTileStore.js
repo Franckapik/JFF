@@ -133,4 +133,8 @@ export const useTileStore = create((set, get) => ({
     const tiles = get().tiles;
     return tiles[coord]?.fuelStation === true;
   },
+  isRepairStation: (coord) => {
+    const tiles = get().tiles;
+    return tiles[coord]?.repairStation === true;
+  },
 }));

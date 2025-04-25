@@ -14,18 +14,19 @@ const TargetMovement = ({ initialPosition, children }) => {
   const setTargetVehicleProgress = useTileStore((state) => state.setTargetVehicleProgress); // Zustand setter for progress
   const targetFuel = useTileStore((state) => state.targetFuel); // Get targetFuel from the store
   const setTargetFuel = useTileStore((state) => state.setTargetFuel); // Setter for targetFuel
-  const targetVehicleStartCoord = useTileStore((state) => state.targetVehicleStartCoord); // Get initial coord
+  const targetDamage = useTileStore((state) => state.targetDamage); // Get targetDamage from the store
+  const setTargetDamage = useTileStore((state) => state.setTargetDamage); // Setter for targetDamage
   const setTargetVehicleResources = useTileStore((state) => state.setTargetVehicleResources); // Setter for target vehicle resources
   const setPlayerResources = useTileStore((state) => state.setPlayerResources); // Setter for player resources
   const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
   const resetTargetVehicleResources = useTileStore((state) => state.resetTargetVehicleResources); // Import reset function
   const markTileAsCollected = useTileStore((state) => state.markTileAsCollected); // Import markTileAsCollected function
-  const isFuelStation = useTileStore((state) => state.isFuelStation); // Importer la fonction pour vérifier les stations de carburant
-  const [fuelRefilled, setFuelRefilled] = useState(false); // Suivre si le carburant a été rempli
-  const addPlayerMessage = useTileStore((state) => state.addPlayerMessage); // Ajouter un message pour informer le joueur
+  const isFuelStation = useTileStore((state) => state.isFuelStation); // Check if a tile is a fuel station
+  const isRepairStation = useTileStore((state) => state.isRepairStation); // Check if a tile is a repair station
+  const addPlayerMessage = useTileStore((state) => state.addPlayerMessage); // Add player messages
 
-  const speed = 1; // Movement speed (units per second)
-  const rotationSpeed = 2; // Rotation interpolation speed
+  const [fuelRefilled, setFuelRefilled] = useState(false); // Track if fuel has been refilled
+  const [damageRepaired, setDamageRepaired] = useState(false); // Track if damage has been repaired
   const [path, setPath] = useState([]); // List of intermediate tiles
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index of the current target tile
   const [initialTilePosition, setInitialTilePosition] = useState(null); // Position of the initial tile
@@ -34,9 +35,11 @@ const TargetMovement = ({ initialPosition, children }) => {
   const [resourcesCollected, setResourcesCollected] = useState(false); // Track if resources have been collected
   const [resourcesTransferred, setResourcesTransferred] = useState(false); // Track if resources have been transferred
 
+  const speed = 1; // Movement speed (units per second)
+  const rotationSpeed = 2; // Rotation interpolation speed
+
   const calculatePath = () => {
     if (groupRef.current && targetVehicleTargetTile) {
-      // Find the current tile based on the vehicle's current position
       const currentTile = Object.values(tiles).find(
         (tile) =>
           Math.abs(tile.position.x - groupRef.current.position.x) < 0.1 &&
@@ -45,13 +48,11 @@ const TargetMovement = ({ initialPosition, children }) => {
       const targetTile = tiles[targetVehicleTargetTile];
 
       if (currentTile && targetTile) {
-        // Use a pathfinding function (e.g., A*)
         const newPath = findPath(currentTile.coord, targetTile.coord, tiles);
         setPath(newPath);
         setCurrentTargetIndex(0); // Reset the index
         setTargetVehicleProgress(0); // Reset progress
 
-        // Calculate the total distance of the path
         let totalDistance = 0;
         for (let i = 0; i < newPath.length - 1; i++) {
           const tileA = tiles[newPath[i]];
@@ -67,29 +68,26 @@ const TargetMovement = ({ initialPosition, children }) => {
   };
 
   useEffect(() => {
-    // Ensure the vehicle starts at the initial position
     if (targetVehicle?.position && !initialTilePosition) {
       groupRef.current.position.set(
         targetVehicle.position.x,
         targetVehicle.position.y,
         targetVehicle.position.z
       );
-      setInitialTilePosition(targetVehicle.position); // Save the initial position for the red ring only once
+      setInitialTilePosition(targetVehicle.position);
     }
   }, [targetVehicle, initialTilePosition]);
 
   useEffect(() => {
-    // Recalculate the path when the target changes
     if (targetVehicleTargetTile && tiles[targetVehicleTargetTile]) {
-      calculatePath(); // Ensure the path is recalculated when the target tile changes
+      calculatePath();
       setResourcesCollected(false); // Reset resourcesCollected for the new target
     }
   }, [targetVehicleTargetTile, tiles]);
 
   useFrame((_, delta) => {
-    // Prevent movement if fuel is 0%
     if (targetFuel <= 0) {
-      setTargetVehicleIsMoving(false); // Ensure the vehicle is not marked as moving
+      setTargetVehicleIsMoving(false);
       return;
     }
 
@@ -104,36 +102,29 @@ const TargetMovement = ({ initialPosition, children }) => {
           currentTargetTile.position.z
         );
 
-        // Calculate direction and distance
         const direction = new Vector3().subVectors(targetPosition, groupRef.current.position);
         const distance = direction.length();
 
         if (distance > 0.01) {
-          setTargetVehicleIsMoving(true); // Set isMoving to true
+          setTargetVehicleIsMoving(true);
           direction.normalize();
           const moveDistance = Math.min(speed * delta, distance);
           groupRef.current.position.addScaledVector(direction, moveDistance);
 
-          // Interpolate rotation to face the target
           const targetAngle = Math.atan2(direction.x, direction.z);
           const currentAngle = rotationRef.current.y;
           const interpolatedAngle = currentAngle + (targetAngle - currentAngle) * Math.min(rotationSpeed * delta, 1);
 
-          // Update the rotation
           rotationRef.current.set(0, interpolatedAngle, 0);
           groupRef.current.rotation.copy(rotationRef.current);
 
-          // Update the distance traveled
           setDistanceTraveled((prev) => prev + moveDistance);
 
-          // Calculate progress based on the total path distance
           const progress = (distanceTraveled / totalPathDistance) * 100;
-          setTargetVehicleProgress(progress.toFixed(2)); // Update progress in the store
+          setTargetVehicleProgress(progress.toFixed(2));
         } else if (currentTargetIndex < path.length - 1) {
-          // Move to the next tile in the path
           setCurrentTargetIndex(currentTargetIndex + 1);
 
-          // Update the target vehicle's position in the store at intermediate tiles
           setTargetVehicle({
             position: {
               x: currentTargetTile.position.x,
@@ -143,10 +134,8 @@ const TargetMovement = ({ initialPosition, children }) => {
             coord: currentTargetCoord,
           });
 
-          // Decrease fuel by 10% when moving to the next tile
-          setTargetFuel(Math.max(targetFuel - 10, 0)); // Ensure fuel does not go below 0
+          setTargetFuel(Math.max(targetFuel - 10, 0));
         } else {
-          // Final position update
           setTargetVehicle({
             position: {
               x: groupRef.current.position.x,
@@ -156,42 +145,51 @@ const TargetMovement = ({ initialPosition, children }) => {
             coord: currentTargetCoord,
           });
 
-          // Prevent resource collection on the starting tile
           if (!currentTargetTile.targetVehicleStart && !resourcesCollected && !currentTargetTile.collected) {
             const destinationTile = tiles[currentTargetCoord];
             if (destinationTile && destinationTile.resources && destinationTile.collectable) {
-              setTargetVehicleResources(destinationTile.resources); // Add resources to the target vehicle
-              markTileAsCollected(currentTargetCoord); // Mark the tile as collected
+              setTargetVehicleResources(destinationTile.resources);
+              markTileAsCollected(currentTargetCoord);
             }
-            setResourcesCollected(true); // Mark resources as collected
+            setResourcesCollected(true);
           }
 
-          // Reset fuel to 100%, transfer resources to the player, and reset target vehicle resources
           const isStartingTile = tiles[currentTargetCoord]?.targetVehicleStart;
           if (isStartingTile && !resourcesTransferred) {
-            setTargetFuel(100); // Reset fuel to 100%
-            setPlayerResources(targetVehicleResources); // Transfer resources to the player's resources
-            resetTargetVehicleResources(); // Reset target vehicle resources using the store function
-            setResourcesTransferred(true); // Mark resources as transferred
+            setTargetFuel(100);
+            setPlayerResources(targetVehicleResources);
+            resetTargetVehicleResources();
+            setResourcesTransferred(true);
           } else if (!isStartingTile) {
-            setResourcesTransferred(false); // Reset the transfer flag when leaving the starting tile
+            setResourcesTransferred(false);
           }
 
-          // Vérifiez si la tuile actuelle est une station de carburant
           if (isFuelStation(currentTargetCoord) && !fuelRefilled && targetFuel < 100) {
-            setTargetFuel(100); // Remplir le carburant à 100 %
-            setFuelRefilled(true); // Marquer comme rempli
+            setTargetFuel(100);
+            setFuelRefilled(true);
             addPlayerMessage({
               text: "Le réservoir de carburant a été rempli à 100 % !",
               type: "info",
               timestamp: Date.now(),
             });
           } else if (!isFuelStation(currentTargetCoord)) {
-            setFuelRefilled(false); // Réinitialiser l'état lorsque le véhicule quitte la station
+            setFuelRefilled(false);
           }
 
-          setTargetVehicleIsMoving(false); // Set isMoving to false when target is reached
-          setTargetVehicleProgress(100); // Set progress to 100% when target is reached
+          if (isRepairStation(currentTargetCoord) && !damageRepaired && targetDamage > 0) {
+            setTargetDamage(0);
+            setDamageRepaired(true);
+            addPlayerMessage({
+              text: "Les dégâts du vaisseau ont été réparés !",
+              type: "info",
+              timestamp: Date.now(),
+            });
+          } else if (!isRepairStation(currentTargetCoord)) {
+            setDamageRepaired(false);
+          }
+
+          setTargetVehicleIsMoving(false);
+          setTargetVehicleProgress(100);
         }
       }
     }
@@ -199,15 +197,13 @@ const TargetMovement = ({ initialPosition, children }) => {
 
   return (
     <>
-      {/* Render the red ring on the initial tile */}
       {initialTilePosition && (
         <mesh position={[initialTilePosition.x, 0.2, initialTilePosition.z]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.6, 0.7, 32]} />
-          <meshBasicMaterial color="red" side={2} /> {/* Red ring */}
+          <meshBasicMaterial color="red" side={2} />
         </mesh>
       )}
 
-      {/* Render the helper dynamically */}
       {targetVehicleTargetTile && tiles[targetVehicleTargetTile] && (
         <mesh
           position={[
@@ -217,17 +213,15 @@ const TargetMovement = ({ initialPosition, children }) => {
           ]}
         >
           <sphereGeometry args={[0.1, 16, 16]} />
-          <meshStandardMaterial color="yellow" /> {/* Updated color to yellow */}
+          <meshStandardMaterial color="yellow" />
         </mesh>
       )}
 
-      {/* Render the moving object */}
       <group ref={groupRef}>{children}</group>
     </>
   );
 };
 
-// Simplified pathfinding function
 const findPath = (startCoord, targetCoord, tiles) => {
   const queue = [[startCoord]];
   const visited = new Set();
@@ -237,7 +231,7 @@ const findPath = (startCoord, targetCoord, tiles) => {
     const currentCoord = path[path.length - 1];
 
     if (currentCoord === targetCoord) {
-      return path; // Path found
+      return path;
     }
 
     if (!visited.has(currentCoord)) {
@@ -245,14 +239,13 @@ const findPath = (startCoord, targetCoord, tiles) => {
       const neighbors = tiles[currentCoord]?.neighbors || [];
       neighbors.forEach((neighbor) => {
         if (!visited.has(neighbor) && tiles[neighbor]?.walkable !== false) {
-          // Only consider walkable tiles
           queue.push([...path, neighbor]);
         }
       });
     }
   }
 
-  return []; // No path found
+  return [];
 };
 
 export default TargetMovement;
