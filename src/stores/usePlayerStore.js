@@ -110,8 +110,8 @@ const usePlayerStore = create((set, get) => ({
       },
     }));
   },
-  calculatePath: (tiles, selectedTile) => {
-    const playerVehicle = get().players.player1.vehicles.ship; // Access player vehicle
+  calculatePath: (tiles, selectedTile, playerId) => {
+    const playerVehicle = get().players[playerId].vehicles.ship; // Access player-specific vehicle
 
     if (!playerVehicle || !selectedTile) return { path: [], totalDistance: 0 };
 
@@ -127,12 +127,12 @@ const usePlayerStore = create((set, get) => ({
       set((state) => ({
         players: {
           ...state.players,
-          player1: {
-            ...state.players.player1,
+          [playerId]: {
+            ...state.players[playerId],
             vehicles: {
-              ...state.players.player1.vehicles,
+              ...state.players[playerId].vehicles,
               ship: {
-                ...state.players.player1.vehicles.ship,
+                ...state.players[playerId].vehicles.ship,
                 path, // Store the calculated path
                 totalDistance, // Set total distance
                 progress: 0, // Reset progress
@@ -146,20 +146,20 @@ const usePlayerStore = create((set, get) => ({
 
     return { path: [], totalDistance: 0 };
   },
-  updateShip: (updates) => {
+  updateShip: (playerId, updates) => {
     set((state) => {
       const updatedShip = {
-        ...state.players.player1.vehicles.ship,
+        ...state.players[playerId].vehicles.ship,
         ...updates,
       };
 
       // Check if the ship is on the starting tile
       if (
         updatedShip.coord &&
-        updatedShip.coord === state.players.player1.vehicles.ship.startCoord &&
+        updatedShip.coord === state.players[playerId].vehicles.ship.startCoord &&
         !updatedShip.isMoving
       ) {
-        const updatedScore = { ...state.players.player1.score.resources };
+        const updatedScore = { ...state.players[playerId].score.resources };
         const shipResources = updatedShip.resources;
 
         // Add ship resources to the player's score
@@ -173,14 +173,14 @@ const usePlayerStore = create((set, get) => ({
         return {
           players: {
             ...state.players,
-            player1: {
-              ...state.players.player1,
+            [playerId]: {
+              ...state.players[playerId],
               vehicles: {
-                ...state.players.player1.vehicles,
+                ...state.players[playerId].vehicles,
                 ship: updatedShip,
               },
               score: {
-                ...state.players.player1.score,
+                ...state.players[playerId].score,
                 resources: updatedScore,
               },
             },
@@ -191,10 +191,10 @@ const usePlayerStore = create((set, get) => ({
       return {
         players: {
           ...state.players,
-          player1: {
-            ...state.players.player1,
+          [playerId]: {
+            ...state.players[playerId],
             vehicles: {
-              ...state.players.player1.vehicles,
+              ...state.players[playerId].vehicles,
               ship: updatedShip,
             },
           },

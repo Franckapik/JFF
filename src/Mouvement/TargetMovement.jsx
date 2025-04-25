@@ -97,7 +97,7 @@ const TargetMovement = ({ playerId, children }) => {
           ((currentTargetIndex + (1 - distance / targetPosition.length())) / path.length) * 100;
 
         if (Math.round(playerVehicle.progress) !== Math.round(progress)) {
-          updateShip({
+          updateShip(playerId, {
             position: {
               x: groupRef.current.position.x,
               y: groupRef.current.position.y,
@@ -110,7 +110,7 @@ const TargetMovement = ({ playerId, children }) => {
       } else if (currentTargetIndex < path.length - 1) {
         setCurrentTargetIndex(currentTargetIndex + 1); // Move to the next tile in the path
 
-        updateShip({
+        updateShip(playerId, {
           position: {
             x: currentTargetTile.position.x,
             y: currentTargetTile.position.y,
@@ -136,7 +136,7 @@ const TargetMovement = ({ playerId, children }) => {
         // Check if the ship is on the starting tile
         const isStartingTile = currentTargetCoord === playerVehicle.startCoord;
         if (isStartingTile) {
-          updateShip({
+          updateShip(playerId, {
             resources: updatedResources, // Transfer resources to the player's score
             position: {
               x: currentTargetTile.position.x,
@@ -148,7 +148,7 @@ const TargetMovement = ({ playerId, children }) => {
             isMoving: false,
           });
         } else {
-          updateShip({
+          updateShip(playerId, {
             position: {
               x: currentTargetTile.position.x,
               y: currentTargetTile.position.y,
