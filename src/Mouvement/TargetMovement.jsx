@@ -188,6 +188,66 @@ const TargetMovement = ({ initialPosition, children }) => {
             setDamageRepaired(false);
           }
 
+          // Gérer les types de tuiles
+          switch (currentTargetTile.type) {
+            case "fuel":
+              if (!fuelRefilled && targetFuel < 100) {
+                setTargetFuel(100); // Remplir le carburant à 100 %
+                setFuelRefilled(true);
+                addPlayerMessage({
+                  vehiculeId: "targetVehicle",
+                  title: "Le réservoir de carburant a été rempli.",
+                  body: "Le véhicule cible a atteint une station de carburant et a rempli son réservoir à 100 %.",
+                  timestamp: Date.now(),
+                });
+              }
+              break;
+
+            case "repair":
+              if (!damageRepaired && targetDamage > 0) {
+                setTargetDamage(0); // Réparer les dégâts
+                setDamageRepaired(true);
+                addPlayerMessage({
+                  vehiculeId: "targetVehicle",
+                  title: "Les dégâts ont été réparés.",
+                  body: "Le véhicule cible a atteint une station de réparation et a réparé tous ses dégâts.",
+                  timestamp: Date.now(),
+                });
+              }
+              break;
+
+            case "danger":
+              setTargetDamage(Math.min(targetDamage + 10, 100)); // Augmenter les dégâts
+              addPlayerMessage({
+                vehiculeId: "targetVehicle",
+                title: "Le véhicule cible a traversé une zone dangereuse.",
+                body: "Le véhicule cible a subi des dégâts en traversant une zone dangereuse.",
+                timestamp: Date.now(),
+              });
+              break;
+
+            case "resource":
+              if (!resourcesCollected && !currentTargetTile.collected) {
+                setTargetVehicleResources(currentTargetTile.resources); // Collecter les ressources
+                markTileAsCollected(currentTargetCoord);
+                setResourcesCollected(true);
+                addPlayerMessage({
+                  vehiculeId: "targetVehicle",
+                  title: "Ressources collectées.",
+                  body: `Le véhicule cible a collecté des ressources :\n- Nourriture : ${currentTargetTile.resources.food}\n- Débris : ${currentTargetTile.resources.debris}\n- Spécial : ${currentTargetTile.resources.special}`,
+                  timestamp: Date.now(),
+                });
+              }
+              break;
+
+            default:
+              break;
+          }
+
+          // Réinitialiser les états si la tuile n'est plus pertinente
+          if (currentTargetTile.type !== "fuel") setFuelRefilled(false);
+          if (currentTargetTile.type !== "repair") setDamageRepaired(false);
+
           setTargetVehicleIsMoving(false);
           setTargetVehicleProgress(100);
         }

@@ -60,14 +60,14 @@ const DroneMovement = ({ drone, children }) => {
         groupRef.current.position.y = 1.5; // Maintain height of +1.5
 
         // Sauvegarder la tuile cible avant de la réinitialiser
-        const reachedTile = drone.targetTile;
-        const reachedTileName = tiles[reachedTile]?.name || `Tuile ${reachedTile}`; // Nom de la tuile ou fallback
-        const resources = tiles[reachedTile]?.resources || { food: 0, debris: 0, special: 0 }; // Récupérer les ressources
-
-        updateDrone(drone.id, { isMoving: false, targetTile: null, hasReachedTarget: true });
-
-        // Ajouter un message à la liste des messages du joueur
+        const reachedTile = tiles[drone.targetTile];
         if (reachedTile) {
+          const reachedTileName = reachedTile.name || `Tuile ${drone.targetTile}`;
+          const resources = reachedTile.resources || { food: 0, debris: 0, special: 0 };
+
+          updateDrone(drone.id, { isMoving: false, targetTile: null, hasReachedTarget: true });
+
+          // Ajouter un message à la liste des messages du joueur
           addPlayerMessage({
             droneId: drone.id,
             title: `Drone ${drone.id} a atteint ${reachedTileName}.`,
@@ -78,6 +78,32 @@ const DroneMovement = ({ drone, children }) => {
             tileName: reachedTileName, // Inclure le nom de la tuile
             timestamp: Date.now(), // Ajouter un timestamp pour le tri et l'affichage
           });
+
+          // Gérer les types de tuiles
+          if (reachedTile.type) {
+            switch (reachedTile.type) {
+              case "resource":
+                addPlayerMessage({
+                  droneId: drone.id,
+                  title: `Drone ${drone.id} a collecté des ressources.`,
+                  body: `Ressources collectées :\n- Nourriture : ${resources.food}\n- Débris : ${resources.debris}\n- Spécial : ${resources.special}`,
+                  timestamp: Date.now(),
+                });
+                break;
+
+              case "danger":
+                addPlayerMessage({
+                  droneId: drone.id,
+                  title: `Drone ${drone.id} a traversé une zone dangereuse.`,
+                  body: `Le drone a subi des dégâts en traversant une zone dangereuse.`,
+                  timestamp: Date.now(),
+                });
+                break;
+
+              default:
+                break;
+            }
+          }
         }
       }
     }

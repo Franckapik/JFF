@@ -71,7 +71,7 @@ export const useTileStore = create((set, get) => ({
   setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }), // Setter for selected vehicle
 
   addPlayerMessage: (message) => {
-    if (!message || typeof message.text !== "string") {
+    if (!message || typeof message.title !== "string" || typeof message.body !== "string") {
       console.error("Message invalide :", message);
       return;
     }

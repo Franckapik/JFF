@@ -44,8 +44,7 @@ export function generateHexPositions(radius, spacing) {
           walkable: true, // Par défaut, la tuile est accessible
           explored: false, // Par défaut, la tuile n'est pas explorée
           collected: false, // Par défaut, la tuile n'est pas collectée
-          collectable: true, // Par défaut, la tuile est collectable
-          danger: Math.random() < 0.1, // 10% de chance d'avoir un danger
+          type: "resource", // Par défaut, la tuile est une ressource
           neighbors, // Encoded neighbors
           color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Couleur aléatoire
           outer, // Propriété outer
@@ -56,8 +55,6 @@ export function generateHexPositions(radius, spacing) {
           },
           randomVehicleStart: false, // Default value
           targetVehicleStart: false, // Default value
-          fuelStation: false, // Default value for fuel station
-          repairStation: false, // Default value for repair station
           immunity: Math.random() < 0.1, // 10% chance of immunity
         });
       }
@@ -87,7 +84,7 @@ export function generateHexPositions(radius, spacing) {
 
   randomVehicleTile.randomVehicleStart = true;
   targetVehicleTile.targetVehicleStart = true;
-  targetVehicleTile.collectable = false; // Starting tile is not collectable
+  targetVehicleTile.type = null; // Starting tile has no type
 
   hexPositions.forEach((tile) => {
     if (tile.targetVehicleStart) {
@@ -95,50 +92,32 @@ export function generateHexPositions(radius, spacing) {
     }
   });
 
-  // Place a fuel station at exactly three tiles away from the target vehicle's starting tile,
-  // excluding its neighbors
-  const targetVehicleNeighbors = new Set(targetVehicleTile.neighbors);
-  const fuelStationCandidates = hexPositions.filter((tile) => {
-    const distance = Math.abs(tile.coord.charCodeAt(0) - targetVehicleTile.coord.charCodeAt(0)) +
-                     Math.abs(parseInt(tile.coord.slice(1)) - parseInt(targetVehicleTile.coord.slice(1)));
-    return (
-      distance === 3 &&
-      tile.walkable &&
-      !tile.targetVehicleStart &&
-      !targetVehicleNeighbors.has(tile.coord) // Exclude neighbors of the target vehicle's starting tile
-    );
-  });
-
+  // Place a fuel station
+  const fuelStationCandidates = hexPositions.filter((tile) => tile.walkable && tile.type === "resource");
   if (fuelStationCandidates.length > 0) {
     const fuelStationTile = fuelStationCandidates[Math.floor(Math.random() * fuelStationCandidates.length)];
-    fuelStationTile.fuelStation = true;
+    fuelStationTile.type = "fuel";
     fuelStationTile.color = "black"; // Black color for the fuel station
     fuelStationTile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on the fuel station tile
     fuelStationTile.immunity = true; // Set immunity to true for the fuel station tile
-    fuelStationTile.collectable = false; // Fuel station is not collectable
   }
 
-  // Place a repair station at exactly three tiles away from the target vehicle's starting tile,
-  // excluding its neighbors
-  const repairStationCandidates = hexPositions.filter((tile) => {
-    const distance = Math.abs(tile.coord.charCodeAt(0) - targetVehicleTile.coord.charCodeAt(0)) +
-                     Math.abs(parseInt(tile.coord.slice(1)) - parseInt(targetVehicleTile.coord.slice(1)));
-    return (
-      distance === 3 &&
-      tile.walkable &&
-      !tile.targetVehicleStart &&
-      !targetVehicleNeighbors.has(tile.coord) // Exclude neighbors of the target vehicle's starting tile
-    );
-  });
-
+  // Place a repair station
+  const repairStationCandidates = hexPositions.filter((tile) => tile.walkable && tile.type === "resource");
   if (repairStationCandidates.length > 0) {
     const repairStationTile = repairStationCandidates[Math.floor(Math.random() * repairStationCandidates.length)];
-    repairStationTile.repairStation = true;
+    repairStationTile.type = "repair";
     repairStationTile.color = "green"; // Green color for the repair station
     repairStationTile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on the repair station tile
     repairStationTile.immunity = true; // Set immunity to true for the repair station tile
-    repairStationTile.collectable = false; // Repair station is not collectable
   }
+
+  // Randomly assign danger tiles
+  const dangerTiles = hexPositions.filter((tile) => tile.walkable && tile.type === "resource");
+  dangerTiles.slice(0, Math.floor(dangerTiles.length * 0.1)).forEach((tile) => {
+    tile.type = "danger";
+    tile.color = "red"; // Red color for danger tiles
+  });
 
   return hexPositions;
 }

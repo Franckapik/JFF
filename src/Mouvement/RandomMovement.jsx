@@ -24,7 +24,6 @@ const RandomMovement = ({ initialPosition, children }) => {
   const [processedOverlap, setProcessedOverlap] = useState(false); // Track if overlap has been processed for the current tile
 
   const setNextTarget = () => {
-    // Find the current tile based on the position
     const currentTile = Object.values(useTileStore.getState().tiles).find(
       (tile) =>
         Math.abs(tile.position.x - currentPosition.current.x) < 0.1 &&
@@ -32,34 +31,30 @@ const RandomMovement = ({ initialPosition, children }) => {
     );
 
     if (currentTile) {
-      // Set the first tile position if not already set
-      if (!firstTilePosition) {
-        setFirstTilePosition(currentTile.position);
-      }
-
-      // Update the start marker to the current tile's position
-      setStartMarker(currentTile.position);
-
-      // Get neighboring tiles
-      const neighbors = getNeighbors(currentTile.coord).filter((neighbor) => {
-        // Exclude the previous tile
-        return neighbor.coord !== previousTileCoord.current;
-      });
+      const neighbors = getNeighbors(currentTile.coord).filter(
+        (neighbor) => neighbor.coord !== previousTileCoord.current
+      );
 
       if (neighbors.length > 0) {
-        // Choose a random neighbor and set it as the target position
         const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
-        previousTileCoord.current = currentTile.coord; // Update the previous tile's coord
+        previousTileCoord.current = currentTile.coord;
         targetPosition.current.set(randomNeighbor.position.x, randomNeighbor.position.y, randomNeighbor.position.z);
 
-        // Update the end marker to the target tile's position
-        setEndMarker(randomNeighbor.position);
+        // Gérer les types de tuiles
+        switch (currentTile.type) {
+          case "danger":
+            addPlayerMessage({
+              vehiculeId: "randomVehicle",
+              title: "Le véhicule aléatoire a traversé une zone dangereuse.",
+              body: "Le véhicule a subi des dégâts en traversant une zone dangereuse.",
+              timestamp: Date.now(),
+            });
+            setTargetDamage(Math.min(targetDamage + 10, 100)); // Augmenter les dégâts
+            break;
 
-        // Save the target tile's coord in the store
-        setRandomVehicleTargetTile(randomNeighbor.coord);
-
-        // Reset overlap processing for the new tile
-        setProcessedOverlap(false);
+          default:
+            break;
+        }
       }
     }
   };
