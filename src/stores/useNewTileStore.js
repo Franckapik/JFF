@@ -27,9 +27,8 @@ export const useTileStore = create((set, get) => ({
     },
     clearTiles: () => set({ tiles: {} }),
 
-    // Updated method to initialize tiles using radius and spacing from the store
-    initializeTiles: () => {
-        const { radius, spacing } = get(); // Get radius and spacing from the store
+    // Initialize tiles using radius and spacing from the store
+    initializeTiles: (radius = 3, spacing = 0.1) => {
         const hexPositions = generateHexPositions(radius, spacing);
         const tiles = hexPositions.reduce((acc, tile) => ({ ...acc, [tile.coord]: tile }), {});
         set({ tiles });

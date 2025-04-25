@@ -4,6 +4,7 @@ import { useThree } from "@react-three/fiber";
 import Tile from "./Tile";
 import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
+import TargetMovement from "../Mouvement/TargetMovement"; // Import TargetMovement
 
 const Scene = () => {
   const initializeTiles = useTileStore((state) => state.initializeTiles); // Zustand initializer for tiles
@@ -13,7 +14,7 @@ const Scene = () => {
   const setSelectedTile = useTileStore((state) => state.setSelectedTile); // Zustand setter for selectedTile
 
   useEffect(() => {
-    initializeTiles(3, 0.1); // Initialize tiles with radius and spacing
+    initializeTiles(); // Initialize tiles with default radius and spacing
   }, [initializeTiles]);
 
   useEffect(() => {
@@ -39,10 +40,12 @@ const Scene = () => {
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
       {shipPosition && (
-        <mesh position={[shipPosition.x, 0.5, shipPosition.z]} castShadow>
-          <boxGeometry args={[0.5, 0.5, 0.5]} /> {/* Vehicle dimensions */}
-          <meshStandardMaterial color="blue" /> {/* Blue color for the vehicle */}
-        </mesh>
+        <TargetMovement>
+          <mesh  castShadow>
+            <boxGeometry args={[0.5, 0.5, 0.5]} /> {/* Vehicle dimensions */}
+            <meshStandardMaterial color="blue" /> {/* Blue color for the vehicle */}
+          </mesh>
+        </TargetMovement>
       )}
       {Object.values(tiles)
         .filter((tile) => tile.walkable)
