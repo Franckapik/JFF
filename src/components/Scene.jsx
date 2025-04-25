@@ -59,6 +59,18 @@ const Scene = () => {
           />
         ))}
       {Object.values(tiles)
+        .filter((tile) => tile.type === "depart") // Filter for the starting tile
+        .map((tile) => (
+          <mesh
+            key={`depart-tile-${tile.coord}`}
+            position={[tile.position.x, 0.2, tile.position.z]} // Slightly above the ground
+            rotation={[-Math.PI / 2, 0, 0]} // Rotate to lie flat on the ground
+          >
+            <circleGeometry args={[0.5, 32]} /> {/* Circle dimensions */}
+            <meshStandardMaterial color="red" /> {/* Red color for the circle */}
+          </mesh>
+        ))}
+      {Object.values(tiles)
         .filter((tile) => tile.type === "fuel") // Filter for the fuel station tile
         .map((tile) => (
           <mesh
