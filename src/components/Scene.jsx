@@ -106,24 +106,24 @@ const Scene = () => {
           />
         ))}
       {Object.values(tiles)
-        .filter((tile) => tile.fuelStation) // Filter for the fuel station tile
+        .filter((tile) => tile.type === "fuel") // Filter for the fuel station tile
         .map((tile) => (
           <mesh
             key={`fuel-station-${tile.coord}`}
             position={[tile.position.x, 0.25, tile.position.z]} // Slightly above the ground
           >
-            <boxGeometry args={[0.2, 0.8, 0.2]} /> {/* Cube dimensions */}
-            <meshStandardMaterial color="white" /> {/* Black color for the cube */}
+            <boxGeometry args={[0.5, 0.5, 0.5]} /> {/* Adjusted cube dimensions */}
+            <meshStandardMaterial color="orange" /> {/* Black color for the cube */}
           </mesh>
         ))}
       {Object.values(tiles)
-        .filter((tile) => tile.repairStation) // Filter for the repair station tile
+        .filter((tile) => tile.type === "repair") // Filter for the repair station tile
         .map((tile) => (
           <mesh
             key={`repair-station-${tile.coord}`}
             position={[tile.position.x, 0.25, tile.position.z]} // Slightly above the ground
           >
-            <boxGeometry args={[0.2, 0.8, 0.2]} /> {/* Cube dimensions */}
+            <boxGeometry args={[0.5, 0.5, 0.5]} /> {/* Adjusted cube dimensions */}
             <meshStandardMaterial color="green" /> {/* Green color for the cube */}
           </mesh>
         ))}

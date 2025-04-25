@@ -100,7 +100,7 @@ export function generateHexPositions(radius, spacing) {
   if (fuelStationCandidates.length > 0) {
     const fuelStationTile = fuelStationCandidates[Math.floor(Math.random() * fuelStationCandidates.length)];
     fuelStationTile.type = "fuel";
-    fuelStationTile.color = "black"; // Black color for the fuel station
+    fuelStationTile.color = "orange"; // Black color for the fuel station
     fuelStationTile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on the fuel station tile
     fuelStationTile.immunity = true; // Set immunity to true for the fuel station tile
   }
