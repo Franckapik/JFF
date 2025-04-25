@@ -13,6 +13,8 @@ const TargetMovement = ({ children }) => {
 
   const [path, setPath] = useState([]); // Store the calculated path
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index of the current target tile
+  const [distanceTraveled, setDistanceTraveled] = useState(0); // Track distance traveled
+  const [resourcesCollected, setResourcesCollected] = useState(false); // Track if resources have been collected
 
   const speed = 1; // Movement speed (units per second)
 
@@ -50,6 +52,8 @@ const TargetMovement = ({ children }) => {
       const calculatedPath = calculatePath(playerVehicle.coord, selectedTile);
       setPath(calculatedPath);
       setCurrentTargetIndex(0); // Reset the index
+      setDistanceTraveled(0); // Reset distance traveled
+      setResourcesCollected(false); // Reset resource collection state
     }
   }, [selectedTile, tiles, playerVehicle?.coord]);
 
@@ -86,19 +90,23 @@ const TargetMovement = ({ children }) => {
         const moveDistance = Math.min(speed * delta, distance);
         groupRef.current.position.addScaledVector(direction, moveDistance);
 
+        setDistanceTraveled((prev) => prev + moveDistance);
+
         // Calculate progress as a percentage of the path completed
         const progress =
           ((currentTargetIndex + (1 - distance / targetPosition.length())) / path.length) * 100;
 
-        updateShip({
-          position: {
-            x: groupRef.current.position.x,
-            y: groupRef.current.position.y,
-            z: groupRef.current.position.z,
-          },
-          progress: Math.min(progress, 100), // Ensure progress does not exceed 100%
-          isMoving: true,
-        });
+        if (Math.round(playerVehicle.progress) !== Math.round(progress)) {
+          updateShip({
+            position: {
+              x: groupRef.current.position.x,
+              y: groupRef.current.position.y,
+              z: groupRef.current.position.z,
+            },
+            progress: Math.min(progress, 100), // Ensure progress does not exceed 100%
+            isMoving: true,
+          });
+        }
       } else if (currentTargetIndex < path.length - 1) {
         setCurrentTargetIndex(currentTargetIndex + 1); // Move to the next tile in the path
 
@@ -114,28 +122,44 @@ const TargetMovement = ({ children }) => {
       } else {
         // Add resources from the destination tile to the ship
         const destinationTile = tiles[currentTargetCoord];
-        const updatedResources = { ...playerVehicle.resources }; // Renamed from ressources
+        const updatedResources = { ...playerVehicle.resources };
 
-        if (destinationTile?.resources && !destinationTile.collected) { // Check if resources are not yet collected
+        if (destinationTile?.resources && !destinationTile.collected && !resourcesCollected) {
           updatedResources.food += destinationTile.resources.food || 0;
           updatedResources.debris += destinationTile.resources.debris || 0;
           updatedResources.special += destinationTile.resources.special || 0;
 
-          // Mark the tile as collected
           destinationTile.collected = true;
+          setResourcesCollected(true); // Mark resources as collected
         }
 
-        updateShip({
-          position: {
-            x: currentTargetTile.position.x,
-            y: currentTargetTile.position.y,
-            z: currentTargetTile.position.z,
-          },
-          coord: currentTargetCoord,
-          progress: 100, // Set progress to 100% when the target is reached
-          isMoving: false,
-          resources: updatedResources, // Update ship resources
-        });
+        // Check if the ship is on the starting tile
+        const isStartingTile = currentTargetCoord === playerVehicle.startCoord;
+        if (isStartingTile) {
+          updateShip({
+            resources: updatedResources, // Transfer resources to the player's score
+            position: {
+              x: currentTargetTile.position.x,
+              y: currentTargetTile.position.y,
+              z: currentTargetTile.position.z,
+            },
+            coord: currentTargetCoord,
+            progress: 100,
+            isMoving: false,
+          });
+        } else {
+          updateShip({
+            position: {
+              x: currentTargetTile.position.x,
+              y: currentTargetTile.position.y,
+              z: currentTargetTile.position.z,
+            },
+            coord: currentTargetCoord,
+            progress: 100,
+            isMoving: false,
+            resources: updatedResources, // Update ship resources
+          });
+        }
       }
     }
   });

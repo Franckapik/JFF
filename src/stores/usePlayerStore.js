@@ -109,21 +109,60 @@ const usePlayerStore = create((set, get) => ({
     return { path: [], totalDistance: 0 };
   },
   updateShip: (updates) => {
-    set((state) => ({
-      players: {
-        ...state.players,
-        player1: {
-          ...state.players.player1,
-          vehicles: {
-            ...state.players.player1.vehicles,
-            ship: {
-              ...state.players.player1.vehicles.ship,
-              ...updates, // Apply updates to the ship
+    set((state) => {
+      const updatedShip = {
+        ...state.players.player1.vehicles.ship,
+        ...updates,
+      };
+
+      // Check if the ship is on the starting tile
+      if (
+        updatedShip.coord &&
+        updatedShip.coord === state.players.player1.vehicles.ship.startCoord &&
+        !updatedShip.isMoving
+      ) {
+        const updatedScore = { ...state.players.player1.score.resources };
+        const shipResources = updatedShip.resources;
+
+        // Add ship resources to the player's score
+        updatedScore.food += shipResources.food;
+        updatedScore.debris += shipResources.debris;
+        updatedScore.special += shipResources.special;
+
+        // Reset ship resources
+        updatedShip.resources = { food: 0, debris: 0, special: 0 };
+
+        return {
+          players: {
+            ...state.players,
+            player1: {
+              ...state.players.player1,
+              vehicles: {
+                ...state.players.player1.vehicles,
+                ship: updatedShip,
+              },
+              score: {
+                ...state.players.player1.score,
+                resources: updatedScore,
+              },
+            },
+          },
+        };
+      }
+
+      return {
+        players: {
+          ...state.players,
+          player1: {
+            ...state.players.player1,
+            vehicles: {
+              ...state.players.player1.vehicles,
+              ship: updatedShip,
             },
           },
         },
-      },
-    }));
+      };
+    });
   },
   selectVehicle: (vehicleId) => {
     set((state) => ({
