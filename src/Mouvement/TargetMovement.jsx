@@ -109,6 +109,7 @@ const TargetMovement = ({ children }) => {
             z: currentTargetTile.position.z,
           },
           coord: currentTargetCoord,
+          fuel: Math.max(playerVehicle.fuel - 10, 0), // Decrement fuel by 10, ensuring it doesn't go below 0
         });
       } else {
         updateShip({
