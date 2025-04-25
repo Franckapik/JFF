@@ -1,3 +1,5 @@
+import { Vector3 } from "three";
+
 export function generateHexPositions(radius, spacing) {
   const hexPositions = [];
   const sqrt3 = Math.sqrt(3);
@@ -137,4 +139,45 @@ export function generateInitialDrones(count, spacing = 1) {
     });
   }
   return drones; // Always return an array
+}
+
+export function findPath(startCoord, targetCoord, tiles) {
+  const queue = [[startCoord]];
+  const visited = new Set();
+
+  while (queue.length > 0) {
+    const path = queue.shift();
+    const currentCoord = path[path.length - 1];
+
+    if (currentCoord === targetCoord) {
+      return path;
+    }
+
+    if (!visited.has(currentCoord)) {
+      visited.add(currentCoord);
+      const neighbors = tiles[currentCoord]?.neighbors || [];
+      neighbors.forEach((neighbor) => {
+        if (!visited.has(neighbor) && tiles[neighbor]?.walkable !== false) {
+          queue.push([...path, neighbor]);
+        }
+      });
+    }
+  }
+
+  return [];
+}
+
+export function calculatePathData(currentTile, targetTile, tiles) {
+  const path = findPath(currentTile.coord, targetTile.coord, tiles);
+
+  let totalDistance = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    const tileA = tiles[path[i]];
+    const tileB = tiles[path[i + 1]];
+    totalDistance += new Vector3(tileA.position.x, tileA.position.y, tileA.position.z).distanceTo(
+      new Vector3(tileB.position.x, tileB.position.y, tileB.position.z)
+    );
+  }
+
+  return { path, totalDistance };
 }

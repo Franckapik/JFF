@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { useFrame } from "@react-three/fiber";
 import { Vector3, Euler } from "three";
+import { calculatePathData } from "../utils/utils"; // Import the calculatePathData function
 import useMessageManager from "../hooks/useMessageManager"; // Import the custom hook
 
 const TargetMovement = ({ initialPosition, children }) => {
@@ -53,19 +54,10 @@ const TargetMovement = ({ initialPosition, children }) => {
       const targetTile = tiles[targetVehicleTargetTile];
 
       if (currentTile && targetTile) {
-        const newPath = findPath(currentTile.coord, targetTile.coord, tiles);
-        setPath(newPath);
+        const { path, totalDistance } = calculatePathData(currentTile, targetTile, tiles);
+        setPath(path);
         setCurrentTargetIndex(0); // Reset the index
         setTargetVehicleProgress(0); // Reset progress
-
-        let totalDistance = 0;
-        for (let i = 0; i < newPath.length - 1; i++) {
-          const tileA = tiles[newPath[i]];
-          const tileB = tiles[newPath[i + 1]];
-          totalDistance += new Vector3(tileA.position.x, tileA.position.y, tileA.position.z).distanceTo(
-            new Vector3(tileB.position.x, tileB.position.y, tileB.position.z)
-          );
-        }
         setTotalPathDistance(totalDistance);
         setDistanceTraveled(0); // Reset traveled distance
       }
