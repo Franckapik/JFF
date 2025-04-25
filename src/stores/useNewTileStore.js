@@ -11,6 +11,10 @@ export const useTileStore = create((set, get) => ({
         console.log("Setting selected tile:", tileCoord); // Log the selected tile coordinate
         set({ selectedTile: tileCoord });
     },
+    clearSelectedTile: () => {
+        console.log("Clearing selected tile"); // Log the action
+        set({ selectedTile: null });
+    },
     getTile: (coord) => get().tiles[coord],
     getNeighbors: (coord) => {
         const tile = get().tiles[coord];

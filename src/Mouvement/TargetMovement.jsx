@@ -15,6 +15,7 @@ const TargetMovement = ({ playerId, children }) => {
   const updateShip = usePlayerStore((state) => state.updateShip); // Use the generic updateShip function
   const tiles = useTileStore((state) => state.tiles); // Get tiles from the store
   const selectedTile = useTileStore((state) => state.selectedTile); // Get the selected tile
+  const clearSelectedTile = useTileStore((state) => state.clearSelectedTile); // Get the clearSelectedTile function
 
   const [path, setPath] = useState([]); // Store the calculated path
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index of the current target tile
@@ -152,6 +153,7 @@ const TargetMovement = ({ playerId, children }) => {
             progress: 100,
             isMoving: false,
           });
+          clearSelectedTile(); // Clear the selected tile
         } else {
           updateShip(playerId, {
             position: {
@@ -164,6 +166,7 @@ const TargetMovement = ({ playerId, children }) => {
             isMoving: false,
             resources: updatedResources, // Update ship resources
           });
+          clearSelectedTile(); // Clear the selected tile
         }
       }
     }

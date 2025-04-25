@@ -54,7 +54,7 @@ const UserHUD = () => {
             </li>
           </ul>
         ) : (
-          <p>Aucune tuile sélectionnée</p>
+          <p>Aucune tuile sélectionnée</p> // Message when no tile is selected
         )}
       </div>
 
