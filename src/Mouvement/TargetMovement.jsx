@@ -112,6 +112,19 @@ const TargetMovement = ({ children }) => {
           fuel: Math.max(playerVehicle.fuel - 10, 0), // Decrement fuel by 10, ensuring it doesn't go below 0
         });
       } else {
+        // Add resources from the destination tile to the ship
+        const destinationTile = tiles[currentTargetCoord];
+        const updatedResources = { ...playerVehicle.resources }; // Renamed from ressources
+
+        if (destinationTile?.resources && !destinationTile.collected) { // Check if resources are not yet collected
+          updatedResources.food += destinationTile.resources.food || 0;
+          updatedResources.debris += destinationTile.resources.debris || 0;
+          updatedResources.special += destinationTile.resources.special || 0;
+
+          // Mark the tile as collected
+          destinationTile.collected = true;
+        }
+
         updateShip({
           position: {
             x: currentTargetTile.position.x,
@@ -121,6 +134,7 @@ const TargetMovement = ({ children }) => {
           coord: currentTargetCoord,
           progress: 100, // Set progress to 100% when the target is reached
           isMoving: false,
+          resources: updatedResources, // Update ship resources
         });
       }
     }

@@ -9,8 +9,10 @@ const UserHUD = () => {
   const ship = usePlayerStore((state) => state.players.player1.vehicles.ship); // Get ship data
   const selectedVehicleId = usePlayerStore((state) => state.players.player1.vehicles.selectedVehicle); // Get selected vehicle ID
   const drones = usePlayerStore((state) => state.players.player1.vehicles.drones); // Get drones
-  const playerResources = usePlayerStore((state) => state.players.player1.score.ressources); // Get player resources
+  const playerResources = usePlayerStore((state) => state.players.player1.score.resources); // Get player resources
 
+  console.log(tile);
+  
   const selectedVehicle =
     selectedVehicleId === "ship"
       ? ship
@@ -49,13 +51,13 @@ const UserHUD = () => {
               <strong>Resources:</strong>
               <ul>
                 <li>
-                  <strong>Food:</strong> {tile.resources?.food || 0}
+                  <strong>Food:</strong> {tile.resources?.food || 0} {/* Correct key */}
                 </li>
                 <li>
-                  <strong>Debris:</strong> {tile.resources?.debris || 0}
+                  <strong>Debris:</strong> {tile.resources?.debris || 0} {/* Correct key */}
                 </li>
                 <li>
-                  <strong>Special:</strong> {tile.resources?.special || 0}
+                  <strong>Special:</strong> {tile.resources?.special || 0} {/* Correct key */}
                 </li>
               </ul>
             </li>
@@ -91,6 +93,20 @@ const UserHUD = () => {
               </li>
               <li>
                 <strong>Dommages:</strong> {ship.damage}%
+              </li>
+              <li>
+                <strong>Resources of Ship:</strong> {/* Renamed from Ressources */}
+                <ul>
+                  <li>
+                    <strong>Nourriture:</strong> {ship.resources.food || 0}
+                  </li>
+                  <li>
+                    <strong>Débris:</strong> {ship.resources.debris || 0}
+                  </li>
+                  <li>
+                    <strong>Spécial:</strong> {ship.resources.special || 0}
+                  </li>
+                </ul>
               </li>
             </ul>
           </li>

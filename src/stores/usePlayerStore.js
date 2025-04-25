@@ -16,7 +16,7 @@ const usePlayerStore = create((set, get) => ({
           progress: 0,
           totalDistance: 0, // Total distance for the current path
           path: [], // Store the calculated path
-          ressources: { food: 0, debris: 0, special: 0 },
+          resources: { food: 0, debris: 0, special: 0 },
           startCoord: null, // Initialize as null until tiles are available
         },
         drones: [
@@ -38,7 +38,7 @@ const usePlayerStore = create((set, get) => ({
         selectedVehicle: 'ship', // Default selected vehicle is the ship
       },
       score: {
-        ressources: { food: 0, debris: 0, special: 0 },
+        resources: { food: 0, debris: 0, special: 0 },
       },
       memory: {
         knownResources: [],
