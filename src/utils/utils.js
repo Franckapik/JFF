@@ -1,4 +1,10 @@
+import { Vector3 } from "three";
+// Remove the redundant import of calculatePathData
+// import { calculatePathData } from "./utils"; 
+import usePlayerStore from "../stores/usePlayerStore"; // Import player store
+
 export function generateHexPositions(radius, spacing) {
+  
   const hexPositions = [];
   const sqrt3 = Math.sqrt(3);
 
@@ -53,8 +59,6 @@ export function generateHexPositions(radius, spacing) {
             debris: Math.floor(Math.random() * 10001), // Random debris quantity (0-10000)
             special: Math.floor(Math.random() * 3), // Random special quantity (0-2)
           },
-          randomVehicleStart: false, // Default value
-          targetVehicleStart: false, // Default value
           immunity: Math.random() < 0.1, // 10% chance of immunity
         });
       }
@@ -98,7 +102,7 @@ export function generateHexPositions(radius, spacing) {
   if (fuelStationCandidates.length > 0) {
     const fuelStationTile = fuelStationCandidates[Math.floor(Math.random() * fuelStationCandidates.length)];
     fuelStationTile.type = "fuel";
-    fuelStationTile.color = "black"; // Black color for the fuel station
+    fuelStationTile.color = "orange"; // Black color for the fuel station
     fuelStationTile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on the fuel station tile
     fuelStationTile.immunity = true; // Set immunity to true for the fuel station tile
   }
@@ -137,4 +141,73 @@ export function generateInitialDrones(count, spacing = 1) {
     });
   }
   return drones; // Always return an array
+}
+
+export function findPath(startCoord, targetCoord, tiles) {
+  console.log("Finding path from", startCoord, "to", targetCoord);
+  const queue = [[startCoord]];
+  const visited = new Set();
+
+  while (queue.length > 0) {
+    const path = queue.shift();
+    const currentCoord = path[path.length - 1];
+
+    if (currentCoord === targetCoord) {
+      console.log("Path found:", path);
+      return path; // Return the path if the target is reached
+    }
+
+    if (!visited.has(currentCoord)) {
+      visited.add(currentCoord);
+      const neighbors = tiles[currentCoord]?.neighbors || [];
+      neighbors.forEach((neighbor) => {
+        if (!visited.has(neighbor) && tiles[neighbor]?.walkable !== false) {
+          queue.push([...path, neighbor]); // Add the neighbor to the path
+        }
+      });
+    }
+  }
+
+  console.log("No path found");
+  return []; // Return an empty array if no path is found
+}
+
+export function calculatePathData(currentTile, targetTile, tiles) {
+  const path = findPath(currentTile.coord, targetTile.coord, tiles);
+
+  let totalDistance = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    const tileA = tiles[path[i]];
+    const tileB = tiles[path[i + 1]];
+    totalDistance += new Vector3(tileA.position.x, tileA.position.y, tileA.position.z).distanceTo(
+      new Vector3(tileB.position.x, tileB.position.y, tileB.position.z)
+    );
+  }
+
+  return { path, totalDistance };
+}
+
+// Remove the getInitialVehiclePosition function
+// Instead, search for tiles with type "depart" directly in the store or logic where needed.
+
+export function calculatePath(tiles, selectedTile) {
+  const playerVehicle = usePlayerStore.getState().players.player1.vehicles.ship; // Access player vehicle
+  const setPlayerVehicleProgress = usePlayerStore.getState().setTargetVehicleProgress; // Access progress setter
+
+  if (!playerVehicle || !selectedTile) return { path: [], totalDistance: 0 };
+
+  const currentTile = Object.values(tiles).find(
+    (tile) =>
+      Math.abs(tile.position.x - playerVehicle.position.x) < 0.1 &&
+      Math.abs(tile.position.z - playerVehicle.position.z) < 0.1
+  );
+  const targetTile = tiles[selectedTile];
+
+  if (currentTile && targetTile) {
+    const { path, totalDistance } = calculatePathData(currentTile, targetTile, tiles);
+    setPlayerVehicleProgress(0, totalDistance); // Reset progress and set total distance
+    return { path, totalDistance };
+  }
+
+  return { path: [], totalDistance: 0 };
 }

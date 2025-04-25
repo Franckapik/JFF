@@ -1,28 +1,19 @@
 import React from "react";
-import { useTileStore } from "../store/useTileStore"; // Import Zustand store
+import { useTileStore } from "../stores/useNewTileStore"; // Import tile store
+import usePlayerStore from "../stores/usePlayerStore"; // Import player store
 import "../styles/App.css"; // Import CSS for styling
 
 const UserHUD = () => {
   const selectedTileCoord = useTileStore((state) => state.selectedTile); // Get the selected tile's coordinate
   const tile = useTileStore((state) => (selectedTileCoord ? state.tiles[selectedTileCoord] : null)); // Fetch the full tile data
-  const randomVehicle = useTileStore((state) => state.randomVehicle); // Get random vehicle data
-  const targetVehicle = useTileStore((state) => state.targetVehicle); // Get target vehicle data
-  const randomVehicleIsMoving = useTileStore((state) => state.randomVehicleIsMoving); // Get random vehicle movement status
-  const targetVehicleIsMoving = useTileStore((state) => state.targetVehicleIsMoving); // Get target vehicle movement status
-  const targetVehicleProgress = useTileStore((state) => state.targetVehicleProgress); // Get target vehicle progress
-  const randomVehicleStartCoord = useTileStore((state) => state.randomVehicleStartCoord); // Get random vehicle start coord
-  const targetVehicleStartCoord = useTileStore((state) => state.targetVehicleStartCoord); // Get target vehicle start coord
-  const targetFuel = useTileStore((state) => state.targetFuel); // Get targetFuel from the store
-  const targetDamage = useTileStore((state) => state.targetDamage); // Get targetDamage from the store
-  const targetVehicleResources = useTileStore((state) => state.targetVehicleResources); // Get target vehicle resources
-  const playerResources = useTileStore((state) => state.playerResources); // Get player resources from the store
-  const selectedVehicle = useTileStore((state) => state.selectedVehicle); // Get selected vehicle from the store
-  const drones = useTileStore((state) => state.drones); // Get drones from the store
+  const players = usePlayerStore((state) => state.players); // Get all players
+  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
 
   return (
     <div className="user-hud">
+      {/* Section: Tile Information */}
       <div className="hud-column">
-        <h3>Selection</h3>
+        <h3>Tuile Sélectionnée</h3>
         {tile ? (
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             <li>
@@ -31,6 +22,9 @@ const UserHUD = () => {
             <li>
               <strong>Position :</strong> x: {tile.position?.x.toFixed(2) || "N/A"}, y:{" "}
               {tile.position?.y.toFixed(2) || "N/A"}, z: {tile.position?.z.toFixed(2) || "N/A"}
+            </li>
+            <li>
+              <strong>Type :</strong> {tile.type || "N/A"}
             </li>
             <li>
               <strong>Walkable :</strong> {tile.walkable ? "Oui" : "Non"}
@@ -42,34 +36,7 @@ const UserHUD = () => {
               <strong>Collected :</strong> {tile.collected ? "Oui" : "Non"}
             </li>
             <li>
-              <strong>Collectable :</strong> {tile.collectable ? "Oui" : "Non"}
-            </li>
-            <li>
-              <strong>Danger :</strong> {tile.danger ? "Oui" : "Non"}
-            </li>
-            <li>
               <strong>Neighbors :</strong> {tile.neighbors?.join(", ") || "N/A"}
-            </li>
-            <li>
-              <strong>Color :</strong> {tile.color || "N/A"}
-            </li>
-            <li>
-              <strong>Outer :</strong> {tile.outer ? "Oui" : "Non"}
-            </li>
-            <li>
-              <strong>Random Vehicle Start :</strong> {tile.randomVehicleStart ? "Oui" : "Non"}
-            </li>
-            <li>
-              <strong>Target Vehicle Start :</strong> {tile.targetVehicleStart ? "Oui" : "Non"}
-            </li>
-            <li>
-              <strong>Fuel Station :</strong> {tile.fuelStation ? "Oui" : "Non"}
-            </li>
-            <li>
-              <strong>Repair Station :</strong> {tile.repairStation ? "Oui" : "Non"}
-            </li>
-            <li>
-              <strong>Immunity :</strong> {tile.immunity ? "Oui" : "Non"}
             </li>
             <li>
               <strong>Resources:</strong>
@@ -81,141 +48,94 @@ const UserHUD = () => {
                   <strong>Debris:</strong> {tile.resources?.debris || 0}
                 </li>
                 <li>
-                  <strong>Special:</strong> {tile.resources?.special || 0}
+                  <strong>Special:</strong> {tile.resources?.special || 0} {/* Correct key */}
                 </li>
               </ul>
             </li>
           </ul>
         ) : (
-          <p>Aucune tuile sélectionnée</p>
+          <p>Aucune tuile sélectionnée</p> // Message when no tile is selected
         )}
       </div>
+
+      {/* Section: Selected Vehicle */}
       <div className="hud-column">
-        <h3>Mouvement</h3>
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li>
-            <strong>Random Vehicle:</strong>
-            <ul>
-              <li>
-                <strong>Position:</strong>{" "}
-                {randomVehicle
-                  ? `x: ${randomVehicle.position.x.toFixed(2)}, y: ${randomVehicle.position.y.toFixed(
-                      2
-                    )}, z: ${randomVehicle.position.z.toFixed(2)} (Coord: ${randomVehicle.coord})`
-                  : "N/A"}
-              </li>
-              <li>
-                <strong>Is Moving:</strong> {randomVehicleIsMoving ? "Yes" : "No"}
-              </li>
-              <li>
-                <strong>Start Coord:</strong> {randomVehicleStartCoord || "N/A"}
-              </li>
-            </ul>
-          </li>
-          <li>
-            <strong>Target Vehicle:</strong>
-            <ul>
-              <li>
-                <strong>Position:</strong>{" "}
-                {targetVehicle
-                  ? `x: ${targetVehicle.position.x.toFixed(2)}, y: ${targetVehicle.position.y.toFixed(
-                      2
-                    )}, z: ${targetVehicle.position.z.toFixed(2)} (Coord: ${targetVehicle.coord})`
-                  : "N/A"}
-              </li>
-              <li>
-                <strong>Is Moving:</strong> {targetVehicleIsMoving ? "Yes" : "No"}
-              </li>
-              <li>
-                <strong>Progress:</strong> {targetVehicleProgress}%
-              </li>
-              <li>
-                <strong>Start Coord:</strong> {targetVehicleStartCoord || "N/A"}
-              </li>
-            </ul>
-          </li>
-          <li>
-            <strong>Drones:</strong>
-            <ul>
-              {drones.map((drone) => (
-                <li key={drone.id}>
-                  <strong>ID:</strong> {drone.id} <br />
-                  <strong>Position:</strong>{" "}
-                  {drone.position
-                    ? `x: ${drone.position.x.toFixed(2)}, y: ${drone.position.y.toFixed(
-                        2
-                      )}, z: ${drone.position.z.toFixed(2)}`
-                    : "N/A"}{" "}
-                  <br />
-                  <strong>Target Tile:</strong> {drone.targetTile || "N/A"} <br />
-                  <strong>Is Moving:</strong> {drone.isMoving ? "Yes" : "No"}
-                </li>
-              ))}
-            </ul>
-          </li>
-          <li>
-            <strong>Véhicule Sélectionné:</strong>
-            {selectedVehicle ? (
+        <h3>Véhicule Sélectionné</h3>
+        {selectedVehicle.playerId && selectedVehicle.vehicleId ? (
+          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+            <li>
+              <strong>Joueur :</strong> {selectedVehicle.playerId}
+            </li>
+            <li>
+              <strong>Véhicule :</strong> {selectedVehicle.vehicleId}
+            </li>
+          </ul>
+        ) : (
+          <p>Aucun véhicule sélectionné</p>
+        )}
+      </div>
+
+      {/* Section: Players Information */}
+      {Object.entries(players).map(([playerId, player]) => (
+        <div className="hud-column" key={playerId}>
+          <h3>Informations Joueur: {playerId}</h3>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+            <li>
+              <strong>Véhicule (Ship):</strong>
               <ul>
                 <li>
-                  <strong>ID :</strong> {selectedVehicle.id || "N/A"}
+                  <strong>Position:</strong>{" "}
+                  {player.vehicles.ship.position
+                    ? `x: ${player.vehicles.ship.position.x.toFixed(2)}, y: ${player.vehicles.ship.position.y.toFixed(
+                        2
+                      )}, z: ${player.vehicles.ship.position.z.toFixed(2)} (Coord: ${player.vehicles.ship.coord})`
+                    : "N/A"}
                 </li>
                 <li>
-                  <strong>Type :</strong> {selectedVehicle.type || "N/A"}
+                  <strong>En Mouvement:</strong> {player.vehicles.ship.isMoving ? "Oui" : "Non"}
                 </li>
                 <li>
-                  <strong>Position :</strong> x: {selectedVehicle.position?.x.toFixed(2) || "N/A"}, y:{" "}
-                  {selectedVehicle.position?.y.toFixed(2) || "N/A"}, z: {selectedVehicle.position?.z.toFixed(2) || "N/A"}
+                  <strong>Progression:</strong> {player.vehicles.ship.progress}%
                 </li>
                 <li>
-                  <strong>Target Tile :</strong> {selectedVehicle.targetTile || "N/A"}
+                  <strong>Carburant:</strong> {player.vehicles.ship.fuel}%
+                </li>
+                <li>
+                  <strong>Dommages:</strong> {player.vehicles.ship.damage}%
+                </li>
+                <li>
+                  <strong>Ressources:</strong>
+                  <ul>
+                    <li>
+                      <strong>Nourriture:</strong> {player.vehicles.ship.resources.food || 0}
+                    </li>
+                    <li>
+                      <strong>Débris:</strong> {player.vehicles.ship.resources.debris || 0}
+                    </li>
+                    <li>
+                      <strong>Spécial:</strong> {player.vehicles.ship.resources.special || 0}
+                    </li>
+                  </ul>
                 </li>
               </ul>
-            ) : (
-              <p>Aucun véhicule sélectionné</p>
-            )}
-          </li>
-        </ul>
-      </div>
-      <div className="hud-column">
-        <h3>Indicateur</h3>
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li>
-            <strong>Fuel:</strong> {targetFuel}%
-          </li>
-          <li>
-            <strong>Damage:</strong> {targetDamage}%
-          </li>
-          <li>
-            <strong>Target Vehicle Resources:</strong>
-            <ul>
-              <li>
-                <strong>Food:</strong> {targetVehicleResources.food}
-              </li>
-              <li>
-                <strong>Debris:</strong> {targetVehicleResources.debris}
-              </li>
-              <li>
-                <strong>Special:</strong> {targetVehicleResources.special}
-              </li>
-            </ul>
-          </li>
-          <li>
-            <strong>Player Resources:</strong>
-            <ul>
-              <li>
-                <strong>Food:</strong> {playerResources.food}
-              </li>
-              <li>
-                <strong>Debris:</strong> {playerResources.debris}
-              </li>
-              <li>
-                <strong>Special:</strong> {playerResources.special}
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </div>
+            </li>
+            <li>
+              <strong>Ressources Joueur:</strong>
+              <ul>
+                <li>
+                  <strong>Nourriture:</strong> {player.score.resources.food}
+                </li>
+                <li>
+                  <strong>Débris:</strong> {player.score.resources.debris}
+                </li>
+                <li>
+                  <strong>Spécial:</strong> {player.score.resources.special}
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      ))}
     </div>
   );
 };

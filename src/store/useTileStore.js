@@ -4,33 +4,42 @@ export const useTileStore = create((set, get) => ({
   tiles: {}, // Centralized tile data
   selectedTile: null, // Currently selected tile
   randomVehicle: null, // Combined position and coord for the random vehicle
-  targetVehicle: null, // Combined position and coord for the target vehicle
   randomVehicleTargetTile: null, // Tile coord of the random vehicle's target
-  targetVehicleTargetTile: null, // Tile coord of the target vehicle's destination
   randomVehicleIsMoving: false, // Movement status for the random vehicle
+  randomVehicleStartCoord: null, // Starting coord for the random vehicle
+
+  targetVehicle: null, // Combined position and coord for the target vehicle
+  targetVehicleTargetTile: null, // Tile coord of the target vehicle's destination
   targetVehicleIsMoving: false, // Movement status for the target vehicle
   targetVehicleProgress: 0, // Progress of the target vehicle
-  randomVehicleStartCoord: null, // Starting coord for the random vehicle
-  targetVehicleStartCoord: null, // Starting coord for the target vehicle
   targetFuel: 100, // Initial fuel level for the target vehicle
   targetDamage: 0, // Initial damage level for the target vehicle
   targetVehicleResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the target vehicle
+  
   playerResources: { food: 0, debris: 0, special: 0 }, // Initial resources for the player
-  drones: [], // Ensure drones is initialized as an empty array
-  selectedVehicle: null, // Currently selected vehicle (drone or target vehicle)
   playerMessages: [], // Array to store player messages
+  drones: [], // Ensure drones is initialized as an empty array
+  
+  selectedVehicle: null, // Currently selected vehicle (drone or target vehicle)
+  
+  totalPathDistance: 0, // Total distance of the path
+  distanceTraveled: 0, // Distance traveled so far
 
   setTiles: (newTiles) => set({ tiles: newTiles }),
   setSelectedTile: (tileCoord) => set({ selectedTile: tileCoord }), // Ensure selectedTile is a coordinate
+  
   setRandomVehicle: (vehicle) => set({ randomVehicle: vehicle }), // Setter for random vehicle
-  setTargetVehicle: (vehicle) => set({ targetVehicle: vehicle }), // Setter for target vehicle
   setRandomVehicleTargetTile: (tileCoord) => set({ randomVehicleTargetTile: tileCoord }), // Setter for target tile
+
+  
+  setTargetVehicle: (vehicle) => set({ targetVehicle: vehicle }), // Setter for target vehicle
+  
   setTargetVehicleTargetTile: (tileCoord) => set({ targetVehicleTargetTile: tileCoord }), // Setter for target tile
   setRandomVehicleIsMoving: (isMoving) => set({ randomVehicleIsMoving: isMoving }), // Setter for random vehicle movement
   setTargetVehicleIsMoving: (isMoving) => set({ targetVehicleIsMoving: isMoving }), // Setter for target vehicle movement
   setTargetVehicleProgress: (progress) => set({ targetVehicleProgress: progress }), // Setter for progress
   setRandomVehicleStartCoord: (coord) => set({ randomVehicleStartCoord: coord }), // Setter for random vehicle start coord
-  setTargetVehicleStartCoord: (coord) => set({ targetVehicleStartCoord: coord }), // Setter for target vehicle start coord
+  
   setTargetFuel: (fuel) => set({ targetFuel: fuel }), // Setter for targetFuel
   setTargetDamage: (damage) => set({ targetDamage: damage }), // Setter for targetDamage
   setTargetVehicleResources: (resources) =>
@@ -41,6 +50,7 @@ export const useTileStore = create((set, get) => ({
         special: state.targetVehicleResources.special + (resources.special || 0),
       },
     })),
+
   setPlayerResources: (resources) =>
     set((state) => ({
       playerResources: {
@@ -49,10 +59,12 @@ export const useTileStore = create((set, get) => ({
         special: state.playerResources.special + (resources.special || 0),
       },
     })),
+
   resetTargetVehicleResources: () =>
     set(() => ({
       targetVehicleResources: { food: 0, debris: 0, special: 0 },
     })),
+    
   setDrones: (newDrones) => {
     if (typeof newDrones === "function") {
       set((state) => ({ drones: newDrones(state.drones) })); // Allow functional updates
@@ -129,12 +141,60 @@ export const useTileStore = create((set, get) => ({
       }
       return { tiles: updatedTiles };
     }),
-  isFuelStation: (coord) => {
-    const tiles = get().tiles;
-    return tiles[coord]?.fuelStation === true;
+
+  updateProgress: (moveDistance, totalDistance = null) => {
+    set((state) => {
+      const newDistanceTraveled = totalDistance !== null ? 0 : state.distanceTraveled + moveDistance;
+      const newTotalPathDistance = totalDistance !== null ? totalDistance : state.totalPathDistance;
+
+      const progress = (newDistanceTraveled / newTotalPathDistance) * 100;
+
+      return {
+        distanceTraveled: newDistanceTraveled,
+        totalPathDistance: newTotalPathDistance,
+        targetVehicleProgress: progress.toFixed(2),
+      };
+    });
   },
-  isRepairStation: (coord) => {
-    const tiles = get().tiles;
-    return tiles[coord]?.repairStation === true;
+
+  initializeVehiclesAndDrones: (hexPositions) => {
+    const setRandomVehicle = get().setRandomVehicle;
+    const setTargetVehicle = get().setTargetVehicle;
+    const setDrones = get().setDrones;
+    const setSelectedVehicle = get().setSelectedVehicle; // Setter for selected vehicle
+
+    // Trouver les tuiles de départ pour les véhicules
+    const randomVehicleTile = hexPositions.find((tile) => tile.randomVehicleStart);
+    const targetVehicleTile = hexPositions.find((tile) => tile.targetVehicleStart);
+
+    if (randomVehicleTile) {
+      setRandomVehicle({
+        position: randomVehicleTile.position,
+        coord: randomVehicleTile.coord,
+      });
+    }
+
+    if (targetVehicleTile) {
+      const targetVehicle = {
+        position: targetVehicleTile.position,
+        coord: targetVehicleTile.coord,
+      };
+      setTargetVehicle(targetVehicle);
+      setSelectedVehicle({ id: "targetVehicle", type: "Vaisseau", ...targetVehicle }); // Sélectionner le véhicule cible par défaut
+    }
+
+    // Initialiser les drones
+    const drones = hexPositions
+      .filter((tile) => tile.walkable && !tile.outer) // Utiliser uniquement les tuiles accessibles
+      .slice(0, 2) // Limiter à 2 drones pour l'exemple
+      .map((tile, index) => ({
+        id: `drone-${index + 1}`,
+        position: tile.position,
+        coord: tile.coord,
+        isMoving: false,
+        targetTile: null,
+      }));
+
+    setDrones(drones);
   },
 }));

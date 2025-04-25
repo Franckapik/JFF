@@ -1,73 +1,29 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { GridHelper } from "three";
-import { useThree } from "@react-three/fiber"; // Import useThree hook
+import { useThree } from "@react-three/fiber";
 import Tile from "./Tile";
-import { generateHexPositions, generateInitialDrones } from "../utils/utils"; // Import generateInitialDrones
-import { useTileStore } from "../store/useTileStore"; // Import Zustand store
-import { Box, Torus } from "@react-three/drei"; // Import Box and Torus from drei
-import RandomMovement from "../Mouvement/RandomMovement"; // Import RandomMovement component
-import TargetMovement from "../Mouvement/TargetMovement"; // Import TargetMovement component
-import DroneMovement from "../Mouvement/DroneMovement"; // Import DroneMovement component
+import { useTileStore } from "../stores/useNewTileStore";
+import usePlayerStore from "../stores/usePlayerStore";
+import TargetMovement from "../Mouvement/TargetMovement"; // Import TargetMovement
 
 const Scene = () => {
-  const radius = 3; // Augmentez le rayon à 3 pour inclure un troisième cercle de tuiles
-  const setTiles = useTileStore((state) => state.setTiles); // Zustand setter for tiles
-  const setSelectedTile = useTileStore((state) => state.setSelectedTile); // Zustand setter for selectedTile
+  const initializeTiles = useTileStore((state) => state.initializeTiles); // Zustand initializer for tiles
   const tiles = useTileStore((state) => state.tiles); // Zustand tiles state
-  const setRandomVehicleInStore = useTileStore((state) => state.setRandomVehicle); // Zustand setter
-  const setTargetVehicleInStore = useTileStore((state) => state.setTargetVehicle); // Zustand setter
-  const setTargetVehicleTargetTile = useTileStore((state) => state.setTargetVehicleTargetTile); // Zustand setter
-  const targetVehicleIsMoving = useTileStore((state) => state.targetVehicleIsMoving); // Zustand state for movement
-  const setRandomVehicleStartCoord = useTileStore((state) => state.setRandomVehicleStartCoord); // Zustand setter
-  const setTargetVehicleStartCoord = useTileStore((state) => state.setTargetVehicleStartCoord); // Zustand setter
-  const drones = useTileStore((state) => state.drones); // Get drones from the store
-  const setDrones = useTileStore((state) => state.setDrones); // Get setDrones from the store
-  const setSelectedVehicle = useTileStore((state) => state.setSelectedVehicle); // Zustand setter for selected vehicle
-  const randomVehicle = useTileStore((state) => state.randomVehicle); // Get random vehicle from the store
-  const selectedVehicle = useTileStore((state) => state.selectedVehicle); // Get the selected vehicle from the store
-
-  const hexPositions = useMemo(() => generateHexPositions(radius, 0.1), []); // Use radius here
-  const [randomVehiclePosition, setRandomVehiclePosition] = useState(null); // State for random vehicle position
-  const [targetVehiclePosition, setTargetVehiclePosition] = useState(null); // State for target vehicle position
+  const initializePlayer = usePlayerStore((state) => state.initializePlayer); // Player initialization method
+  const shipPosition = usePlayerStore((state) => state.players.player1.vehicles.ship.position); // Ship position
+  const setSelectedTile = useTileStore((state) => state.setSelectedTile); // Zustand setter for selectedTile
+  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
 
   useEffect(() => {
-    // Directly set tiles in Zustand store
-    setTiles(hexPositions.reduce((acc, tile) => ({ ...acc, [tile.coord]: tile }), {}));
-  }, [hexPositions, setTiles]);
+    initializeTiles(); // Initialize tiles with default radius and spacing
+  }, [initializeTiles]);
 
   useEffect(() => {
-    // Set the initial random vehicle data (position and coord)
-    const randomTile = hexPositions.find((tile) => tile.randomVehicleStart);
-    if (randomTile) {
-      const randomVehicle = { position: randomTile.position, coord: randomTile.coord };
-      setRandomVehiclePosition(randomTile.position); // Update local state
-      setRandomVehicleInStore(randomVehicle); // Store combined data in Zustand
-      setRandomVehicleStartCoord(randomTile.coord); // Store starting coord in Zustand
+    if (Object.keys(tiles).length > 0) {
+      initializePlayer(tiles); // Initialize player once tiles are available
     }
-  }, [hexPositions, setRandomVehicleInStore, setRandomVehicleStartCoord]);
+  }, [tiles, initializePlayer]);
 
-  useEffect(() => {
-    // Set the initial target vehicle data (position and coord)
-    const targetTile = hexPositions.find((tile) => tile.targetVehicleStart);
-    if (targetTile) {
-      const targetVehicle = { position: targetTile.position, coord: targetTile.coord };
-      setTargetVehiclePosition(targetTile.position); // Update local state
-      setTargetVehicleInStore(targetVehicle); // Store combined data in Zustand
-      setTargetVehicleStartCoord(targetTile.coord); // Store starting coord in Zustand
-      setSelectedVehicle({ id: "targetVehicle", type: "Vaisseau", ...targetVehicle }); // Select target vehicle by default
-    }
-  }, [hexPositions, setTargetVehicleInStore, setTargetVehicleStartCoord, setSelectedVehicle]);
-
-  useEffect(() => {
-    const initialDrones = generateInitialDrones(1, 2); // Generate only 1 drone
-    if (Array.isArray(initialDrones)) {
-      setDrones(initialDrones); // Ensure setDrones is called with an array
-    } else {
-      console.error("generateInitialDrones did not return an array:", initialDrones);
-    }
-  }, [setDrones]);
-
-  // Configure the camera using useThree
   const { camera } = useThree();
   useEffect(() => {
     camera.position.set(0, 10, 10); // Adjusted camera position for better visibility
@@ -75,62 +31,37 @@ const Scene = () => {
   }, [camera]);
 
   const handleTileClick = (tileCoord) => {
-    if (!selectedVehicle) {
-      console.warn("No vehicle selected. Please select a vehicle first.");
-      return; // Prevent setting a target if no vehicle is selected
-    }
-  
-    if (selectedVehicle.id === "targetVehicle") {
-      if (targetVehicleIsMoving) {
-        console.warn("Cannot set a new target while the target vehicle is moving.");
-        return; // Prevent setting a new target if the vehicle is moving
-      }
-      setTargetVehicleTargetTile(tileCoord); // Set the target tile for the target vehicle
-    } else {
-      // Handle drones
-      setDrones((prevDrones) =>
-        prevDrones.map((drone) =>
-          drone.id === selectedVehicle.id ? { ...drone, targetTile: tileCoord } : drone
-        )
-      );
-    }
-  
     setSelectedTile(tileCoord); // Store the clicked tile's coordinate
-  };
-
-  const handleVehicleClick = (vehicle) => {
-    setSelectedVehicle(vehicle); // Update the selected vehicle in the store
   };
 
   return (
     <>
-      <primitive object={new GridHelper(10, 10)} visible={true} /> {/* GridHelper visible for debugging */}
-      <ambientLight intensity={1} /> {/* Increased ambient light intensity */}
-      <directionalLight position={[5, 10, 5]} intensity={1} castShadow /> {/* Adjusted directional light */}
-      <pointLight position={[-5, 10, -5]} intensity={0.8} /> {/* Adjusted point light */}
-      {randomVehiclePosition && randomVehicle && (
-        <RandomMovement initialPosition={randomVehiclePosition}>
-          <Box args={[0.5, 0.5, 0.5]} castShadow>
-            <meshStandardMaterial attach="material" color="blue" />
-          </Box>
-        </RandomMovement>
-      )}
-      {targetVehiclePosition && (
-        <TargetMovement initialPosition={targetVehiclePosition}>
-          <Box
-            args={[0.5, 0.5, 0.5]}
-            castShadow
-            onClick={() => handleVehicleClick({ id: "targetVehicle", type: "Vaisseau", ...targetVehicle })}
-          >
-            <meshStandardMaterial
-              attach="material"
-              color={selectedVehicle?.id === "targetVehicle" ? "hotpink" : "red"} // Highlight if selected
-            />
-          </Box>
-        </TargetMovement>
+      <primitive object={new GridHelper(10, 10)} visible={true} />
+      <ambientLight intensity={1} />
+      <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
+      <pointLight position={[-5, 10, -5]} intensity={0.8} />
+      {Object.keys(tiles).length > 0 && (
+        <>
+          <TargetMovement playerId="player1">
+            <mesh castShadow>
+              <boxGeometry args={[0.5, 0.5, 0.5]} />
+              <meshStandardMaterial
+                color={selectedVehicle.playerId === "player1" && selectedVehicle.vehicleId === "ship" ? "yellow" : "blue"}
+              />
+            </mesh>
+          </TargetMovement>
+          <TargetMovement playerId="player2">
+            <mesh castShadow>
+              <boxGeometry args={[0.5, 0.5, 0.5]} />
+              <meshStandardMaterial
+                color={selectedVehicle.playerId === "player2" && selectedVehicle.vehicleId === "ship" ? "yellow" : "red"}
+              />
+            </mesh>
+          </TargetMovement>
+        </>
       )}
       {Object.values(tiles)
-        .filter((tile) => tile.walkable) // Ensure only walkable tiles are rendered
+        .filter((tile) => tile.walkable)
         .map((tile) => (
           <Tile
             key={tile.coord}
@@ -141,42 +72,39 @@ const Scene = () => {
           />
         ))}
       {Object.values(tiles)
-        .filter((tile) => tile.fuelStation) // Filter for the fuel station tile
+        .filter((tile) => tile.type === "depart") // Filter for the starting tile
+        .map((tile) => (
+          <mesh
+            key={`depart-tile-${tile.coord}`}
+            position={[tile.position.x, 0.2, tile.position.z]} // Slightly above the ground
+            rotation={[-Math.PI / 2, 0, 0]} // Rotate to lie flat on the ground
+          >
+            <circleGeometry args={[0.5, 32]} /> {/* Circle dimensions */}
+            <meshStandardMaterial color="red" /> {/* Red color for the circle */}
+          </mesh>
+        ))}
+      {Object.values(tiles)
+        .filter((tile) => tile.type === "fuel") // Filter for the fuel station tile
         .map((tile) => (
           <mesh
             key={`fuel-station-${tile.coord}`}
             position={[tile.position.x, 0.25, tile.position.z]} // Slightly above the ground
           >
-            <boxGeometry args={[0.2, 0.8, 0.2]} /> {/* Cube dimensions */}
-            <meshStandardMaterial color="white" /> {/* Black color for the cube */}
+            <boxGeometry args={[0.5, 0.5, 0.5]} /> {/* Adjusted cube dimensions */}
+            <meshStandardMaterial color="orange" /> {/* Black color for the cube */}
           </mesh>
         ))}
       {Object.values(tiles)
-        .filter((tile) => tile.repairStation) // Filter for the repair station tile
+        .filter((tile) => tile.type === "repair") // Filter for the repair station tile
         .map((tile) => (
           <mesh
             key={`repair-station-${tile.coord}`}
             position={[tile.position.x, 0.25, tile.position.z]} // Slightly above the ground
           >
-            <boxGeometry args={[0.2, 0.8, 0.2]} /> {/* Cube dimensions */}
+            <boxGeometry args={[0.5, 0.5, 0.5]} /> {/* Adjusted cube dimensions */}
             <meshStandardMaterial color="green" /> {/* Green color for the cube */}
           </mesh>
         ))}
-      {drones.map((drone) => (
-        <DroneMovement key={drone.id} drone={drone}>
-          <Torus
-            args={[0.2, 0.05, 16, 100]}
-            rotation={[-Math.PI / 2, 0, 0]}
-            castShadow
-            onClick={() => handleVehicleClick({ id: drone.id, type: "Drone", ...drone })}
-          >
-            <meshStandardMaterial
-              attach="material"
-              color={selectedVehicle?.id === drone.id ? "hotpink" : "white"} // Highlight if selected
-            />
-          </Torus>
-        </DroneMovement>
-      ))}
     </>
   );
 };
