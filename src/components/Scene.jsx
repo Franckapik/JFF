@@ -140,6 +140,28 @@ const Scene = () => {
             onClick={() => handleTileClick(tile.coord)}
           />
         ))}
+      {Object.values(tiles)
+        .filter((tile) => tile.fuelStation) // Filter for the fuel station tile
+        .map((tile) => (
+          <mesh
+            key={`fuel-station-${tile.coord}`}
+            position={[tile.position.x, 0.25, tile.position.z]} // Slightly above the ground
+          >
+            <boxGeometry args={[0.2, 0.8, 0.2]} /> {/* Cube dimensions */}
+            <meshStandardMaterial color="white" /> {/* Black color for the cube */}
+          </mesh>
+        ))}
+      {Object.values(tiles)
+        .filter((tile) => tile.repairStation) // Filter for the repair station tile
+        .map((tile) => (
+          <mesh
+            key={`repair-station-${tile.coord}`}
+            position={[tile.position.x, 0.25, tile.position.z]} // Slightly above the ground
+          >
+            <boxGeometry args={[0.2, 0.8, 0.2]} /> {/* Cube dimensions */}
+            <meshStandardMaterial color="green" /> {/* Green color for the cube */}
+          </mesh>
+        ))}
       {drones.map((drone) => (
         <DroneMovement key={drone.id} drone={drone}>
           <Torus

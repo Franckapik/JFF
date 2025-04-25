@@ -25,12 +25,12 @@ const MessageModal = ({ messages, onClose }) => {
           <div>
             <h3>Détails du Message</h3>
             <p><strong>Drone {selectedMessage.droneId}:</strong></p>
-            <p>{selectedMessage.body.split("\n").map((line, index) => (
+            <p>{selectedMessage.text?.split("\n").map((line, index) => (
               <span key={index}>
                 {line}
                 <br />
               </span>
-            ))}</p>
+            )) || "Message vide"}</p>
             <table style={{ margin: "10px auto", borderCollapse: "collapse", width: "100%" }}>
               <thead>
                 <tr>

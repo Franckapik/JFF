@@ -70,10 +70,15 @@ export const useTileStore = create((set, get) => ({
     })),
   setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }), // Setter for selected vehicle
 
-  addPlayerMessage: (message) =>
+  addPlayerMessage: (message) => {
+    if (!message || typeof message.text !== "string") {
+      console.error("Message invalide :", message);
+      return;
+    }
     set((state) => ({
-      playerMessages: [...state.playerMessages, { ...message, isRead: false }], // Add a new message with isRead: false
-    })),
+      playerMessages: [...state.playerMessages, { ...message, isRead: false }],
+    }));
+  },
 
   markMessageAsRead: (index) =>
     set((state) => {
@@ -104,9 +109,16 @@ export const useTileStore = create((set, get) => ({
     });
   },
   checkVehicleOverlap: () => {
-    const { randomVehicle, targetVehicle, setTargetDamage, targetDamage } = get();
-    if (randomVehicle?.coord && targetVehicle?.coord && randomVehicle.coord === targetVehicle.coord) {
-      setTargetDamage(Math.min(targetDamage + 10, 100)); // Increase damage by 10%, max 100%
+    const { randomVehicle, targetVehicle, setTargetDamage, targetDamage, tiles } = get();
+    if (
+      randomVehicle?.coord &&
+      targetVehicle?.coord &&
+      randomVehicle.coord === targetVehicle.coord
+    ) {
+      const targetTile = tiles[targetVehicle.coord];
+      if (!targetTile?.immunity) {
+        setTargetDamage(Math.min(targetDamage + 10, 100)); // Increase damage by 10%, max 100%
+      }
     }
   },
   markTileAsCollected: (coord) =>
@@ -117,4 +129,12 @@ export const useTileStore = create((set, get) => ({
       }
       return { tiles: updatedTiles };
     }),
+  isFuelStation: (coord) => {
+    const tiles = get().tiles;
+    return tiles[coord]?.fuelStation === true;
+  },
+  isRepairStation: (coord) => {
+    const tiles = get().tiles;
+    return tiles[coord]?.repairStation === true;
+  },
 }));
