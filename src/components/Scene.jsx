@@ -6,7 +6,7 @@ import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
 import TargetMovement from "../Mouvement/TargetMovement"; // Import TargetMovement
 
-const Scene = ({ onStartMovement }) => {
+const Scene = () => {
   const initializeTiles = useTileStore((state) => state.initializeTiles); // Zustand initializer for tiles
   const tiles = useTileStore((state) => state.tiles); // Zustand tiles state
   const initializePlayer = usePlayerStore((state) => state.initializePlayer); // Player initialization method
@@ -42,7 +42,7 @@ const Scene = ({ onStartMovement }) => {
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
       {Object.keys(tiles).length > 0 && (
         <>
-          <TargetMovement playerId="player1" onStartMovement={onStartMovement}>
+          <TargetMovement playerId="player1">
             <mesh castShadow>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
               <meshStandardMaterial
@@ -50,7 +50,7 @@ const Scene = ({ onStartMovement }) => {
               />
             </mesh>
           </TargetMovement>
-          <TargetMovement playerId="player2" onStartMovement={onStartMovement}>
+          <TargetMovement playerId="player2">
             <mesh castShadow>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
               <meshStandardMaterial

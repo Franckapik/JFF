@@ -25,7 +25,7 @@ const App = () => {
         <StoreHUD />
         <div className="canvas-container">
           <Canvas camera={{ fov: 70, position: [5, 5, 5] }}>
-            <Scene onStartMovement={setIsTimerRunning} />
+            <Scene />
           </Canvas>
         </div>
       </div>

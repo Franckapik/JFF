@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useTileStore } from "../stores/useNewTileStore"; // Import tile store
 import usePlayerStore from "../stores/usePlayerStore"; // Import player store
+import useGameStore from "../stores/useGameStore"; // Import game store
 import { useFrame } from "@react-three/fiber";
 import { Vector3 } from "three";
 
-const TargetMovement = ({ playerId, children, onStartMovement }) => {
+const TargetMovement = ({ playerId, children }) => {
   const groupRef = useRef();
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
   const playerVehicles = usePlayerStore((state) => state.players[playerId].vehicles); // Get all vehicles for the player
@@ -16,6 +17,7 @@ const TargetMovement = ({ playerId, children, onStartMovement }) => {
   const tiles = useTileStore((state) => state.tiles); // Get tiles from the store
   const selectedTile = useTileStore((state) => state.selectedTile); // Get the selected tile
   const clearSelectedTile = useTileStore((state) => state.clearSelectedTile); // Get the clearSelectedTile function
+  const setClockRunning = useGameStore((state) => state.setClockRunning); // Access the clock trigger action
 
   const [path, setPath] = useState([]); // Store the calculated path
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index of the current target tile
@@ -29,7 +31,7 @@ const TargetMovement = ({ playerId, children, onStartMovement }) => {
   // Calculate the path when a new tile is selected
   useEffect(() => {
     if (selectedTile && tiles[selectedTile] && playerVehicle?.coord) {
-      onStartMovement(true); // Notify that movement has started
+      setClockRunning(true); // Start the clock
       const calculatePath = (startCoord, targetCoord) => {
         const queue = [[startCoord]];
         const visited = new Set();
@@ -66,7 +68,7 @@ const TargetMovement = ({ playerId, children, onStartMovement }) => {
       setRepairApplied(false); // Reset repair state
       setFuelApplied(false); // Reset fuel state
     }
-  }, [selectedTile, tiles, playerVehicle?.coord, onStartMovement]);
+  }, [selectedTile, tiles, playerVehicle?.coord, setClockRunning]);
 
   // Set the initial position of the vehicle
   useEffect(() => {
@@ -185,7 +187,7 @@ const TargetMovement = ({ playerId, children, onStartMovement }) => {
           });
           clearSelectedTile(); // Clear the selected tile
         }
-        onStartMovement(false); // Notify that movement has stopped
+        setClockRunning(false); // Stop the clock
       }
     }
   });

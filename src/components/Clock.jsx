@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import useGameStore from "../stores/useGameStore"; // Import game store
 
-const Clock = ({ isTimerRunning }) => {
+const Clock = () => {
+  const isClockRunning = useGameStore((state) => state.isClockRunning); // Access global clock state
   const [currentTime, setCurrentTime] = useState(new Date());
   const [elapsedTime, setElapsedTime] = useState(0);
 
@@ -16,7 +18,7 @@ const Clock = ({ isTimerRunning }) => {
   useEffect(() => {
     let timerInterval;
 
-    if (isTimerRunning) {
+    if (isClockRunning) {
       // Start the stopwatch
       timerInterval = setInterval(() => {
         setElapsedTime((prev) => prev + 1);
@@ -27,7 +29,7 @@ const Clock = ({ isTimerRunning }) => {
     }
 
     return () => clearInterval(timerInterval);
-  }, [isTimerRunning]);
+  }, [isClockRunning]);
 
   const formatTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
