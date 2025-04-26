@@ -4,7 +4,7 @@ import usePlayerStore from "../stores/usePlayerStore"; // Import player store
 import { useFrame } from "@react-three/fiber";
 import { Vector3 } from "three";
 
-const TargetMovement = ({ playerId, children }) => {
+const TargetMovement = ({ playerId, children, onStartMovement }) => {
   const groupRef = useRef();
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
   const playerVehicles = usePlayerStore((state) => state.players[playerId].vehicles); // Get all vehicles for the player
@@ -29,6 +29,7 @@ const TargetMovement = ({ playerId, children }) => {
   // Calculate the path when a new tile is selected
   useEffect(() => {
     if (selectedTile && tiles[selectedTile] && playerVehicle?.coord) {
+      onStartMovement(true); // Notify that movement has started
       const calculatePath = (startCoord, targetCoord) => {
         const queue = [[startCoord]];
         const visited = new Set();
@@ -65,7 +66,7 @@ const TargetMovement = ({ playerId, children }) => {
       setRepairApplied(false); // Reset repair state
       setFuelApplied(false); // Reset fuel state
     }
-  }, [selectedTile, tiles, playerVehicle?.coord]);
+  }, [selectedTile, tiles, playerVehicle?.coord, onStartMovement]);
 
   // Set the initial position of the vehicle
   useEffect(() => {
@@ -184,6 +185,7 @@ const TargetMovement = ({ playerId, children }) => {
           });
           clearSelectedTile(); // Clear the selected tile
         }
+        onStartMovement(false); // Notify that movement has stopped
       }
     }
   });
