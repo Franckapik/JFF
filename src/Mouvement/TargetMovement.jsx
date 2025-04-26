@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useTileStore } from "../stores/useNewTileStore"; // Import tile store
 import usePlayerStore from "../stores/usePlayerStore"; // Import player store
 import useGameStore from "../stores/useGameStore"; // Import game store
+import useBotStore from "../stores/useBotStore"; // Import bot store
 import { useFrame } from "@react-three/fiber";
 import { Vector3 } from "three";
 import useMessageManager from "../hooks/useMessageManager"; // Import message manager
@@ -20,6 +21,9 @@ const TargetMovement = ({ playerId, children }) => {
   const clearSelectedTile = useTileStore((state) => state.clearSelectedTile); // Get the clearSelectedTile function
   const setClockRunning = useGameStore((state) => state.setClockRunning); // Access the clock trigger action
   const { sendVehicleMessage } = useMessageManager(); // Use message manager
+  const botState = useBotStore((state) => state.state); // Get the current FSM state
+  const botTargetTile = useBotStore((state) => state.targetTile); // Get the target tile from the FSM
+  const executeBotAction = useBotStore((state) => state.execute); // Execute FSM actions
 
   const [path, setPath] = useState([]); // Store the calculated path
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index of the current target tile
@@ -73,6 +77,44 @@ const TargetMovement = ({ playerId, children }) => {
       setHasReachedTarget(false); // Reset target reached state
     }
   }, [selectedTile, tiles, playerVehicle?.coord, setClockRunning]);
+
+  // Calculate the path for player 2 based on FSM
+  useEffect(() => {
+    if (playerId === "player2" && botTargetTile && tiles[botTargetTile]) {
+      const calculatePath = (startCoord, targetCoord) => {
+        const queue = [[startCoord]];
+        const visited = new Set();
+        let foundPath = [];
+
+        while (queue.length > 0) {
+          const currentPath = queue.shift();
+          const currentCoord = currentPath[currentPath.length - 1];
+
+          if (currentCoord === targetCoord) {
+            foundPath = currentPath;
+            break;
+          }
+
+          if (!visited.has(currentCoord)) {
+            visited.add(currentCoord);
+            const neighbors = tiles[currentCoord]?.neighbors || [];
+            neighbors.forEach((neighbor) => {
+              if (!visited.has(neighbor) && tiles[neighbor]?.walkable) {
+                queue.push([...currentPath, neighbor]);
+              }
+            });
+          }
+        }
+
+        return foundPath;
+      };
+
+      const playerVehicle = usePlayerStore.getState().players[playerId].vehicles.ship;
+      const calculatedPath = calculatePath(playerVehicle.coord, botTargetTile);
+      setPath(calculatedPath);
+      setCurrentTargetIndex(0);
+    }
+  }, [botTargetTile, tiles, playerId]);
 
   // Set the initial position of the vehicle
   useEffect(() => {
@@ -205,6 +247,11 @@ const TargetMovement = ({ playerId, children }) => {
         }
         setClockRunning(false); // Stop the clock
         setHasReachedTarget(true); // Mark the target as reached to prevent further updates
+
+        // Execute the next FSM action for player 2
+        if (playerId === "player2") {
+          executeBotAction(tiles);
+        }
       }
     }
   });

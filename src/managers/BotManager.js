@@ -1,4 +1,4 @@
-import { useTileStore } from "../stores/useNewTileStore"; // Corrigez l'importation
+import { useTileStore } from "../stores/useNewTileStore";
 import useBotStore from "../stores/useBotStore";
 import usePlayerStore from "../stores/usePlayerStore";
 
@@ -16,7 +16,7 @@ const BotManager = () => {
       const targetTile = tiles[botTargetTile];
 
       if (targetTile) {
-        // Example: Update player2's ship position to move toward the target
+        // Update player2's ship position to move toward the target
         updateShip("player2", {
           coord: botTargetTile,
           position: targetTile.position,
