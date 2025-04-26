@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
 import "./styles/App.css";
@@ -7,9 +7,16 @@ import UserHUD from "./components/UserHUD";
 import VehicleSelector from "./components/VehicleSelector"; // Import VehicleSelector
 import MessageSelector from "./components/MessageSelector"; // Import MessageSelector
 import Clock from "./components/Clock"; // Import Clock
+import BotManager from "./managers/BotManager"; // Import BotManager
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const botManager = BotManager(); // Initialize BotManager
+
+  useEffect(() => {
+    // Perform initial bot setup
+    botManager.performAction();
+  }, [botManager]);
 
   return (
     <div className="app-container">

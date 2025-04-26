@@ -1,5 +1,5 @@
+import { useTileStore } from "../stores/useNewTileStore"; // Corrigez l'importation
 import useBotStore from "../stores/useBotStore";
-import useTileStore from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
 
 const BotManager = () => {
