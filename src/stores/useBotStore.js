@@ -13,16 +13,20 @@ const useBotStore = create((set, get) => ({
       const botState = get();
       if (botState.state !== "exploring") return;
 
-      // Avoid updating if targetTile is already set or reached
       if (botState.targetTile) {
         console.log("[BotStore] Target already set. Skipping exploration.");
         return;
       }
 
-      console.log("[BotStore] Exploring: Finding nearest resource tile...");
-      const resourceTile = Object.values(tiles).find((tile) => tile.resources && !tile.collected);
-      if (resourceTile) {
-        console.log("[BotStore] Found resource tile:", resourceTile.coord);
+      const resourceTiles = Object.values(tiles).filter((tile) => tile.resources && !tile.collected);
+
+      console.log("[BotStore] Available resource tiles:", resourceTiles.map((tile) => tile.coord));
+
+      if (resourceTiles.length > 0) {
+        const randomIndex = Math.floor(Math.random() * resourceTiles.length);
+        console.log("[BotStore] Random index selected:", randomIndex);
+        const resourceTile = resourceTiles[randomIndex];
+        console.log("[BotStore] Selected random resource tile:", resourceTile.coord);
         set({ targetTile: resourceTile.coord });
       } else {
         console.log("[BotStore] No resource tile found.");
@@ -35,9 +39,12 @@ const useBotStore = create((set, get) => ({
       if (botState.targetTile) return;
 
       console.log("[BotStore] Refueling: Finding nearest fuel tile...");
-      const fuelTile = Object.values(tiles).find((tile) => tile.type === "fuel");
-      if (fuelTile) {
-        console.log("[BotStore] Found fuel tile:", fuelTile.coord);
+      const fuelTiles = Object.values(tiles).filter((tile) => tile.type === "fuel");
+
+      if (fuelTiles.length > 0) {
+        const randomIndex = Math.floor(Math.random() * fuelTiles.length);
+        const fuelTile = fuelTiles[randomIndex];
+        console.log("[BotStore] Found random fuel tile:", fuelTile.coord);
         set({ targetTile: fuelTile.coord });
       } else {
         console.log("[BotStore] No fuel tile found.");
@@ -50,9 +57,12 @@ const useBotStore = create((set, get) => ({
       if (botState.targetTile) return;
 
       console.log("[BotStore] Repairing: Finding nearest repair tile...");
-      const repairTile = Object.values(tiles).find((tile) => tile.type === "repair");
-      if (repairTile) {
-        console.log("[BotStore] Found repair tile:", repairTile.coord);
+      const repairTiles = Object.values(tiles).filter((tile) => tile.type === "repair");
+
+      if (repairTiles.length > 0) {
+        const randomIndex = Math.floor(Math.random() * repairTiles.length);
+        const repairTile = repairTiles[randomIndex];
+        console.log("[BotStore] Found random repair tile:", repairTile.coord);
         set({ targetTile: repairTile.coord });
       } else {
         console.log("[BotStore] No repair tile found.");
