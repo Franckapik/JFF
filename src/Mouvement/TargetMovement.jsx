@@ -4,6 +4,7 @@ import usePlayerStore from "../stores/usePlayerStore"; // Import player store
 import useGameStore from "../stores/useGameStore"; // Import game store
 import { useFrame } from "@react-three/fiber";
 import { Vector3 } from "three";
+import useMessageManager from "../hooks/useMessageManager"; // Import message manager
 
 const TargetMovement = ({ playerId, children }) => {
   const groupRef = useRef();
@@ -18,6 +19,7 @@ const TargetMovement = ({ playerId, children }) => {
   const selectedTile = useTileStore((state) => state.selectedTile); // Get the selected tile
   const clearSelectedTile = useTileStore((state) => state.clearSelectedTile); // Get the clearSelectedTile function
   const setClockRunning = useGameStore((state) => state.setClockRunning); // Access the clock trigger action
+  const { sendVehicleMessage } = useMessageManager(); // Use message manager
 
   const [path, setPath] = useState([]); // Store the calculated path
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index of the current target tile
@@ -25,6 +27,7 @@ const TargetMovement = ({ playerId, children }) => {
   const [resourcesCollected, setResourcesCollected] = useState(false); // Track if resources have been collected
   const [repairApplied, setRepairApplied] = useState(false); // Track if repair has been applied
   const [fuelApplied, setFuelApplied] = useState(false); // Track if fuel has been applied
+  const [hasReachedTarget, setHasReachedTarget] = useState(false); // Track if the target has been reached
 
   const speed = 1; // Movement speed (units per second)
 
@@ -67,6 +70,7 @@ const TargetMovement = ({ playerId, children }) => {
       setResourcesCollected(false); // Reset resource collection state
       setRepairApplied(false); // Reset repair state
       setFuelApplied(false); // Reset fuel state
+      setHasReachedTarget(false); // Reset target reached state
     }
   }, [selectedTile, tiles, playerVehicle?.coord, setClockRunning]);
 
@@ -83,7 +87,7 @@ const TargetMovement = ({ playerId, children }) => {
 
   // Move the vehicle along the path
   useFrame((_, delta) => {
-    if (!path || path.length === 0 || !groupRef.current || !playerVehicle) return; // Ensure playerVehicle is defined
+    if (!path || path.length === 0 || !groupRef.current || !playerVehicle || hasReachedTarget) return; // Ensure no infinite loop
 
     const currentTargetCoord = path[currentTargetIndex];
     const currentTargetTile = tiles[currentTargetCoord];
@@ -144,18 +148,27 @@ const TargetMovement = ({ playerId, children }) => {
 
           destinationTile.collected = true;
           setResourcesCollected(true); // Mark resources as collected
+
+          // Send resource collection message
+          sendVehicleMessage(playerId, playerVehicle.id, "resource", destinationTile.resources);
         }
 
         // Apply repair if on a repair tile
         if (destinationTile?.type === "repair" && !repairApplied) {
           updateShip(playerId, { damage: 0 }); // Reset damage to 0
           setRepairApplied(true); // Mark repair as applied
+
+          // Send repair message
+          sendVehicleMessage(playerId, playerVehicle.id, "repair");
         }
 
         // Apply fuel if on a fuel tile
         if (destinationTile?.type === "fuel" && !fuelApplied) {
           updateShip(playerId, { fuel: 100 }); // Set fuel to 100
           setFuelApplied(true); // Mark fuel as applied
+
+          // Send fuel message
+          sendVehicleMessage(playerId, playerVehicle.id, "fuel");
         }
 
         // Check if the ship is on the starting tile
@@ -173,6 +186,9 @@ const TargetMovement = ({ playerId, children }) => {
             isMoving: false,
           });
           clearSelectedTile(); // Clear the selected tile
+
+          // Send return to start tile message
+          sendVehicleMessage(playerId, playerVehicle.id, "depart");
         } else {
           updateShip(playerId, {
             position: {
@@ -188,6 +204,7 @@ const TargetMovement = ({ playerId, children }) => {
           clearSelectedTile(); // Clear the selected tile
         }
         setClockRunning(false); // Stop the clock
+        setHasReachedTarget(true); // Mark the target as reached to prevent further updates
       }
     }
   });

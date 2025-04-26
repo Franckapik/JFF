@@ -1,9 +1,9 @@
-import { useTileStore } from "../store/useTileStore";
+import usePlayerStore from "../stores/usePlayerStore"; // Import player store
 
 const useMessageManager = () => {
-  const addPlayerMessage = useTileStore((state) => state.addPlayerMessage); // Add a message to the store
+  const addPlayerMessage = usePlayerStore((state) => state.addPlayerMessage); // Add a message to the store
 
-  const sendVehicleMessage = (vehicleId, type, data = {}) => {
+  const sendVehicleMessage = (playerId, vehicleId, type, data = {}) => {
     let title = "";
     let body = "";
 
@@ -38,12 +38,13 @@ const useMessageManager = () => {
         return;
     }
 
-    addPlayerMessage({
-      vehiculeId: vehicleId,
+    const message = {
       title,
       body,
       timestamp: Date.now(),
-    });
+    };
+
+    addPlayerMessage(playerId, message);
   };
 
   return {
