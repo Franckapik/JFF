@@ -8,15 +8,19 @@ import VehicleSelector from "./components/VehicleSelector"; // Import VehicleSel
 import MessageSelector from "./components/MessageSelector"; // Import MessageSelector
 import Clock from "./components/Clock"; // Import Clock
 import BotManager from "./managers/BotManager"; // Import BotManager
+import { useTileStore } from "./stores/useNewTileStore"; // Import tile store
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const botManager = BotManager(); // Initialize BotManager
+  const tiles = useTileStore((state) => state.tiles); // Access tiles
 
   useEffect(() => {
-    // Perform initial bot setup
-    botManager.performAction();
-  }, [botManager]);
+    // Wait for tiles to be initialized before starting the bot
+    if (Object.keys(tiles).length > 0) {
+      botManager.performAction(); // Start the bot's first action
+    }
+  }, [tiles, botManager]);
 
   return (
     <div className="app-container">

@@ -8,6 +8,9 @@ const BotManager = () => {
   const updateShip = usePlayerStore((state) => state.updateShip);
 
   const performAction = () => {
+    // Avoid executing if no tiles are available
+    if (!tiles || Object.keys(tiles).length === 0) return;
+
     // Execute the current state's action
     execute(tiles);
 
