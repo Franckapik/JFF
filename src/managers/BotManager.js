@@ -8,34 +8,28 @@ const BotManager = () => {
   const updateShip = usePlayerStore((state) => state.updateShip);
 
   const performAction = () => {
-    // Avoid executing if no tiles are available
-    if (!tiles || Object.keys(tiles).length === 0) return;
+    if (!tiles || Object.keys(tiles).length === 0) {
+      console.warn("[BotManager] No tiles available. Skipping action.");
+      return;
+    }
 
-    // Execute the current state's action
+    console.log("[BotManager] Performing action for state:", state);
     execute(tiles);
 
     const botTargetTile = useBotStore.getState().targetTile;
     if (botTargetTile) {
       const targetTile = tiles[botTargetTile];
-
       if (targetTile) {
-        // Update player2's ship position to move toward the target
+        console.log("[BotManager] Setting target tile for player2's ship:", botTargetTile);
         updateShip("player2", {
-          coord: botTargetTile,
-          position: targetTile.position,
+          coord: botTargetTile, // Set the target coordinate
+          isMoving: true, // Mark the ship as moving
         });
-
-        // Transition to the next state based on the tile type
-        if (targetTile.type === "fuel") {
-          updateState("refueling");
-        } else if (targetTile.type === "repair") {
-          updateState("repairing");
-        } else if (targetTile.resources) {
-          updateState("exploring");
-        } else {
-          updateState("idle");
-        }
+      } else {
+        console.warn("[BotManager] Target tile not found in tiles.");
       }
+    } else {
+      console.log("[BotManager] No target tile set.");
     }
   };
 

@@ -15,11 +15,13 @@ const Scene = () => {
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
 
   useEffect(() => {
+    console.log("[Scene] Initializing tiles...");
     initializeTiles(); // Initialize tiles with default radius and spacing
   }, [initializeTiles]);
 
   useEffect(() => {
     if (Object.keys(tiles).length > 0) {
+      console.log("[Scene] Initializing players with tiles:", tiles);
       initializePlayer(tiles); // Initialize player once tiles are available
     }
   }, [tiles, initializePlayer]);
