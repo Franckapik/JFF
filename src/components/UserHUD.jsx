@@ -1,6 +1,7 @@
 import React from "react";
 import { useTileStore } from "../stores/useNewTileStore"; // Import tile store
 import usePlayerStore from "../stores/usePlayerStore"; // Import player store
+import useBotStore from "../stores/useBotStore"; // Import BotStore
 import "../styles/App.css"; // Import CSS for styling
 
 const UserHUD = () => {
@@ -8,6 +9,7 @@ const UserHUD = () => {
   const tile = useTileStore((state) => (selectedTileCoord ? state.tiles[selectedTileCoord] : null)); // Fetch the full tile data
   const players = usePlayerStore((state) => state.players); // Get all players
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
+  const { state, targetTile } = useBotStore(); // Get bot state and target tile
 
   return (
     <div className="user-hud">
@@ -136,6 +138,20 @@ const UserHUD = () => {
           </ul>
         </div>
       ))}
+
+      {/* Section: Bot Information */}
+      <div className="hud-column">
+        <h3>Informations du Bot</h3>
+        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+          <li>
+            <strong>État :</strong> {state}
+          </li>
+          <li>
+            <strong>Tuile Cible :</strong> 
+            {Array.isArray(targetTile) ? targetTile.join(", ") : targetTile || "Aucune"}
+          </li>
+        </ul>
+      </div>
     </div>
   );
 };
