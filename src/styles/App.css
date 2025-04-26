@@ -220,10 +220,11 @@
 
 /* Conteneur des sélecteurs */
 .selector-container {
-  width: 100px;
+  width: 150px;
   background-color: #f0f0f0;
   position: fixed; /* Fixe le conteneur sur le côté gauche */
   left: 0;
+  height: 500px;;
   top: 50%; /* Centre verticalement */
   transform: translateY(-50%); /* Ajuste pour centrer parfaitement */
   display: flex;
@@ -270,7 +271,7 @@
 
 /* Style pour le Message Selector */
 .message-selector {
-  position: relative; /* Ensure proper positioning */
+  position: fixed; /* Ensure proper positioning */
   width: 100%; /* Match the width of the container */
   display: flex;
   justify-content: center;

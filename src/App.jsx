@@ -13,10 +13,14 @@ const App = () => {
 
   return (
     <div className="app-container">
-      {/* Selector container for VehicleSelector and MessageSelector */}
+      {/* Selector container for VehicleSelector */}
       <div className="selector-container">
         <VehicleSelector />
-        <MessageSelector /> {/* Add the MessageSelector below the VehicleSelector */}
+      </div>
+
+      {/* New container for MessageSelector */}
+      <div className="message-selector-container">
+        <MessageSelector />
       </div>
 
       {/* Main content area */}
