@@ -7,6 +7,10 @@ const VehicleSelector = () => {
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get the globally selected vehicle
 
   const handleSelect = (playerId, vehicleId) => {
+    if (playerId === "player2") {
+      console.warn("Manual selection is disabled for player 2 (autonomous bot).");
+      return; // Prevent manual selection for player 2
+    }
     selectVehicle(playerId, vehicleId); // Update the globally selected vehicle
   };
 

@@ -16,9 +16,9 @@ const App = () => {
   const tiles = useTileStore((state) => state.tiles); // Access tiles
 
   useEffect(() => {
-    // Wait for tiles to be initialized before starting the bot
+    // Attendre que les tuiles soient prêtes avant de démarrer le bot
     if (Object.keys(tiles).length > 0) {
-      botManager.performAction(); // Start the bot's first action
+      botManager.performAction(); // Démarrer la première action du bot
     }
   }, [tiles, botManager]);
 

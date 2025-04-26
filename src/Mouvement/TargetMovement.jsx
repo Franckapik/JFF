@@ -12,7 +12,9 @@ const TargetMovement = ({ playerId, children }) => {
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
   const playerVehicles = usePlayerStore((state) => state.players[playerId].vehicles); // Get all vehicles for the player
   const playerVehicle =
-    selectedVehicle.playerId === playerId && selectedVehicle.vehicleId === "ship"
+    playerId === "player2" // Ignore selectedVehicle for player 2
+      ? playerVehicles.ship
+      : selectedVehicle.playerId === playerId && selectedVehicle.vehicleId === "ship"
       ? playerVehicles.ship
       : playerVehicles.drones.find((drone) => drone.id === selectedVehicle.vehicleId); // Get the selected vehicle
   const updateShip = usePlayerStore((state) => state.updateShip); // Use the generic updateShip function
