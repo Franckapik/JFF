@@ -18,36 +18,12 @@ const MessageSelector = () => {
   };
 
   return (
-    <div className="message-selector" style={{ position: "absolute", left: 10, top: 120, zIndex: 10 }}>
-      <ul style={{ listStyle: "none", padding: 0 }}>
+    <div className="message-selector">
+      <ul>
         <li>
-          <button
-            onClick={handleViewMessages}
-            style={{
-              marginBottom: "10px",
-              padding: "10px",
-              cursor: "pointer",
-              position: "relative",
-            }}
-          >
+          <button onClick={handleViewMessages}>
             Messagerie
-            {unreadCount > 0 && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: "-5px",
-                  right: "-5px",
-                  backgroundColor: "red",
-                  color: "white",
-                  borderRadius: "50%",
-                  padding: "2px 6px",
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                }}
-              >
-                {unreadCount}
-              </span>
-            )}
+            {unreadCount > 0 && <span>{unreadCount}</span>}
           </button>
         </li>
       </ul>
