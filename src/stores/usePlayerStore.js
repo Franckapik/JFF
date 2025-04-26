@@ -46,7 +46,7 @@ const usePlayerStore = create((set, get) => ({
         knownResources: [],
         knownDangers: [],
       },
-      messages: [],
+      messages: [], // Ensure messages array is initialized
     },
     player2: {
       id: 'player2',
@@ -90,7 +90,7 @@ const usePlayerStore = create((set, get) => ({
         knownResources: [],
         knownDangers: [],
       },
-      messages: [],
+      messages: [], // Ensure messages array is initialized
     },
   },
   initializePlayer: (tiles) => {
@@ -224,6 +224,25 @@ const usePlayerStore = create((set, get) => ({
     set(() => ({
       selectedVehicle: { playerId, vehicleId }, // Update the globally selected vehicle
     }));
+  },
+  addPlayerMessage: (playerId, message) => {
+    set((state) => {
+      const player = state.players[playerId];
+      if (!player) {
+        console.error(`Player with ID '${playerId}' does not exist.`);
+        return state; // Return the current state without changes
+      }
+
+      return {
+        players: {
+          ...state.players,
+          [playerId]: {
+            ...player,
+            messages: [...player.messages, message],
+          },
+        },
+      };
+    });
   },
 }));
 

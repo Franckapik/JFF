@@ -1,10 +1,15 @@
-import React, { useState } from "react";
-import { useTileStore } from "../store/useTileStore"; // Import Zustand store
+import React, { useState, useEffect } from "react";
+import usePlayerStore from "../stores/usePlayerStore"; // Import player store
 import MessageModal from "./MessageModal";
 
-const MessageSelector = () => {
+const MessageSelector = ({ playerId = "player1" }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const playerMessages = useTileStore((state) => state.playerMessages); // Get messages from the store
+  const playerMessages = usePlayerStore((state) => state.players[playerId]?.messages || []); // Get messages for the player
+
+  // Debug: Log messages to ensure they are retrieved correctly
+  useEffect(() => {
+    console.log("Player Messages:", playerMessages);
+  }, [playerMessages]);
 
   // Calculate the number of unread messages
   const unreadCount = playerMessages.filter((message) => !message.isRead).length;
