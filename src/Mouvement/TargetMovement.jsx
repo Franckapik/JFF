@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useTileStore } from "../stores/useNewTileStore"; // Import tile store
 import usePlayerStore from "../stores/usePlayerStore"; // Import player store
+import useGameStore from "../stores/useGameStore"; // Import game store
 import { useFrame } from "@react-three/fiber";
 import { Vector3 } from "three";
 
@@ -16,6 +17,7 @@ const TargetMovement = ({ playerId, children }) => {
   const tiles = useTileStore((state) => state.tiles); // Get tiles from the store
   const selectedTile = useTileStore((state) => state.selectedTile); // Get the selected tile
   const clearSelectedTile = useTileStore((state) => state.clearSelectedTile); // Get the clearSelectedTile function
+  const setClockRunning = useGameStore((state) => state.setClockRunning); // Access the clock trigger action
 
   const [path, setPath] = useState([]); // Store the calculated path
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index of the current target tile
@@ -29,6 +31,7 @@ const TargetMovement = ({ playerId, children }) => {
   // Calculate the path when a new tile is selected
   useEffect(() => {
     if (selectedTile && tiles[selectedTile] && playerVehicle?.coord) {
+      setClockRunning(true); // Start the clock
       const calculatePath = (startCoord, targetCoord) => {
         const queue = [[startCoord]];
         const visited = new Set();
@@ -65,7 +68,7 @@ const TargetMovement = ({ playerId, children }) => {
       setRepairApplied(false); // Reset repair state
       setFuelApplied(false); // Reset fuel state
     }
-  }, [selectedTile, tiles, playerVehicle?.coord]);
+  }, [selectedTile, tiles, playerVehicle?.coord, setClockRunning]);
 
   // Set the initial position of the vehicle
   useEffect(() => {
@@ -184,6 +187,7 @@ const TargetMovement = ({ playerId, children }) => {
           });
           clearSelectedTile(); // Clear the selected tile
         }
+        setClockRunning(false); // Stop the clock
       }
     }
   });
