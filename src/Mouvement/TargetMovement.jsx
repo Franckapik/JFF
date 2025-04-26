@@ -22,6 +22,7 @@ const TargetMovement = ({ playerId, children }) => {
   const [distanceTraveled, setDistanceTraveled] = useState(0); // Track distance traveled
   const [resourcesCollected, setResourcesCollected] = useState(false); // Track if resources have been collected
   const [repairApplied, setRepairApplied] = useState(false); // Track if repair has been applied
+  const [fuelApplied, setFuelApplied] = useState(false); // Track if fuel has been applied
 
   const speed = 1; // Movement speed (units per second)
 
@@ -62,6 +63,7 @@ const TargetMovement = ({ playerId, children }) => {
       setDistanceTraveled(0); // Reset distance traveled
       setResourcesCollected(false); // Reset resource collection state
       setRepairApplied(false); // Reset repair state
+      setFuelApplied(false); // Reset fuel state
     }
   }, [selectedTile, tiles, playerVehicle?.coord]);
 
@@ -145,6 +147,12 @@ const TargetMovement = ({ playerId, children }) => {
         if (destinationTile?.type === "repair" && !repairApplied) {
           updateShip(playerId, { damage: 0 }); // Reset damage to 0
           setRepairApplied(true); // Mark repair as applied
+        }
+
+        // Apply fuel if on a fuel tile
+        if (destinationTile?.type === "fuel" && !fuelApplied) {
+          updateShip(playerId, { fuel: 100 }); // Set fuel to 100
+          setFuelApplied(true); // Mark fuel as applied
         }
 
         // Check if the ship is on the starting tile
