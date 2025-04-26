@@ -10,7 +10,7 @@ const usePlayerStore = create((set, get) => ({
         ship: {
           id: 'ship1', // Unique ID for player 1's ship
           fuel: 100,
-          damage: 0,
+          damage: 20,
           position: null, // Initialize as null until tiles are available
           coord: null,
           isMoving: false,
