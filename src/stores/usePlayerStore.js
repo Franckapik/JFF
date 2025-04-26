@@ -244,6 +244,30 @@ const usePlayerStore = create((set, get) => ({
       };
     });
   },
+  markMessagesAsRead: (playerId) => {
+    set((state) => {
+      const player = state.players[playerId];
+      if (!player) {
+        console.error(`Player with ID '${playerId}' does not exist.`);
+        return state; // Return the current state without changes
+      }
+
+      const updatedMessages = player.messages.map((message) => ({
+        ...message,
+        isRead: true, // Mark all messages as read
+      }));
+
+      return {
+        players: {
+          ...state.players,
+          [playerId]: {
+            ...player,
+            messages: updatedMessages,
+          },
+        },
+      };
+    });
+  },
 }));
 
 export default usePlayerStore;

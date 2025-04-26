@@ -44,7 +44,6 @@ const useMessageManager = () => {
       timestamp: Date.now(),
     };
 
-    console.log("Adding Message:", message); // Debug: Log the message being added
     addPlayerMessage(playerId, message);
   };
 

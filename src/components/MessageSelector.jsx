@@ -1,21 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import usePlayerStore from "../stores/usePlayerStore"; // Import player store
 import MessageModal from "./MessageModal";
 
 const MessageSelector = ({ playerId = "player1" }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const playerMessages = usePlayerStore((state) => state.players[playerId]?.messages || []); // Get messages for the player
-
-  // Debug: Log messages to ensure they are retrieved correctly
-  useEffect(() => {
-    console.log("Player Messages:", playerMessages);
-  }, [playerMessages]);
+  const markMessagesAsRead = usePlayerStore((state) => state.markMessagesAsRead); // Get the function to mark messages as read
 
   // Calculate the number of unread messages
   const unreadCount = playerMessages.filter((message) => !message.isRead).length;
 
   const handleViewMessages = () => {
     setIsModalOpen(true);
+    markMessagesAsRead(playerId); // Mark all messages as read when the modal is opened
   };
 
   const handleCloseModal = () => {
