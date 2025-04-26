@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { calculatePathData } from '../utils/utils'; // Import utility functions
 
 const usePlayerStore = create((set, get) => ({
-  selectedVehicle: { playerId: null, vehicleId: null }, // Global selected vehicle
+  selectedVehicle: { playerId: 'player1', vehicleId: 'ship' }, // Default to player 1's ship
   players: {
     player1: {
       id: 'player1',
