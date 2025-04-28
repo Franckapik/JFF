@@ -1,46 +1,59 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useTileStore } from "../stores/useNewTileStore"; // Import tile store
-import usePlayerStore from "../stores/usePlayerStore"; // Import player store
-import useGameStore from "../stores/useGameStore"; // Import game store
-import useBotStore from "../stores/useBotStore"; // Import bot store
-import { useFrame } from "@react-three/fiber";
-import { Vector3 } from "three";
-import useMessageManager from "../hooks/useMessageManager"; // Import message manager
+import { useTileStore } from "../stores/useNewTileStore"; // Gestion des tuiles
+import usePlayerStore from "../stores/usePlayerStore"; // Gestion des joueurs et véhicules
+import useGameStore from "../stores/useGameStore"; // Gestion de l'état global du jeu
+import useBotStore from "../stores/useBotStore"; // Gestion des actions du bot
+import { useFrame } from "@react-three/fiber"; // Gestion des animations dans la boucle de rendu
+import { Vector3 } from "three"; // Utilisation des vecteurs pour les calculs 3D
+import useMessageManager from "../hooks/useMessageManager"; // Gestion des messages
 
 const TargetMovement = ({ playerId, children }) => {
-  const groupRef = useRef();
-  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
-  const playerVehicles = usePlayerStore((state) => state.players[playerId].vehicles); // Get all vehicles for the player
+  // === Références et états locaux ===
+  const groupRef = useRef(); // Référence au groupe 3D pour le mouvement
+  const [path, setPath] = useState([]); // Chemin calculé pour le mouvement
+  const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index de la tuile cible actuelle
+  const [distanceTraveled, setDistanceTraveled] = useState(0); // Distance parcourue
+  const [resourcesCollected, setResourcesCollected] = useState(false); // Indique si les ressources ont été collectées
+  const [repairApplied, setRepairApplied] = useState(false); // Indique si une réparation a été appliquée
+  const [fuelApplied, setFuelApplied] = useState(false); // Indique si un ravitaillement a été appliqué
+  const [hasReachedTarget, setHasReachedTarget] = useState(false); // Indique si la cible a été atteinte
+
+  const speed = 1; // Vitesse de déplacement (unités par seconde)
+
+  // === Sélecteurs des stores ===
+  // Gestion des véhicules et des joueurs
+  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Véhicule sélectionné globalement
+  const playerVehicles = usePlayerStore((state) => state.players[playerId].vehicles); // Véhicules du joueur
   const playerVehicle =
-    playerId === "player2" // Ignore selectedVehicle for player 2
+    playerId === "player2" // Ignorer le véhicule sélectionné pour le joueur 2
       ? playerVehicles.ship
       : selectedVehicle.playerId === playerId && selectedVehicle.vehicleId === "ship"
       ? playerVehicles.ship
-      : playerVehicles.drones.find((drone) => drone.id === selectedVehicle.vehicleId); // Get the selected vehicle
-  const updateShip = usePlayerStore((state) => state.updateShip); // Use the generic updateShip function
-  const tiles = useTileStore((state) => state.tiles); // Get tiles from the store
-  const selectedTile = useTileStore((state) => state.selectedTile); // Get the selected tile
-  const clearSelectedTile = useTileStore((state) => state.clearSelectedTile); // Get the clearSelectedTile function
-  const setClockRunning = useGameStore((state) => state.setClockRunning); // Access the clock trigger action
-  const { sendVehicleMessage } = useMessageManager(); // Use message manager
-  const botState = useBotStore((state) => state.state); // Get the current FSM state
-  const botTargetTile = useBotStore((state) => state.targetTile); // Get the target tile from the FSM
-  const executeBotAction = useBotStore((state) => state.execute); // Execute FSM actions
+      : playerVehicles.drones.find((drone) => drone.id === selectedVehicle.vehicleId); // Véhicule sélectionné
+  const updateShip = usePlayerStore((state) => state.updateShip); // Fonction pour mettre à jour le véhicule
 
-  const [path, setPath] = useState([]); // Store the calculated path
-  const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index of the current target tile
-  const [distanceTraveled, setDistanceTraveled] = useState(0); // Track distance traveled
-  const [resourcesCollected, setResourcesCollected] = useState(false); // Track if resources have been collected
-  const [repairApplied, setRepairApplied] = useState(false); // Track if repair has been applied
-  const [fuelApplied, setFuelApplied] = useState(false); // Track if fuel has been applied
-  const [hasReachedTarget, setHasReachedTarget] = useState(false); // Track if the target has been reached
+  // Gestion des tuiles
+  const tiles = useTileStore((state) => state.tiles); // Toutes les tuiles
+  const selectedTile = useTileStore((state) => state.selectedTile); // Tuile sélectionnée
+  const clearSelectedTile = useTileStore((state) => state.clearSelectedTile); // Fonction pour désélectionner une tuile
 
-  const speed = 1; // Movement speed (units per second)
+  // Gestion globale du jeu
+  const setClockRunning = useGameStore((state) => state.setClockRunning); // Démarrer ou arrêter l'horloge globale
 
-  // Calculate the path when a new tile is selected
+  // Gestion des messages
+  const { sendVehicleMessage } = useMessageManager(); // Fonction pour envoyer des messages
+
+  // Gestion des actions du bot
+  const botState = useBotStore((state) => state.state); // État actuel du bot (FSM)
+  const botTargetTile = useBotStore((state) => state.targetTile); // Tuile cible du bot
+  const executeBotAction = useBotStore((state) => state.execute); // Exécuter une action du bot
+
+  // === Effets ===
+
+  // Effet : Calculer le chemin lorsque la tuile sélectionnée change
   useEffect(() => {
     if (selectedTile && tiles[selectedTile] && playerVehicle?.coord) {
-      setClockRunning(true); // Start the clock
+      setClockRunning(true); // Démarrer l'horloge
       const calculatePath = (startCoord, targetCoord) => {
         const queue = [[startCoord]];
         const visited = new Set();
@@ -71,16 +84,16 @@ const TargetMovement = ({ playerId, children }) => {
 
       const calculatedPath = calculatePath(playerVehicle.coord, selectedTile);
       setPath(calculatedPath);
-      setCurrentTargetIndex(0); // Reset the index
-      setDistanceTraveled(0); // Reset distance traveled
-      setResourcesCollected(false); // Reset resource collection state
-      setRepairApplied(false); // Reset repair state
-      setFuelApplied(false); // Reset fuel state
-      setHasReachedTarget(false); // Reset target reached state
+      setCurrentTargetIndex(0); // Réinitialiser l'index
+      setDistanceTraveled(0); // Réinitialiser la distance parcourue
+      setResourcesCollected(false); // Réinitialiser l'état de collecte des ressources
+      setRepairApplied(false); // Réinitialiser l'état de réparation
+      setFuelApplied(false); // Réinitialiser l'état de ravitaillement
+      setHasReachedTarget(false); // Réinitialiser l'état de cible atteinte
     }
   }, [selectedTile, tiles, playerVehicle?.coord, setClockRunning]);
 
-  // Calculate the path for player 2 based on FSM
+  // Effet : Calculer le chemin pour le joueur 2 (bot) en fonction de la FSM
   useEffect(() => {
     if (playerId === "player2" && botTargetTile && tiles[botTargetTile]) {
       const calculatePath = (startCoord, targetCoord) => {
@@ -118,7 +131,7 @@ const TargetMovement = ({ playerId, children }) => {
     }
   }, [botTargetTile, tiles, playerId]);
 
-  // Set the initial position of the vehicle
+  // Effet : Définir la position initiale du véhicule
   useEffect(() => {
     if (playerVehicle?.position && groupRef.current) {
       groupRef.current.position.set(
@@ -129,9 +142,11 @@ const TargetMovement = ({ playerId, children }) => {
     }
   }, [playerVehicle]);
 
-  // Move the vehicle along the path
+  // === Boucle de rendu (useFrame) ===
+
+  // Déplacer le véhicule le long du chemin
   useFrame((_, delta) => {
-    if (!path || path.length === 0 || !groupRef.current || !playerVehicle || hasReachedTarget) return; // Ensure no infinite loop
+    if (!path || path.length === 0 || !groupRef.current || !playerVehicle || hasReachedTarget) return;
 
     const currentTargetCoord = path[currentTargetIndex];
     const currentTargetTile = tiles[currentTargetCoord];
@@ -153,7 +168,7 @@ const TargetMovement = ({ playerId, children }) => {
 
         setDistanceTraveled((prev) => prev + moveDistance);
 
-        // Calculate progress as a percentage of the path completed
+        // Calculer la progression en pourcentage
         const progress =
           ((currentTargetIndex + (1 - distance / targetPosition.length())) / path.length) * 100;
 
@@ -164,13 +179,12 @@ const TargetMovement = ({ playerId, children }) => {
               y: groupRef.current.position.y,
               z: groupRef.current.position.z,
             },
-            progress: Math.min(progress, 100), // Ensure progress does not exceed 100%
+            progress: Math.min(progress, 100), // Limiter la progression à 100%
             isMoving: true,
           });
         }
       } else if (currentTargetIndex < path.length - 1) {
-        setCurrentTargetIndex(currentTargetIndex + 1); // Move to the next tile in the path
-
+        setCurrentTargetIndex(currentTargetIndex + 1); // Passer à la tuile suivante
         updateShip(playerId, {
           position: {
             x: currentTargetTile.position.x,
@@ -178,86 +192,90 @@ const TargetMovement = ({ playerId, children }) => {
             z: currentTargetTile.position.z,
           },
           coord: currentTargetCoord,
-          fuel: Math.max(playerVehicle.fuel - 10, 0), // Decrement fuel by 10, ensuring it doesn't go below 0
+          fuel: Math.max(playerVehicle.fuel - 10, 0), // Réduire le carburant
         });
       } else {
-        // Add resources from the destination tile to the ship
-        const destinationTile = tiles[currentTargetCoord];
-        const updatedResources = playerVehicle.resources ? { ...playerVehicle.resources } : {}; // Ensure resources exist
-
-        if (destinationTile?.resources && !destinationTile.collected && !resourcesCollected) {
-          updatedResources.food += destinationTile.resources.food || 0;
-          updatedResources.debris += destinationTile.resources.debris || 0;
-          updatedResources.special += destinationTile.resources.special || 0;
-
-          destinationTile.collected = true;
-          setResourcesCollected(true); // Mark resources as collected
-
-          // Send resource collection message
-          sendVehicleMessage(playerId, playerVehicle.id, "resource", destinationTile.resources);
-        }
-
-        // Apply repair if on a repair tile
-        if (destinationTile?.type === "repair" && !repairApplied) {
-          updateShip(playerId, { damage: 0 }); // Reset damage to 0
-          setRepairApplied(true); // Mark repair as applied
-
-          // Send repair message
-          sendVehicleMessage(playerId, playerVehicle.id, "repair");
-        }
-
-        // Apply fuel if on a fuel tile
-        if (destinationTile?.type === "fuel" && !fuelApplied) {
-          updateShip(playerId, { fuel: 100 }); // Set fuel to 100
-          setFuelApplied(true); // Mark fuel as applied
-
-          // Send fuel message
-          sendVehicleMessage(playerId, playerVehicle.id, "fuel");
-        }
-
-        // Check if the ship is on the starting tile
-        const isStartingTile = currentTargetCoord === playerVehicle.startCoord;
-        if (isStartingTile) {
-          updateShip(playerId, {
-            resources: updatedResources, // Transfer resources to the player's score
-            position: {
-              x: currentTargetTile.position.x,
-              y: currentTargetTile.position.y,
-              z: currentTargetTile.position.z,
-            },
-            coord: currentTargetCoord,
-            progress: 100,
-            isMoving: false,
-          });
-          clearSelectedTile(); // Clear the selected tile
-
-          // Send return to start tile message
-          sendVehicleMessage(playerId, playerVehicle.id, "depart");
-        } else {
-          updateShip(playerId, {
-            position: {
-              x: currentTargetTile.position.x,
-              y: currentTargetTile.position.y,
-              z: currentTargetTile.position.z,
-            },
-            coord: currentTargetCoord,
-            progress: 100,
-            isMoving: false,
-            resources: updatedResources, // Update ship resources
-          });
-          clearSelectedTile(); // Clear the selected tile
-        }
-        setClockRunning(false); // Stop the clock
-        setHasReachedTarget(true); // Mark the target as reached to prevent further updates
-
-        // Execute the next FSM action for player 2
-        if (playerId === "player2") {
-          executeBotAction(tiles);
-        }
+        handleTargetReached(currentTargetTile, currentTargetCoord); // Gérer l'arrivée à la cible
       }
     }
   });
 
+  // === Fonctions utilitaires ===
+
+  // Gérer l'arrivée à la tuile cible
+  const handleTargetReached = (currentTargetTile, currentTargetCoord) => {
+    const destinationTile = tiles[currentTargetCoord];
+    const updatedResources = playerVehicle.resources ? { ...playerVehicle.resources } : {};
+
+    // Collecter les ressources
+    if (destinationTile?.resources && !destinationTile.collected && !resourcesCollected) {
+      updatedResources.food += destinationTile.resources.food || 0;
+      updatedResources.debris += destinationTile.resources.debris || 0;
+      updatedResources.special += destinationTile.resources.special || 0;
+
+      destinationTile.collected = true;
+      setResourcesCollected(true);
+
+      sendVehicleMessage(playerId, playerVehicle.id, "resource", destinationTile.resources);
+    }
+
+    // Réparer le véhicule
+    if (destinationTile?.type === "repair" && !repairApplied) {
+      updateShip(playerId, { damage: 0 });
+      setRepairApplied(true);
+
+      sendVehicleMessage(playerId, playerVehicle.id, "repair");
+    }
+
+    // Ravitailler le véhicule
+    if (destinationTile?.type === "fuel" && !fuelApplied) {
+      updateShip(playerId, { fuel: 100 });
+      setFuelApplied(true);
+
+      sendVehicleMessage(playerId, playerVehicle.id, "fuel");
+    }
+
+    // Vérifier si le véhicule est sur la tuile de départ
+    const isStartingTile = currentTargetCoord === playerVehicle.startCoord;
+    if (isStartingTile) {
+      updateShip(playerId, {
+        resources: updatedResources,
+        position: {
+          x: currentTargetTile.position.x,
+          y: currentTargetTile.position.y,
+          z: currentTargetTile.position.z,
+        },
+        coord: currentTargetCoord,
+        progress: 100,
+        isMoving: false,
+      });
+      clearSelectedTile();
+
+      sendVehicleMessage(playerId, playerVehicle.id, "depart");
+    } else {
+      updateShip(playerId, {
+        position: {
+          x: currentTargetTile.position.x,
+          y: currentTargetTile.position.y,
+          z: currentTargetTile.position.z,
+        },
+        coord: currentTargetCoord,
+        progress: 100,
+        isMoving: false,
+        resources: updatedResources,
+      });
+      clearSelectedTile();
+    }
+
+    setClockRunning(false);
+    setHasReachedTarget(true);
+
+    if (playerId === "player2") {
+      executeBotAction(tiles);
+    }
+  };
+
+  // === Rendu ===
   return <group ref={groupRef}>{children}</group>;
 };
 
