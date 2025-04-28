@@ -20,6 +20,7 @@ const usePlayerStore = create((set, get) => ({
           path: [], // Store the calculated path
           resources: { food: 0, debris: 0, special: 0 },
           startCoord: null, // Initialize as null until tiles are available
+          targetTile: null, // Nouvelle propriété pour la tuile cible
         },
         drones: [
           {
@@ -29,6 +30,7 @@ const usePlayerStore = create((set, get) => ({
             isMoving: false,
             progress: 0,
             resources: { food: 0, debris: 0, special: 0 }, // Add resources for drones
+            targetTile: null, // Nouvelle propriété pour la tuile cible
           },
           {
             id: 'drone2', // Add another drone with an ID
@@ -64,6 +66,7 @@ const usePlayerStore = create((set, get) => ({
           path: [],
           resources: { food: 0, debris: 0, special: 0 },
           startCoord: null,
+          targetTile: null, // Nouvelle propriété pour la tuile cible
         },
         drones: [
           {
@@ -429,6 +432,38 @@ const usePlayerStore = create((set, get) => ({
     });
 
     clearSelectedTile(); // Désélectionner la tuile
+  },
+
+  // Méthode pour mettre à jour la tuile cible du véhicule sélectionné
+  setVehicleTargetTile: (playerId, vehicleId, targetTile) => {
+    set((state) => {
+      const vehicle =
+        vehicleId === 'ship'
+          ? state.players[playerId].vehicles.ship
+          : state.players[playerId].vehicles.drones.find((drone) => drone.id === vehicleId);
+
+      if (vehicle) {
+        return {
+          players: {
+            ...state.players,
+            [playerId]: {
+              ...state.players[playerId],
+              vehicles: {
+                ...state.players[playerId].vehicles,
+                [vehicleId === 'ship' ? 'ship' : 'drones']: vehicleId === 'ship'
+                  ? { ...vehicle, targetTile }
+                  : state.players[playerId].vehicles.drones.map((drone) =>
+                      drone.id === vehicleId ? { ...drone, targetTile } : drone
+                    ),
+              },
+            },
+          },
+        };
+      }
+
+      console.warn(`Vehicle with ID '${vehicleId}' not found for player '${playerId}'.`);
+      return state;
+    });
   },
 
 }));
