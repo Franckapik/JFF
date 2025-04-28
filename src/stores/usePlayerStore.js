@@ -268,6 +268,125 @@ const usePlayerStore = create((set, get) => ({
       };
     });
   },
+
+  // === Fonctions utilitaires ===
+
+  // Marquer l'arrivée du véhicule à la tuile cible
+  markVehicleArrival: (playerId, currentTargetTile) => {
+    set((state) => {
+      const playerVehicle = state.players[playerId].vehicles.ship;
+
+      return {
+        players: {
+          ...state.players,
+          [playerId]: {
+            ...state.players[playerId],
+            vehicles: {
+              ...state.players[playerId].vehicles,
+              ship: {
+                ...playerVehicle,
+                position: currentTargetTile.position,
+                coord: currentTargetTile.coord,
+                progress: 100, // Marquer la progression comme terminée
+                isMoving: false, // Indiquer que le véhicule a cessé de se déplacer
+              },
+            },
+          },
+        },
+      };
+    });
+  },
+
+  // Collecter les ressources
+  collectResources: (playerId, destinationTile) => {
+    set((state) => {
+      const playerVehicle = state.players[playerId].vehicles.ship;
+
+      // Mettre à jour les ressources
+      const updatedResources = {
+        food: playerVehicle.resources.food + (destinationTile.resources.food || 0),
+        debris: playerVehicle.resources.debris + (destinationTile.resources.debris || 0),
+        special: playerVehicle.resources.special + (destinationTile.resources.special || 0),
+      };
+
+      // Marquer la tuile comme collectée
+      const updatedTiles = { ...state.tiles };
+      updatedTiles[destinationTile.coord] = {
+        ...destinationTile,
+        collected: true,
+      };
+
+      return {
+        players: {
+          ...state.players,
+          [playerId]: {
+            ...state.players[playerId],
+            vehicles: {
+              ...state.players[playerId].vehicles,
+              ship: {
+                ...playerVehicle,
+                resources: updatedResources,
+              },
+            },
+          },
+        },
+        tiles: updatedTiles,
+      };
+    });
+  },
+
+  // Réparer le véhicule
+  repairVehicle: (playerId) => {
+    set((state) => {
+      const playerVehicle = state.players[playerId].vehicles.ship;
+
+      return {
+        players: {
+          ...state.players,
+          [playerId]: {
+            ...state.players[playerId],
+            vehicles: {
+              ...state.players[playerId].vehicles,
+              ship: {
+                ...playerVehicle,
+                damage: 0, // Réparer les dommages
+              },
+            },
+          },
+        },
+      };
+    });
+  },
+
+  // Ravitailler le véhicule
+  refuelVehicle: (playerId) => {
+    set((state) => {
+      const playerVehicle = state.players[playerId].vehicles.ship;
+
+      return {
+        players: {
+          ...state.players,
+          [playerId]: {
+            ...state.players[playerId],
+            vehicles: {
+              ...state.players[playerId].vehicles,
+              ship: {
+                ...playerVehicle,
+                fuel: 100, // Remplir le carburant
+              },
+            },
+          },
+        },
+      };
+    });
+  },
+
+  // Retourner à la base
+  returnToBase: (playerId, currentTargetTile) => {
+    const { markVehicleArrival } = get();
+    markVehicleArrival(playerId, currentTargetTile);
+  },
+
 }));
 
 export default usePlayerStore;

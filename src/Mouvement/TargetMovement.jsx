@@ -48,6 +48,12 @@ const TargetMovement = ({ playerId, children }) => {
   const botTargetTile = useBotStore((state) => state.targetTile); // Tuile cible du bot
   const executeBotAction = useBotStore((state) => state.execute); // Exécuter une action du bot
 
+  const markVehicleArrival = usePlayerStore((state) => state.markVehicleArrival);
+  const collectResources = usePlayerStore((state) => state.collectResources);
+  const repairVehicle = usePlayerStore((state) => state.repairVehicle);
+  const refuelVehicle = usePlayerStore((state) => state.refuelVehicle);
+  const returnToBase = usePlayerStore((state) => state.returnToBase);
+
   // === Effets ===
 
   // Effet : Calculer le chemin lorsque la tuile sélectionnée change
@@ -200,67 +206,7 @@ const TargetMovement = ({ playerId, children }) => {
     }
   });
 
-  // === Fonctions utilitaires ===
-
-  // Marquer l'arrivée du véhicule à la tuile cible
-  const markVehicleArrival = (currentTargetTile) => {
-    usePlayerStore.setState((state) => {
-      const playerVehicle = state.players[playerId].vehicles.ship;
-
-      return {
-        players: {
-          ...state.players,
-          [playerId]: {
-            ...state.players[playerId],
-            vehicles: {
-              ...state.players[playerId].vehicles,
-              ship: {
-                ...playerVehicle,
-                position: currentTargetTile.position,
-                coord: currentTargetTile.coord,
-                progress: 100, // Marquer la progression comme terminée
-                isMoving: false, // Indiquer que le véhicule a cessé de se déplacer
-              },
-            },
-          },
-        },
-      };
-    });
-  };
-
-  // Collecter les ressources
-  const collectResources = (destinationTile) => {
-    updateVehicleResources(destinationTile.resources);
-
-    destinationTile.collected = true;
-    setResourcesCollected(true);
-
-    sendVehicleMessage(playerId, playerVehicle.id, "resource", destinationTile.resources);
-  };
-
-  // Réparer le véhicule
-  const repairVehicle = () => {
-    updateShip(playerId, { damage: 0 });
-    setRepairApplied(true);
-    sendVehicleMessage(playerId, playerVehicle.id, "repair");
-  };
-
-  // Ravitailler le véhicule
-  const refuelVehicle = () => {
-    updateShip(playerId, { fuel: 100 });
-    setFuelApplied(true);
-    sendVehicleMessage(playerId, playerVehicle.id, "fuel");
-  };
-
-  // Retourner à la base
-  const returnToBase = (currentTargetTile) => {
-    markVehicleArrival(currentTargetTile);
-    clearSelectedTile();
-
-    sendVehicleMessage(playerId, playerVehicle.id, "depart");
-  };
-
-  // Gérer l'arrivée à la tuile cible
+  // === Gérer l'arrivée à la tuile cible ===
   const handleTargetReached = (currentTargetTile, currentTargetCoord) => {
     const destinationTile = tiles[currentTargetCoord];
     if (!destinationTile) return;
@@ -269,24 +215,27 @@ const TargetMovement = ({ playerId, children }) => {
     switch (destinationTile.type) {
       case "resource":
         if (!destinationTile.collected && !resourcesCollected) {
-          collectResources(destinationTile);
+          collectResources(playerId, destinationTile);
+          setResourcesCollected(true);
         }
         break;
 
       case "repair":
         if (!repairApplied) {
-          repairVehicle();
+          repairVehicle(playerId);
+          setRepairApplied(true);
         }
         break;
 
       case "fuel":
         if (!fuelApplied) {
-          refuelVehicle();
+          refuelVehicle(playerId);
+          setFuelApplied(true);
         }
         break;
 
       case "depart":
-        returnToBase(currentTargetTile);
+        returnToBase(playerId, currentTargetTile);
         return; // Sortir immédiatement après avoir géré la tuile de départ
 
       default:
@@ -295,7 +244,7 @@ const TargetMovement = ({ playerId, children }) => {
     }
 
     // Marquer l'arrivée si ce n'est pas une tuile de départ
-    markVehicleArrival(currentTargetTile);
+    markVehicleArrival(playerId, currentTargetTile);
     clearSelectedTile();
 
     setClockRunning(false);
