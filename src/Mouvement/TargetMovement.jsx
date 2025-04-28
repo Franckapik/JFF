@@ -202,11 +202,10 @@ const TargetMovement = ({ playerId, children }) => {
 
   // === Fonctions utilitaires ===
 
-  // Mettre à jour les ressources du vaisseau dans le store
-  const updateVehicleResources = (newResources) => {
+  // Marquer l'arrivée du véhicule à la tuile cible
+  const markVehicleArrival = (currentTargetTile) => {
     usePlayerStore.setState((state) => {
       const playerVehicle = state.players[playerId].vehicles.ship;
-      const currentResources = playerVehicle.resources || { food: 0, debris: 0, special: 0 };
 
       return {
         players: {
@@ -217,11 +216,10 @@ const TargetMovement = ({ playerId, children }) => {
               ...state.players[playerId].vehicles,
               ship: {
                 ...playerVehicle,
-                resources: {
-                  food: currentResources.food + (newResources.food || 0),
-                  debris: currentResources.debris + (newResources.debris || 0),
-                  special: currentResources.special + (newResources.special || 0),
-                },
+                position: currentTargetTile.position,
+                coord: currentTargetTile.coord,
+                progress: 100, // Marquer la progression comme terminée
+                isMoving: false, // Indiquer que le véhicule a cessé de se déplacer
               },
             },
           },
@@ -256,16 +254,7 @@ const TargetMovement = ({ playerId, children }) => {
 
   // Retourner à la base
   const returnToBase = (currentTargetTile) => {
-    updateShip(playerId, {
-      position: {
-        x: currentTargetTile.position.x,
-        y: currentTargetTile.position.y,
-        z: currentTargetTile.position.z,
-      },
-      coord: currentTargetTile.coord,
-      progress: 100,
-      isMoving: false,
-    });
+    markVehicleArrival(currentTargetTile);
     clearSelectedTile();
 
     sendVehicleMessage(playerId, playerVehicle.id, "depart");
@@ -305,17 +294,8 @@ const TargetMovement = ({ playerId, children }) => {
         break;
     }
 
-    // Mettre à jour la position si ce n'est pas une tuile de départ
-    updateShip(playerId, {
-      position: {
-        x: currentTargetTile.position.x,
-        y: currentTargetTile.position.y,
-        z: currentTargetTile.position.z,
-      },
-      coord: currentTargetCoord,
-      progress: 100,
-      isMoving: false,
-    });
+    // Marquer l'arrivée si ce n'est pas une tuile de départ
+    markVehicleArrival(currentTargetTile);
     clearSelectedTile();
 
     setClockRunning(false);
