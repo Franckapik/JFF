@@ -10,9 +10,7 @@ import useMessageManager from "../hooks/useMessageManager"; // Gestion des messa
 const TargetMovement = ({ playerId, children }) => {
   // === Références et états locaux ===
   const groupRef = useRef(); // Référence au groupe 3D pour le mouvement
-  const [path, setPath] = useState([]); // Chemin calculé pour le mouvement
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index de la tuile cible actuelle
-  const [distanceTraveled, setDistanceTraveled] = useState(0); // Distance parcourue
   const [resourcesCollected, setResourcesCollected] = useState(false); // Indique si les ressources ont été collectées
   const [repairApplied, setRepairApplied] = useState(false); // Indique si une réparation a été appliquée
   const [fuelApplied, setFuelApplied] = useState(false); // Indique si un ravitaillement a été appliqué
@@ -21,7 +19,6 @@ const TargetMovement = ({ playerId, children }) => {
   const speed = 1; // Vitesse de déplacement (unités par seconde)
 
   // === Sélecteurs des stores ===
-  // Gestion des véhicules et des joueurs
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Véhicule sélectionné globalement
   const playerVehicles = usePlayerStore((state) => state.players[playerId].vehicles); // Véhicules du joueur
   const playerVehicle =
@@ -31,6 +28,7 @@ const TargetMovement = ({ playerId, children }) => {
       ? playerVehicles.ship
       : playerVehicles.drones.find((drone) => drone.id === selectedVehicle.vehicleId); // Véhicule sélectionné
   const updateShip = usePlayerStore((state) => state.updateShip); // Fonction pour mettre à jour le véhicule
+  const path = usePlayerStore((state) => state.players[playerId].vehicles.ship.path); // Chemin depuis le store
 
   // Gestion des tuiles
   const tiles = useTileStore((state) => state.tiles); // Toutes les tuiles
@@ -39,9 +37,6 @@ const TargetMovement = ({ playerId, children }) => {
 
   // Gestion globale du jeu
   const setClockRunning = useGameStore((state) => state.setClockRunning); // Démarrer ou arrêter l'horloge globale
-
-  // Gestion des messages
-  const { sendVehicleMessage } = useMessageManager(); // Fonction pour envoyer des messages
 
   // Gestion des actions du bot
   const botState = useBotStore((state) => state.state); // État actuel du bot (FSM)
@@ -64,11 +59,8 @@ const TargetMovement = ({ playerId, children }) => {
 
     if (targetTile && tiles[targetTile] && playerVehicle?.coord) {
       setClockRunning(true); // Démarrer l'horloge
-
-      const calculatedPath = calculatePath(playerId, targetTile, tiles); // Utiliser la fonction du store
-      setPath(calculatedPath);
+      calculatePath(playerId, targetTile, tiles); // Utiliser la fonction du store
       setCurrentTargetIndex(0); // Réinitialiser l'index
-      setDistanceTraveled(0); // Réinitialiser la distance parcourue
       setResourcesCollected(false); // Réinitialiser l'état de collecte des ressources
       setRepairApplied(false); // Réinitialiser l'état de réparation
       setFuelApplied(false); // Réinitialiser l'état de ravitaillement
@@ -110,8 +102,6 @@ const TargetMovement = ({ playerId, children }) => {
         direction.normalize();
         const moveDistance = Math.min(speed * delta, distance);
         groupRef.current.position.addScaledVector(direction, moveDistance);
-
-        setDistanceTraveled((prev) => prev + moveDistance);
 
         // Calculer la progression en pourcentage
         const progress =
