@@ -28,5 +28,29 @@ export const useTileStore = create((set, get) => ({
         const tiles = hexPositions.reduce((acc, tile) => ({ ...acc, [tile.coord]: { ...tile, collected: false } }), {});
         set({ tiles });
     },
+
+    /**
+     * Marque une tuile comme ayant eu ses ressources collectées
+     * @param {string} coord - Coordonnée de la tuile à marquer
+     * @returns {boolean} - true si la tuile a été marquée, false si déjà collectée
+     */
+    markTileAsCollected: (coord) => {
+        const tile = get().tiles[coord];
+        if (!tile) return false;
+        
+        // Si la tuile est déjà collectée, ne rien faire
+        if (tile.collected) return false;
+        
+        set((state) => {
+            const updatedTiles = { ...state.tiles };
+            updatedTiles[coord] = { 
+                ...updatedTiles[coord], 
+                collected: true 
+            };
+            return { tiles: updatedTiles };
+        });
+        
+        return true;
+    },
 }));
 

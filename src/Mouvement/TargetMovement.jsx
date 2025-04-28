@@ -39,10 +39,29 @@ const TargetMovement = ({ playerId, children }) => {
 
   const setClockRunning = useGameStore((state) => state.setClockRunning); // Démarrer ou arrêter l'horloge globale
   const botTargetTile = useBotStore((state) => state.targetTile); // Tuile cible du bot
-  const finalizeMovement = usePlayerStore((state) => state.finalizeMovement); // Fonction pour finaliser le mouvement
+  
+  // Remove the finalizeMovement reference since we'll handle it locally
+  // const finalizeMovement = usePlayerStore((state) => state.finalizeMovement);
+
+  // Ajouter le sélecteur pour markTileAsCollected
+  const markTileAsCollected = useTileStore(state => state.markTileAsCollected);
+  const collectResources = usePlayerStore(state => state.collectResources);
 
   // === Fonctions locales ===
   
+  // Add the finalizeMovement functionality directly in the component
+  const handleFinalizeMovement = (currentTargetTile) => {
+    if (playerId && playerVehicle) {
+      updateShip(playerId, {
+        position: currentTargetTile.position,
+        coord: currentTargetTile.coord,
+        progress: 100, // Marquer la progression comme terminée
+        isMoving: false, // Indiquer que le véhicule a cessé de se déplacer
+        targetTile: { position: null, coord: null }, // Effacer la tuile cible
+      });
+    }
+  };
+
   // Séparer le traitement du chemin pour plus de clarté
   const processPath = (pathData) => {
     if (!pathData.path || pathData.path.length === 0) {
@@ -200,8 +219,17 @@ const TargetMovement = ({ playerId, children }) => {
           setHasReachedTarget(true);
           console.log("Arrived at destination");
           
-          // Finaliser le mouvement et traiter les interactions
-          finalizeMovement(playerId, currentTargetTile);
+          // Use the local function instead of the store function
+          handleFinalizeMovement(currentTargetTile);
+          
+          // Check if the tile has resources and collect them
+          if (currentTargetTile.resources && 
+              (currentTargetTile.resources.food > 0 || 
+               currentTargetTile.resources.debris > 0 || 
+               currentTargetTile.resources.special > 0)) {
+            collectResources(playerId, currentTargetTile);
+            markTileAsCollected(currentTargetTile.coord);
+          }
           
           // Réinitialiser le chemin pour éviter les logs infinis
           setPath([]);
