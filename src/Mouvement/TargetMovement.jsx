@@ -207,32 +207,44 @@ const TargetMovement = ({ playerId, children }) => {
     const destinationTile = tiles[currentTargetCoord];
     const updatedResources = playerVehicle.resources ? { ...playerVehicle.resources } : {};
 
-    // Collecter les ressources
-    if (destinationTile?.resources && !destinationTile.collected && !resourcesCollected) {
-      updatedResources.food += destinationTile.resources.food || 0;
-      updatedResources.debris += destinationTile.resources.debris || 0;
-      updatedResources.special += destinationTile.resources.special || 0;
+    if (!destinationTile) return;
 
-      destinationTile.collected = true;
-      setResourcesCollected(true);
+    // Utiliser un switch pour gérer les différents types de tuiles
+    switch (destinationTile.type) {
+      case "resource":
+        if (!destinationTile.collected && !resourcesCollected) {
+          updatedResources.food += destinationTile.resources.food || 0;
+          updatedResources.debris += destinationTile.resources.debris || 0;
+          updatedResources.special += destinationTile.resources.special || 0;
 
-      sendVehicleMessage(playerId, playerVehicle.id, "resource", destinationTile.resources);
-    }
+          destinationTile.collected = true;
+          setResourcesCollected(true);
 
-    // Réparer le véhicule
-    if (destinationTile?.type === "repair" && !repairApplied) {
-      updateShip(playerId, { damage: 0 });
-      setRepairApplied(true);
+          sendVehicleMessage(playerId, playerVehicle.id, "resource", destinationTile.resources);
+        }
+        break;
 
-      sendVehicleMessage(playerId, playerVehicle.id, "repair");
-    }
+      case "repair":
+        if (!repairApplied) {
+          updateShip(playerId, { damage: 0 });
+          setRepairApplied(true);
 
-    // Ravitailler le véhicule
-    if (destinationTile?.type === "fuel" && !fuelApplied) {
-      updateShip(playerId, { fuel: 100 });
-      setFuelApplied(true);
+          sendVehicleMessage(playerId, playerVehicle.id, "repair");
+        }
+        break;
 
-      sendVehicleMessage(playerId, playerVehicle.id, "fuel");
+      case "fuel":
+        if (!fuelApplied) {
+          updateShip(playerId, { fuel: 100 });
+          setFuelApplied(true);
+
+          sendVehicleMessage(playerId, playerVehicle.id, "fuel");
+        }
+        break;
+
+      default:
+        console.warn(`Unhandled tile type: ${destinationTile.type}`);
+        break;
     }
 
     // Vérifier si le véhicule est sur la tuile de départ
