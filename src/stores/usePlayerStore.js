@@ -1,41 +1,5 @@
 import { create } from 'zustand';
-
-// Fonction utilitaire pour mettre à jour un véhicule
-const updateVehicle = (state, playerId, vehicleId, updates) => {
-  const vehicle =
-    vehicleId === "ship"
-      ? state.players[playerId].vehicles.ship
-      : state.players[playerId].vehicles.drones.find((drone) => drone.id === vehicleId);
-
-  if (!vehicle) {
-    console.warn(`Vehicle with ID '${vehicleId}' not found for player '${playerId}'.`);
-    return state;
-  }
-
-  const updatedVehicle = {
-    ...vehicle,
-    ...updates,
-  };
-
-  return {
-    ...state,
-    players: {
-      ...state.players,
-      [playerId]: {
-        ...state.players[playerId],
-        vehicles: {
-          ...state.players[playerId].vehicles,
-          [vehicleId === "ship" ? "ship" : "drones"]:
-            vehicleId === "ship"
-              ? updatedVehicle
-              : state.players[playerId].vehicles.drones.map((drone) =>
-                  drone.id === vehicleId ? updatedVehicle : drone
-                ),
-        },
-      },
-    },
-  };
-};
+import { updateVehicle } from '../utils/utils'; // Importez la fonction utilitaire
 
 const usePlayerStore = create((set, get) => ({
   selectedVehicle: { playerId: 'player1', vehicleId: 'ship' }, // Default to player 1's ship

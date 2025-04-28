@@ -143,6 +143,50 @@ export function generateInitialDrones(count, spacing = 1) {
   return drones; // Always return an array
 }
 
+/**
+ * Fonction utilitaire pour mettre à jour un véhicule dans l'état du store
+ * @param {Object} state - L'état actuel du store
+ * @param {string} playerId - L'ID du joueur
+ * @param {string} vehicleId - L'ID du véhicule (ship ou drone ID)
+ * @param {Object} updates - Les propriétés à mettre à jour
+ * @returns {Object} Le nouvel état avec les mises à jour
+ */
+export const updateVehicle = (state, playerId, vehicleId, updates) => {
+  const vehicle =
+    vehicleId === "ship"
+      ? state.players[playerId].vehicles.ship
+      : state.players[playerId].vehicles.drones.find((drone) => drone.id === vehicleId);
+
+  if (!vehicle) {
+    console.warn(`Vehicle with ID '${vehicleId}' not found for player '${playerId}'.`);
+    return state;
+  }
+
+  const updatedVehicle = {
+    ...vehicle,
+    ...updates,
+  };
+
+  return {
+    ...state,
+    players: {
+      ...state.players,
+      [playerId]: {
+        ...state.players[playerId],
+        vehicles: {
+          ...state.players[playerId].vehicles,
+          [vehicleId === "ship" ? "ship" : "drones"]:
+            vehicleId === "ship"
+              ? updatedVehicle
+              : state.players[playerId].vehicles.drones.map((drone) =>
+                  drone.id === vehicleId ? updatedVehicle : drone
+                ),
+        },
+      },
+    },
+  };
+};
+
 
 
 
