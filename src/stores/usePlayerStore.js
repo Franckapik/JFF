@@ -129,40 +129,52 @@ const usePlayerStore = create((set, get) => ({
       },
     }));
   },
-  calculatePath: (tiles, selectedTile, playerId) => {
-    const playerVehicle = get().players[playerId].vehicles.ship; // Access player-specific vehicle
+  calculatePath: (playerId, targetTile, tiles) => {
+    const playerVehicle = get().players[playerId].vehicles.ship;
 
-    if (!playerVehicle || !selectedTile) return { path: [], totalDistance: 0 };
+    if (!playerVehicle || !targetTile || !tiles[targetTile]) return [];
 
-    const currentTile = Object.values(tiles).find(
-      (tile) =>
-        Math.abs(tile.position.x - playerVehicle.position.x) < 0.1 &&
-        Math.abs(tile.position.z - playerVehicle.position.z) < 0.1
-    );
-    const targetTile = tiles[selectedTile];
+    const queue = [[playerVehicle.coord]];
+    const visited = new Set();
+    let foundPath = [];
 
-    if (currentTile && targetTile) {
-      const { path, totalDistance } = calculatePathData(currentTile, targetTile, tiles);
-      set((state) => ({
-        players: {
-          ...state.players,
-          [playerId]: {
-            ...state.players[playerId],
-            vehicles: {
-              ...state.players[playerId].vehicles,
-              ship: {
-                path, // Store the calculated path
-                totalDistance, // Set total distance
-                progress: 0, // Reset progress
-              },
+    while (queue.length > 0) {
+      const currentPath = queue.shift();
+      const currentCoord = currentPath[currentPath.length - 1];
+
+      if (currentCoord === targetTile) {
+        foundPath = currentPath;
+        break;
+      }
+
+      if (!visited.has(currentCoord)) {
+        visited.add(currentCoord);
+        const neighbors = tiles[currentCoord]?.neighbors || [];
+        neighbors.forEach((neighbor) => {
+          if (!visited.has(neighbor) && tiles[neighbor]?.walkable) {
+            queue.push([...currentPath, neighbor]);
+          }
+        });
+      }
+    }
+
+    set((state) => ({
+      players: {
+        ...state.players,
+        [playerId]: {
+          ...state.players[playerId],
+          vehicles: {
+            ...state.players[playerId].vehicles,
+            ship: {
+              ...playerVehicle,
+              path: foundPath, // Stocker le chemin calculé
             },
           },
         },
-      }));
-      return { path, totalDistance };
-    }
+      },
+    }));
 
-    return { path: [], totalDistance: 0 };
+    return foundPath;
   },
   updateShip: (playerId, updates) => {
     set((state) => {

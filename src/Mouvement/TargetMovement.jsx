@@ -54,41 +54,18 @@ const TargetMovement = ({ playerId, children }) => {
   const refuelVehicle = usePlayerStore((state) => state.refuelVehicle);
   const returnToBase = usePlayerStore((state) => state.returnToBase);
 
+  const calculatePath = usePlayerStore((state) => state.calculatePath);
+
   // === Effets ===
 
-  // Effet : Calculer le chemin lorsque la tuile sélectionnée change
+  // Effet : Calculer le chemin pour le joueur (1 ou 2) lorsque la tuile cible change
   useEffect(() => {
-    if (selectedTile && tiles[selectedTile] && playerVehicle?.coord) {
+    const targetTile = playerId === "player2" ? botTargetTile : selectedTile;
+
+    if (targetTile && tiles[targetTile] && playerVehicle?.coord) {
       setClockRunning(true); // Démarrer l'horloge
-      const calculatePath = (startCoord, targetCoord) => {
-        const queue = [[startCoord]];
-        const visited = new Set();
-        let foundPath = [];
 
-        while (queue.length > 0) {
-          const currentPath = queue.shift();
-          const currentCoord = currentPath[currentPath.length - 1];
-
-          if (currentCoord === targetCoord) {
-            foundPath = currentPath;
-            break;
-          }
-
-          if (!visited.has(currentCoord)) {
-            visited.add(currentCoord);
-            const neighbors = tiles[currentCoord]?.neighbors || [];
-            neighbors.forEach((neighbor) => {
-              if (!visited.has(neighbor) && tiles[neighbor]?.walkable) {
-                queue.push([...currentPath, neighbor]);
-              }
-            });
-          }
-        }
-
-        return foundPath;
-      };
-
-      const calculatedPath = calculatePath(playerVehicle.coord, selectedTile);
+      const calculatedPath = calculatePath(playerId, targetTile, tiles); // Utiliser la fonction du store
       setPath(calculatedPath);
       setCurrentTargetIndex(0); // Réinitialiser l'index
       setDistanceTraveled(0); // Réinitialiser la distance parcourue
@@ -97,45 +74,7 @@ const TargetMovement = ({ playerId, children }) => {
       setFuelApplied(false); // Réinitialiser l'état de ravitaillement
       setHasReachedTarget(false); // Réinitialiser l'état de cible atteinte
     }
-  }, [selectedTile, tiles, playerVehicle?.coord, setClockRunning]);
-
-  // Effet : Calculer le chemin pour le joueur 2 (bot) en fonction de la FSM
-  useEffect(() => {
-    if (playerId === "player2" && botTargetTile && tiles[botTargetTile]) {
-      const calculatePath = (startCoord, targetCoord) => {
-        const queue = [[startCoord]];
-        const visited = new Set();
-        let foundPath = [];
-
-        while (queue.length > 0) {
-          const currentPath = queue.shift();
-          const currentCoord = currentPath[currentPath.length - 1];
-
-          if (currentCoord === targetCoord) {
-            foundPath = currentPath;
-            break;
-          }
-
-          if (!visited.has(currentCoord)) {
-            visited.add(currentCoord);
-            const neighbors = tiles[currentCoord]?.neighbors || [];
-            neighbors.forEach((neighbor) => {
-              if (!visited.has(neighbor) && tiles[neighbor]?.walkable) {
-                queue.push([...currentPath, neighbor]);
-              }
-            });
-          }
-        }
-
-        return foundPath;
-      };
-
-      const playerVehicle = usePlayerStore.getState().players[playerId].vehicles.ship;
-      const calculatedPath = calculatePath(playerVehicle.coord, botTargetTile);
-      setPath(calculatedPath);
-      setCurrentTargetIndex(0);
-    }
-  }, [botTargetTile, tiles, playerId]);
+  }, [playerId, selectedTile, botTargetTile, tiles, playerVehicle?.coord, setClockRunning]);
 
   // Effet : Définir la position initiale du véhicule
   useEffect(() => {
