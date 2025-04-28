@@ -119,8 +119,6 @@ const TargetMovement = ({ playerId, children }) => {
   }, [playerId, botTargetTile, playerVehicle?.targetTile?.coord, isInitialPositionSet, Object.keys(tiles).length]);
 
   // === Boucle de rendu (useFrame) ===
-
-  // Déplacer le véhicule le long du chemin
   useFrame((_, delta) => {
     if (!playerVehicle || path.length === 0 || currentTargetIndex >= path.length) return;
 
@@ -205,6 +203,9 @@ const TargetMovement = ({ playerId, children }) => {
           // Finaliser le mouvement et traiter les interactions
           finalizeMovement(playerId, currentTargetTile);
           
+          // Réinitialiser le chemin pour éviter les logs infinis
+          setPath([]);
+          setCurrentTargetIndex(0);
         }
       }
     }
