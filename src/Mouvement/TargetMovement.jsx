@@ -202,43 +202,59 @@ const TargetMovement = ({ playerId, children }) => {
 
   // === Fonctions utilitaires ===
 
+  // Collecter les ressources
+  const collectResources = (destinationTile) => {
+    const updatedResources = playerVehicle.resources ? { ...playerVehicle.resources } : {};
+    updatedResources.food += destinationTile.resources.food || 0;
+    updatedResources.debris += destinationTile.resources.debris || 0;
+    updatedResources.special += destinationTile.resources.special || 0;
+
+    destinationTile.collected = true;
+    setResourcesCollected(true);
+
+    sendVehicleMessage(playerId, playerVehicle.id, "resource", destinationTile.resources);
+
+    return updatedResources;
+  };
+
+  // Réparer le véhicule
+  const repairVehicle = () => {
+    updateShip(playerId, { damage: 0 });
+    setRepairApplied(true);
+    sendVehicleMessage(playerId, playerVehicle.id, "repair");
+  };
+
+  // Ravitailler le véhicule
+  const refuelVehicle = () => {
+    updateShip(playerId, { fuel: 100 });
+    setFuelApplied(true);
+    sendVehicleMessage(playerId, playerVehicle.id, "fuel");
+  };
+
   // Gérer l'arrivée à la tuile cible
   const handleTargetReached = (currentTargetTile, currentTargetCoord) => {
     const destinationTile = tiles[currentTargetCoord];
-    const updatedResources = playerVehicle.resources ? { ...playerVehicle.resources } : {};
-
     if (!destinationTile) return;
+
+    let updatedResources = playerVehicle.resources ? { ...playerVehicle.resources } : {};
 
     // Utiliser un switch pour gérer les différents types de tuiles
     switch (destinationTile.type) {
       case "resource":
         if (!destinationTile.collected && !resourcesCollected) {
-          updatedResources.food += destinationTile.resources.food || 0;
-          updatedResources.debris += destinationTile.resources.debris || 0;
-          updatedResources.special += destinationTile.resources.special || 0;
-
-          destinationTile.collected = true;
-          setResourcesCollected(true);
-
-          sendVehicleMessage(playerId, playerVehicle.id, "resource", destinationTile.resources);
+          updatedResources = collectResources(destinationTile);
         }
         break;
 
       case "repair":
         if (!repairApplied) {
-          updateShip(playerId, { damage: 0 });
-          setRepairApplied(true);
-
-          sendVehicleMessage(playerId, playerVehicle.id, "repair");
+          repairVehicle();
         }
         break;
 
       case "fuel":
         if (!fuelApplied) {
-          updateShip(playerId, { fuel: 100 });
-          setFuelApplied(true);
-
-          sendVehicleMessage(playerId, playerVehicle.id, "fuel");
+          refuelVehicle();
         }
         break;
 
