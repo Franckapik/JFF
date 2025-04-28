@@ -50,6 +50,7 @@ const TargetMovement = ({ playerId, children }) => {
   const returnToBase = usePlayerStore((state) => state.returnToBase);
 
   const calculatePath = usePlayerStore((state) => state.calculatePath);
+  const finalizeMovement = usePlayerStore((state) => state.finalizeMovement);
 
   // === Effets ===
 
@@ -172,12 +173,8 @@ const TargetMovement = ({ playerId, children }) => {
         break;
     }
 
-    // Marquer l'arrivée si ce n'est pas une tuile de départ
-    markVehicleArrival(playerId, currentTargetTile);
-    clearSelectedTile();
-
-    setClockRunning(false);
-    setHasReachedTarget(true);
+    // Appeler la fonction centralisée pour finaliser le mouvement
+    finalizeMovement(playerId, currentTargetTile);
 
     if (playerId === "player2") {
       executeBotAction(tiles);

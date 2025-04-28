@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { calculatePathData } from '../utils/utils'; // Import utility functions
+import { useTileStore } from '../stores/useNewTileStore'; // Import du store des tuiles
 
 const usePlayerStore = create((set, get) => ({
   selectedVehicle: { playerId: 'player1', vehicleId: 'ship' }, // Default to player 1's ship
@@ -397,6 +398,37 @@ const usePlayerStore = create((set, get) => ({
   returnToBase: (playerId, currentTargetTile) => {
     const { markVehicleArrival } = get();
     markVehicleArrival(playerId, currentTargetTile);
+  },
+
+  // Actions à effectuer à la fin d'un déplacement
+  finalizeMovement: (playerId, currentTargetTile) => {
+    const clearSelectedTile = useTileStore.getState().clearSelectedTile; // Utiliser clearSelectedTile depuis useTileStore
+
+    set((state) => {
+      const playerVehicle = state.players[playerId].vehicles.ship;
+
+      return {
+        players: {
+          ...state.players,
+          [playerId]: {
+            ...state.players[playerId],
+            vehicles: {
+              ...state.players[playerId].vehicles,
+              ship: {
+                ...playerVehicle,
+                position: currentTargetTile.position,
+                coord: currentTargetTile.coord,
+                progress: 100, // Marquer la progression comme terminée
+                isMoving: false, // Indiquer que le véhicule a cessé de se déplacer
+              },
+            },
+          },
+        },
+        hasReachedTarget: true, // Mettre à jour l'état global
+      };
+    });
+
+    clearSelectedTile(); // Désélectionner la tuile
   },
 
 }));
