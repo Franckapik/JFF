@@ -10,9 +10,8 @@ const Scene = () => {
   const initializeTiles = useTileStore((state) => state.initializeTiles); // Zustand initializer for tiles
   const tiles = useTileStore((state) => state.tiles); // Zustand tiles state
   const initializePlayer = usePlayerStore((state) => state.initializePlayer); // Player initialization method
-  const shipPosition = usePlayerStore((state) => state.players.player1.vehicles.ship.position); // Ship position
-  const setSelectedTile = useTileStore((state) => state.setSelectedTile); // Zustand setter for selectedTile
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
+  const setVehicleTargetTile = usePlayerStore((state) => state.setVehicleTargetTile); // Setter for vehicle target tile
 
   useEffect(() => {
     console.log("[Scene] Initializing tiles...");
@@ -32,8 +31,17 @@ const Scene = () => {
     camera.lookAt(0, 0, 0); // Make the camera look at the center of the scene
   }, [camera]);
 
-  const handleTileClick = (tileCoord) => {
-    setSelectedTile(tileCoord); // Store the clicked tile's coordinate
+  const handleTileClick = (tile) => {
+    // Utiliser directement "player1" comme playerId
+    const playerId = "player1";
+
+    // Mettre à jour la tuile cible du véhicule sélectionné
+    if (selectedVehicle.vehicleId) {
+      setVehicleTargetTile(playerId, selectedVehicle.vehicleId, {
+        coord: tile.coord,
+        position: tile.position,
+      });
+    }
   };
 
   return (
@@ -70,7 +78,7 @@ const Scene = () => {
             position={[tile.position.x, 0, tile.position.z]}
             radius={1}
             color={tile.color}
-            onClick={() => handleTileClick(tile.coord)}
+            onClick={() => handleTileClick(tile)} // Passer l'objet complet de la tuile
           />
         ))}
       {Object.values(tiles)
