@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { calculatePathData } from '../utils/utils'; // Import utility functions
 import { useTileStore } from '../stores/useNewTileStore'; // Import du store des tuiles
+import { Vector3 } from "three"; // Import Vector3 for 3D calculations
 
 const usePlayerStore = create((set, get) => ({
   selectedVehicle: { playerId: 'player1', vehicleId: 'ship' }, // Default to player 1's ship
@@ -20,7 +21,10 @@ const usePlayerStore = create((set, get) => ({
           path: [], // Store the calculated path
           resources: { food: 0, debris: 0, special: 0 },
           startCoord: null, // Initialize as null until tiles are available
-          targetTile: null, // Nouvelle propriété pour la tuile cible
+          targetTile: {
+            position: null, // Vecteur 3D pour la position
+            coord: null, // Coordonnée de la tuile
+          },
         },
         drones: [
           {
@@ -30,7 +34,10 @@ const usePlayerStore = create((set, get) => ({
             isMoving: false,
             progress: 0,
             resources: { food: 0, debris: 0, special: 0 }, // Add resources for drones
-            targetTile: null, // Nouvelle propriété pour la tuile cible
+            targetTile: {
+              position: null,
+              coord: null,
+            },
           },
           {
             id: 'drone2', // Add another drone with an ID
@@ -66,7 +73,10 @@ const usePlayerStore = create((set, get) => ({
           path: [],
           resources: { food: 0, debris: 0, special: 0 },
           startCoord: null,
-          targetTile: null, // Nouvelle propriété pour la tuile cible
+          targetTile: {
+            position: null,
+            coord: null,
+          },
         },
         drones: [
           {
@@ -442,7 +452,11 @@ const usePlayerStore = create((set, get) => ({
           ? state.players[playerId].vehicles.ship
           : state.players[playerId].vehicles.drones.find((drone) => drone.id === vehicleId);
 
-      if (vehicle) {
+      if (vehicle && targetTile) {
+        const targetPosition = targetTile.position
+          ? new Vector3(targetTile.position.x, targetTile.position.y, targetTile.position.z)
+          : null;
+
         return {
           players: {
             ...state.players,
@@ -451,9 +465,23 @@ const usePlayerStore = create((set, get) => ({
               vehicles: {
                 ...state.players[playerId].vehicles,
                 [vehicleId === 'ship' ? 'ship' : 'drones']: vehicleId === 'ship'
-                  ? { ...vehicle, targetTile }
+                  ? {
+                      ...vehicle,
+                      targetTile: {
+                        position: targetPosition,
+                        coord: targetTile.coord,
+                      },
+                    }
                   : state.players[playerId].vehicles.drones.map((drone) =>
-                      drone.id === vehicleId ? { ...drone, targetTile } : drone
+                      drone.id === vehicleId
+                        ? {
+                            ...drone,
+                            targetTile: {
+                              position: targetPosition,
+                              coord: targetTile.coord,
+                            },
+                          }
+                        : drone
                     ),
               },
             },

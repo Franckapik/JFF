@@ -84,36 +84,40 @@ const TargetMovement = ({ playerId, children }) => {
 
   // Déplacer le véhicule le long du chemin
   useFrame((_, delta) => {
-    // Vérifier si le chemin est valide et si le véhicule peut se déplacer
+    // Si le chemin est vide, le groupe 3D n'est pas défini, le véhicule n'existe pas,
+    // ou si la cible finale a déjà été atteinte, on ne fait rien.
     if (!path || path.length === 0 || !groupRef.current || !playerVehicle || hasReachedTarget) return;
 
-    // Récupérer la coordonnée de la tuile cible actuelle
-    const currentTargetCoord = path[currentTargetIndex];
-    const currentTargetTile = tiles[currentTargetCoord];
+    // Récupérer la tuile cible actuelle associée au véhicule.
+    const targetTile = playerVehicle.targetTile;
 
-    if (currentTargetTile) {
-      // Calculer la position cible en 3D
-      const targetPosition = new Vector3(
-        currentTargetTile.position.x,
-        currentTargetTile.position.y,
-        currentTargetTile.position.z
-      );
+    // Vérifier si la tuile cible a une position et des coordonnées valides.
+    if (targetTile?.position && targetTile?.coord) {
+      // Extraire la position cible.
+      const targetPosition = targetTile.position;
 
-      // Calculer la direction entre la position actuelle et la position cible
+      // Calculer la direction entre la position actuelle du véhicule et la position cible.
       const direction = new Vector3().subVectors(targetPosition, groupRef.current.position);
-      const distance = direction.length(); // Distance entre la position actuelle et la cible
 
+      // Calculer la distance entre la position actuelle et la position cible.
+      const distance = direction.length();
+
+      // Si la distance est significative (supérieure à un seuil), déplacer le véhicule.
       if (distance > 0.01) {
-        // Si le véhicule n'est pas encore arrivé à la tuile cible
-        direction.normalize(); // Normaliser la direction pour obtenir un vecteur unitaire
-        const moveDistance = Math.min(speed * delta, distance); // Calculer la distance à parcourir pendant ce frame
-        groupRef.current.position.addScaledVector(direction, moveDistance); // Déplacer le véhicule
+        // Normaliser la direction pour obtenir un vecteur unitaire.
+        direction.normalize();
 
-        // Calculer la progression en pourcentage sur le chemin
+        // Calculer la distance à parcourir pendant cette frame, en fonction de la vitesse et du delta (temps écoulé).
+        const moveDistance = Math.min(speed * delta, distance);
+
+        // Déplacer la position du véhicule en ajoutant un vecteur directionnel multiplié par la distance à parcourir.
+        groupRef.current.position.addScaledVector(direction, moveDistance);
+
+        // Calculer la progression du véhicule en pourcentage le long du chemin.
         const progress =
           ((currentTargetIndex + (1 - distance / targetPosition.length())) / path.length) * 100;
 
-        // Mettre à jour la progression si elle a changé
+        // Si la progression a changé de manière significative, mettre à jour l'état du véhicule.
         if (Math.round(playerVehicle.progress) !== Math.round(progress)) {
           updateShip(playerId, {
             position: {
@@ -121,32 +125,37 @@ const TargetMovement = ({ playerId, children }) => {
               y: groupRef.current.position.y,
               z: groupRef.current.position.z,
             },
-            progress: Math.min(progress, 100), // Limiter la progression à 100%
-            isMoving: true, // Indiquer que le véhicule est en mouvement
+            progress: Math.min(progress, 100), // Limiter la progression à 100%.
+            isMoving: true, // Indiquer que le véhicule est en mouvement.
           });
         }
-      } else if (currentTargetIndex < path.length - 1) {
-        // Si le véhicule a atteint la tuile cible actuelle mais qu'il reste des tuiles à parcourir
-        setCurrentTargetIndex(currentTargetIndex + 1); // Passer à la tuile suivante
+      } 
+      // Si la distance est négligeable et qu'il reste des étapes dans le chemin, passer à la prochaine tuile cible.
+      else if (currentTargetIndex < path.length - 1) {
+        // Incrémenter l'index de la cible actuelle.
+        setCurrentTargetIndex(currentTargetIndex + 1);
+
+        // Mettre à jour la position, les coordonnées et réduire le carburant du véhicule.
         updateShip(playerId, {
           position: {
-            x: currentTargetTile.position.x,
-            y: currentTargetTile.position.y,
-            z: currentTargetTile.position.z,
+            x: targetTile.position.x,
+            y: targetTile.position.y,
+            z: targetTile.position.z,
           },
-          coord: currentTargetCoord, // Mettre à jour la coordonnée du véhicule
-          fuel: Math.max(playerVehicle.fuel - 10, 0), // Réduire le carburant
+          coord: targetTile.coord,
+          fuel: Math.max(playerVehicle.fuel - 10, 0), // Réduire le carburant avec une limite minimale de 0.
         });
-      } else {
-        // Si le véhicule a atteint la dernière tuile du chemin
-        handleTargetReached(currentTargetTile, currentTargetCoord); // Gérer l'arrivée à la cible
+      } 
+      // Si la dernière tuile du chemin est atteinte, gérer l'arrivée à la cible.
+      else {
+        handleTargetReached(targetTile, targetTile.coord);
       }
     }
   });
 
   // === Gérer l'arrivée à la tuile cible ===
-  const handleTargetReached = (currentTargetTile, currentTargetCoord) => {
-    const destinationTile = tiles[currentTargetCoord];
+  const handleTargetReached = (targetTile, targetCoord) => {
+    const destinationTile = tiles[targetCoord];
     if (!destinationTile) return;
 
     // Utiliser un switch pour gérer les différents types de tuiles
@@ -173,7 +182,7 @@ const TargetMovement = ({ playerId, children }) => {
         break;
 
       case "depart":
-        returnToBase(playerId, currentTargetTile);
+        returnToBase(playerId, targetTile);
         return; // Sortir immédiatement après avoir géré la tuile de départ
 
       default:
@@ -182,7 +191,7 @@ const TargetMovement = ({ playerId, children }) => {
     }
 
     // Appeler la fonction centralisée pour finaliser le mouvement
-    finalizeMovement(playerId, currentTargetTile);
+    finalizeMovement(playerId, targetTile);
 
     if (playerId === "player2") {
       executeBotAction(tiles);
