@@ -221,16 +221,7 @@ const TargetMovement = ({ playerId, children }) => {
           
           // Use the local function instead of the store function
           handleFinalizeMovement(currentTargetTile);
-          
-          // Check if the tile has resources and collect them
-          if (currentTargetTile.resources && 
-              (currentTargetTile.resources.food > 0 || 
-               currentTargetTile.resources.debris > 0 || 
-               currentTargetTile.resources.special > 0)) {
-            collectResources(playerId, currentTargetTile);
-            markTileAsCollected(currentTargetTile.coord);
-          }
-          
+                    
           // Réinitialiser le chemin pour éviter les logs infinis
           setPath([]);
           setCurrentTargetIndex(0);
