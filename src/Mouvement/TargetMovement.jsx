@@ -202,19 +202,42 @@ const TargetMovement = ({ playerId, children }) => {
 
   // === Fonctions utilitaires ===
 
+  // Mettre à jour les ressources du vaisseau dans le store
+  const updateVehicleResources = (newResources) => {
+    usePlayerStore.setState((state) => {
+      const playerVehicle = state.players[playerId].vehicles.ship;
+      const currentResources = playerVehicle.resources || { food: 0, debris: 0, special: 0 };
+
+      return {
+        players: {
+          ...state.players,
+          [playerId]: {
+            ...state.players[playerId],
+            vehicles: {
+              ...state.players[playerId].vehicles,
+              ship: {
+                ...playerVehicle,
+                resources: {
+                  food: currentResources.food + (newResources.food || 0),
+                  debris: currentResources.debris + (newResources.debris || 0),
+                  special: currentResources.special + (newResources.special || 0),
+                },
+              },
+            },
+          },
+        },
+      };
+    });
+  };
+
   // Collecter les ressources
   const collectResources = (destinationTile) => {
-    const updatedResources = playerVehicle.resources ? { ...playerVehicle.resources } : {};
-    updatedResources.food += destinationTile.resources.food || 0;
-    updatedResources.debris += destinationTile.resources.debris || 0;
-    updatedResources.special += destinationTile.resources.special || 0;
+    updateVehicleResources(destinationTile.resources);
 
     destinationTile.collected = true;
     setResourcesCollected(true);
 
     sendVehicleMessage(playerId, playerVehicle.id, "resource", destinationTile.resources);
-
-    return updatedResources;
   };
 
   // Réparer le véhicule
@@ -231,18 +254,33 @@ const TargetMovement = ({ playerId, children }) => {
     sendVehicleMessage(playerId, playerVehicle.id, "fuel");
   };
 
+  // Retourner à la base
+  const returnToBase = (currentTargetTile) => {
+    updateShip(playerId, {
+      position: {
+        x: currentTargetTile.position.x,
+        y: currentTargetTile.position.y,
+        z: currentTargetTile.position.z,
+      },
+      coord: currentTargetTile.coord,
+      progress: 100,
+      isMoving: false,
+    });
+    clearSelectedTile();
+
+    sendVehicleMessage(playerId, playerVehicle.id, "depart");
+  };
+
   // Gérer l'arrivée à la tuile cible
   const handleTargetReached = (currentTargetTile, currentTargetCoord) => {
     const destinationTile = tiles[currentTargetCoord];
     if (!destinationTile) return;
 
-    let updatedResources = playerVehicle.resources ? { ...playerVehicle.resources } : {};
-
     // Utiliser un switch pour gérer les différents types de tuiles
     switch (destinationTile.type) {
       case "resource":
         if (!destinationTile.collected && !resourcesCollected) {
-          updatedResources = collectResources(destinationTile);
+          collectResources(destinationTile);
         }
         break;
 
@@ -258,42 +296,27 @@ const TargetMovement = ({ playerId, children }) => {
         }
         break;
 
+      case "depart":
+        returnToBase(currentTargetTile);
+        return; // Sortir immédiatement après avoir géré la tuile de départ
+
       default:
         console.warn(`Unhandled tile type: ${destinationTile.type}`);
         break;
     }
 
-    // Vérifier si le véhicule est sur la tuile de départ
-    const isStartingTile = currentTargetCoord === playerVehicle.startCoord;
-    if (isStartingTile) {
-      updateShip(playerId, {
-        resources: updatedResources,
-        position: {
-          x: currentTargetTile.position.x,
-          y: currentTargetTile.position.y,
-          z: currentTargetTile.position.z,
-        },
-        coord: currentTargetCoord,
-        progress: 100,
-        isMoving: false,
-      });
-      clearSelectedTile();
-
-      sendVehicleMessage(playerId, playerVehicle.id, "depart");
-    } else {
-      updateShip(playerId, {
-        position: {
-          x: currentTargetTile.position.x,
-          y: currentTargetTile.position.y,
-          z: currentTargetTile.position.z,
-        },
-        coord: currentTargetCoord,
-        progress: 100,
-        isMoving: false,
-        resources: updatedResources,
-      });
-      clearSelectedTile();
-    }
+    // Mettre à jour la position si ce n'est pas une tuile de départ
+    updateShip(playerId, {
+      position: {
+        x: currentTargetTile.position.x,
+        y: currentTargetTile.position.y,
+        z: currentTargetTile.position.z,
+      },
+      coord: currentTargetCoord,
+      progress: 100,
+      isMoving: false,
+    });
+    clearSelectedTile();
 
     setClockRunning(false);
     setHasReachedTarget(true);
