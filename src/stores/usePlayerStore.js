@@ -141,53 +141,7 @@ const usePlayerStore = create((set, get) => ({
       },
     }));
   },
-  calculatePath: (playerId, targetTile, tiles) => {
-    const playerVehicle = get().players[playerId].vehicles.ship;
 
-    if (!playerVehicle || !targetTile || !tiles[targetTile]) return [];
-
-    const queue = [[playerVehicle.coord]];
-    const visited = new Set();
-    let foundPath = [];
-
-    while (queue.length > 0) {
-      const currentPath = queue.shift();
-      const currentCoord = currentPath[currentPath.length - 1];
-
-      if (currentCoord === targetTile) {
-        foundPath = currentPath;
-        break;
-      }
-
-      if (!visited.has(currentCoord)) {
-        visited.add(currentCoord);
-        const neighbors = tiles[currentCoord]?.neighbors || [];
-        neighbors.forEach((neighbor) => {
-          if (!visited.has(neighbor) && tiles[neighbor]?.walkable) {
-            queue.push([...currentPath, neighbor]);
-          }
-        });
-      }
-    }
-
-    set((state) => ({
-      players: {
-        ...state.players,
-        [playerId]: {
-          ...state.players[playerId],
-          vehicles: {
-            ...state.players[playerId].vehicles,
-            ship: {
-              ...playerVehicle,
-              path: foundPath, // Stocker le chemin calculé
-            },
-          },
-        },
-      },
-    }));
-
-    return foundPath;
-  },
   updateShip: (playerId, updates) => {
     set((state) => {
       const updatedState = updateVehicle(state, playerId, "ship", updates);
