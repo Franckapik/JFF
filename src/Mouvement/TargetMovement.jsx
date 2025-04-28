@@ -84,30 +84,36 @@ const TargetMovement = ({ playerId, children }) => {
 
   // Déplacer le véhicule le long du chemin
   useFrame((_, delta) => {
+    // Vérifier si le chemin est valide et si le véhicule peut se déplacer
     if (!path || path.length === 0 || !groupRef.current || !playerVehicle || hasReachedTarget) return;
 
+    // Récupérer la coordonnée de la tuile cible actuelle
     const currentTargetCoord = path[currentTargetIndex];
     const currentTargetTile = tiles[currentTargetCoord];
 
     if (currentTargetTile) {
+      // Calculer la position cible en 3D
       const targetPosition = new Vector3(
         currentTargetTile.position.x,
         currentTargetTile.position.y,
         currentTargetTile.position.z
       );
 
+      // Calculer la direction entre la position actuelle et la position cible
       const direction = new Vector3().subVectors(targetPosition, groupRef.current.position);
-      const distance = direction.length();
+      const distance = direction.length(); // Distance entre la position actuelle et la cible
 
       if (distance > 0.01) {
-        direction.normalize();
-        const moveDistance = Math.min(speed * delta, distance);
-        groupRef.current.position.addScaledVector(direction, moveDistance);
+        // Si le véhicule n'est pas encore arrivé à la tuile cible
+        direction.normalize(); // Normaliser la direction pour obtenir un vecteur unitaire
+        const moveDistance = Math.min(speed * delta, distance); // Calculer la distance à parcourir pendant ce frame
+        groupRef.current.position.addScaledVector(direction, moveDistance); // Déplacer le véhicule
 
-        // Calculer la progression en pourcentage
+        // Calculer la progression en pourcentage sur le chemin
         const progress =
           ((currentTargetIndex + (1 - distance / targetPosition.length())) / path.length) * 100;
 
+        // Mettre à jour la progression si elle a changé
         if (Math.round(playerVehicle.progress) !== Math.round(progress)) {
           updateShip(playerId, {
             position: {
@@ -116,10 +122,11 @@ const TargetMovement = ({ playerId, children }) => {
               z: groupRef.current.position.z,
             },
             progress: Math.min(progress, 100), // Limiter la progression à 100%
-            isMoving: true,
+            isMoving: true, // Indiquer que le véhicule est en mouvement
           });
         }
       } else if (currentTargetIndex < path.length - 1) {
+        // Si le véhicule a atteint la tuile cible actuelle mais qu'il reste des tuiles à parcourir
         setCurrentTargetIndex(currentTargetIndex + 1); // Passer à la tuile suivante
         updateShip(playerId, {
           position: {
@@ -127,10 +134,11 @@ const TargetMovement = ({ playerId, children }) => {
             y: currentTargetTile.position.y,
             z: currentTargetTile.position.z,
           },
-          coord: currentTargetCoord,
+          coord: currentTargetCoord, // Mettre à jour la coordonnée du véhicule
           fuel: Math.max(playerVehicle.fuel - 10, 0), // Réduire le carburant
         });
       } else {
+        // Si le véhicule a atteint la dernière tuile du chemin
         handleTargetReached(currentTargetTile, currentTargetCoord); // Gérer l'arrivée à la cible
       }
     }
