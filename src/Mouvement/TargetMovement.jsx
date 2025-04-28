@@ -84,36 +84,26 @@ const TargetMovement = ({ playerId, children }) => {
 
         moveVehicle(playerId, selectedVehicle.vehicleId, groupRef.current.position, targetTile);
       } else {
-        handleTargetReached(targetTile, targetTile.coord);
+        handleTargetReached(targetTile);
       }
     }
   });
 
   // === Gérer l'arrivée à la tuile cible ===
-  const handleTargetReached = (targetTile, targetCoord) => {
+  const handleTargetReached = (targetTile) => {
     if (!targetTile) return;
 
-    // Utiliser un switch pour gérer les différents types de tuiles
     switch (targetTile.type) {
       case "resource":
-        if (!resourcesCollected) {
-          collectResources(playerId, targetTile);
-          setResourcesCollected(true);
-        }
+        collectResources(playerId, targetTile);
         break;
 
       case "repair":
-        if (!repairApplied) {
-          repairVehicle(playerId);
-          setRepairApplied(true);
-        }
+        repairVehicle(playerId);
         break;
 
       case "fuel":
-        if (!fuelApplied) {
-          refuelVehicle(playerId);
-          setFuelApplied(true);
-        }
+        refuelVehicle(playerId);
         break;
 
       case "depart":
@@ -125,7 +115,6 @@ const TargetMovement = ({ playerId, children }) => {
         break;
     }
 
-    // Appeler la fonction centralisée pour finaliser le mouvement
     finalizeMovement(playerId, targetTile);
 
     if (playerId === "player2") {
