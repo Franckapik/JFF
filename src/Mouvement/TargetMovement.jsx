@@ -5,6 +5,7 @@ import useBotStore from "../stores/useBotStore"; // Gestion des actions du bot
 import { useTileStore } from "../stores/useNewTileStore"; // Accès aux tuiles pour le pathfinding
 import { useFrame } from "@react-three/fiber"; // Gestion des animations dans la boucle de rendu
 import { Vector3, Euler } from "three"; // Utilisation des vecteurs pour les calculs 3D
+import { findPath, calculatePathDistance, findTileAtPosition, calculatePath } from "../utils/utils"; // Import utility functions
 
 const TargetMovement = ({ playerId, children }) => {
   // === Références et états locaux ===
@@ -40,37 +41,33 @@ const TargetMovement = ({ playerId, children }) => {
   const botTargetTile = useBotStore((state) => state.targetTile); // Tuile cible du bot
   const finalizeMovement = usePlayerStore((state) => state.finalizeMovement); // Fonction pour finaliser le mouvement
 
-  // === Fonctions utilitaires ===
+  // === Fonctions locales ===
   
-  // Calculer le chemin entre deux tuiles 
-  const findPath = (startCoord, targetCoord, tiles) => {
-    const queue = [[startCoord]];
-    const visited = new Set();
-
-    while (queue.length > 0) {
-      const path = queue.shift();
-      const currentCoord = path[path.length - 1];
-
-      if (currentCoord === targetCoord) {
-        return path;
-      }
-
-      if (!visited.has(currentCoord)) {
-        visited.add(currentCoord);
-        const neighbors = tiles[currentCoord]?.neighbors || [];
-        neighbors.forEach((neighbor) => {
-          if (!visited.has(neighbor) && tiles[neighbor]?.walkable !== false) {
-            queue.push([...path, neighbor]);
-          }
-        });
-      }
+  // Séparer le traitement du chemin pour plus de clarté
+  const processPath = (pathData) => {
+    if (!pathData.path || pathData.path.length === 0) {
+      console.log("Empty path returned");
+      return;
     }
-
-    return [];
+    
+    setPath(pathData.path);
+    setCurrentTargetIndex(0);
+    setHasReachedTarget(false);
+    setTotalPathDistance(pathData.totalDistance);
+    setDistanceTraveled(0);
+    
+    // Mettre à jour l'état du véhicule
+    if (playerId && playerVehicle) {
+      updateShip(playerId, {
+        isMoving: true,
+        path: pathData.path,
+        totalDistance: pathData.totalDistance
+      });
+    }
   };
 
-  // Calculer le chemin complet vers la cible
-  const calculatePath = () => {
+  // Recalculer le chemin complet
+  const recalculatePath = () => {
     if (!groupRef.current || !playerVehicle) {
       console.log("Missing ref or vehicle:", { groupRef: !!groupRef.current, playerVehicle: !!playerVehicle });
       return;
@@ -83,74 +80,15 @@ const TargetMovement = ({ playerId, children }) => {
       return;
     }
     
-    // Vérifier la position actuelle du group
-    console.log("Group position:", groupRef.current.position);
-    
-    // Trouver la tuile actuelle basée sur la position du véhicule
-    const currentTile = Object.values(tiles).find(
-      (tile) =>
-        Math.abs(tile.position.x - groupRef.current.position.x) < 0.3 &&
-        Math.abs(tile.position.z - groupRef.current.position.z) < 0.3
+    // Calculer le chemin à l'aide de la fonction utilitaire
+    const pathData = calculatePath(
+      groupRef.current.position,
+      targetTile.coord,
+      tiles,
+      playerVehicle.coord
     );
     
-    if (!currentTile) {
-      console.log("Current tile not found at position:", groupRef.current.position);
-      
-      // Utiliser la tuile du véhicule si nous ne trouvons pas de correspondance
-      if (playerVehicle.coord) {
-        const fallbackTile = tiles[playerVehicle.coord];
-        if (fallbackTile) {
-          console.log("Using fallback tile from vehicle coord:", fallbackTile);
-          const newPath = findPath(playerVehicle.coord, targetTile.coord, tiles);
-          processPath(newPath);
-        } else {
-          console.log("Fallback tile not found either.");
-        }
-      }
-      return;
-    }
-    
-    console.log("Found current tile:", currentTile.coord);
-    const newPath = findPath(currentTile.coord, targetTile.coord, tiles);
-    console.log("Path calculated:", newPath);
-    
-    processPath(newPath);
-  };
-  
-  // Séparer le traitement du chemin pour plus de clarté
-  const processPath = (newPath) => {
-    if (!newPath || newPath.length === 0) {
-      console.log("Empty path returned");
-      return;
-    }
-    
-    setPath(newPath);
-    setCurrentTargetIndex(0);
-    setHasReachedTarget(false);
-    
-    // Calculer la distance totale du chemin
-    let totalDistance = 0;
-    for (let i = 0; i < newPath.length - 1; i++) {
-      const tileA = tiles[newPath[i]];
-      const tileB = tiles[newPath[i + 1]];
-      if (tileA && tileB) {
-        totalDistance += new Vector3(tileA.position.x, tileA.position.y, tileA.position.z)
-          .distanceTo(new Vector3(tileB.position.x, tileB.position.y, tileB.position.z));
-      }
-    }
-    
-    console.log("Total path distance:", totalDistance);
-    setTotalPathDistance(totalDistance);
-    setDistanceTraveled(0);
-    
-    // Mettre à jour l'état du véhicule
-    if (playerId && playerVehicle) {
-      updateShip(playerId, {
-        isMoving: true,
-        path: newPath,
-        totalDistance: totalDistance
-      });
-    }
+    processPath(pathData);
   };
 
   // === Effets ===
@@ -176,7 +114,7 @@ const TargetMovement = ({ playerId, children }) => {
       console.log("Target changed, recalculating path");
       setClockRunning(true);
       // Attendre un peu pour s'assurer que la position est correcte
-      setTimeout(calculatePath, 100);
+      setTimeout(recalculatePath, 100);
     }
   }, [playerId, botTargetTile, playerVehicle?.targetTile?.coord, isInitialPositionSet, Object.keys(tiles).length]);
 
