@@ -1,11 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useTileStore } from "../stores/useNewTileStore"; // Gestion des tuiles
 import usePlayerStore from "../stores/usePlayerStore"; // Gestion des joueurs et véhicules
 import useGameStore from "../stores/useGameStore"; // Gestion de l'état global du jeu
 import useBotStore from "../stores/useBotStore"; // Gestion des actions du bot
 import { useFrame } from "@react-three/fiber"; // Gestion des animations dans la boucle de rendu
 import { Vector3 } from "three"; // Utilisation des vecteurs pour les calculs 3D
-import useMessageManager from "../hooks/useMessageManager"; // Gestion des messages
 
 const TargetMovement = ({ playerId, children }) => {
   // === Références et états locaux ===
@@ -26,28 +24,15 @@ const TargetMovement = ({ playerId, children }) => {
       : selectedVehicle.playerId === playerId && selectedVehicle.vehicleId === "ship"
       ? playerVehicles.ship
       : playerVehicles.drones.find((drone) => drone.id === selectedVehicle.vehicleId); // Véhicule sélectionné
-  const updateShip = usePlayerStore((state) => state.updateShip); // Fonction pour mettre à jour le véhicule
-  const path = usePlayerStore((state) => state.players[playerId].vehicles.ship.path); // Chemin depuis le store
 
-  // Gestion des tuiles
-  const tiles = useTileStore((state) => state.tiles); // Toutes les tuiles
-  const selectedTile = useTileStore((state) => state.selectedTile); // Tuile sélectionnée
-  const clearSelectedTile = useTileStore((state) => state.clearSelectedTile); // Fonction pour désélectionner une tuile
-
-  // Gestion globale du jeu
   const setClockRunning = useGameStore((state) => state.setClockRunning); // Démarrer ou arrêter l'horloge globale
-
-  // Gestion des actions du bot
-  const botState = useBotStore((state) => state.state); // État actuel du bot (FSM)
   const botTargetTile = useBotStore((state) => state.targetTile); // Tuile cible du bot
   const executeBotAction = useBotStore((state) => state.execute); // Exécuter une action du bot
 
-  const markVehicleArrival = usePlayerStore((state) => state.markVehicleArrival);
   const collectResources = usePlayerStore((state) => state.collectResources);
   const repairVehicle = usePlayerStore((state) => state.repairVehicle);
   const refuelVehicle = usePlayerStore((state) => state.refuelVehicle);
   const returnToBase = usePlayerStore((state) => state.returnToBase);
-
   const calculatePath = usePlayerStore((state) => state.calculatePath);
   const finalizeMovement = usePlayerStore((state) => state.finalizeMovement);
   const moveVehicle = usePlayerStore((state) => state.moveVehicle);
@@ -56,17 +41,17 @@ const TargetMovement = ({ playerId, children }) => {
 
   // Effet : Calculer le chemin pour le joueur (1 ou 2) lorsque la tuile cible change
   useEffect(() => {
-    const targetTile = playerId === "player2" ? botTargetTile : selectedTile;
+    const targetTile = playerId === "player2" ? botTargetTile : playerVehicle?.targetTile;
 
-    if (targetTile && tiles[targetTile] && playerVehicle?.coord) {
+    if (targetTile && playerVehicle?.coord) {
       setClockRunning(true); // Démarrer l'horloge
-      calculatePath(playerId, targetTile, tiles); // Utiliser la fonction du store
+      calculatePath(playerId, targetTile, {}); // Utiliser la fonction du store
       setResourcesCollected(false); // Réinitialiser l'état de collecte des ressources
       setRepairApplied(false); // Réinitialiser l'état de réparation
       setFuelApplied(false); // Réinitialiser l'état de ravitaillement
       setHasReachedTarget(false); // Réinitialiser l'état de cible atteinte
     }
-  }, [playerId, selectedTile, botTargetTile, tiles, playerVehicle?.coord, setClockRunning]);
+  }, [playerId, botTargetTile, playerVehicle?.coord, setClockRunning]);
 
   // Effet : Définir la position initiale du véhicule
   useEffect(() => {
@@ -83,12 +68,12 @@ const TargetMovement = ({ playerId, children }) => {
 
   // Déplacer le véhicule le long du chemin
   useFrame((_, delta) => {
-    if (!path || path.length === 0 || !groupRef.current || !playerVehicle || hasReachedTarget) return;
+    if (!playerVehicle || !playerVehicle.targetTile || hasReachedTarget) return;
 
     const targetTile = playerVehicle.targetTile;
 
     if (targetTile?.position && targetTile?.coord) {
-      const targetPosition = targetTile.position;
+      const targetPosition = new Vector3(targetTile.position.x, targetTile.position.y, targetTile.position.z);
       const direction = new Vector3().subVectors(targetPosition, groupRef.current.position);
       const distance = direction.length();
 
@@ -97,16 +82,7 @@ const TargetMovement = ({ playerId, children }) => {
         const moveDistance = Math.min(speed * delta, distance);
         groupRef.current.position.addScaledVector(direction, moveDistance);
 
-        // Calculer la progression en pourcentage
-        const progress =
-          ((path.findIndex((tile) => tile.coord === targetTile.coord) +
-            (1 - distance / targetPosition.length())) /
-            path.length) *
-          100;
-
-        moveVehicle(playerId, "ship", groupRef.current.position, progress);
-      } else if (path.findIndex((tile) => tile.coord === targetTile.coord) < path.length - 1) {
-        moveVehicle(playerId, "ship", targetTile.position, 100, targetTile);
+        moveVehicle(playerId, selectedVehicle.vehicleId, groupRef.current.position, targetTile);
       } else {
         handleTargetReached(targetTile, targetTile.coord);
       }
@@ -115,14 +91,13 @@ const TargetMovement = ({ playerId, children }) => {
 
   // === Gérer l'arrivée à la tuile cible ===
   const handleTargetReached = (targetTile, targetCoord) => {
-    const destinationTile = tiles[targetCoord];
-    if (!destinationTile) return;
+    if (!targetTile) return;
 
     // Utiliser un switch pour gérer les différents types de tuiles
-    switch (destinationTile.type) {
+    switch (targetTile.type) {
       case "resource":
-        if (!destinationTile.collected && !resourcesCollected) {
-          collectResources(playerId, destinationTile);
+        if (!resourcesCollected) {
+          collectResources(playerId, targetTile);
           setResourcesCollected(true);
         }
         break;
@@ -146,7 +121,7 @@ const TargetMovement = ({ playerId, children }) => {
         return; // Sortir immédiatement après avoir géré la tuile de départ
 
       default:
-        console.warn(`Unhandled tile type: ${destinationTile.type}`);
+        console.warn(`Unhandled tile type: ${targetTile.type}`);
         break;
     }
 
@@ -154,7 +129,7 @@ const TargetMovement = ({ playerId, children }) => {
     finalizeMovement(playerId, targetTile);
 
     if (playerId === "player2") {
-      executeBotAction(tiles);
+      executeBotAction({});
     }
   };
 

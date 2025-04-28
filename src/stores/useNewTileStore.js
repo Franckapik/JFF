@@ -3,14 +3,9 @@ import { generateHexPositions } from '../utils/utils'; // Import the utility fun
 
 export const useTileStore = create((set, get) => ({
     tiles: {},
-    selectedTile: null,
     radius: 3, // Default radius
     spacing: 0.1, // Default spacing
     setTiles: (tiles) => set({ tiles }),
-    clearSelectedTile: () => {
-        console.log("Clearing selected tile"); // Log the action
-        set({ selectedTile: null });
-    },
     getTile: (coord) => get().tiles[coord],
     getNeighbors: (coord) => {
         const tile = get().tiles[coord];

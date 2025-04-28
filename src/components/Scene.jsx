@@ -32,10 +32,8 @@ const Scene = () => {
   }, [camera]);
 
   const handleTileClick = (tile) => {
-    // Utiliser directement "player1" comme playerId
     const playerId = "player1";
 
-    // Mettre à jour la tuile cible du véhicule sélectionné
     if (selectedVehicle.vehicleId) {
       setVehicleTargetTile(playerId, selectedVehicle.vehicleId, {
         coord: tile.coord,

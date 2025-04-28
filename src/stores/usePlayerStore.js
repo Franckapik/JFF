@@ -415,8 +415,6 @@ const usePlayerStore = create((set, get) => ({
 
   // Actions à effectuer à la fin d'un déplacement
   finalizeMovement: (playerId, currentTargetTile) => {
-    const clearSelectedTile = useTileStore.getState().clearSelectedTile; // Utiliser clearSelectedTile depuis useTileStore
-
     set((state) => {
       const playerVehicle = state.players[playerId].vehicles.ship;
 
@@ -433,15 +431,13 @@ const usePlayerStore = create((set, get) => ({
                 coord: currentTargetTile.coord,
                 progress: 100, // Marquer la progression comme terminée
                 isMoving: false, // Indiquer que le véhicule a cessé de se déplacer
+                targetTile: { position: null, coord: null }, // Effacer la tuile cible
               },
             },
           },
         },
-        hasReachedTarget: true, // Mettre à jour l'état global
       };
     });
-
-    clearSelectedTile(); // Désélectionner la tuile
   },
 
   // Méthode pour mettre à jour la tuile cible du véhicule sélectionné
@@ -453,10 +449,6 @@ const usePlayerStore = create((set, get) => ({
           : state.players[playerId].vehicles.drones.find((drone) => drone.id === vehicleId);
 
       if (vehicle && targetTile) {
-        const targetPosition = targetTile.position
-          ? new Vector3(targetTile.position.x, targetTile.position.y, targetTile.position.z)
-          : null;
-
         return {
           players: {
             ...state.players,
@@ -468,7 +460,7 @@ const usePlayerStore = create((set, get) => ({
                   ? {
                       ...vehicle,
                       targetTile: {
-                        position: targetPosition,
+                        position: targetTile.position,
                         coord: targetTile.coord,
                       },
                     }
@@ -477,7 +469,7 @@ const usePlayerStore = create((set, get) => ({
                         ? {
                             ...drone,
                             targetTile: {
-                              position: targetPosition,
+                              position: targetTile.position,
                               coord: targetTile.coord,
                             },
                           }
@@ -494,7 +486,7 @@ const usePlayerStore = create((set, get) => ({
     });
   },
 
-  moveVehicle: (playerId, vehicleId, newPosition, progress, targetTile) => {
+  moveVehicle: (playerId, vehicleId, newPosition, targetTile) => {
     set((state) => {
       const vehicle =
         vehicleId === "ship"
@@ -506,11 +498,22 @@ const usePlayerStore = create((set, get) => ({
         return state;
       }
 
+      // Calculer la progression en fonction de la distance parcourue
+      const targetPosition = targetTile?.position
+        ? new Vector3(targetTile.position.x, targetTile.position.y, targetTile.position.z)
+        : null;
+      const distance = targetPosition
+        ? new Vector3().subVectors(targetPosition, newPosition).length()
+        : 0;
+      const progress = targetPosition
+        ? (1 - distance / targetPosition.length()) * 100
+        : vehicle.progress;
+
       const updatedVehicle = {
         ...vehicle,
         position: newPosition,
         progress: Math.min(progress, 100), // Limiter la progression à 100%.
-        isMoving: progress < 100, // Indiquer si le véhicule est encore
+        isMoving: progress < 100, // Indiquer si le véhicule est encore en mouvement
         coord: progress === 100 && targetTile?.coord ? targetTile.coord : vehicle.coord,
         fuel: progress === 100 ? Math.max(vehicle.fuel - 10, 0) : vehicle.fuel,
       };
@@ -533,10 +536,8 @@ const usePlayerStore = create((set, get) => ({
       };
     });
   },
-
-  // ...other methods like updateShip, collectResources, repairVehicle, etc...
 }));
 
-export default usePlayerStore;
+export default usePlayerStore; // Assurez-vous que le store est exporté par défaut
 
 
