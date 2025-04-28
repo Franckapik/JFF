@@ -494,6 +494,47 @@ const usePlayerStore = create((set, get) => ({
     });
   },
 
+  moveVehicle: (playerId, vehicleId, newPosition, progress, targetTile) => {
+    set((state) => {
+      const vehicle =
+        vehicleId === "ship"
+          ? state.players[playerId].vehicles.ship
+          : state.players[playerId].vehicles.drones.find((drone) => drone.id === vehicleId);
+
+      if (!vehicle) {
+        console.warn(`Vehicle with ID '${vehicleId}' not found for player '${playerId}'.`);
+        return state;
+      }
+
+      const updatedVehicle = {
+        ...vehicle,
+        position: newPosition,
+        progress: Math.min(progress, 100), // Limiter la progression à 100%.
+        isMoving: progress < 100, // Indiquer si le véhicule est encore
+        coord: progress === 100 && targetTile?.coord ? targetTile.coord : vehicle.coord,
+        fuel: progress === 100 ? Math.max(vehicle.fuel - 10, 0) : vehicle.fuel,
+      };
+
+      return {
+        players: {
+          ...state.players,
+          [playerId]: {
+            ...state.players[playerId],
+            vehicles: {
+              ...state.players[playerId].vehicles,
+              [vehicleId === "ship" ? "ship" : "drones"]: vehicleId === "ship"
+                ? updatedVehicle
+                : state.players[playerId].vehicles.drones.map((drone) =>
+                    drone.id === vehicleId ? updatedVehicle : drone
+                  ),
+            },
+          },
+        },
+      };
+    });
+  },
+
+  // ...other methods like updateShip, collectResources, repairVehicle, etc...
 }));
 
 export default usePlayerStore;

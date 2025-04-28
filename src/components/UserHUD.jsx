@@ -5,58 +5,71 @@ import useBotStore from "../stores/useBotStore"; // Import BotStore
 import "../styles/App.css"; // Import CSS for styling
 
 const UserHUD = () => {
-  const selectedTileCoord = useTileStore((state) => state.selectedTile); // Get the selected tile's coordinate
-  const tile = useTileStore((state) => (selectedTileCoord ? state.tiles[selectedTileCoord] : null)); // Fetch the full tile data
   const players = usePlayerStore((state) => state.players); // Get all players
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
-  const { state, targetTile } = useBotStore(); // Get bot state and target tile
+  const { state: botState, targetTile: botTargetTile } = useBotStore(); // Get bot state and target tile
+
+  // Récupérer le véhicule sélectionné
+  const vehicle =
+    selectedVehicle.playerId && selectedVehicle.vehicleId
+      ? selectedVehicle.vehicleId === "ship"
+        ? players[selectedVehicle.playerId].vehicles.ship // Accès direct si c'est un ship
+        : players[selectedVehicle.playerId].vehicles.drones.find(
+            (drone) => drone.id === selectedVehicle.vehicleId
+          ) // Recherche dans le tableau si c'est un drone
+      : null;
+
+  // Récupérer la tuile cible du véhicule sélectionné
+  const targetTile = vehicle?.targetTile?.coord
+    ? useTileStore.getState().tiles[vehicle.targetTile.coord]
+    : null;
 
   return (
     <div className="user-hud">
       {/* Section: Tile Information */}
       <div className="hud-column">
-        <h3>Tuile Sélectionnée</h3>
-        {tile ? (
+        <h3>Tuile Cible</h3>
+        {targetTile ? (
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             <li>
-              <strong>Coord :</strong> {tile.coord || "N/A"}
+              <strong>Coord :</strong> {targetTile.coord || "N/A"}
             </li>
             <li>
-              <strong>Position :</strong> x: {tile.position?.x.toFixed(2) || "N/A"}, y:{" "}
-              {tile.position?.y.toFixed(2) || "N/A"}, z: {tile.position?.z.toFixed(2) || "N/A"}
+              <strong>Position :</strong> x: {targetTile.position?.x.toFixed(2) || "N/A"}, y:{" "}
+              {targetTile.position?.y.toFixed(2) || "N/A"}, z: {targetTile.position?.z.toFixed(2) || "N/A"}
             </li>
             <li>
-              <strong>Type :</strong> {tile.type || "N/A"}
+              <strong>Type :</strong> {targetTile.type || "N/A"}
             </li>
             <li>
-              <strong>Walkable :</strong> {tile.walkable ? "Oui" : "Non"}
+              <strong>Walkable :</strong> {targetTile.walkable ? "Oui" : "Non"}
             </li>
             <li>
-              <strong>Explored :</strong> {tile.explored ? "Oui" : "Non"}
+              <strong>Explored :</strong> {targetTile.explored ? "Oui" : "Non"}
             </li>
             <li>
-              <strong>Collected :</strong> {tile.collected ? "Oui" : "Non"}
+              <strong>Collected :</strong> {targetTile.collected ? "Oui" : "Non"}
             </li>
             <li>
-              <strong>Neighbors :</strong> {tile.neighbors?.join(", ") || "N/A"}
+              <strong>Neighbors :</strong> {targetTile.neighbors?.join(", ") || "N/A"}
             </li>
             <li>
               <strong>Resources:</strong>
               <ul>
                 <li>
-                  <strong>Food:</strong> {tile.resources?.food || 0}
+                  <strong>Food:</strong> {targetTile.resources?.food || 0}
                 </li>
                 <li>
-                  <strong>Debris:</strong> {tile.resources?.debris || 0}
+                  <strong>Debris:</strong> {targetTile.resources?.debris || 0}
                 </li>
                 <li>
-                  <strong>Special:</strong> {tile.resources?.special || 0} {/* Correct key */}
+                  <strong>Special:</strong> {targetTile.resources?.special || 0}
                 </li>
               </ul>
             </li>
           </ul>
         ) : (
-          <p>Aucune tuile sélectionnée</p> // Message when no tile is selected
+          <p>Aucune tuile cible</p> // Message when no target tile is set
         )}
       </div>
 
@@ -144,11 +157,11 @@ const UserHUD = () => {
         <h3>Informations du Bot</h3>
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           <li>
-            <strong>État :</strong> {state}
+            <strong>État :</strong> {botState}
           </li>
           <li>
             <strong>Tuile Cible :</strong> 
-            {Array.isArray(targetTile) ? targetTile.join(", ") : targetTile || "Aucune"}
+            {Array.isArray(botTargetTile) ? botTargetTile.join(", ") : botTargetTile || "Aucune"}
           </li>
         </ul>
       </div>

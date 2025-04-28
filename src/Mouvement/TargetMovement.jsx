@@ -10,7 +10,6 @@ import useMessageManager from "../hooks/useMessageManager"; // Gestion des messa
 const TargetMovement = ({ playerId, children }) => {
   // === Références et états locaux ===
   const groupRef = useRef(); // Référence au groupe 3D pour le mouvement
-  const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Index de la tuile cible actuelle
   const [resourcesCollected, setResourcesCollected] = useState(false); // Indique si les ressources ont été collectées
   const [repairApplied, setRepairApplied] = useState(false); // Indique si une réparation a été appliquée
   const [fuelApplied, setFuelApplied] = useState(false); // Indique si un ravitaillement a été appliqué
@@ -51,6 +50,7 @@ const TargetMovement = ({ playerId, children }) => {
 
   const calculatePath = usePlayerStore((state) => state.calculatePath);
   const finalizeMovement = usePlayerStore((state) => state.finalizeMovement);
+  const moveVehicle = usePlayerStore((state) => state.moveVehicle);
 
   // === Effets ===
 
@@ -61,7 +61,6 @@ const TargetMovement = ({ playerId, children }) => {
     if (targetTile && tiles[targetTile] && playerVehicle?.coord) {
       setClockRunning(true); // Démarrer l'horloge
       calculatePath(playerId, targetTile, tiles); // Utiliser la fonction du store
-      setCurrentTargetIndex(0); // Réinitialiser l'index
       setResourcesCollected(false); // Réinitialiser l'état de collecte des ressources
       setRepairApplied(false); // Réinitialiser l'état de réparation
       setFuelApplied(false); // Réinitialiser l'état de ravitaillement
@@ -84,70 +83,31 @@ const TargetMovement = ({ playerId, children }) => {
 
   // Déplacer le véhicule le long du chemin
   useFrame((_, delta) => {
-    // Si le chemin est vide, le groupe 3D n'est pas défini, le véhicule n'existe pas,
-    // ou si la cible finale a déjà été atteinte, on ne fait rien.
     if (!path || path.length === 0 || !groupRef.current || !playerVehicle || hasReachedTarget) return;
 
-    // Récupérer la tuile cible actuelle associée au véhicule.
     const targetTile = playerVehicle.targetTile;
 
-    // Vérifier si la tuile cible a une position et des coordonnées valides.
     if (targetTile?.position && targetTile?.coord) {
-      // Extraire la position cible.
       const targetPosition = targetTile.position;
-
-      // Calculer la direction entre la position actuelle du véhicule et la position cible.
       const direction = new Vector3().subVectors(targetPosition, groupRef.current.position);
-
-      // Calculer la distance entre la position actuelle et la position cible.
       const distance = direction.length();
 
-      // Si la distance est significative (supérieure à un seuil), déplacer le véhicule.
       if (distance > 0.01) {
-        // Normaliser la direction pour obtenir un vecteur unitaire.
         direction.normalize();
-
-        // Calculer la distance à parcourir pendant cette frame, en fonction de la vitesse et du delta (temps écoulé).
         const moveDistance = Math.min(speed * delta, distance);
-
-        // Déplacer la position du véhicule en ajoutant un vecteur directionnel multiplié par la distance à parcourir.
         groupRef.current.position.addScaledVector(direction, moveDistance);
 
-        // Calculer la progression du véhicule en pourcentage le long du chemin.
+        // Calculer la progression en pourcentage
         const progress =
-          ((currentTargetIndex + (1 - distance / targetPosition.length())) / path.length) * 100;
+          ((path.findIndex((tile) => tile.coord === targetTile.coord) +
+            (1 - distance / targetPosition.length())) /
+            path.length) *
+          100;
 
-        // Si la progression a changé de manière significative, mettre à jour l'état du véhicule.
-        if (Math.round(playerVehicle.progress) !== Math.round(progress)) {
-          updateShip(playerId, {
-            position: {
-              x: groupRef.current.position.x,
-              y: groupRef.current.position.y,
-              z: groupRef.current.position.z,
-            },
-            progress: Math.min(progress, 100), // Limiter la progression à 100%.
-            isMoving: true, // Indiquer que le véhicule est en mouvement.
-          });
-        }
-      } 
-      // Si la distance est négligeable et qu'il reste des étapes dans le chemin, passer à la prochaine tuile cible.
-      else if (currentTargetIndex < path.length - 1) {
-        // Incrémenter l'index de la cible actuelle.
-        setCurrentTargetIndex(currentTargetIndex + 1);
-
-        // Mettre à jour la position, les coordonnées et réduire le carburant du véhicule.
-        updateShip(playerId, {
-          position: {
-            x: targetTile.position.x,
-            y: targetTile.position.y,
-            z: targetTile.position.z,
-          },
-          coord: targetTile.coord,
-          fuel: Math.max(playerVehicle.fuel - 10, 0), // Réduire le carburant avec une limite minimale de 0.
-        });
-      } 
-      // Si la dernière tuile du chemin est atteinte, gérer l'arrivée à la cible.
-      else {
+        moveVehicle(playerId, "ship", groupRef.current.position, progress);
+      } else if (path.findIndex((tile) => tile.coord === targetTile.coord) < path.length - 1) {
+        moveVehicle(playerId, "ship", targetTile.position, 100, targetTile);
+      } else {
         handleTargetReached(targetTile, targetTile.coord);
       }
     }
