@@ -25,28 +25,31 @@ const usePlayerStore = create((set, get) => ({
             coord: null, // Coordonnée de la tuile
           },
         },
-        drones: [
-          {
-            id: 'drone1', // Add an ID for the drone
+        // Convertir le tableau de drones en objets séparés
+        drone1: {
+          id: 'drone1',
+          position: null,
+          coord: null,
+          isMoving: false,
+          progress: 0,
+          resources: { food: 0, debris: 0, special: 0 },
+          targetTile: {
             position: null,
             coord: null,
-            isMoving: false,
-            progress: 0,
-            resources: { food: 0, debris: 0, special: 0 }, // Add resources for drones
-            targetTile: {
-              position: null,
-              coord: null,
-            },
           },
-          {
-            id: 'drone2', // Add another drone with an ID
+        },
+        drone2: {
+          id: 'drone2',
+          position: null,
+          coord: null,
+          isMoving: false,
+          progress: 0,
+          resources: { food: 0, debris: 0, special: 0 },
+          targetTile: {
             position: null,
             coord: null,
-            isMoving: false,
-            progress: 0,
-            resources: { food: 0, debris: 0, special: 0 }, // Add resources for drones
           },
-        ],
+        },
       },
       score: {
         resources: { food: 0, debris: 0, special: 0 },
@@ -77,24 +80,31 @@ const usePlayerStore = create((set, get) => ({
             coord: null,
           },
         },
-        drones: [
-          {
-            id: 'drone3', // Add an ID for player 2's first drone
+        // Convertir le tableau de drones en objets séparés
+        drone3: {
+          id: 'drone3',
+          position: null,
+          coord: null,
+          isMoving: false,
+          progress: 0,
+          resources: { food: 0, debris: 0, special: 0 },
+          targetTile: {
             position: null,
             coord: null,
-            isMoving: false,
-            progress: 0,
-            resources: { food: 0, debris: 0, special: 0 }, // Add resources for drones
           },
-          {
-            id: 'drone4', // Add another drone for player 2
+        },
+        drone4: {
+          id: 'drone4',
+          position: null,
+          coord: null,
+          isMoving: false,
+          progress: 0,
+          resources: { food: 0, debris: 0, special: 0 },
+          targetTile: {
             position: null,
             coord: null,
-            isMoving: false,
-            progress: 0,
-            resources: { food: 0, debris: 0, special: 0 }, // Add resources for drones
           },
-        ],
+        },
       },
       score: {
         resources: { food: 0, debris: 0, special: 0 },
@@ -151,38 +161,78 @@ const usePlayerStore = create((set, get) => ({
 
   // === GESTION DES VÉHICULES ===
   /**
-   * Met à jour l'état d'un vaisseau avec de nouvelles propriétés
-   * Gère aussi le dépôt automatique des ressources à la base
+   * Met à jour l'état d'un véhicule avec de nouvelles propriétés
    * @param {string} playerId - ID du joueur
+   * @param {string} vehicleId - ID du véhicule (ship, drone1, drone2, etc.)
    * @param {Object} updates - Propriétés à mettre à jour
    */
-  updateShip: (playerId, updates) => {
+  updateVehicle: (playerId, vehicleId, updates) => {
     set((state) => {
-      const updatedState = updateVehicle(state, playerId, "ship", updates);
-
-      // Vérifier si le véhicule est sur la tuile de départ
-      const playerVehicle = updatedState.players[playerId].vehicles.ship;
-      if (
-        playerVehicle.coord &&
-        playerVehicle.coord === playerVehicle.startCoord &&
-        !playerVehicle.isMoving
-      ) {
-        const updatedScore = { ...updatedState.players[playerId].score.resources };
-        const shipResources = playerVehicle.resources;
-
-        // Ajouter les ressources du véhicule au score du joueur
+      const player = state.players[playerId];
+      if (!player) return state;
+      
+      const vehicle = player.vehicles[vehicleId];
+      if (!vehicle) {
+        console.warn(`Vehicle '${vehicleId}' not found for player '${playerId}'.`);
+        return state;
+      }
+      
+      const updatedVehicle = { ...vehicle, ...updates };
+      
+      // Logique spécifique pour les vaisseaux à la base (dépôt des ressources)
+      if (vehicleId === 'ship' && 
+          updatedVehicle.coord &&
+          updatedVehicle.coord === updatedVehicle.startCoord &&
+          !updatedVehicle.isMoving) {
+        // Mise à jour du score avec les ressources du vaisseau
+        const updatedScore = { ...player.score.resources };
+        const shipResources = updatedVehicle.resources;
+        
         updatedScore.food += shipResources.food;
         updatedScore.debris += shipResources.debris;
         updatedScore.special += shipResources.special;
-
-        // Réinitialiser les ressources du véhicule
-        return updateVehicle(updatedState, playerId, "ship", {
-          resources: { food: 0, debris: 0, special: 0 },
-        });
+        
+        // Réinitialiser les ressources du vaisseau
+        updatedVehicle.resources = { food: 0, debris: 0, special: 0 };
+        
+        return {
+          players: {
+            ...state.players,
+            [playerId]: {
+              ...player,
+              vehicles: {
+                ...player.vehicles,
+                [vehicleId]: updatedVehicle
+              },
+              score: {
+                ...player.score,
+                resources: updatedScore
+              }
+            }
+          }
+        };
       }
-
-      return updatedState;
+      
+      // Mise à jour standard du véhicule
+      return {
+        players: {
+          ...state.players,
+          [playerId]: {
+            ...player,
+            vehicles: {
+              ...player.vehicles,
+              [vehicleId]: updatedVehicle
+            }
+          }
+        }
+      };
     });
+  },
+
+  // Pour compatibilité avec le code existant
+  updateShip: (playerId, updates) => {
+    const updateVehicleFn = get().updateVehicle;
+    updateVehicleFn(playerId, "ship", updates);
   },
 
   /**
@@ -204,46 +254,33 @@ const usePlayerStore = create((set, get) => ({
    */
   setVehicleTargetTile: (playerId, vehicleId, targetTile) => {
     set((state) => {
-      const vehicle =
-        vehicleId === 'ship'
-          ? state.players[playerId].vehicles.ship
-          : state.players[playerId].vehicles.drones.find((drone) => drone.id === vehicleId);
-
-      if (vehicle && targetTile) {
-        return {
-          players: {
-            ...state.players,
-            [playerId]: {
-              ...state.players[playerId],
-              vehicles: {
-                ...state.players[playerId].vehicles,
-                [vehicleId === 'ship' ? 'ship' : 'drones']: vehicleId === 'ship'
-                  ? {
-                      ...vehicle,
-                      targetTile: {
-                        position: targetTile.position,
-                        coord: targetTile.coord,
-                      },
-                    }
-                  : state.players[playerId].vehicles.drones.map((drone) =>
-                      drone.id === vehicleId
-                        ? {
-                            ...drone,
-                            targetTile: {
-                              position: targetTile.position,
-                              coord: targetTile.coord,
-                            },
-                          }
-                        : drone
-                    ),
-              },
-            },
-          },
-        };
+      const player = state.players[playerId];
+      if (!player) return state;
+      
+      const vehicle = player.vehicles[vehicleId];
+      if (!vehicle) {
+        console.warn(`Vehicle '${vehicleId}' not found for player '${playerId}'.`);
+        return state;
       }
-
-      console.warn(`Vehicle with ID '${vehicleId}' not found for player '${playerId}'.`);
-      return state;
+      
+      return {
+        players: {
+          ...state.players,
+          [playerId]: {
+            ...player,
+            vehicles: {
+              ...player.vehicles,
+              [vehicleId]: {
+                ...vehicle,
+                targetTile: {
+                  position: targetTile.position,
+                  coord: targetTile.coord,
+                }
+              }
+            }
+          }
+        }
+      };
     });
   },
 
@@ -261,32 +298,51 @@ const usePlayerStore = create((set, get) => ({
 
   // === GESTION DES INTERACTIONS AVEC L'ENVIRONNEMENT ===
   /**
-   * Collecte les ressources d'une tuile
+   * Collecte les ressources d'une tuile pour un véhicule spécifique
    * @param {string} playerId - ID du joueur
+   * @param {string} vehicleId - ID du véhicule
    * @param {Object} destinationTile - Tuile contenant des ressources
    */
-  collectResources: (playerId, destinationTile) => {
+  collectResources: (playerId, vehicleId, destinationTile) => {
     set((state) => {
-      const playerVehicle = state.players[playerId].vehicles.ship;
-
+      const player = state.players[playerId];
+      if (!player) return state;
+      
+      const vehicle = player.vehicles[vehicleId || 'ship']; // Par défaut le vaisseau
+      if (!vehicle) return state;
+      
       if (!destinationTile.collected) {
-        // Mettre à jour les ressources du véhicule
         const updatedResources = {
-          food: playerVehicle.resources.food + (destinationTile.resources?.food || 0),
-          debris: playerVehicle.resources.debris + (destinationTile.resources?.debris || 0),
-          special: playerVehicle.resources.special + (destinationTile.resources?.special || 0),
+          food: vehicle.resources.food + (destinationTile.resources?.food || 0),
+          debris: vehicle.resources.debris + (destinationTile.resources?.debris || 0),
+          special: vehicle.resources.special + (destinationTile.resources?.special || 0),
         };
         
-        // Remarque: nous ne modifions plus la tuile ici
-        // Cette responsabilité est maintenant dans le TileStore
-
-        return updateVehicle(state, playerId, "ship", {
-          resources: updatedResources
-        });
+        return {
+          players: {
+            ...state.players,
+            [playerId]: {
+              ...player,
+              vehicles: {
+                ...player.vehicles,
+                [vehicleId || 'ship']: {
+                  ...vehicle,
+                  resources: updatedResources
+                }
+              }
+            }
+          }
+        };
       }
-
+      
       return state;
     });
+  },
+
+  // Pour compatibilité avec le code existant
+  collectResources: (playerId, destinationTile) => {
+    const collectResourcesFn = get().collectResources;
+    collectResourcesFn(playerId, 'ship', destinationTile);
   },
 
   /**

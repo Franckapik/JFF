@@ -28,14 +28,14 @@ const TargetMovement = ({ playerId, children }) => {
   const tiles = useTileStore((state) => state.tiles); // Obtenir les tuiles pour le calcul de chemin
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Véhicule sélectionné globalement
   const playerVehicles = usePlayerStore((state) => state.players[playerId]?.vehicles); // Véhicules du joueur
-  const updateShip = usePlayerStore((state) => state.updateShip); // Fonction pour mettre à jour le navire
+  const updateVehicle = usePlayerStore((state) => state.updateVehicle); // Fonction pour mettre à jour le navire
   
   const playerVehicle =
     playerId === "player2"
       ? playerVehicles?.ship
-      : selectedVehicle.playerId === playerId && selectedVehicle.vehicleId === "ship"
-      ? playerVehicles?.ship
-      : playerVehicles?.drones?.find((drone) => drone.id === selectedVehicle.vehicleId); // Véhicule sélectionné
+      : selectedVehicle.playerId === playerId 
+        ? playerVehicles[selectedVehicle.vehicleId]
+        : null;
 
   const setClockRunning = useGameStore((state) => state.setClockRunning); // Démarrer ou arrêter l'horloge globale
   const botTargetTile = useBotStore((state) => state.targetTile); // Tuile cible du bot
@@ -51,8 +51,9 @@ const TargetMovement = ({ playerId, children }) => {
   
   // Add the finalizeMovement functionality directly in the component
   const handleFinalizeMovement = (currentTargetTile) => {
-    if (playerId && playerVehicle) {
-      updateShip(playerId, {
+    if (playerId && playerVehicle && selectedVehicle.vehicleId) {
+      const vehicleId = selectedVehicle.vehicleId;
+      updateVehicle(playerId, vehicleId, {
         position: currentTargetTile.position,
         coord: currentTargetTile.coord,
         progress: 100, // Marquer la progression comme terminée
@@ -77,7 +78,7 @@ const TargetMovement = ({ playerId, children }) => {
     
     // Mettre à jour l'état du véhicule
     if (playerId && playerVehicle) {
-      updateShip(playerId, {
+      updateVehicle(playerId, selectedVehicle.vehicleId, {
         isMoving: true,
         path: pathData.path,
         totalDistance: pathData.totalDistance
@@ -143,7 +144,7 @@ const TargetMovement = ({ playerId, children }) => {
 
     // Vérifier si le véhicule a du carburant (optionnel)
     if (playerVehicle.fuel <= 0) {
-      updateShip(playerId, { isMoving: false });
+      updateVehicle(playerId, selectedVehicle.vehicleId, { isMoving: false });
       return;
     }
 
@@ -191,28 +192,32 @@ const TargetMovement = ({ playerId, children }) => {
       const progress = (distanceTraveled / totalPathDistance) * 100;
       
       // Mettre à jour la progression dans le store
-      updateShip(playerId, {
-        progress: Math.min(progress, 100).toFixed(2),
-      });
+      if (selectedVehicle.vehicleId) {
+        updateVehicle(playerId, selectedVehicle.vehicleId, {
+          progress: Math.min(progress, 100).toFixed(2),
+        });
+      }
       
     } else {
       // Le véhicule a atteint la tuile cible actuelle
       console.log("Reached tile:", currentTargetCoord, "Index:", currentTargetIndex, "Path length:", path.length);
       
       // Mettre à jour la position dans le store pour synchroniser
-      updateShip(playerId, {
-        position: {
-          x: currentTargetTile.position.x,
-          y: currentTargetTile.position.y,
-          z: currentTargetTile.position.z,
-        },
-        coord: currentTargetCoord,
-      });
+      if (selectedVehicle.vehicleId) {
+        updateVehicle(playerId, selectedVehicle.vehicleId, {
+          position: {
+            x: currentTargetTile.position.x,
+            y: currentTargetTile.position.y,
+            z: currentTargetTile.position.z,
+          },
+          coord: currentTargetCoord,
+        });
+      }
       
       if (currentTargetIndex < path.length - 1) {
         // Passer à la tuile suivante du chemin
         setCurrentTargetIndex(prev => prev + 1);
-        updateShip(playerId, { fuel: Math.max(playerVehicle.fuel - 5, 0) });
+        updateVehicle(playerId, selectedVehicle.vehicleId, { fuel: Math.max(playerVehicle.fuel - 5, 0) });
       } else {
         // Le véhicule a atteint la tuile finale
         if (!hasReachedTarget) {
