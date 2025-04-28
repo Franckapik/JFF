@@ -1,7 +1,4 @@
 import { create } from 'zustand';
-import { calculatePathData } from '../utils/utils'; // Import utility functions
-import { useTileStore } from '../stores/useNewTileStore'; // Import du store des tuiles
-import { Vector3 } from "three"; // Import Vector3 for 3D calculations
 
 // Fonction utilitaire pour mettre à jour un véhicule
 const updateVehicle = (state, playerId, vehicleId, updates) => {
@@ -449,56 +446,7 @@ const usePlayerStore = create((set, get) => ({
     });
   },
 
-  moveVehicle: (playerId, vehicleId, newPosition, targetTile) => {
-    set((state) => {
-      const vehicle =
-        vehicleId === "ship"
-          ? state.players[playerId].vehicles.ship
-          : state.players[playerId].vehicles.drones.find((drone) => drone.id === vehicleId);
 
-      if (!vehicle) {
-        console.warn(`Vehicle with ID '${vehicleId}' not found for player '${playerId}'.`);
-        return state;
-      }
-
-      // Calculer la progression en fonction de la distance parcourue
-      const targetPosition = targetTile?.position
-        ? new Vector3(targetTile.position.x, targetTile.position.y, targetTile.position.z)
-        : null;
-      const distance = targetPosition
-        ? new Vector3().subVectors(targetPosition, newPosition).length()
-        : 0;
-      const progress = targetPosition
-        ? (1 - distance / targetPosition.length()) * 100
-        : vehicle.progress;
-
-      const updatedVehicle = {
-        ...vehicle,
-        position: newPosition,
-        progress: Math.min(progress, 100), // Limiter la progression à 100%.
-        isMoving: progress < 100, // Indiquer si le véhicule est encore en mouvement
-        coord: progress === 100 && targetTile?.coord ? targetTile.coord : vehicle.coord,
-        fuel: progress === 100 ? Math.max(vehicle.fuel - 10, 0) : vehicle.fuel,
-      };
-
-      return {
-        players: {
-          ...state.players,
-          [playerId]: {
-            ...state.players[playerId],
-            vehicles: {
-              ...state.players[playerId].vehicles,
-              [vehicleId === "ship" ? "ship" : "drones"]: vehicleId === "ship"
-                ? updatedVehicle
-                : state.players[playerId].vehicles.drones.map((drone) =>
-                    drone.id === vehicleId ? updatedVehicle : drone
-                  ),
-            },
-          },
-        },
-      };
-    });
-  },
 }));
 
 export default usePlayerStore;

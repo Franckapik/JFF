@@ -8,9 +8,6 @@ import { Vector3 } from "three"; // Utilisation des vecteurs pour les calculs 3D
 const TargetMovement = ({ playerId, children }) => {
   // === Références et états locaux ===
   const groupRef = useRef(); // Référence au groupe 3D pour le mouvement
-  const [resourcesCollected, setResourcesCollected] = useState(false); // Indique si les ressources ont été collectées
-  const [repairApplied, setRepairApplied] = useState(false); // Indique si une réparation a été appliquée
-  const [fuelApplied, setFuelApplied] = useState(false); // Indique si un ravitaillement a été appliqué
   const [hasReachedTarget, setHasReachedTarget] = useState(false); // Indique si la cible a été atteinte
 
   const speed = 1; // Vitesse de déplacement (unités par seconde)
@@ -27,15 +24,7 @@ const TargetMovement = ({ playerId, children }) => {
 
   const setClockRunning = useGameStore((state) => state.setClockRunning); // Démarrer ou arrêter l'horloge globale
   const botTargetTile = useBotStore((state) => state.targetTile); // Tuile cible du bot
-  const executeBotAction = useBotStore((state) => state.execute); // Exécuter une action du bot
-
-  const collectResources = usePlayerStore((state) => state.collectResources);
-  const repairVehicle = usePlayerStore((state) => state.repairVehicle);
-  const refuelVehicle = usePlayerStore((state) => state.refuelVehicle);
-  const returnToBase = usePlayerStore((state) => state.returnToBase);
-  const calculatePath = usePlayerStore((state) => state.calculatePath);
-  const finalizeMovement = usePlayerStore((state) => state.finalizeMovement);
-  const moveVehicle = usePlayerStore((state) => state.moveVehicle);
+  const finalizeMovement = usePlayerStore((state) => state.finalizeMovement); // Fonction pour finaliser le mouvement
 
   // === Effets ===
 
@@ -45,13 +34,9 @@ const TargetMovement = ({ playerId, children }) => {
 
     if (targetTile && playerVehicle?.coord) {
       setClockRunning(true); // Démarrer l'horloge
-      calculatePath(playerId, targetTile, {}); // Utiliser la fonction du store
-      setResourcesCollected(false); // Réinitialiser l'état de collecte des ressources
-      setRepairApplied(false); // Réinitialiser l'état de réparation
-      setFuelApplied(false); // Réinitialiser l'état de ravitaillement
       setHasReachedTarget(false); // Réinitialiser l'état de cible atteinte
     }
-  }, [playerId, botTargetTile, playerVehicle?.coord, setClockRunning]);
+  }, [playerId, botTargetTile, playerVehicle?.coord, playerVehicle?.targetTile, setClockRunning]);
 
   // Effet : Définir la position initiale du véhicule
   useEffect(() => {
@@ -68,11 +53,11 @@ const TargetMovement = ({ playerId, children }) => {
 
   // Déplacer le véhicule le long du chemin
   useFrame((_, delta) => {
-    if (!playerVehicle || !playerVehicle.targetTile || hasReachedTarget) return;
+    if (!playerVehicle || !playerVehicle.targetTile) return;
 
     const targetTile = playerVehicle.targetTile;
 
-    if (targetTile?.position && targetTile?.coord) {
+    if (targetTile?.position) {
       const targetPosition = new Vector3(targetTile.position.x, targetTile.position.y, targetTile.position.z);
       const direction = new Vector3().subVectors(targetPosition, groupRef.current.position);
       const distance = direction.length();
@@ -81,46 +66,16 @@ const TargetMovement = ({ playerId, children }) => {
         direction.normalize();
         const moveDistance = Math.min(speed * delta, distance);
         groupRef.current.position.addScaledVector(direction, moveDistance);
+      } else if (!hasReachedTarget) {
+        setHasReachedTarget(true); // Marquer comme atteint
+        console.log("arrivé");
 
-        moveVehicle(playerId, selectedVehicle.vehicleId, groupRef.current.position, targetTile);
-      } else {
-        handleTargetReached(targetTile);
+        // Finaliser le mouvement du véhicule dans le store
+        finalizeMovement(playerId, targetTile);
       }
     }
   });
 
-  // === Gérer l'arrivée à la tuile cible ===
-  const handleTargetReached = (targetTile) => {
-    if (!targetTile) return;
-
-    switch (targetTile.type) {
-      case "resource":
-        collectResources(playerId, targetTile);
-        break;
-
-      case "repair":
-        repairVehicle(playerId);
-        break;
-
-      case "fuel":
-        refuelVehicle(playerId);
-        break;
-
-      case "depart":
-        returnToBase(playerId, targetTile);
-        return; // Sortir immédiatement après avoir géré la tuile de départ
-
-      default:
-        console.warn(`Unhandled tile type: ${targetTile.type}`);
-        break;
-    }
-
-    finalizeMovement(playerId, targetTile);
-
-    if (playerId === "player2") {
-      executeBotAction({});
-    }
-  };
 
   // === Rendu ===
   return <group ref={groupRef}>{children}</group>;
