@@ -9,20 +9,26 @@ const UserHUD = () => {
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
   const { state: botState, targetTile: botTargetTile } = useBotStore(); // Get bot state and target tile
 
-  // Récupérer le véhicule sélectionné
+  // Adapter pour la nouvelle structure de véhicules
   const vehicle =
     selectedVehicle.playerId && selectedVehicle.vehicleId
-      ? selectedVehicle.vehicleId === "ship"
-        ? players[selectedVehicle.playerId].vehicles.ship // Accès direct si c'est un ship
-        : players[selectedVehicle.playerId].vehicles.drones.find(
-            (drone) => drone.id === selectedVehicle.vehicleId
-          ) // Recherche dans le tableau si c'est un drone
+      ? players[selectedVehicle.playerId]?.vehicles[selectedVehicle.vehicleId]
       : null;
 
   // Récupérer la tuile cible du véhicule sélectionné
   const targetTile = vehicle?.targetTile?.coord
     ? useTileStore.getState().tiles[vehicle.targetTile.coord]
     : null;
+
+  /**
+   * Vérifie si un objet est un véhicule valide
+   * @param {Object} vehicle - L'objet à vérifier
+   * @param {string} key - La clé de l'objet
+   * @returns {boolean} - true si c'est un véhicule, false sinon
+   */
+  const isVehicle = (vehicle, key) => {
+    return vehicle && typeof vehicle === 'object' && vehicle.id && key !== 'drones';
+  };
 
   return (
     <div className="user-hud">
@@ -84,6 +90,30 @@ const UserHUD = () => {
             <li>
               <strong>Véhicule :</strong> {selectedVehicle.vehicleId}
             </li>
+            {vehicle && (
+              <>
+                <li>
+                  <strong>Position :</strong>{" "}
+                  {vehicle.position
+                    ? `x: ${vehicle.position.x.toFixed(2)}, y: ${vehicle.position.y.toFixed(
+                        2
+                      )}, z: ${vehicle.position.z.toFixed(2)} (Coord: ${vehicle.coord})`
+                    : "N/A"}
+                </li>
+                <li>
+                  <strong>En Mouvement :</strong> {vehicle.isMoving ? "Oui" : "Non"}
+                </li>
+                <li>
+                  <strong>Progression :</strong> {vehicle.progress}%
+                </li>
+                <li>
+                  <strong>Carburant :</strong> {vehicle.fuel || "N/A"}%
+                </li>
+                <li>
+                  <strong>Dommages :</strong> {vehicle.damage || "N/A"}%
+                </li>
+              </>
+            )}
           </ul>
         ) : (
           <p>Aucun véhicule sélectionné</p>
@@ -94,61 +124,68 @@ const UserHUD = () => {
       {Object.entries(players).map(([playerId, player]) => (
         <div className="hud-column" key={playerId}>
           <h3>Informations Joueur: {playerId}</h3>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            <li>
-              <strong>Véhicule (Ship):</strong>
-              <ul>
-                <li>
-                  <strong>Position:</strong>{" "}
-                  {player.vehicles.ship.position
-                    ? `x: ${player.vehicles.ship.position.x.toFixed(2)}, y: ${player.vehicles.ship.position.y.toFixed(
-                        2
-                      )}, z: ${player.vehicles.ship.position.z.toFixed(2)} (Coord: ${player.vehicles.ship.coord})`
-                    : "N/A"}
-                </li>
-                <li>
-                  <strong>En Mouvement:</strong> {player.vehicles.ship.isMoving ? "Oui" : "Non"}
-                </li>
-                <li>
-                  <strong>Progression:</strong> {player.vehicles.ship.progress}%
-                </li>
-                <li>
-                  <strong>Carburant:</strong> {player.vehicles.ship.fuel}%
-                </li>
-                <li>
-                  <strong>Dommages:</strong> {player.vehicles.ship.damage}%
-                </li>
-                <li>
-                  <strong>Ressources:</strong>
-                  <ul>
-                    <li>
-                      <strong>Nourriture:</strong> {player.vehicles.ship.resources.food || 0}
-                    </li>
-                    <li>
-                      <strong>Débris:</strong> {player.vehicles.ship.resources.debris || 0}
-                    </li>
-                    <li>
-                      <strong>Spécial:</strong> {player.vehicles.ship.resources.special || 0}
-                    </li>
-                  </ul>
-                </li>
-              </ul>
-            </li>
-            <li>
-              <strong>Ressources Joueur:</strong>
-              <ul>
-                <li>
-                  <strong>Nourriture:</strong> {player.score.resources.food}
-                </li>
-                <li>
-                  <strong>Débris:</strong> {player.score.resources.debris}
-                </li>
-                <li>
-                  <strong>Spécial:</strong> {player.score.resources.special}
-                </li>
-              </ul>
-            </li>
-          </ul>
+          <div className="scrollable-content">
+            <h4>Véhicules:</h4>
+            {Object.entries(player.vehicles).map(([vehicleId, vehicle]) => {
+              if (isVehicle(vehicle, vehicleId)) {
+                return (
+                  <div key={vehicleId} style={{ marginBottom: "15px" }}>
+                    <h5>{vehicleId === 'ship' ? 'Vaisseau' : `Drone ${vehicle.id}`}</h5>
+                    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                      <li>
+                        <strong>Position:</strong>{" "}
+                        {vehicle.position
+                          ? `x: ${vehicle.position.x.toFixed(2)}, y: ${vehicle.position.y.toFixed(
+                              2
+                            )}, z: ${vehicle.position.z.toFixed(2)} (Coord: ${vehicle.coord})`
+                          : "N/A"}
+                      </li>
+                      <li>
+                        <strong>En Mouvement:</strong> {vehicle.isMoving ? "Oui" : "Non"}
+                      </li>
+                      <li>
+                        <strong>Progression:</strong> {vehicle.progress}%
+                      </li>
+                      <li>
+                        <strong>Carburant:</strong> {vehicle.fuel || "N/A"}%
+                      </li>
+                      <li>
+                        <strong>Dommages:</strong> {vehicle.damage || "N/A"}%
+                      </li>
+                      <li>
+                        <strong>Ressources:</strong>
+                        <ul>
+                          <li>
+                            <strong>Nourriture:</strong> {vehicle.resources?.food || 0}
+                          </li>
+                          <li>
+                            <strong>Débris:</strong> {vehicle.resources?.debris || 0}
+                          </li>
+                          <li>
+                            <strong>Spécial:</strong> {vehicle.resources?.special || 0}
+                          </li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                );
+              }
+              return null;
+            })}
+
+            <h4>Ressources Joueur:</h4>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              <li>
+                <strong>Nourriture:</strong> {player.score.resources.food}
+              </li>
+              <li>
+                <strong>Débris:</strong> {player.score.resources.debris}
+              </li>
+              <li>
+                <strong>Spécial:</strong> {player.score.resources.special}
+              </li>
+            </ul>
+          </div>
         </div>
       ))}
 

@@ -14,6 +14,26 @@ const VehicleSelector = () => {
     selectVehicle(playerId, vehicleId); // Update the globally selected vehicle
   };
 
+  /**
+   * Vérifie si un objet est un véhicule valide
+   * @param {Object} vehicle - L'objet à vérifier
+   * @param {string} key - La clé de l'objet
+   * @returns {boolean} - true si c'est un véhicule, false sinon
+   */
+  const isVehicle = (vehicle, key) => {
+    return vehicle && typeof vehicle === 'object' && vehicle.id && key !== 'drones';
+  };
+
+  /**
+   * Détermine si un véhicule est sélectionné
+   * @param {string} playerId - ID du joueur
+   * @param {string} vehicleId - ID du véhicule
+   * @returns {boolean} - true si le véhicule est sélectionné
+   */
+  const isSelected = (playerId, vehicleId) => {
+    return selectedVehicle.playerId === playerId && selectedVehicle.vehicleId === vehicleId;
+  };
+
   return (
     <div className="vehicle-selector" style={{ position: "absolute", left: 10, top: 10, zIndex: 10 }}>
       <h3>Sélecteur de Véhicules</h3>
@@ -21,48 +41,34 @@ const VehicleSelector = () => {
         <div key={playerId} style={{ marginBottom: "20px" }}>
           <h4>Joueur: {playerId}</h4>
           <ul style={{ listStyle: "none", padding: 0 }}>
-            <li>
-              <button
-                onClick={() => handleSelect(playerId, "ship")}
-                style={{
-                  marginBottom: "10px",
-                  padding: "10px",
-                  cursor: "pointer",
-                  backgroundColor:
-                    selectedVehicle.playerId === playerId && selectedVehicle.vehicleId === "ship"
-                      ? "yellow"
-                      : "#f0f0f0", // Use a light gray color for unselected buttons
-                  color: "black", // Ensure text is always black for readability
-                  border: "1px solid black",
-                }}
-              >
-                Vaisseau (Ship)
-              </button>
-            </li>
-            {Array.isArray(player.vehicles.drones) && player.vehicles.drones.length > 0 ? (
-              player.vehicles.drones.map((drone) => (
-                <li key={drone.id}>
-                  <button
-                    onClick={() => handleSelect(playerId, drone.id)}
-                    style={{
-                      marginBottom: "10px",
-                      padding: "10px",
-                      cursor: "pointer",
-                      backgroundColor:
-                        selectedVehicle.playerId === playerId && selectedVehicle.vehicleId === drone.id
-                          ? "yellow"
-                          : "#f0f0f0", // Use a light gray color for unselected buttons
-                      color: "black", // Ensure text is always black for readability
-                      border: "1px solid black",
-                    }}
-                  >
-                    Drone {drone.id}
-                  </button>
-                </li>
-              ))
-            ) : (
-              <li>Aucun drone disponible</li>
-            )}
+            {/* Afficher tous les véhicules dans l'objet vehicles */}
+            {Object.entries(player.vehicles).map(([vehicleKey, vehicle]) => {
+              // Vérifier si c'est un véhicule valide (avec un ID)
+              if (isVehicle(vehicle, vehicleKey)) {
+                const displayName = vehicleKey === 'ship' 
+                  ? 'Vaisseau (Ship)' 
+                  : `Drone ${vehicle.id}`;
+                  
+                return (
+                  <li key={vehicleKey}>
+                    <button
+                      onClick={() => handleSelect(playerId, vehicleKey)}
+                      style={{
+                        marginBottom: "10px",
+                        padding: "10px",
+                        cursor: "pointer",
+                        backgroundColor: isSelected(playerId, vehicleKey) ? "yellow" : "#f0f0f0",
+                        color: "black",
+                        border: "1px solid black",
+                      }}
+                    >
+                      {displayName}
+                    </button>
+                  </li>
+                );
+              }
+              return null;
+            })}
           </ul>
         </div>
       ))}
