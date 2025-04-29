@@ -4,7 +4,7 @@ import { useThree } from "@react-three/fiber";
 import Tile from "./Tile";
 import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
-import TargetMovement from "../Mouvement/TargetMovement"; // Import TargetMovement
+import ShipMovement from "../Mouvement/ShipMovement"; // Changé de TargetMovement à ShipMovement
 
 const Scene = () => {
   const initializeTiles = useTileStore((state) => state.initializeTiles); // Zustand initializer for tiles
@@ -50,22 +50,22 @@ const Scene = () => {
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
       {Object.keys(tiles).length > 0 && (
         <>
-          <TargetMovement playerId="player1">
+          <ShipMovement playerId="player1"> {/* Changé de TargetMovement à ShipMovement */}
             <mesh castShadow>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
               <meshStandardMaterial
                 color={selectedVehicle.playerId === "player1" && selectedVehicle.vehicleId === "ship" ? "yellow" : "blue"}
               />
             </mesh>
-          </TargetMovement>
-          <TargetMovement playerId="player2">
+          </ShipMovement>
+          <ShipMovement playerId="player2"> {/* Changé de TargetMovement à ShipMovement */}
             <mesh castShadow>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
               <meshStandardMaterial
                 color={selectedVehicle.playerId === "player2" && selectedVehicle.vehicleId === "ship" ? "yellow" : "red"}
               />
             </mesh>
-          </TargetMovement>
+          </ShipMovement>
         </>
       )}
       {Object.values(tiles)
