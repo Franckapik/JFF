@@ -32,9 +32,6 @@ const ShipMovement = ({ playerId, children }) => {
   const consumeFuel = usePlayerStore(state => state.consumeFuel);
   
   const botStore = useBotStore();
-  const botTargetTile = useBotStore(state => 
-    playerId === "player2" ? state.bots?.player2?.ship?.targetTile : null
-  );
   
   const playerVehicle =
     playerId === "player2"
@@ -86,9 +83,7 @@ const ShipMovement = ({ playerId, children }) => {
       return;
     }
 
-    const targetTile = playerId === "player2" 
-      ? botTargetTile 
-      : playerVehicle.targetTile;
+    const targetTile = playerVehicle.targetTile;
         
     if (!targetTile || !targetTile.coord) {
       console.log(`Missing target tile for ${playerId}:`, targetTile);
@@ -121,14 +116,14 @@ const ShipMovement = ({ playerId, children }) => {
   }, [playerVehicle, isInitialPositionSet]);
 
   useEffect(() => {
-    const targetTile = playerId === "player2" ? botTargetTile : playerVehicle?.targetTile;
+    const targetTile = playerVehicle?.targetTile;
 
     if (targetTile && targetTile.coord && playerVehicle && Object.keys(tiles).length > 0 && isInitialPositionSet) {
       console.log(`[${playerId}] Target changed, recalculating path to:`, targetTile.coord);
       setClockRunning(true);
       setTimeout(recalculatePath, 100);
     }
-  }, [playerId, botTargetTile, playerVehicle?.targetTile?.coord, isInitialPositionSet, Object.keys(tiles).length]);
+  }, [playerId, playerVehicle?.targetTile?.coord, isInitialPositionSet, Object.keys(tiles).length]);
 
   // === Boucle de rendu (useFrame) ===
   useFrame((_, delta) => {

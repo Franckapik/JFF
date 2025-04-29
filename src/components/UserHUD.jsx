@@ -8,7 +8,7 @@ const UserHUD = () => {
   const players = usePlayerStore((state) => state.players); // Get all players
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
   const botState = useBotStore(state => state.bots?.player2?.ship?.currentState || 'unknown');
-  const botTargetTile = useBotStore(state => state.bots?.player2?.ship?.targetTile);
+  const botTargetTile = players.player2?.vehicles.ship?.targetTile;
 
   // Adapter pour la nouvelle structure de véhicules
   const vehicle =
@@ -158,13 +158,7 @@ const UserHUD = () => {
           </li>
           <li>
             <strong>Tuile Cible :</strong> 
-            {botTargetTile ? 
-              (typeof botTargetTile === 'string' ? 
-                botTargetTile : 
-                botTargetTile.coord || 'Format inconnu'
-              ) : 
-              'Aucune'
-            }
+            {botTargetTile?.coord || 'Aucune'}
           </li>
         </ul>
       </div>

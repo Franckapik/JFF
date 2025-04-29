@@ -28,7 +28,7 @@ const useBotStore = create((set, get) => ({
       ship: {
         currentState: BOT_STATES.IDLE,
         previousState: null,
-        targetTile: null,
+        // Suppression de targetTile ici, nous utiliserons uniquement celle de playerStore
         memory: {
           exploredTiles: [], // Coordinates of explored tiles
           knownResources: [], // Resource locations
@@ -265,13 +265,13 @@ const useBotStore = create((set, get) => ({
 
     console.log(`Bot ${playerId}/${vehicleId} moving to random tile:`, randomTile.coord);
 
-    // Initialiser le mouvement via PlayerStore
+    // Initialiser le mouvement via PlayerStore - c'est le seul endroit où la cible est définie
     usePlayerStore.getState().moveToTile(playerId, vehicleId, {
       position: randomTile.position,
       coord: randomTile.coord
     });
 
-    // Mettre à jour l'état du bot SANS la targetTile de niveau supérieur
+    // Mettre à jour l'état du bot SANS stocker targetTile en double
     set((state) => {
       const botVehicle = state.bots[playerId][vehicleId];
       if (!botVehicle) return state;
@@ -283,7 +283,6 @@ const useBotStore = create((set, get) => ({
             ...state.bots[playerId],
             [vehicleId]: {
               ...botVehicle,
-              targetTile: randomTile,
               currentState: BOT_STATES.EXPLORING,
               lastActionTime: Date.now(),
             },
