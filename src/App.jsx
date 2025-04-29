@@ -7,22 +7,9 @@ import UserHUD from "./components/UserHUD";
 import VehicleSelector from "./components/VehicleSelector"; // Import VehicleSelector
 import MessageSelector from "./components/MessageSelector"; // Import MessageSelector
 import Clock from "./components/Clock"; // Import Clock
-import BotManager from "./managers/BotManager"; // Import BotManager
-import { useTileStore } from "./stores/useNewTileStore"; // Import tile store
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const botManager = BotManager(); // Initialize BotManager
-  const tiles = useTileStore((state) => state.tiles); // Access tiles
-
-  useEffect(() => {
-    if (Object.keys(tiles).length > 0) {
-      console.log("[App] Tiles are ready. Starting bot action...");
-      botManager.performAction(); // Démarrer la première action du bot
-    } else {
-      console.log("[App] Waiting for tiles to be ready...");
-    }
-  }, [tiles, botManager]);
 
   return (
     <div className="app-container">

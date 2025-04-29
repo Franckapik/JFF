@@ -347,11 +347,6 @@ const usePlayerStore = create((set, get) => ({
     });
   },
 
-  // Pour compatibilité avec le code existant
-  collectResourcesLegacy: (playerId, destinationTile) => {
-    get().collectResources(playerId, 'ship', destinationTile);
-  },
-
   /**
    * Répare un véhicule (remise à zéro des dégâts)
    * @param {string} playerId - ID du joueur
