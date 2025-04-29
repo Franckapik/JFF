@@ -10,23 +10,23 @@ const usePlayerStore = create((set, get) => ({
       id: 'player1',
       vehicles: {
         ship: {
-          id: 'ship1', // Unique ID for player 1's ship
+          id: 'ship1',
           fuel: 100,
           damage: 20,
-          position: null, // Initialize as null until tiles are available
+          position: null,
           coord: null,
           isMoving: false,
           progress: 0,
-          totalDistance: 0, // Total distance for the current path
-          path: [], // Store the calculated path
+          totalDistance: 0,
+          path: [],
           resources: { food: 0, debris: 0, special: 0 },
-          startCoord: null, // Initialize as null until tiles are available
+          startCoord: null,
           targetTile: {
-            position: null, // Vecteur 3D pour la position
-            coord: null, // Coordonnée de la tuile
+            position: null,
+            coord: null,
           },
+          maxCapacity: 100, // Ajout de la capacité maximale
         },
-        // Convertir le tableau de drones en objets séparés
         drone1: {
           id: 'drone1',
           position: null,
@@ -38,6 +38,7 @@ const usePlayerStore = create((set, get) => ({
             position: null,
             coord: null,
           },
+          maxCapacity: 50, // Capacité maximale spécifique au drone
         },
         drone2: {
           id: 'drone2',
@@ -50,6 +51,7 @@ const usePlayerStore = create((set, get) => ({
             position: null,
             coord: null,
           },
+          maxCapacity: 50, // Capacité maximale spécifique au drone
         },
       },
       score: {
@@ -327,6 +329,21 @@ const usePlayerStore = create((set, get) => ({
     };
   });
  },
+
+  checkResourceCapacity: (playerId, vehicleId) => {
+    const player = get().players[playerId];
+    const vehicle = player.vehicles[vehicleId];
+
+    const totalResources =
+      vehicle.resources.food +
+      vehicle.resources.debris +
+      vehicle.resources.special;
+
+    if (totalResources >= vehicle.maxCapacity) {
+      get().moveToTile(playerId, vehicleId, { coord: vehicle.startCoord });
+    }
+  },
+
   // === GESTION DES INTERACTIONS AVEC L'ENVIRONNEMENT ===
   /**
    * Collecte les ressources d'une tuile pour un véhicule spécifique
