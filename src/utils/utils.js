@@ -143,8 +143,58 @@ export function generateInitialDrones(count, spacing = 1) {
   return drones; // Always return an array
 }
 
-export function findPath(startCoord, targetCoord, tiles) {
-  console.log("Finding path from", startCoord, "to", targetCoord);
+/**
+ * Fonction utilitaire pour mettre à jour un véhicule dans l'état du store
+ * @param {Object} state - L'état actuel du store
+ * @param {string} playerId - L'ID du joueur
+ * @param {string} vehicleId - L'ID du véhicule (ship ou drone ID)
+ * @param {Object} updates - Les propriétés à mettre à jour
+ * @returns {Object} Le nouvel état avec les mises à jour
+ */
+export const updateVehicle = (state, playerId, vehicleId, updates) => {
+  const vehicle =
+    vehicleId === "ship"
+      ? state.players[playerId].vehicles.ship
+      : state.players[playerId].vehicles.drones.find((drone) => drone.id === vehicleId);
+
+  if (!vehicle) {
+    console.warn(`Vehicle with ID '${vehicleId}' not found for player '${playerId}'.`);
+    return state;
+  }
+
+  const updatedVehicle = {
+    ...vehicle,
+    ...updates,
+  };
+
+  return {
+    ...state,
+    players: {
+      ...state.players,
+      [playerId]: {
+        ...state.players[playerId],
+        vehicles: {
+          ...state.players[playerId].vehicles,
+          [vehicleId === "ship" ? "ship" : "drones"]:
+            vehicleId === "ship"
+              ? updatedVehicle
+              : state.players[playerId].vehicles.drones.map((drone) =>
+                  drone.id === vehicleId ? updatedVehicle : drone
+                ),
+        },
+      },
+    },
+  };
+};
+
+/**
+ * Find a path between two hex coordinates using breadth-first search
+ * @param {string} startCoord - Starting coordinate (e.g., "A1")
+ * @param {string} targetCoord - Target coordinate (e.g., "B2")
+ * @param {Object} tiles - Map of all tiles
+ * @returns {Array} Array of coordinates representing the path
+ */
+export const findPath = (startCoord, targetCoord, tiles) => {
   const queue = [[startCoord]];
   const visited = new Set();
 
@@ -153,8 +203,7 @@ export function findPath(startCoord, targetCoord, tiles) {
     const currentCoord = path[path.length - 1];
 
     if (currentCoord === targetCoord) {
-      console.log("Path found:", path);
-      return path; // Return the path if the target is reached
+      return path;
     }
 
     if (!visited.has(currentCoord)) {
@@ -162,52 +211,80 @@ export function findPath(startCoord, targetCoord, tiles) {
       const neighbors = tiles[currentCoord]?.neighbors || [];
       neighbors.forEach((neighbor) => {
         if (!visited.has(neighbor) && tiles[neighbor]?.walkable !== false) {
-          queue.push([...path, neighbor]); // Add the neighbor to the path
+          queue.push([...path, neighbor]);
         }
       });
     }
   }
 
-  console.log("No path found");
-  return []; // Return an empty array if no path is found
-}
+  return [];
+};
 
-export function calculatePathData(currentTile, targetTile, tiles) {
-  const path = findPath(currentTile.coord, targetTile.coord, tiles);
-
+/**
+ * Calculate the total distance of a path
+ * @param {Array} path - Array of coordinates representing the path
+ * @param {Object} tiles - Map of all tiles
+ * @returns {number} Total distance of the path
+ */
+export const calculatePathDistance = (path, tiles) => {
+  if (!path || path.length < 2) return 0;
+  
   let totalDistance = 0;
   for (let i = 0; i < path.length - 1; i++) {
     const tileA = tiles[path[i]];
     const tileB = tiles[path[i + 1]];
-    totalDistance += new Vector3(tileA.position.x, tileA.position.y, tileA.position.z).distanceTo(
-      new Vector3(tileB.position.x, tileB.position.y, tileB.position.z)
-    );
+    if (tileA && tileB) {
+      totalDistance += new Vector3(tileA.position.x, tileA.position.y, tileA.position.z)
+        .distanceTo(new Vector3(tileB.position.x, tileB.position.y, tileB.position.z));
+    }
   }
+  
+  return totalDistance;
+};
 
-  return { path, totalDistance };
-}
-
-// Remove the getInitialVehiclePosition function
-// Instead, search for tiles with type "depart" directly in the store or logic where needed.
-
-export function calculatePath(tiles, selectedTile) {
-  const playerVehicle = usePlayerStore.getState().players.player1.vehicles.ship; // Access player vehicle
-  const setPlayerVehicleProgress = usePlayerStore.getState().setTargetVehicleProgress; // Access progress setter
-
-  if (!playerVehicle || !selectedTile) return { path: [], totalDistance: 0 };
-
-  const currentTile = Object.values(tiles).find(
+/**
+ * Find the current tile based on a 3D position
+ * @param {Object} position - Position {x, y, z} to check
+ * @param {Object} tiles - Map of all tiles
+ * @returns {Object|null} The tile at this position or null if not found
+ */
+export const findTileAtPosition = (position, tiles) => {
+  return Object.values(tiles).find(
     (tile) =>
-      Math.abs(tile.position.x - playerVehicle.position.x) < 0.1 &&
-      Math.abs(tile.position.z - playerVehicle.position.z) < 0.1
+      Math.abs(tile.position.x - position.x) < 0.3 &&
+      Math.abs(tile.position.z - position.z) < 0.3
   );
-  const targetTile = tiles[selectedTile];
+};
 
-  if (currentTile && targetTile) {
-    const { path, totalDistance } = calculatePathData(currentTile, targetTile, tiles);
-    setPlayerVehicleProgress(0, totalDistance); // Reset progress and set total distance
-    return { path, totalDistance };
+/**
+ * Calculate path from current position to target
+ * @param {Object} currentPosition - Current position {x, y, z}
+ * @param {string} targetCoord - Target coordinate
+ * @param {Object} tiles - Map of all tiles
+ * @param {string} fallbackCoord - Fallback coordinate if current position doesn't match a tile
+ * @returns {Object} Path data {path, totalDistance}
+ */
+export const calculatePath = (currentPosition, targetCoord, tiles, fallbackCoord) => {
+  // Find the tile at current position
+  const currentTile = findTileAtPosition(currentPosition, tiles);
+  
+  let path = [];
+  if (currentTile) {
+    path = findPath(currentTile.coord, targetCoord, tiles);
+  } else if (fallbackCoord) {
+    // Use fallback coordinate if we can't find a tile at current position
+    path = findPath(fallbackCoord, targetCoord, tiles);
   }
+  
+  if (!path || path.length === 0) {
+    return { path: [], totalDistance: 0 };
+  }
+  
+  const totalDistance = calculatePathDistance(path, tiles);
+  
+  return { path, totalDistance };
+};
 
-  return { path: [], totalDistance: 0 };
-}
+
+
+

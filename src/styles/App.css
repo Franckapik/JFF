@@ -441,3 +441,81 @@
 .close-button:hover {
   background-color: #0056b3;
 }
+
+/* Bot Controls Styles */
+.bot-controls-container {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 5px;
+  padding: 10px;
+  color: white;
+  width: 220px;
+}
+
+.bot-controls h3 {
+  margin-top: 0;
+  text-align: center;
+  color: #4CAF50;
+}
+
+.bot-status {
+  margin-bottom: 10px;
+}
+
+.bot-status div {
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.bot-status .active {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.bot-status .inactive {
+  color: #F44336;
+  font-weight: bold;
+}
+
+.bot-status .state-exploring {
+  color: #2196F3;
+  font-weight: bold;
+}
+
+.bot-status .state-collecting {
+  color: #FFC107;
+  font-weight: bold;
+}
+
+.bot-status .state-returning {
+  color: #9C27B0;
+  font-weight: bold;
+}
+
+.bot-controls button {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.bot-controls button.start {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.bot-controls button.stop {
+  background-color: #F44336;
+  color: white;
+}
+
+.bot-controls button:hover {
+  opacity: 0.9;
+}

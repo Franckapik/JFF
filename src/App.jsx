@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
 import "./styles/App.css";
@@ -7,6 +7,7 @@ import UserHUD from "./components/UserHUD";
 import VehicleSelector from "./components/VehicleSelector"; // Import VehicleSelector
 import MessageSelector from "./components/MessageSelector"; // Import MessageSelector
 import Clock from "./components/Clock"; // Import Clock
+import BotControls from "./components/BotControls"; // Ajout du composant BotControls
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -21,6 +22,11 @@ const App = () => {
       {/* New container for MessageSelector */}
       <div className="message-selector-container">
         <MessageSelector />
+      </div>
+
+      {/* Bot Controls */}
+      <div className="bot-controls-container">
+        <BotControls />
       </div>
 
       {/* Main content area */}

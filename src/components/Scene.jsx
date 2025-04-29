@@ -1,37 +1,71 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { GridHelper } from "three";
-import { useThree } from "@react-three/fiber";
+import { useThree, useFrame } from "@react-three/fiber";
 import Tile from "./Tile";
 import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
-import TargetMovement from "../Mouvement/TargetMovement"; // Import TargetMovement
+import useBotStore from "../stores/useBotStore";
+import ShipMovement from "../Mouvement/ShipMovement";
 
 const Scene = () => {
-  const initializeTiles = useTileStore((state) => state.initializeTiles); // Zustand initializer for tiles
-  const tiles = useTileStore((state) => state.tiles); // Zustand tiles state
-  const initializePlayer = usePlayerStore((state) => state.initializePlayer); // Player initialization method
-  const shipPosition = usePlayerStore((state) => state.players.player1.vehicles.ship.position); // Ship position
-  const setSelectedTile = useTileStore((state) => state.setSelectedTile); // Zustand setter for selectedTile
-  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
+  const initializeTiles = useTileStore((state) => state.initializeTiles);
+  const tiles = useTileStore((state) => state.tiles);
+  const initializePlayer = usePlayerStore((state) => state.initializePlayer);
+  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
+  const moveToTile = usePlayerStore((state) => state.moveToTile);
+  const initializeBot = useBotStore((state) => state.initializeBot);
+  const processBot = useBotStore((state) => state.processBot);
+  
+  const botInitialized = useRef(false);
 
+  // Initialize tiles
   useEffect(() => {
-    initializeTiles(); // Initialize tiles with default radius and spacing
+    console.log("[Scene] Initializing tiles...");
+    initializeTiles();
   }, [initializeTiles]);
 
+  // Initialize players
   useEffect(() => {
     if (Object.keys(tiles).length > 0) {
-      initializePlayer(tiles); // Initialize player once tiles are available
+      console.log("[Scene] Initializing players with tiles:", tiles);
+      initializePlayer(tiles);
+      
+      // Initialize bot after players are set up
+      if (!botInitialized.current) {
+        console.log("[Scene] Initializing bot...");
+        initializeBot();
+        botInitialized.current = true;
+      }
     }
-  }, [tiles, initializePlayer]);
+  }, [tiles, initializePlayer, initializeBot]);
 
+  // Process bot in real-time using useFrame with throttling
+  const lastBotProcess = useRef(Date.now());
+  useFrame((state, delta) => {
+    const now = Date.now();
+    // Process bot every 500ms to avoid too frequent updates
+    if (now - lastBotProcess.current > 500) {
+      processBot();
+      lastBotProcess.current = now;
+    }
+  });
+
+  // Camera setup
   const { camera } = useThree();
   useEffect(() => {
-    camera.position.set(0, 10, 10); // Adjusted camera position for better visibility
-    camera.lookAt(0, 0, 0); // Make the camera look at the center of the scene
+    camera.position.set(0, 10, 10);
+    camera.lookAt(0, 0, 0);
   }, [camera]);
 
-  const handleTileClick = (tileCoord) => {
-    setSelectedTile(tileCoord); // Store the clicked tile's coordinate
+  const handleTileClick = (tile) => {
+    const playerId = "player1";
+
+    if (selectedVehicle.vehicleId) {
+      moveToTile(playerId, selectedVehicle.vehicleId, {
+        coord: tile.coord,
+        position: tile.position,
+      });
+    }
   };
 
   return (
@@ -42,22 +76,22 @@ const Scene = () => {
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
       {Object.keys(tiles).length > 0 && (
         <>
-          <TargetMovement playerId="player1">
+          <ShipMovement playerId="player1"> {/* Changé de TargetMovement à ShipMovement */}
             <mesh castShadow>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
               <meshStandardMaterial
                 color={selectedVehicle.playerId === "player1" && selectedVehicle.vehicleId === "ship" ? "yellow" : "blue"}
               />
             </mesh>
-          </TargetMovement>
-          <TargetMovement playerId="player2">
+          </ShipMovement>
+          <ShipMovement playerId="player2"> {/* Changé de TargetMovement à ShipMovement */}
             <mesh castShadow>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
               <meshStandardMaterial
                 color={selectedVehicle.playerId === "player2" && selectedVehicle.vehicleId === "ship" ? "yellow" : "red"}
               />
             </mesh>
-          </TargetMovement>
+          </ShipMovement>
         </>
       )}
       {Object.values(tiles)
@@ -68,7 +102,7 @@ const Scene = () => {
             position={[tile.position.x, 0, tile.position.z]}
             radius={1}
             color={tile.color}
-            onClick={() => handleTileClick(tile.coord)}
+            onClick={() => handleTileClick(tile)} // Passer l'objet complet de la tuile
           />
         ))}
       {Object.values(tiles)
