@@ -29,6 +29,7 @@ const ShipMovement = ({ playerId, children }) => {
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
   const playerVehicles = usePlayerStore((state) => state.players[playerId]?.vehicles);
   const updateVehicle = usePlayerStore((state) => state.updateVehicle);
+  const consumeFuel = usePlayerStore(state => state.consumeFuel);
   
   const playerVehicle =
     playerId === "player2"
@@ -190,7 +191,7 @@ const ShipMovement = ({ playerId, children }) => {
       
       if (currentTargetIndex < path.length - 1) {
         setCurrentTargetIndex(prev => prev + 1);
-        updateVehicle(playerId, selectedVehicle.vehicleId, { fuel: Math.max(playerVehicle.fuel - 5, 0) });
+        consumeFuel(playerId, selectedVehicle.vehicleId);
       } else {
         if (!hasReachedTarget) {
           setHasReachedTarget(true);

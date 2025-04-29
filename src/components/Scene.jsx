@@ -11,7 +11,7 @@ const Scene = () => {
   const tiles = useTileStore((state) => state.tiles); // Zustand tiles state
   const initializePlayer = usePlayerStore((state) => state.initializePlayer); // Player initialization method
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
-  const setVehicleTargetTile = usePlayerStore((state) => state.setVehicleTargetTile); // Setter for vehicle target tile
+  const moveToTile = usePlayerStore((state) => state.moveToTile); // Updated to use the new method name
 
   useEffect(() => {
     console.log("[Scene] Initializing tiles...");
@@ -35,7 +35,7 @@ const Scene = () => {
     const playerId = "player1";
 
     if (selectedVehicle.vehicleId) {
-      setVehicleTargetTile(playerId, selectedVehicle.vehicleId, {
+      moveToTile(playerId, selectedVehicle.vehicleId, {
         coord: tile.coord,
         position: tile.position,
       });

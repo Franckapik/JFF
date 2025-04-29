@@ -231,8 +231,7 @@ const usePlayerStore = create((set, get) => ({
 
   // Pour compatibilité avec le code existant
   updateShip: (playerId, updates) => {
-    const updateVehicleFn = get().updateVehicle;
-    updateVehicleFn(playerId, "ship", updates);
+    get().updateVehicle(playerId, "ship", updates);
   },
 
   /**
@@ -247,41 +246,18 @@ const usePlayerStore = create((set, get) => ({
   },
 
   /**
-   * Met à jour la tuile cible d'un véhicule
+   * Met à jour la tuile cible d'un véhicule et initie un mouvement
    * @param {string} playerId - ID du joueur
    * @param {string} vehicleId - ID du véhicule
    * @param {Object} targetTile - Tuile cible
    */
-  setVehicleTargetTile: (playerId, vehicleId, targetTile) => {
-    set((state) => {
-      const player = state.players[playerId];
-      if (!player) return state;
-      
-      const vehicle = player.vehicles[vehicleId];
-      if (!vehicle) {
-        console.warn(`Vehicle '${vehicleId}' not found for player '${playerId}'.`);
-        return state;
+  moveToTile: (playerId, vehicleId, targetTile) => {
+    set((state) => updateVehicle(state, playerId, vehicleId, {
+      targetTile: {
+        position: targetTile.position,
+        coord: targetTile.coord,
       }
-      
-      return {
-        players: {
-          ...state.players,
-          [playerId]: {
-            ...player,
-            vehicles: {
-              ...player.vehicles,
-              [vehicleId]: {
-                ...vehicle,
-                targetTile: {
-                  position: targetTile.position,
-                  coord: targetTile.coord,
-                }
-              }
-            }
-          }
-        }
-      };
-    });
+    }));
   },
 
   // === GESTION DES DÉPLACEMENTS ===
@@ -304,45 +280,30 @@ const usePlayerStore = create((set, get) => ({
    * @param {Object} destinationTile - Tuile contenant des ressources
    */
   collectResources: (playerId, vehicleId, destinationTile) => {
+    if (destinationTile.collected) return;
+    
     set((state) => {
       const player = state.players[playerId];
       if (!player) return state;
       
-      const vehicle = player.vehicles[vehicleId || 'ship']; // Par défaut le vaisseau
+      const vehicle = player.vehicles[vehicleId || 'ship'];
       if (!vehicle) return state;
       
-      if (!destinationTile.collected) {
-        const updatedResources = {
-          food: vehicle.resources.food + (destinationTile.resources?.food || 0),
-          debris: vehicle.resources.debris + (destinationTile.resources?.debris || 0),
-          special: vehicle.resources.special + (destinationTile.resources?.special || 0),
-        };
-        
-        return {
-          players: {
-            ...state.players,
-            [playerId]: {
-              ...player,
-              vehicles: {
-                ...player.vehicles,
-                [vehicleId || 'ship']: {
-                  ...vehicle,
-                  resources: updatedResources
-                }
-              }
-            }
-          }
-        };
-      }
+      const updatedResources = {
+        food: vehicle.resources.food + (destinationTile.resources?.food || 0),
+        debris: vehicle.resources.debris + (destinationTile.resources?.debris || 0),
+        special: vehicle.resources.special + (destinationTile.resources?.special || 0),
+      };
       
-      return state;
+      return updateVehicle(state, playerId, vehicleId || 'ship', {
+        resources: updatedResources
+      });
     });
   },
 
   // Pour compatibilité avec le code existant
-  collectResources: (playerId, destinationTile) => {
-    const collectResourcesFn = get().collectResources;
-    collectResourcesFn(playerId, 'ship', destinationTile);
+  collectResourcesLegacy: (playerId, destinationTile) => {
+    get().collectResources(playerId, 'ship', destinationTile);
   },
 
   /**
@@ -414,6 +375,34 @@ const usePlayerStore = create((set, get) => ({
         },
       };
     });
+  },
+
+  /**
+   * Consomme du carburant pour un véhicule spécifique
+   * @param {string} playerId - ID du joueur
+   * @param {string} vehicleId - ID du véhicule
+   * @param {number} amount - Quantité de carburant à consommer (par défaut: 5)
+   * @returns {boolean} - true si suffisamment de carburant, false sinon
+   */
+  consumeFuel: (playerId, vehicleId, amount = 5) => {
+    const player = get().players[playerId];
+    if (!player) return false;
+    
+    const vehicle = player.vehicles[vehicleId];
+    if (!vehicle) return false;
+    
+    // Vérifier s'il y a suffisamment de carburant
+    if (vehicle.fuel <= 0) {
+      set((state) => updateVehicle(state, playerId, vehicleId, { isMoving: false }));
+      return false;
+    }
+    
+    // Consommer le carburant et mettre à jour le véhicule
+    const newFuelLevel = Math.max(vehicle.fuel - amount, 0);
+    set((state) => updateVehicle(state, playerId, vehicleId, { fuel: newFuelLevel }));
+    
+    // Retourner true si le nouveau niveau est > 0, false sinon
+    return newFuelLevel > 0;
   },
 }));
 
