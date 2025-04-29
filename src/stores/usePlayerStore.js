@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { updateVehicle } from '../utils/utils'; // Importez la fonction utilitaire
+import { useTileStore } from './useNewTileStore'; // Importez le tile store
 
 const usePlayerStore = create((set, get) => ({
   // === ÉTAT INITIAL ===
@@ -333,25 +334,29 @@ const usePlayerStore = create((set, get) => ({
    * @param {string} vehicleId - ID du véhicule
    * @param {Object} destinationTile - Tuile contenant des ressources
    */
- 
   collectResources: (playerId, vehicleId, destinationTile) => {
     if (destinationTile.collected) return;
-    
+
+    const markTileAsCollected = useTileStore.getState().markTileAsCollected;
+
     set((state) => {
       const player = state.players[playerId];
       if (!player) return state;
-      
+
       const vehicle = player.vehicles[vehicleId || 'ship'];
       if (!vehicle) return state;
-      
+
       const updatedResources = {
         food: vehicle.resources.food + (destinationTile.resources?.food || 0),
         debris: vehicle.resources.debris + (destinationTile.resources?.debris || 0),
         special: vehicle.resources.special + (destinationTile.resources?.special || 0),
       };
-      
+
+      // Marquer la tuile comme collectée
+      markTileAsCollected(destinationTile.coord);
+
       return updateVehicle(state, playerId, vehicleId || 'ship', {
-        resources: updatedResources
+        resources: updatedResources,
       });
     });
   },

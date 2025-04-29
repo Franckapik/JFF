@@ -294,44 +294,124 @@ const useBotStore = create((set, get) => ({
     return true;
   },
 
-  // Make decisions based on current state and environment - focus on exploration
+  /**
+   * Trouve et collecte les ressources proches pour un bot
+   * @param {string} playerId - ID du joueur (bot)
+   * @param {string} vehicleId - ID du véhicule
+   */
+  collectNearbyResources: (playerId, vehicleId) => {
+    const tiles = useTileStore.getState().tiles; // Obtenir les tuiles
+    const playerStore = usePlayerStore.getState();
+    const vehicle = playerStore.players[playerId].vehicles[vehicleId];
+
+    if (!vehicle || !vehicle.coord) {
+      console.warn(`Véhicule ${vehicleId} du joueur ${playerId} introuvable ou sans coordonnées.`);
+      return false;
+    }
+
+    // Trouver les tuiles avec des ressources non collectées
+    const nearbyResources = Object.values(tiles)
+      .filter((tile) => 
+        tile.resources && 
+        !tile.collected && 
+        (tile.resources.food > 0 || tile.resources.debris > 0 || tile.resources.special > 0)
+      )
+      .map((tile) => ({
+        ...tile,
+        distance: Math.sqrt(
+          Math.pow(tile.coord.split(',')[0] - vehicle.coord.split(',')[0], 2) +
+          Math.pow(tile.coord.split(',')[1] - vehicle.coord.split(',')[1], 2)
+        ),
+      }))
+      .sort((a, b) => a.distance - b.distance); // Trier par distance
+
+    if (nearbyResources.length === 0) {
+      console.log(`Aucune ressource à collecter pour ${vehicleId}.`);
+      return false;
+    }
+
+    // Sélectionner la tuile la plus proche
+    const targetTile = nearbyResources[0];
+    console.log(`Bot ${playerId}/${vehicleId} se déplace vers la tuile pour collecter :`, targetTile.coord);
+
+    // Déplacer le véhicule vers la tuile cible
+    playerStore.moveToTile(playerId, vehicleId, {
+      position: targetTile.position,
+      coord: targetTile.coord,
+    });
+
+    // Mettre à jour l'état du bot
+    set((state) => {
+      const botVehicle = state.bots[playerId][vehicleId];
+      if (!botVehicle) return state;
+
+      return {
+        bots: {
+          ...state.bots,
+          [playerId]: {
+            ...state.bots[playerId],
+            [vehicleId]: {
+              ...botVehicle,
+              currentState: BOT_STATES.COLLECTING,
+              targetTile: targetTile,
+            },
+          },
+        },
+      };
+    });
+
+    return true;
+  },
+
+  // Make decisions based on current state and environment
   makeDecision: (playerId, vehicleId) => {
     const botVehicle = get().bots[playerId][vehicleId];
     const playerStore = usePlayerStore.getState();
     const vehicle = playerStore.players[playerId].vehicles[vehicleId];
-    const tiles = useTileStore.getState().tiles; // Utiliser TileStore
-    
+
     if (!botVehicle || !vehicle) {
-      console.log("Missing bot or vehicle data in makeDecision");
+      console.log("Données du bot ou du véhicule manquantes dans makeDecision");
       return;
     }
 
-    // Clear action queue if we need to recalculate
+    // Effacer la file d'actions si nécessaire
     get().clearActionQueue(playerId, vehicleId);
-    
-    console.log(`Bot ${playerId}/${vehicleId} making decision in state: ${botVehicle.currentState}`);
-    
-    // Selon l'état actuel du bot, effectuez différentes actions
+
+    console.log(`Bot ${playerId}/${vehicleId} prend une décision dans l'état : ${botVehicle.currentState}`);
+
     switch (botVehicle.currentState) {
       case BOT_STATES.IDLE:
         // Si inactif, commencer à explorer
         get().changeState(playerId, vehicleId, BOT_STATES.EXPLORING);
         break;
-        
+
       case BOT_STATES.EXPLORING:
-        // Si en phase d'exploration et pas de déplacement en cours, choisir une tuile au hasard
+        // Si en exploration, chercher des ressources proches
         if (!vehicle.isMoving) {
-          console.log("Bot is not moving, selecting random tile");
-          get().moveToRandomTile(playerId, vehicleId);
-        } else {
-          console.log("Bot is already moving, no new decision needed");
+          const foundResources = get().collectNearbyResources(playerId, vehicleId);
+          if (!foundResources) {
+            // Si aucune ressource trouvée, continuer à explorer
+            get().moveToRandomTile(playerId, vehicleId);
+          }
         }
         break;
-        
+
       case BOT_STATES.COLLECTING:
-        // Logique de collecte - à implémenter plus tard
+        // Si en collecte, vérifier si le véhicule est arrivé à destination
+        if (
+          vehicle.coord === botVehicle.targetTile?.coord &&
+          !vehicle.isMoving
+        ) {
+          console.log(`Bot ${playerId}/${vehicleId} collecte des ressources sur la tuile :`, botVehicle.targetTile.coord);
+
+          // Collecter les ressources
+          playerStore.collectResources(playerId, vehicleId, botVehicle.targetTile);
+
+          // Revenir à l'exploration après la collecte
+          get().changeState(playerId, vehicleId, BOT_STATES.EXPLORING);
+        }
         break;
-        
+
       case BOT_STATES.RETURNING:
         // Logique de retour à la base - à implémenter plus tard
         break;
