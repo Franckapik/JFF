@@ -445,6 +445,7 @@ const usePlayerStore = create((set, get) => ({
     // Retourner true si le nouveau niveau est > 0, false sinon
     return newFuelLevel > 0;
   },
+
 }));
 
 export default usePlayerStore;

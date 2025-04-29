@@ -79,47 +79,6 @@ const UserHUD = () => {
         )}
       </div>
 
-      {/* Section: Selected Vehicle */}
-      <div className="hud-column">
-        <h3>Véhicule Sélectionné</h3>
-        {selectedVehicle.playerId && selectedVehicle.vehicleId ? (
-          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            <li>
-              <strong>Joueur :</strong> {selectedVehicle.playerId}
-            </li>
-            <li>
-              <strong>Véhicule :</strong> {selectedVehicle.vehicleId}
-            </li>
-            {vehicle && (
-              <>
-                <li>
-                  <strong>Position :</strong>{" "}
-                  {vehicle.position
-                    ? `x: ${vehicle.position.x.toFixed(2)}, y: ${vehicle.position.y.toFixed(
-                        2
-                      )}, z: ${vehicle.position.z.toFixed(2)} (Coord: ${vehicle.coord})`
-                    : "N/A"}
-                </li>
-                <li>
-                  <strong>En Mouvement :</strong> {vehicle.isMoving ? "Oui" : "Non"}
-                </li>
-                <li>
-                  <strong>Progression :</strong> {vehicle.progress}%
-                </li>
-                <li>
-                  <strong>Carburant :</strong> {vehicle.fuel || "N/A"}%
-                </li>
-                <li>
-                  <strong>Dommages :</strong> {vehicle.damage || "N/A"}%
-                </li>
-              </>
-            )}
-          </ul>
-        ) : (
-          <p>Aucun véhicule sélectionné</p>
-        )}
-      </div>
-
       {/* Section: Players Information */}
       {Object.entries(players).map(([playerId, player]) => (
         <div className="hud-column" key={playerId}>

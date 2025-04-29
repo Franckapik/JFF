@@ -52,5 +52,28 @@ export const useTileStore = create((set, get) => ({
         
         return true;
     },
+
+    /**
+     * Sélectionne une tuile walkable au hasard parmi toutes les tuiles
+     * Utilisé principalement pour les actions automatisées des bots
+     * @returns {Object|null} - La tuile walkable sélectionnée ou null si aucune tuile disponible
+     */
+    selectRandomWalkableTile: () => {
+        const tiles = get().tiles;
+        
+        // Filtrer uniquement les tuiles walkable
+        const walkableTiles = Object.values(tiles).filter(tile => 
+            tile && tile.walkable !== false && tile.type !== 'danger'
+        );
+        
+        if (walkableTiles.length === 0) {
+            console.warn("Aucune tuile walkable disponible pour la sélection aléatoire");
+            return null;
+        }
+        
+        // Sélection d'une tuile au hasard dans le tableau
+        const randomIndex = Math.floor(Math.random() * walkableTiles.length);
+        return walkableTiles[randomIndex];
+    },
 }));
 

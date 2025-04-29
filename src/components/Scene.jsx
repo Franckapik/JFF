@@ -1,34 +1,54 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { GridHelper } from "three";
-import { useThree } from "@react-three/fiber";
+import { useThree, useFrame } from "@react-three/fiber";
 import Tile from "./Tile";
 import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
-import ShipMovement from "../Mouvement/ShipMovement"; // Changé de TargetMovement à ShipMovement
+import useBotStore from "../stores/useBotStore";
+import ShipMovement from "../Mouvement/ShipMovement";
 
 const Scene = () => {
-  const initializeTiles = useTileStore((state) => state.initializeTiles); // Zustand initializer for tiles
-  const tiles = useTileStore((state) => state.tiles); // Zustand tiles state
-  const initializePlayer = usePlayerStore((state) => state.initializePlayer); // Player initialization method
-  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
-  const moveToTile = usePlayerStore((state) => state.moveToTile); // Updated to use the new method name
+  const initializeTiles = useTileStore((state) => state.initializeTiles);
+  const tiles = useTileStore((state) => state.tiles);
+  const initializePlayer = usePlayerStore((state) => state.initializePlayer);
+  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
+  const moveToTile = usePlayerStore((state) => state.moveToTile);
+  const initializeBot = useBotStore((state) => state.initializeBot);
+  const processBot = useBotStore((state) => state.processBot);
+  
+  const botInitialized = useRef(false);
 
+  // Initialize tiles
   useEffect(() => {
     console.log("[Scene] Initializing tiles...");
-    initializeTiles(); // Initialize tiles with default radius and spacing
+    initializeTiles();
   }, [initializeTiles]);
 
+  // Initialize players
   useEffect(() => {
     if (Object.keys(tiles).length > 0) {
       console.log("[Scene] Initializing players with tiles:", tiles);
-      initializePlayer(tiles); // Initialize player once tiles are available
+      initializePlayer(tiles);
+      
+      // Initialize bot after players are set up
+      if (!botInitialized.current) {
+        console.log("[Scene] Initializing bot...");
+        initializeBot();
+        botInitialized.current = true;
+      }
     }
-  }, [tiles, initializePlayer]);
+  }, [tiles, initializePlayer, initializeBot]);
 
+  // Process bot in real-time using useFrame
+  useFrame((state, delta) => {
+    processBot();
+  });
+
+  // Camera setup
   const { camera } = useThree();
   useEffect(() => {
-    camera.position.set(0, 10, 10); // Adjusted camera position for better visibility
-    camera.lookAt(0, 0, 0); // Make the camera look at the center of the scene
+    camera.position.set(0, 10, 10);
+    camera.lookAt(0, 0, 0);
   }, [camera]);
 
   const handleTileClick = (tile) => {
