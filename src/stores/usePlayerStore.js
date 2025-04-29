@@ -263,15 +263,60 @@ const usePlayerStore = create((set, get) => ({
   // === GESTION DES DÉPLACEMENTS ===
   // Removing finalizeMovement function since it will be handled in the component
 
-  /**
-   * Force un véhicule à retourner à sa base
+ /**
+   * Transfère les ressources d'un véhicule vers le score du joueur
    * @param {string} playerId - ID du joueur
-   * @param {Object} currentTargetTile - Tuile actuelle
+   * @param {string} vehicleId - ID du véhicule (par défaut: "ship")
+   * @returns {boolean} - true si le transfert a réussi, false sinon
    */
-  returnToBase: (playerId, currentTargetTile) => {
-  // logique de transfert des ressources
-  },
-
+ transferResourcesToScore: (playerId, vehicleId = "ship") => {
+  const player = get().players[playerId];
+  if (!player) return false;
+  
+  const vehicle = player.vehicles[vehicleId];
+  if (!vehicle) return false;
+  
+  // Vérifier si le véhicule est à sa base
+  if (vehicle.coord !== vehicle.startCoord) {
+    return false;
+  }
+  
+  // Transférer les ressources au score
+  const resources = vehicle.resources;
+  
+  set((state) => {
+    // 1. Mettre à jour le score du joueur
+    const updatedScore = {
+      ...state.players[playerId].score,
+      resources: {
+        food: state.players[playerId].score.resources.food + resources.food,
+        debris: state.players[playerId].score.resources.debris + resources.debris,
+        special: state.players[playerId].score.resources.special + resources.special,
+      }
+    };
+    
+    // 2. Réinitialiser les ressources du véhicule
+    const updatedVehicle = {
+      ...vehicle,
+      resources: { food: 0, debris: 0, special: 0 }
+    };
+    
+    // 3. Mettre à jour l'état
+    return {
+      players: {
+        ...state.players,
+        [playerId]: {
+          ...state.players[playerId],
+          vehicles: {
+            ...state.players[playerId].vehicles,
+            [vehicleId]: updatedVehicle
+          },
+          score: updatedScore
+        }
+      }
+    };
+  });
+ },
   // === GESTION DES INTERACTIONS AVEC L'ENVIRONNEMENT ===
   /**
    * Collecte les ressources d'une tuile pour un véhicule spécifique
@@ -279,6 +324,7 @@ const usePlayerStore = create((set, get) => ({
    * @param {string} vehicleId - ID du véhicule
    * @param {Object} destinationTile - Tuile contenant des ressources
    */
+ 
   collectResources: (playerId, vehicleId, destinationTile) => {
     if (destinationTile.collected) return;
     
