@@ -31,6 +31,11 @@ const ShipMovement = ({ playerId, children }) => {
   const updateVehicle = usePlayerStore((state) => state.updateVehicle);
   const consumeFuel = usePlayerStore(state => state.consumeFuel);
   
+  const botStore = useBotStore();
+  const botTargetTile = useBotStore(state => 
+    playerId === "player2" ? state.bots?.player2?.ship?.targetTile : null
+  );
+  
   const playerVehicle =
     playerId === "player2"
       ? playerVehicles?.ship
@@ -39,7 +44,6 @@ const ShipMovement = ({ playerId, children }) => {
         : null;
 
   const setClockRunning = useGameStore((state) => state.setClockRunning);
-  const botTargetTile = useBotStore((state) => state.targetTile);
 
   // === Fonctions locales ===
   const handleFinalizeMovement = (currentTargetTile) => {
@@ -82,12 +86,16 @@ const ShipMovement = ({ playerId, children }) => {
       return;
     }
 
-    const targetTile = playerId === "player2" ? botTargetTile : playerVehicle.targetTile;
+    const targetTile = playerId === "player2" 
+      ? botTargetTile 
+      : playerVehicle.targetTile;
         
     if (!targetTile || !targetTile.coord) {
-      console.log("Missing target tile:", targetTile);
+      console.log(`Missing target tile for ${playerId}:`, targetTile);
       return;
     }
+    
+    console.log(`Calculating path for ${playerId} from ${playerVehicle.coord} to ${targetTile.coord}`);
     
     const pathData = calculatePath(
       groupRef.current.position,
@@ -116,7 +124,7 @@ const ShipMovement = ({ playerId, children }) => {
     const targetTile = playerId === "player2" ? botTargetTile : playerVehicle?.targetTile;
 
     if (targetTile && targetTile.coord && playerVehicle && Object.keys(tiles).length > 0 && isInitialPositionSet) {
-      console.log("Target changed, recalculating path");
+      console.log(`[${playerId}] Target changed, recalculating path to:`, targetTile.coord);
       setClockRunning(true);
       setTimeout(recalculatePath, 100);
     }

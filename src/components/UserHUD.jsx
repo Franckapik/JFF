@@ -7,7 +7,8 @@ import "../styles/App.css"; // Import CSS for styling
 const UserHUD = () => {
   const players = usePlayerStore((state) => state.players); // Get all players
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle); // Get globally selected vehicle
-  const { state: botState, targetTile: botTargetTile } = useBotStore(); // Get bot state and target tile
+  const botState = useBotStore(state => state.bots?.player2?.ship?.currentState || 'unknown');
+  const botTargetTile = useBotStore(state => state.bots?.player2?.ship?.targetTile);
 
   // Adapter pour la nouvelle structure de véhicules
   const vehicle =
@@ -153,11 +154,17 @@ const UserHUD = () => {
         <h3>Informations du Bot</h3>
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           <li>
-            <strong>État :</strong> {botState}
+            <strong>État :</strong> {botState || 'Non défini'}
           </li>
           <li>
             <strong>Tuile Cible :</strong> 
-            {Array.isArray(botTargetTile) ? botTargetTile.join(", ") : botTargetTile || "Aucune"}
+            {botTargetTile ? 
+              (typeof botTargetTile === 'string' ? 
+                botTargetTile : 
+                botTargetTile.coord || 'Format inconnu'
+              ) : 
+              'Aucune'
+            }
           </li>
         </ul>
       </div>

@@ -263,13 +263,15 @@ const useBotStore = create((set, get) => ({
       return false;
     }
 
+    console.log(`Bot ${playerId}/${vehicleId} moving to random tile:`, randomTile.coord);
+
     // Initialiser le mouvement via PlayerStore
     usePlayerStore.getState().moveToTile(playerId, vehicleId, {
       position: randomTile.position,
       coord: randomTile.coord
     });
 
-    // Mettre à jour l'état du bot
+    // Mettre à jour l'état du bot SANS la targetTile de niveau supérieur
     set((state) => {
       const botVehicle = state.bots[playerId][vehicleId];
       if (!botVehicle) return state;
@@ -300,10 +302,15 @@ const useBotStore = create((set, get) => ({
     const vehicle = playerStore.players[playerId].vehicles[vehicleId];
     const tiles = useTileStore.getState().tiles; // Utiliser TileStore
     
-    if (!botVehicle || !vehicle) return;
+    if (!botVehicle || !vehicle) {
+      console.log("Missing bot or vehicle data in makeDecision");
+      return;
+    }
 
     // Clear action queue if we need to recalculate
     get().clearActionQueue(playerId, vehicleId);
+    
+    console.log(`Bot ${playerId}/${vehicleId} making decision in state: ${botVehicle.currentState}`);
     
     // Selon l'état actuel du bot, effectuez différentes actions
     switch (botVehicle.currentState) {
@@ -315,8 +322,10 @@ const useBotStore = create((set, get) => ({
       case BOT_STATES.EXPLORING:
         // Si en phase d'exploration et pas de déplacement en cours, choisir une tuile au hasard
         if (!vehicle.isMoving) {
-          // Au lieu de l'ancienne logique complexe, utilisons directement moveToRandomTile
+          console.log("Bot is not moving, selecting random tile");
           get().moveToRandomTile(playerId, vehicleId);
+        } else {
+          console.log("Bot is already moving, no new decision needed");
         }
         break;
         

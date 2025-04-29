@@ -252,11 +252,20 @@ const usePlayerStore = create((set, get) => ({
    * @param {Object} targetTile - Tuile cible
    */
   moveToTile: (playerId, vehicleId, targetTile) => {
+    console.log(`[PlayerStore] Moving ${playerId}/${vehicleId} to tile:`, targetTile.coord);
+    
+    // Vérifier que les données sont valides
+    if (!targetTile || !targetTile.position || !targetTile.coord) {
+      console.error("Invalid target tile data:", targetTile);
+      return;
+    }
+    
     set((state) => updateVehicle(state, playerId, vehicleId, {
       targetTile: {
         position: targetTile.position,
         coord: targetTile.coord,
-      }
+      },
+      isMoving: true // Assurez-vous que isMoving est défini sur true
     }));
   },
 

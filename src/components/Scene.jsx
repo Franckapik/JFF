@@ -39,9 +39,15 @@ const Scene = () => {
     }
   }, [tiles, initializePlayer, initializeBot]);
 
-  // Process bot in real-time using useFrame
+  // Process bot in real-time using useFrame with throttling
+  const lastBotProcess = useRef(Date.now());
   useFrame((state, delta) => {
-    processBot();
+    const now = Date.now();
+    // Process bot every 500ms to avoid too frequent updates
+    if (now - lastBotProcess.current > 500) {
+      processBot();
+      lastBotProcess.current = now;
+    }
   });
 
   // Camera setup
