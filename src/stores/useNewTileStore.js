@@ -75,5 +75,26 @@ export const useTileStore = create((set, get) => ({
         const randomIndex = Math.floor(Math.random() * walkableTiles.length);
         return walkableTiles[randomIndex];
     },
+
+    /**
+     * Réinitialise les ressources d'une tuile
+     * @param {string} coord - Coordonnée de la tuile à réinitialiser
+     * @returns {boolean} - true si les ressources ont été réinitialisées, false sinon
+     */
+    resetTileResources: (coord) => {
+        const tile = get().tiles[coord];
+        if (!tile) return false;
+
+        set((state) => {
+            const updatedTiles = { ...state.tiles };
+            updatedTiles[coord] = {
+                ...updatedTiles[coord],
+                resources: { food: 0, debris: 0, special: 0 },
+            };
+            return { tiles: updatedTiles };
+        });
+
+        return true;
+    },
 }));
 

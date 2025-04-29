@@ -337,7 +337,9 @@ const usePlayerStore = create((set, get) => ({
   collectResources: (playerId, vehicleId, destinationTile) => {
     if (destinationTile.collected) return;
 
-    const markTileAsCollected = useTileStore.getState().markTileAsCollected;
+    const tileStore = useTileStore.getState();
+    const markTileAsCollected = tileStore.markTileAsCollected;
+    const resetTileResources = tileStore.resetTileResources;
 
     set((state) => {
       const player = state.players[playerId];
@@ -354,6 +356,9 @@ const usePlayerStore = create((set, get) => ({
 
       // Marquer la tuile comme collectée
       markTileAsCollected(destinationTile.coord);
+
+      // Réinitialiser les ressources de la tuile
+      resetTileResources(destinationTile.coord);
 
       return updateVehicle(state, playerId, vehicleId || 'ship', {
         resources: updatedResources,
