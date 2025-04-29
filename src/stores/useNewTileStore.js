@@ -96,5 +96,16 @@ export const useTileStore = create((set, get) => ({
 
         return true;
     },
+    markTileAsExplored: (coord) => {
+        set((state) => ({
+          tiles: {
+            ...state.tiles,
+            [coord]: {
+              ...state.tiles[coord],
+              explored: true,
+            },
+          },
+        }));
+      },
 }));
 
