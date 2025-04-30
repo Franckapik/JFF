@@ -423,6 +423,7 @@ const useBotStore = create((set, get) => ({
         // Vérifier si le vaisseau est arrivé à sa base de départ
         if (vehicle.coord === vehicle.startCoord && !vehicle.isMoving) {
           console.log(`Bot ${playerId}/${vehicleId} est arrivé à sa base et transfère ses ressources`);
+          console.log(vehicle.coord,  vehicle.startCoord);
           
           // Transférer les ressources au score
           playerStore.transferResourcesToScore(playerId, vehicleId);
