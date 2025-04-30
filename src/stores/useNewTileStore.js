@@ -77,10 +77,41 @@ export const useTileStore = create((set, get) => ({
     },
 
     /**
-     * Réinitialise les ressources d'une tuile
-     * @param {string} coord - Coordonnée de la tuile à réinitialiser
-     * @returns {boolean} - true si les ressources ont été réinitialisées, false sinon
+     * Déduit les ressources d'une tuile en fonction des ressources collectées
+     * Marque la tuile comme collectée uniquement si toutes les ressources sont épuisées
+     * @param {string} coord - Coordonnée de la tuile
+     * @param {Object} collectedResources - Ressources collectées de la tuile
+     * @returns {boolean} - true si la déduction a été effectuée, false sinon
      */
+    deductTileResources: (coord, collectedResources) => {
+        const tile = get().tiles[coord];
+        if (!tile || !tile.resources) return false;
+        
+        // Calcul des ressources restantes sur la tuile
+        const remainingResources = {
+            food: Math.max(0, (tile.resources.food || 0) - (collectedResources.food || 0)),
+            debris: Math.max(0, (tile.resources.debris || 0) - (collectedResources.debris || 0)),
+            special: Math.max(0, (tile.resources.special || 0) - (collectedResources.special || 0))
+        };
+        
+        // Vérifier si toutes les ressources ont été collectées
+        const isEmpty = remainingResources.food === 0 && 
+                       remainingResources.debris === 0 && 
+                       remainingResources.special === 0;
+        
+        set((state) => {
+            const updatedTiles = { ...state.tiles };
+            updatedTiles[coord] = {
+                ...updatedTiles[coord],
+                resources: remainingResources,
+                collected: isEmpty // Marquer comme collectée uniquement si vide
+            };
+            return { tiles: updatedTiles };
+        });
+        
+        return true;
+    },
+    
     resetTileResources: (coord) => {
         const tile = get().tiles[coord];
         if (!tile) return false;

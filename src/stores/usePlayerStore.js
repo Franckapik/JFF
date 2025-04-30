@@ -370,8 +370,7 @@ const usePlayerStore = create((set, get) => ({
     if (destinationTile.collected) return;
 
     const tileStore = useTileStore.getState();
-    const markTileAsCollected = tileStore.markTileAsCollected;
-    const resetTileResources = tileStore.resetTileResources;
+    const deductTileResources = tileStore.deductTileResources;
 
     set((state) => {
       const player = state.players[playerId];
@@ -380,17 +379,29 @@ const usePlayerStore = create((set, get) => ({
       const vehicle = player.vehicles[vehicleId || 'ship'];
       if (!vehicle) return state;
 
-      const updatedResources = {
-        food: vehicle.resources.food + (destinationTile.resources?.food || 0),
-        debris: vehicle.resources.debris + (destinationTile.resources?.debris || 0),
-        special: vehicle.resources.special + (destinationTile.resources?.special || 0),
+      // Calculer la capacité disponible pour chaque type de ressource
+      const availableCapacity = {
+        food: vehicle.maxCapacity ? Math.max(0, vehicle.maxCapacity.food - vehicle.resources.food) : Infinity,
+        debris: vehicle.maxCapacity ? Math.max(0, vehicle.maxCapacity.debris - vehicle.resources.debris) : Infinity,
+        special: vehicle.maxCapacity ? Math.max(0, vehicle.maxCapacity.special - vehicle.resources.special) : Infinity
       };
 
-      // Marquer la tuile comme collectée
-      markTileAsCollected(destinationTile.coord);
+      // Calculer les ressources qui peuvent être collectées en fonction de la capacité
+      const collectableResources = {
+        food: Math.min(availableCapacity.food, destinationTile.resources?.food || 0),
+        debris: Math.min(availableCapacity.debris, destinationTile.resources?.debris || 0),
+        special: Math.min(availableCapacity.special, destinationTile.resources?.special || 0)
+      };
 
-      // Réinitialiser les ressources de la tuile
-      resetTileResources(destinationTile.coord);
+      // Mettre à jour les ressources du véhicule
+      const updatedResources = {
+        food: vehicle.resources.food + collectableResources.food,
+        debris: vehicle.resources.debris + collectableResources.debris,
+        special: vehicle.resources.special + collectableResources.special
+      };
+
+      // Déduire les ressources de la tuile
+      deductTileResources(destinationTile.coord, collectableResources);
 
       // Mettre à jour les ressources du véhicule
       const updatedState = updateVehicle(state, playerId, vehicleId || 'ship', {
