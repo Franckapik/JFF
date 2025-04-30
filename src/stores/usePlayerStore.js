@@ -21,11 +21,12 @@ const usePlayerStore = create((set, get) => ({
           path: [],
           resources: { food: 0, debris: 0, special: 0 },
           startCoord: null,
+          isAtCapacity: false,
           targetTile: {
             position: null,
             coord: null,
           },
-          maxCapacity: 100, // Ajout de la capacité maximale
+          maxCapacity: { food: 100, debris: 1000, special: 2 }, // Updated capacities
         },
         drone1: {
           id: 'drone1',
@@ -38,7 +39,6 @@ const usePlayerStore = create((set, get) => ({
             position: null,
             coord: null,
           },
-          maxCapacity: 50, // Capacité maximale spécifique au drone
         },
         drone2: {
           id: 'drone2',
@@ -51,7 +51,6 @@ const usePlayerStore = create((set, get) => ({
             position: null,
             coord: null,
           },
-          maxCapacity: 50, // Capacité maximale spécifique au drone
         },
       },
       score: {
@@ -78,10 +77,12 @@ const usePlayerStore = create((set, get) => ({
           path: [],
           resources: { food: 0, debris: 0, special: 0 },
           startCoord: null,
+          isAtCapacity: false,
           targetTile: {
             position: null,
             coord: null,
           },
+          maxCapacity: { food: 100, debris: 1000, special: 2 }, // Updated capacities
         },
         // Convertir le tableau de drones en objets séparés
         drone3: {
@@ -334,14 +335,28 @@ const usePlayerStore = create((set, get) => ({
     const player = get().players[playerId];
     const vehicle = player.vehicles[vehicleId];
 
-    const totalResources =
-      vehicle.resources.food +
-      vehicle.resources.debris +
-      vehicle.resources.special;
+    if (!vehicle.maxCapacity) return; // Skip if the vehicle has no maxCapacity (e.g., drones)
 
-    if (totalResources >= vehicle.maxCapacity) {
-      get().moveToTile(playerId, vehicleId, { coord: vehicle.startCoord });
+    const { food, debris, special } = vehicle.resources;
+    const { food: maxFood, debris: maxDebris, special: maxSpecial } = vehicle.maxCapacity;
+
+    // Vérifier si une des ressources a atteint sa capacité maximale
+    const isAtMaxCapacity = food >= maxFood || debris >= maxDebris || special >= maxSpecial;
+
+    console.log(maxFood, maxDebris, maxSpecial);
+    
+    
+    // Si à capacité max, marquer seulement le vaisseau avec isAtCapacity = true
+    if (isAtMaxCapacity) {
+      console.log(`${playerId}/${vehicleId} est à sa capacité maximale.`);
+      
+      // Mettre à jour le vaisseau avec la nouvelle propriété
+      set((state) => updateVehicle(state, playerId, vehicleId, { 
+        isAtCapacity: true 
+      }));
     }
+    
+    return isAtMaxCapacity;
   },
 
   // === GESTION DES INTERACTIONS AVEC L'ENVIRONNEMENT ===
@@ -377,9 +392,17 @@ const usePlayerStore = create((set, get) => ({
       // Réinitialiser les ressources de la tuile
       resetTileResources(destinationTile.coord);
 
-      return updateVehicle(state, playerId, vehicleId || 'ship', {
+      // Mettre à jour les ressources du véhicule
+      const updatedState = updateVehicle(state, playerId, vehicleId || 'ship', {
         resources: updatedResources,
       });
+      
+      // Vérifier si la capacité maximale est atteinte (à la prochaine itération du state)
+      setTimeout(() => {
+        get().checkResourceCapacity(playerId, vehicleId || 'ship');
+      }, 0);
+      
+      return updatedState;
     });
   },
 

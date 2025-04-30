@@ -104,6 +104,9 @@ const UserHUD = () => {
                         <strong>En Mouvement:</strong> {vehicle.isMoving ? "Oui" : "Non"}
                       </li>
                       <li>
+                        <strong>Capacité Max:</strong> {vehicle.isAtCapacity ? "Oui" : "Non"}
+                      </li>
+                      <li>
                         <strong>Progression:</strong> {vehicle.progress}%
                       </li>
                       <li>

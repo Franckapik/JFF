@@ -379,6 +379,13 @@ const useBotStore = create((set, get) => ({
 
     console.log(`Bot ${playerId}/${vehicleId} prend une décision dans l'état : ${botVehicle.currentState}`);
 
+    // Vérifier si le vaisseau est à sa capacité maximale, et passer en mode RETURNING si c'est le cas
+    if (vehicle.isAtCapacity && botVehicle.currentState !== BOT_STATES.RETURNING) {
+      console.log(`Bot ${playerId}/${vehicleId} détecte capacité max et passe en mode RETURNING`);
+      get().changeState(playerId, vehicleId, BOT_STATES.RETURNING);
+      return;
+    }
+
     switch (botVehicle.currentState) {
       case BOT_STATES.IDLE:
         // Si inactif, commencer à explorer
@@ -413,7 +420,25 @@ const useBotStore = create((set, get) => ({
         break;
 
       case BOT_STATES.RETURNING:
-        // Logique de retour à la base - à implémenter plus tard
+        // Vérifier si le vaisseau est arrivé à sa base de départ
+        if (vehicle.coord === vehicle.startCoord && !vehicle.isMoving) {
+          console.log(`Bot ${playerId}/${vehicleId} est arrivé à sa base et transfère ses ressources`);
+          
+          // Transférer les ressources au score
+          playerStore.transferResourcesToScore(playerId, vehicleId);
+          
+          // Réinitialiser la propriété isAtCapacity
+          playerStore.updateVehicle(playerId, vehicleId, { isAtCapacity: false });
+          
+          // Retour à l'exploration après avoir déchargé les ressources
+          get().changeState(playerId, vehicleId, BOT_STATES.EXPLORING);
+        } else if (!vehicle.isMoving && vehicle.coord !== vehicle.startCoord) {
+          // Si le vaisseau s'est arrêté mais n'est pas encore à sa base, continuer vers la base
+          playerStore.moveToTile(playerId, vehicleId, {
+            position: vehicle.position,
+            coord: vehicle.startCoord
+          });
+        }
         break;
         
       case BOT_STATES.AVOIDING:
