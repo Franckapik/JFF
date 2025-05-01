@@ -6,6 +6,7 @@ import useSimpleBotStore from "../stores/useSimpleBotStore";
 const SimpleUserHUD = () => {
   const botState = useSimpleBotStore((state) => state.botState);
   const isRunning = useSimpleBotStore((state) => state.isRunning);
+  const actionQueue = useSimpleBotStore((state) => state.actionQueue);
   const players = usePlayerStore((state) => state.players);
   const player2Ship = players.player2?.vehicles?.ship;
 
@@ -24,6 +25,28 @@ const SimpleUserHUD = () => {
       borderRadius: "3px",
       transition: "width 0.3s ease-in-out"
     };
+  };
+
+  // Couleur selon la priorité de l'action
+  const getPriorityColor = (priority) => {
+    switch(priority) {
+      case 4: return "#FF0000"; // URGENT - Rouge
+      case 3: return "#FFA500"; // HIGH - Orange
+      case 2: return "#FFC107"; // MEDIUM - Jaune
+      case 1: return "#4CAF50"; // LOW - Vert
+      default: return "#777777"; // Gris par défaut
+    }
+  };
+  
+  // Nom lisible pour la priorité
+  const getPriorityName = (priority) => {
+    switch(priority) {
+      case 4: return "URGENT";
+      case 3: return "HAUTE";
+      case 2: return "MOYENNE";
+      case 1: return "BASSE";
+      default: return "INCONNUE";
+    }
   };
 
   return (
@@ -47,6 +70,45 @@ const SimpleUserHUD = () => {
         <p style={{ margin: '5px 0' }}>
           <strong>Active:</strong> {isRunning ? "Yes" : "No"}
         </p>
+      </div>
+      
+      {/* Nouvelle section - File d'actions prioritaires */}
+      <div style={{ marginTop: '15px' }}>
+        <h4 style={{ margin: '0 0 5px 0' }}>File d'actions ({actionQueue.length})</h4>
+        {actionQueue.length === 0 ? (
+          <p style={{ fontSize: '0.9em', fontStyle: 'italic' }}>Aucune action planifiée</p>
+        ) : (
+          <ul style={{ 
+            listStyleType: 'none', 
+            padding: '0', 
+            margin: '0',
+            maxHeight: '120px',
+            overflowY: 'auto',
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: '4px',
+            padding: '5px'
+          }}>
+            {actionQueue.map((action, index) => (
+              <li key={index} style={{
+                padding: '5px',
+                margin: '2px 0',
+                borderLeft: `4px solid ${getPriorityColor(action.priority)}`,
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                fontSize: '0.9em',
+                display: 'flex',
+                justifyContent: 'space-between'
+              }}>
+                <span><strong>{action.type}</strong></span>
+                <span style={{
+                  color: getPriorityColor(action.priority),
+                  fontWeight: 'bold'
+                }}>
+                  {getPriorityName(action.priority)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       
       {player2Ship && (
