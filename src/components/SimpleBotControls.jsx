@@ -54,6 +54,7 @@ const SimpleBotControls = () => {
         >
           <option value="idle">Idle</option>
           <option value="exploring">Exploring</option>
+          <option value="returning">Returning</option>
         </select>
       </div>
     </div>
