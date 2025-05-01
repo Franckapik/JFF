@@ -20,8 +20,15 @@ const SimpleApp = () => {
           <SimpleBotControls />
         </div>
 
-        {/* Simple User HUD */}
-        <SimpleUserHUD />
+        {/* Simple User HUD - Ajout du conteneur avec position absolue */}
+        <div style={{ 
+          position: 'absolute', 
+          top: '10px', 
+          left: '10px', 
+          zIndex: 1000 
+        }}>
+          <SimpleUserHUD />
+        </div>
 
         {/* 3D Scene */}
         <div className="canvas-container">
@@ -35,7 +42,7 @@ const SimpleApp = () => {
           <Clock isTimerRunning={true} />
         </div>
         
-        {/* Learning Info Box */}
+        {/* Learning Info Box - Mise à jour pour inclure l'état RETURNING */}
         <div style={{
           position: 'absolute',
           bottom: '10px',
@@ -47,12 +54,13 @@ const SimpleApp = () => {
           boxShadow: '0 0 10px rgba(0,0,0,0.2)'
         }}>
           <h3>FSM Learning Mode</h3>
-          <p>Cette vue simplifiée implémente une machine à états finis (FSM) minimale avec seulement deux états :</p>
+          <p>Cette vue simplifiée implémente une machine à états finis (FSM) avec trois états :</p>
           <ul>
             <li><strong>IDLE</strong> - Le bot ne fait rien</li>
             <li><strong>EXPLORING</strong> - Le bot se déplace aléatoirement</li>
+            <li><strong>RETURNING</strong> - Le bot retourne à sa base quand le carburant est inférieur à 50%</li>
           </ul>
-          <p>Utilisez les contrôles pour basculer entre les états et observer le comportement.</p>
+          <p>Condition de transition: Le bot passe automatiquement en mode RETURNING lorsque son carburant passe sous 50%.</p>
         </div>
       </div>
     </div>

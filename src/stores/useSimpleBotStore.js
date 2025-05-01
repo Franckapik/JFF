@@ -37,6 +37,21 @@ const useSimpleBotStore = create((set, get) => ({
     set({ botState: newState });
   },
   
+  // Vérifie les conditions et change d'état si nécessaire
+  checkConditions: () => {
+    const currentState = get().botState;
+    const playerStore = usePlayerStore.getState();
+    const botVehicle = playerStore.players.player2?.vehicles?.ship;
+    
+    if (!botVehicle) return;
+    
+    // NOUVELLE CONDITION: Si le carburant est inférieur à 50%, passer en mode RETURNING
+    if (currentState === BOT_STATES.EXPLORING && botVehicle.fuel < 50) {
+      console.log(`[SimpleBotStore] Fuel level low (${botVehicle.fuel}%), switching to RETURNING state`);
+      get().changeState(BOT_STATES.RETURNING);
+    }
+  },
+  
   // Exécute une action simple basée sur l'état actuel
   performAction: () => {
     const currentState = get().botState;
@@ -93,15 +108,24 @@ const useSimpleBotStore = create((set, get) => ({
         
         // Si le bot est arrivé à la base
         if (botVehicle.coord === botVehicle.startCoord && !botVehicle.isMoving) {
-          console.log("[SimpleBotStore] Bot has reached home base, returning to exploring state");
+          console.log("[SimpleBotStore] Bot has reached home base");
           
-          // Transférer les ressources au score (si API disponible)
-          if (playerStore.transferResourcesToScore) {
-            playerStore.transferResourcesToScore('player2', 'ship');
+          // Si le carburant est à nouveau plein (après ravitaillement), revenir à l'exploration
+          if (botVehicle.fuel >= 100) {
+            console.log("[SimpleBotStore] Fuel is now full, returning to exploring state");
+            
+            // Transférer les ressources au score (si API disponible)
+            if (playerStore.transferResourcesToScore) {
+              playerStore.transferResourcesToScore('player2', 'ship');
+            }
+            
+            // Revenir à l'état d'exploration
+            get().changeState(BOT_STATES.EXPLORING);
+          } else {
+            console.log("[SimpleBotStore] Refueling vehicle");
+            // Ravitailler le véhicule si à la base
+            playerStore.refuelVehicle('player2');
           }
-          
-          // Revenir à l'état d'exploration
-          get().changeState(BOT_STATES.EXPLORING);
         }
         break;
     }
@@ -110,6 +134,9 @@ const useSimpleBotStore = create((set, get) => ({
   // Traite l'état du bot (à appeler périodiquement)
   processBot: () => {
     if (!get().isRunning) return;
+    
+    // Vérifier les conditions avant d'exécuter l'action
+    get().checkConditions();
     
     // Exécute l'action appropriée selon l'état actuel
     get().performAction();
