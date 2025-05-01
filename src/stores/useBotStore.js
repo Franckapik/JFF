@@ -1,55 +1,64 @@
-import { create } from 'zustand';
-import usePlayerStore from './usePlayerStore';
-import { useTileStore } from './useNewTileStore'; // Utilisation de TileStore au lieu de GameStore
+import { create } from 'zustand'; // Zustand est une bibliothèque de gestion d'état légère
+import usePlayerStore from './usePlayerStore'; // Store pour gérer les joueurs
+import { useTileStore } from './useNewTileStore'; // Store pour gérer les tuiles du jeu
 
-// Bot states
+/**
+ * ARCHITECTURE DU BOT:
+ * 
+ * Ce store implémente une séparation stricte entre:
+ * 1. LA PRISE DE DÉCISION (planActions, ex-makeDecision): détermine quoi faire et ajoute à la file d'actions
+ *    - Ne doit JAMAIS exécuter directement des actions sur le playerStore
+ *    - Utilise uniquement: queueAction(), changeState(), updateMemory()
+ * 
+ * 2. L'EXÉCUTION (executeAction, ex-executeNextAction): exécute les actions de la file
+ *    - Seul endroit où les méthodes du playerStore sont appelées
+ * 
+ * WORKFLOW: planActions → queueAction → executeAction → playerStore
+ */
+
+// Bot states - Définit les états possibles du bot
 const BOT_STATES = {
-  IDLE: 'idle',
-  EXPLORING: 'exploring',
-  COLLECTING: 'collecting',
-  RETURNING: 'returning',
-  AVOIDING: 'avoiding',
-  REPAIRING: 'repairing',
-  REFUELING: 'refueling',
+  IDLE: 'idle',           // En attente
+  EXPLORING: 'exploring', // Exploration de la carte
+  COLLECTING: 'collecting', // Collecte de ressources
+  RETURNING: 'returning', // Retour à la base
+  AVOIDING: 'avoiding',   // Évitement de danger
+  REPAIRING: 'repairing', // Réparation du véhicule
+  REFUELING: 'refueling', // Rechargement du carburant
 };
 
-// Bot priority levels
+// Bot priority levels - Pour définir l'importance des actions
 const PRIORITY = {
-  LOW: 1,
-  MEDIUM: 2,
-  HIGH: 3,
-  CRITICAL: 4,
+  LOW: 1,      // Priorité basse
+  MEDIUM: 2,   // Priorité moyenne
+  HIGH: 3,     // Priorité haute
+  CRITICAL: 4, // Priorité critique
 };
 
+// Création du store avec Zustand
 const useBotStore = create((set, get) => ({
-  // Bot state configuration
+  // Bot state configuration - Structure initiale des données du bot
   bots: {
-    player2: {
-      ship: {
-        currentState: BOT_STATES.IDLE,
-        previousState: null,
-        // Suppression de targetTile ici, nous utiliserons uniquement celle de playerStore
-        memory: {
-          exploredTiles: [], // Coordinates of explored tiles
-          knownResources: [], // Resource locations
-          knownDangers: [], // Danger locations
-          availableMoves: [], // Current available moves
+    player2: { // Identifiant du joueur bot
+      ship: {  // Identifiant du véhicule
+        currentState: BOT_STATES.IDLE, // État actuel
+        previousState: null, // État précédent (pour gérer les transitions)
+        memory: { // Mémoire du bot pour stocker des informations sur l'environnement
+          exploredTiles: [],  // Tiles déjà explorées
+          knownResources: [], // Ressources identifiées
+          knownDangers: [],   // Dangers identifiés
+          availableMoves: [], // Mouvements possibles
         },
-        actionQueue: [], // Queue of planned actions
-        lastActionTime: 0, // Timestamp of last action for real-time control
+        actionQueue: [], // File d'actions à exécuter
+        lastActionTime: 0, // Timestamp de la dernière action (pour le cooldown)
       },
-      // Autres véhicules désactivés pour l'instant
     },
   },
   
-  isRunning: false, // Flag to control real-time bot processing
+  isRunning: false, // Indicateur si le bot est actif
   
-  // Initialize bot with game data
+  // Initialize bot with game data - Initialisation du bot au démarrage du jeu
   initializeBot: () => {
-    const playerStore = usePlayerStore.getState();
-    const player2 = playerStore.players.player2;
-
-    // Set bot ships to starting positions
     set((state) => ({
       bots: {
         ...state.bots,
@@ -57,20 +66,20 @@ const useBotStore = create((set, get) => ({
           ...state.bots.player2,
           ship: {
             ...state.bots.player2.ship,
-            currentState: BOT_STATES.EXPLORING, // Start with exploration
+            currentState: BOT_STATES.EXPLORING, // Démarrer en mode exploration
             lastActionTime: Date.now(),
           },
         },
       },
-      isRunning: true, // Auto-start the bot
+      isRunning: true, // Activer le bot
     }));
   },
 
-  // Change bot state with transition logic
+  // Change bot state with transition logic - Gestion des transitions d'état
   changeState: (playerId, vehicleId, newState) => {
     set((state) => {
-      const botVehicle = state.bots[playerId][vehicleId];
-      if (!botVehicle) return state;
+      const botVehicle = state.bots[playerId]?.[vehicleId];
+      if (!botVehicle) return state; // Sécurité si le bot n'existe pas
 
       return {
         bots: {
@@ -79,8 +88,8 @@ const useBotStore = create((set, get) => ({
             ...state.bots[playerId],
             [vehicleId]: {
               ...botVehicle,
-              previousState: botVehicle.currentState,
-              currentState: newState,
+              previousState: botVehicle.currentState, // Sauvegarde l'état précédent
+              currentState: newState, // Définit le nouvel état
             },
           },
         },
@@ -88,15 +97,16 @@ const useBotStore = create((set, get) => ({
     });
   },
 
-  // Add action to the bot's queue
+  // Add action to the bot's queue - Ajoute une action à la file d'attente
   queueAction: (playerId, vehicleId, action) => {
     set((state) => {
-      const botVehicle = state.bots[playerId][vehicleId];
-      if (!botVehicle) return state;
+      const botVehicle = state.bots[playerId]?.[vehicleId];
+      if (!botVehicle) return state; // Vérification de sécurité
 
+      // Ajoute l'action à la file avec un timestamp
       const updatedQueue = [...botVehicle.actionQueue, {
         ...action,
-        timestamp: Date.now(),
+        timestamp: Date.now(), // Horodatage pour suivi et gestion de timeouts
       }];
 
       return {
@@ -106,18 +116,21 @@ const useBotStore = create((set, get) => ({
             ...state.bots[playerId],
             [vehicleId]: {
               ...botVehicle,
-              actionQueue: updatedQueue,
+              actionQueue: updatedQueue, // Met à jour la file d'actions
             },
           },
         },
       };
     });
+    
+    // Log pour le débogage
+    console.log(`Action ajoutée à la file pour ${playerId}/${vehicleId}:`, action.type);
   },
 
   // Clear action queue
   clearActionQueue: (playerId, vehicleId) => {
     set((state) => {
-      const botVehicle = state.bots[playerId][vehicleId];
+      const botVehicle = state.bots[playerId]?.[vehicleId];
       if (!botVehicle) return state;
 
       return {
@@ -135,46 +148,79 @@ const useBotStore = create((set, get) => ({
     });
   },
 
-  // Execute the next action in queue - adapted for real-time
-  executeNextAction: (playerId, vehicleId) => {
-    const botVehicle = get().bots[playerId][vehicleId];
-    if (!botVehicle || botVehicle.actionQueue.length === 0) return false;
+  // Execute the next action in queue - Exécute l'action suivante avec gestion du cooldown
+  executeAction: (playerId, vehicleId) => {
+    const botVehicle = get().bots[playerId]?.[vehicleId];
+    if (!botVehicle || botVehicle.actionQueue.length === 0) return false; // Vérifie si une action est disponible
 
-    // Check if sufficient time has passed since last action (cooldown)
+    // Système de cooldown pour éviter les actions trop rapides
     const now = Date.now();
-    const cooldownTime = 1000; // 1 second cooldown between actions
+    const cooldownTime = 1000; // 1 seconde entre chaque action
     if (now - botVehicle.lastActionTime < cooldownTime) {
-      return false; // Still on cooldown
+      return false; // Encore en cooldown, ne fait rien
     }
 
-    const nextAction = botVehicle.actionQueue[0];
-    const playerStore = usePlayerStore.getState();
+    const nextAction = botVehicle.actionQueue[0]; // Prend la première action de la file
+    const playerStore = usePlayerStore.getState(); // Accède au store joueur pour exécuter l'action
     
-    // Execute the action based on type
-    switch (nextAction.type) {
-      case 'move':
-        playerStore.moveToTile(playerId, vehicleId, nextAction.targetTile);
-        break;
-      case 'collect':
-        playerStore.collectResources(playerId, vehicleId, nextAction.tile);
-        break;
-      case 'repair':
-        playerStore.repairVehicle(playerId);
-        break;
-      case 'refuel':
-        playerStore.refuelVehicle(playerId);
-        break;
-      case 'transferResources':
-        playerStore.transferResourcesToScore(playerId, vehicleId);
-        break;
-      default:
-        console.warn(`Unknown action type: ${nextAction.type}`);
-        break;
+    console.log(`Exécution de l'action ${nextAction.type} pour ${playerId}/${vehicleId}`);
+    
+    let actionSucceeded = true; // Par défaut, on suppose que l'action réussira
+    
+    // Switch qui détermine quelle méthode du playerStore appeler selon le type d'action
+    try {
+      switch (nextAction.type) {
+        case 'move': // Déplacement vers une tuile
+          playerStore.moveToTile(playerId, vehicleId, nextAction.targetTile);
+          break;
+        case 'collect': // Collecte de ressources
+          playerStore.collectResources(playerId, vehicleId, nextAction.tile);
+          break;
+        case 'repair': // Réparation du véhicule
+          playerStore.repairVehicle(playerId, vehicleId);
+          break;
+        case 'refuel': // Rechargement du carburant
+          playerStore.refuelVehicle(playerId, vehicleId);
+          break;
+        case 'transferResources': // Transfert des ressources à la base
+          playerStore.transferResourcesToScore(playerId, vehicleId);
+          break;
+        default:
+          console.warn(`Unknown action type: ${nextAction.type}`);
+          actionSucceeded = false;
+          break;
+      }
+    } catch (error) {
+      // Gestion des erreurs lors de l'exécution
+      console.error(`Erreur lors de l'exécution de l'action ${nextAction.type}:`, error);
+      actionSucceeded = false;
     }
 
-    // Remove the executed action from queue and update last action time
+    // Remove executed action from queue and update last action time
     set((state) => {
-      const botVehicle = state.bots[playerId][vehicleId];
+      const botVehicle = state.bots[playerId]?.[vehicleId];
+      if (!botVehicle) return state;
+      
+      // Si action en échec et tentatives max non dépassées
+      if (!actionSucceeded && nextAction.retries < 3) {
+        return {
+          bots: {
+            ...state.bots,
+            [playerId]: {
+              ...state.bots[playerId],
+              [vehicleId]: {
+                ...botVehicle,
+                actionQueue: [
+                  {...nextAction, retries: (nextAction.retries || 0) + 1},
+                  ...botVehicle.actionQueue.slice(1)
+                ],
+                lastActionTime: now,
+              },
+            },
+          },
+        };
+      }
+      
       return {
         bots: {
           ...state.bots,
@@ -184,51 +230,22 @@ const useBotStore = create((set, get) => ({
               ...botVehicle,
               actionQueue: botVehicle.actionQueue.slice(1),
               lastActionTime: now,
+              // Si action échouée même après tentatives, marquer pour replanification
+              needsReplanning: !actionSucceeded
             },
           },
         },
       };
     });
 
-    return true;
+    return actionSucceeded;
   },
 
-  // Find nearby resources for exploration
-  findNearbyResources: (playerId, vehicleId, radius = 3) => {
-    const tiles = useTileStore.getState().tiles; // Utiliser TileStore
-    const playerStore = usePlayerStore.getState();
-    const vehicle = playerStore.players[playerId].vehicles[vehicleId];
-    
-    if (!vehicle || !vehicle.coord) return [];
-    
-    const [vX, vY] = vehicle.coord.split(',').map(Number);
-    const resources = [];
-    
-    // Scan surrounding tiles for resources
-    for (let x = vX - radius; x <= vX + radius; x++) {
-      for (let y = vY - radius; y <= vY + radius; y++) {
-        const coord = `${x},${y}`;
-        const tile = tiles[coord];
-        
-        if (tile && !tile.collected && tile.resources && 
-            (tile.resources.food > 0 || tile.resources.debris > 0 || tile.resources.special > 0)) {
-          resources.push({
-            coord,
-            position: tile.position,
-            resources: tile.resources,
-            distance: Math.sqrt(Math.pow(x - vX, 2) + Math.pow(y - vY, 2)),
-          });
-        }
-      }
-    }
-    
-    return resources.sort((a, b) => a.distance - b.distance);
-  },
-
+ 
   // Update memory with new information
   updateMemory: (playerId, vehicleId, memoryUpdates) => {
     set((state) => {
-      const botVehicle = state.bots[playerId][vehicleId];
+      const botVehicle = state.bots[playerId]?.[vehicleId];
       if (!botVehicle) return state;
 
       return {
@@ -249,209 +266,139 @@ const useBotStore = create((set, get) => ({
     });
   },
 
-  /**
-   * Fait déplacer un bot vers une tuile choisie au hasard
-   * @param {string} playerId - ID du joueur (bot)
-   * @param {string} vehicleId - ID du véhicule
-   * @returns {boolean} - true si le déplacement a été initié, false sinon
-   */
-  moveToRandomTile: (playerId, vehicleId) => {
-    // Obtenir une tuile walkable aléatoire
-    const randomTile = useTileStore.getState().selectRandomWalkableTile();
-    if (!randomTile) {
-      console.warn("Pas de tuile walkable disponible pour le déplacement aléatoire");
-      return false;
-    }
-
-    console.log(`Bot ${playerId}/${vehicleId} moving to random tile:`, randomTile.coord);
-
-    // Initialiser le mouvement via PlayerStore - c'est le seul endroit où la cible est définie
-    usePlayerStore.getState().moveToTile(playerId, vehicleId, {
-      position: randomTile.position,
-      coord: randomTile.coord
-    });
-
-    // Mettre à jour l'état du bot SANS stocker targetTile en double
-    set((state) => {
-      const botVehicle = state.bots[playerId][vehicleId];
-      if (!botVehicle) return state;
-
-      return {
-        bots: {
-          ...state.bots,
-          [playerId]: {
-            ...state.bots[playerId],
-            [vehicleId]: {
-              ...botVehicle,
-              currentState: BOT_STATES.EXPLORING,
-              lastActionTime: Date.now(),
-            },
-          },
-        },
-      };
-    });
-
-    return true;
-  },
-
-  /**
-   * Trouve et collecte les ressources proches pour un bot
-   * @param {string} playerId - ID du joueur (bot)
-   * @param {string} vehicleId - ID du véhicule
-   */
-  collectNearbyResources: (playerId, vehicleId) => {
-    const tiles = useTileStore.getState().tiles; // Obtenir les tuiles
+  // REFACTORISÉ: Planifier des actions basées sur l'état actuel et l'environnement
+  planActions: (playerId, vehicleId) => {
+    // Récupère l'état actuel du bot et du véhicule
+    const botVehicle = get().bots[playerId]?.[vehicleId];
     const playerStore = usePlayerStore.getState();
-    const vehicle = playerStore.players[playerId].vehicles[vehicleId];
-
-    if (!vehicle || !vehicle.coord) {
-      console.warn(`Véhicule ${vehicleId} du joueur ${playerId} introuvable ou sans coordonnées.`);
-      return false;
-    }
-
-    // Trouver les tuiles avec des ressources non collectées
-    const nearbyResources = Object.values(tiles)
-      .filter((tile) => 
-        tile.resources && 
-        !tile.collected && 
-        (tile.resources.food > 0 || tile.resources.debris > 0 || tile.resources.special > 0)
-      )
-      .map((tile) => ({
-        ...tile,
-        distance: Math.sqrt(
-          Math.pow(tile.coord.split(',')[0] - vehicle.coord.split(',')[0], 2) +
-          Math.pow(tile.coord.split(',')[1] - vehicle.coord.split(',')[1], 2)
-        ),
-      }))
-      .sort((a, b) => a.distance - b.distance); // Trier par distance
-
-    if (nearbyResources.length === 0) {
-      console.log(`Aucune ressource à collecter pour ${vehicleId}.`);
-      return false;
-    }
-
-    // Sélectionner la tuile la plus proche
-    const targetTile = nearbyResources[0];
-    console.log(`Bot ${playerId}/${vehicleId} se déplace vers la tuile pour collecter :`, targetTile.coord);
-
-    // Déplacer le véhicule vers la tuile cible
-    playerStore.moveToTile(playerId, vehicleId, {
-      position: targetTile.position,
-      coord: targetTile.coord,
-    });
-
-    // Mettre à jour l'état du bot
-    set((state) => {
-      const botVehicle = state.bots[playerId][vehicleId];
-      if (!botVehicle) return state;
-
-      return {
-        bots: {
-          ...state.bots,
-          [playerId]: {
-            ...state.bots[playerId],
-            [vehicleId]: {
-              ...botVehicle,
-              currentState: BOT_STATES.COLLECTING,
-              targetTile: targetTile,
-            },
-          },
-        },
-      };
-    });
-
-    return true;
-  },
-
-  // Make decisions based on current state and environment
-  makeDecision: (playerId, vehicleId) => {
-    const botVehicle = get().bots[playerId][vehicleId];
-    const playerStore = usePlayerStore.getState();
-    const vehicle = playerStore.players[playerId].vehicles[vehicleId];
+    const vehicle = playerStore.players[playerId]?.vehicles?.[vehicleId];
 
     if (!botVehicle || !vehicle) {
-      console.log("Données du bot ou du véhicule manquantes dans makeDecision");
+      console.log("Données du bot ou du véhicule manquantes dans planActions");
       return;
     }
 
-    // Effacer la file d'actions si nécessaire
-    get().clearActionQueue(playerId, vehicleId);
+    console.log(`Bot ${playerId}/${vehicleId} planifie des actions dans l'état : ${botVehicle.currentState}`);
 
-    console.log(`Bot ${playerId}/${vehicleId} prend une décision dans l'état : ${botVehicle.currentState}`);
-
-    // Vérifier si le vaisseau est à sa capacité maximale, et passer en mode RETURNING si c'est le cas
+    // RÈGLE D'URGENCE: Vérifier capacité max -> passer en mode RETURNING
     if (vehicle.isAtCapacity && botVehicle.currentState !== BOT_STATES.RETURNING) {
       console.log(`Bot ${playerId}/${vehicleId} détecte capacité max et passe en mode RETURNING`);
       get().changeState(playerId, vehicleId, BOT_STATES.RETURNING);
+      
+      // Ajout d'une action de retour à la base
+      get().queueAction(playerId, vehicleId, {
+        type: 'move',
+        targetTile: {
+          position: vehicle.startPosition,
+          coord: vehicle.startCoord
+        }
+      });
       return;
     }
 
+    // Machine à états: comportement différent selon l'état actuel du bot
     switch (botVehicle.currentState) {
-      case BOT_STATES.IDLE:
-        // Si inactif, commencer à explorer
+      case BOT_STATES.IDLE: // État d'attente
+        // Passe en mode exploration
         get().changeState(playerId, vehicleId, BOT_STATES.EXPLORING);
+        // Planifie un mouvement aléatoire pour commencer
+        get().queueRandomMoveAction(playerId, vehicleId);
         break;
 
-      case BOT_STATES.EXPLORING:
-        // Si en exploration, chercher des ressources proches
+      case BOT_STATES.EXPLORING: // État d'exploration
+        // Vérifie si le bot est immobile avant de planifier
         if (!vehicle.isMoving) {
-          const foundResources = get().collectNearbyResources(playerId, vehicleId);
-          if (!foundResources) {
-            // Si aucune ressource trouvée, continuer à explorer
-            get().moveToRandomTile(playerId, vehicleId);
+          // Cherche des ressources à proximité - Utilise directement tileStore
+          const nearbyResources = useTileStore.getState().analyzeResourcesNearPosition(vehicle, 3);
+          
+          if (nearbyResources.length > 0) {
+            // Si des ressources sont trouvées, passe en mode collecte
+            const targetResource = nearbyResources[0]; // Prend la plus proche
+            get().changeState(playerId, vehicleId, BOT_STATES.COLLECTING);
+            
+            // Planifie d'abord le déplacement vers la ressource
+            get().queueAction(playerId, vehicleId, {
+              type: 'move',
+              targetTile: {
+                position: targetResource.position,
+                coord: targetResource.coord
+              }
+            });
+            
+            // Puis planifie la collecte une fois arrivé
+            get().queueAction(playerId, vehicleId, {
+              type: 'collect',
+              tile: {
+                position: targetResource.position,
+                coord: targetResource.coord
+              }
+            });
+          } else {
+            // Si aucune ressource n'est trouvée, continue l'exploration
+            get().queueRandomMoveAction(playerId, vehicleId);
           }
         }
         break;
 
       case BOT_STATES.COLLECTING:
-        // Si en collecte, vérifier si le véhicule est arrivé à destination
-        if (
-          vehicle.coord === botVehicle.targetTile?.coord &&
-          !vehicle.isMoving
-        ) {
-          console.log(`Bot ${playerId}/${vehicleId} collecte des ressources sur la tuile :`, botVehicle.targetTile.coord);
-
-          // Collecter les ressources
-          playerStore.collectResources(playerId, vehicleId, botVehicle.targetTile);
-
-          // Revenir à l'exploration après la collecte
+        // Ici on ne fait rien car les actions de collecte sont déjà dans la file
+        // Une fois la collecte terminée, l'action sera exécutée automatiquement
+        if (!vehicle.isMoving && botVehicle.actionQueue.length === 0) {
+          // Si nous sommes en état de collecte mais sans actions et sans mouvement,
+          // retour à l'exploration sans appel récursif
           get().changeState(playerId, vehicleId, BOT_STATES.EXPLORING);
+          
+          // Marquer qu'une nouvelle planification est nécessaire
+          set((state) => ({
+            bots: {
+              ...state.bots,
+              [playerId]: {
+                ...state.bots[playerId],
+                [vehicleId]: {
+                  ...state.bots[playerId][vehicleId],
+                  needsReplanning: true
+                }
+              }
+            }
+          }));
         }
         break;
 
       case BOT_STATES.RETURNING:
-        // Vérifier si le vaisseau est arrivé à sa base de départ
+        // Vérifier si arrivé à la base
         if (vehicle.coord === vehicle.startCoord && !vehicle.isMoving) {
-          console.log(`Bot ${playerId}/${vehicleId} est arrivé à sa base et transfère ses ressources`);
-          console.log(vehicle.coord,  vehicle.startCoord);
+          // Si à la base, transférer les ressources
+          get().queueAction(playerId, vehicleId, {
+            type: 'transferResources'
+          });
           
-          // Transférer les ressources au score
-          playerStore.transferResourcesToScore(playerId, vehicleId);
-          
-          // Réinitialiser la propriété isAtCapacity
-          playerStore.updateVehicle(playerId, vehicleId, { isAtCapacity: false });
-          
-          // Retour à l'exploration après avoir déchargé les ressources
+          // Puis prévoir de revenir à l'exploration
           get().changeState(playerId, vehicleId, BOT_STATES.EXPLORING);
-        } else if (!vehicle.isMoving && vehicle.coord !== vehicle.startCoord) {
-          // Si le vaisseau s'est arrêté mais n'est pas encore à sa base, continuer vers la base
-          playerStore.moveToTile(playerId, vehicleId, {
-            position: vehicle.position,
-            coord: vehicle.startCoord
+        } else if (!vehicle.isMoving && botVehicle.actionQueue.length === 0) {
+          // Si arrêté mais pas à la base, planifier le retour
+          get().queueAction(playerId, vehicleId, {
+            type: 'move',
+            targetTile: {
+              position: vehicle.startPosition,
+              coord: vehicle.startCoord
+            }
           });
         }
         break;
         
       case BOT_STATES.AVOIDING:
-        // Logique d'évitement de danger - à implémenter plus tard
+        // À implémenter plus tard
+        get().changeState(playerId, vehicleId, BOT_STATES.EXPLORING);
         break;
         
       case BOT_STATES.REPAIRING:
-        // Logique de réparation - à implémenter plus tard
+        // À implémenter plus tard
+        get().changeState(playerId, vehicleId, BOT_STATES.EXPLORING);
         break;
         
       case BOT_STATES.REFUELING:
-        // Logique de ravitaillement - à implémenter plus tard
+        // À implémenter plus tard
+        get().changeState(playerId, vehicleId, BOT_STATES.EXPLORING);
         break;
         
       default:
@@ -460,30 +407,55 @@ const useBotStore = create((set, get) => ({
     }
   },
 
-  // Process bot in real-time
+  // Helper: Queue a random move action
+  queueRandomMoveAction: (playerId, vehicleId) => {
+    const randomTile = useTileStore.getState().selectRandomWalkableTile();
+    if (!randomTile) {
+      console.warn("Pas de tuile walkable disponible pour le déplacement aléatoire");
+      return false;
+    }
+
+    console.log(`Bot ${playerId}/${vehicleId} planifie un déplacement vers:`, randomTile.coord);
+
+    get().queueAction(playerId, vehicleId, {
+      type: 'move',
+      targetTile: {
+        position: randomTile.position,
+        coord: randomTile.coord
+      }
+    });
+
+    return true;
+  },
+
+  // Process bot in real-time - Fonction appelée à intervalles réguliers
   processBot: () => {
-    if (!get().isRunning) return;
+    if (!get().isRunning) return; // Ne fait rien si le bot est désactivé
     
     const playerId = 'player2';
-    const vehicleId = 'ship'; // Focus on ship only
+    const vehicleId = 'ship';
     
-    // Make a decision if the action queue is empty
-    const bot = get().bots[playerId][vehicleId];
+    const bot = get().bots[playerId]?.[vehicleId];
     if (!bot) return;
     
+    // Stratégie: planifier de nouvelles actions si la file est vide
     if (bot.actionQueue.length === 0) {
-      get().makeDecision(playerId, vehicleId);
+      get().planActions(playerId, vehicleId);
     }
     
-    // Execute next action with cooldown handling
-    get().executeNextAction(playerId, vehicleId);
+    // Tente d'exécuter l'action suivante (avec gestion du cooldown interne)
+    get().executeAction(playerId, vehicleId);
   },
   
-  // Start/stop bot processing
+  // Start/stop bot processing - Activer/désactiver le bot
   toggleBotProcessing: () => {
     set(state => ({ isRunning: !state.isRunning }));
   }
 }));
+
+// Suppression des méthodes redondantes (intégrées dans les nouveaux workflows)
+// - moveToRandomTile (remplacée par queueRandomMoveAction)
+// - collectNearbyResources (intégrée directement dans planActions)
 
 export default useBotStore;
 

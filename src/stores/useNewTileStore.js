@@ -138,5 +138,53 @@ export const useTileStore = create((set, get) => ({
           },
         }));
       },
+
+    /**
+     * Analyse les ressources à proximité d'une position ou d'un véhicule
+     * @param {string|Object} source - Coordonnée (format "x,y") ou objet avec propriété coord
+     * @param {number} radius - Rayon de recherche autour de la position
+     * @returns {Array} - Liste des ressources trouvées, triées par distance
+     */
+    analyzeResourcesNearPosition: (source, radius = 3) => {
+        // On peut maintenant passer soit des coordonnées soit un véhicule
+        let coord;
+        if (typeof source === 'string') {
+            coord = source;
+        } else if (source && source.coord) {
+            coord = source.coord;
+        } else {
+            console.warn("Source invalide pour analyzeResourcesNearPosition");
+            return [];
+        }
+        
+        if (!coord) return [];
+        
+        const tiles = get().tiles;
+        const [vX, vY] = coord.split(',').map(Number); // Convertit les coordonnées en nombres
+        const resources = [];
+        
+        // Parcourt les tuiles dans un rayon donné
+        for (let x = vX - radius; x <= vX + radius; x++) {
+            for (let y = vY - radius; y <= vY + radius; y++) {
+                const tileCoord = `${x},${y}`;
+                const tile = tiles[tileCoord];
+                
+                // Vérifie si la tuile contient des ressources non collectées
+                if (tile && !tile.collected && tile.resources && 
+                    (tile.resources.food > 0 || tile.resources.debris > 0 || tile.resources.special > 0)) {
+                    resources.push({
+                        coord: tileCoord,
+                        position: tile.position,
+                        resources: tile.resources,
+                        // Calcule la distance euclidienne pour le tri
+                        distance: Math.sqrt(Math.pow(x - vX, 2) + Math.pow(y - vY, 2)),
+                    });
+                }
+            }
+        }
+        
+        // Retourne les ressources triées par proximité
+        return resources.sort((a, b) => a.distance - b.distance);
+    },
 }));
 
