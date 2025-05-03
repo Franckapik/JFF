@@ -33,6 +33,17 @@ export const BotStateConfig = {
     }
   },
   
+  [BOT_STATES.COLLECTING]: {
+    description: "Bot en collecte de ressources",
+    defaultAction: { type: 'move', priority: PRIORITY.LOW },
+    onEnterState: () => {
+      console.log("[BotState] Entering COLLECTING state");
+    },
+    onExitState: () => {
+      console.log("[BotState] Exiting COLLECTING state");
+    }
+  },
+  
   [BOT_STATES.RETURNING]: {
     description: "Bot en retour vers sa base",
     defaultAction: { type: 'returnToBase', priority: PRIORITY.HIGH },

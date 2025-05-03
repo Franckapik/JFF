@@ -13,7 +13,7 @@ import { BOT_STATES, PRIORITY } from '../../constants/botConstants';
 export const BotConditions = {
   // Vérifie si le carburant est bas
   isLowFuel: (botState, botVehicle) => {
-    const isLow = botState === BOT_STATES.EXPLORING && botVehicle?.fuel < 50;
+    const isLow = (botState === BOT_STATES.EXPLORING || botState === BOT_STATES.COLLECTING) && botVehicle?.fuel < 50;
     return {
       result: isLow,
       state: isLow ? BOT_STATES.RETURNING : null,
@@ -36,7 +36,7 @@ export const BotConditions = {
     const isFull = botVehicle?.fuel >= 100 && botState === BOT_STATES.RETURNING;
     return {
       result: isFull,
-      state: isFull ? BOT_STATES.EXPLORING : null,
+      state: isFull ? BOT_STATES.COLLECTING : null,
       action: isFull ? { type: 'move', priority: PRIORITY.MEDIUM } : null
     };
   },

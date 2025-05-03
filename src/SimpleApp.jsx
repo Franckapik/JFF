@@ -42,7 +42,7 @@ const SimpleApp = () => {
           <Clock isTimerRunning={true} />
         </div>
         
-        {/* Learning Info Box - Mise à jour pour inclure l'état RETURNING */}
+        {/* Learning Info Box - Mise à jour pour inclure l'état COLLECTING */}
         <div style={{
           position: 'absolute',
           bottom: '10px',
@@ -54,13 +54,14 @@ const SimpleApp = () => {
           boxShadow: '0 0 10px rgba(0,0,0,0.2)'
         }}>
           <h3>FSM Learning Mode</h3>
-          <p>Cette vue simplifiée implémente une machine à états finis (FSM) avec trois états :</p>
+          <p>Cette vue simplifiée implémente une machine à états finis (FSM) avec quatre états :</p>
           <ul>
             <li><strong>IDLE</strong> - Le bot ne fait rien</li>
-            <li><strong>EXPLORING</strong> - Le bot se déplace aléatoirement</li>
+            <li><strong>COLLECTING</strong> - Le bot se déplace aléatoirement pour collecter des ressources</li>
+            <li><strong>EXPLORING</strong> - Le bot se déplace aléatoirement pour explorer</li>
             <li><strong>RETURNING</strong> - Le bot retourne à sa base quand le carburant est inférieur à 50%</li>
           </ul>
-          <p>Condition de transition: Le bot passe automatiquement en mode RETURNING lorsque son carburant passe sous 50%.</p>
+          <p>L'état initial est COLLECTING. Condition de transition principale: Le bot passe automatiquement en mode RETURNING lorsque son carburant passe sous 50%.</p>
         </div>
       </div>
     </div>
