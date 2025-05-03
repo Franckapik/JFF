@@ -5,20 +5,11 @@ import { create } from 'zustand';
 import usePlayerStore from './usePlayerStore';
 import { useTileStore } from './useNewTileStore';
 
-// Les états possibles du bot
-const BOT_STATES = {
-  IDLE: 'idle',         // En attente, ne fait rien
-  EXPLORING: 'exploring', // Exploration de la carte
-  RETURNING: 'returning'  // Retour à la base/tuile de départ
-};
-
-// Niveaux de priorité des actions
-const PRIORITY = {
-  LOW: 1,     // Priorité basse
-  MEDIUM: 2,  // Priorité moyenne
-  HIGH: 3,    // Priorité haute
-  URGENT: 4   // Priorité urgente/critique
-};
+// Importations des modules FSM
+import { BOT_STATES, PRIORITY } from '../ai/constants/botConstants';
+import { BotActions } from '../ai/fsm/actions/botActions';
+import { BotConditions } from '../ai/fsm/conditions/botConditions';
+import { BotStateConfig } from '../ai/fsm/states/botStates';
 
 // Store bot avec file d'actions prioritaires
 const useSimpleBotStore = create((set, get) => ({
@@ -26,7 +17,7 @@ const useSimpleBotStore = create((set, get) => ({
   botState: BOT_STATES.IDLE,
   isRunning: false,
   
-  // NOUVELLE PROPRIÉTÉ: File d'actions avec priorités
+  // File d'actions avec priorités
   actionQueue: [], // [{type, priority, params, timestamp}]
   
   // Fonction d'initialisation - démarre le bot
@@ -37,6 +28,9 @@ const useSimpleBotStore = create((set, get) => ({
       isRunning: true,
       actionQueue: [] // Réinitialise la file d'actions
     });
+    
+    // Exécute l'action onEnterState de l'état initial
+    BotStateConfig[BOT_STATES.EXPLORING].onEnterState();
   },
   
   // Change l'état du bot
@@ -46,12 +40,39 @@ const useSimpleBotStore = create((set, get) => ({
       return;
     }
     
-    console.log(`[SimpleBotStore] Changing state from ${get().botState} to ${newState}`);
+    const currentState = get().botState;
+    if (currentState === newState) return; // Évite les transitions inutiles
+    
+    console.log(`[SimpleBotStore] Changing state from ${currentState} to ${newState}`);
+    
+    // Exécute les hooks de sortie et d'entrée d'état
+    const playerStore = usePlayerStore.getState();
+    
+    if (BotStateConfig[currentState].onExitState) {
+      BotStateConfig[currentState].onExitState(playerStore);
+    }
+    
+    if (BotStateConfig[newState].onEnterState) {
+      BotStateConfig[newState].onEnterState(playerStore);
+    }
+    
     set({ botState: newState });
+    
+    // Ajoute l'action par défaut du nouvel état si nécessaire
+    const defaultAction = BotStateConfig[newState].defaultAction;
+    if (defaultAction) {
+      get().addAction(defaultAction.type, defaultAction.priority);
+    }
   },
   
-  // NOUVELLE MÉTHODE: Ajoute une action à la file d'attente avec priorité
+  // Ajoute une action à la file d'attente avec priorité
   addAction: (actionType, priority = PRIORITY.MEDIUM, params = {}) => {
+    // Vérifie si l'action existe dans le registre
+    if (!BotActions.actionMap[actionType]) {
+      console.warn(`[SimpleBotStore] Unknown action type: ${actionType}`);
+      return;
+    }
+    
     const newAction = {
       type: actionType,
       priority, 
@@ -75,14 +96,14 @@ const useSimpleBotStore = create((set, get) => ({
     });
   },
   
-  // NOUVELLE MÉTHODE: Supprime la première action de la file
+  // Supprime la première action de la file
   removeFirstAction: () => {
     set((state) => ({
       actionQueue: state.actionQueue.slice(1)
     }));
   },
   
-  // NOUVELLE MÉTHODE: Exécute l'action la plus prioritaire de la file
+  // Exécute l'action la plus prioritaire de la file
   executeNextAction: () => {
     const actionQueue = get().actionQueue;
     if (actionQueue.length === 0) return false;
@@ -90,27 +111,26 @@ const useSimpleBotStore = create((set, get) => ({
     const nextAction = actionQueue[0];
     console.log(`[SimpleBotStore] Executing action: ${nextAction.type} with priority ${nextAction.priority}`);
     
-    // Exécuter l'action selon son type
+    // Récupère les stores nécessaires
+    const playerStore = usePlayerStore.getState();
+    const tileStore = useTileStore.getState();
+    
+    // Récupère la référence de la fonction d'action
+    const actionFunction = BotActions[BotActions.actionMap[nextAction.type]];
+    
+    // Exécute l'action avec les paramètres appropriés
     let success = false;
     
-    switch (nextAction.type) {
-      case 'move':
-        success = get().moveToRandomTile();
-        break;
-      
-      case 'returnToBase':
-        success = get().returnToBase();
-        break;
-      
-      case 'refuel':
-        success = get().refuelAtBase();
-        break;
-        
-      // Ajoutez d'autres types d'actions selon vos besoins
-      
-      default:
-        console.warn(`[SimpleBotStore] Unknown action type: ${nextAction.type}`);
-        break;
+    if (actionFunction) {
+      // Passe les différents stores et fonctions dont l'action pourrait avoir besoin
+      success = actionFunction(
+        playerStore, 
+        tileStore, 
+        get().addAction, 
+        get().changeState
+      );
+    } else {
+      console.warn(`[SimpleBotStore] Action function not found for type: ${nextAction.type}`);
     }
     
     // Retirer l'action de la file seulement si elle a été exécutée avec succès
@@ -125,117 +145,25 @@ const useSimpleBotStore = create((set, get) => ({
   checkConditions: () => {
     const currentState = get().botState;
     const playerStore = usePlayerStore.getState();
-    const botVehicle = playerStore.players.player2?.vehicles?.ship;
+    const botVehicle = playerStore.players?.player2?.vehicles?.ship;
     
     if (!botVehicle) return;
     
-    // Condition: si le carburant est inférieur à 50%, passer en mode RETURNING
-    if (currentState === BOT_STATES.EXPLORING && botVehicle.fuel < 50) {
-      console.log(`[SimpleBotStore] Fuel level low (${botVehicle.fuel}%), switching to RETURNING state`);
-      get().changeState(BOT_STATES.RETURNING);
-      
-      // Ajouter une action de retour à la base avec priorité haute
-      get().addAction('returnToBase', PRIORITY.HIGH);
-    }
-  },
-  
-  // MÉTHODES D'ACTION SPÉCIFIQUES
-  
-  // Se déplace vers une tuile aléatoire
-  moveToRandomTile: () => {
-    const playerStore = usePlayerStore.getState();
-    const tileStore = useTileStore.getState();
-    const botVehicle = playerStore.players.player2?.vehicles?.ship;
+    // Utilise le module de conditions pour vérifier toutes les conditions
+    const conditionResult = BotConditions.checkAllConditions(currentState, botVehicle);
     
-    if (!botVehicle || botVehicle.isMoving) {
-      return false;
-    }
-    
-    // Récupère une tuile walkable aléatoire
-    const randomTile = tileStore.selectRandomWalkableTile();
-    if (randomTile) {
-      console.log(`[SimpleBotStore] Moving to random tile: ${randomTile.coord}`);
-      
-      // Déplace le vaisseau vers cette tuile
-      playerStore.moveToTile('player2', 'ship', randomTile);
-      return true;
-    }
-    
-    return false;
-  },
-  
-  // Retourne à la base/tuile de départ
-  returnToBase: () => {
-    const playerStore = usePlayerStore.getState();
-    const tileStore = useTileStore.getState();
-    const botVehicle = playerStore.players.player2?.vehicles?.ship;
-    
-    if (!botVehicle || botVehicle.isMoving) {
-      return false;
-    }
-    
-    // Si déjà à la base
-    if (botVehicle.coord === botVehicle.startCoord) {
-      console.log(`[SimpleBotStore] Already at base`);
-      
-      // Ajouter action de ravitaillement avec priorité moyenne
-      get().addAction('refuel', PRIORITY.MEDIUM);
-      return true;
-    }
-    
-    // Trouve la tuile de départ
-    const baseTile = tileStore.tiles[botVehicle.startCoord];
-    
-    if (baseTile) {
-      console.log(`[SimpleBotStore] Moving back to base tile: ${baseTile.coord}`);
-      
-      // Déplace le bot vers sa base
-      playerStore.moveToTile('player2', 'ship', {
-        coord: baseTile.coord,
-        position: baseTile.position
-      });
-      return true;
-    }
-    
-    return false;
-  },
-  
-  // Ravitaille le véhicule en carburant
-  refuelAtBase: () => {
-    const playerStore = usePlayerStore.getState();
-    const botVehicle = playerStore.players.player2?.vehicles?.ship;
-    
-    if (!botVehicle) return false;
-    
-    // Vérifier si le bot est à sa base
-    if (botVehicle.coord !== botVehicle.startCoord) {
-      console.log(`[SimpleBotStore] Not at base, cannot refuel`);
-      
-      // Ajouter action de retour à la base avec priorité haute
-      get().addAction('returnToBase', PRIORITY.HIGH);
-      return false;
-    }
-    
-    console.log(`[SimpleBotStore] Refueling at base`);
-    playerStore.refuelVehicle('player2');
-    
-    // Si plein, revenir en mode exploration
-    if (botVehicle.fuel >= 100) {
-      console.log("[SimpleBotStore] Fuel full, returning to exploring state");
-      
-      // Transférer les ressources au score (si API disponible)
-      if (playerStore.transferResourcesToScore) {
-        playerStore.transferResourcesToScore('player2', 'ship');
+    // Si une condition est remplie, change l'état et/ou ajoute une action
+    if (conditionResult.result) {
+      // Change l'état si spécifié
+      if (conditionResult.state) {
+        get().changeState(conditionResult.state);
       }
       
-      // Revenir à l'état d'exploration
-      get().changeState(BOT_STATES.EXPLORING);
-      
-      // Ajouter action d'exploration
-      get().addAction('move', PRIORITY.MEDIUM);
+      // Ajoute l'action si spécifiée
+      if (conditionResult.action) {
+        get().addAction(conditionResult.action.type, conditionResult.action.priority);
+      }
     }
-    
-    return true;
   },
   
   // Traite l'état du bot (à appeler périodiquement)
@@ -245,24 +173,14 @@ const useSimpleBotStore = create((set, get) => ({
     // 1. Vérifier les conditions avant tout
     get().checkConditions();
     
-    // 2. Si la file d'actions est vide, ajouter des actions selon l'état
+    // 2. Si la file d'actions est vide, ajouter l'action par défaut de l'état actuel
     if (get().actionQueue.length === 0) {
       const currentState = get().botState;
+      const stateConfig = BotStateConfig[currentState];
       
-      switch (currentState) {
-        case BOT_STATES.IDLE:
-          // Ne rien faire en IDLE
-          break;
-          
-        case BOT_STATES.EXPLORING:
-          // Ajouter une action de mouvement aléatoire
-          get().addAction('move', PRIORITY.LOW);
-          break;
-          
-        case BOT_STATES.RETURNING:
-          // Ajouter une action de retour à la base
-          get().addAction('returnToBase', PRIORITY.HIGH);
-          break;
+      if (stateConfig && stateConfig.defaultAction) {
+        const action = stateConfig.defaultAction;
+        get().addAction(action.type, action.priority);
       }
     }
     
@@ -273,11 +191,20 @@ const useSimpleBotStore = create((set, get) => ({
   // Active/désactive le traitement du bot
   toggleBotProcessing: () => {
     const currentlyRunning = get().isRunning;
+    
+    if (!currentlyRunning) {
+      // Si on démarre le bot et qu'il est en IDLE, passer en EXPLORING
+      if (get().botState === BOT_STATES.IDLE) {
+        get().changeState(BOT_STATES.EXPLORING);
+      }
+    }
+    
     set({ isRunning: !currentlyRunning });
     console.log(`[SimpleBotStore] Bot processing ${!currentlyRunning ? "started" : "stopped"}`);
   },
   
   // Expose les constantes pour usage externe
+  BOT_STATES,
   PRIORITY
 }));
 

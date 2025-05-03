@@ -1,250 +1,350 @@
-# Guide d'Organisation pour un FSM Évolutif
+# Guide d'Évolution de la Machine à États Finis (FSM) du Bot
 
-Ce guide propose des stratégies d'organisation pour faciliter l'extension de votre machine à états finis (FSM) à mesure que la complexité augmente.
+Ce guide vous aidera à étendre les comportements de votre bot en utilisant la structure modulaire mise en place. Vous apprendrez où et comment ajouter de nouveaux états, conditions, actions et transitions.
 
-## 1. Structurer votre code par domaines de responsabilité
+## Structure Générale de la FSM
+
+Notre FSM est organisée en plusieurs modules distincts:
+
+```
+src/
+  ai/
+    constants/
+      botConstants.js      # Définition des états et priorités
+    fsm/
+      actions/
+        botActions.js      # Implémentation des actions exécutables
+      conditions/
+        botConditions.js   # Vérification des conditions de transition
+      states/
+        botStates.js       # Configuration des comportements par état
+```
+
+## 1. Ajouter un Nouvel État
+
+Pour ajouter un nouvel état (par exemple "RESOURCE_COLLECTING"):
+
+### Étape 1: Définir la constante d'état
+
+Dans `src/ai/constants/botConstants.js`:
 
 ```javascript
-// src/stores/useSimpleBotStore.js
-
-// === DÉFINITIONS DES ÉTATS ET CONSTANTES ===
-const BOT_STATES = { 
+// Les états possibles du bot
+export const BOT_STATES = {
+  // États existants...
   IDLE: 'idle',
   EXPLORING: 'exploring',
   RETURNING: 'returning',
-  // Nouveaux états à ajouter ici
-  // HARVESTING: 'harvesting',
-  // COMBAT: 'combat',
+  // Nouvel état
+  RESOURCE_COLLECTING: 'resource_collecting'
 };
-
-const PRIORITY = { /* ... */ };
-
-// === DÉFINITION DES ACTIONS DISPONIBLES ===
-const ACTION_TYPES = {
-  MOVE: 'move',
-  RETURN_TO_BASE: 'returnToBase',
-  REFUEL: 'refuel',
-  // Nouvelles actions à ajouter ici
-  // HARVEST: 'harvest',
-  // ATTACK: 'attack',
-};
-
-const useSimpleBotStore = create((set, get) => ({
-  // === ÉTAT INTERNE DU STORE ===
-  botState: BOT_STATES.IDLE,
-  isRunning: false,
-  actionQueue: [],
-  
-  // === GESTION D'ÉTAT (FSM CORE) ===
-  initializeBot: () => { /* ... */ },
-  changeState: (newState) => { /* ... */ },
-  
-  // === GESTION DE LA FILE D'ACTIONS ===
-  addAction: (actionType, priority, params) => { /* ... */ },
-  removeFirstAction: () => { /* ... */ },
-  executeNextAction: () => {
-    // Centralisez ici l'aiguillage vers les fonctions d'action
-    const { type } = get().actionQueue[0];
-    
-    // Utilisez un mappage explicite des types d'action vers les fonctions
-    const actionHandlers = {
-      [ACTION_TYPES.MOVE]: get().moveToRandomTile,
-      [ACTION_TYPES.RETURN_TO_BASE]: get().returnToBase,
-      [ACTION_TYPES.REFUEL]: get().refuelAtBase,
-      // Ajoutez de nouveaux handlers ici
-    };
-    
-    // Exécutez l'action si un handler existe
-    if (actionHandlers[type]) {
-      return actionHandlers[type]();
-    }
-    
-    console.warn(`Unknown action type: ${type}`);
-    return false;
-  },
-  
-  // === LOGIQUE DE DÉCISION (CONDITIONS) ===
-  checkConditions: () => {
-    // Séparation des conditions dans des fonctions dédiées
-    get().checkFuelCondition();
-    get().checkDamageCondition();
-    // Ajoutez de nouvelles vérifications de conditions ici
-  },
-  
-  // Conditions individuelles
-  checkFuelCondition: () => {
-    const currentState = get().botState;
-    const botVehicle = usePlayerStore.getState().players.player2?.vehicles?.ship;
-    
-    if (currentState === BOT_STATES.EXPLORING && botVehicle?.fuel < 50) {
-      get().changeState(BOT_STATES.RETURNING);
-      get().addAction(ACTION_TYPES.RETURN_TO_BASE, PRIORITY.HIGH);
-    }
-  },
-  
-  checkDamageCondition: () => {
-    // Nouvelle condition à implémenter
-  },
-  
-  // === ACTIONS SPÉCIFIQUES (IMPLEMENTATION) ===
-  // Organisez par domaine fonctionnel
-  
-  // Actions de mouvement
-  moveToRandomTile: () => { /* ... */ },
-  moveToBestResourceTile: () => { /* ... */ },
-  
-  // Actions de base
-  returnToBase: () => { /* ... */ },
-  refuelAtBase: () => { /* ... */ },
-  repairAtBase: () => { /* ... */ },
-  
-  // Actions de ressources (nouveau domaine)
-  harvestResource: () => { /* ... */ },
-  
-  // === SYSTÈME DE TRAITEMENT PRINCIPAL ===
-  processBot: () => {
-    // Structurez clairement les étapes
-    get().checkConditions();
-    get().fillEmptyQueue();
-    get().executeNextAction();
-  },
-  
-  // Remplissage de la file basé sur l'état courant
-  fillEmptyQueue: () => {
-    if (get().actionQueue.length === 0) {
-      const actionsByState = {
-        [BOT_STATES.IDLE]: () => {},
-        [BOT_STATES.EXPLORING]: () => get().addAction(ACTION_TYPES.MOVE, PRIORITY.LOW),
-        [BOT_STATES.RETURNING]: () => get().addAction(ACTION_TYPES.RETURN_TO_BASE, PRIORITY.HIGH),
-        // Ajoutez de nouvelles actions par état ici
-      };
-      
-      const currentState = get().botState;
-      if (actionsByState[currentState]) {
-        actionsByState[currentState]();
-      }
-    }
-  },
-  
-  toggleBotProcessing: () => { /* ... */ },
-  
-  // === EXPORTS ===
-  ACTION_TYPES,
-  BOT_STATES,
-  PRIORITY
-}));
 ```
 
-## 2. Créer un tableau de transitions explicite
-
-Pour clarifier davantage les transitions entre états, ajoutez une définition explicite des transitions possibles :
+Mettez également à jour `STATE_TRANSITIONS` pour documenter les transitions possibles:
 
 ```javascript
-// À ajouter dans votre store
-
-const STATE_TRANSITIONS = [
-  {
-    from: BOT_STATES.EXPLORING,
-    to: BOT_STATES.RETURNING,
-    condition: (botVehicle) => botVehicle?.fuel < 50,
-    action: (store) => store.addAction(ACTION_TYPES.RETURN_TO_BASE, PRIORITY.HIGH)
+export const STATE_TRANSITIONS = {
+  // Transitions existantes...
+  [BOT_STATES.EXPLORING]: {
+    possibleNextStates: [BOT_STATES.RETURNING, BOT_STATES.IDLE, BOT_STATES.RESOURCE_COLLECTING],
+    description: "Bot en exploration, peut collecter des ressources, retourner à la base ou s'arrêter",
   },
-  {
-    from: BOT_STATES.RETURNING, 
-    to: BOT_STATES.EXPLORING,
-    condition: (botVehicle) => botVehicle?.fuel >= 100 && botVehicle?.coord === botVehicle?.startCoord,
-    action: (store) => store.addAction(ACTION_TYPES.MOVE, PRIORITY.MEDIUM)
+  // Nouvel état
+  [BOT_STATES.RESOURCE_COLLECTING]: {
+    possibleNextStates: [BOT_STATES.EXPLORING, BOT_STATES.RETURNING],
+    description: "Bot collectant des ressources, peut reprendre l'exploration ou retourner à la base",
   },
-  // Ajoutez de nouvelles transitions ici
-];
+};
+```
 
-// Puis dans checkConditions()
+### Étape 2: Configurer le comportement de l'état
+
+Dans `src/ai/fsm/states/botStates.js`:
+
+```javascript
+export const BotStateConfig = {
+  // États existants...
+  
+  [BOT_STATES.RESOURCE_COLLECTING]: {
+    description: "Bot en train de collecter des ressources",
+    defaultAction: { type: 'collectResource', priority: PRIORITY.MEDIUM },
+    onEnterState: () => {
+      console.log("[BotState] Entering RESOURCE_COLLECTING state");
+    },
+    onExitState: () => {
+      console.log("[BotState] Exiting RESOURCE_COLLECTING state");
+    }
+  }
+};
+```
+
+## 2. Ajouter une Nouvelle Action
+
+Pour ajouter une nouvelle action (par exemple "collectResource"):
+
+### Étape 1: Implémenter la fonction d'action
+
+Dans `src/ai/fsm/actions/botActions.js`:
+
+```javascript
+export const BotActions = {
+  // Actions existantes...
+  
+  // Collecte des ressources sur la tuile actuelle
+  collectResource: (playerStore, tileStore, addAction) => {
+    const botVehicle = playerStore.players?.player2?.vehicles?.ship;
+    
+    if (!botVehicle) return false;
+    
+    // Vérifier si la tuile actuelle a des ressources
+    const currentTile = tileStore.tiles[botVehicle.coord];
+    
+    if (!currentTile || !currentTile.hasResource) {
+      console.log(`[BotActions] No resources on current tile`);
+      // Pas de ressource, retourner à l'exploration
+      addAction('move', PRIORITY.LOW);
+      return true;
+    }
+    
+    console.log(`[BotActions] Collecting resources from tile ${currentTile.coord}`);
+    playerStore.collectResource('player2', 'ship', currentTile);
+    
+    // Vérifier si l'inventaire est plein pour décider de l'action suivante
+    if (botVehicle.inventory >= botVehicle.maxInventory) {
+      addAction('returnToBase', PRIORITY.HIGH);
+    }
+    
+    return true;
+  },
+  
+  // Mettre à jour la map des types d'actions aux fonctions
+  actionMap: {
+    // Types existants...
+    'move': 'moveToRandomTile',
+    'returnToBase': 'returnToBase',
+    'refuel': 'refuelAtBase',
+    // Nouveau type
+    'collectResource': 'collectResource'
+  }
+};
+```
+
+## 3. Ajouter une Nouvelle Condition
+
+Pour ajouter une nouvelle condition (par exemple "isResourceNearby"):
+
+Dans `src/ai/fsm/conditions/botConditions.js`:
+
+```javascript
+export const BotConditions = {
+  // Conditions existantes...
+  
+  // Vérifie si une ressource est disponible sur la tuile actuelle
+  isResourceAvailable: (botState, botVehicle, tileStore) => {
+    if (botState !== BOT_STATES.EXPLORING) return { result: false };
+    
+    const currentTile = tileStore.tiles[botVehicle.coord];
+    const hasResource = currentTile && currentTile.hasResource;
+    
+    return {
+      result: hasResource,
+      state: hasResource ? BOT_STATES.RESOURCE_COLLECTING : null,
+      action: hasResource ? { type: 'collectResource', priority: PRIORITY.MEDIUM } : null
+    };
+  },
+  
+  // Fonction principale qui vérifie toutes les conditions
+  checkAllConditions: (botState, botVehicle, tileStore) => {
+    if (!botVehicle) return { result: false };
+    
+    // Ordre de priorité des conditions à vérifier
+    const conditions = [
+      BotConditions.isLowFuel,
+      BotConditions.isAtBase,
+      BotConditions.isFullyRefueled,
+      // Ajouter la nouvelle condition
+      BotConditions.isResourceAvailable
+    ];
+    
+    // Parcourir les conditions par ordre de priorité
+    for (const condition of conditions) {
+      const result = condition(botState, botVehicle, tileStore);
+      if (result.result) {
+        return result;
+      }
+    }
+    
+    return { result: false };
+  }
+};
+```
+
+## 4. Mettre à Jour le Store Principal
+
+Si votre nouvelle fonctionnalité nécessite des modifications du store principal:
+
+Dans `src/stores/useSimpleBotStore.js`:
+
+```javascript
+// Mettre à jour la fonction checkConditions pour passer les dépendances nécessaires
 checkConditions: () => {
   const currentState = get().botState;
-  const botVehicle = usePlayerStore.getState().players.player2?.vehicles?.ship;
+  const playerStore = usePlayerStore.getState();
+  const tileStore = useTileStore.getState();
+  const botVehicle = playerStore.players?.player2?.vehicles?.ship;
   
   if (!botVehicle) return;
   
-  // Parcourir les transitions possibles depuis l'état actuel
-  for (const transition of STATE_TRANSITIONS) {
-    if (transition.from === currentState && transition.condition(botVehicle)) {
-      console.log(`[SimpleBotStore] Transition from ${transition.from} to ${transition.to}`);
-      get().changeState(transition.to);
-      transition.action(get());
-      break; // Une seule transition par cycle
-    }
+  // Passer le tileStore aux conditions
+  const conditionResult = BotConditions.checkAllConditions(currentState, botVehicle, tileStore);
+  
+  // Si une condition est remplie, change l'état et/ou ajoute une action
+  if (conditionResult.result) {
+    // Reste de la fonction inchangé...
   }
 }
 ```
 
-## 3. Documenter clairement chaque nouvelle extension
+## Guide Pas à Pas pour Ajouter un Comportement Complet
 
-Pour chaque nouvel état ou action que vous ajoutez, incluez un bloc de commentaires standard qui explique :
+Voici les étapes pour ajouter un comportement complet, de la planification à l'implémentation:
 
+### 1. Planification
+
+Définissez clairement:
+- Le nouvel **état** requis (s'il y en a un)
+- Les **conditions** qui déclencheront ou termineront ce comportement
+- Les **actions** que le bot doit effectuer dans ce comportement
+
+### 2. Implémentation
+
+#### Ordre recommandé:
+
+1. **Constantes**: Ajoutez d'abord l'état dans `botConstants.js`
+2. **Actions**: Implémentez les fonctions d'action dans `botActions.js`
+3. **États**: Configurez le comportement de l'état dans `botStates.js`
+4. **Conditions**: Ajoutez les conditions de transition dans `botConditions.js`
+
+### 3. Test
+
+Pour tester votre nouveau comportement:
+1. Forcez l'état initial approprié pour le test
+2. Vérifiez les logs de console pour suivre les transitions
+3. Confirmez que les actions appropriées sont exécutées
+
+## Exemple Complet: Ajout d'un Comportement d'Évitement de Danger
+
+Voici un exemple complet d'ajout d'un comportement d'évitement de danger:
+
+### 1. Constantes (botConstants.js)
 ```javascript
-/**
- * État: HARVESTING
- * Description: Le bot collecte activement des ressources d'une tuile.
- * Conditions d'entrée:
- *   - Depuis EXPLORING quand une ressource est détectée
- * Conditions de sortie:
- *   - Vers EXPLORING quand la ressource est épuisée
- *   - Vers RETURNING quand le carburant est bas (<50%)
- * Actions associées:
- *   - 'harvest' (MEDIUM): Collecter des ressources sur la tuile actuelle
- */
+export const BOT_STATES = {
+  // États existants...
+  DANGER_AVOIDANCE: 'danger_avoidance'
+};
+
+export const STATE_TRANSITIONS = {
+  // Transitions existantes...
+  [BOT_STATES.DANGER_AVOIDANCE]: {
+    possibleNextStates: [BOT_STATES.EXPLORING, BOT_STATES.RETURNING],
+    description: "Bot évitant un danger, peut ensuite reprendre son activité précédente"
+  }
+};
 ```
 
-## 4. Créer un fichier de documentation des extensions
-
-Créez un fichier `SimpleBotExtensions.md` qui liste tous les états et actions, explique leur fonction et indique où ajouter du code pour chaque type d'extension :
-
-```markdown
-# Guide d'Extension du SimpleBot
-
-## Ajouter un Nouvel État
-
-1. Ajoutez le nom de l'état dans l'objet `BOT_STATES`
-2. Ajoutez une condition de transition vers cet état dans `STATE_TRANSITIONS`
-3. Ajoutez une gestion de cet état dans la fonction `fillEmptyQueue`
-4. Documentez l'état et ses transitions
-
-## Ajouter une Nouvelle Action
-
-1. Ajoutez le type d'action dans l'objet `ACTION_TYPES`
-2. Créez une fonction d'implémentation de l'action dans la section appropriée
-3. Ajoutez le mapping dans `actionHandlers` dans `executeNextAction`
-4. Documentez l'action et son utilisation
-```
-
-## 5. Visualisez votre FSM
-
-Créez un fichier `botFSM.dot` qui représente visuellement votre machine à états, et mettez-le à jour à chaque extension :
-
-```dot
-digraph BotFSM {
-  // États
-  idle [shape=circle];
-  exploring [shape=circle];
-  returning [shape=circle];
+### 2. Actions (botActions.js)
+```javascript
+export const BotActions = {
+  // Actions existantes...
   
-  // Transitions
-  idle -> exploring [label="Démarrage"];
-  exploring -> returning [label="Carburant < 50%"];
-  returning -> exploring [label="À la base, plein"];
-}
+  avoidDanger: (playerStore, tileStore, addAction, changeState) => {
+    const botVehicle = playerStore.players?.player2?.vehicles?.ship;
+    if (!botVehicle) return false;
+    
+    // Trouver une tuile sûre
+    const safeTile = tileStore.findSafeTile(botVehicle.coord);
+    
+    if (safeTile) {
+      console.log(`[BotActions] Avoiding danger, moving to safe tile: ${safeTile.coord}`);
+      playerStore.moveToTile('player2', 'ship', safeTile);
+      
+      // Après avoir évité le danger, retourner à l'état précédent
+      setTimeout(() => {
+        // Stocker l'état précédent dans une variable à l'entrée de DANGER_AVOIDANCE
+        changeState(botVehicle.previousState || BOT_STATES.EXPLORING);
+      }, 1000);
+      return true;
+    }
+    
+    return false;
+  },
+  
+  actionMap: {
+    // Types existants...
+    'avoidDanger': 'avoidDanger'
+  }
+};
 ```
 
-Vous pouvez utiliser des outils comme Graphviz pour générer une visualisation graphique de votre FSM à partir de ce fichier.
+### 3. États (botStates.js)
+```javascript
+export const BotStateConfig = {
+  // États existants...
+  
+  [BOT_STATES.DANGER_AVOIDANCE]: {
+    description: "Bot évitant un danger imminent",
+    defaultAction: { type: 'avoidDanger', priority: PRIORITY.URGENT },
+    onEnterState: (playerStore) => {
+      console.log("[BotState] Entering DANGER_AVOIDANCE state");
+      // Sauvegarder l'état précédent pour y revenir après
+      const botVehicle = playerStore.players?.player2?.vehicles?.ship;
+      if (botVehicle) {
+        botVehicle.previousState = botVehicle.currentState;
+      }
+    },
+    onExitState: () => {
+      console.log("[BotState] Exiting DANGER_AVOIDANCE state");
+    }
+  }
+};
+```
 
-## Bénéfices de cette approche
+### 4. Conditions (botConditions.js)
+```javascript
+export const BotConditions = {
+  // Conditions existantes...
+  
+  isDangerDetected: (botState, botVehicle, tileStore) => {
+    // Vérifier les dangers à proximité
+    const currentTile = tileStore.tiles[botVehicle.coord];
+    const dangerNearby = currentTile && currentTile.isDangerous;
+    
+    return {
+      result: dangerNearby,
+      state: dangerNearby ? BOT_STATES.DANGER_AVOIDANCE : null,
+      action: dangerNearby ? { type: 'avoidDanger', priority: PRIORITY.URGENT } : null
+    };
+  },
+  
+  checkAllConditions: (botState, botVehicle, tileStore) => {
+    // Conditions existantes...
+    const conditions = [
+      // Le danger doit être vérifié en premier (priorité maximale)
+      BotConditions.isDangerDetected,
+      // Autres conditions...
+    ];
+    
+    // Reste du code inchangé...
+  }
+};
+```
 
-Cette structure organisée vous permettra de :
+## Conseils pour un Code Maintenable
 
-1. **Identifier facilement** où ajouter de nouveaux états, conditions et actions
-2. **Maintenir une séparation claire** entre les différentes responsabilités
-3. **Documenter systématiquement** votre système au fur et à mesure qu'il évolue
-4. **Visualiser** la structure complète de votre FSM
-5. **Réduire les bugs** en ayant un modèle cohérent et explicite pour les extensions
+1. **Documentation**: Documentez clairement chaque état, action, et condition.
+2. **Logs**: Utilisez les logs de manière consistante avec des préfixes clairs.
+3. **Cohérence**: Suivez les mêmes patterns pour toutes les nouvelles fonctionnalités.
+4. **Tests**: Testez chaque nouveau comportement indépendamment avant de l'intégrer.
+5. **Simplicité**: Gardez chaque fonction simple et centrée sur une seule responsabilité.
 
-À mesure que la complexité de votre bot augmente, cette structure vous aidera à garder un code organisé, maintenable et extensible.
+En suivant ce guide, vous pourrez facilement étendre les comportements de votre bot tout en maintenant un code organisé et facile à comprendre.
