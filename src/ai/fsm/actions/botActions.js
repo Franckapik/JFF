@@ -27,6 +27,37 @@ export const BotActions = {
     return false;
   },
   
+  // Se déplace vers une tuile aléatoire et collecte automatiquement les ressources à l'arrivée
+  moveAndCollect: (playerStore, tileStore) => {
+    const botVehicle = playerStore.players?.player2?.vehicles?.ship;
+    
+    if (!botVehicle || botVehicle.isMoving) {
+      return false;
+    }
+    
+    // Si le bot vient d'arriver sur une tuile avec des ressources, collecter d'abord
+    if (botVehicle.coord) {
+      const currentTile = tileStore.tiles[botVehicle.coord];
+      if (currentTile && currentTile.resources && 
+          (currentTile.resources.food > 0 || 
+           currentTile.resources.debris > 0 || 
+           currentTile.resources.special > 0)) {
+        console.log(`[BotActions] Collecting resources at tile: ${botVehicle.coord}`);
+        playerStore.collectResources('player2', 'ship', currentTile);
+      }
+    }
+    
+    // Puis se déplacer vers une nouvelle tuile aléatoire
+    const randomTile = tileStore.selectRandomWalkableTile();
+    if (randomTile) {
+      console.log(`[BotActions] Moving to random tile: ${randomTile.coord}`);
+      playerStore.moveToTile('player2', 'ship', randomTile);
+      return true;
+    }
+    
+    return false;
+  },
+  
   // Retourne à la base/tuile de départ
   returnToBase: (playerStore, tileStore, addAction) => {
     const botVehicle = playerStore.players?.player2?.vehicles?.ship;
@@ -80,6 +111,7 @@ export const BotActions = {
   // Map des types d'actions aux fonctions d'exécution
   actionMap: {
     'move': 'moveToRandomTile',
+    'collect': 'moveAndCollect',
     'returnToBase': 'returnToBase',
     'refuel': 'refuelAtBase'
   }
