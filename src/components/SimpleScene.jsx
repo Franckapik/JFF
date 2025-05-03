@@ -1,11 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import { GridHelper } from "three";
 import { useThree, useFrame } from "@react-three/fiber";
+import { Cone } from "@react-three/drei";
 import Tile from "./Tile";
 import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
 import useSimpleBotStore from "../stores/useSimpleBotStore";
 import ShipMovement from "../Mouvement/ShipMovement";
+import SimpleDroneMovement from "../Mouvement/SimpleDroneMovement";
 
 // Cette version simplifiée de Scene utilise specificiquement useSimpleBotStore
 // pour tester l'implémentation FSM éducative
@@ -78,6 +80,18 @@ const SimpleScene = () => {
       <ambientLight intensity={1} />
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
+      
+      {/* Drone représenté par un cône avec mouvement */}
+      <SimpleDroneMovement>
+        <Cone 
+          args={[0.3, 0.8, 8]} 
+          rotation={[Math.PI, 0, 0]}
+          castShadow
+        >
+          <meshStandardMaterial color="purple" metalness={0.5} roughness={0.3} />
+        </Cone>
+      </SimpleDroneMovement>
+      
       {Object.keys(tiles).length > 0 && (
         <>
           <ShipMovement playerId="player1">
