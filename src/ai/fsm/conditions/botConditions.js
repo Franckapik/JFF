@@ -36,8 +36,8 @@ export const BotConditions = {
     const isFull = botVehicle?.fuel >= 100 && botState === BOT_STATES.RETURNING;
     return {
       result: isFull,
-      state: isFull ? BOT_STATES.COLLECTING : null,
-      action: isFull ? { type: 'move', priority: PRIORITY.MEDIUM } : null
+      state: isFull ? BOT_STATES.EXPLORING : null, // Change to EXPLORING state instead of COLLECTING
+      action: isFull ? { type: 'exploreDrone', priority: PRIORITY.MEDIUM } : null // Use exploreDrone action
     };
   },
   

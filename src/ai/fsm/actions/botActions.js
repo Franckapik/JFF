@@ -108,11 +108,53 @@ export const BotActions = {
     return true;
   },
   
+  // Envoie un drone explorer une tuile à distance
+  explorerWithDrone: (playerStore, tileStore) => {
+    const botVehicle = playerStore.players?.player2?.vehicles?.ship;
+    const botDrone = playerStore.players?.player2?.vehicles?.drone3;
+    
+    // Vérifie si le drone est déjà en mouvement
+    if (!botDrone || botDrone.isMoving) {
+      return false;
+    }
+    
+    // Sélectionne une tuile à explorer à une distance raisonnable du vaisseau
+    const resourcesNearby = tileStore.analyzeResourcesNearPosition(botVehicle, 5);
+    const unexploredTiles = resourcesNearby.filter(tile => !tile.explored);
+    
+    // Si aucune tuile non-explorée n'est trouvée, chercher une tuile aléatoire
+    if (unexploredTiles.length === 0) {
+      const randomTile = tileStore.selectRandomWalkableTile();
+      if (randomTile) {
+        console.log(`[BotActions] Sending drone to explore random tile: ${randomTile.coord}`);
+        playerStore.moveToTile('player2', 'drone3', randomTile);
+        
+        // Marquer la tuile comme explorée
+        tileStore.markTileAsExplored(randomTile.coord);
+        return true;
+      }
+      return false;
+    }
+    
+    // Sinon, envoyer le drone vers la tuile non-explorée la plus proche
+    const targetTile = unexploredTiles[0];
+    console.log(`[BotActions] Sending drone to explore tile with resources: ${targetTile.coord}`);
+    playerStore.moveToTile('player2', 'drone3', {
+      coord: targetTile.coord,
+      position: targetTile.position
+    });
+    
+    // Marquer la tuile comme explorée
+    tileStore.markTileAsExplored(targetTile.coord);
+    return true;
+  },
+  
   // Map des types d'actions aux fonctions d'exécution
   actionMap: {
     'move': 'moveToRandomTile',
     'collect': 'moveAndCollect',
     'returnToBase': 'returnToBase',
-    'refuel': 'refuelAtBase'
+    'refuel': 'refuelAtBase',
+    'exploreDrone': 'explorerWithDrone'
   }
 };

@@ -8,6 +8,7 @@ import usePlayerStore from "../stores/usePlayerStore";
 import useSimpleBotStore from "../stores/useSimpleBotStore";
 import ShipMovement from "../Mouvement/ShipMovement";
 import SimpleDroneMovement from "../Mouvement/SimpleDroneMovement";
+import SimpleBotDroneMovement from "../Mouvement/SimpleBotDroneMovement";
 
 // Cette version simplifiée de Scene utilise specificiquement useSimpleBotStore
 // pour tester l'implémentation FSM éducative
@@ -81,7 +82,7 @@ const SimpleScene = () => {
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
       
-      {/* Drone représenté par un cône avec mouvement */}
+      {/* Drone du joueur 1 représenté par un cône avec mouvement */}
       <SimpleDroneMovement>
         <Cone 
           args={[0.3, 0.8, 8]} 
@@ -91,6 +92,17 @@ const SimpleScene = () => {
           <meshStandardMaterial color="purple" metalness={0.5} roughness={0.3} />
         </Cone>
       </SimpleDroneMovement>
+      
+      {/* Drone du bot (player2) représenté par un cône avec mouvement */}
+      <SimpleBotDroneMovement>
+        <Cone 
+          args={[0.3, 0.8, 8]} 
+          rotation={[Math.PI, 0, 0]}
+          castShadow
+        >
+          <meshStandardMaterial color="magenta" metalness={0.5} roughness={0.3} />
+        </Cone>
+      </SimpleBotDroneMovement>
       
       {Object.keys(tiles).length > 0 && (
         <>

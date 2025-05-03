@@ -24,7 +24,7 @@ export const BotStateConfig = {
   
   [BOT_STATES.EXPLORING]: {
     description: "Bot en exploration de la carte",
-    defaultAction: { type: 'move', priority: PRIORITY.LOW },
+    defaultAction: { type: 'exploreDrone', priority: PRIORITY.MEDIUM },
     onEnterState: () => {
       console.log("[BotState] Entering EXPLORING state");
     },
