@@ -1,15 +1,15 @@
 import React from 'react';
-import useSimpleBotStore from '../stores/useSimpleBotStore';
+import useBotStore from '../stores/useBotStore';
 
 const BotControls = () => {
   // Récupération de l'état et des fonctions du store
-  const botState = useSimpleBotStore(state => state.botState);
-  const isRunning = useSimpleBotStore(state => state.isRunning);
-  const actionQueue = useSimpleBotStore(state => state.actionQueue);
-  const toggleBotProcessing = useSimpleBotStore(state => state.toggleBotProcessing);
-  const changeState = useSimpleBotStore(state => state.changeState);
-  const addAction = useSimpleBotStore(state => state.addAction);
-  const PRIORITY = useSimpleBotStore(state => state.PRIORITY);
+  const botState = useBotStore(state => state.botState);
+  const isRunning = useBotStore(state => state.isRunning);
+  const actionQueue = useBotStore(state => state.actionQueue);
+  const toggleBotProcessing = useBotStore(state => state.toggleBotProcessing);
+  const changeState = useBotStore(state => state.changeState);
+  const addAction = useBotStore(state => state.addAction);
+  const PRIORITY = useBotStore(state => state.PRIORITY);
   
   // Fonction pour ajouter une action manuelle
   const handleAddAction = (actionType, priority) => {
@@ -17,36 +17,22 @@ const BotControls = () => {
   };
   
   return (
-    <div style={{ 
-      border: '1px solid #ddd', 
-      borderRadius: '5px', 
-      padding: '10px', 
-      backgroundColor: '#f5f5f5',
-      fontFamily: 'Arial, sans-serif',
-      minWidth: '300px'
-    }}>
-      <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>Bot Controls (FSM)</h3>
+    <div className="bot-controls">
+      <h3>Bot Controls (FSM)</h3>
       
-      <div style={{ marginBottom: '10px' }}>
-        <p style={{ margin: '5px 0' }}>
+      <div className="bot-controls-info">
+        <p>
           Current State: <strong>{botState}</strong>
         </p>
-        <p style={{ margin: '5px 0' }}>
+        <p>
           Running: <strong>{isRunning ? "Yes" : "No"}</strong>
         </p>
       </div>
       
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+      <div className="bot-controls-buttons">
         <button 
           onClick={toggleBotProcessing}
-          style={{
-            backgroundColor: isRunning ? '#f44336' : '#4CAF50',
-            color: 'white',
-            border: 'none',
-            padding: '5px 10px',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
+          className={`bot-controls-toggle ${isRunning ? 'running' : ''}`}
         >
           {isRunning ? "Stop Bot" : "Start Bot"}
         </button>
@@ -55,11 +41,7 @@ const BotControls = () => {
           value={botState} 
           onChange={(e) => changeState(e.target.value)}
           disabled={!isRunning}
-          style={{
-            padding: '5px',
-            borderRadius: '4px',
-            border: '1px solid #ccc'
-          }}
+          className="bot-controls-state-select"
         >
           <option value="idle">Idle</option>
           <option value="exploring">Exploring</option>
@@ -68,70 +50,33 @@ const BotControls = () => {
       </div>
       
       {/* Section - Ajout d'actions manuelles */}
-      <div>
-        <h4 style={{ margin: '10px 0', fontSize: '1em' }}>Ajouter des actions</h4>
-        <div style={{ 
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '5px',
-          marginBottom: '10px'
-        }}>
+      <div className="bot-controls-actions-section">
+        <h4>Ajouter des actions</h4>
+        <div className="bot-controls-actions-grid">
           <button 
             onClick={() => handleAddAction('move', PRIORITY.LOW)}
-            style={{
-              backgroundColor: '#4CAF50',
-              color: 'white',
-              border: 'none',
-              padding: '5px',
-              fontSize: '0.8em',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
+            className="bot-action-button bot-action-move-low"
           >
             Mouvement (BASSE)
           </button>
           
           <button 
             onClick={() => handleAddAction('move', PRIORITY.MEDIUM)}
-            style={{
-              backgroundColor: '#FFC107',
-              color: 'black',
-              border: 'none',
-              padding: '5px',
-              fontSize: '0.8em',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
+            className="bot-action-button bot-action-move-medium"
           >
             Mouvement (MOYENNE)
           </button>
           
           <button 
             onClick={() => handleAddAction('returnToBase', PRIORITY.HIGH)}
-            style={{
-              backgroundColor: '#FFA500',
-              color: 'white',
-              border: 'none',
-              padding: '5px',
-              fontSize: '0.8em',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
+            className="bot-action-button bot-action-return-high"
           >
             Retour Base (HAUTE)
           </button>
           
           <button 
             onClick={() => handleAddAction('refuel', PRIORITY.URGENT)}
-            style={{
-              backgroundColor: '#FF0000',
-              color: 'white',
-              border: 'none',
-              padding: '5px',
-              fontSize: '0.8em',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
+            className="bot-action-button bot-action-collect-urgent"
           >
             Ravitailler (URGENT)
           </button>
@@ -139,16 +84,9 @@ const BotControls = () => {
       </div>
       
       {/* Section d'information éducative */}
-      <div style={{ 
-        marginTop: '15px',
-        padding: '8px',
-        backgroundColor: '#e9f5f8',
-        borderRadius: '4px',
-        fontSize: '0.85em',
-        color: '#444'
-      }}>
-        <p style={{ margin: '0 0 5px 0' }}><strong>File d'actions prioritaires</strong></p>
-        <ul style={{ margin: '0', paddingLeft: '20px' }}>
+      <div className="bot-info-section">
+        <p><strong>File d'actions prioritaires</strong></p>
+        <ul>
           <li>Les actions sont exécutées par ordre de priorité</li>
           <li>À priorité égale, la première ajoutée est exécutée en premier</li>
           <li>Une nouvelle action peut être insérée devant celles de priorité moindre</li>

@@ -5,7 +5,7 @@ import { Cone } from "@react-three/drei";
 import Tile from "./Tile";
 import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
-import useSimpleBotStore from "../stores/useSimpleBotStore"; // Remplace useBotStore par useSimpleBotStore
+import useBotStore from "../stores/useBotStore"; // Utiliser useBotStore à la place de useSimpleBotStore
 import ShipMovement from "../Mouvement/ShipMovement";
 import UnifiedDroneMovement from "../Mouvement/UnifiedDroneMovement"; // Ajout de UnifiedDroneMovement
 
@@ -16,9 +16,9 @@ const Scene = () => {
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
   const moveToTile = usePlayerStore((state) => state.moveToTile);
   
-  // Utilisation de useSimpleBotStore au lieu du BotStore standard
-  const initializeBot = useSimpleBotStore((state) => state.initializeBot);
-  const processBot = useSimpleBotStore((state) => state.processBot);
+  // Utilisation de useBotStore au lieu de useSimpleBotStore
+  const initializeBot = useBotStore((state) => state.initializeBot);
+  const processBot = useBotStore((state) => state.processBot);
   
   const botInitialized = useRef(false);
 

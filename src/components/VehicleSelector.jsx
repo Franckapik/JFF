@@ -35,12 +35,12 @@ const VehicleSelector = () => {
   };
 
   return (
-    <div className="vehicle-selector" style={{ position: "absolute", left: 10, top: 10, zIndex: 10 }}>
+    <div className="vehicle-selector vehicle-selector-container">
       <h3>Sélecteur de Véhicules</h3>
       {Object.entries(players).map(([playerId, player]) => (
-        <div key={playerId} style={{ marginBottom: "20px" }}>
+        <div key={playerId} className="vehicle-player-section">
           <h4>Joueur: {playerId}</h4>
-          <ul style={{ listStyle: "none", padding: 0 }}>
+          <ul className="vehicle-selector-list">
             {/* Afficher tous les véhicules dans l'objet vehicles */}
             {Object.entries(player.vehicles).map(([vehicleKey, vehicle]) => {
               // Vérifier si c'est un véhicule valide (avec un ID)
@@ -53,14 +53,7 @@ const VehicleSelector = () => {
                   <li key={vehicleKey}>
                     <button
                       onClick={() => handleSelect(playerId, vehicleKey)}
-                      style={{
-                        marginBottom: "10px",
-                        padding: "10px",
-                        cursor: "pointer",
-                        backgroundColor: isSelected(playerId, vehicleKey) ? "yellow" : "#f0f0f0",
-                        color: "black",
-                        border: "1px solid black",
-                      }}
+                      className={isSelected(playerId, vehicleKey) ? "selected" : ""}
                     >
                       {displayName}
                     </button>

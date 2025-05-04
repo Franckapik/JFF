@@ -1,12 +1,12 @@
 import React from "react";
 import usePlayerStore from "../stores/usePlayerStore";
-import useSimpleBotStore from "../stores/useSimpleBotStore";
+import useBotStore from "../stores/useBotStore";
 
 // Renommé de SimpleUserHUD à BotHUD
 const BotHUD = () => {
-  const botState = useSimpleBotStore((state) => state.botState);
-  const isRunning = useSimpleBotStore((state) => state.isRunning);
-  const actionQueue = useSimpleBotStore((state) => state.actionQueue);
+  const botState = useBotStore((state) => state.botState);
+  const isRunning = useBotStore((state) => state.isRunning);
+  const actionQueue = useBotStore((state) => state.actionQueue) || []; // Ajout d'un tableau vide par défaut
   const players = usePlayerStore((state) => state.players);
   const player2Ship = players.player2?.vehicles?.ship;
 
@@ -20,10 +20,7 @@ const BotHUD = () => {
     
     return {
       width: `${fuelLevel}%`,
-      backgroundColor: color,
-      height: "20px",
-      borderRadius: "3px",
-      transition: "width 0.3s ease-in-out"
+      backgroundColor: color
     };
   };
 
@@ -50,59 +47,31 @@ const BotHUD = () => {
   };
 
   return (
-    <div className="bot-hud" style={{
-      position: 'absolute',
-      top: '10px',
-      left: '10px',
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      color: 'white',
-      padding: '10px',
-      borderRadius: '5px',
-      fontFamily: 'Arial, sans-serif',
-      width: '300px'
-    }}>
-      <h3 style={{ margin: '0 0 10px 0' }}>Bot Status</h3>
+    <div className="bot-hud">
+      <h3>Bot Status</h3>
       
       <div>
-        <p style={{ margin: '5px 0' }}>
-          <strong>State:</strong> {botState}
+        <p>
+          <strong>State:</strong> {botState || "Unknown"}
         </p>
-        <p style={{ margin: '5px 0' }}>
+        <p>
           <strong>Active:</strong> {isRunning ? "Yes" : "No"}
         </p>
       </div>
       
       {/* File d'actions prioritaires */}
-      <div style={{ marginTop: '15px' }}>
-        <h4 style={{ margin: '0 0 5px 0' }}>File d'actions ({actionQueue.length})</h4>
+      <div className="bot-hud-section">
+        <h4>File d'actions ({actionQueue.length})</h4>
         {actionQueue.length === 0 ? (
-          <p style={{ fontSize: '0.9em', fontStyle: 'italic' }}>Aucune action planifiée</p>
+          <p className="bot-hud-empty-actions">Aucune action planifiée</p>
         ) : (
-          <ul style={{ 
-            listStyleType: 'none', 
-            padding: '0', 
-            margin: '0',
-            maxHeight: '120px',
-            overflowY: 'auto',
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            borderRadius: '4px',
-            padding: '5px'
-          }}>
+          <ul className="bot-hud-action-list">
             {actionQueue.map((action, index) => (
-              <li key={index} style={{
-                padding: '5px',
-                margin: '2px 0',
-                borderLeft: `4px solid ${getPriorityColor(action.priority)}`,
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                fontSize: '0.9em',
-                display: 'flex',
-                justifyContent: 'space-between'
-              }}>
+              <li key={index} className="bot-hud-action-item" 
+                  style={{borderLeft: `4px solid ${getPriorityColor(action.priority)}`}}>
                 <span><strong>{action.type}</strong></span>
-                <span style={{
-                  color: getPriorityColor(action.priority),
-                  fontWeight: 'bold'
-                }}>
+                <span className="bot-hud-priority-label" 
+                      style={{color: getPriorityColor(action.priority)}}>
                   {getPriorityName(action.priority)}
                 </span>
               </li>
@@ -112,38 +81,30 @@ const BotHUD = () => {
       </div>
       
       {player2Ship && (
-        <div style={{ marginTop: '10px' }}>
-          <h4 style={{ margin: '0 0 5px 0' }}>Ship Info:</h4>
-          <p style={{ margin: '3px 0', fontSize: '0.9em' }}>
+        <div className="bot-hud-info">
+          <h4>Ship Info:</h4>
+          <p className="bot-hud-subinfo">
             <strong>Position:</strong> {player2Ship.coord || "Unknown"}
           </p>
-          <p style={{ margin: '3px 0', fontSize: '0.9em' }}>
+          <p className="bot-hud-subinfo">
             <strong>Moving:</strong> {player2Ship.isMoving ? "Yes" : "No"}
           </p>
           
           {/* Section améliorée pour le carburant */}
-          <div style={{ marginTop: '10px' }}>
-            <p style={{ margin: '5px 0', fontWeight: 'bold' }}>
+          <div className="bot-hud-info">
+            <p className="bot-hud-fuel-label">
               Fuel Level: {player2Ship.fuel}%
               {player2Ship.fuel < 50 && (
-                <span style={{ marginLeft: '5px', color: '#ff9800' }}>
+                <span className="bot-hud-fuel-warning">
                   (LOW!)
                 </span>
               )}
             </p>
-            <div style={{ 
-              backgroundColor: "#ddd", 
-              borderRadius: "3px", 
-              height: "20px",
-              marginTop: "5px"
-            }}>
-              <div style={getFuelBarStyle(player2Ship.fuel)}></div>
+            <div className="bot-hud-fuel-container">
+              <div className="bot-hud-fuel-bar" style={getFuelBarStyle(player2Ship.fuel)}></div>
             </div>
-            <p style={{ 
-              margin: '5px 0', 
-              fontSize: '0.8em', 
-              color: player2Ship.fuel < 50 ? '#ff9800' : 'inherit'
-            }}>
+            <p className="bot-hud-fuel-info" 
+               style={{color: player2Ship.fuel < 50 ? '#ff9800' : 'inherit'}}>
               {player2Ship.fuel < 50 
                 ? "Threshold reached! Bot should return to base."
                 : "Above 50% threshold, bot can explore."
@@ -153,27 +114,23 @@ const BotHUD = () => {
           
           {/* Informations supplémentaires */}
           {player2Ship.targetTile && player2Ship.targetTile.coord && (
-            <p style={{ margin: '10px 0', fontSize: '0.9em' }}>
+            <p className="bot-hud-fuel-info">
               <strong>Target:</strong> {player2Ship.targetTile.coord}
             </p>
           )}
           
           {/* Section Base */}
-          <p style={{ margin: '10px 0', fontSize: '0.9em' }}>
+          <p className="bot-hud-fuel-info">
             <strong>Base Coord:</strong> {player2Ship.startCoord || "Unknown"}
             {player2Ship.coord === player2Ship.startCoord && (
-              <span style={{ marginLeft: '5px', color: '#4CAF50' }}>(At Base!)</span>
+              <span className="bot-hud-at-base">(At Base!)</span>
             )}
           </p>
           
           {/* Section Ressources */}
-          <div style={{ marginTop: '10px' }}>
-            <p style={{ margin: '0', fontWeight: 'bold' }}>Resources:</p>
-            <ul style={{ 
-              paddingLeft: '20px', 
-              margin: '5px 0', 
-              fontSize: '0.9em'
-            }}>
+          <div className="bot-hud-section">
+            <p className="bot-hud-resources-title">Resources:</p>
+            <ul className="bot-hud-resources-list">
               <li>Food: {player2Ship.resources?.food || 0}</li>
               <li>Debris: {player2Ship.resources?.debris || 0}</li>
               <li>Special: {player2Ship.resources?.special || 0}</li>
