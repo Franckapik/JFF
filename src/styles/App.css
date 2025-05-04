@@ -243,11 +243,12 @@
 
 /* Conteneur des sélecteurs */
 .selector-container {
-  width: 150px;
+  width: 120px;
   background-color: #f0f0f0;
   position: fixed; /* Fixe le conteneur sur le côté gauche */
   left: 0;
-  height: 500px;;
+  height: auto; /* Ajustement automatique à la hauteur du contenu */
+  max-height: 300px; /* Limite la hauteur maximale */
   top: 50%; /* Centre verticalement */
   transform: translateY(-50%); /* Ajuste pour centrer parfaitement */
   display: flex;
@@ -259,20 +260,43 @@
 }
 
 /* Boutons du Vehicle Selector */
-.vehicle-selector button {
+.vehicle-selector {
+  width: 100%;
+}
+
+.vehicle-selector h3 {
+  font-size: 14px;
+  text-align: center;
   margin-bottom: 10px;
-  padding: 10px;
+}
+
+.vehicle-selector-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.vehicle-selector button {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 8px;
   cursor: pointer;
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 5px;
-  font-size: 14px;
+  font-size: 12px;
   transition: background-color 0.3s ease;
 }
 
 .vehicle-selector button:hover {
   background-color: #0056b3;
+}
+
+.vehicle-selector button.selected {
+  background-color: #28a745; /* Vert pour indiquer la sélection */
+  font-weight: bold;
 }
 
 /* Boutons du Message Selector */

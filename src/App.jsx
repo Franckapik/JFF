@@ -33,17 +33,10 @@ const App = () => {
         </CollapsibleHUD>
       </div>
 
-      {/* Player HUD et Bot HUD - à gauche, séparés */}
+      {/* Bot HUD à gauche */}
       <div className="player-hud-wrapper">
         <CollapsibleHUD title="Bot Status" defaultOpen={false}>
           <BotHUD />
-        </CollapsibleHUD>
-      </div>
-
-      {/* PlayerHUD avec CollapsibleHUD - placé sous le BotHUD mais avec un écart */}
-      <div className="player-hud-wrapper" style={{ top: "60px" }}>
-        <CollapsibleHUD title="Player Status" defaultOpen={false}>
-          <PlayerHUD />
         </CollapsibleHUD>
       </div>
 
@@ -58,6 +51,13 @@ const App = () => {
           <div className="tile-hud-wrapper">
             <CollapsibleHUD title="Tile Information" defaultOpen={false}>
               <TileHUD />
+            </CollapsibleHUD>
+          </div>
+          
+          {/* PlayerHUD déplacé en bas à gauche */}
+          <div className="player-hud-wrapper" style={{ top: 'auto', bottom: '10px', left: '10px' }}>
+            <CollapsibleHUD title="Player Status" defaultOpen={false}>
+              <PlayerHUD />
             </CollapsibleHUD>
           </div>
         </div>
