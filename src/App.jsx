@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
 import "./styles/App.css";
-import UserHUD from "./components/UserHUD";
+import PlayerHUD from "./components/PlayerHUD"; // Remplacement de UserHUD par PlayerHUD
 import VehicleSelector from "./components/VehicleSelector";
 import MessageSelector from "./components/MessageSelector";
 import Clock from "./components/Clock";
@@ -35,9 +35,13 @@ const App = () => {
         <BotHUD />
       </div>
 
+      {/* PlayerHUD - Nouvelle position pour le HUD du joueur 1 */}
+      <div className="player-hud-position">
+        <PlayerHUD />
+      </div>
+
       {/* Main content area */}
       <div className="main-content">
-        <UserHUD />
         <div className="canvas-container">
           <Canvas camera={{ fov: 70, position: [5, 5, 5] }}>
             <Scene />
