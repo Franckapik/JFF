@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
 import "./styles/App.css";
-import PlayerHUD from "./components/PlayerHUD"; // Remplacement de UserHUD par PlayerHUD
+import PlayerHUD from "./components/PlayerHUD";
 import VehicleSelector from "./components/VehicleSelector";
 import MessageSelector from "./components/MessageSelector";
 import Clock from "./components/Clock";
-import BotControls from "./components/BotControls"; // Utilisation de BotControls (mis à jour)
-import BotHUD from "./components/BotHUD"; // BotHUD (ancien SimpleUserHUD)
-import TileHUD from "./components/TileHUD"; // Import de notre nouveau composant TileHUD
+import BotControls from "./components/BotControls";
+import BotHUD from "./components/BotHUD";
+import TileHUD from "./components/TileHUD";
+import CollapsibleHUD from "./components/CollapsibleHUD";
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
@@ -25,19 +26,25 @@ const App = () => {
         <MessageSelector />
       </div>
 
-      {/* Bot Controls - Utilisation de la classe CSS au lieu du style inline */}
-      <div className="bot-controls-position">
-        <BotControls />
+      {/* Bot Controls avec CollapsibleHUD - à droite */}
+      <div className="bot-hud-wrapper">
+        <CollapsibleHUD title="Bot Controls" defaultOpen={false}>
+          <BotControls />
+        </CollapsibleHUD>
       </div>
 
-      {/* BotHUD - Utilisation de la classe CSS au lieu du style inline */}
-      <div className="bot-hud-position">
-        <BotHUD />
+      {/* Player HUD et Bot HUD - à gauche, séparés */}
+      <div className="player-hud-wrapper">
+        <CollapsibleHUD title="Bot Status" defaultOpen={false}>
+          <BotHUD />
+        </CollapsibleHUD>
       </div>
 
-      {/* PlayerHUD - Nouvelle position pour le HUD du joueur 1 */}
-      <div className="player-hud-position">
-        <PlayerHUD />
+      {/* PlayerHUD avec CollapsibleHUD - placé sous le BotHUD mais avec un écart */}
+      <div className="player-hud-wrapper" style={{ top: "60px" }}>
+        <CollapsibleHUD title="Player Status" defaultOpen={false}>
+          <PlayerHUD />
+        </CollapsibleHUD>
       </div>
 
       {/* Main content area */}
@@ -47,8 +54,12 @@ const App = () => {
             <Scene />
           </Canvas>
           
-          {/* TileHUD - S'affiche lors du survol d'une tuile */}
-          <TileHUD />
+          {/* TileHUD avec CollapsibleHUD */}
+          <div className="tile-hud-wrapper">
+            <CollapsibleHUD title="Tile Information" defaultOpen={false}>
+              <TileHUD />
+            </CollapsibleHUD>
+          </div>
         </div>
         
         {/* Clock HUD */}
