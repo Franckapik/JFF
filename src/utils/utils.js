@@ -147,26 +147,31 @@ export function generateInitialDrones(count, spacing = 1) {
  * Fonction utilitaire pour mettre à jour un véhicule dans l'état du store
  * @param {Object} state - L'état actuel du store
  * @param {string} playerId - L'ID du joueur
- * @param {string} vehicleId - L'ID du véhicule (ship ou drone ID)
+ * @param {string} vehicleId - L'ID du véhicule (ship, drone1, drone2, etc.)
  * @param {Object} updates - Les propriétés à mettre à jour
  * @returns {Object} Le nouvel état avec les mises à jour
  */
 export const updateVehicle = (state, playerId, vehicleId, updates) => {
-  const vehicle =
-    vehicleId === "ship"
-      ? state.players[playerId].vehicles.ship
-      : state.players[playerId].vehicles.drones.find((drone) => drone.id === vehicleId);
+  // Vérifie si le joueur existe
+  if (!state.players[playerId]) {
+    console.warn(`Player with ID '${playerId}' not found.`);
+    return state;
+  }
 
+  // Vérifie si le véhicule existe
+  const vehicle = state.players[playerId].vehicles[vehicleId];
   if (!vehicle) {
     console.warn(`Vehicle with ID '${vehicleId}' not found for player '${playerId}'.`);
     return state;
   }
 
+  // Met à jour le véhicule
   const updatedVehicle = {
     ...vehicle,
     ...updates,
   };
 
+  // Retourne l'état mis à jour
   return {
     ...state,
     players: {
@@ -175,12 +180,7 @@ export const updateVehicle = (state, playerId, vehicleId, updates) => {
         ...state.players[playerId],
         vehicles: {
           ...state.players[playerId].vehicles,
-          [vehicleId === "ship" ? "ship" : "drones"]:
-            vehicleId === "ship"
-              ? updatedVehicle
-              : state.players[playerId].vehicles.drones.map((drone) =>
-                  drone.id === vehicleId ? updatedVehicle : drone
-                ),
+          [vehicleId]: updatedVehicle
         },
       },
     },

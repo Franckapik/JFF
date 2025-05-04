@@ -24,13 +24,13 @@ const useSimpleBotStore = create((set, get) => ({
   initializeBot: () => {
     console.log("[SimpleBotStore] Initializing bot");
     set({
-      botState: BOT_STATES.COLLECTING,
+      botState: BOT_STATES.EXPLORING, // Changé de COLLECTING à EXPLORING
       isRunning: true,
       actionQueue: [] // Réinitialise la file d'actions
     });
     
     // Exécute l'action onEnterState de l'état initial
-    BotStateConfig[BOT_STATES.COLLECTING].onEnterState();
+    BotStateConfig[BOT_STATES.EXPLORING].onEnterState(); // Changé de COLLECTING à EXPLORING
   },
   
   // Change l'état du bot
