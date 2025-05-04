@@ -5,6 +5,13 @@ export const useTileStore = create((set, get) => ({
     tiles: {},
     radius: 3, // Default radius
     spacing: 0.1, // Default spacing
+    hoveredTile: null, // Track the currently hovered tile
+    
+    // Update the currently hovered tile
+    updateHoveredTile: (coord) => {
+        set({ hoveredTile: coord });
+    },
+    
     setTiles: (tiles) => set({ tiles }),
     getTile: (coord) => get().tiles[coord],
     getNeighbors: (coord) => {

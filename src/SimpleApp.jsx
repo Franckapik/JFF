@@ -10,23 +10,13 @@ const SimpleApp = () => {
   return (
     <div className="app-container">
       <div className="main-content">
-        {/* Simple Bot Controls */}
-        <div style={{ 
-          position: 'absolute', 
-          top: '10px', 
-          right: '10px', 
-          zIndex: 1000 
-        }}>
+        {/* Simple Bot Controls - Utilisation de la classe CSS au lieu du style inline */}
+        <div className="simple-bot-controls-position">
           <SimpleBotControls />
         </div>
 
-        {/* Simple User HUD - Ajout du conteneur avec position absolue */}
-        <div style={{ 
-          position: 'absolute', 
-          top: '10px', 
-          left: '10px', 
-          zIndex: 1000 
-        }}>
+        {/* Simple User HUD - Utilisation de la classe CSS au lieu du style inline */}
+        <div className="simple-user-hud-position">
           <SimpleUserHUD />
         </div>
 
@@ -42,17 +32,8 @@ const SimpleApp = () => {
           <Clock isTimerRunning={true} />
         </div>
         
-        {/* Learning Info Box - Mise à jour pour inclure l'EXPLORING avec drone */}
-        <div style={{
-          position: 'absolute',
-          bottom: '10px',
-          left: '10px',
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          padding: '15px',
-          borderRadius: '5px',
-          maxWidth: '400px',
-          boxShadow: '0 0 10px rgba(0,0,0,0.2)'
-        }}>
+        {/* Learning Info Box - Utilisation de la classe CSS au lieu du style inline */}
+        <div className="learning-info-box">
           <h3>FSM Learning Mode</h3>
           <p>Cette vue simplifiée implémente une machine à états finis (FSM) avec quatre états :</p>
           <ul>

@@ -22,4 +22,6 @@ Le jeu demarre, je dois avoir plus de ressources pour progresser, je vais :
     - je verse mes ressources pour augmenter mon score.
 
 
-    
+Je souhaite creer un nouvel hud dans le style identique de BotHUD qui donnerait des informations sur une tuile lorsque celle ci est onHover. 
+
+Je souhaite

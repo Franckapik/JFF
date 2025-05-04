@@ -34,25 +34,25 @@ const MessageModal = ({ messages, onClose }) => {
                 <br />
               </span>
             )) || "Message vide"}</p>
-            <table style={{ margin: "10px auto", borderCollapse: "collapse", width: "100%" }}>
+            <table className="message-table">
               <thead>
                 <tr>
-                  <th style={{ border: "1px solid #ddd", padding: "8px" }}>Ressource</th>
-                  <th style={{ border: "1px solid #ddd", padding: "8px" }}>Quantité</th>
+                  <th>Ressource</th>
+                  <th>Quantité</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>Nourriture</td>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{selectedMessage.resources?.food || 0}</td>
+                  <td>Nourriture</td>
+                  <td>{selectedMessage.resources?.food || 0}</td>
                 </tr>
                 <tr>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>Débris</td>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{selectedMessage.resources?.debris || 0}</td>
+                  <td>Débris</td>
+                  <td>{selectedMessage.resources?.debris || 0}</td>
                 </tr>
                 <tr>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>Spécial</td>
-                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>{selectedMessage.resources?.special || 0}</td>
+                  <td>Spécial</td>
+                  <td>{selectedMessage.resources?.special || 0}</td>
                 </tr>
               </tbody>
             </table>
@@ -79,7 +79,7 @@ const MessageModal = ({ messages, onClose }) => {
                   <div className="message-tile">
                     <em>Tuile : {message.tileName}</em>
                   </div>
-                  <div className="message-timestamp" style={{ fontSize: "0.8em", color: "#888", marginTop: "5px" }}>
+                  <div className="message-timestamp message-timestamp-text">
                     <em>Reçu le : {formatTimestamp(message.timestamp)}</em>
                   </div>
                 </li>

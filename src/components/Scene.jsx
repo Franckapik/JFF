@@ -1,11 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import { GridHelper } from "three";
 import { useThree, useFrame } from "@react-three/fiber";
+import { Cone } from "@react-three/drei";
 import Tile from "./Tile";
 import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
-import useBotStore from "../stores/useBotStore";
+import useBotStore from "../stores/useBotStore"; // Utiliser useBotStore à la place de useSimpleBotStore
 import ShipMovement from "../Mouvement/ShipMovement";
+import UnifiedDroneMovement from "../Mouvement/UnifiedDroneMovement"; // Ajout de UnifiedDroneMovement
 
 const Scene = () => {
   const initializeTiles = useTileStore((state) => state.initializeTiles);
@@ -13,6 +15,8 @@ const Scene = () => {
   const initializePlayer = usePlayerStore((state) => state.initializePlayer);
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
   const moveToTile = usePlayerStore((state) => state.moveToTile);
+  
+  // Utilisation de useBotStore au lieu de useSimpleBotStore
   const initializeBot = useBotStore((state) => state.initializeBot);
   const processBot = useBotStore((state) => state.processBot);
   
@@ -41,10 +45,10 @@ const Scene = () => {
 
   // Process bot in real-time using useFrame with throttling
   const lastBotProcess = useRef(Date.now());
-  useFrame((state, delta) => {
+  useFrame(() => {
     const now = Date.now();
-    // Process bot every 500ms to avoid too frequent updates
-    if (now - lastBotProcess.current > 500) {
+    // Process bot every second to make it easier to follow (comme dans SimpleScene)
+    if (now - lastBotProcess.current > 1000) {
       processBot();
       lastBotProcess.current = now;
     }
@@ -74,9 +78,32 @@ const Scene = () => {
       <ambientLight intensity={1} />
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
+      
+      {/* Drone du joueur 1 - Utilisation du composant unifié (ajouté depuis SimpleScene) */}
+      <UnifiedDroneMovement playerId="player1" droneId="drone1">
+        <Cone 
+          args={[0.3, 0.8, 8]} 
+          rotation={[Math.PI, 0, 0]}
+          castShadow
+        >
+          <meshStandardMaterial color="purple" metalness={0.5} roughness={0.3} />
+        </Cone>
+      </UnifiedDroneMovement>
+      
+      {/* Drone du bot (player2) - Utilisation du composant unifié (ajouté depuis SimpleScene) */}
+      <UnifiedDroneMovement playerId="player2" droneId="drone3">
+        <Cone 
+          args={[0.3, 0.8, 8]} 
+          rotation={[Math.PI, 0, 0]}
+          castShadow
+        >
+          <meshStandardMaterial color="magenta" metalness={0.5} roughness={0.3} />
+        </Cone>
+      </UnifiedDroneMovement>
+      
       {Object.keys(tiles).length > 0 && (
         <>
-          <ShipMovement playerId="player1"> {/* Changé de TargetMovement à ShipMovement */}
+          <ShipMovement playerId="player1">
             <mesh castShadow>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
               <meshStandardMaterial
@@ -84,7 +111,7 @@ const Scene = () => {
               />
             </mesh>
           </ShipMovement>
-          <ShipMovement playerId="player2"> {/* Changé de TargetMovement à ShipMovement */}
+          <ShipMovement playerId="player2">
             <mesh castShadow>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
               <meshStandardMaterial
@@ -102,41 +129,42 @@ const Scene = () => {
             position={[tile.position.x, 0, tile.position.z]}
             radius={1}
             color={tile.color}
-            onClick={() => handleTileClick(tile)} // Passer l'objet complet de la tuile
+            onClick={() => handleTileClick(tile)}
+            coord={tile.coord}
           />
         ))}
       {Object.values(tiles)
-        .filter((tile) => tile.type === "depart") // Filter for the starting tile
+        .filter((tile) => tile.type === "depart")
         .map((tile) => (
           <mesh
             key={`depart-tile-${tile.coord}`}
-            position={[tile.position.x, 0.2, tile.position.z]} // Slightly above the ground
-            rotation={[-Math.PI / 2, 0, 0]} // Rotate to lie flat on the ground
+            position={[tile.position.x, 0.2, tile.position.z]}
+            rotation={[-Math.PI / 2, 0, 0]}
           >
-            <circleGeometry args={[0.5, 32]} /> {/* Circle dimensions */}
-            <meshStandardMaterial color="red" /> {/* Red color for the circle */}
+            <circleGeometry args={[0.5, 32]} />
+            <meshStandardMaterial color="red" />
           </mesh>
         ))}
       {Object.values(tiles)
-        .filter((tile) => tile.type === "fuel") // Filter for the fuel station tile
+        .filter((tile) => tile.type === "fuel")
         .map((tile) => (
           <mesh
             key={`fuel-station-${tile.coord}`}
-            position={[tile.position.x, 0.25, tile.position.z]} // Slightly above the ground
+            position={[tile.position.x, 0.25, tile.position.z]}
           >
-            <boxGeometry args={[0.5, 0.5, 0.5]} /> {/* Adjusted cube dimensions */}
-            <meshStandardMaterial color="orange" /> {/* Black color for the cube */}
+            <boxGeometry args={[0.5, 0.5, 0.5]} />
+            <meshStandardMaterial color="orange" />
           </mesh>
         ))}
       {Object.values(tiles)
-        .filter((tile) => tile.type === "repair") // Filter for the repair station tile
+        .filter((tile) => tile.type === "repair")
         .map((tile) => (
           <mesh
             key={`repair-station-${tile.coord}`}
-            position={[tile.position.x, 0.25, tile.position.z]} // Slightly above the ground
+            position={[tile.position.x, 0.25, tile.position.z]}
           >
-            <boxGeometry args={[0.5, 0.5, 0.5]} /> {/* Adjusted cube dimensions */}
-            <meshStandardMaterial color="green" /> {/* Green color for the cube */}
+            <boxGeometry args={[0.5, 0.5, 0.5]} />
+            <meshStandardMaterial color="green" />
           </mesh>
         ))}
     </>

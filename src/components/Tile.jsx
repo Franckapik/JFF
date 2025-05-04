@@ -1,11 +1,28 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTileAnimation } from "../animations/useTileAnimation";
+import { useTileStore } from "../stores/useNewTileStore";
 
-const Tile = ({ position, radius, color, isHighTile, onClick }) => {
+const Tile = ({ position, radius, color, isHighTile, onClick, coord }) => {
   const meshRef = useTileAnimation(isHighTile);
+  const updateHoveredTile = useTileStore((state) => state.updateHoveredTile);
+  
+  // Handle hover events
+  const handlePointerOver = () => {
+    updateHoveredTile(coord);
+  };
+  
+  const handlePointerOut = () => {
+    updateHoveredTile(null);
+  };
 
   return (
-    <mesh ref={meshRef} position={position} onClick={onClick}>
+    <mesh 
+      ref={meshRef} 
+      position={position} 
+      onClick={onClick}
+      onPointerOver={handlePointerOver}
+      onPointerOut={handlePointerOut}
+    >
       <cylinderGeometry args={[radius, radius, 0.2, 6]} /> {/* Épaisseur de 0.2 */}
       <meshStandardMaterial
         color={color}
