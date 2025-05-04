@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Vector3 } from "three";
-import { useTileStore } from "../store/useTileStore";
+import { useTileStore } from "../stores/useNewTileStore"; // Corrected import path
 import useMessageManager from "../hooks/useMessageManager"; // Import the custom hook
 
 const DroneMovement = ({ drone, children }) => {
