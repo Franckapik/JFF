@@ -19,7 +19,8 @@ const SimpleDroneMovement = ({ children }) => {
   // État local pour le drone
   const [targetTile, setTargetTile] = useState(null);
   const [isMoving, setIsMoving] = useState(false);
-  const [hasReachedTarget, setHasReachedTarget] = useState(false);
+  const [returningToShip, setReturningToShip] = useState(false); 
+  const [cooldown, setCooldown] = useState(0);
 
   // Détermine le vaisseau à suivre (priorité au vaisseau sélectionné)
   const determineShipToFollow = () => {
@@ -33,6 +34,9 @@ const SimpleDroneMovement = ({ children }) => {
 
   // Vérifier si un vaisseau a une cible définie
   useEffect(() => {
+    // Ne pas démarrer d'exploration si le drone est en retour vers le vaisseau ou en cooldown
+    if (returningToShip || cooldown > 0) return;
+    
     const followedShip = determineShipToFollow();
     
     // Si le vaisseau suivi a une cible et que le drone n'est pas déjà en déplacement
@@ -41,19 +45,23 @@ const SimpleDroneMovement = ({ children }) => {
       if (Math.random() < 0.2) {
         setTargetTile(followedShip.targetTile.coord);
         setIsMoving(true);
-        setHasReachedTarget(false);
       }
     }
-  }, [player1Ship?.targetTile, player2Ship?.targetTile, selectedVehicle, isMoving, targetTile]);
+  }, [player1Ship?.targetTile, player2Ship?.targetTile, selectedVehicle, isMoving, targetTile, returningToShip, cooldown]);
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
 
+    // Décrementer le cooldown
+    if (cooldown > 0) {
+      setCooldown(cooldown - delta);
+    }
+
     const shipToFollow = determineShipToFollow();
     let targetPosition;
     
-    if (targetTile && tiles[targetTile]) {
-      // Si le drone a une cible, il se déplace vers elle
+    if (targetTile && tiles[targetTile] && !returningToShip) {
+      // Si le drone a une cible et n'est pas en retour, il se déplace vers elle
       const tile = tiles[targetTile];
       targetPosition = new Vector3(
         tile.position.x,
@@ -87,11 +95,11 @@ const SimpleDroneMovement = ({ children }) => {
     if (distance > 0.2) {
       // Déplacement vers la cible
       direction.normalize();
-      const speed = targetTile ? 2.5 : 1.8;  // Plus rapide en exploration
+      const speed = targetTile && !returningToShip ? 2.5 : 1.8;  // Plus rapide en exploration
       groupRef.current.position.addScaledVector(direction, delta * speed);
       
-      if (targetTile) setIsMoving(true);
-    } else if (targetTile && !hasReachedTarget) {
+      if (targetTile && !returningToShip) setIsMoving(true);
+    } else if (targetTile && isMoving && !returningToShip) {
       // Arrivé à la tuile cible
       const reachedTile = tiles[targetTile];
       if (reachedTile) {
@@ -121,16 +129,21 @@ const SimpleDroneMovement = ({ children }) => {
           }
         }
         
-        // Réinitialiser l'état du drone
-        setHasReachedTarget(true);
-        setIsMoving(false);
+        // Marquer la tuile comme explorée
+        useTileStore.getState().markTileAsExplored(targetTile);
         
-        // Attendre avant de pouvoir explorer une nouvelle tuile
-        setTimeout(() => {
-          setTargetTile(null);
-          setHasReachedTarget(false);
-        }, 3000);
+        // Réinitialiser l'état et initialiser le retour vers le vaisseau
+        setIsMoving(false);
+        setReturningToShip(true);
+        setTargetTile(null);
       }
+    } else if (returningToShip && distance <= 0.2 && shipToFollow) {
+      // Le drone est revenu au vaisseau
+      console.log(`[PlayerDrone] Returned to ship at position: ${shipToFollow.position.x}, ${shipToFollow.position.z}`);
+      setReturningToShip(false);
+      
+      // Mettre un cooldown avant la prochaine exploration
+      setCooldown(3); // 3 secondes de cooldown
     }
   });
 

@@ -1,0 +1,292 @@
+import React, { useRef, useState, useEffect } from "react";
+import { useFrame } from "@react-three/fiber";
+import { Vector3 } from "three";
+import { useTileStore } from "../stores/useNewTileStore";
+import usePlayerStore from "../stores/usePlayerStore";
+import useMessageManager from "../hooks/useMessageManager";
+
+/**
+ * Composant de mouvement de drone unifié qui fonctionne pour les deux joueurs (player1 et player2/bot)
+ * @param {Object} props
+ * @param {string} props.playerId - "player1" ou "player2"
+ * @param {string} props.droneId - Identifiant du drone (ex: "drone1", "drone3")
+ * @param {React.ReactNode} props.children - Contenu à rendre à l'intérieur du groupe
+ */
+const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", children }) => {
+  const groupRef = useRef();
+  const rotationRef = useRef(0);
+  const tiles = useTileStore((state) => state.tiles);
+  const { sendVehicleMessage } = useMessageManager();
+  const updateVehicle = usePlayerStore((state) => state.updateVehicle);
+  
+  // Sélecteurs pour les vaisseaux et le drone concerné
+  const player1Ship = usePlayerStore((state) => state.players.player1?.vehicles?.ship);
+  const player2Ship = usePlayerStore((state) => state.players.player2?.vehicles?.ship);
+  const drone = usePlayerStore((state) => state.players[playerId]?.vehicles[droneId]);
+  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
+
+  // État local pour le statut du drone
+  const [returningToShip, setReturningToShip] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  
+  // Pour le drone du joueur 1, on utilise un état local pour la cible
+  const [playerDroneTargetTile, setPlayerDroneTargetTile] = useState(null);
+  const [isPlayerDroneMoving, setIsPlayerDroneMoving] = useState(false);
+
+  // Détermine le vaisseau à suivre
+  const getShipToFollow = () => {
+    if (playerId === "player2") {
+      return player2Ship; // Le drone du bot suit toujours le vaisseau du bot
+    } else {
+      // Pour le joueur 1, on peut utiliser le vaisseau sélectionné ou par défaut player1Ship
+      if (selectedVehicle.vehicleId === "ship") {
+        return selectedVehicle.playerId === "player1" ? player1Ship : player2Ship;
+      }
+      return player1Ship;
+    }
+  };
+
+  // Pour le drone du joueur 1: vérifier si un vaisseau a une cible définie
+  useEffect(() => {
+    // Ne s'applique qu'au drone du joueur 1
+    if (playerId !== "player1") return;
+    
+    // Ne pas démarrer d'exploration si le drone est en retour vers le vaisseau ou en cooldown
+    if (returningToShip || cooldown > 0) return;
+    
+    const shipToFollow = getShipToFollow();
+    
+    // Si le vaisseau suivi a une cible et que le drone n'est pas déjà en déplacement
+    if (shipToFollow?.targetTile?.coord && !isPlayerDroneMoving && !playerDroneTargetTile) {
+      // 20% de chance d'explorer la même cible que le vaisseau
+      if (Math.random() < 0.2) {
+        setPlayerDroneTargetTile(shipToFollow.targetTile.coord);
+        setIsPlayerDroneMoving(true);
+      }
+    }
+  }, [playerId, player1Ship?.targetTile, player2Ship?.targetTile, selectedVehicle, 
+      isPlayerDroneMoving, playerDroneTargetTile, returningToShip, cooldown]);
+
+  useFrame((_, delta) => {
+    if (!groupRef.current) return;
+
+    // Décrémentez le compteur de cooldown s'il est actif
+    if (cooldown > 0) {
+      setCooldown(cooldown - delta);
+    }
+
+    const shipToFollow = getShipToFollow();
+    let targetPosition;
+    
+    // Détermination de la position cible
+    if (playerId === "player1") {
+      // Logique pour le drone du joueur 1
+      if (playerDroneTargetTile && tiles[playerDroneTargetTile] && !returningToShip) {
+        const tile = tiles[playerDroneTargetTile];
+        targetPosition = new Vector3(
+          tile.position.x,
+          1.5,  // Hauteur du drone
+          tile.position.z
+        );
+      } else if (shipToFollow?.position) {
+        // Position à côté du vaisseau (légèrement à droite)
+        targetPosition = new Vector3(
+          shipToFollow.position.x + 0.5,
+          1.5,
+          shipToFollow.position.z + 0.5
+        );
+      } else {
+        targetPosition = new Vector3(0, 1.5, 0); // Position par défaut
+      }
+    } else {
+      // Logique pour le drone du bot (player2)
+      if (drone?.targetTile?.coord && tiles[drone.targetTile.coord] && !returningToShip) {
+        const tile = tiles[drone.targetTile.coord];
+        targetPosition = new Vector3(
+          tile.position.x,
+          1.5,  // Hauteur du drone
+          tile.position.z
+        );
+      } else if (shipToFollow?.position) {
+        // Position à côté du vaisseau (légèrement à gauche)
+        targetPosition = new Vector3(
+          shipToFollow.position.x - 0.5,
+          1.5,
+          shipToFollow.position.z - 0.5
+        );
+      } else {
+        targetPosition = new Vector3(0, 1.5, 0); // Position par défaut
+      }
+    }
+
+    // Calculer la direction et la distance
+    const currentPosition = new Vector3(
+      groupRef.current.position.x,
+      groupRef.current.position.y,
+      groupRef.current.position.z
+    );
+    const direction = new Vector3().subVectors(targetPosition, currentPosition);
+    const distance = direction.length();
+    
+    // Animation de flottement
+    groupRef.current.position.y = 1.5 + Math.sin(Date.now() * 0.002) * 0.1;
+    
+    // Animation de rotation
+    rotationRef.current += delta * 0.5;
+    groupRef.current.rotation.y = rotationRef.current;
+
+    // Logique de déplacement
+    if (distance > 0.2) {
+      // Déplacement vers la cible
+      direction.normalize();
+      
+      // Vitesse différente selon le mode
+      let speed;
+      if (playerId === "player1") {
+        speed = playerDroneTargetTile && !returningToShip ? 2.5 : 1.8;
+      } else {
+        speed = drone?.targetTile?.coord && !returningToShip ? 2.0 : 1.5;
+      }
+      
+      groupRef.current.position.addScaledVector(direction, delta * speed);
+      
+      // Mise à jour du statut de mouvement
+      if (playerId === "player1") {
+        if (playerDroneTargetTile && !returningToShip) {
+          setIsPlayerDroneMoving(true);
+        }
+      } else {
+        if (drone?.targetTile?.coord && !returningToShip) {
+          updateVehicle(playerId, droneId, { isMoving: true });
+        }
+      }
+    } 
+    // Gestion de l'arrivée à destination
+    else {
+      if (playerId === "player1") {
+        // Drone du joueur 1
+        if (playerDroneTargetTile && isPlayerDroneMoving && !returningToShip) {
+          handleDroneReachedTarget(playerDroneTargetTile);
+        }
+      } else {
+        // Drone du bot (player2)
+        if (drone?.targetTile?.coord && drone.isMoving && !returningToShip) {
+          handleDroneReachedTarget(drone.targetTile.coord);
+        }
+      }
+      
+      // Gestion du retour au vaisseau
+      if (returningToShip && distance <= 0.2 && shipToFollow) {
+        console.log(`[UnifiedDroneMovement] Drone for ${playerId} returned to ship`);
+        setReturningToShip(false);
+        setCooldown(3); // 3 secondes de cooldown
+      }
+    }
+  });
+
+  // Gère l'arrivée du drone à sa cible
+  const handleDroneReachedTarget = (reachedTileCoord) => {
+    if (!reachedTileCoord) return;
+    
+    const reachedTile = tiles[reachedTileCoord];
+    if (!reachedTile) return;
+    
+    // Récupérer les informations de ressources
+    const resources = reachedTile.resources || { food: 0, debris: 0, special: 0 };
+    
+    // Envoyer un message adapté au type de tuile
+    sendVehicleMessage(playerId, droneId, 'resource', resources);
+    
+    if (reachedTile.type) {
+      switch (reachedTile.type) {
+        case "resource":
+          sendVehicleMessage(playerId, droneId, 'resource', resources);
+          break;
+        case "danger":
+          sendVehicleMessage(playerId, droneId, 'danger');
+          break;
+        case "fuel":
+          sendVehicleMessage(playerId, droneId, 'fuel');
+          break;
+        case "repair":
+          sendVehicleMessage(playerId, droneId, 'repair');
+          break;
+        default:
+          break;
+      }
+    }
+    
+    // Si c'est le bot, mettre à jour sa mémoire des ressources connues
+    if (playerId === "player2" && (resources.food > 0 || resources.debris > 0 || resources.special > 0)) {
+      const playersState = usePlayerStore.getState().players;
+      const botMemory = playersState.player2?.memory;
+      
+      if (botMemory && botMemory.knownResources) {
+        // Vérifier si la ressource est déjà connue
+        const alreadyKnown = botMemory.knownResources.some(r => r.coord === reachedTileCoord);
+        
+        if (!alreadyKnown) {
+          const updatedKnownResources = [
+            ...botMemory.knownResources,
+            {
+              coord: reachedTileCoord,
+              position: reachedTile.position,
+              resources
+            }
+          ];
+          
+          // Mettre à jour la mémoire du bot
+          usePlayerStore.setState((state) => ({
+            players: {
+              ...state.players,
+              player2: {
+                ...state.players.player2,
+                memory: {
+                  ...state.players.player2.memory,
+                  knownResources: updatedKnownResources
+                }
+              }
+            }
+          }));
+        }
+      }
+    }
+    
+    // Marquer la tuile comme explorée
+    useTileStore.getState().markTileAsExplored(reachedTileCoord);
+    
+    // Mise à jour des états selon le type de drone
+    if (playerId === "player1") {
+      setIsPlayerDroneMoving(false);
+      setPlayerDroneTargetTile(null);
+    } else {
+      updateVehicle(playerId, droneId, {
+        isMoving: false,
+        targetTile: null
+      });
+    }
+    
+    // Le drone retourne au vaisseau
+    setReturningToShip(true);
+  };
+
+  // Position initiale du drone
+  const initialPosition = () => {
+    const ship = playerId === "player1" ? player1Ship : player2Ship;
+    if (ship?.position) {
+      // Position légèrement décalée par rapport au vaisseau
+      const offsetX = playerId === "player1" ? 0.5 : -0.5;
+      const offsetZ = playerId === "player1" ? 0.5 : -0.5;
+      return [ship.position.x + offsetX, 1.5, ship.position.z + offsetZ];
+    }
+    return [0, 1.5, 0]; // Position par défaut
+  };
+
+  return (
+    <group ref={groupRef} position={initialPosition()}>
+      {children}
+    </group>
+  );
+};
+
+export default UnifiedDroneMovement;

@@ -7,8 +7,7 @@ import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
 import useSimpleBotStore from "../stores/useSimpleBotStore";
 import ShipMovement from "../Mouvement/ShipMovement";
-import SimpleDroneMovement from "../Mouvement/SimpleDroneMovement";
-import SimpleBotDroneMovement from "../Mouvement/SimpleBotDroneMovement";
+import UnifiedDroneMovement from "../Mouvement/UnifiedDroneMovement";
 
 // Cette version simplifiée de Scene utilise specificiquement useSimpleBotStore
 // pour tester l'implémentation FSM éducative
@@ -82,8 +81,8 @@ const SimpleScene = () => {
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
       
-      {/* Drone du joueur 1 représenté par un cône avec mouvement */}
-      <SimpleDroneMovement>
+      {/* Drone du joueur 1 - Utilisation du composant unifié */}
+      <UnifiedDroneMovement playerId="player1" droneId="drone1">
         <Cone 
           args={[0.3, 0.8, 8]} 
           rotation={[Math.PI, 0, 0]}
@@ -91,10 +90,10 @@ const SimpleScene = () => {
         >
           <meshStandardMaterial color="purple" metalness={0.5} roughness={0.3} />
         </Cone>
-      </SimpleDroneMovement>
+      </UnifiedDroneMovement>
       
-      {/* Drone du bot (player2) représenté par un cône avec mouvement */}
-      <SimpleBotDroneMovement>
+      {/* Drone du bot (player2) - Utilisation du composant unifié */}
+      <UnifiedDroneMovement playerId="player2" droneId="drone3">
         <Cone 
           args={[0.3, 0.8, 8]} 
           rotation={[Math.PI, 0, 0]}
@@ -102,7 +101,7 @@ const SimpleScene = () => {
         >
           <meshStandardMaterial color="magenta" metalness={0.5} roughness={0.3} />
         </Cone>
-      </SimpleBotDroneMovement>
+      </UnifiedDroneMovement>
       
       {Object.keys(tiles).length > 0 && (
         <>
