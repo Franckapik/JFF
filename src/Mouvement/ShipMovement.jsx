@@ -179,7 +179,6 @@ const ShipMovement = ({ playerId, children }) => {
       }
       
     } else {
-      console.log("Reached tile:", currentTargetCoord, "Index:", currentTargetIndex, "Path length:", path.length);
       
       if (selectedVehicle.vehicleId) {
         updateVehicle(playerId, selectedVehicle.vehicleId, {
