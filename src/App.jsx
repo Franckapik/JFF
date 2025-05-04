@@ -8,6 +8,7 @@ import MessageSelector from "./components/MessageSelector";
 import Clock from "./components/Clock";
 import BotControls from "./components/BotControls"; // Utilisation de BotControls (mis à jour)
 import BotHUD from "./components/BotHUD"; // BotHUD (ancien SimpleUserHUD)
+import TileHUD from "./components/TileHUD"; // Import de notre nouveau composant TileHUD
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
@@ -41,6 +42,9 @@ const App = () => {
           <Canvas camera={{ fov: 70, position: [5, 5, 5] }}>
             <Scene />
           </Canvas>
+          
+          {/* TileHUD - S'affiche lors du survol d'une tuile */}
+          <TileHUD />
         </div>
         
         {/* Clock HUD */}

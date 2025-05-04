@@ -130,6 +130,7 @@ const Scene = () => {
             radius={1}
             color={tile.color}
             onClick={() => handleTileClick(tile)}
+            coord={tile.coord}
           />
         ))}
       {Object.values(tiles)
