@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import usePlayerStore from "../stores/usePlayerStore";
 import useBotStore from "../stores/useBotStore";
+import { useTileStore } from "../stores/useNewTileStore";
 
 // Renommé de SimpleUserHUD à BotHUD
 const BotHUD = () => {
@@ -10,6 +11,9 @@ const BotHUD = () => {
   const players = usePlayerStore((state) => state.players);
   const player2Ship = players.player2?.vehicles?.ship;
   const botMemory = players.player2?.memory;
+  
+  // Récupérer la fonction calculateDistance du TileStore
+  const calculateDistance = useTileStore((state) => state.calculateDistance);
   
   // États locaux pour les onglets de mémoire du bot
   const [activeTab, setActiveTab] = useState('resources'); // 'resources' ou 'dangers'
@@ -56,17 +60,6 @@ const BotHUD = () => {
     if (quantity > 20) return "#FFC107"; // Jaune pour moyen
     return "#ff9800"; // Orange pour peu
   };
-  
-  // Calculer la distance entre deux coordonnées
-  const calculateDistance = (coord1, coord2) => {
-    if (!coord1 || !coord2) return "N/A";
-    
-    const [x1, y1] = coord1.split(',').map(Number);
-    const [x2, y2] = coord2.split(',').map(Number);
-    
-    const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-    return distance.toFixed(1);
-  };
 
   return (
     <div className="bot-hud">
@@ -112,7 +105,7 @@ const BotHUD = () => {
                     <thead>
                       <tr>
                         <th>Coord</th>
-                        <th>Distance</th>
+                        <th>Tiles</th>
                         <th>Food</th>
                         <th>Debris</th>
                         <th>Special</th>
@@ -122,7 +115,7 @@ const BotHUD = () => {
                       {botMemory.knownResources.map((resource, index) => (
                         <tr key={index}>
                           <td>{resource.coord}</td>
-                          <td>{calculateDistance(player2Ship?.coord, resource.coord)}</td>
+                          <td>{calculateDistance(player2Ship?.coord, resource.coord, true, true)}</td>
                           <td style={{color: getResourceColor(resource.resources?.food || 0)}}>
                             {resource.resources?.food || 0}
                           </td>
@@ -152,7 +145,7 @@ const BotHUD = () => {
                     <thead>
                       <tr>
                         <th>Coord</th>
-                        <th>Distance</th>
+                        <th>Tiles</th>
                         <th>Type</th>
                       </tr>
                     </thead>
@@ -160,7 +153,7 @@ const BotHUD = () => {
                       {botMemory.knownDangers.map((danger, index) => (
                         <tr key={index}>
                           <td>{danger.coord}</td>
-                          <td>{calculateDistance(player2Ship?.coord, danger.coord)}</td>
+                          <td>{calculateDistance(player2Ship?.coord, danger.coord, true, true)}</td>
                           <td>{danger.type || 'Unknown'}</td>
                         </tr>
                       ))}
