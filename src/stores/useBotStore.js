@@ -20,13 +20,17 @@ const useSimpleBotStore = create((set, get) => ({
   // File d'actions avec priorités
   actionQueue: [], // [{type, priority, params, timestamp}]
   
+  // Nouvelle liste pour stocker les actions terminées
+  completedActions: [], // [{type, priority, params, timestamp, completedAt}]
+  
   // Fonction d'initialisation - démarre le bot
   initializeBot: () => {
     console.log("[SimpleBotStore] Initializing bot");
     set({
       botState: BOT_STATES.EXPLORING, // Changé de COLLECTING à EXPLORING
       isRunning: true,
-      actionQueue: [] // Réinitialise la file d'actions
+      actionQueue: [], // Réinitialise la file d'actions
+      completedActions: [] // Réinitialise la file des actions terminées
     });
     
     // Exécute l'action onEnterState de l'état initial
@@ -96,11 +100,32 @@ const useSimpleBotStore = create((set, get) => ({
     });
   },
   
-  // Supprime la première action de la file
-  removeFirstAction: () => {
-    set((state) => ({
-      actionQueue: state.actionQueue.slice(1)
-    }));
+  // Supprime la première action de la file et l'ajoute aux actions terminées si completed=true
+  removeFirstAction: (completed = false) => {
+    const actionQueue = get().actionQueue;
+    if (actionQueue.length === 0) return;
+    
+    const removedAction = actionQueue[0];
+    
+    set((state) => {
+      // Si l'action a été complétée, l'ajouter à la liste des actions terminées
+      const updatedCompletedActions = completed 
+        ? [...state.completedActions, {
+            ...removedAction,
+            completedAt: Date.now()
+          }].slice(-20) // Limiter à 20 actions terminées (les plus récentes)
+        : state.completedActions;
+      
+      return {
+        actionQueue: state.actionQueue.slice(1),
+        completedActions: updatedCompletedActions
+      };
+    });
+  },
+  
+  // Vide la liste des actions terminées
+  clearCompletedActions: () => {
+    set({ completedActions: [] });
   },
   
   // Exécute l'action la plus prioritaire de la file
@@ -134,8 +159,9 @@ const useSimpleBotStore = create((set, get) => ({
     }
     
     // Retirer l'action de la file seulement si elle a été exécutée avec succès
+    // et l'ajouter à la liste des actions terminées
     if (success) {
-      get().removeFirstAction();
+      get().removeFirstAction(true); // true indique que l'action a été complétée
     }
     
     return success;

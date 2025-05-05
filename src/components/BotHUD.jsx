@@ -8,6 +8,8 @@ const BotHUD = () => {
   const botState = useBotStore((state) => state.botState);
   const isRunning = useBotStore((state) => state.isRunning);
   const actionQueue = useBotStore((state) => state.actionQueue) || []; // Ajout d'un tableau vide par défaut
+  const completedActions = useBotStore((state) => state.completedActions) || []; // Récupération des actions terminées
+  const clearCompletedActions = useBotStore((state) => state.clearCompletedActions); // Fonction pour vider l'historique
   const players = usePlayerStore((state) => state.players);
   const player2Ship = players.player2?.vehicles?.ship;
   const botMemory = players.player2?.memory;
@@ -16,7 +18,10 @@ const BotHUD = () => {
   const calculateDistance = useTileStore((state) => state.calculateDistance);
   
   // États locaux pour les onglets de mémoire du bot
-  const [activeTab, setActiveTab] = useState('resources'); // 'resources', 'collected', ou 'dangers'
+  const [activeMemoryTab, setActiveMemoryTab] = useState('resources'); // 'resources', 'collected', ou 'dangers'
+  
+  // Nouvel état local pour les onglets des actions
+  const [activeActionTab, setActiveActionTab] = useState('queue'); // 'queue' ou 'completed'
 
   // Style pour la barre de carburant
   const getFuelBarStyle = (fuelLevel) => {
@@ -100,18 +105,18 @@ const BotHUD = () => {
         {/* Onglets pour choisir le type de mémoire à afficher */}
         <div className="bot-memory-tabs">
           <button 
-            className={`bot-memory-tab ${activeTab === 'resources' ? 'active' : ''}`}
-            onClick={() => setActiveTab('resources')}>
+            className={`bot-memory-tab ${activeMemoryTab === 'resources' ? 'active' : ''}`}
+            onClick={() => setActiveMemoryTab('resources')}>
             Resources ({botMemory?.knownResources?.length || 0})
           </button>
           <button 
-            className={`bot-memory-tab ${activeTab === 'collected' ? 'active' : ''}`}
-            onClick={() => setActiveTab('collected')}>
+            className={`bot-memory-tab ${activeMemoryTab === 'collected' ? 'active' : ''}`}
+            onClick={() => setActiveMemoryTab('collected')}>
             Collected ({botMemory?.collectedResources?.length || 0})
           </button>
           <button 
-            className={`bot-memory-tab ${activeTab === 'dangers' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dangers')}>
+            className={`bot-memory-tab ${activeMemoryTab === 'dangers' ? 'active' : ''}`}
+            onClick={() => setActiveMemoryTab('dangers')}>
             Dangers ({botMemory?.knownDangers?.length || 0})
           </button>
         </div>
@@ -119,7 +124,7 @@ const BotHUD = () => {
         {/* Contenu des onglets */}
         <div className="bot-memory-content">
           {/* Onglet des ressources découvertes */}
-          {activeTab === 'resources' && (
+          {activeMemoryTab === 'resources' && (
             <>
               {(!botMemory?.knownResources || botMemory.knownResources.length === 0) ? (
                 <p className="bot-memory-empty">Aucune ressource découverte</p>
@@ -159,7 +164,7 @@ const BotHUD = () => {
           )}
           
           {/* Nouvel onglet des ressources collectées */}
-          {activeTab === 'collected' && (
+          {activeMemoryTab === 'collected' && (
             <>
               {(!botMemory?.collectedResources || botMemory.collectedResources.length === 0) ? (
                 <p className="bot-memory-empty">Aucune ressource collectée</p>
@@ -202,7 +207,7 @@ const BotHUD = () => {
           )}
           
           {/* Onglet des dangers détectés */}
-          {activeTab === 'dangers' && (
+          {activeMemoryTab === 'dangers' && (
             <>
               {(!botMemory?.knownDangers || botMemory.knownDangers.length === 0) ? (
                 <p className="bot-memory-empty">Aucun danger détecté</p>
@@ -235,23 +240,74 @@ const BotHUD = () => {
       
       {/* File d'actions prioritaires */}
       <div className="bot-hud-section">
-        <h4>File d'actions ({actionQueue.length})</h4>
-        {actionQueue.length === 0 ? (
-          <p className="bot-hud-empty-actions">Aucune action planifiée</p>
-        ) : (
-          <ul className="bot-hud-action-list">
-            {actionQueue.map((action, index) => (
-              <li key={index} className="bot-hud-action-item" 
-                  style={{borderLeft: `4px solid ${getPriorityColor(action.priority)}`}}>
-                <span><strong>{action.type}</strong></span>
-                <span className="bot-hud-priority-label" 
-                      style={{color: getPriorityColor(action.priority)}}>
-                  {getPriorityName(action.priority)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <h4>File d'actions</h4>
+        
+        {/* Onglets pour choisir le type d'actions à afficher */}
+        <div className="bot-action-tabs">
+          <button 
+            className={`bot-action-tab ${activeActionTab === 'queue' ? 'active' : ''}`}
+            onClick={() => setActiveActionTab('queue')}>
+            Queue ({actionQueue.length})
+          </button>
+          <button 
+            className={`bot-action-tab ${activeActionTab === 'completed' ? 'active' : ''}`}
+            onClick={() => setActiveActionTab('completed')}>
+            Completed ({completedActions.length})
+          </button>
+        </div>
+        
+        {/* Contenu des onglets */}
+        <div className="bot-action-content">
+          {/* Onglet de la file d'attente */}
+          {activeActionTab === 'queue' && (
+            <>
+              {actionQueue.length === 0 ? (
+                <p className="bot-hud-empty-actions">Aucune action planifiée</p>
+              ) : (
+                <ul className="bot-hud-action-list">
+                  {actionQueue.map((action, index) => (
+                    <li key={index} className="bot-hud-action-item" 
+                        style={{borderLeft: `4px solid ${getPriorityColor(action.priority)}`}}>
+                      <span><strong>{action.type}</strong></span>
+                      <span className="bot-hud-priority-label" 
+                            style={{color: getPriorityColor(action.priority)}}>
+                        {getPriorityName(action.priority)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+          
+          {/* Nouvel onglet des actions terminées */}
+          {activeActionTab === 'completed' && (
+            <>
+              {completedActions.length === 0 ? (
+                <p className="bot-hud-empty-actions">Aucune action terminée</p>
+              ) : (
+                <ul className="bot-hud-action-list">
+                  {completedActions.map((action, index) => (
+                    <li key={index} className="bot-hud-action-item" 
+                        style={{borderLeft: `4px solid ${getPriorityColor(action.priority)}`}}>
+                      <span><strong>{action.type}</strong></span>
+                      <span className="bot-hud-priority-label" 
+                            style={{color: getPriorityColor(action.priority)}}>
+                        {getPriorityName(action.priority)}
+                      </span>
+                      <span className="bot-hud-action-timestamp">
+                        {new Date(action.completedAt).toLocaleTimeString()}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <button onClick={clearCompletedActions} className="bot-hud-clear-completed">
+                Clear Completed Actions
+              </button>
+            </>
+          )}
+        </div>
       </div>
       
       {player2Ship && (

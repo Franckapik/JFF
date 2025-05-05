@@ -1252,3 +1252,61 @@
 .bot-hud, .player-hud, .tile-hud {
   width: 100%; /* Permet de prendre toute la largeur du conteneur parent */
 }
+
+/* Styles pour le système d'onglets des actions */
+.bot-action-tabs {
+  display: flex;
+  border-bottom: 1px solid #444;
+  margin-bottom: 8px;
+}
+
+.bot-action-tab {
+  padding: 5px 10px;
+  border: none;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 5px;
+  border-radius: 3px 3px 0 0;
+}
+
+.bot-action-tab.active {
+  color: #fff;
+  background-color: #444;
+  font-weight: bold;
+}
+
+.bot-action-content {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Style pour le bouton de suppression des actions terminées */
+.bot-hud-clear-completed {
+  margin-top: 8px;
+  padding: 5px 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 3px;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: 12px;
+  width: 100%;
+}
+
+.bot-hud-clear-completed:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Style pour afficher des informations sur l'heure de complétion */
+.bot-hud-action-item {
+  position: relative;
+}
+
+.bot-hud-action-timestamp {
+  display: block;
+  font-size: 10px;
+  color: #aaa;
+  margin-top: 3px;
+}
