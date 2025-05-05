@@ -42,7 +42,7 @@ export const BotConditions = {
     };
   },
   
-  // CONDITION MODIFIÉE: Vérifie si des ressources ont été découvertes par le drone
+  // CONDITION MODIFIÉE: Vérifie si des ressources ont été découvertes et si assez d'explorations
   hasDiscoveredResources: (botState, botVehicle) => {
     // On ne vérifie cette condition que si on est en mode exploration
     if (botState !== BOT_STATES.EXPLORING) return { result: false };
@@ -56,14 +56,24 @@ export const BotConditions = {
                         botMemory.knownResources && 
                         botMemory.knownResources.length > 0;
     
-    console.log(`[BotConditions] hasDiscoveredResources check: ${hasResources ? 'Resources found!' : 'No resources yet'}`);
-    console.log(`[BotConditions] knownResources:`, botMemory?.knownResources);
+    // NOUVELLE VÉRIFICATION: Exige au moins 3 explorations avant de passer en collecte
+    const hasEnoughExplorations = botMemory && 
+                                (botMemory.explorationCount >= 3);
+    
+    // Les deux conditions doivent être remplies
+    const shouldTransition = hasResources && hasEnoughExplorations;
+    
+    console.log(`[BotConditions] hasDiscoveredResources check: Resources: ${hasResources ? 'Found!' : 'None'}, Explorations: ${botMemory?.explorationCount || 0}/3`);
+    
+    if (shouldTransition) {
+      console.log(`[BotConditions] Transitioning to COLLECTING with ${botMemory.knownResources.length} resources after ${botMemory.explorationCount} explorations`);
+    }
                          
-    // Si le drone a trouvé des ressources, passer en mode collecte
+    // Transition uniquement si assez de ressources ET assez d'explorations
     return {
-      result: hasResources,
-      state: hasResources ? BOT_STATES.COLLECTING : null,
-      action: hasResources ? { type: 'collect', priority: PRIORITY.HIGH } : null // Augmenté la priorité
+      result: shouldTransition,
+      state: shouldTransition ? BOT_STATES.COLLECTING : null,
+      action: shouldTransition ? { type: 'collect', priority: PRIORITY.HIGH } : null
     };
   },
   

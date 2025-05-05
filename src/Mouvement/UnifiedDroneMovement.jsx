@@ -5,6 +5,7 @@ import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
 import useMessageManager from "../hooks/useMessageManager";
 import useSimpleBotStore from "../stores/useBotStore"; // Importation du store bot pour les transitions d'état
+import { BotConditions } from "../ai/fsm/conditions/botConditions"; // Import direct du module BotConditions
 
 /**
  * Composant de mouvement de drone unifié qui fonctionne pour les deux joueurs (player1 et player2/bot)
@@ -247,32 +248,48 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
             resources
           };
           
-          // Mettre à jour la mémoire du bot avec la nouvelle ressource
+          // Utiliser la méthode updatePlayerMemory au lieu de manipuler l'état directement
           const updatedKnownResources = botMemory.knownResources ? 
             [...botMemory.knownResources, newResource] : [newResource];
           
-          // Mettre à jour l'état global
-          usePlayerStore.setState((state) => ({
-            players: {
-              ...state.players,
-              player2: {
-                ...state.players.player2,
-                memory: {
-                  ...state.players.player2.memory,
-                  knownResources: updatedKnownResources
-                }
-              }
-            }
-          }));
+          // Mise à jour de la mémoire via la méthode appropriée
+          usePlayerStore.getState().updatePlayerMemory('player2', {
+            knownResources: updatedKnownResources
+          });
           
           // Forcer une vérification des conditions après la découverte de ressources
           // pour faciliter la transition vers l'état de collecte
           if (playerId === "player2" && botState === BOT_STATES.EXPLORING) {
             console.log("[UnifiedDroneMovement] Resources found, checking conditions for state transition");
+            // Attendre que la mise à jour du state soit complète avant de vérifier les conditions
             setTimeout(() => {
-              // Permet au store de mettre à jour son état avant de vérifier les conditions
-              useSimpleBotStore.getState().checkConditions();
-            }, 100);
+              console.log("[UnifiedDroneMovement] Executing checkConditions after finding resources");
+              const botStore = useSimpleBotStore.getState();
+              const currentState = botStore.botState;
+              console.log(`[UnifiedDroneMovement] Current bot state before check: ${currentState}`);
+              
+              // Forcer la vérification de la condition spécifique
+              const playerState = usePlayerStore.getState();
+              const botVehicle = playerState.players?.player2?.vehicles?.ship;
+              const hasDiscoveredResourcesResult = BotConditions.hasDiscoveredResources(currentState, botVehicle);
+              
+              console.log(`[UnifiedDroneMovement] hasDiscoveredResources result:`, hasDiscoveredResourcesResult);
+              
+              // Si la condition est validée, changer l'état manuellement
+              if (hasDiscoveredResourcesResult.result && hasDiscoveredResourcesResult.state) {
+                console.log(`[UnifiedDroneMovement] Forcing state change to ${hasDiscoveredResourcesResult.state}`);
+                botStore.changeState(hasDiscoveredResourcesResult.state);
+                
+                // Ajouter l'action si spécifiée
+                if (hasDiscoveredResourcesResult.action) {
+                  console.log(`[UnifiedDroneMovement] Adding action ${hasDiscoveredResourcesResult.action.type}`);
+                  botStore.addAction(hasDiscoveredResourcesResult.action.type, hasDiscoveredResourcesResult.action.priority);
+                }
+              } else {
+                // Si la vérification spécifique n'a pas fonctionné, essayer la vérification générale
+                botStore.checkConditions();
+              }
+            }, 200); // Allonger légèrement le délai pour s'assurer que l'état est bien mis à jour
           }
         }
       }
@@ -280,6 +297,20 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
     
     // Marquer la tuile comme explorée
     useTileStore.getState().markTileAsExplored(reachedTileCoord);
+    
+    // Incrémenter le compteur d'explorations si c'est le bot
+    if (playerId === "player2") {
+      const playerState = usePlayerStore.getState();
+      const botMemory = playerState.players?.player2?.memory;
+      const currentCount = botMemory?.explorationCount || 0;
+      
+      // Mettre à jour le compteur d'explorations
+      usePlayerStore.getState().updatePlayerMemory('player2', {
+        explorationCount: currentCount + 1
+      });
+      
+      console.log(`[UnifiedDroneMovement] Bot exploration count increased to ${currentCount + 1}`);
+    }
     
     // Mise à jour des états selon le type de drone
     if (playerId === "player1") {

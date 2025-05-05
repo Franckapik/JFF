@@ -35,7 +35,7 @@ const App = () => {
 
       {/* Bot HUD à gauche */}
       <div className="player-hud-wrapper">
-        <CollapsibleHUD title="Bot Status" defaultOpen={false}>
+        <CollapsibleHUD title="Bot Status" defaultOpen={true}>
           <BotHUD />
         </CollapsibleHUD>
       </div>

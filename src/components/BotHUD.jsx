@@ -16,7 +16,7 @@ const BotHUD = () => {
   const calculateDistance = useTileStore((state) => state.calculateDistance);
   
   // États locaux pour les onglets de mémoire du bot
-  const [activeTab, setActiveTab] = useState('resources'); // 'resources' ou 'dangers'
+  const [activeTab, setActiveTab] = useState('resources'); // 'resources', 'collected', ou 'dangers'
 
   // Style pour la barre de carburant
   const getFuelBarStyle = (fuelLevel) => {
@@ -72,6 +72,9 @@ const BotHUD = () => {
         <p>
           <strong>Active:</strong> {isRunning ? "Yes" : "No"}
         </p>
+        <p>
+          <strong>Explorations:</strong> {botMemory?.explorationCount || 0}
+        </p>
       </div>
       
       {/* NOUVELLE SECTION - Mémoire du bot */}
@@ -84,6 +87,11 @@ const BotHUD = () => {
             className={`bot-memory-tab ${activeTab === 'resources' ? 'active' : ''}`}
             onClick={() => setActiveTab('resources')}>
             Resources ({botMemory?.knownResources?.length || 0})
+          </button>
+          <button 
+            className={`bot-memory-tab ${activeTab === 'collected' ? 'active' : ''}`}
+            onClick={() => setActiveTab('collected')}>
+            Collected ({botMemory?.collectedResources?.length || 0})
           </button>
           <button 
             className={`bot-memory-tab ${activeTab === 'dangers' ? 'active' : ''}`}
@@ -124,6 +132,49 @@ const BotHUD = () => {
                           </td>
                           <td style={{color: getResourceColor(resource.resources?.special || 0) * 10}}>
                             {resource.resources?.special || 0}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+          
+          {/* Nouvel onglet des ressources collectées */}
+          {activeTab === 'collected' && (
+            <>
+              {(!botMemory?.collectedResources || botMemory.collectedResources.length === 0) ? (
+                <p className="bot-memory-empty">Aucune ressource collectée</p>
+              ) : (
+                <div className="bot-memory-table-container">
+                  <table className="bot-memory-table">
+                    <thead>
+                      <tr>
+                        <th>Coord</th>
+                        <th>Food</th>
+                        <th>Debris</th>
+                        <th>Special</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {botMemory.collectedResources.map((resource, index) => (
+                        <tr key={index}>
+                          <td>{resource.coord}</td>
+                          <td style={{color: getResourceColor(resource.resources?.food || 0)}}>
+                            {resource.resources?.food || 0}
+                          </td>
+                          <td style={{color: getResourceColor(resource.resources?.debris || 0)}}>
+                            {resource.resources?.debris || 0}
+                          </td>
+                          <td style={{color: getResourceColor(resource.resources?.special || 0) * 10}}>
+                            {resource.resources?.special || 0}
+                          </td>
+                          <td>{resource.collectedAt ? 
+                              new Date(resource.collectedAt).toLocaleTimeString() : 
+                              'N/A'}
                           </td>
                         </tr>
                       ))}

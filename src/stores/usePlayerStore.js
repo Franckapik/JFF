@@ -60,6 +60,8 @@ const usePlayerStore = create((set, get) => ({
       memory: {
         knownResources: [],
         knownDangers: [],
+        explorationCount: 0, // Ajout de la propriété explorationCount
+        collectedResources: [], // Ajout de la propriété collectedResources
       },
       messages: [], // Ensure messages array is initialized
     },
@@ -118,6 +120,8 @@ const usePlayerStore = create((set, get) => ({
       memory: {
         knownResources: [],
         knownDangers: [],
+        explorationCount: 0, // Ajout de la propriété explorationCount
+        collectedResources: [], // Ajout de la propriété collectedResources
       },
       messages: [], // Ensure messages array is initialized
     },
@@ -513,6 +517,34 @@ const usePlayerStore = create((set, get) => ({
     
     // Retourner true si le nouveau niveau est > 0, false sinon
     return newFuelLevel > 0;
+  },
+
+  /**
+   * Met à jour la mémoire d'un joueur
+   * @param {string} playerId - ID du joueur (ex: 'player1', 'player2')
+   * @param {Object} updates - Propriétés à mettre à jour dans la mémoire
+   */
+  updatePlayerMemory: (playerId, updates) => {
+    set((state) => {
+      const player = state.players[playerId];
+      if (!player) {
+        console.error(`Player with ID '${playerId}' does not exist.`);
+        return state;
+      }
+
+      return {
+        players: {
+          ...state.players,
+          [playerId]: {
+            ...player,
+            memory: {
+              ...player.memory,
+              ...updates, // Applique les mises à jour à la mémoire existante
+            },
+          },
+        },
+      };
+    });
   },
 
 }));

@@ -44,16 +44,20 @@ const ShipMovement = ({ playerId, children }) => {
 
   // === Fonctions locales ===
   const handleFinalizeMovement = (currentTargetTile) => {
-    if (playerId && playerVehicle && selectedVehicle.vehicleId) {
-      const vehicleId = selectedVehicle.vehicleId;
-      updateVehicle(playerId, vehicleId, {
-        position: currentTargetTile.position,
-        coord: currentTargetTile.coord,
-        progress: 100,
-        isMoving: false,
-        targetTile: { position: null, coord: null },
-      });
-    }
+    if (!playerId || !playerVehicle) return;
+    
+    // Pour le joueur 2 (bot), on utilise toujours "ship"
+    const vehicleId = playerId === "player2" ? "ship" : selectedVehicle.vehicleId;
+    
+    console.log(`[ShipMovement] Finalizing movement for ${playerId}/${vehicleId} to ${currentTargetTile.coord}`);
+    
+    updateVehicle(playerId, vehicleId, {
+      position: currentTargetTile.position,
+      coord: currentTargetTile.coord,
+      progress: 100,
+      isMoving: false,
+      targetTile: { position: null, coord: null },
+    });
   };
 
   const processPath = (pathData) => {
@@ -69,7 +73,11 @@ const ShipMovement = ({ playerId, children }) => {
     setDistanceTraveled(0);
     
     if (playerId && playerVehicle) {
-      updateVehicle(playerId, selectedVehicle.vehicleId, {
+      // Pour le joueur 2 (bot), on utilise toujours "ship"
+      const vehicleId = playerId === "player2" ? "ship" : selectedVehicle.vehicleId;
+      console.log(`[ShipMovement] Setting isMoving=true for ${playerId}/${vehicleId}`);
+      
+      updateVehicle(playerId, vehicleId, {
         isMoving: true,
         path: pathData.path,
         totalDistance: pathData.totalDistance
@@ -129,8 +137,11 @@ const ShipMovement = ({ playerId, children }) => {
   useFrame((_, delta) => {
     if (!playerVehicle || path.length === 0 || currentTargetIndex >= path.length) return;
 
+    // Pour le joueur 2 (bot), on utilise toujours "ship"
+    const vehicleId = playerId === "player2" ? "ship" : selectedVehicle.vehicleId;
+
     if (playerVehicle.fuel <= 0) {
-      updateVehicle(playerId, selectedVehicle.vehicleId, { isMoving: false });
+      updateVehicle(playerId, vehicleId, { isMoving: false });
       return;
     }
 
@@ -153,7 +164,7 @@ const ShipMovement = ({ playerId, children }) => {
     const distance = direction.length();
 
     if (currentTargetIndex === 0 && Math.random() < 0.01) {
-      console.log("Distance to target:", distance, "Target:", targetPosition, "Current:", currentPosition);
+      console.log(`[${playerId}/${vehicleId}] Distance to target:`, distance);
     }
 
     if (distance > 0.1) {
@@ -172,32 +183,27 @@ const ShipMovement = ({ playerId, children }) => {
       setDistanceTraveled(prev => prev + moveDistance);
       const progress = (distanceTraveled / totalPathDistance) * 100;
       
-      if (selectedVehicle.vehicleId) {
-        updateVehicle(playerId, selectedVehicle.vehicleId, {
-          progress: Math.min(progress, 100).toFixed(2),
-        });
-      }
+      updateVehicle(playerId, vehicleId, {
+        progress: Math.min(progress, 100).toFixed(2),
+      });
       
     } else {
-      
-      if (selectedVehicle.vehicleId) {
-        updateVehicle(playerId, selectedVehicle.vehicleId, {
-          position: {
-            x: currentTargetTile.position.x,
-            y: currentTargetTile.position.y,
-            z: currentTargetTile.position.z,
-          },
-          coord: currentTargetCoord,
-        });
-      }
+      updateVehicle(playerId, vehicleId, {
+        position: {
+          x: currentTargetTile.position.x,
+          y: currentTargetTile.position.y,
+          z: currentTargetTile.position.z,
+        },
+        coord: currentTargetCoord,
+      });
       
       if (currentTargetIndex < path.length - 1) {
         setCurrentTargetIndex(prev => prev + 1);
-        consumeFuel(playerId, selectedVehicle.vehicleId);
+        consumeFuel(playerId, vehicleId);
       } else {
         if (!hasReachedTarget) {
           setHasReachedTarget(true);
-          console.log("Arrived at destination");
+          console.log(`[${playerId}/${vehicleId}] Arrived at destination`);
           
           handleFinalizeMovement(currentTargetTile);
                     

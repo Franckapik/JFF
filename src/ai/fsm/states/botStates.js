@@ -35,7 +35,7 @@ export const BotStateConfig = {
   
   [BOT_STATES.COLLECTING]: {
     description: "Bot en collecte de ressources",
-    defaultAction: { type: 'collect', priority: PRIORITY.LOW },
+    defaultAction: { type: 'collect', priority: PRIORITY.MEDIUM }, // Changé de LOW à MEDIUM
     onEnterState: () => {
       console.log("[BotState] Entering COLLECTING state");
     },
