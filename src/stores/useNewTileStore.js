@@ -52,31 +52,31 @@ export const useTileStore = create((set, get) => ({
         if (!coord) return [];
         
         const tiles = get().tiles;
-        const [sourceX, sourceY] = coord.split(',').map(Number); // Convertit les coordonnées en nombres
         const walkableTiles = [];
+        const calculateDistanceFn = get().calculateDistance;
         
-        // Parcourt les tuiles dans un rayon donné
-        for (let x = sourceX - exploringRadius; x <= sourceX + exploringRadius; x++) {
-            for (let y = sourceY - exploringRadius; y <= sourceY + exploringRadius; y++) {
-                const tileCoord = `${x},${y}`;
-                const tile = tiles[tileCoord];
-                
-                // Vérifie si la tuile est valide et walkable
+        // Parcours de toutes les tuiles pour chercher celles dans le rayon
+        Object.entries(tiles).forEach(([tileCoord, tile]) => {
+            // Utiliser calculateDistance pour obtenir la distance en nombre de tuiles
+            const distance = calculateDistanceFn(coord, tileCoord, false, true);
+            
+            // Vérifier si la tuile est dans le rayon d'exploration
+            if (distance <= exploringRadius) {
+                // Vérifier les autres conditions (walkable, non danger, non explorée)
                 if (tile && 
                     tile.walkable !== false && 
-                    (!excludeDanger || tile.type !== 'danger') && 
+                    (!excludeDanger || tile.type !== 'danger') &&
                     (!onlyUnexplored || !tile.explored)) {
                     
                     walkableTiles.push({
                         coord: tileCoord,
                         position: tile.position,
                         tile: tile,
-                        // Calcule la distance euclidienne pour le tri
-                        distance: Math.sqrt(Math.pow(x - sourceX, 2) + Math.pow(y - sourceY, 2)),
+                        distance: distance
                     });
                 }
             }
-        }
+        });
         
         // Retourne les tuiles walkable triées par proximité
         return walkableTiles.sort((a, b) => a.distance - b.distance);

@@ -236,8 +236,9 @@ export const BotActions = {
         position: targetTileInfo.position
       });
       
-      // Marquer la tuile comme explorée
-      tileStore.markTileAsExplored(targetTileInfo.coord);
+      // Ne pas marquer la tuile comme explorée ici
+      // Le composant UnifiedDroneMovement s'en chargera quand le drone atteindra la tuile
+      
       return true;
     } else {
       // Si aucune tuile non-explorée n'est trouvée à proximité, chercher une tuile aléatoire
@@ -246,8 +247,9 @@ export const BotActions = {
         console.log(`[BotActions] No unexplored tiles nearby, sending drone to random tile: ${randomTile.coord}`);
         playerStore.moveToTile('player2', 'drone3', randomTile);
         
-        // Marquer la tuile comme explorée
-        tileStore.markTileAsExplored(randomTile.coord);
+        // Ne pas marquer la tuile comme explorée ici
+        // Le composant UnifiedDroneMovement s'en chargera quand le drone atteindra la tuile
+        
         return true;
       }
     }
