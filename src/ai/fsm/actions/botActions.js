@@ -47,7 +47,30 @@ export const BotActions = {
            currentTile.resources.debris > 0 || 
            currentTile.resources.special > 0)) {
         console.log(`[BotActions] Collecting resources at current tile: ${botVehicle.coord}`);
+        
+        // Stocker les ressources avant de les collecter pour l'historique
+        const resourcesBeforeCollection = { ...currentTile.resources };
+        
+        // Collecter les ressources
         playerStore.collectResources('player2', 'ship', currentTile);
+        
+        // Ajouter la tuile à la liste des tuiles collectées dans la mémoire du bot
+        const collectedEntry = {
+          coord: botVehicle.coord,
+          resources: resourcesBeforeCollection,
+          collectedAt: new Date().toISOString()
+        };
+        
+        // Récupérer la liste actuelle des ressources collectées
+        const currentCollected = botMemory.collectedResources || [];
+        
+        // Mettre à jour la mémoire du bot avec la nouvelle entrée
+        playerStore.updatePlayerMemory('player2', {
+          collectedResources: [...currentCollected, collectedEntry]
+        });
+        
+        console.log(`[BotActions] Added collected resource at ${botVehicle.coord} to memory`);
+        
         return true;
       }
     }

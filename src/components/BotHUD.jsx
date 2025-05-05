@@ -32,6 +32,22 @@ const BotHUD = () => {
     };
   };
 
+  // Style pour la barre de ressources
+  const getResourceBarStyle = (level, total = 100) => {
+    const percentage = Math.min(100, (level / total) * 100);
+    
+    let color = "#4CAF50"; // Vert par défaut
+    if (level === 0) color = "#777777"; // Gris si aucune ressource
+    else if (level > 35) color = "#2196F3"; // Bleu si beaucoup de ressources
+    
+    return {
+      width: `${percentage}%`,
+      backgroundColor: color,
+      height: "8px",
+      borderRadius: "4px"
+    };
+  };
+
   // Couleur selon la priorité de l'action
   const getPriorityColor = (priority) => {
     switch(priority) {
@@ -285,14 +301,97 @@ const BotHUD = () => {
             )}
           </p>
           
-          {/* Section Ressources */}
+
+          {/* Section Ressources du vaisseau avec barres de progression */}
           <div className="bot-hud-section">
-            <p className="bot-hud-resources-title">Resources:</p>
-            <ul className="bot-hud-resources-list">
-              <li>Food: {player2Ship.resources?.food || 0}</li>
-              <li>Debris: {player2Ship.resources?.debris || 0}</li>
-              <li>Special: {player2Ship.resources?.special || 0}</li>
-            </ul>
+            <h4 className="bot-hud-resources-title">Ship Resources:</h4>
+            
+            {/* Food Resource */}
+            <div className="bot-hud-resource-item">
+              <div className="bot-hud-resource-label">
+                <span>Food:</span> {player2Ship.resources?.food || 0}/{player2Ship.maxCapacity?.food || 100}
+              </div>
+              <div className="bot-hud-resource-container">
+                <div 
+                  className="bot-hud-resource-bar" 
+                  style={getResourceBarStyle(player2Ship.resources?.food || 0, player2Ship.maxCapacity?.food || 100)}
+                ></div>
+              </div>
+            </div>
+            
+            {/* Debris Resource */}
+            <div className="bot-hud-resource-item">
+              <div className="bot-hud-resource-label">
+                <span>Debris:</span> {player2Ship.resources?.debris || 0}/{player2Ship.maxCapacity?.debris || 1000}
+              </div>
+              <div className="bot-hud-resource-container">
+                <div 
+                  className="bot-hud-resource-bar" 
+                  style={getResourceBarStyle(player2Ship.resources?.debris || 0, player2Ship.maxCapacity?.debris || 1000)}
+                ></div>
+              </div>
+            </div>
+            
+            {/* Special Resource */}
+            <div className="bot-hud-resource-item">
+              <div className="bot-hud-resource-label">
+                <span>Special:</span> {player2Ship.resources?.special || 0}/{player2Ship.maxCapacity?.special || 2}
+              </div>
+              <div className="bot-hud-resource-container">
+                <div 
+                  className="bot-hud-resource-bar" 
+                  style={getResourceBarStyle(player2Ship.resources?.special || 0, player2Ship.maxCapacity?.special || 2)}
+                ></div>
+              </div>
+            </div>
+            
+            <p>
+              <strong>At Capacity:</strong> {player2Ship.isAtCapacity ? "Yes" : "No"}
+            </p>
+          </div>
+          
+          {/* Section pour le score total du joueur */}
+          <div className="bot-hud-section">
+            <h4 className="bot-hud-resources-title">Total Score:</h4>
+            
+            {/* Food Total */}
+            <div className="bot-hud-resource-item">
+              <div className="bot-hud-resource-label">
+                <span>Food:</span> {players.player2?.score?.resources?.food || 0}
+              </div>
+              <div className="bot-hud-resource-container">
+                <div 
+                  className="bot-hud-resource-bar" 
+                  style={getResourceBarStyle(players.player2?.score?.resources?.food || 0, 100)}
+                ></div>
+              </div>
+            </div>
+            
+            {/* Debris Total */}
+            <div className="bot-hud-resource-item">
+              <div className="bot-hud-resource-label">
+                <span>Debris:</span> {players.player2?.score?.resources?.debris || 0}
+              </div>
+              <div className="bot-hud-resource-container">
+                <div 
+                  className="bot-hud-resource-bar" 
+                  style={getResourceBarStyle(players.player2?.score?.resources?.debris || 0, 200)}
+                ></div>
+              </div>
+            </div>
+            
+            {/* Special Total */}
+            <div className="bot-hud-resource-item">
+              <div className="bot-hud-resource-label">
+                <span>Special:</span> {players.player2?.score?.resources?.special || 0}
+              </div>
+              <div className="bot-hud-resource-container">
+                <div 
+                  className="bot-hud-resource-bar" 
+                  style={getResourceBarStyle(players.player2?.score?.resources?.special || 0, 10)}
+                ></div>
+              </div>
+            </div>
           </div>
         </div>
       )}
