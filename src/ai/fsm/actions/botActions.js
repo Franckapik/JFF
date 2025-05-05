@@ -27,6 +27,89 @@ export const BotActions = {
     return false;
   },
   
+  // NOUVELLE ACTION: Se déplace vers une ressource connue et la collecte
+  moveToKnownResource: (playerStore, tileStore) => {
+    const botVehicle = playerStore.players?.player2?.vehicles?.ship;
+    const botMemory = playerStore.players?.player2?.memory;
+    
+    if (!botVehicle || botVehicle.isMoving || !botMemory) {
+      return false;
+    }
+    
+    // Si le bot est déjà sur une tuile avec des ressources, collecter d'abord
+    if (botVehicle.coord) {
+      const currentTile = tileStore.tiles[botVehicle.coord];
+      if (currentTile && currentTile.resources && 
+          (currentTile.resources.food > 0 || 
+           currentTile.resources.debris > 0 || 
+           currentTile.resources.special > 0)) {
+        console.log(`[BotActions] Collecting resources at current tile: ${botVehicle.coord}`);
+        playerStore.collectResources('player2', 'ship', currentTile);
+        return true;
+      }
+    }
+    
+    // Vérifier s'il y a des ressources connues
+    if (!botMemory.knownResources || botMemory.knownResources.length === 0) {
+      console.log(`[BotActions] No known resources to collect`);
+      return false;
+    }
+    
+    // Trouver la ressource la plus proche
+    let nearestResource = null;
+    let shortestDistance = Infinity;
+    
+    if (botVehicle.coord) {
+      const [shipX, shipY] = botVehicle.coord.split(',').map(Number);
+      
+      botMemory.knownResources.forEach(resource => {
+        const [resX, resY] = resource.coord.split(',').map(Number);
+        const distance = Math.sqrt(Math.pow(resX - shipX, 2) + Math.pow(resY - shipY, 2));
+        
+        // Vérifier si la ressource existe toujours (n'a pas été collectée)
+        const tile = tileStore.tiles[resource.coord];
+        if (tile && tile.resources && 
+            (tile.resources.food > 0 || tile.resources.debris > 0 || tile.resources.special > 0) && 
+            !tile.collected) {
+          if (distance < shortestDistance) {
+            shortestDistance = distance;
+            nearestResource = resource;
+          }
+        }
+      });
+    }
+    
+    // Si une ressource valide a été trouvée, s'y déplacer
+    if (nearestResource) {
+      console.log(`[BotActions] Moving to known resource at: ${nearestResource.coord}`);
+      const targetTile = tileStore.tiles[nearestResource.coord];
+      if (targetTile) {
+        playerStore.moveToTile('player2', 'ship', {
+          coord: nearestResource.coord,
+          position: targetTile.position
+        });
+        return true;
+      }
+    } else {
+      // Si toutes les ressources connues ont été collectées, les supprimer de la mémoire
+      console.log(`[BotActions] Clearing collected resources from memory`);
+      playerStore.setState((state) => ({
+        players: {
+          ...state.players,
+          player2: {
+            ...state.players.player2,
+            memory: {
+              ...state.players.player2.memory,
+              knownResources: []
+            }
+          }
+        }
+      }));
+    }
+    
+    return false;
+  },
+  
   // Se déplace vers une tuile aléatoire et collecte automatiquement les ressources à l'arrivée
   moveAndCollect: (playerStore, tileStore) => {
     const botVehicle = playerStore.players?.player2?.vehicles?.ship;
@@ -189,7 +272,7 @@ export const BotActions = {
   // Map des types d'actions aux fonctions d'exécution
   actionMap: {
     'move': 'moveToRandomTile',
-    'collect': 'moveAndCollect',
+    'collect': 'moveToKnownResource', // Changé pour utiliser la nouvelle action
     'returnToBase': 'returnToBase',
     'refuel': 'refuelAtBase',
     'exploreDrone': 'explorerWithDrone'

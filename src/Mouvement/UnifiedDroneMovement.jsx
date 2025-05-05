@@ -4,6 +4,7 @@ import { Vector3 } from "three";
 import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
 import useMessageManager from "../hooks/useMessageManager";
+import useSimpleBotStore from "../stores/useBotStore"; // Importation du store bot pour les transitions d'état
 
 /**
  * Composant de mouvement de drone unifié qui fonctionne pour les deux joueurs (player1 et player2/bot)
@@ -18,6 +19,12 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
   const tiles = useTileStore((state) => state.tiles);
   const { sendVehicleMessage } = useMessageManager();
   const updateVehicle = usePlayerStore((state) => state.updateVehicle);
+  
+  // Ajout du store bot pour les transitions d'état (uniquement pour player2)
+  const botState = useSimpleBotStore((state) => state.botState);
+  const changeState = useSimpleBotStore((state) => state.changeState);
+  const BOT_STATES = useSimpleBotStore((state) => state.BOT_STATES);
+  const addAction = useSimpleBotStore((state) => state.addAction);
   
   // Sélecteurs pour les vaisseaux et le drone concerné
   const player1Ship = usePlayerStore((state) => state.players.player1?.vehicles?.ship);
@@ -217,25 +224,34 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
     }
     
     // Si c'est le bot, mettre à jour sa mémoire des ressources connues
-    if (playerId === "player2" && (resources.food > 0 || resources.debris > 0 || resources.special > 0)) {
-      const playersState = usePlayerStore.getState().players;
-      const botMemory = playersState.player2?.memory;
+    if (playerId === "player2") {
+      // Vérifier s'il y a des ressources sur la tuile
+      const hasResources = resources.food > 0 || resources.debris > 0 || resources.special > 0;
       
-      if (botMemory && botMemory.knownResources) {
+      if (hasResources) {
+        // Récupérer l'état actuel du store
+        const playerState = usePlayerStore.getState();
+        const botMemory = playerState.players?.player2?.memory || { knownResources: [] };
+        
         // Vérifier si la ressource est déjà connue
-        const alreadyKnown = botMemory.knownResources.some(r => r.coord === reachedTileCoord);
+        const alreadyKnown = botMemory.knownResources && 
+                            botMemory.knownResources.some(r => r.coord === reachedTileCoord);
         
         if (!alreadyKnown) {
-          const updatedKnownResources = [
-            ...botMemory.knownResources,
-            {
-              coord: reachedTileCoord,
-              position: reachedTile.position,
-              resources
-            }
-          ];
+          console.log(`[UnifiedDroneMovement] Bot drone discovered new resources at ${reachedTileCoord}:`, resources);
           
-          // Mettre à jour la mémoire du bot
+          // Créer le nouvel objet de ressource
+          const newResource = {
+            coord: reachedTileCoord,
+            position: reachedTile.position,
+            resources
+          };
+          
+          // Mettre à jour la mémoire du bot avec la nouvelle ressource
+          const updatedKnownResources = botMemory.knownResources ? 
+            [...botMemory.knownResources, newResource] : [newResource];
+          
+          // Mettre à jour l'état global
           usePlayerStore.setState((state) => ({
             players: {
               ...state.players,
@@ -248,6 +264,16 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
               }
             }
           }));
+          
+          // Forcer une vérification des conditions après la découverte de ressources
+          // pour faciliter la transition vers l'état de collecte
+          if (playerId === "player2" && botState === BOT_STATES.EXPLORING) {
+            console.log("[UnifiedDroneMovement] Resources found, checking conditions for state transition");
+            setTimeout(() => {
+              // Permet au store de mettre à jour son état avant de vérifier les conditions
+              useSimpleBotStore.getState().checkConditions();
+            }, 100);
+          }
         }
       }
     }

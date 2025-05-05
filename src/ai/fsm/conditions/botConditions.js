@@ -2,6 +2,7 @@
 // Conditions qui déclenchent des transitions d'état dans la FSM
 
 import { BOT_STATES, PRIORITY } from '../../constants/botConstants';
+import usePlayerStore from '../../../stores/usePlayerStore';
 
 /**
  * Registre des conditions du bot
@@ -36,8 +37,67 @@ export const BotConditions = {
     const isFull = botVehicle?.fuel >= 100 && botState === BOT_STATES.RETURNING;
     return {
       result: isFull,
-      state: isFull ? BOT_STATES.EXPLORING : null, // Change to EXPLORING state instead of COLLECTING
-      action: isFull ? { type: 'exploreDrone', priority: PRIORITY.MEDIUM } : null // Use exploreDrone action
+      state: isFull ? BOT_STATES.EXPLORING : null,
+      action: isFull ? { type: 'exploreDrone', priority: PRIORITY.HIGH } : null
+    };
+  },
+  
+  // CONDITION MODIFIÉE: Vérifie si des ressources ont été découvertes par le drone
+  hasDiscoveredResources: (botState, botVehicle) => {
+    // On ne vérifie cette condition que si on est en mode exploration
+    if (botState !== BOT_STATES.EXPLORING) return { result: false };
+    
+    // Récupérer directement l'état du joueur
+    const playerState = usePlayerStore.getState();
+    const botMemory = playerState.players?.player2?.memory;
+    
+    // Vérifier si le bot a identifié des ressources
+    const hasResources = botMemory && 
+                        botMemory.knownResources && 
+                        botMemory.knownResources.length > 0;
+    
+    console.log(`[BotConditions] hasDiscoveredResources check: ${hasResources ? 'Resources found!' : 'No resources yet'}`);
+    console.log(`[BotConditions] knownResources:`, botMemory?.knownResources);
+                         
+    // Si le drone a trouvé des ressources, passer en mode collecte
+    return {
+      result: hasResources,
+      state: hasResources ? BOT_STATES.COLLECTING : null,
+      action: hasResources ? { type: 'collect', priority: PRIORITY.HIGH } : null // Augmenté la priorité
+    };
+  },
+  
+  // NOUVELLE CONDITION: Vérifie si le vaisseau est à capacité maximale
+  isAtMaxCapacity: (botState, botVehicle) => {
+    // Cette condition s'applique uniquement en mode collecte
+    if (botState !== BOT_STATES.COLLECTING) return { result: false };
+    
+    const isAtCapacity = botVehicle.isAtCapacity === true;
+    
+    return {
+      result: isAtCapacity,
+      state: isAtCapacity ? BOT_STATES.RETURNING : null,
+      action: isAtCapacity ? { type: 'returnToBase', priority: PRIORITY.HIGH } : null
+    };
+  },
+  
+  // NOUVELLE CONDITION: Vérifie si toutes les ressources connues ont été collectées
+  allKnownResourcesCollected: (botState, botVehicle) => {
+    // Cette condition s'applique uniquement en mode collecte
+    if (botState !== BOT_STATES.COLLECTING) return { result: false };
+    
+    const playerState = usePlayerStore.getState();
+    const botMemory = playerState.players?.player2?.memory;
+    
+    // Si le bot n'a pas de mémoire ou pas de ressources connues, retourner en exploration
+    const noResourcesToCollect = !botMemory || 
+                             !botMemory.knownResources || 
+                             botMemory.knownResources.length === 0;
+    
+    return {
+      result: noResourcesToCollect,
+      state: noResourcesToCollect ? BOT_STATES.EXPLORING : null,
+      action: noResourcesToCollect ? { type: 'exploreDrone', priority: PRIORITY.HIGH } : null
     };
   },
   
@@ -47,9 +107,12 @@ export const BotConditions = {
     
     // Ordre de priorité des conditions à vérifier
     const conditions = [
-      BotConditions.isLowFuel,
-      BotConditions.isAtBase,
-      BotConditions.isFullyRefueled
+      BotConditions.isLowFuel,          // Priorité 1: Vérifier le carburant (sécurité)
+      BotConditions.isAtBase,           // Priorité 2: Vérifier si à la base
+      BotConditions.isFullyRefueled,    // Priorité 3: Vérifier si ravitaillé
+      BotConditions.isAtMaxCapacity,    // Priorité 4: Vérifier si capacité max atteinte
+      BotConditions.hasDiscoveredResources, // Priorité 5: Vérifier si ressources découvertes
+      BotConditions.allKnownResourcesCollected // Priorité 6: Vérifier si ressources épuisées
     ];
     
     // Vérifie chaque condition dans l'ordre
