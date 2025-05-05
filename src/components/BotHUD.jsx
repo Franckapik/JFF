@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import usePlayerStore from "../stores/usePlayerStore";
 import useBotStore from "../stores/useBotStore";
 
@@ -9,6 +9,10 @@ const BotHUD = () => {
   const actionQueue = useBotStore((state) => state.actionQueue) || []; // Ajout d'un tableau vide par défaut
   const players = usePlayerStore((state) => state.players);
   const player2Ship = players.player2?.vehicles?.ship;
+  const botMemory = players.player2?.memory;
+  
+  // États locaux pour les onglets de mémoire du bot
+  const [activeTab, setActiveTab] = useState('resources'); // 'resources' ou 'dangers'
 
   // Style pour la barre de carburant
   const getFuelBarStyle = (fuelLevel) => {
@@ -45,6 +49,24 @@ const BotHUD = () => {
       default: return "INCONNUE";
     }
   };
+  
+  // Obtenir une couleur pour les ressources en fonction de leur quantité
+  const getResourceColor = (quantity) => {
+    if (quantity > 50) return "#4CAF50"; // Vert pour beaucoup
+    if (quantity > 20) return "#FFC107"; // Jaune pour moyen
+    return "#ff9800"; // Orange pour peu
+  };
+  
+  // Calculer la distance entre deux coordonnées
+  const calculateDistance = (coord1, coord2) => {
+    if (!coord1 || !coord2) return "N/A";
+    
+    const [x1, y1] = coord1.split(',').map(Number);
+    const [x2, y2] = coord2.split(',').map(Number);
+    
+    const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    return distance.toFixed(1);
+  };
 
   return (
     <div className="bot-hud">
@@ -57,6 +79,98 @@ const BotHUD = () => {
         <p>
           <strong>Active:</strong> {isRunning ? "Yes" : "No"}
         </p>
+      </div>
+      
+      {/* NOUVELLE SECTION - Mémoire du bot */}
+      <div className="bot-hud-section bot-memory-section">
+        <h4>Bot Memory</h4>
+        
+        {/* Onglets pour choisir le type de mémoire à afficher */}
+        <div className="bot-memory-tabs">
+          <button 
+            className={`bot-memory-tab ${activeTab === 'resources' ? 'active' : ''}`}
+            onClick={() => setActiveTab('resources')}>
+            Resources ({botMemory?.knownResources?.length || 0})
+          </button>
+          <button 
+            className={`bot-memory-tab ${activeTab === 'dangers' ? 'active' : ''}`}
+            onClick={() => setActiveTab('dangers')}>
+            Dangers ({botMemory?.knownDangers?.length || 0})
+          </button>
+        </div>
+        
+        {/* Contenu des onglets */}
+        <div className="bot-memory-content">
+          {/* Onglet des ressources découvertes */}
+          {activeTab === 'resources' && (
+            <>
+              {(!botMemory?.knownResources || botMemory.knownResources.length === 0) ? (
+                <p className="bot-memory-empty">Aucune ressource découverte</p>
+              ) : (
+                <div className="bot-memory-table-container">
+                  <table className="bot-memory-table">
+                    <thead>
+                      <tr>
+                        <th>Coord</th>
+                        <th>Distance</th>
+                        <th>Food</th>
+                        <th>Debris</th>
+                        <th>Special</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {botMemory.knownResources.map((resource, index) => (
+                        <tr key={index}>
+                          <td>{resource.coord}</td>
+                          <td>{calculateDistance(player2Ship?.coord, resource.coord)}</td>
+                          <td style={{color: getResourceColor(resource.resources?.food || 0)}}>
+                            {resource.resources?.food || 0}
+                          </td>
+                          <td style={{color: getResourceColor(resource.resources?.debris || 0)}}>
+                            {resource.resources?.debris || 0}
+                          </td>
+                          <td style={{color: getResourceColor(resource.resources?.special || 0) * 10}}>
+                            {resource.resources?.special || 0}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+          
+          {/* Onglet des dangers détectés */}
+          {activeTab === 'dangers' && (
+            <>
+              {(!botMemory?.knownDangers || botMemory.knownDangers.length === 0) ? (
+                <p className="bot-memory-empty">Aucun danger détecté</p>
+              ) : (
+                <div className="bot-memory-table-container">
+                  <table className="bot-memory-table">
+                    <thead>
+                      <tr>
+                        <th>Coord</th>
+                        <th>Distance</th>
+                        <th>Type</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {botMemory.knownDangers.map((danger, index) => (
+                        <tr key={index}>
+                          <td>{danger.coord}</td>
+                          <td>{calculateDistance(player2Ship?.coord, danger.coord)}</td>
+                          <td>{danger.type || 'Unknown'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
       
       {/* File d'actions prioritaires */}
