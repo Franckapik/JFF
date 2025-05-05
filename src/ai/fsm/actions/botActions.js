@@ -195,6 +195,7 @@ export const BotActions = {
   explorerWithDrone: (playerStore, tileStore) => {
     const botVehicle = playerStore.players?.player2?.vehicles?.ship;
     const botDrone = playerStore.players?.player2?.vehicles?.drone3;
+    const playerState = playerStore.players?.player2;
     
     // Vérifie si le drone est déjà en mouvement
     if (!botDrone || botDrone.isMoving) {
@@ -210,43 +211,29 @@ export const BotActions = {
     
     console.log(`[BotActions] Attempting to find a tile to explore`);
     
-    // Obtenir les coordonnées du vaisseau
-    const [shipX, shipY] = botVehicle.coord.split(',').map(Number);
-    const explorationRadius = 5;
-    const tiles = tileStore.tiles;
-    const tileCoords = Object.keys(tiles);
+    // Utiliser la nouvelle fonction getWalkableTilesInRadius avec le rayon d'exploration du joueur
+    const exploringRadius = playerState?.exploringRadius || 3;
+    console.log(`[BotActions] Using exploring radius: ${exploringRadius}`);
     
-    // Filtrer pour obtenir toutes les tuiles walkable dans le rayon d'exploration
-    const nearbyTiles = tileCoords
-      .map(coord => {
-        const [x, y] = coord.split(',').map(Number);
-        const distance = Math.sqrt(Math.pow(x - shipX, 2) + Math.pow(y - shipY, 2));
-        return { 
-          coord,
-          tile: tiles[coord], 
-          distance 
-        };
-      })
-      .filter(item => 
-        item.tile.walkable !== false && // Tuile où on peut marcher
-        item.distance <= explorationRadius && // Dans le rayon d'exploration
-        !item.tile.explored // N'a pas encore été explorée
-      )
-      .sort((a, b) => a.distance - b.distance); // Trier par distance
+    const walkableTilesInRadius = tileStore.getWalkableTilesInRadius(
+      botVehicle, // Passe le véhicule directement (il contient la propriété coord)
+      exploringRadius,
+      true, // onlyUnexplored = true, ne récupère que les tuiles non explorées
+      true  // excludeDanger = true, exclut les tuiles de type danger
+    );
     
-    console.log(`[BotActions] Found ${nearbyTiles.length} nearby unexplored tiles`);
+    console.log(`[BotActions] Found ${walkableTilesInRadius.length} walkable unexplored tiles in radius`);
     
     // Si des tuiles sont trouvées à proximité
-    if (nearbyTiles.length > 0) {
-      // Prendre la tuile la plus proche
-      const targetTileInfo = nearbyTiles[0];
-      const targetTile = targetTileInfo.tile;
+    if (walkableTilesInRadius.length > 0) {
+      // La première tuile est déjà la plus proche grâce au tri dans getWalkableTilesInRadius
+      const targetTileInfo = walkableTilesInRadius[0];
       
       console.log(`[BotActions] Sending drone to explore tile: ${targetTileInfo.coord}, distance: ${targetTileInfo.distance.toFixed(2)}`);
       
       playerStore.moveToTile('player2', 'drone3', {
         coord: targetTileInfo.coord,
-        position: targetTile.position
+        position: targetTileInfo.position
       });
       
       // Marquer la tuile comme explorée

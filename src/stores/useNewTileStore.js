@@ -29,6 +29,59 @@ export const useTileStore = create((set, get) => ({
     },
     clearTiles: () => set({ tiles: {} }),
 
+    /**
+     * Récupère les tuiles 'walkable' dans un rayon donné autour d'une position
+     * @param {string|Object} source - Coordonnée (format "x,y") ou objet avec propriété coord
+     * @param {number} exploringRadius - Rayon de recherche autour de la position (défaut: 3)
+     * @param {boolean} onlyUnexplored - Si true, retourne uniquement les tuiles non explorées
+     * @param {boolean} excludeDanger - Si true, exclut les tuiles de type 'danger'
+     * @returns {Array} - Liste des tuiles walkable trouvées, triées par distance
+     */
+    getWalkableTilesInRadius: (source, exploringRadius = 3, onlyUnexplored = false, excludeDanger = true) => {
+        // Convertir la source en coordonnées (accepte soit des coordonnées, soit un véhicule)
+        let coord;
+        if (typeof source === 'string') {
+            coord = source;
+        } else if (source && source.coord) {
+            coord = source.coord;
+        } else {
+            console.warn("Source invalide pour getWalkableTilesInRadius");
+            return [];
+        }
+        
+        if (!coord) return [];
+        
+        const tiles = get().tiles;
+        const [sourceX, sourceY] = coord.split(',').map(Number); // Convertit les coordonnées en nombres
+        const walkableTiles = [];
+        
+        // Parcourt les tuiles dans un rayon donné
+        for (let x = sourceX - exploringRadius; x <= sourceX + exploringRadius; x++) {
+            for (let y = sourceY - exploringRadius; y <= sourceY + exploringRadius; y++) {
+                const tileCoord = `${x},${y}`;
+                const tile = tiles[tileCoord];
+                
+                // Vérifie si la tuile est valide et walkable
+                if (tile && 
+                    tile.walkable !== false && 
+                    (!excludeDanger || tile.type !== 'danger') && 
+                    (!onlyUnexplored || !tile.explored)) {
+                    
+                    walkableTiles.push({
+                        coord: tileCoord,
+                        position: tile.position,
+                        tile: tile,
+                        // Calcule la distance euclidienne pour le tri
+                        distance: Math.sqrt(Math.pow(x - sourceX, 2) + Math.pow(y - sourceY, 2)),
+                    });
+                }
+            }
+        }
+        
+        // Retourne les tuiles walkable triées par proximité
+        return walkableTiles.sort((a, b) => a.distance - b.distance);
+    },
+
     // Initialize tiles using radius and spacing from the store
     initializeTiles: (radius = 3, spacing = 0.1) => {
         const hexPositions = generateHexPositions(radius, spacing);

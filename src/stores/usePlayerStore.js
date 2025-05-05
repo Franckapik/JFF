@@ -8,6 +8,7 @@ const usePlayerStore = create((set, get) => ({
   players: {
     player1: {
       id: 'player1',
+      exploringRadius: 3, // Rayon d'exploration par défaut
       vehicles: {
         ship: {
           id: 'ship1',
@@ -64,6 +65,7 @@ const usePlayerStore = create((set, get) => ({
     },
     player2: {
       id: 'player2',
+      exploringRadius: 3, // Rayon d'exploration par défaut
       vehicles: {
         ship: {
           id: 'ship2', // Unique ID for player 2's ship
