@@ -10,6 +10,7 @@ import BotControls from "./components/BotControls";
 import BotHUD from "./components/BotHUD";
 import TileHUD from "./components/TileHUD";
 import CollapsibleHUD from "./components/CollapsibleHUD";
+import BotDebugger from "./components/BotDebugger"; // Importation du BotDebugger
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
@@ -67,6 +68,9 @@ const App = () => {
           <Clock isTimerRunning={isTimerRunning} />
         </div>
       </div>
+      
+      {/* Bot Debugger - ajouté pour visualiser l'état de la FSM du bot */}
+      <BotDebugger />
     </div>
   );
 };

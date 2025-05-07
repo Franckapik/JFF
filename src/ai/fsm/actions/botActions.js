@@ -1,7 +1,7 @@
 // src/ai/fsm/actions/botActions.js
 // Actions que le bot peut exécuter dans la FSM
 
-import { PRIORITY } from '../../constants/botConstants';
+import { BOT_STATES, PRIORITY, IDLE_EVALUATION } from '../../constants/botConstants';
 
 /**
  * Registre des actions du bot
@@ -9,8 +9,60 @@ import { PRIORITY } from '../../constants/botConstants';
  * et effectue une action spécifique
  */
 export const BotActions = {
+  // NOUVELLE ACTION: Évaluation des conditions depuis l'état IDLE
+  evaluateConditionsFromIdle: (playerStore, tileStore, addAction, changeState) => {
+    console.log(`[BotActions] Evaluating conditions from IDLE state`);
+    
+    const botVehicle = playerStore.players?.player2?.vehicles?.ship;
+    if (!botVehicle) {
+      console.warn('[BotActions] Bot vehicle not found, cannot evaluate conditions');
+      return false;
+    }
+    
+    // Récupérer la mémoire du bot
+    const botMemory = playerStore.players?.player2?.memory;
+    
+    // 1. SAFETY - Vérifier le niveau de carburant (PRIORITÉ LA PLUS HAUTE)
+    if (botVehicle.fuel < 50) {
+      console.log("[BotActions] Low fuel detected in IDLE evaluation, returning to base");
+      changeState(BOT_STATES.RETURNING);
+      addAction('returnToBase', PRIORITY.HIGH);
+      return true;
+    }
+    
+    // 2. CAPACITY - Vérifier si capacité maximale atteinte
+    if (botVehicle.isAtCapacity) {
+      console.log("[BotActions] Maximum capacity reached in IDLE evaluation, returning to base");
+      changeState(BOT_STATES.RETURNING);
+      addAction('returnToBase', PRIORITY.HIGH);
+      return true;
+    }
+    
+    // 3. EFFICIENCY - Vérifier s'il y a des ressources à collecter
+    const hasKnownResources = botMemory?.knownResources && 
+                             botMemory.knownResources.length > 0;
+    
+    if (hasKnownResources && botVehicle.fuel >= 50) {
+      console.log(`[BotActions] ${botMemory.knownResources.length} resources available, changing to COLLECTING state`);
+      changeState(BOT_STATES.COLLECTING);
+      addAction('collect', PRIORITY.MEDIUM);
+      return true;
+    }
+    
+    // 4. DISCOVERY - Par défaut, explorer si carburant suffisant
+    if (botVehicle.fuel >= 50) {
+      console.log("[BotActions] No specific conditions met in IDLE evaluation, changing to EXPLORING state");
+      changeState(BOT_STATES.EXPLORING);
+      addAction('exploreDrone', PRIORITY.MEDIUM);
+      return true;
+    }
+    
+    console.log("[BotActions] No actions taken in IDLE evaluation");
+    return false;
+  },
+
   // Se déplace vers une tuile aléatoire
-  moveToRandomTile: (playerStore, tileStore) => {
+  moveToRandomTile: (playerStore, tileStore, addAction, changeState) => {
     const botVehicle = playerStore.players?.player2?.vehicles?.ship;
     
     if (!botVehicle || botVehicle.isMoving) {
@@ -21,13 +73,20 @@ export const BotActions = {
     if (randomTile) {
       console.log(`[BotActions] Moving to random tile: ${randomTile.coord}`);
       playerStore.moveToTile('player2', 'ship', randomTile);
+      
+      // Vérifier les conditions de retour à IDLE après l'action
+      if (botVehicle.fuel < 50) {
+        console.log(`[BotActions] Low fuel after movement, returning to IDLE`);
+        changeState(BOT_STATES.IDLE);
+      }
+      
       return true;
     }
     
     return false;
   },
   
-  // NOUVELLE ACTION: Se déplace vers une ressource connue et la collecte
+  // Action de collecte de ressources
   moveToKnownResource: (playerStore, tileStore, addAction, changeState) => {
     const botVehicle = playerStore.players?.player2?.vehicles?.ship;
     const botMemory = playerStore.players?.player2?.memory;
@@ -71,6 +130,12 @@ export const BotActions = {
         
         console.log(`[BotActions] Added collected resource at ${botVehicle.coord} to memory`);
         
+        // Vérifier si à capacité maximale après la collecte
+        if (botVehicle.isAtCapacity) {
+          console.log(`[BotActions] Maximum capacity reached after collection, returning to IDLE`);
+          changeState(BOT_STATES.IDLE);
+        }
+        
         return true;
       }
     }
@@ -78,16 +143,9 @@ export const BotActions = {
     // Vérifier s'il y a des ressources connues
     if (!botMemory.knownResources || botMemory.knownResources.length === 0) {
       console.log(`[BotActions] No known resources to collect`);
-
-      if (changeState) {
-        console.log(`[BotActions] No resources to collect, changing state to EXPLORING`);
-        changeState('exploring');
-
-        if (addAction) {
-          addAction('exploreDrone', 2); // Priorité moyenne
-        }
-      }
-
+      
+      console.log(`[BotActions] No resources to collect, returning to IDLE`);
+      changeState(BOT_STATES.IDLE);
       return true;
     }
 
@@ -130,6 +188,13 @@ export const BotActions = {
       }
     });
 
+    // Vérifier le carburant avant de se déplacer
+    if (botVehicle.fuel < 50) {
+      console.log(`[BotActions] Low fuel before movement, returning to IDLE`);
+      changeState(BOT_STATES.IDLE);
+      return true;
+    }
+
     if (bestResource) {
       console.log(`[BotActions] Moving to best resource at: ${bestResource.coord} with value: ${maxResourceValue.toFixed(2)}`);
       const targetTile = tileStore.tiles[bestResource.coord];
@@ -165,19 +230,12 @@ export const BotActions = {
       });
 
       if (validResources.length === 0) {
-        if (changeState) {
-          console.log(`[BotActions] No valid resources left, changing to EXPLORING state`);
-          changeState('exploring');
-
-          if (addAction) {
-            addAction('exploreDrone', 2); // Priorité moyenne
-          }
-        }
+        console.log(`[BotActions] No valid resources left, returning to IDLE`);
+        changeState(BOT_STATES.IDLE);
+        return true;
       } else {
         console.log(`[BotActions] Still ${validResources.length} valid resources, retrying collection`);
-        if (addAction) {
-          addAction('collect', PRIORITY.MEDIUM);
-        }
+        addAction('collect', PRIORITY.MEDIUM);
       }
 
       return true;
@@ -187,7 +245,7 @@ export const BotActions = {
   },
   
   // Retourne à la base/tuile de départ
-  returnToBase: (playerStore, tileStore, addAction) => {
+  returnToBase: (playerStore, tileStore, addAction, changeState) => {
     const botVehicle = playerStore.players?.player2?.vehicles?.ship;
     
     if (!botVehicle || botVehicle.isMoving) {
@@ -217,7 +275,7 @@ export const BotActions = {
   },
   
   // Ravitaille le véhicule en carburant
-  refuelAtBase: (playerStore, changeState, addAction) => {
+  refuelAtBase: (playerStore, tileStore, addAction, changeState) => {
     const botVehicle = playerStore.players?.player2?.vehicles?.ship;
     
     if (!botVehicle) return false;
@@ -232,12 +290,24 @@ export const BotActions = {
     console.log(`[BotActions] Refueling at base`);
     playerStore.refuelVehicle('player2');
     
-    // La vérification du carburant plein sera faite par les conditions
+    // Transfert des ressources si nécessaire
+    if (botVehicle.resources && (
+        botVehicle.resources.food > 0 || 
+        botVehicle.resources.debris > 0 || 
+        botVehicle.resources.special > 0)) {
+      console.log(`[BotActions] Transferring resources to score`);
+      playerStore.transferResourcesToScore('player2', 'ship');
+    }
+    
+    // Retourner à IDLE après le ravitaillement
+    console.log(`[BotActions] Refueling complete, returning to IDLE`);
+    changeState(BOT_STATES.IDLE);
+    
     return true;
   },
   
   // Envoie un drone explorer une tuile à distance
-  explorerWithDrone: (playerStore, tileStore) => {
+  explorerWithDrone: (playerStore, tileStore, addAction, changeState) => {
     const botVehicle = playerStore.players?.player2?.vehicles?.ship;
     const botDrone = playerStore.players?.player2?.vehicles?.drone3;
     const playerState = playerStore.players?.player2;
@@ -252,6 +322,13 @@ export const BotActions = {
     if (!botVehicle || !botVehicle.coord) {
       console.log(`[BotActions] Bot vehicle not initialized properly`);
       return false;
+    }
+    
+    // Vérifier le carburant avant d'explorer
+    if (botVehicle.fuel < 50) {
+      console.log(`[BotActions] Low fuel before exploration, returning to IDLE`);
+      changeState(BOT_STATES.IDLE);
+      return true;
     }
     
     console.log(`[BotActions] Attempting to find a tile to explore`);
@@ -284,6 +361,21 @@ export const BotActions = {
       // Ne pas marquer la tuile comme explorée ici
       // Le composant UnifiedDroneMovement s'en chargera quand le drone atteindra la tuile
       
+      // Incrémenter le compteur d'explorations
+      const currentExplorationCount = playerState.memory.explorationCount || 0;
+      playerStore.updatePlayerMemory('player2', {
+        explorationCount: currentExplorationCount + 1
+      });
+      
+      // Si le nombre d'explorations atteint 3 et qu'il y a des ressources connues, changer d'état
+      const hasKnownResources = playerState.memory.knownResources && 
+                               playerState.memory.knownResources.length > 0;
+      
+      if ((currentExplorationCount + 1) >= 3 && hasKnownResources) {
+        console.log(`[BotActions] Exploration count reached threshold and resources found, returning to IDLE`);
+        changeState(BOT_STATES.IDLE);
+      }
+      
       return true;
     } else {
       // Si aucune tuile non-explorée n'est trouvée à proximité, chercher une tuile aléatoire
@@ -305,8 +397,9 @@ export const BotActions = {
   
   // Map des types d'actions aux fonctions d'exécution
   actionMap: {
+    'evaluateIdle': 'evaluateConditionsFromIdle', // Nouvelle action d'évaluation
     'move': 'moveToRandomTile',
-    'collect': 'moveToKnownResource', // Changé pour utiliser la nouvelle action
+    'collect': 'moveToKnownResource',
     'returnToBase': 'returnToBase',
     'refuel': 'refuelAtBase',
     'exploreDrone': 'explorerWithDrone'

@@ -1,0 +1,77 @@
+@startuml "Bot FSM Diagram"
+
+title "Bot Finite State Machine Diagram"
+
+' Définition du style
+skinparam state {
+  BackgroundColor<<active>> LightGreen
+  BackgroundColor<<default>> LightBlue
+  BorderColor Black
+  FontSize 14
+}
+
+skinparam arrow {
+  FontSize 12
+}
+
+' États de la FSM
+state "IDLE" as IDLE <<default>>
+state "EXPLORING" as EXPLORING <<active>> {
+  state "defaultAction: exploreDrone (MEDIUM)" as EXPLORING_ACTION
+}
+state "COLLECTING" as COLLECTING <<active>> {
+  state "defaultAction: collect (MEDIUM)" as COLLECTING_ACTION
+}
+state "RETURNING" as RETURNING <<active>> {
+  state "defaultAction: returnToBase (HIGH)" as RETURNING_ACTION
+}
+
+' Transitions principales entre les états
+IDLE --> EXPLORING : toggleBotProcessing()\n(démarrage manuel)
+EXPLORING --> COLLECTING : hasDiscoveredResources()\n[knownResources.length > 0 && explorationCount >= 3]
+COLLECTING --> EXPLORING : allKnownResourcesCollected()\n[knownResources.length === 0]
+EXPLORING --> RETURNING : isLowFuel()\n[fuel < 50]
+COLLECTING --> RETURNING : isLowFuel()\n[fuel < 50]
+COLLECTING --> RETURNING : isAtMaxCapacity()\n[isAtCapacity === true]
+RETURNING --> EXPLORING : isFullyRefueled()\n[fuel >= 100]
+
+' Actions dans les états
+note right of EXPLORING
+  Actions:
+  - moveToRandomTile
+  - explorerWithDrone
+  Le drone recherche des tuiles
+  et ajoute des ressources dans
+  knownResources si découvertes
+end note
+
+note right of COLLECTING
+  Actions:
+  - moveToKnownResource
+  - collectResources
+  Collecte les ressources connues
+  stockées dans knownResources
+end note
+
+note right of RETURNING
+  Actions:
+  - returnToBase
+  - refuelAtBase
+  Transfère les ressources au score
+  lorsque le bot quitte cet état
+end note
+
+' Conditions importantes
+note bottom of EXPLORING
+  Condition de sortie:
+  - Au moins 3 explorations effectuées (explorationCount >= 3)
+  - Au moins une ressource découverte (knownResources.length > 0)
+end note
+
+note bottom of COLLECTING
+  Conditions de sortie:
+  - Ressources du vaisseau à pleine capacité
+  - Plus de ressources connues à collecter
+end note
+
+@enduml

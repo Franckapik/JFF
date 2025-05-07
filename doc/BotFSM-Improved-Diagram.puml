@@ -1,0 +1,108 @@
+@startuml "Bot FSM Improved Diagram"
+
+title "Bot Finite State Machine - Improved Design"
+
+' Définition du style
+skinparam state {
+  BackgroundColor<<central>> Gold
+  BackgroundColor<<active>> LightGreen
+  BackgroundColor<<default>> LightBlue
+  BorderColor Black
+  FontSize 14
+}
+
+skinparam arrow {
+  FontSize 12
+  Color Black
+}
+
+' États de la FSM avec état IDLE centralisé
+state "IDLE" as IDLE <<central>> {
+  state "Évaluation des conditions" as EVALUATION
+}
+
+state "EXPLORING" as EXPLORING <<active>> {
+  state "defaultAction: exploreDrone (MEDIUM)" as EXPLORING_ACTION
+}
+
+state "COLLECTING" as COLLECTING <<active>> {
+  state "defaultAction: collect (MEDIUM)" as COLLECTING_ACTION
+}
+
+state "RETURNING" as RETURNING <<active>> {
+  state "defaultAction: returnToBase (HIGH)" as RETURNING_ACTION
+}
+
+' Transitions depuis l'état IDLE centralisé
+IDLE --> EXPLORING : hasFullFuel() &&\n!hasDiscoveredResources()
+IDLE --> COLLECTING : hasFullFuel() &&\nhasDiscoveredResources()
+IDLE --> RETURNING : isLowFuel() ||\nisAtMaxCapacity()
+
+' Transitions vers l'état IDLE centralisé
+EXPLORING --> IDLE : after(explorationComplete) ||\nisLowFuel()
+COLLECTING --> IDLE : allResourcesCollected() ||\nisLowFuel() ||\nisAtMaxCapacity()
+RETURNING --> IDLE : isAtBase()
+
+' Notes explicatives
+note right of IDLE
+  État central de décision
+  - Évalue toutes les conditions
+  - Détermine l'état suivant
+  - Simplifie la logique des transitions
+end note
+
+note right of EXPLORING
+  Actions:
+  - moveToRandomTile
+  - explorerWithDrone
+  
+  L'état retourne à IDLE quand:
+  - Assez d'explorations effectuées (≥3)
+  - Carburant faible (<50)
+end note
+
+note right of COLLECTING
+  Actions:
+  - moveToKnownResource
+  - collectResources
+  
+  L'état retourne à IDLE quand:
+  - Toutes les ressources connues collectées
+  - Capacité maximale atteinte
+  - Carburant faible (<50)
+end note
+
+note right of RETURNING
+  Actions:
+  - returnToBase
+  - refuelAtBase
+  
+  L'état retourne à IDLE quand:
+  - Le bot atteint sa base
+  (le transfert des ressources 
+  se fait lors de cette transition)
+end note
+
+' Conditions globales
+note bottom of IDLE
+  IDLE est l'état central qui:
+  1. Évalue le niveau de carburant
+  2. Vérifie la présence de ressources connues
+  3. Vérifie si la capacité maximale est atteinte
+  4. Redirige vers l'état approprié
+end note
+
+' Légende
+legend right
+  Transitions simplifiées avec évaluation centralisée
+  
+  **Conditions:**
+  hasFullFuel(): fuel >= 100
+  isLowFuel(): fuel < 50
+  hasDiscoveredResources(): knownResources.length > 0 && explorationCount >= 3
+  allResourcesCollected(): knownResources.length === 0
+  isAtMaxCapacity(): isAtCapacity === true
+  isAtBase(): vehicle.coord === vehicle.startCoord
+endlegend
+
+@enduml

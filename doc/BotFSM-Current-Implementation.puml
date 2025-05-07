@@ -1,0 +1,103 @@
+@startuml "Bot FSM Current Implementation"
+
+title "Bot FSM - Implémentation Actuelle (Architecture IDLE-Centralisée)"
+
+' Définition du style
+skinparam state {
+  BackgroundColor<<central>> Gold
+  BackgroundColor<<active>> LightGreen
+  BorderColor Black
+  FontSize 14
+}
+
+skinparam arrow {
+  FontSize 12
+  Color Black
+}
+
+' États de la FSM avec état IDLE centralisé
+state "IDLE" as IDLE <<central>> {
+  state "Évaluation via evaluateIdle()" as EVALUATION
+  note right
+    Action par défaut: evaluateIdle (HIGH)
+    Évalue les conditions dans cet ordre:
+    1. Sécurité (fuel < 50)
+    2. Capacité (isAtCapacity = true)
+    3. Efficacité (knownResources > 0)
+    4. Exploration (par défaut)
+  end note
+}
+
+state "EXPLORING" as EXPLORING <<active>> {
+  state "defaultAction: exploreDrone (MEDIUM)" as EXPLORING_ACTION
+}
+
+state "COLLECTING" as COLLECTING <<active>> {
+  state "defaultAction: collect (MEDIUM)" as COLLECTING_ACTION
+}
+
+state "RETURNING" as RETURNING <<active>> {
+  state "defaultAction: returnToBase (HIGH)" as RETURNING_ACTION
+}
+
+' Transitions depuis l'état IDLE centralisé
+IDLE --> RETURNING : [BotActions.evaluateConditionsFromIdle]\nfuel < 50 || isAtCapacity
+IDLE --> COLLECTING : [BotActions.evaluateConditionsFromIdle]\nknownResources.length > 0
+IDLE --> EXPLORING : [BotActions.evaluateConditionsFromIdle]\nfuel >= 50 && !knownResources
+
+' Transitions vers l'état IDLE centralisé
+EXPLORING --> IDLE : [BotStateConfig.onExitState]\nOU\n[BotConditions.checkAllConditions]\nfuel < 50
+COLLECTING --> IDLE : [BotStateConfig.onExitState]\nOU\n[BotConditions.checkAllConditions]\n(fuel < 50 || isAtCapacity || knownResources.length === 0)
+RETURNING --> IDLE : [BotStateConfig.onExitState]\nOU\n[BotConditions.checkAllConditions]\ncoord === startCoord
+
+' Détails des actions par état
+note bottom of EXPLORING
+  Actions dans EXPLORING:
+  1. explorerWithDrone - Explore le terrain avec le drone
+  2. moveToRandomTile - Déplace le vaisseau aléatoirement
+  
+  Conditions de retour à IDLE:
+  - Fuel faible (< 50)
+  - Ressources découvertes (≥ 3 explorations)
+end note
+
+note bottom of COLLECTING
+  Actions dans COLLECTING:
+  1. moveToKnownResource - Se déplace vers la ressource
+  2. collectResources - Collecte les ressources
+  
+  Conditions de retour à IDLE:
+  - Fuel faible (< 50)
+  - Capacité maximale atteinte
+  - Toutes ressources connues collectées
+end note
+
+note bottom of RETURNING
+  Actions dans RETURNING:
+  1. returnToBase - Retourne à la base
+  2. refuelAtBase - Fait le plein de carburant
+  
+  Conditions de retour à IDLE:
+  - Arrivée à la base
+  
+  À la sortie:
+  - Transfert des ressources au score
+  - Ravitaillement en carburant
+end note
+
+' Légende
+legend right
+  **Implémentation Actuelle**
+  
+  L'état IDLE est central et évalue quelle action prendre ensuite.
+  Tous les états actifs retournent à IDLE après leur exécution
+  ou lorsque leurs conditions de sortie sont remplies.
+  
+  Le système utilise une file d'actions prioritaires:
+  - URGENT (4): Actions critiques
+  - HIGH (3): Actions importantes
+  - MEDIUM (2): Actions standard
+  - LOW (1): Actions secondaires
+endlegend
+
+@enduml

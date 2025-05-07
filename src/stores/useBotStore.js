@@ -10,6 +10,7 @@ import { BOT_STATES, PRIORITY } from '../ai/constants/botConstants';
 import { BotActions } from '../ai/fsm/actions/botActions';
 import { BotConditions } from '../ai/fsm/conditions/botConditions';
 import { BotStateConfig } from '../ai/fsm/states/botStates';
+import fsmLogger from '../utils/fsmLogger';
 
 // Store bot avec file d'actions prioritaires
 const useSimpleBotStore = create((set, get) => ({
@@ -25,35 +26,44 @@ const useSimpleBotStore = create((set, get) => ({
   
   // Fonction d'initialisation - démarre le bot
   initializeBot: () => {
-    console.log("[SimpleBotStore] Initializing bot");
+    fsmLogger.info("Initializing bot FSM");
     set({
-      botState: BOT_STATES.EXPLORING, // Changé de COLLECTING à EXPLORING
+      botState: BOT_STATES.IDLE, // Commencer avec IDLE comme état central
       isRunning: true,
       actionQueue: [], // Réinitialise la file d'actions
       completedActions: [] // Réinitialise la file des actions terminées
     });
     
     // Exécute l'action onEnterState de l'état initial
-    BotStateConfig[BOT_STATES.EXPLORING].onEnterState(); // Changé de COLLECTING à EXPLORING
+    const playerStore = usePlayerStore.getState();
+    BotStateConfig[BOT_STATES.IDLE].onEnterState(playerStore);
+    
+    // Ajouter l'action d'évaluation immédiatement
+    get().addAction('evaluateIdle', PRIORITY.HIGH);
+    
+    fsmLogger.state("Bot initialized in IDLE state");
   },
   
   // Change l'état du bot
-  changeState: (newState) => {
+  changeState: (newState, targetState = null) => {
     if (!Object.values(BOT_STATES).includes(newState)) {
-      console.warn(`[SimpleBotStore] Invalid state: ${newState}`);
+      fsmLogger.error(`Invalid state: ${newState}`);
       return;
     }
     
     const currentState = get().botState;
     if (currentState === newState) return; // Évite les transitions inutiles
     
-    console.log(`[SimpleBotStore] Changing state from ${currentState} to ${newState}`);
+    fsmLogger.stateTransition(currentState, newState, {
+      targetState: targetState,
+      timestamp: new Date().toISOString()
+    });
     
     // Exécute les hooks de sortie et d'entrée d'état
     const playerStore = usePlayerStore.getState();
     
     if (BotStateConfig[currentState].onExitState) {
-      BotStateConfig[currentState].onExitState(playerStore);
+      BotStateConfig[currentState].onExitState(playerStore, get().changeState, targetState || newState);
     }
     
     if (BotStateConfig[newState].onEnterState) {
@@ -62,18 +72,30 @@ const useSimpleBotStore = create((set, get) => ({
     
     set({ botState: newState });
     
-    // Ajoute l'action par défaut du nouvel état si nécessaire
-    const defaultAction = BotStateConfig[newState].defaultAction;
-    if (defaultAction) {
-      get().addAction(defaultAction.type, defaultAction.priority);
+    // Si nous passons à un état autre que IDLE, ajouter l'action par défaut du nouvel état
+    if (newState !== BOT_STATES.IDLE) {
+      const defaultAction = BotStateConfig[newState].defaultAction;
+      if (defaultAction) {
+        get().addAction(defaultAction.type, defaultAction.priority);
+      }
+    } 
+    // Si nous passons à IDLE, ajouter l'action d'évaluation
+    else {
+      get().addAction('evaluateIdle', PRIORITY.HIGH);
     }
+  },
+  
+  // Nouvelle fonction pour retourner à l'état IDLE
+  returnToIdle: (reason) => {
+    fsmLogger.state(`Returning to IDLE state: ${reason}`);
+    get().changeState(BOT_STATES.IDLE);
   },
   
   // Ajoute une action à la file d'attente avec priorité
   addAction: (actionType, priority = PRIORITY.MEDIUM, params = {}) => {
     // Vérifie si l'action existe dans le registre
     if (!BotActions.actionMap[actionType]) {
-      console.warn(`[SimpleBotStore] Unknown action type: ${actionType}`);
+      fsmLogger.error(`Unknown action type: ${actionType}`);
       return;
     }
     
@@ -84,7 +106,7 @@ const useSimpleBotStore = create((set, get) => ({
       timestamp: Date.now()
     };
     
-    console.log(`[SimpleBotStore] Adding action to queue: ${actionType} with priority ${priority}`);
+    fsmLogger.action(`Adding action to queue: ${actionType}`, { priority, params });
     
     // Insérer l'action dans la file et trier par priorité (plus haute en premier)
     set((state) => {
@@ -116,6 +138,13 @@ const useSimpleBotStore = create((set, get) => ({
           }].slice(-20) // Limiter à 20 actions terminées (les plus récentes)
         : state.completedActions;
       
+      if (completed) {
+        fsmLogger.action(`Completed action: ${removedAction.type}`, { 
+          priority: removedAction.priority, 
+          elapsed: Date.now() - removedAction.timestamp 
+        });
+      }
+      
       return {
         actionQueue: state.actionQueue.slice(1),
         completedActions: updatedCompletedActions
@@ -126,6 +155,7 @@ const useSimpleBotStore = create((set, get) => ({
   // Vide la liste des actions terminées
   clearCompletedActions: () => {
     set({ completedActions: [] });
+    fsmLogger.action("Cleared completed actions history");
   },
   
   // Exécute l'action la plus prioritaire de la file
@@ -134,7 +164,7 @@ const useSimpleBotStore = create((set, get) => ({
     if (actionQueue.length === 0) return false;
     
     const nextAction = actionQueue[0];
-    console.log(`[SimpleBotStore] Executing action: ${nextAction.type} with priority ${nextAction.priority}`);
+    fsmLogger.actionExecution(nextAction.type, nextAction.priority);
     
     // Récupère les stores nécessaires
     const playerStore = usePlayerStore.getState();
@@ -155,7 +185,7 @@ const useSimpleBotStore = create((set, get) => ({
         get().changeState
       );
     } else {
-      console.warn(`[SimpleBotStore] Action function not found for type: ${nextAction.type}`);
+      fsmLogger.error(`Action function not found for type: ${nextAction.type}`);
     }
     
     // Retirer l'action de la file seulement si elle a été exécutée avec succès
@@ -175,20 +205,37 @@ const useSimpleBotStore = create((set, get) => ({
     
     if (!botVehicle) return;
     
-    // Utilise le module de conditions pour vérifier toutes les conditions
+    // Si nous sommes dans l'état IDLE, l'évaluation des conditions
+    // est gérée par l'action evaluateConditionsFromIdle
+    if (currentState === BOT_STATES.IDLE) {
+      // Si la file d'actions est vide, ajouter une action d'évaluation
+      if (get().actionQueue.length === 0) {
+        get().addAction('evaluateIdle', PRIORITY.HIGH);
+      }
+      return;
+    }
+    
+    // Pour les autres états, vérifier les conditions qui déclenchent un retour à IDLE
+    fsmLogger.condition(`Checking conditions in state: ${currentState}`);
     const conditionResult = BotConditions.checkAllConditions(currentState, botVehicle);
     
-    // Si une condition est remplie, change l'état et/ou ajoute une action
+    // Journaliser le résultat de l'évaluation des conditions
     if (conditionResult.result) {
-      // Change l'état si spécifié
-      if (conditionResult.state) {
-        get().changeState(conditionResult.state);
-      }
-      
-      // Ajoute l'action si spécifiée
-      if (conditionResult.action) {
-        get().addAction(conditionResult.action.type, conditionResult.action.priority);
-      }
+      fsmLogger.conditionEvaluation('checkAllConditions', true, {
+        currentState,
+        targetState: conditionResult.state,
+        botStats: {
+          fuel: botVehicle.fuel,
+          resources: botVehicle.resources,
+          isAtCapacity: botVehicle.isAtCapacity,
+          isAtBase: botVehicle.coord === botVehicle.startCoord
+        }
+      });
+    }
+    
+    // Si une condition est remplie et qu'elle spécifie un retour à IDLE
+    if (conditionResult.result && conditionResult.state === BOT_STATES.IDLE) {
+      get().returnToIdle(`Condition met: ${JSON.stringify(conditionResult)}`);
     }
   },
   
@@ -196,17 +243,24 @@ const useSimpleBotStore = create((set, get) => ({
   processBot: () => {
     if (!get().isRunning) return;
     
-    // 1. Vérifier les conditions avant tout
+    // 1. Vérifier les conditions 
     get().checkConditions();
     
-    // 2. Si la file d'actions est vide, ajouter l'action par défaut de l'état actuel
+    // 2. Si la file d'actions est vide:
     if (get().actionQueue.length === 0) {
       const currentState = get().botState;
-      const stateConfig = BotStateConfig[currentState];
       
-      if (stateConfig && stateConfig.defaultAction) {
-        const action = stateConfig.defaultAction;
-        get().addAction(action.type, action.priority);
+      // Si dans l'état IDLE, ajouter l'action d'évaluation
+      if (currentState === BOT_STATES.IDLE) {
+        get().addAction('evaluateIdle', PRIORITY.HIGH);
+      }
+      // Sinon, ajouter l'action par défaut de l'état actuel
+      else {
+        const stateConfig = BotStateConfig[currentState];
+        if (stateConfig && stateConfig.defaultAction) {
+          const action = stateConfig.defaultAction;
+          get().addAction(action.type, action.priority);
+        }
       }
     }
     
@@ -219,14 +273,65 @@ const useSimpleBotStore = create((set, get) => ({
     const currentlyRunning = get().isRunning;
     
     if (!currentlyRunning) {
-      // Si on démarre le bot et qu'il est en IDLE, passer en COLLECTING
-      if (get().botState === BOT_STATES.IDLE) {
-        get().changeState(BOT_STATES.COLLECTING);
-      }
+      fsmLogger.info("Starting bot processing");
+      
+      // Démarrer toujours le bot dans l'état IDLE pour l'évaluation centrale
+      set({ botState: BOT_STATES.IDLE });
+      
+      // Exécuter le hook d'entrée dans l'état IDLE
+      const playerStore = usePlayerStore.getState();
+      BotStateConfig[BOT_STATES.IDLE].onEnterState(playerStore);
+      
+      // Ajouter immédiatement une action d'évaluation
+      get().addAction('evaluateIdle', PRIORITY.HIGH);
+    } else {
+      fsmLogger.info("Stopping bot processing");
     }
     
     set({ isRunning: !currentlyRunning });
-    console.log(`[SimpleBotStore] Bot processing ${!currentlyRunning ? "started" : "stopped"}`);
+  },
+  
+  // Fonctions pour les tests unitaires et le débogage
+  _test: {
+    resetState: () => {
+      fsmLogger.info("Resetting bot state for testing");
+      set({
+        botState: BOT_STATES.IDLE,
+        isRunning: false,
+        actionQueue: [],
+        completedActions: []
+      });
+      return true;
+    },
+    
+    simulateCondition: (conditionName, mockResult = true, mockData = {}) => {
+      fsmLogger.info(`Test: Simulating condition ${conditionName} with result ${mockResult}`, mockData);
+      
+      // Sauvegarde temporaire de la fonction originale
+      const originalFn = BotConditions[conditionName];
+      if (!originalFn) {
+        fsmLogger.error(`Test: Condition ${conditionName} not found`);
+        return false;
+      }
+      
+      // Remplacer temporairement par une fonction mockée
+      BotConditions[conditionName] = () => ({
+        result: mockResult,
+        ...mockData
+      });
+      
+      // Exécuter la vérification des conditions
+      get().checkConditions();
+      
+      // Restaurer la fonction originale
+      BotConditions[conditionName] = originalFn;
+      
+      return true;
+    },
+    
+    getLogBuffer: (count = null, type = null) => {
+      return fsmLogger.getLogBuffer(count, type);
+    }
   },
   
   // Expose les constantes pour usage externe

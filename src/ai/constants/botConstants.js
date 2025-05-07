@@ -17,22 +17,30 @@ export const PRIORITY = {
   URGENT: 4   // Priorité urgente/critique
 };
 
+// Nouvelles constantes pour l'état IDLE centralisé
+export const IDLE_EVALUATION = {
+  SAFETY: 4,      // Priorité la plus haute: sécurité (carburant, dangers)
+  CAPACITY: 3,    // Priorité haute: capacité de stockage
+  EFFICIENCY: 2,  // Priorité moyenne: efficacité (collecte de ressources)
+  DISCOVERY: 1    // Priorité basse: découverte (exploration)
+};
+
 // Structure pour faciliter la visualisation des transitions d'état
 export const STATE_TRANSITIONS = {
   [BOT_STATES.IDLE]: {
-    possibleNextStates: [BOT_STATES.COLLECTING],
-    description: "Bot en attente, peut commencer la collecte",
+    possibleNextStates: [BOT_STATES.EXPLORING, BOT_STATES.COLLECTING, BOT_STATES.RETURNING],
+    description: "État central d'évaluation, décide du prochain état en fonction des conditions",
   },
   [BOT_STATES.EXPLORING]: {
-    possibleNextStates: [BOT_STATES.RETURNING, BOT_STATES.IDLE],
-    description: "Bot en exploration, peut retourner à la base ou s'arrêter",
+    possibleNextStates: [BOT_STATES.IDLE],
+    description: "Bot en exploration, retourne à IDLE après exploration ou si conditions critiques",
   },
   [BOT_STATES.COLLECTING]: {
-    possibleNextStates: [BOT_STATES.RETURNING, BOT_STATES.IDLE],
-    description: "Bot en collecte, peut retourner à la base ou s'arrêter",
+    possibleNextStates: [BOT_STATES.IDLE],
+    description: "Bot en collecte, retourne à IDLE après collecte ou si conditions critiques",
   },
   [BOT_STATES.RETURNING]: {
-    possibleNextStates: [BOT_STATES.EXPLORING, BOT_STATES.COLLECTING, BOT_STATES.IDLE],
-    description: "Bot en retour à la base, peut reprendre l'exploration, la collecte ou s'arrêter",
+    possibleNextStates: [BOT_STATES.IDLE],
+    description: "Bot en retour à la base, retourne à IDLE après arrivée à la base",
   }
 };
