@@ -1,0 +1,158 @@
+@startuml "Bot FSM Revised Diagram"
+' Configuration du style
+skinparam state {
+  BackgroundColor<<Central>> LightYellow
+  BorderColor<<Central>> Gold
+  BackgroundColor<<Gathering>> LightBlue
+  BorderColor<<Gathering>> Blue
+  BackgroundColor<<Resources>> Green
+  BorderColor<<Resources>> DarkGreen
+  BackgroundColor<<Navigation>> Pink
+  BorderColor<<Navigation>> Red
+  BackgroundColor<<Servicing>> LightGray
+  BorderColor<<Servicing>> Gray
+  ArrowColor Black
+  FontName Arial
+}
+
+' Définition des états
+[*] --> IDLE <<Central>>
+
+' L'IDLE est maintenant un état central qui orchestre toutes les transitions principales
+state IDLE <<Central>> {
+  description: "État central du bot pour la prise de décision"
+  onEnterState: "console.log('[BotState] Entering IDLE state - Ready for new decisions')"
+  onExitState: "console.log('[BotState] Exiting IDLE state - Task selected')"
+  
+  ' Sous-états de décision
+  [*] --> AssessmentPhase
+  
+  state AssessmentPhase {
+    [*] --> CheckFuelStatus
+    CheckFuelStatus --> CheckResourceStatus : "fuel > 50"
+    CheckFuelStatus --> RequestRefueling : "fuel <= 50"
+    RequestRefueling --> [*] : "changeState(RETURNING)"
+    
+    CheckResourceStatus --> CheckMemory : "not isAtCapacity"
+    CheckResourceStatus --> ReturnResources : "isAtCapacity"
+    ReturnResources --> [*] : "changeState(RETURNING)"
+    
+    CheckMemory --> DecideExploration : "knownResources.length == 0"
+    CheckMemory --> DecideCollection : "knownResources.length > 0"
+    
+    DecideExploration --> [*] : "changeState(EXPLORING)"
+    DecideCollection --> [*] : "changeState(COLLECTING)"
+  }
+}
+
+state EXPLORING <<Gathering>> {
+  description: "Exploration de la carte à la recherche de ressources"
+  defaultAction: "exploreDrone (MEDIUM priority)"
+  onEnterState: "console.log('[BotState] Entering EXPLORING state - Searching for resources')"
+  onExitState: "console.log('[BotState] Exiting EXPLORING state')"
+  
+  ' Sous-états d'exploration
+  [*] --> InitDroneExploration
+  InitDroneExploration --> SendDrone
+  SendDrone --> WaitForDroneResults
+  WaitForDroneResults --> EvaluateFindings
+  EvaluateFindings --> [*] : "retour à IDLE une fois l'évaluation terminée"
+}
+
+state COLLECTING <<Resources>> {
+  description: "Collecte active de ressources"
+  defaultAction: "collect (LOW priority)"
+  onEnterState: "console.log('[BotState] Entering COLLECTING state - Gathering resources')"
+  onExitState: "console.log('[BotState] Exiting COLLECTING state')"
+  
+  ' Sous-états de collecte
+  [*] --> SelectResourceToCollect
+  SelectResourceToCollect --> MoveToResource
+  MoveToResource --> ExtractResource
+  ExtractResource --> UpdateInventory
+  UpdateInventory --> [*] : "retour à IDLE après la collecte"
+}
+
+state RETURNING <<Navigation>> {
+  description: "Retour vers la base"
+  defaultAction: "returnToBase (HIGH priority)"
+  onEnterState: "console.log('[BotState] Entering RETURNING state - Heading to base')"
+  onExitState: "console.log('[BotState] Exiting RETURNING state - Resources transferred')"
+  
+  ' Sous-états de retour
+  [*] --> CalculatePathToBase
+  CalculatePathToBase --> NavigateToBase
+  NavigateToBase --> ArriveAtBase
+  ArriveAtBase --> [*] : "ArrivéBaseComplète ? REFUELING : IDLE"
+}
+
+state REFUELING <<Servicing>> {
+  description: "Ravitaillement du vaisseau à la base"
+  defaultAction: "refuel (MEDIUM priority)"
+  onEnterState: "console.log('[BotState] Entering REFUELING state - Refueling ship')"
+  onExitState: "console.log('[BotState] Exiting REFUELING state - Ship fully refueled')"
+  
+  ' Sous-états de ravitaillement
+  [*] --> StartRefueling
+  StartRefueling --> CompleteRefueling
+  CompleteRefueling --> [*] : "changeState(IDLE)"
+}
+
+' Définition des transitions principales centralisées via IDLE
+IDLE --> EXPLORING : "Pas de ressources connues\n(knownResources.length == 0)"
+IDLE --> COLLECTING : "Ressources connues et\ncapacité disponible\n(knownResources.length > 0 && !isAtCapacity)"
+IDLE --> RETURNING : "Faible carburant ou\ncapacité atteinte\n(fuel <= 50 || isAtCapacity)"
+
+' Retours vers l'état central IDLE
+EXPLORING --> IDLE : "Exploration terminée\n(resourcesFound || allTilesExplored)"
+COLLECTING --> IDLE : "Collecte terminée\n(resourceCollected || isAtCapacity)"
+REFUELING --> IDLE : "Ravitaillement complet\n(isFullyRefueled)"
+
+' La transition spéciale depuis RETURNING
+RETURNING --> REFUELING : "À la base et\ncarburant bas\n(isAtBase && fuel < 100)"
+RETURNING --> IDLE : "À la base et\ncarburant suffisant\n(isAtBase && fuel >= 50)"
+
+' Notes explicatives
+note right of IDLE
+  État central qui évalue les conditions et 
+  décide de l'action suivante à entreprendre.
+  Toutes les transitions principales passent par IDLE
+  pour une meilleure lisibilité et maintenance.
+end note
+
+note right of EXPLORING
+  Actions:
+  - explorerWithDrone(): Envoyer un drone explorer des tuiles inexplorees
+  - updateMemory(): Mettre à jour la mémoire avec les résultats
+  - moveToRandomTile(): Déplacement vers une zone inexplorée
+end note
+
+note right of COLLECTING
+  Actions:
+  - moveToKnownResource(): Déplacement vers ressource connue
+  - collectResource(): Collecte des ressources de la tuile
+  - updateCapacity(): Mise à jour de l'inventaire
+end note
+
+note bottom of RETURNING
+  Actions:
+  - returnToBase(): Navigation vers la base d'origine
+  - À l'arrivée: transfert automatique des ressources au score
+  - Décision de ravitailler ou non selon le niveau de carburant
+end note
+
+note bottom of REFUELING
+  Actions:
+  - refuelAtBase(): Remplir complètement le réservoir
+  - Une fois plein, retour à IDLE pour nouvelle décision
+end note
+
+' Légende des transitions
+legend
+  |= Type de transition |= Couleur |= Description |
+  | Standard | Black | Transition normale entre états |
+  | Décision | --> | Basée sur des conditions évaluées |
+  | Automatique | --> | Transition automatique sans condition |
+endlegend
+
+@enduml

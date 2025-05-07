@@ -1,0 +1,106 @@
+@startuml "Bot FSM Diagram"
+' Configuration du style
+skinparam state {
+  BackgroundColor<<Initial>> LightGreen
+  BorderColor<<Initial>> Green
+  BackgroundColor<<Normal>> LightBlue
+  BorderColor<<Normal>> Blue
+  BackgroundColor<<Critical>> Pink
+  BorderColor<<Critical>> Red
+  ArrowColor Black
+  FontName Arial
+}
+
+' Définition des états
+[*] --> IDLE <<Initial>>
+
+state IDLE <<Initial>> {
+  description: "Bot inactif, en attente"
+  onEnterState: "console.log('[BotState] Entering IDLE state')"
+  onExitState: "console.log('[BotState] Exiting IDLE state')"
+}
+
+state EXPLORING <<Normal>> {
+  description: "Bot en exploration de la carte"
+  defaultAction: "exploreDrone (MEDIUM priority)"
+  onEnterState: "console.log('[BotState] Entering EXPLORING state')"
+  onExitState: "console.log('[BotState] Exiting EXPLORING state')"
+}
+
+state COLLECTING <<Normal>> {
+  description: "Bot en collecte de ressources"
+  defaultAction: "collect (LOW priority)"
+  onEnterState: "console.log('[BotState] Entering COLLECTING state')"
+  onExitState: "console.log('[BotState] Exiting COLLECTING state')"
+}
+
+state RETURNING <<Critical>> {
+  description: "Bot en retour vers sa base"
+  defaultAction: "returnToBase (HIGH priority)"
+  onEnterState: "console.log('[BotState] Entering RETURNING state')"
+  onExitState: "playerStore.transferResourcesToScore('player2', 'ship')"
+}
+
+' Définition des transitions et conditions
+IDLE --> COLLECTING : "toggleBotProcessing()"
+IDLE -up-> EXPLORING : "initializeBot()"
+
+' Transitions basées sur les ressources détectées
+EXPLORING -down-> COLLECTING : "Ressources détectées\n(implémentation manuelle)"
+
+' Transitions basées sur le niveau de carburant
+EXPLORING --> RETURNING : "isLowFuel\n(fuel < 50)"
+COLLECTING --> RETURNING : "isLowFuel\n(fuel < 50)"
+
+' Transitions basées sur la position
+RETURNING --> REFUELING : "isAtBase\n(coord === startCoord)"
+REFUELING --> EXPLORING : "isFullyRefueled\n(fuel >= 100)"
+
+' État de ravitaillement (inféré du code)
+state REFUELING <<Critical>> {
+  description: "Bot en ravitaillement à la base"
+  action: "refuelVehicle('player2')"
+}
+
+' Détails des actions
+note right of EXPLORING
+  Actions:
+  - explorerWithDrone() : Envoie un drone explorer une tuile
+  - moveToRandomTile() : Déplacement vers une tuile aléatoire
+end note
+
+note right of COLLECTING
+  Actions:
+  - moveAndCollect() : Déplacement et collecte automatique de ressources
+  - moveToKnownResource() : Déplacement vers une ressource connue
+end note
+
+note right of RETURNING
+  Actions:
+  - returnToBase() : Retour à la tuile de départ
+  - Si déjà à la base: addAction('refuel', PRIORITY.MEDIUM)
+end note
+
+note right of REFUELING
+  Actions:
+  - refuelAtBase() : Ravitaille le véhicule (fuel = 100)
+  - Si pas à la base: addAction('returnToBase', PRIORITY.HIGH)
+end note
+
+' Annotations système
+note "Les états ont des priorités d'action différentes:\nHIGH > MEDIUM > LOW" as N1
+note "Le système vérifie les conditions avant\nchaque exécution d'action" as N2
+
+' Sous-états (représentations conceptuelles)
+state "Action Queue Processing" as ActionQueue {
+  [*] --> CheckActions
+  CheckActions --> ExecuteAction : "actionQueue.length > 0"
+  CheckActions --> AddDefaultAction : "actionQueue.length === 0"
+  ExecuteAction --> RemoveAction : "action successful"
+  ExecuteAction --> RetryLater : "action failed"
+  AddDefaultAction --> CheckActions
+  RemoveAction --> CheckActions
+  RetryLater --> CheckActions
+}
+
+@enduml
