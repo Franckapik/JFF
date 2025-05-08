@@ -21,6 +21,9 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
   const { sendVehicleMessage } = useMessageManager();
   const updateVehicle = usePlayerStore((state) => state.updateVehicle);
   
+  // Récupérer les vitesses des drones du PlayerStore
+  const droneSpeeds = usePlayerStore((state) => state.movementSpeeds.drone);
+  
   // Ajout du store bot pour les transitions d'état (uniquement pour player2)
   const botState = useSimpleBotStore((state) => state.botState);
   const changeState = useSimpleBotStore((state) => state.changeState);
@@ -139,8 +142,8 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
     // Animation de flottement
     groupRef.current.position.y = 1.5 + Math.sin(Date.now() * 0.002) * 0.1;
     
-    // Animation de rotation
-    rotationRef.current += delta * 0.5;
+    // Animation de rotation avec vitesse du PlayerStore
+    rotationRef.current += delta * droneSpeeds.rotationSpeed;
     groupRef.current.rotation.y = rotationRef.current;
 
     // Logique de déplacement
@@ -148,12 +151,12 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
       // Déplacement vers la cible
       direction.normalize();
       
-      // Vitesse différente selon le mode
+      // Vitesse différente selon le mode, en utilisant les vitesses du PlayerStore
       let speed;
       if (playerId === "player1") {
-        speed = playerDroneTargetTile && !returningToShip ? 2.5 : 1.8;
+        speed = playerDroneTargetTile && !returningToShip ? droneSpeeds.explorationSpeed : droneSpeeds.normalSpeed;
       } else {
-        speed = drone?.targetTile?.coord && !returningToShip ? 2.0 : 1.5;
+        speed = drone?.targetTile?.coord && !returningToShip ? droneSpeeds.botExplorationSpeed : droneSpeeds.botNormalSpeed;
       }
       
       groupRef.current.position.addScaledVector(direction, delta * speed);

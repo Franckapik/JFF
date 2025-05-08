@@ -20,9 +20,10 @@ const ShipMovement = ({ playerId, children }) => {
   const [distanceTraveled, setDistanceTraveled] = useState(0);
   const [isInitialPositionSet, setIsInitialPositionSet] = useState(false);
 
-  // Constantes de mouvement
-  const speed = 1.5;
-  const rotationSpeed = 2;
+  // Récupérer les vitesses du PlayerStore au lieu de les coder en dur
+  const shipSpeeds = usePlayerStore((state) => state.movementSpeeds.ship);
+  const speed = shipSpeeds.speed;
+  const rotationSpeed = shipSpeeds.rotationSpeed;
 
   // === Sélecteurs des stores ===
   const tiles = useTileStore((state) => state.tiles);

@@ -5,6 +5,26 @@ import { useTileStore } from './useNewTileStore'; // Importez le tile store
 const usePlayerStore = create((set, get) => ({
   // === ÉTAT INITIAL ===
   selectedVehicle: { playerId: 'player1', vehicleId: 'ship' }, // Default to player 1's ship
+  
+  // Nouvelles propriétés pour les vitesses de mouvement des véhicules
+  movementSpeeds: {
+    ship: {
+      speed: 0.2,
+      rotationSpeed: 2.0
+    },
+    drone: {
+      // Vitesse normale pour les drones
+      normalSpeed: 0.5,
+      // Vitesse lors d'une exploration (quand le drone va vers une cible)
+      explorationSpeed: 0.5,
+      // Vitesse pour les drones du bot
+      botNormalSpeed: 0.5,
+      botExplorationSpeed: 0.5,
+      // Vitesse de rotation des drones
+      rotationSpeed: 0.5
+    }
+  },
+  
   players: {
     player1: {
       id: 'player1',

@@ -43,17 +43,13 @@ export const BotConditions = {
     const playerState = usePlayerStore.getState();
     const botMemory = playerState.players?.player2?.memory;
     
-    // Vérifier si le bot a identifié des ressources
-    const hasResources = botMemory && 
-                        botMemory.knownResources && 
-                        botMemory.knownResources.length > 0;
+    // MODIFICATION: Vérifier s'il y a au moins 3 ressources connues
+    const hasEnoughResources = botMemory && 
+                              botMemory.knownResources && 
+                              botMemory.knownResources.length >= 3;
     
-    // Exige au moins 3 explorations avant de passer en collecte
-    const hasEnoughExplorations = botMemory && 
-                                (botMemory.explorationCount >= 3);
-    
-    // Les deux conditions doivent être remplies
-    const shouldCollect = hasResources && hasEnoughExplorations;
+    // Pas besoin de vérifier le compteur d'explorations
+    const shouldCollect = hasEnoughResources;
     
     return {
       result: shouldCollect,
@@ -99,11 +95,7 @@ export const BotConditions = {
     return {
       result: isFull,
       priority: IDLE_EVALUATION.SAFETY,
-      // Si plein de carburant et des ressources sont disponibles, aller collecter
-      // sinon, aller explorer
-      state: isFull ? null : null, // L'état sera déterminé par evaluateNextState
-      action: isFull ? null : null // L'action sera déterminée par evaluateNextState
-    };
+      state: isFull ? null : null,      action: isFull ? null : null    };
   },
   
   // === CONDITIONS DE DÉCOUVERTE ===
@@ -113,10 +105,9 @@ export const BotConditions = {
     const playerState = usePlayerStore.getState();
     const botMemory = playerState.players?.player2?.memory;
     
-    // Si pas de ressources connues ou pas assez d'explorations
+    // MODIFICATION: Si pas assez de ressources connues (moins de 3)
     const needsExploration = !botMemory?.knownResources || 
-                           botMemory.knownResources.length === 0 ||
-                           botMemory.explorationCount < 3;
+                           botMemory.knownResources.length < 3;
     
     // Suffisamment de carburant pour explorer
     const hasEnoughFuel = botVehicle?.fuel >= 50;
@@ -140,10 +131,9 @@ export const BotConditions = {
     
     const botMemory = playerStore?.players?.player2?.memory;
     
-    // Si le bot n'a pas de ressources connues ou pas assez d'explorations
+    // MODIFICATION: Si le bot n'a pas assez de ressources connues (moins de 3)
     const needsExploration = !botMemory?.knownResources || 
-                           botMemory.knownResources.length === 0 ||
-                           botMemory.explorationCount < 3;
+                           botMemory.knownResources.length < 3;
     
     return {
       result: needsExploration,
@@ -159,96 +149,80 @@ export const BotConditions = {
     
     const botMemory = playerStore?.players?.player2?.memory;
     
-    // Vérifier s'il y a des ressources connues et assez d'explorations
-    const hasResources = botMemory?.knownResources && 
-                        botMemory.knownResources.length > 0;
-    const hasEnoughExplorations = botMemory && botMemory.explorationCount >= 3;
-    
-    const shouldCollect = hasResources && hasEnoughExplorations;
-    
+    // MODIFICATION: Vérifier s'il y a au moins 3 ressources connues
+    const hasEnoughResources = botMemory?.knownResources && 
+                             botMemory.knownResources.length >= 3;
+                             
     return {
-      result: shouldCollect,
+      result: hasEnoughResources,
       state: BOT_STATES.COLLECTING,
       action: { type: 'collect', priority: PRIORITY.MEDIUM }
     };
   },
   
-  // Nouvelle fonction pour déterminer si le bot doit passer de IDLE à RETURNING
+  // Détermine si le bot doit retourner à sa base
   shouldReturnToBase: (botVehicle) => {
-    // Si carburant bas ou capacité maximale atteinte
-    const lowFuel = botVehicle.fuel < 50;
-    const atMaxCapacity = botVehicle.isAtCapacity === true;
+    // Vérifier le niveau de carburant
+    const isLowFuel = botVehicle?.fuel < 50;
     
-    const shouldReturn = lowFuel || atMaxCapacity;
+    // Vérifier si capacité maximale atteinte
+    const isAtCapacity = botVehicle?.isAtCapacity === true;
     
+    // Retourner à la base si l'une des conditions est remplie
     return {
-      result: shouldReturn,
+      result: isLowFuel || isAtCapacity,
       state: BOT_STATES.RETURNING,
       action: { type: 'returnToBase', priority: PRIORITY.HIGH }
     };
   },
   
-  // Fonction principale pour évaluer l'état suivant depuis l'état IDLE
+  // Fonction centrale d'évaluation depuis l'état IDLE
   evaluateNextState: (botVehicle, playerStore) => {
-    if (!botVehicle) return null;
+    if (!botVehicle) return { result: false };
     
-    // 1. SAFETY - Vérifier si retour à la base nécessaire (PRIORITÉ LA PLUS HAUTE)
-    const returnCheck = BotConditions.shouldReturnToBase(botVehicle);
-    if (returnCheck.result) {
-      console.log("[BotConditions] Evaluation result: Should return to base");
-      return returnCheck;
-    }
+    // Ordre de priorité des évaluations
     
-    // 2. Si carburant OK, vérifier s'il y a des ressources à collecter
-    const collectCheck = BotConditions.shouldStartCollecting(botVehicle, playerStore);
-    if (collectCheck.result) {
-      console.log("[BotConditions] Evaluation result: Should start collecting");
-      return collectCheck;
-    }
+    // 1. SAFETY - Vérifier s'il faut retourner à la base (priorité la plus haute)
+    const needsToReturn = BotConditions.shouldReturnToBase(botVehicle);
+    if (needsToReturn.result) return needsToReturn;
     
-    // 3. Par défaut, explorer
-    const exploreCheck = BotConditions.shouldStartExploring(botVehicle, playerStore);
-    if (exploreCheck.result) {
-      console.log("[BotConditions] Evaluation result: Should start exploring");
-      return exploreCheck;
-    }
+    // 2. EFFICIENCY - Vérifier s'il faut collecter des ressources
+    const shouldCollect = BotConditions.shouldStartCollecting(botVehicle, playerStore);
+    if (shouldCollect.result) return shouldCollect;
     
-    // Si aucune condition n'est remplie, rester en IDLE (ce qui ne devrait pas arriver souvent)
-    console.log("[BotConditions] No condition met, remaining in IDLE");
-    return {
-      result: false,
-      state: BOT_STATES.IDLE,
-      action: null
-    };
+    // 3. DISCOVERY - Par défaut, explorer si rien d'autre à faire
+    const shouldExplore = BotConditions.shouldStartExploring(botVehicle, playerStore);
+    if (shouldExplore.result) return shouldExplore;
+    
+    // Si aucune condition n'est remplie, rester en IDLE
+    return { result: false };
   },
   
-  // Fonction principale qui vérifie toutes les conditions selon l'état courant
+  // Vérification complète des conditions selon l'état actuel
   checkAllConditions: (botState, botVehicle) => {
     if (!botVehicle) return { result: false };
     
-    const playerStore = usePlayerStore.getState();
-    
-    // Si en état IDLE, utiliser la nouvelle logique d'évaluation centralisée
-    if (botState === BOT_STATES.IDLE) {
-      return BotConditions.evaluateNextState(botVehicle, playerStore);
-    }
-    
-    // Pour les autres états, vérifier les conditions qui font revenir à IDLE
+    // Vérifier les conditions selon l'état actuel
     switch (botState) {
+      case BOT_STATES.IDLE:
+        // Pour IDLE, la vérification se fait via evaluateNextState
+        // Aucune condition spécifique de sortie ici car c'est l'état central
+        break;
+        
       case BOT_STATES.EXPLORING:
         // Conditions qui font revenir à IDLE depuis EXPLORING
         
         // 1. Vérifier le carburant (priorité la plus haute)
-        const lowFuel = BotConditions.isLowFuel(botVehicle);
-        if (lowFuel.result) {
+        const lowFuelExploring = BotConditions.isLowFuel(botVehicle);
+        if (lowFuelExploring.result) {
           console.log("[BotConditions] Low fuel detected in EXPLORING state, returning to IDLE");
           return { result: true, state: BOT_STATES.IDLE };
         }
         
-        // 2. Vérifier si assez d'explorations et ressources découvertes
-        const resourcesDiscovered = BotConditions.hasDiscoveredResources(botVehicle);
-        if (resourcesDiscovered.result) {
-          console.log("[BotConditions] Resources discovered in EXPLORING state, returning to IDLE");
+        // 2. Vérifier si assez de ressources ont été découvertes
+        const resourcesDiscoveredExploring = BotConditions.hasDiscoveredResources(botVehicle);
+        if (resourcesDiscoveredExploring.result) {
+          console.log("[BotConditions] Enough resources discovered, returning to IDLE");
           return { result: true, state: BOT_STATES.IDLE };
         }
         break;
@@ -273,7 +247,7 @@ export const BotConditions = {
         // 3. Vérifier si toutes les ressources ont été collectées
         const allCollected = BotConditions.allKnownResourcesCollected(botVehicle);
         if (allCollected.result) {
-          console.log("[BotConditions] All resources collected in COLLECTING state, returning to IDLE");
+          console.log("[BotConditions] All known resources collected, returning to IDLE");
           return { result: true, state: BOT_STATES.IDLE };
         }
         break;
@@ -284,13 +258,17 @@ export const BotConditions = {
         // Vérifier si le bot est arrivé à la base
         const atBase = BotConditions.isAtBase(botVehicle);
         if (atBase.result) {
-          console.log("[BotConditions] Arrived at base in RETURNING state, returning to IDLE");
+          console.log("[BotConditions] Reached base in RETURNING state, returning to IDLE");
           return { result: true, state: BOT_STATES.IDLE };
         }
         break;
+        
+      default:
+        // État non reconnu, retourner à IDLE
+        return { result: true, state: BOT_STATES.IDLE };
     }
     
-    // Si aucune condition n'est remplie, pas de changement d'état
+    // Si aucune condition n'est remplie
     return { result: false };
   }
 };

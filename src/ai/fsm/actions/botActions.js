@@ -40,10 +40,11 @@ export const BotActions = {
     }
     
     // 3. EFFICIENCY - Vérifier s'il y a des ressources à collecter
-    const hasKnownResources = botMemory?.knownResources && 
-                             botMemory.knownResources.length > 0;
+    // MODIFICATION: Vérifier qu'il y a au moins 3 ressources connues, indépendamment du compteur d'explorations
+    const hasEnoughKnownResources = botMemory?.knownResources && 
+                                   botMemory.knownResources.length >= 3;
     
-    if (hasKnownResources && botVehicle.fuel >= 50) {
+    if (hasEnoughKnownResources && botVehicle.fuel >= 50) {
       fsmLogger.condition(`${botMemory.knownResources.length} resources available, changing to COLLECTING state`);
       changeState(BOT_STATES.COLLECTING);
       addAction('collect', PRIORITY.MEDIUM);
@@ -406,7 +407,6 @@ export const BotActions = {
   // Map des types d'actions aux fonctions d'exécution
   actionMap: {
     'evaluateIdle': 'evaluateConditionsFromIdle', // Nouvelle action d'évaluation
-    'move': 'moveToRandomTile',
     'collect': 'moveToKnownResource',
     'returnToBase': 'returnToBase',
     'refuel': 'refuelAtBase',
