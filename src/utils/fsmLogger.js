@@ -39,7 +39,7 @@ const logBuffer = {
  * Configuration du logger
  */
 let config = {
-  enableConsole: true, // Activer/désactiver les logs dans la console
+  enableConsole: true, // Activé pour voir les logs dans la console
   minLevel: 0, // Niveau minimum pour afficher un log
   enableBuffering: true, // Activer/désactiver le stockage des logs dans le buffer
 };
