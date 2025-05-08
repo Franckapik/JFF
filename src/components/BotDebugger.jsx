@@ -116,7 +116,7 @@ const contentContainerStyle = {
 const BotDebugger = () => {
   // États pour le débogueur
   const [isVisible, setIsVisible] = useState(true);
-  const [activeMainTab, setActiveMainTab] = useState('bot'); // 'bot' ou 'player'
+  const [activeMainTab, setActiveMainTab] = useState('bot'); // 'bot', 'player' ou 'tile'
   const [activeTab, setActiveTab] = useState('state'); // 'state', 'actions', 'history', 'conditions', 'resources'
   const [stateHistory, setStateHistory] = useState([]);
   const [conditionLog, setConditionLog] = useState([]);
@@ -139,6 +139,11 @@ const BotDebugger = () => {
   
   // Récupérer la fonction calculateDistance du TileStore
   const calculateDistance = useTileStore((state) => state.calculateDistance);
+
+  // Récupération des données des tuiles pour l'onglet Tile
+  const hoveredTileCoord = useTileStore((state) => state.hoveredTile);
+  const tiles = useTileStore((state) => state.tiles);
+  const hoveredTile = hoveredTileCoord ? tiles[hoveredTileCoord] : null;
   
   // Ajoute un état au historique lors des changements
   useEffect(() => {
@@ -641,20 +646,156 @@ const BotDebugger = () => {
         return <div>Onglet inconnu</div>;
     }
   };
+
+  // Fonction helper pour la barre de ressources des tuiles
+  const getTileResourceBarStyle = (quantity) => {
+    let color = "#4CAF50"; // Green by default
+    
+    if (quantity === 0) color = "#777777"; // Gray if empty
+    else if (quantity < 3) color = "#f44336"; // Red if very low
+    else if (quantity < 5) color = "#ff9800"; // Orange if somewhat low
+    
+    return {
+      width: `${Math.min(quantity * 10, 100)}%`,
+      backgroundColor: color,
+      height: "8px",
+      borderRadius: "4px"
+    };
+  };
   
+  // Rendu du contenu de l'onglet Tile
+  const renderTileTabContent = () => {
+    if (!hoveredTile) {
+      return (
+        <div style={{padding: '20px', textAlign: 'center', color: '#888'}}>
+          <p>Aucune tuile survolée.</p>
+          <p>Passez votre souris sur une tuile pour voir ses détails.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <h4>Informations sur la tuile</h4>
+        
+        <div style={{marginBottom: '15px'}}>
+          <p>
+            <strong>Coordonnées:</strong> {hoveredTileCoord}
+          </p>
+          <p>
+            <strong>Type:</strong> {hoveredTile.type || "Standard"}
+          </p>
+          <p>
+            <strong>Status:</strong> {hoveredTile.collected ? "Collectée" : "Disponible"}
+          </p>
+          <p>
+            <strong>Explorée:</strong> {hoveredTile.explored ? "Oui" : "Non"}
+          </p>
+          {hoveredTile.walkable === false && (
+            <p style={{color: '#ff5722', marginTop: '5px', fontSize: '12px'}}>
+              <strong>Attention:</strong> Tuile non praticable!
+            </p>
+          )}
+        </div>
+        
+        {/* Resources Section */}
+        {hoveredTile.resources && (
+          <div style={{marginTop: '15px'}}>
+            <h4 style={{margin: '0', fontWeight: 'bold'}}>Ressources:</h4>
+            
+            {/* Food Resource */}
+            <div style={{marginBottom: '8px', marginTop: '10px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '3px'}}>
+                <span>Food:</span> {hoveredTile.resources.food || 0}
+              </div>
+              <div style={{width: '100%', backgroundColor: '#444', borderRadius: '3px', height: '8px', overflow: 'hidden'}}>
+                <div style={getTileResourceBarStyle(hoveredTile.resources.food || 0)}></div>
+              </div>
+            </div>
+            
+            {/* Debris Resource */}
+            <div style={{marginBottom: '8px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '3px'}}>
+                <span>Debris:</span> {hoveredTile.resources.debris || 0}
+              </div>
+              <div style={{width: '100%', backgroundColor: '#444', borderRadius: '3px', height: '8px', overflow: 'hidden'}}>
+                <div style={getTileResourceBarStyle(hoveredTile.resources.debris || 0)}></div>
+              </div>
+            </div>
+            
+            {/* Special Resource */}
+            <div style={{marginBottom: '8px'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '3px'}}>
+                <span>Special:</span> {hoveredTile.resources.special || 0}
+              </div>
+              <div style={{width: '100%', backgroundColor: '#444', borderRadius: '3px', height: '8px', overflow: 'hidden'}}>
+                <div style={getTileResourceBarStyle(hoveredTile.resources.special || 0)}></div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Special Properties Section */}
+        {hoveredTile.type === 'station' && (
+          <div style={{marginTop: '15px', padding: '10px', backgroundColor: '#2a3f4d', borderRadius: '4px'}}>
+            <p style={{margin: '0'}}>
+              <strong>Station</strong> - Permet de ravitailler et réparer les vaisseaux
+            </p>
+          </div>
+        )}
+        
+        {hoveredTile.type === 'danger' && (
+          <div style={{marginTop: '15px', padding: '10px', backgroundColor: '#4d2a2a', borderRadius: '4px'}}>
+            <p style={{margin: '0'}}>
+              <strong>Zone Dangereuse</strong> - Les vaisseaux peuvent subir des dommages dans cette zone
+            </p>
+          </div>
+        )}
+        
+        {hoveredTile.type === 'base' || hoveredTile.type === 'depart' && (
+          <div style={{marginTop: '15px', padding: '10px', backgroundColor: '#2a4d2a', borderRadius: '4px'}}>
+            <p style={{margin: '0'}}>
+              <strong>Base</strong> - Revenez ici pour déposer vos ressources
+            </p>
+          </div>
+        )}
+
+        {/* Distance par rapport aux véhicules */}
+        <div style={{marginTop: '15px'}}>
+          <h4 style={{margin: '0', fontWeight: 'bold'}}>Distances:</h4>
+          
+          {playerVehicle?.coord && (
+            <p>
+              <strong>Player 1:</strong> {calculateDistance(playerVehicle.coord, hoveredTileCoord, true, true)} tuiles
+            </p>
+          )}
+          
+          {botVehicle?.coord && (
+            <p>
+              <strong>Bot (Player 2):</strong> {calculateDistance(botVehicle.coord, hoveredTileCoord, true, true)} tuiles
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // Gestionnaire d'actions pour le débogueur
   const handleResetHistory = () => {
     setStateHistory([]);
     setConditionLog([]);
   };
 
-  // Rendu des onglets selon le mode actif (Bot ou Player)
+  // Rendu des onglets selon le mode actif (Bot, Player ou Tile)
   const renderTabContent = () => {
     if (activeMainTab === 'bot') {
       return renderBotTabContent();
-    } else {
+    } else if (activeMainTab === 'player') {
       return renderPlayerTabContent();
+    } else if (activeMainTab === 'tile') {
+      return renderTileTabContent();
     }
+    return <div>Onglet inconnu</div>;
   };
   
   return isVisible ? (
@@ -688,7 +829,7 @@ const BotDebugger = () => {
         </div>
       </div>
 
-      {/* Onglets pour choisir entre Bot et Player */}
+      {/* Onglets pour choisir entre Bot, Player et Tile */}
       <div style={tabStyle}>
         <button 
           onClick={() => setActiveMainTab('bot')} 
@@ -708,47 +849,58 @@ const BotDebugger = () => {
         >
           Player
         </button>
+        <button 
+          onClick={() => setActiveMainTab('tile')} 
+          style={{
+            ...tabButtonStyle(activeMainTab === 'tile'),
+            backgroundColor: activeMainTab === 'tile' ? '#ff9800' : '#222',
+          }}
+        >
+          Tile
+        </button>
       </div>
       
-      {/* Onglets secondaires */}
-      <div style={tabStyle}>
-        <button 
-          onClick={() => setActiveTab('state')} 
-          style={tabButtonStyle(activeTab === 'state')}
-        >
-          État
-        </button>
-        {activeMainTab === 'bot' && (
+      {/* Onglets secondaires - uniquement pour Bot et Player */}
+      {activeMainTab !== 'tile' && (
+        <div style={tabStyle}>
           <button 
-            onClick={() => setActiveTab('actions')} 
-            style={tabButtonStyle(activeTab === 'actions')}
+            onClick={() => setActiveTab('state')} 
+            style={tabButtonStyle(activeTab === 'state')}
           >
-            Actions ({actionQueue.length})
+            État
           </button>
-        )}
-        {activeMainTab === 'bot' && (
+          {activeMainTab === 'bot' && (
+            <button 
+              onClick={() => setActiveTab('actions')} 
+              style={tabButtonStyle(activeTab === 'actions')}
+            >
+              Actions ({actionQueue.length})
+            </button>
+          )}
+          {activeMainTab === 'bot' && (
+            <button 
+              onClick={() => setActiveTab('history')} 
+              style={tabButtonStyle(activeTab === 'history')}
+            >
+              Historique
+            </button>
+          )}
+          {activeMainTab === 'bot' && (
+            <button 
+              onClick={() => setActiveTab('conditions')} 
+              style={tabButtonStyle(activeTab === 'conditions')}
+            >
+              Conditions
+            </button>
+          )}
           <button 
-            onClick={() => setActiveTab('history')} 
-            style={tabButtonStyle(activeTab === 'history')}
+            onClick={() => setActiveTab('resources')} 
+            style={tabButtonStyle(activeTab === 'resources')}
           >
-            Historique
+            Resources
           </button>
-        )}
-        {activeMainTab === 'bot' && (
-          <button 
-            onClick={() => setActiveTab('conditions')} 
-            style={tabButtonStyle(activeTab === 'conditions')}
-          >
-            Conditions
-          </button>
-        )}
-        <button 
-          onClick={() => setActiveTab('resources')} 
-          style={tabButtonStyle(activeTab === 'resources')}
-        >
-          Resources
-        </button>
-      </div>
+        </div>
+      )}
       
       {/* Conteneur de contenu avec scroll */}
       <div style={contentContainerStyle}>
