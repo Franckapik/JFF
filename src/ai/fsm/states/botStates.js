@@ -121,8 +121,9 @@ export const BotStateConfig = {
       
       fsmLogger.state("Exiting COLLECTING state - Returning to IDLE for evaluation");
       
-      // Toujours retourner à l'état IDLE après la fin des actions de collecte
+      // Nettoyer la file d'action en sortant de l'état
       if (changeState) {
+        // On passe explicitement à IDLE depuis COLLECTING
         changeState(BOT_STATES.IDLE);
       }
       

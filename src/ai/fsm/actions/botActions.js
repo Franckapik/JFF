@@ -93,8 +93,16 @@ export const BotActions = {
     const botVehicle = playerStore.players?.player2?.vehicles?.ship;
     const botMemory = playerStore.players?.player2?.memory;
 
-    if (!botVehicle || botVehicle.isMoving) {
-      fsmLogger.action(`Bot vehicle is ${!botVehicle ? 'undefined' : 'moving'}, cannot proceed with collection`);
+    // Si le bot est en mouvement, on retourne true pour éviter d'ajouter continuellement l'action à la file
+    // Cela résout le problème de boucle de répétition
+    if (botVehicle && botVehicle.isMoving) {
+      // Ne pas afficher de log pour éviter de spammer la console
+      return true;
+    }
+    
+    // Si le véhicule n'existe pas, indiquer l'erreur
+    if (!botVehicle) {
+      fsmLogger.action(`Bot vehicle is undefined, cannot proceed with collection`);
       return false;
     }
 
@@ -136,8 +144,12 @@ export const BotActions = {
         if (botVehicle.isAtCapacity) {
           fsmLogger.condition(`Maximum capacity reached after collection, returning to IDLE`);
           changeState(BOT_STATES.IDLE);
+          return true;
         }
         
+        // MODIFICATION: Retourner à IDLE après chaque collecte réussie pour réévaluation
+        fsmLogger.condition(`Collection successful, returning to IDLE for re-evaluation`);
+        changeState(BOT_STATES.IDLE);
         return true;
       }
     }
@@ -172,6 +184,14 @@ export const BotActions = {
     });
 
     fsmLogger.info(`Found ${validResources.length} valid resources`);
+
+    // MODIFICATION: Si pas de ressources valides, retourner immédiatement à IDLE
+    if (validResources.length === 0) {
+      fsmLogger.action(`No valid resources found, returning to IDLE`);
+      playerStore.updatePlayerMemory('player2', { knownResources: [] });
+      changeState(BOT_STATES.IDLE);
+      return true;
+    }
 
     validResources.forEach(resource => {
       const tile = tileStore.tiles[resource.coord];
@@ -218,6 +238,7 @@ export const BotActions = {
           });
         }, 100);
         
+        // MODIFICATION: Ne pas changer d'état ici, laisser le mouvement se terminer
         return true;
       }
     } else {
@@ -228,19 +249,16 @@ export const BotActions = {
         knownResources: validResources
       });
 
-      if (validResources.length === 0) {
-        fsmLogger.condition(`No valid resources left, returning to IDLE`);
-        changeState(BOT_STATES.IDLE);
-        return true;
-      } else {
-        fsmLogger.action(`Still ${validResources.length} valid resources, retrying collection`);
-        addAction('collect', PRIORITY.MEDIUM);
-      }
-
+      // MODIFICATION: Simplification du contrôle de flux
+      fsmLogger.condition(`No valid resources to collect, returning to IDLE`);
+      changeState(BOT_STATES.IDLE);
       return true;
     }
 
-    return false;
+    // Si on arrive ici, quelque chose n'a pas fonctionné
+    fsmLogger.error(`Unexpected end of moveToKnownResource function, returning to IDLE`);
+    changeState(BOT_STATES.IDLE);
+    return true;
   },
   
   // Retourne à la base/tuile de départ
@@ -313,8 +331,28 @@ export const BotActions = {
     
     // Vérifie si le drone est déjà en mouvement
     if (!botDrone || botDrone.isMoving) {
-      fsmLogger.action(`Drone is already moving or not available`);
+      fsmLogger.action(`Drone is already moving or not available, skipping exploration`);
+      
+      // Si le drone est en mouvement, on retourne true pour indiquer que l'action
+      // a été "traitée" même si on n'a rien fait, pour éviter qu'elle soit réajoutée
+      if (botDrone && botDrone.isMoving) {
+        fsmLogger.action(`Drone is currently moving, waiting for it to reach target`);
+        return true;
+      }
+      
       return false;
+    }
+    
+    // Vérifie si le drone vient de terminer son mouvement (il est revenu au vaisseau)
+    // On peut le savoir si le drone a la même coordonnée que le vaisseau et qu'il a exploré au moins une tuile
+    const droneAtShip = botDrone.coord === botVehicle.coord;
+    const hasExplored = playerState.memory.explorationCount > 0;
+    
+    if (droneAtShip && hasExplored) {
+      // Le drone est revenu au vaisseau après une exploration
+      fsmLogger.action(`Drone has returned to ship after exploration, returning to IDLE for re-evaluation`);
+      changeState(BOT_STATES.IDLE);
+      return true;
     }
     
     // Si le vaisseau n'a pas de position ou de coordonnées
@@ -337,10 +375,10 @@ export const BotActions = {
     fsmLogger.info(`Using exploring radius: ${exploringRadius}`);
     
     const walkableTilesInRadius = tileStore.getWalkableTilesInRadius(
-      botVehicle, // Passe le véhicule directement (il contient la propriété coord)
+      botVehicle,
       exploringRadius,
-      true, // onlyUnexplored = true, ne récupère que les tuiles non explorées
-      true  // excludeDanger = true, exclut les tuiles de type danger
+      true,
+      true
     );
     
     fsmLogger.info(`Found ${walkableTilesInRadius.length} walkable unexplored tiles in radius`);
@@ -357,29 +395,15 @@ export const BotActions = {
         position: targetTileInfo.position
       });
       
-      // Ne pas marquer la tuile comme explorée ici
-      // Le composant UnifiedDroneMovement s'en chargera quand le drone atteindra la tuile
-      
       // Incrémenter le compteur d'explorations
       const currentExplorationCount = playerState.memory.explorationCount || 0;
       playerStore.updatePlayerMemory('player2', {
         explorationCount: currentExplorationCount + 1
       });
       
-      // Si le nombre d'explorations atteint 3 et qu'il y a des ressources connues, changer d'état
-      const hasKnownResources = playerState.memory.knownResources && 
-                               playerState.memory.knownResources.length > 0;
+      // IMPORTANT: NE PAS changer d'état après avoir lancé le mouvement du drone
+      // Le drone reste dans l'état EXPLORING pendant qu'il se déplace
       
-      if ((currentExplorationCount + 1) >= 3 && hasKnownResources) {
-        fsmLogger.condition(`Exploration count reached threshold and resources found, returning to IDLE`);
-        changeState(BOT_STATES.IDLE);
-        return true;
-      }
-      
-      // CORRECTIF: Force un retour à IDLE pour permettre la réévaluation
-      // après chaque action d'exploration réussie
-      fsmLogger.action(`Exploration action complete, returning to IDLE for re-evaluation`);
-      changeState(BOT_STATES.IDLE);
       return true;
     } else {
       // Si aucune tuile non-explorée n'est trouvée à proximité, chercher une tuile aléatoire
@@ -388,12 +412,8 @@ export const BotActions = {
         fsmLogger.action(`No unexplored tiles nearby, sending drone to random tile: ${randomTile.coord}`);
         playerStore.moveToTile('player2', 'drone3', randomTile);
         
-        // Ne pas marquer la tuile comme explorée ici
-        // Le composant UnifiedDroneMovement s'en chargera quand le drone atteindra la tuile
+        // IMPORTANT: NE PAS changer d'état après avoir lancé le mouvement du drone
         
-        // CORRECTIF: Force un retour à IDLE pour permettre la réévaluation
-        fsmLogger.action(`Random exploration action complete, returning to IDLE for re-evaluation`);
-        changeState(BOT_STATES.IDLE);
         return true;
       }
     }

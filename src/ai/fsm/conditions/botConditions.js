@@ -250,6 +250,10 @@ export const BotConditions = {
           console.log("[BotConditions] All known resources collected, returning to IDLE");
           return { result: true, state: BOT_STATES.IDLE };
         }
+
+        // 4. NOUVELLE CONDITION: Vérifier si le bot a terminé une collecte sur une tuile (n'est plus en mouvement)
+        // Cette condition sera traitée directement dans moveToKnownResource, pas besoin de la répliquer ici
+        
         break;
         
       case BOT_STATES.RETURNING:

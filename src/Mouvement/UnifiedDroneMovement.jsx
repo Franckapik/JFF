@@ -4,7 +4,7 @@ import { Vector3 } from "three";
 import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
 import useMessageManager from "../hooks/useMessageManager";
-import useSimpleBotStore from "../stores/useBotStore"; // Importation du store bot pour les transitions d'état
+import useBotStore from "../stores/useBotStore"; // Importation du store bot pour les transitions d'état
 import { BotConditions } from "../ai/fsm/conditions/botConditions"; // Import direct du module BotConditions
 
 /**
@@ -25,10 +25,10 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
   const droneSpeeds = usePlayerStore((state) => state.movementSpeeds.drone);
   
   // Ajout du store bot pour les transitions d'état (uniquement pour player2)
-  const botState = useSimpleBotStore((state) => state.botState);
-  const changeState = useSimpleBotStore((state) => state.changeState);
-  const BOT_STATES = useSimpleBotStore((state) => state.BOT_STATES);
-  const addAction = useSimpleBotStore((state) => state.addAction);
+  const botState = useBotStore((state) => state.botState);
+  const changeState = useBotStore((state) => state.changeState);
+  const BOT_STATES = useBotStore((state) => state.BOT_STATES);
+  const addAction = useBotStore((state) => state.addAction);
   
   // Sélecteurs pour les vaisseaux et le drone concerné
   const player1Ship = usePlayerStore((state) => state.players.player1?.vehicles?.ship);
@@ -267,7 +267,7 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
             // Attendre que la mise à jour du state soit complète avant de vérifier les conditions
             setTimeout(() => {
               console.log("[UnifiedDroneMovement] Executing checkConditions after finding resources");
-              const botStore = useSimpleBotStore.getState();
+              const botStore = useBotStore.getState();
               const currentState = botStore.botState;
               console.log(`[UnifiedDroneMovement] Current bot state before check: ${currentState}`);
               

@@ -45,43 +45,47 @@ const useSimpleBotStore = create((set, get) => ({
   },
   
   // Change l'état du bot
-  changeState: (newState, targetState = null) => {
-    if (!Object.values(BOT_STATES).includes(newState)) {
-      fsmLogger.error(`Invalid state: ${newState}`);
-      return;
+  changeState: (newState) => {
+    const currentState = get().botState;
+    
+    // Si on est déjà dans l'état demandé, ne rien faire
+    if (currentState === newState) return;
+    
+    // Récupérer les configurations pour les états actuel et nouveau
+    const currentStateConfig = BotStateConfig[currentState];
+    const newStateConfig = BotStateConfig[newState];
+    
+    // Créer un objet de transition pour le logging
+    const transition = {
+      targetState: newState,
+      timestamp: new Date().toISOString()
+    };
+    
+    fsmLogger.state(`Transition: ${currentState} → ${newState}`, transition);
+    
+    // Exécuter la fonction de sortie d'état si définie
+    if (currentStateConfig && currentStateConfig.onExitState) {
+      try {
+        currentStateConfig.onExitState(newState);
+      } catch (error) {
+        console.error(`Error in exit handler for state ${currentState}:`, error);
+      }
     }
     
-    const currentState = get().botState;
-    if (currentState === newState) return; // Évite les transitions inutiles
-    
-    fsmLogger.stateTransition(currentState, newState, {
-      targetState: targetState,
-      timestamp: new Date().toISOString()
+    // IMPORTANT: Définir le nouvel état AVANT d'appeler onEnterState
+    // Et vider la file d'actions lors d'un changement d'état
+    set({ 
+      botState: newState,
+      actionQueue: [] // Vider la file d'action à chaque changement d'état
     });
     
-    // Exécute les hooks de sortie et d'entrée d'état
-    const playerStore = usePlayerStore.getState();
-    
-    if (BotStateConfig[currentState].onExitState) {
-      BotStateConfig[currentState].onExitState(playerStore, get().changeState, targetState || newState);
-    }
-    
-    if (BotStateConfig[newState].onEnterState) {
-      BotStateConfig[newState].onEnterState(playerStore);
-    }
-    
-    set({ botState: newState });
-    
-    // Si nous passons à un état autre que IDLE, ajouter l'action par défaut du nouvel état
-    if (newState !== BOT_STATES.IDLE) {
-      const defaultAction = BotStateConfig[newState].defaultAction;
-      if (defaultAction) {
-        get().addAction(defaultAction.type, defaultAction.priority);
+    // Exécuter la fonction d'entrée dans le nouvel état si définie
+    if (newStateConfig && newStateConfig.onEnterState) {
+      try {
+        newStateConfig.onEnterState(currentState);
+      } catch (error) {
+        console.error(`Error in entry handler for state ${newState}:`, error);
       }
-    } 
-    // Si nous passons à IDLE, ajouter l'action d'évaluation
-    else {
-      get().addAction('evaluateIdle', PRIORITY.HIGH);
     }
   },
   
