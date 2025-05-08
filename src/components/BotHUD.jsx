@@ -18,7 +18,7 @@ const BotHUD = () => {
   const calculateDistance = useTileStore((state) => state.calculateDistance);
   
   // États locaux pour les onglets de mémoire du bot
-  const [activeMemoryTab, setActiveMemoryTab] = useState('resources'); // 'resources', 'collected', ou 'dangers'
+  const [activeMemoryTab, setActiveMemoryTab] = useState('resources'); // 'resources', 'collected' ou 'dangers'
   
   // Nouvel état local pour les onglets des actions
   const [activeActionTab, setActiveActionTab] = useState('queue'); // 'queue' ou 'completed'
@@ -81,7 +81,13 @@ const BotHUD = () => {
     if (quantity > 20) return "#FFC107"; // Jaune pour moyen
     return "#ff9800"; // Orange pour peu
   };
-
+  
+  // Couleur spéciale pour les ressources rares (special)
+  const getSpecialResourceColor = (quantity) => {
+    if (quantity > 0) return "#673AB7"; // Violet pour les ressources spéciales
+    return "#777777"; // Gris pour aucune
+  };
+  
   return (
     <div className="bot-hud">
       <h3>Bot Status</h3>
@@ -151,7 +157,7 @@ const BotHUD = () => {
                           <td style={{color: getResourceColor(resource.resources?.debris || 0)}}>
                             {resource.resources?.debris || 0}
                           </td>
-                          <td style={{color: getResourceColor(resource.resources?.special || 0) * 10}}>
+                          <td style={{color: getSpecialResourceColor(resource.resources?.special || 0)}}>
                             {resource.resources?.special || 0}
                           </td>
                         </tr>
@@ -190,7 +196,7 @@ const BotHUD = () => {
                           <td style={{color: getResourceColor(resource.resources?.debris || 0)}}>
                             {resource.resources?.debris || 0}
                           </td>
-                          <td style={{color: getResourceColor(resource.resources?.special || 0) * 10}}>
+                          <td style={{color: getSpecialResourceColor(resource.resources?.special || 0)}}>
                             {resource.resources?.special || 0}
                           </td>
                           <td>{resource.collectedAt ? 

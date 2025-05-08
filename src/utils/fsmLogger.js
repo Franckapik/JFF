@@ -84,12 +84,21 @@ const log = (type, message, data = null) => {
   
   // Afficher dans la console si activé
   if (config.enableConsole) {
-    console.log(
-      `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${message}`,
-      typeConfig.style,
-      'color: inherit',
-      data
-    );
+    // Modification: n'afficher le paramètre data que s'il n'est pas null
+    if (data !== null) {
+      console.log(
+        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${message}`,
+        typeConfig.style,
+        'color: inherit',
+        data
+      );
+    } else {
+      console.log(
+        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${message}`,
+        typeConfig.style,
+        'color: inherit'
+      );
+    }
   }
   
   return logEntry;
