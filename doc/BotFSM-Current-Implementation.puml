@@ -46,7 +46,7 @@ IDLE --> COLLECTING : [BotActions.evaluateConditionsFromIdle]\nknownResources.le
 IDLE --> EXPLORING : [BotActions.evaluateConditionsFromIdle]\nfuel >= 50 && !knownResources
 
 ' Transitions vers l'état IDLE centralisé
-EXPLORING --> IDLE : [BotStateConfig.onExitState]\nOU\n[BotConditions.checkAllConditions]\nfuel < 50
+EXPLORING --> IDLE : [BotStateConfig.onExitState]\nOU\n[BotConditions.checkAllConditions]\nfuel < 50 || hasNewResourceDiscovery
 COLLECTING --> IDLE : [BotStateConfig.onExitState]\nOU\n[BotConditions.checkAllConditions]\n(fuel < 50 || isAtCapacity || knownResources.length === 0)
 RETURNING --> IDLE : [BotStateConfig.onExitState]\nOU\n[BotConditions.checkAllConditions]\ncoord === startCoord
 
@@ -58,7 +58,11 @@ note bottom of EXPLORING
   
   Conditions de retour à IDLE:
   - Fuel faible (< 50)
-  - Ressources découvertes (≥ 3 explorations)
+  - Ressources découvertes par drone (via hasNewResourceDiscovery flag)
+  - Drone revenu au vaisseau (via droneReturnedToShip flag)
+  
+  Après EXPLORING, toutes les transitions passent par IDLE
+  pour réévaluation centralisée des conditions
 end note
 
 note bottom of COLLECTING
@@ -90,8 +94,12 @@ legend right
   **Implémentation Actuelle**
   
   L'état IDLE est central et évalue quelle action prendre ensuite.
-  Tous les états actifs retournent à IDLE après leur exécution
-  ou lorsque leurs conditions de sortie sont remplies.
+  Toutes les transitions entre états actifs passent obligatoirement
+  par IDLE pour une réévaluation centralisée des conditions.
+  
+  Le drone du bot peut découvrir des ressources qui mettent à jour
+  le PlayerStore avec des flags (hasNewResourceDiscovery, droneReturnedToShip),
+  déclenchant un retour à IDLE où la prochaine action sera décidée.
   
   Le système utilise une file d'actions prioritaires:
   - URGENT (4): Actions critiques

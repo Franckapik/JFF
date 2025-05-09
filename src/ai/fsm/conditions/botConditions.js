@@ -38,24 +38,63 @@ export const BotConditions = {
   // === CONDITIONS D'EFFICACITÉ ===
   
   // Vérifie si des ressources ont été découvertes
-  hasDiscoveredResources: (botVehicle) => {
+  hasDiscoveredResources: (currentState, botVehicle) => {
     // Récupérer directement l'état du joueur
     const playerState = usePlayerStore.getState();
     const botMemory = playerState.players?.player2?.memory;
     
-    // MODIFICATION: Vérifier s'il y a au moins 3 ressources connues
+    // Vérifier s'il y a au moins 3 ressources connues
     const hasEnoughResources = botMemory && 
                               botMemory.knownResources && 
                               botMemory.knownResources.length >= 3;
     
-    // Pas besoin de vérifier le compteur d'explorations
-    const shouldCollect = hasEnoughResources;
+    // Vérifier s'il y a une nouvelle découverte de ressource (flag défini dans UnifiedDroneMovement)
+    const hasNewDiscovery = botMemory?.hasNewResourceDiscovery === true;
+    
+    // Vérifier si le drone est revenu au vaisseau après une exploration
+    const droneReturnedToShip = botMemory?.droneReturnedToShip === true;
+    
+    // On doit avoir assez de ressources ET soit une nouvelle découverte, soit le drone de retour
+    const shouldCollect = hasEnoughResources && (hasNewDiscovery || droneReturnedToShip);
+    
+    // Si la condition est remplie, réinitialiser les flags dans la mémoire
+    if (shouldCollect) {
+      // Réinitialiser les flags dans la mémoire
+      usePlayerStore.getState().updatePlayerMemory('player2', {
+        hasNewResourceDiscovery: false,
+        droneReturnedToShip: false
+      });
+      
+      console.log("[BotConditions] Resource discovery conditions met");
+      
+      // Si nous sommes dans l'état EXPLORING ou un autre état actif, 
+      // nous retournons à IDLE qui évaluera automatiquement la prochaine action
+      if (currentState && currentState !== BOT_STATES.IDLE) {
+        console.log(`[BotConditions] In state ${currentState}, returning to IDLE for centralized evaluation`);
+        return {
+          result: true,
+          priority: IDLE_EVALUATION.EFFICIENCY,
+          state: BOT_STATES.IDLE, // Toujours retourner à IDLE depuis les états actifs
+          action: null // Pas d'action spécifique, l'évaluation sera faite dans IDLE
+        };
+      } 
+      // Si nous sommes déjà dans IDLE, le système peut passer directement à COLLECTING
+      else if (currentState === BOT_STATES.IDLE) {
+        console.log(`[BotConditions] In IDLE state, can transition directly to COLLECTING`);
+        return {
+          result: true,
+          priority: IDLE_EVALUATION.EFFICIENCY,
+          state: BOT_STATES.COLLECTING,
+          action: { type: 'collect', priority: PRIORITY.HIGH }
+        };
+      }
+    }
     
     return {
-      result: shouldCollect,
+      result: false,
       priority: IDLE_EVALUATION.EFFICIENCY,
-      state: shouldCollect ? BOT_STATES.COLLECTING : null,
-      action: shouldCollect ? { type: 'collect', priority: PRIORITY.HIGH } : null
+      state: null,
+      action: null
     };
   },
   
