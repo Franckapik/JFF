@@ -1,7 +1,20 @@
 // src/ai/fsm/actions/botActions.js
 // Actions que le bot peut exécuter dans la FSM
 
-import { BOT_STATES, PRIORITY, IDLE_EVALUATION } from '../../constants/botConstants';
+/* Liste des actions du bot:
+ * 
+ * evaluateConditionsFromIdle - Évalue les conditions depuis l'état IDLE pour déterminer l'action suivante
+ * moveToRandomTile - Déplace le vaisseau du bot vers une tuile aléatoire
+ * moveToKnownResource - Déplace le vaisseau vers une ressource connue pour la collecter (ancienne version)
+ * returnToBase - Déplace le vaisseau vers sa base/tuile de départ
+ * refuelAtBase - Fait le plein de carburant et transfère les ressources au score à la base
+ * explorerWithDrone - Envoie le drone explorer une tuile non découverte à proximité
+ * moveToResourceAction - Déplace le vaisseau vers la meilleure ressource connue (nouvelle version)
+ * collectResourceAction - Collecte la ressource une fois arrivé à la tuile cible
+ */
+
+import { BOT_STATES, PRIORITY, IDLE_EVALUATION, ACTION_STATUS, COLLECT_ACTION_TYPES } from '../../constants/botConstants';
+import { BotStateConfig } from '../states/botStates';
 import fsmLogger from '../../../utils/fsmLogger';
 
 /**
@@ -47,7 +60,7 @@ export const BotActions = {
     if (hasEnoughKnownResources && botVehicle.fuel >= 50) {
       fsmLogger.condition(`${botMemory.knownResources.length} resources available, changing to COLLECTING state`);
       changeState(BOT_STATES.COLLECTING);
-      addAction('collect', PRIORITY.MEDIUM);
+      addAction('moveToResource', PRIORITY.MEDIUM); // Utiliser la nouvelle action séparée au lieu de 'collect'
       return true;
     }
     
@@ -424,12 +437,243 @@ export const BotActions = {
     return true;
   },
   
+  // NOUVELLES FONCTIONS SÉPARÉES
+  
+  // Action 1: Se déplacer vers une ressource
+  moveToResourceAction: (playerStore, tileStore, addAction, changeState) => {
+    // Récupérer l'état de collecte et les informations sur le bot
+    const collectState = BotStateConfig[BOT_STATES.COLLECTING];
+    const botVehicle = playerStore.players?.player2?.vehicles?.ship;
+    const botMemory = playerStore.players?.player2?.memory;
+    
+    // Vérifier si l'action est en cours mais ne pas la réexécuter trop fréquemment
+    const now = Date.now();
+    if (collectState.actionStatus === ACTION_STATUS.IN_PROGRESS && 
+        now - collectState.lastActionCheck < collectState.cooldownPeriod) {
+      return true; // Action en cours, pas besoin de la réexécuter maintenant
+    }
+    
+    // Mise à jour de l'horodatage de la dernière vérification
+    collectState.lastActionCheck = now;
+    
+    // Si le véhicule n'existe pas, signaler l'erreur
+    if (!botVehicle) {
+      fsmLogger.action('Bot vehicle not found, cannot move to resource');
+      collectState.actionStatus = ACTION_STATUS.FAILED;
+      return false;
+    }
+    
+    // Si le bot est en mouvement, vérifier l'état mais ne pas répéter l'action
+    if (botVehicle.isMoving) {
+      fsmLogger.info(`Bot is currently moving to resource, waiting for it to arrive`);
+      collectState.actionStatus = ACTION_STATUS.IN_PROGRESS;
+      collectState.currentCollectSubAction = COLLECT_ACTION_TYPES.MOVE_TO_RESOURCE;
+      return true; // Considéré comme réussi pour ne pas répéter l'action
+    }
+    
+    // Si une ressource cible est déjà définie, vérifier si le bot est arrivé à destination
+    if (collectState.targetResource) {
+      const targetCoord = collectState.targetResource.coord;
+      
+      // Si le bot est arrivé à sa destination
+      if (botVehicle.coord === targetCoord) {
+        fsmLogger.action(`Bot has arrived at target resource: ${targetCoord}`);
+        collectState.actionStatus = ACTION_STATUS.COMPLETED;
+        collectState.currentCollectSubAction = COLLECT_ACTION_TYPES.COLLECT_RESOURCE;
+        
+        // Passer à l'étape suivante: collecte de la ressource
+        addAction('collectResource', PRIORITY.HIGH);
+        return true;
+      }
+    }
+    
+    // Si aucune cible n'est définie ou si le bot n'est pas en mouvement,
+    // trouver la meilleure ressource et se déplacer vers elle
+    
+    // Vérifier s'il y a des ressources connues
+    if (!botMemory.knownResources || botMemory.knownResources.length === 0) {
+      fsmLogger.action('No known resources to collect');
+      collectState.actionStatus = ACTION_STATUS.FAILED;
+      changeState(BOT_STATES.IDLE); // Retour à IDLE pour réévaluation
+      return true;
+    }
+    
+    // Filtrer les ressources valides
+    const validResources = botMemory.knownResources.filter(resource => {
+      const tile = tileStore.tiles[resource.coord];
+      return tile && 
+             tile.resources && 
+             (tile.resources.food > 0 || tile.resources.debris > 0 || tile.resources.special > 0) && 
+             !tile.collected;
+    });
+    
+    fsmLogger.info(`Found ${validResources.length} valid resources to choose from`);
+    
+    // Si aucune ressource valide n'est trouvée, retourner à IDLE
+    if (validResources.length === 0) {
+      fsmLogger.action('No valid resources found, returning to IDLE');
+      playerStore.updatePlayerMemory('player2', { knownResources: [] });
+      collectState.actionStatus = ACTION_STATUS.FAILED;
+      changeState(BOT_STATES.IDLE);
+      return true;
+    }
+    
+    // Trouver la ressource avec la plus grande valeur
+    let bestResource = null;
+    let maxResourceValue = -1;
+    
+    validResources.forEach(resource => {
+      const tile = tileStore.tiles[resource.coord];
+      if (tile && tile.resources) {
+        const resourceValue = 
+          (tile.resources.food || 0) + 
+          (tile.resources.debris || 0) * 1.2 + 
+          (tile.resources.special || 0) * 5;
+          
+        if (resourceValue > maxResourceValue) {
+          maxResourceValue = resourceValue;
+          bestResource = resource;
+        }
+      }
+    });
+    
+    // Si une bonne ressource est trouvée, se déplacer vers elle
+    if (bestResource) {
+      fsmLogger.action(`Moving to best resource at: ${bestResource.coord} with value: ${maxResourceValue.toFixed(2)}`);
+      const targetTile = tileStore.tiles[bestResource.coord];
+      
+      if (targetTile) {
+        // Stocker la ressource cible actuelle
+        collectState.targetResource = bestResource;
+        collectState.actionStatus = ACTION_STATUS.IN_PROGRESS;
+        collectState.currentCollectSubAction = COLLECT_ACTION_TYPES.MOVE_TO_RESOURCE;
+        
+        // Démarrer le mouvement vers la ressource
+        playerStore.moveToTile('player2', 'ship', {
+          coord: bestResource.coord,
+          position: targetTile.position
+        });
+        
+        return true;
+      }
+    }
+    
+    // Si on arrive ici, quelque chose n'a pas fonctionné
+    fsmLogger.error('Failed to move to resource');
+    collectState.actionStatus = ACTION_STATUS.FAILED;
+    changeState(BOT_STATES.IDLE);
+    return false;
+  },
+  
+  // Action 2: Collecter une ressource une fois arrivé
+  collectResourceAction: (playerStore, tileStore, addAction, changeState) => {
+    // Récupérer l'état de collecte et les informations sur le bot
+    const collectState = BotStateConfig[BOT_STATES.COLLECTING];
+    const botVehicle = playerStore.players?.player2?.vehicles?.ship;
+    const botMemory = playerStore.players?.player2?.memory;
+    
+    // Si le véhicule n'existe pas, signaler l'erreur
+    if (!botVehicle) {
+      fsmLogger.action('Bot vehicle not found, cannot collect resource');
+      collectState.actionStatus = ACTION_STATUS.FAILED;
+      return false;
+    }
+    
+    // Vérifier si une ressource cible est définie
+    if (!collectState.targetResource) {
+      fsmLogger.action('No target resource defined, cannot collect');
+      collectState.actionStatus = ACTION_STATUS.FAILED;
+      return false;
+    }
+    
+    // Vérifier si le bot est sur la tuile cible
+    if (botVehicle.coord !== collectState.targetResource.coord) {
+      fsmLogger.action(`Bot is not at target resource (${collectState.targetResource.coord}), cannot collect`);
+      
+      // Si le bot n'est pas en mouvement, relancer le déplacement
+      if (!botVehicle.isMoving) {
+        fsmLogger.action('Bot is not moving, initiating movement to resource');
+        addAction('moveToResource', PRIORITY.HIGH);
+      }
+      
+      return false;
+    }
+    
+    // Le bot est sur la bonne tuile, collecter la ressource
+    const currentTile = tileStore.tiles[botVehicle.coord];
+    
+    // Vérifier que la tuile a des ressources
+    if (!currentTile || !currentTile.resources ||
+        (currentTile.resources.food <= 0 &&
+         currentTile.resources.debris <= 0 &&
+         currentTile.resources.special <= 0)) {
+      fsmLogger.action(`No resources to collect at ${botVehicle.coord}`);
+      collectState.actionStatus = ACTION_STATUS.FAILED;
+      
+      // Mettre à jour la mémoire pour supprimer cette ressource
+      const updatedKnownResources = botMemory.knownResources.filter(
+        r => r.coord !== botVehicle.coord
+      );
+      playerStore.updatePlayerMemory('player2', {
+        knownResources: updatedKnownResources
+      });
+      
+      // Retourner à IDLE pour réévaluation
+      changeState(BOT_STATES.IDLE);
+      return true;
+    }
+    
+    // Stocker les ressources avant de les collecter pour l'historique
+    const resourcesBeforeCollection = { ...currentTile.resources };
+    
+    fsmLogger.action(`Collecting resources at ${botVehicle.coord}`);
+    
+    // Collecter les ressources
+    playerStore.collectResources('player2', 'ship', currentTile);
+    
+    // Ajouter la tuile à la liste des tuiles collectées dans la mémoire du bot
+    const collectedEntry = {
+      coord: botVehicle.coord,
+      resources: resourcesBeforeCollection,
+      collectedAt: new Date().toISOString()
+    };
+    
+    // Récupérer la liste actuelle des ressources collectées
+    const currentCollected = botMemory.collectedResources || [];
+    
+    // Mettre à jour la mémoire du bot avec la nouvelle entrée
+    playerStore.updatePlayerMemory('player2', {
+      collectedResources: [...currentCollected, collectedEntry]
+    });
+    
+    fsmLogger.info(`Added collected resource at ${botVehicle.coord} to memory`);
+    
+    // Marquer l'action comme terminée
+    collectState.actionStatus = ACTION_STATUS.COMPLETED;
+    collectState.targetResource = null;
+    
+    // Vérifier si le bot est à capacité maximale
+    if (botVehicle.isAtCapacity) {
+      fsmLogger.condition('Maximum capacity reached after collection, returning to IDLE');
+      changeState(BOT_STATES.IDLE);
+      return true;
+    }
+    
+    // Retourner à IDLE pour réévaluer la situation
+    fsmLogger.condition('Collection successful, returning to IDLE for re-evaluation');
+    changeState(BOT_STATES.IDLE);
+    return true;
+  },
+  
   // Map des types d'actions aux fonctions d'exécution
   actionMap: {
-    'evaluateIdle': 'evaluateConditionsFromIdle', // Nouvelle action d'évaluation
-    'collect': 'moveToKnownResource',
+    'evaluateIdle': 'evaluateConditionsFromIdle', // Action d'évaluation
+    'collect': 'moveToKnownResource',           // Ancienne action unifiée (pour compatibilité)
+    'moveToResource': 'moveToResourceAction',    // Nouvelle action de déplacement vers ressource
+    'collectResource': 'collectResourceAction',  // Nouvelle action de collecte de ressource
     'returnToBase': 'returnToBase',
     'refuel': 'refuelAtBase',
-    'exploreDrone': 'explorerWithDrone'
+    'exploreDrone': 'explorerWithDrone',
+    'moveToRandomTile': 'moveToRandomTile'
   }
-};
+}

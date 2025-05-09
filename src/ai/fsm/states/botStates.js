@@ -1,7 +1,7 @@
 // src/ai/fsm/states/botStates.js
 // Définition des comportements spécifiques à chaque état du bot
 
-import { BOT_STATES, PRIORITY } from '../../constants/botConstants';
+import { BOT_STATES, PRIORITY, ACTION_STATUS, COLLECT_ACTION_TYPES } from '../../constants/botConstants';
 import usePlayerStore from '../../../stores/usePlayerStore';
 import fsmLogger from '../../../utils/fsmLogger';
 
@@ -108,9 +108,17 @@ export const BotStateConfig = {
   
   [BOT_STATES.COLLECTING]: {
     description: "Bot en collecte de ressources",
-    defaultAction: { type: 'collect', priority: PRIORITY.MEDIUM },
+    defaultAction: { type: 'moveToResource', priority: PRIORITY.MEDIUM }, // Nouvelle action par défaut
     onEnterState: () => {
       fsmLogger.state("Entering COLLECTING state");
+      
+      // Réinitialisation du statut d'action au début de l'état
+      BotStateConfig[BOT_STATES.COLLECTING].actionStatus = ACTION_STATUS.PENDING;
+      BotStateConfig[BOT_STATES.COLLECTING].lastActionCheck = 0;
+      BotStateConfig[BOT_STATES.COLLECTING].currentCollectSubAction = null;
+      
+      // Réinitialisation de la cible de ressource
+      BotStateConfig[BOT_STATES.COLLECTING].targetResource = null;
     },
     onExitState: (playerStore, changeState) => {
       // Ajout d'une variable statique pour éviter les appels multiples
@@ -127,13 +135,25 @@ export const BotStateConfig = {
         changeState(BOT_STATES.IDLE);
       }
       
+      // Réinitialisation des variables d'état
+      BotStateConfig[BOT_STATES.COLLECTING].actionStatus = ACTION_STATUS.PENDING;
+      BotStateConfig[BOT_STATES.COLLECTING].currentCollectSubAction = null;
+      BotStateConfig[BOT_STATES.COLLECTING].targetResource = null;
+      
       // Réinitialiser l'indicateur après un court délai
       setTimeout(() => {
         BotStateConfig[BOT_STATES.COLLECTING]._isExiting = false;
       }, 50);
     },
     // Initialiser l'indicateur d'état de sortie
-    _isExiting: false
+    _isExiting: false,
+    
+    // Nouveaux champs pour gérer le statut de l'action de collecte
+    actionStatus: ACTION_STATUS.PENDING,
+    lastActionCheck: 0, // Horodatage de la dernière vérification d'action
+    currentCollectSubAction: null, // Sous-type d'action en cours (moveToResource, collectResource)
+    targetResource: null, // Ressource cible actuelle
+    cooldownPeriod: 500, // Délai en ms entre les vérifications des actions
   },
   
   [BOT_STATES.RETURNING]: {

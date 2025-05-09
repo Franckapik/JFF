@@ -53,6 +53,13 @@ const actionItemStyle = (completed) => ({
   borderRadius: '4px',
 });
 
+const completedActionStyle = {
+  padding: '5px',
+  backgroundColor: '#2a5b2a',
+  margin: '3px 0',
+  borderRadius: '4px',
+};
+
 // Style pour les sous-onglets des ressources
 const subTabStyle = {
   display: 'flex',
@@ -120,6 +127,7 @@ const BotDebugger = () => {
   const [activeTab, setActiveTab] = useState('state'); // 'state', 'actions', 'history', 'conditions', 'resources'
   const [stateHistory, setStateHistory] = useState([]);
   const [conditionLog, setConditionLog] = useState([]);
+  const [actionHistory, setActionHistory] = useState([]); // Nouvel état pour l'historique des actions
   const [activeMemoryTab, setActiveMemoryTab] = useState('resources'); // 'resources', 'collected' ou 'dangers'
   
   // Récupération de l'état du bot
@@ -174,6 +182,17 @@ const BotDebugger = () => {
     }
   }, [completedActions, botState, botVehicle, botMemory]);
   
+  // Mise à jour de l'historique des actions quand une action est complétée
+  useEffect(() => {
+    if (completedActions.length > 0) {
+      const lastAction = completedActions[completedActions.length - 1];
+      setActionHistory(prev => [...prev.slice(-14), {
+        ...lastAction,
+        completedAt: new Date().toLocaleTimeString()
+      }]);
+    }
+  }, [completedActions]);
+
   // Formater le nom d'un état pour l'affichage
   const formatStateName = (state) => {
     return state.charAt(0).toUpperCase() + state.slice(1);
@@ -230,6 +249,25 @@ const BotDebugger = () => {
                 <div key={index} style={actionItemStyle(false)}>
                   <div><strong>Type:</strong> {action.type}</div>
                   <div><strong>Priorité:</strong> {action.priority}</div>
+                </div>
+              ))
+            )}
+            
+            {/* Ajout de la section d'historique des actions */}
+            <h4 style={{ marginTop: '20px' }}>Historique des actions ({actionHistory.length}):</h4>
+            {actionHistory.length === 0 ? (
+              <div style={{ padding: '5px', color: '#888' }}>Aucune action complétée</div>
+            ) : (
+              actionHistory.map((action, index) => (
+                <div key={index} style={completedActionStyle}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <strong>{action.type}</strong>
+                    <span style={{ fontSize: '10px', color: '#aaa' }}>{action.completedAt}</span>
+                  </div>
+                  <div style={{ fontSize: '11px', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Priorité: {action.priority}</span>
+                    <span>Status: {action.success ? 'Réussite' : 'Échec'}</span>
+                  </div>
                 </div>
               ))
             )}
@@ -784,6 +822,7 @@ const BotDebugger = () => {
   const handleResetHistory = () => {
     setStateHistory([]);
     setConditionLog([]);
+    setActionHistory([]); // Réinitialiser aussi l'historique des actions
   };
 
   // Rendu des onglets selon le mode actif (Bot, Player ou Tile)

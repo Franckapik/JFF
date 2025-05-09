@@ -25,6 +25,20 @@ export const IDLE_EVALUATION = {
   DISCOVERY: 1    // Priorité basse: découverte (exploration)
 };
 
+// Statuts d'action pour le suivi d'état
+export const ACTION_STATUS = {
+  PENDING: 'pending',     // Action en attente d'être exécutée
+  IN_PROGRESS: 'in_progress',  // Action en cours d'exécution
+  COMPLETED: 'completed',   // Action terminée avec succès
+  FAILED: 'failed'        // Action qui a échoué
+};
+
+// Sous-types d'actions pour la collecte (séparation du mouvement et de la collecte)
+export const COLLECT_ACTION_TYPES = {
+  MOVE_TO_RESOURCE: 'moveToResource',  // Se déplacer vers une ressource
+  COLLECT_RESOURCE: 'collectResource'   // Collecter une ressource une fois arrivé
+};
+
 // Structure pour faciliter la visualisation des transitions d'état
 export const STATE_TRANSITIONS = {
   [BOT_STATES.IDLE]: {
