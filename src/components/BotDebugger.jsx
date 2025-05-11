@@ -1,7 +1,7 @@
 // src/components/BotDebugger.jsx
 // Composant de débogage pour visualiser l'état de la FSM du bot
 import React, { useState, useEffect } from 'react';
-import useSimpleBotStore from '../stores/useBotStore';
+import useBotStore from '../stores/useBotStore';
 import usePlayerStore from '../stores/usePlayerStore';
 import { useTileStore } from "../stores/useNewTileStore";
 
@@ -137,7 +137,7 @@ const BotDebugger = () => {
     actionQueue,
     completedActions,
     BOT_STATES
-  } = useSimpleBotStore();
+  } = useBotStore();
   
   // Récupération des données des joueurs
   const players = usePlayerStore((state) => state.players);

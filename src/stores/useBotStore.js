@@ -1,4 +1,4 @@
-// src/stores/useSimpleBotStore.js
+// src/stores/useBotStore.js
 // Un store simplifié pour une machine à états finis (FSM) avec trois états
 // et une file d'actions prioritaires
 import { create } from 'zustand';
@@ -13,7 +13,7 @@ import { BotStateConfig } from '../ai/fsm/states/botStates';
 import fsmLogger from '../utils/fsmLogger';
 
 // Store bot avec file d'actions prioritaires
-const useSimpleBotStore = create((set, get) => ({
+const useBotStore = create((set, get) => ({
   // État initial du bot
   botState: BOT_STATES.IDLE,
   isRunning: false,
@@ -209,13 +209,9 @@ const useSimpleBotStore = create((set, get) => ({
     
     if (!botVehicle) return;
     
-    // Si nous sommes dans l'état IDLE, l'évaluation des conditions
-    // est gérée par l'action evaluateConditionsFromIdle
+    // Si nous sommes dans l'état IDLE, on n'effectue pas de vérification supplémentaire
+    // car l'action evaluateIdle s'en chargera
     if (currentState === BOT_STATES.IDLE) {
-      // Si la file d'actions est vide, ajouter une action d'évaluation
-      if (get().actionQueue.length === 0) {
-        get().addAction('evaluateIdle', PRIORITY.HIGH);
-      }
       return;
     }
     
@@ -247,13 +243,15 @@ const useSimpleBotStore = create((set, get) => ({
   processBot: () => {
     if (!get().isRunning) return;
     
-    // 1. Vérifier les conditions 
-    get().checkConditions();
+    const currentState = get().botState;
+    
+    // 1. Vérifier les conditions (seulement pour les états autres que IDLE)
+    if (currentState !== BOT_STATES.IDLE) {
+      get().checkConditions();
+    }
     
     // 2. Si la file d'actions est vide:
     if (get().actionQueue.length === 0) {
-      const currentState = get().botState;
-      
       // Si dans l'état IDLE, ajouter l'action d'évaluation
       if (currentState === BOT_STATES.IDLE) {
         get().addAction('evaluateIdle', PRIORITY.HIGH);
@@ -263,7 +261,15 @@ const useSimpleBotStore = create((set, get) => ({
         const stateConfig = BotStateConfig[currentState];
         if (stateConfig && stateConfig.defaultAction) {
           const action = stateConfig.defaultAction;
-          get().addAction(action.type, action.priority);
+
+          // Vérifier si une action similaire est déjà en cours (statut PENDING)
+          const isActionPending = get().actionQueue.some(
+            (queuedAction) => queuedAction.type === action.type && queuedAction.status === ACTION_STATUS.PENDING
+          );
+
+          if (!isActionPending) {
+            get().addAction(action.type, action.priority);
+          }
         }
       }
     }
@@ -343,4 +349,4 @@ const useSimpleBotStore = create((set, get) => ({
   PRIORITY
 }));
 
-export default useSimpleBotStore;
+export default useBotStore;
