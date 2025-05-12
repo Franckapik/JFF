@@ -9,13 +9,13 @@ import fsmLogger from '../../../../utils/fsmLogger';
  * @param {Object} tileStore - Store des tuiles
  * @param {Function} addAction - Fonction pour ajouter une action
  * @param {Function} changeState - Fonction pour changer l'état du bot
- * @returns {boolean} - True si une action a été effectuée
+ * @returns {boolean|undefined} - True si l'action est terminée, false si elle a échoué, undefined si elle est en cours
  */
 export const returnToBaseAction = (playerStore, tileStore, addAction, changeState) => {
   const botVehicle = playerStore.players?.player2?.vehicles?.ship;
   if (!botVehicle) {
     fsmLogger.error('Bot vehicle not found');
-    return false;
+    return false; // Action échouée
   }
   
   // Utiliser la condition centralisée pour vérifier si le bot est déjà à la base
@@ -23,34 +23,66 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
   if (atBaseCheck.result) {
     fsmLogger.condition('Bot is already at base, transitioning to IDLE');
     changeState(BOT_STATES.IDLE);
-    return true;
+    return true; // Action terminée avec succès
   }
   
-  // Utiliser la condition centralisée pour vérifier si le bot est en mouvement
-  const isMovingCheck = BotConditions.isShipMoving();
-  if (isMovingCheck.result) {
-    fsmLogger.action('Bot is currently moving to base, waiting for it to arrive');
-    return true; // L'action est considérée comme traitée même si on attend seulement
+  // Si l'action vient d'être lancée, initialiser le mouvement
+  if (!returnToBaseAction.initiated) {
+    // Utiliser la condition centralisée pour vérifier si le bot est en mouvement
+    const isMovingCheck = BotConditions.isShipMoving();
+    if (isMovingCheck.result) {
+      // Le bot est déjà en mouvement vers la base
+      fsmLogger.action('Bot is currently moving to base, waiting for it to arrive');
+      returnToBaseAction.initiated = true;
+      return undefined; // Action en cours
+    }
+    
+    // Récupérer la tuile de départ (base) du bot
+    const baseCoord = botVehicle.startCoord;
+    if (!baseCoord) {
+      fsmLogger.error('Bot has no start coordinate defined');
+      return false; // Action échouée
+    }
+    
+    // Trouver la tuile correspondant à la base
+    const baseTile = tileStore.getTileAtCoord(baseCoord);
+    if (!baseTile) {
+      fsmLogger.error(`Base tile not found at coordinate ${baseCoord}`);
+      return false; // Action échouée
+    }
+    
+    fsmLogger.action(`Moving bot to base at ${baseCoord}`);
+    
+    // Déplacer le bot vers sa base
+    playerStore.moveToTile('player2', 'ship', baseTile);
+    returnToBaseAction.initiated = true;
+    return undefined; // Action en cours
   }
   
-  // Récupérer la tuile de départ (base) du bot
-  const baseCoord = botVehicle.startCoord;
-  if (!baseCoord) {
-    fsmLogger.error('Bot has no start coordinate defined');
-    return false;
+  // Vérifier si le bot est arrivé à destination
+  const updatedAtBaseCheck = BotConditions.isAtBase(botVehicle);
+  if (updatedAtBaseCheck.result) {
+    fsmLogger.action('Bot has reached the base');
+    returnToBaseAction.initiated = false; // Réinitialiser pour la prochaine utilisation
+    return true; // Action terminée avec succès
   }
   
-  // Trouver la tuile correspondant à la base
-  const baseTile = tileStore.getTileAtCoord(baseCoord);
-  if (!baseTile) {
-    fsmLogger.error(`Base tile not found at coordinate ${baseCoord}`);
-    return false;
+  // Vérifier si le bot est toujours en mouvement
+  const isStillMovingCheck = BotConditions.isShipMoving();
+  if (isStillMovingCheck.result) {
+    return undefined; // Action toujours en cours
   }
   
-  fsmLogger.action(`Moving bot to base at ${baseCoord}`);
+  // Si le bot n'est plus en mouvement mais n'est pas à la base,
+  // quelque chose a mal fonctionné
+  if (!isStillMovingCheck.result && !updatedAtBaseCheck.result) {
+    fsmLogger.error('Bot stopped moving but did not reach the base');
+    returnToBaseAction.initiated = false; // Réinitialiser pour la prochaine utilisation
+    return false; // Action échouée
+  }
   
-  // Déplacer le bot vers sa base
-  playerStore.moveToTile('player2', 'ship', baseTile);
-  
-  return true;
+  return undefined; // Action toujours en cours par défaut
 };
+
+// Propriété statique pour suivre l'état d'exécution
+returnToBaseAction.initiated = false;

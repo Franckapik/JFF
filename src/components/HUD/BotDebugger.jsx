@@ -127,16 +127,17 @@ const BotDebugger = () => {
   const [activeTab, setActiveTab] = useState('state'); // 'state', 'actions', 'history', 'conditions', 'resources'
   const [stateHistory, setStateHistory] = useState([]);
   const [conditionLog, setConditionLog] = useState([]);
-  const [actionHistory, setActionHistory] = useState([]); // Nouvel état pour l'historique des actions
+  const [actionHistory, setActionHistory] = useState([]); // Historique des actions
   const [activeMemoryTab, setActiveMemoryTab] = useState('resources'); // 'resources', 'collected' ou 'dangers'
   
-  // Récupération de l'état du bot
+  // Récupération de l'état du bot avec le nouveau système
   const {
     botState,
     isRunning,
     actionQueue,
-    completedActions,
-    BOT_STATES
+    actionHistory: storeActionHistory, // Nouveau nom pour éviter la confusion
+    BOT_STATES,
+    ACTION_STATUS // Ajout du statut d'action
   } = useBotStore();
   
   // Récupération des données des joueurs
@@ -167,10 +168,14 @@ const BotDebugger = () => {
   
   // Ajoute un log de condition quand une action d'évaluation est complétée
   useEffect(() => {
-    const lastAction = completedActions[completedActions.length - 1];
-    if (lastAction?.type === 'evaluateIdle') {
+    // Vérifier si une action d'évaluation a été complétée
+    const completeEvaluateAction = storeActionHistory?.find(
+      action => action.type === 'evaluateIdle' && action.status === ACTION_STATUS.COMPLETED
+    );
+    
+    if (completeEvaluateAction && !conditionLog.some(log => log.timestamp === new Date(completeEvaluateAction.completedAt).toLocaleTimeString())) {
       setConditionLog(prev => [...prev.slice(-9), {
-        timestamp: new Date().toLocaleTimeString(),
+        timestamp: new Date(completeEvaluateAction.completedAt).toLocaleTimeString(),
         nextState: botState,
         conditions: {
           fuel: botVehicle?.fuel,
@@ -180,22 +185,41 @@ const BotDebugger = () => {
         }
       }]);
     }
-  }, [completedActions, botState, botVehicle, botMemory]);
+  }, [storeActionHistory, botState, botVehicle, botMemory, ACTION_STATUS, conditionLog]);
   
-  // Mise à jour de l'historique des actions quand une action est complétée
+  // Mise à jour de l'historique des actions quand une action est complétée ou échouée
   useEffect(() => {
-    if (completedActions.length > 0) {
-      const lastAction = completedActions[completedActions.length - 1];
-      setActionHistory(prev => [...prev.slice(-14), {
-        ...lastAction,
-        completedAt: new Date().toLocaleTimeString()
-      }]);
+    if (storeActionHistory && storeActionHistory.length > 0) {
+      // Filtrer pour ne pas dupliquer les entrées dans l'historique local
+      const newActions = storeActionHistory.filter(action => 
+        !actionHistory.some(
+          existingAction => 
+            existingAction.type === action.type && 
+            existingAction.timestamp === action.timestamp &&
+            existingAction.status === action.status
+        )
+      );
+      
+      if (newActions.length > 0) {
+        setActionHistory(prev => [...prev, ...newActions].slice(-15));
+      }
     }
-  }, [completedActions]);
+  }, [storeActionHistory, actionHistory]);
 
   // Formater le nom d'un état pour l'affichage
   const formatStateName = (state) => {
     return state.charAt(0).toUpperCase() + state.slice(1);
+  };
+  
+  // Obtenir la couleur pour un statut d'action
+  const getActionStatusColor = (status) => {
+    switch(status) {
+      case ACTION_STATUS.PENDING: return "#f9a825"; // Orange
+      case ACTION_STATUS.IN_PROGRESS: return "#2196F3"; // Bleu
+      case ACTION_STATUS.COMPLETED: return "#4CAF50"; // Vert
+      case ACTION_STATUS.FAILED: return "#f44336"; // Rouge
+      default: return "#aaaaaa"; // Gris
+    }
   };
   
   // Obtenir une couleur pour les ressources en fonction de leur quantité
@@ -246,9 +270,20 @@ const BotDebugger = () => {
               <div style={{ padding: '5px', color: '#888' }}>Aucune action en attente</div>
             ) : (
               actionQueue.map((action, index) => (
-                <div key={index} style={actionItemStyle(false)}>
+                <div key={index} style={{
+                  ...actionItemStyle(false), 
+                  borderLeft: `4px solid ${getActionStatusColor(action.status)}`
+                }}>
                   <div><strong>Type:</strong> {action.type}</div>
                   <div><strong>Priorité:</strong> {action.priority}</div>
+                  <div><strong>Statut:</strong> <span style={{ color: getActionStatusColor(action.status) }}>
+                    {action.status}
+                  </span></div>
+                  {action.status === ACTION_STATUS.IN_PROGRESS && (
+                    <div style={{ fontSize: '10px', color: '#aaa' }}>
+                      En cours depuis {((Date.now() - action.timestamp)/1000).toFixed(1)}s
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -259,14 +294,23 @@ const BotDebugger = () => {
               <div style={{ padding: '5px', color: '#888' }}>Aucune action complétée</div>
             ) : (
               actionHistory.map((action, index) => (
-                <div key={index} style={completedActionStyle}>
+                <div key={index} style={{
+                  padding: '5px',
+                  backgroundColor: action.status === ACTION_STATUS.COMPLETED ? '#2a5b2a' : '#5b2a2a',
+                  margin: '3px 0',
+                  borderRadius: '4px'
+                }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <strong>{action.type}</strong>
-                    <span style={{ fontSize: '10px', color: '#aaa' }}>{action.completedAt}</span>
+                    <span style={{ fontSize: '10px', color: '#aaa' }}>
+                      {new Date(action.completedAt).toLocaleTimeString()}
+                    </span>
                   </div>
                   <div style={{ fontSize: '11px', display: 'flex', justifyContent: 'space-between' }}>
                     <span>Priorité: {action.priority}</span>
-                    <span>Status: {action.success ? 'Réussite' : 'Échec'}</span>
+                    <span style={{ color: getActionStatusColor(action.status) }}>
+                      Status: {action.status}
+                    </span>
                   </div>
                 </div>
               ))
@@ -544,7 +588,7 @@ const BotDebugger = () => {
     }
   };
 
-  // Rendu des différents onglets pour le PLAYER
+  // Rendu des différents onglets pour le PLAYER (inchangé)
   const renderPlayerTabContent = () => {
     switch (activeTab) {
       case 'state':
@@ -701,7 +745,7 @@ const BotDebugger = () => {
     };
   };
   
-  // Rendu du contenu de l'onglet Tile
+  // Rendu du contenu de l'onglet Tile (inchangé)
   const renderTileTabContent = () => {
     if (!hoveredTile) {
       return (
@@ -822,7 +866,7 @@ const BotDebugger = () => {
   const handleResetHistory = () => {
     setStateHistory([]);
     setConditionLog([]);
-    setActionHistory([]); // Réinitialiser aussi l'historique des actions
+    setActionHistory([]);
   };
 
   // Rendu des onglets selon le mode actif (Bot, Player ou Tile)
