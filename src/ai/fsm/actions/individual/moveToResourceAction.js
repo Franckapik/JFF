@@ -88,9 +88,15 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
       if (targetTile) {
         // CORRECTION: Vérifier si le bot est déjà à la position cible
         if (botVehicle.coord === bestResource.coord) {
-          fsmLogger.action(`Bot already at resource location ${bestResource.coord}, proceeding to collection`);
-          // Passer directement à la collecte
-          addAction('collectResource', PRIORITY.HIGH);
+          fsmLogger.action(`Bot already at resource location ${bestResource.coord}, transitioning to IDLE`);
+          
+          // MODIFICATION: Au lieu d'enchaîner directement avec collectResource,
+          // on retourne à l'état IDLE pour laisser le système d'évaluation décider
+          playerStore.updatePlayerMemory('player2', {
+            currentTargetResource: bestResource
+          });
+          
+          changeState(BOT_STATES.IDLE);
           return true; // Action terminée immédiatement
         }
 
@@ -146,8 +152,9 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
       // Réinitialiser les variables d'état
       moveToResourceAction.reset();
       
-      // Lancer la collecte de ressource
-      addAction('collectResource', PRIORITY.HIGH);
+      // MODIFICATION: Au lieu d'enchaîner directement avec collectResource,
+      // on retourne à l'état IDLE pour laisser le système d'évaluation décider
+      changeState(BOT_STATES.IDLE);
       return true; // Action terminée avec succès
     } else {
       // Si le bot s'est arrêté mais n'est pas à la bonne destination
@@ -164,9 +171,11 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
         }
       } else {
         // Si le bot est à la cible mais qu'on ne l'a pas détecté avant
-        fsmLogger.action('Bot is actually at the target, proceeding to collection');
+        fsmLogger.action('Bot is actually at the target, transitioning to IDLE');
         moveToResourceAction.reset();
-        addAction('collectResource', PRIORITY.HIGH);
+        
+        // MODIFICATION: Retourner à l'état IDLE au lieu d'ajouter directement collectResource
+        changeState(BOT_STATES.IDLE);
         return true;
       }
       

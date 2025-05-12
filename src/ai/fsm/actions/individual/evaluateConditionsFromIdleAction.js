@@ -15,12 +15,56 @@ export const evaluateConditionsFromIdleAction = (playerStore, tileStore, addActi
   fsmLogger.action(`Evaluating conditions from IDLE state using centralized conditions`);
   
   const botVehicle = playerStore.players?.player2?.vehicles?.ship;
+  const botMemory = playerStore.players?.player2?.memory;
+  
   if (!botVehicle) {
     fsmLogger.error('Bot vehicle not found, cannot evaluate conditions');
     return false;
   }
   
-  // Utiliser la fonction centralisée pour évaluer l'état suivant
+  // NOUVELLE LOGIQUE: Vérifier si le bot est déjà sur une tuile avec des ressources
+  // avant d'utiliser l'évaluation de condition standard qui passerait à l'état COLLECTING
+  const currentBotCoord = botVehicle.coord;
+  
+  // Vérifier si la tuile actuelle est une ressource connue ou une cible actuelle
+  const isCurrentTargetResource = botMemory?.currentTargetResource && 
+                                botMemory.currentTargetResource.coord === currentBotCoord;
+  
+  const isKnownResource = botMemory?.knownResources?.some(res => res.coord === currentBotCoord);
+  
+  if (isCurrentTargetResource || isKnownResource) {
+    // Vérifier si la tuile contient encore des ressources
+    const currentTile = tileStore.tiles[currentBotCoord];
+    const hasResources = currentTile?.resources && (
+      currentTile.resources.food > 0 || 
+      currentTile.resources.debris > 0 || 
+      currentTile.resources.special > 0
+    );
+    
+    if (hasResources) {
+      fsmLogger.condition(`Bot est déjà sur une tuile ressource à ${currentBotCoord}, collecte directe sans changer d'état`);
+      
+      // Lancer directement l'action de collecte sans passer par l'état COLLECTING
+      addAction('collectResource', PRIORITY.HIGH);
+      
+      return true; // Action ajoutée avec succès
+    } else {
+      fsmLogger.condition(`Bot est sur une tuile ressource à ${currentBotCoord}, mais aucune ressource restante`);
+      
+      // Si aucune ressource n'est présente, mettre à jour la mémoire du bot
+      if (isKnownResource && botMemory.knownResources) {
+        const updatedResources = botMemory.knownResources.filter(r => r.coord !== currentBotCoord);
+        playerStore.updatePlayerMemory('player2', {
+          knownResources: updatedResources,
+          currentTargetResource: null
+        });
+        
+        fsmLogger.action(`Ressource épuisée supprimée de la mémoire: ${currentBotCoord}`);
+      }
+    }
+  }
+  
+  // Continuer avec la logique standard d'évaluation des conditions
   const nextStateEvaluation = BotConditions.evaluateNextStateFromIdle(botVehicle);
   
   if (nextStateEvaluation.result) {
