@@ -194,13 +194,13 @@ const useBotStore = create((set, get) => ({
     
     // Vérifier si l'action est déjà en cours d'exécution
     if (nextAction.status === ACTION_STATUS.IN_PROGRESS) {
-      return false; // Action bloquante en cours, ne rien faire
+      // Si l'action est déjà en cours, on continue son exécution
+      fsmLogger.actionExecution(`Continue: ${nextAction.type} (priority: ${nextAction.priority})`);
+    } else {
+      // Sinon, on marque l'action comme en cours
+      get().updateActionStatus(0, ACTION_STATUS.IN_PROGRESS);
+      fsmLogger.actionExecution(`Start: ${nextAction.type} (priority: ${nextAction.priority})`);
     }
-    
-    // Marquer l'action comme en cours
-    get().updateActionStatus(0, ACTION_STATUS.IN_PROGRESS);
-    
-    fsmLogger.actionExecution(nextAction.type, nextAction.priority);
     
     // Récupère les stores nécessaires
     const playerStore = usePlayerStore.getState();

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { GridHelper } from "three";
-import { useThree, useFrame } from "@react-three/fiber";
+import { useThree } from "@react-three/fiber";
 import { Cone } from "@react-three/drei";
 import Tile from "./Tile";
 import { useTileStore } from "../stores/useNewTileStore";
@@ -18,7 +18,6 @@ const Scene = () => {
   
   // Utilisation de useBotStore au lieu de useSimpleBotStore
   const initializeBot = useBotStore((state) => state.initializeBot);
-  const processBot = useBotStore((state) => state.processBot);
   
   const botInitialized = useRef(false);
 
@@ -42,17 +41,6 @@ const Scene = () => {
       }
     }
   }, [tiles, initializePlayer, initializeBot]);
-
-  // Process bot in real-time using useFrame with throttling
-  const lastBotProcess = useRef(Date.now());
-  useFrame(() => {
-    const now = Date.now();
-    // Process bot every second to make it easier to follow (comme dans SimpleScene)
-    if (now - lastBotProcess.current > 1000) {
-      processBot();
-      lastBotProcess.current = now;
-    }
-  });
 
   // Camera setup
   const { camera } = useThree();

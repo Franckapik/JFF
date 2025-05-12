@@ -1,306 +1,4171 @@
-Scene.jsx:27 [Scene] Initializing tiles...
-Scene.jsx:34 [Scene] Initializing players with tiles: {A3: {…}, A4: {…}, A5: {…}, A6: {…}, B2: {…}, …}
-Scene.jsx:39 [Scene] Initializing bot...
-fsmLogger.js:96 🔵 INFO [23:05:38] Initializing bot FSM
-fsmLogger.js:96 🟢 STATE [23:05:38] Entering IDLE state - Evaluating conditions
-fsmLogger.js:96 🔵 INFO [23:05:38] Bot status: Fuel=100, At base=true
-fsmLogger.js:89 🟠 ACTION [23:05:38] Adding action to queue: evaluateIdle {priority: 3, params: {…}}
-fsmLogger.js:96 🟢 STATE [23:05:38] Bot initialized in IDLE state
-ShipMovement.jsx:117 Setting initial position: {x: -1.8, y: 0, z: -3.117691453623979}
-ShipMovement.jsx:117 Setting initial position: {x: 0.9, y: 0, z: 1.5588457268119895}
-fsmLogger.js:96 🟠 ACTION [23:05:39] Execute: evaluateIdle (priority: 3)
-fsmLogger.js:96 🟠 ACTION [23:05:39] Evaluating conditions from IDLE state
-fsmLogger.js:96 🟣 CONDITION [23:05:39] No specific conditions met in IDLE evaluation, changing to EXPLORING state
-fsmLogger.js:89 🟢 STATE [23:05:39] Transition: idle → exploring {targetState: null, timestamp: '2025-05-08T21:05:39.044Z'}
-fsmLogger.js:96 🟢 STATE [23:05:39] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:96 🔵 INFO [23:05:39] Transition details: Fuel=100, Resources={"food":0,"debris":0,"special":0}
-fsmLogger.js:96 🟢 STATE [23:05:39] Entering EXPLORING state
-fsmLogger.js:89 🟠 ACTION [23:05:39] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:89 🟠 ACTION [23:05:39] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:89 🟠 ACTION [23:05:39] Completed action: evaluateIdle {priority: 3, elapsed: 971}
-fsmLogger.js:96 🟣 CONDITION [23:05:40] Checking conditions in state: exploring
-fsmLogger.js:96 🟠 ACTION [23:05:40] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:40] Attempting to find a tile to explore
-fsmLogger.js:96 🔵 INFO [23:05:40] Using exploring radius: 3
-fsmLogger.js:96 🔵 INFO [23:05:40] Found 24 walkable unexplored tiles in radius
-fsmLogger.js:96 🟠 ACTION [23:05:40] Sending drone to explore tile: D4, distance: 0.00
-usePlayerStore.js:285 [PlayerStore] Moving player2/drone3 to tile: D4
-fsmLogger.js:89 🟠 ACTION [23:05:40] Completed action: exploreDrone {priority: 2, elapsed: 1010}
-fsmLogger.js:96 🟣 CONDITION [23:05:41] Checking conditions in state: exploring
-fsmLogger.js:96 🟠 ACTION [23:05:41] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:41] Drone is already moving or not available, skipping exploration
-fsmLogger.js:96 🟠 ACTION [23:05:41] Drone is currently moving, waiting for it to reach target
-fsmLogger.js:89 🟠 ACTION [23:05:41] Completed action: exploreDrone {priority: 2, elapsed: 2015}
-UnifiedDroneMovement.jsx:315 [UnifiedDroneMovement] Bot exploration count increased to 2
-Scene.jsx:34 [Scene] Initializing players with tiles: {A3: {…}, A4: {…}, A5: {…}, A6: {…}, B2: {…}, …}
-UnifiedDroneMovement.jsx:191 [UnifiedDroneMovement] Drone for player2 returned to ship
-fsmLogger.js:96 🟣 CONDITION [23:05:42] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:42] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:42] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:42] Attempting to find a tile to explore
-fsmLogger.js:96 🔵 INFO [23:05:42] Using exploring radius: 3
-fsmLogger.js:96 🔵 INFO [23:05:42] Found 23 walkable unexplored tiles in radius
-fsmLogger.js:96 🟠 ACTION [23:05:42] Sending drone to explore tile: C4, distance: 1.00
-usePlayerStore.js:285 [PlayerStore] Moving player2/drone3 to tile: C4
-fsmLogger.js:89 🟠 ACTION [23:05:42] Completed action: exploreDrone {priority: 2, elapsed: 2}
-fsmLogger.js:96 🟣 CONDITION [23:05:43] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:43] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:43] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:43] Drone is already moving or not available, skipping exploration
-fsmLogger.js:96 🟠 ACTION [23:05:43] Drone is currently moving, waiting for it to reach target
-fsmLogger.js:89 🟠 ACTION [23:05:43] Completed action: exploreDrone {priority: 2, elapsed: 1}
-fsmLogger.js:96 🟣 CONDITION [23:05:44] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:44] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:44] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:44] Drone is already moving or not available, skipping exploration
-fsmLogger.js:96 🟠 ACTION [23:05:44] Drone is currently moving, waiting for it to reach target
-fsmLogger.js:89 🟠 ACTION [23:05:44] Completed action: exploreDrone {priority: 2, elapsed: 1}
-UnifiedDroneMovement.jsx:245 [UnifiedDroneMovement] Bot drone discovered new resources at C4: {food: 71, debris: 9397, special: 0}
-UnifiedDroneMovement.jsx:266 [UnifiedDroneMovement] Resources found, checking conditions for state transition
-UnifiedDroneMovement.jsx:315 [UnifiedDroneMovement] Bot exploration count increased to 4
-Scene.jsx:34 [Scene] Initializing players with tiles: {A3: {…}, A4: {…}, A5: {…}, A6: {…}, B2: {…}, …}
-UnifiedDroneMovement.jsx:269 [UnifiedDroneMovement] Executing checkConditions after finding resources
-UnifiedDroneMovement.jsx:272 [UnifiedDroneMovement] Current bot state before check: exploring
-UnifiedDroneMovement.jsx:279 [UnifiedDroneMovement] hasDiscoveredResources result: {result: false, priority: 2, state: null, action: null}
-fsmLogger.js:96 🟣 CONDITION [23:05:44] Checking conditions in state: exploring
-fsmLogger.js:96 🟣 CONDITION [23:05:45] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:45] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:45] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:45] Attempting to find a tile to explore
-fsmLogger.js:96 🔵 INFO [23:05:45] Using exploring radius: 3
-fsmLogger.js:96 🔵 INFO [23:05:45] Found 22 walkable unexplored tiles in radius
-fsmLogger.js:96 🟠 ACTION [23:05:45] Sending drone to explore tile: C5, distance: 1.00
-usePlayerStore.js:285 [PlayerStore] Moving player2/drone3 to tile: C5
-fsmLogger.js:89 🟠 ACTION [23:05:45] Completed action: exploreDrone {priority: 2, elapsed: 2}
-fsmLogger.js:96 🟣 CONDITION [23:05:46] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:46] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:46] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:46] Drone is already moving or not available, skipping exploration
-fsmLogger.js:96 🟠 ACTION [23:05:46] Drone is currently moving, waiting for it to reach target
-fsmLogger.js:89 🟠 ACTION [23:05:46] Completed action: exploreDrone {priority: 2, elapsed: 0}
-UnifiedDroneMovement.jsx:191 [UnifiedDroneMovement] Drone for player2 returned to ship
-fsmLogger.js:96 🟣 CONDITION [23:05:47] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:47] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:47] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:47] Drone is already moving or not available, skipping exploration
-fsmLogger.js:96 🟠 ACTION [23:05:47] Drone is currently moving, waiting for it to reach target
-fsmLogger.js:89 🟠 ACTION [23:05:47] Completed action: exploreDrone {priority: 2, elapsed: 1}
-fsmLogger.js:96 🟣 CONDITION [23:05:48] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:48] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:48] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:48] Drone is already moving or not available, skipping exploration
-fsmLogger.js:96 🟠 ACTION [23:05:48] Drone is currently moving, waiting for it to reach target
-fsmLogger.js:89 🟠 ACTION [23:05:48] Completed action: exploreDrone {priority: 2, elapsed: 0}
-fsmLogger.js:96 🟣 CONDITION [23:05:49] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:49] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:49] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:49] Drone is already moving or not available, skipping exploration
-fsmLogger.js:96 🟠 ACTION [23:05:49] Drone is currently moving, waiting for it to reach target
-fsmLogger.js:89 🟠 ACTION [23:05:49] Completed action: exploreDrone {priority: 2, elapsed: 1}
-fsmLogger.js:96 🟣 CONDITION [23:05:50] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:50] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:50] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:50] Drone is already moving or not available, skipping exploration
-fsmLogger.js:96 🟠 ACTION [23:05:50] Drone is currently moving, waiting for it to reach target
-fsmLogger.js:89 🟠 ACTION [23:05:50] Completed action: exploreDrone {priority: 2, elapsed: 1}
-UnifiedDroneMovement.jsx:245 [UnifiedDroneMovement] Bot drone discovered new resources at C5: {food: 47, debris: 2866, special: 2}
-UnifiedDroneMovement.jsx:266 [UnifiedDroneMovement] Resources found, checking conditions for state transition
-UnifiedDroneMovement.jsx:315 [UnifiedDroneMovement] Bot exploration count increased to 6
-Scene.jsx:34 [Scene] Initializing players with tiles: {A3: {…}, A4: {…}, A5: {…}, A6: {…}, B2: {…}, …}
-UnifiedDroneMovement.jsx:269 [UnifiedDroneMovement] Executing checkConditions after finding resources
-UnifiedDroneMovement.jsx:272 [UnifiedDroneMovement] Current bot state before check: exploring
-UnifiedDroneMovement.jsx:279 [UnifiedDroneMovement] hasDiscoveredResources result: {result: false, priority: 2, state: null, action: null}
-fsmLogger.js:96 🟣 CONDITION [23:05:50] Checking conditions in state: exploring
-fsmLogger.js:96 🟣 CONDITION [23:05:51] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:51] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:51] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:51] Attempting to find a tile to explore
-fsmLogger.js:96 🔵 INFO [23:05:51] Using exploring radius: 3
-fsmLogger.js:96 🔵 INFO [23:05:51] Found 21 walkable unexplored tiles in radius
-fsmLogger.js:96 🟠 ACTION [23:05:51] Sending drone to explore tile: D3, distance: 1.00
-usePlayerStore.js:285 [PlayerStore] Moving player2/drone3 to tile: D3
-fsmLogger.js:89 🟠 ACTION [23:05:51] Completed action: exploreDrone {priority: 2, elapsed: 2}
-fsmLogger.js:96 🟣 CONDITION [23:05:52] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:52] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:52] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:52] Drone is already moving or not available, skipping exploration
-fsmLogger.js:96 🟠 ACTION [23:05:52] Drone is currently moving, waiting for it to reach target
-fsmLogger.js:89 🟠 ACTION [23:05:52] Completed action: exploreDrone {priority: 2, elapsed: 1}
-fsmLogger.js:96 🟣 CONDITION [23:05:53] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:53] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:53] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:53] Drone is already moving or not available, skipping exploration
-fsmLogger.js:96 🟠 ACTION [23:05:53] Drone is currently moving, waiting for it to reach target
-fsmLogger.js:89 🟠 ACTION [23:05:53] Completed action: exploreDrone {priority: 2, elapsed: 1}
-UnifiedDroneMovement.jsx:191 [UnifiedDroneMovement] Drone for player2 returned to ship
-fsmLogger.js:96 🟣 CONDITION [23:05:54] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:54] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:54] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:54] Drone is already moving or not available, skipping exploration
-fsmLogger.js:96 🟠 ACTION [23:05:54] Drone is currently moving, waiting for it to reach target
-fsmLogger.js:89 🟠 ACTION [23:05:54] Completed action: exploreDrone {priority: 2, elapsed: 1}
-fsmLogger.js:96 🟣 CONDITION [23:05:55] Checking conditions in state: exploring
-fsmLogger.js:89 🟠 ACTION [23:05:55] Adding action to queue: exploreDrone {priority: 2, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:55] Execute: exploreDrone (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:55] Drone is already moving or not available, skipping exploration
-fsmLogger.js:96 🟠 ACTION [23:05:55] Drone is currently moving, waiting for it to reach target
-fsmLogger.js:89 🟠 ACTION [23:05:55] Completed action: exploreDrone {priority: 2, elapsed: 0}
-UnifiedDroneMovement.jsx:245 [UnifiedDroneMovement] Bot drone discovered new resources at D3: {food: 24, debris: 1954, special: 2}
-UnifiedDroneMovement.jsx:266 [UnifiedDroneMovement] Resources found, checking conditions for state transition
-UnifiedDroneMovement.jsx:315 [UnifiedDroneMovement] Bot exploration count increased to 8
-Scene.jsx:34 [Scene] Initializing players with tiles: {A3: {…}, A4: {…}, A5: {…}, A6: {…}, B2: {…}, …}
-fsmLogger.js:96 🟣 CONDITION [23:05:56] Checking conditions in state: exploring
-botConditions.js:225 [BotConditions] Enough resources discovered, returning to IDLE
-fsmLogger.js:89 🟣 CONDITION [23:05:56] Evaluate: checkAllConditions = TRUE {currentState: 'exploring', targetState: 'idle', botStats: {…}}
-fsmLogger.js:96 🟢 STATE [23:05:56] Returning to IDLE state: Condition met: {"result":true,"state":"idle"}
-fsmLogger.js:89 🟢 STATE [23:05:56] Transition: exploring → idle {targetState: null, timestamp: '2025-05-08T21:05:56.160Z'}
-fsmLogger.js:96 🟢 STATE [23:05:56] Exiting EXPLORING state - Returning to IDLE for evaluation
-fsmLogger.js:89 🟢 STATE [23:05:56] Transition: exploring → idle {targetState: null, timestamp: '2025-05-08T21:05:56.160Z'}
-fsmLogger.js:96 🟢 STATE [23:05:56] Entering IDLE state - Evaluating conditions
-fsmLogger.js:96 🔵 INFO [23:05:56] Bot status: Fuel=100, At base=true
-fsmLogger.js:89 🟠 ACTION [23:05:56] Adding action to queue: evaluateIdle {priority: 3, params: {…}}
-fsmLogger.js:96 🟢 STATE [23:05:56] Entering IDLE state - Evaluating conditions
-fsmLogger.js:96 🔵 INFO [23:05:56] Bot status: Fuel=100, At base=true
-fsmLogger.js:89 🟠 ACTION [23:05:56] Adding action to queue: evaluateIdle {priority: 3, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:05:56] Execute: evaluateIdle (priority: 3)
-fsmLogger.js:96 🟠 ACTION [23:05:56] Evaluating conditions from IDLE state
-fsmLogger.js:96 🟣 CONDITION [23:05:56] 3 resources available, changing to COLLECTING state
-fsmLogger.js:89 🟢 STATE [23:05:56] Transition: idle → collecting {targetState: null, timestamp: '2025-05-08T21:05:56.161Z'}
-fsmLogger.js:96 🟢 STATE [23:05:56] Exiting IDLE state, transitioning to collecting
-fsmLogger.js:96 🔵 INFO [23:05:56] Transition details: Fuel=100, Resources={"food":0,"debris":0,"special":0}
-fsmLogger.js:96 🟢 STATE [23:05:56] Entering COLLECTING state
-fsmLogger.js:89 🟠 ACTION [23:05:56] Adding action to queue: collect {priority: 2, params: {…}}
-fsmLogger.js:89 🟠 ACTION [23:05:56] Adding action to queue: collect {priority: 2, params: {…}}
-fsmLogger.js:89 🟠 ACTION [23:05:56] Completed action: evaluateIdle {priority: 3, elapsed: 1}
-UnifiedDroneMovement.jsx:269 [UnifiedDroneMovement] Executing checkConditions after finding resources
-UnifiedDroneMovement.jsx:272 [UnifiedDroneMovement] Current bot state before check: collecting
-UnifiedDroneMovement.jsx:279 [UnifiedDroneMovement] hasDiscoveredResources result: {result: true, priority: 2, state: 'collecting', action: {…}}
-UnifiedDroneMovement.jsx:283 [UnifiedDroneMovement] Forcing state change to collecting
-UnifiedDroneMovement.jsx:288 [UnifiedDroneMovement] Adding action collect
-fsmLogger.js:89 🟠 ACTION [23:05:56] Adding action to queue: collect {priority: 3, params: {…}}
-fsmLogger.js:96 🟣 CONDITION [23:05:57] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:05:57] Execute: evaluateIdle (priority: 3)
-fsmLogger.js:96 🟠 ACTION [23:05:57] Evaluating conditions from IDLE state
-fsmLogger.js:96 🟣 CONDITION [23:05:57] 3 resources available, changing to COLLECTING state
-fsmLogger.js:89 🟠 ACTION [23:05:57] Adding action to queue: collect {priority: 2, params: {…}}
-fsmLogger.js:89 🟠 ACTION [23:05:57] Completed action: evaluateIdle {priority: 3, elapsed: 1008}
-UnifiedDroneMovement.jsx:191 [UnifiedDroneMovement] Drone for player2 returned to ship
-fsmLogger.js:96 🟣 CONDITION [23:05:58] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:05:58] Execute: collect (priority: 3)
-fsmLogger.js:96 🟠 ACTION [23:05:58] Starting moveToKnownResource with vehicle at D4, moving: false
-fsmLogger.js:96 🔵 INFO [23:05:58] Examining 3 known resources
-fsmLogger.js:96 🔵 INFO [23:05:58] Found 3 valid resources
-fsmLogger.js:96 🔵 INFO [23:05:58] Resource at C4 has value: 11347.40
-fsmLogger.js:96 🔵 INFO [23:05:58] Resource at C5 has value: 3496.20
-fsmLogger.js:96 🔵 INFO [23:05:58] Resource at D3 has value: 2378.80
-fsmLogger.js:96 🟠 ACTION [23:05:58] Moving to best resource at: C4 with value: 11347.40
-fsmLogger.js:96 🔵 INFO [23:05:58] Calling moveToTile with target: C4
-fsmLogger.js:89 🟠 ACTION [23:05:58] Completed action: collect {priority: 3, elapsed: 1833}
-fsmLogger.js:96 🟠 ACTION [23:05:58] Now executing delayed moveToTile to C4
-usePlayerStore.js:285 [PlayerStore] Moving player2/ship to tile: C4
-ShipMovement.jsx:131 [player2] Target changed, recalculating path to: C4
-ShipMovement.jsx:102 Calculating path for player2 from D4 to C4
-ShipMovement.jsx:79 [ShipMovement] Setting isMoving=true for player2/ship
-fsmLogger.js:96 🟣 CONDITION [23:05:59] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:05:59] Execute: collect (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:05:59] Bot vehicle is moving, cannot proceed with collection
-fsmLogger.js:96 🟣 CONDITION [23:06:00] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:06:00] Execute: collect (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:06:00] Bot vehicle is moving, cannot proceed with collection
-fsmLogger.js:96 🟣 CONDITION [23:06:01] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:06:01] Execute: collect (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:06:01] Bot vehicle is moving, cannot proceed with collection
-fsmLogger.js:96 🟣 CONDITION [23:06:02] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:06:02] Execute: collect (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:06:02] Bot vehicle is moving, cannot proceed with collection
-fsmLogger.js:96 🟣 CONDITION [23:06:03] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:06:03] Execute: collect (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:06:03] Bot vehicle is moving, cannot proceed with collection
-fsmLogger.js:96 🟣 CONDITION [23:06:04] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:06:04] Execute: collect (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:06:04] Bot vehicle is moving, cannot proceed with collection
-fsmLogger.js:96 🟣 CONDITION [23:06:05] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:06:05] Execute: collect (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:06:05] Bot vehicle is moving, cannot proceed with collection
-fsmLogger.js:96 🟣 CONDITION [23:06:06] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:06:06] Execute: collect (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:06:06] Bot vehicle is moving, cannot proceed with collection
-ShipMovement.jsx:207 [player2/ship] Arrived at destination
-ShipMovement.jsx:53 [ShipMovement] Finalizing movement for player2/ship to C4
-fsmLogger.js:96 🟣 CONDITION [23:06:07] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:06:07] Execute: collect (priority: 2)
-fsmLogger.js:96 🟠 ACTION [23:06:07] Starting moveToKnownResource with vehicle at C4, moving: false
-fsmLogger.js:96 🟠 ACTION [23:06:07] Collecting resources at current tile: C4
-fsmLogger.js:96 🔵 INFO [23:06:07] Added collected resource at C4 to memory
-fsmLogger.js:89 🟠 ACTION [23:06:07] Completed action: collect {priority: 2, elapsed: 11064}
-Scene.jsx:34 [Scene] Initializing players with tiles: {A3: {…}, A4: {…}, A5: {…}, A6: {…}, B2: {…}, …}
-usePlayerStore.js:374 player2/ship est à sa capacité maximale.
-fsmLogger.js:96 🟣 CONDITION [23:06:08] Checking conditions in state: collecting
-botConditions.js:243 [BotConditions] Maximum capacity reached in COLLECTING state, returning to IDLE
-fsmLogger.js:89 🟣 CONDITION [23:06:08] Evaluate: checkAllConditions = TRUE {currentState: 'collecting', targetState: 'idle', botStats: {…}}
-fsmLogger.js:96 🟢 STATE [23:06:08] Returning to IDLE state: Condition met: {"result":true,"state":"idle"}
-fsmLogger.js:89 🟢 STATE [23:06:08] Transition: collecting → idle {targetState: null, timestamp: '2025-05-08T21:06:08.235Z'}
-fsmLogger.js:96 🟢 STATE [23:06:08] Exiting COLLECTING state - Returning to IDLE for evaluation
-fsmLogger.js:89 🟢 STATE [23:06:08] Transition: collecting → idle {targetState: null, timestamp: '2025-05-08T21:06:08.236Z'}
-fsmLogger.js:96 🟢 STATE [23:06:08] Entering IDLE state - Evaluating conditions
-fsmLogger.js:96 🔵 INFO [23:06:08] Bot status: Fuel=95, At base=true
-fsmLogger.js:89 🟠 ACTION [23:06:08] Adding action to queue: evaluateIdle {priority: 3, params: {…}}
-fsmLogger.js:96 🟢 STATE [23:06:08] Entering IDLE state - Evaluating conditions
-fsmLogger.js:96 🔵 INFO [23:06:08] Bot status: Fuel=95, At base=true
-fsmLogger.js:89 🟠 ACTION [23:06:08] Adding action to queue: evaluateIdle {priority: 3, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:06:08] Execute: evaluateIdle (priority: 3)
-fsmLogger.js:96 🟠 ACTION [23:06:08] Evaluating conditions from IDLE state
-fsmLogger.js:96 🟣 CONDITION [23:06:08] Maximum capacity reached in IDLE evaluation, returning to base
-fsmLogger.js:89 🟢 STATE [23:06:08] Transition: idle → returning {targetState: null, timestamp: '2025-05-08T21:06:08.237Z'}
-fsmLogger.js:96 🟢 STATE [23:06:08] Exiting IDLE state, transitioning to returning
-fsmLogger.js:96 🔵 INFO [23:06:08] Transition details: Fuel=95, Resources={"food":71,"debris":1000,"special":0}
-fsmLogger.js:96 🟢 STATE [23:06:08] Entering RETURNING state
-fsmLogger.js:89 🟠 ACTION [23:06:08] Adding action to queue: returnToBase {priority: 3, params: {…}}
-fsmLogger.js:89 🟠 ACTION [23:06:08] Adding action to queue: returnToBase {priority: 3, params: {…}}
-fsmLogger.js:89 🟠 ACTION [23:06:08] Completed action: evaluateIdle {priority: 3, elapsed: 2}
-fsmLogger.js:96 🟣 CONDITION [23:06:09] Checking conditions in state: returning
-botConditions.js:261 [BotConditions] Reached base in RETURNING state, returning to IDLE
-fsmLogger.js:89 🟣 CONDITION [23:06:09] Evaluate: checkAllConditions = TRUE {currentState: 'returning', targetState: 'idle', botStats: {…}}
-fsmLogger.js:96 🟢 STATE [23:06:09] Returning to IDLE state: Condition met: {"result":true,"state":"idle"}
-fsmLogger.js:89 🟢 STATE [23:06:09] Transition: returning → idle {targetState: null, timestamp: '2025-05-08T21:06:09.242Z'}
-fsmLogger.js:96 🟢 STATE [23:06:09] Transferring resources to score before exiting RETURNING state
-fsmLogger.js:96 🟢 STATE [23:06:09] Exiting RETURNING state - Returning to IDLE for evaluation
-fsmLogger.js:89 🟢 STATE [23:06:09] Transition: returning → idle {targetState: null, timestamp: '2025-05-08T21:06:09.243Z'}
-fsmLogger.js:96 🟢 STATE [23:06:09] Entering IDLE state - Evaluating conditions
-fsmLogger.js:96 🔵 INFO [23:06:09] Bot status: Fuel=95, At base=true
-fsmLogger.js:89 🟠 ACTION [23:06:09] Adding action to queue: evaluateIdle {priority: 3, params: {…}}
-fsmLogger.js:96 🟢 STATE [23:06:09] Entering IDLE state - Evaluating conditions
-fsmLogger.js:96 🔵 INFO [23:06:09] Bot status: Fuel=95, At base=true
-fsmLogger.js:89 🟠 ACTION [23:06:09] Adding action to queue: evaluateIdle {priority: 3, params: {…}}
-fsmLogger.js:96 🟠 ACTION [23:06:09] Execute: evaluateIdle (priority: 3)
-fsmLogger.js:96 🟠 ACTION [23:06:09] Evaluating conditions from IDLE state
-fsmLogger.js:96 🟣 CONDITION [23:06:09] 3 resources available, changing to COLLECTING state
-fsmLogger.js:89 🟢 STATE [23:06:09] Transition: idle → collecting {targetState: null, timestamp: '2025-05-08T21:06:09.244Z'}
-fsmLogger.js:96 🟢 STATE [23:06:09] Exiting IDLE state, transitioning to collecting
-fsmLogger.js:96 🔵 INFO [23:06:09] Transition details: Fuel=95, Resources={"food":0,"debris":0,"special":0}
-fsmLogger.js:96 🟢 STATE [23:06:09] Entering COLLECTING state
-fsmLogger.js:89 🟠 ACTION [23:06:09] Adding action to queue: collect {priority: 2, params: {…}}
-fsmLogger.js:89 🟠 ACTION [23:06:09] Adding action to queue: collect {priority: 2, params: {…}}
-fsmLogger.js:89 🟠 ACTION [23:06:09] Completed action: evaluateIdle {priority: 3, elapsed: 1007}
-fsmLogger.js:96 🟣 CONDITION [23:06:10] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:06:10] Execute: returnToBase (priority: 3)
-fsmLogger.js:96 🟠 ACTION [23:06:10] Already at base
-fsmLogger.js:89 🟠 ACTION [23:06:10] Adding action to queue: refuel {priority: 2, params: {…}}
-fsmLogger.js:89 🟠 ACTION [23:06:10] Completed action: returnToBase {priority: 3, elapsed: 2014}
-fsmLogger.js:96 🟣 CONDITION [23:06:11] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:06:11] Execute: returnToBase (priority: 3)
-fsmLogger.js:96 🟠 ACTION [23:06:11] Already at base
-fsmLogger.js:89 🟠 ACTION [23:06:11] Adding action to queue: refuel {priority: 2, params: {…}}
-fsmLogger.js:89 🟠 ACTION [23:06:11] Completed action: returnToBase {priority: 3, elapsed: 3022}
-fsmLogger.js:96 🟣 CONDITION [23:06:12] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:06:12] Execute: evaluateIdle (priority: 3)
-fsmLogger.js:96 🟠 ACTION [23:06:12] Evaluating conditions from IDLE state
-fsmLogger.js:96 🟣 CONDITION [23:06:12] 3 resources available, changing to COLLECTING state
-fsmLogger.js:89 🟠 ACTION [23:06:12] Adding action to queue: collect {priority: 2, params: {…}}
-fsmLogger.js:89 🟠 ACTION [23:06:12] Completed action: evaluateIdle {priority: 3, elapsed: 3024}
-fsmLogger.js:96 🟣 CONDITION [23:06:13] Checking conditions in state: collecting
-fsmLogger.js:96 🟠 ACTION [23:06:13] Execute: evaluateIdle (priority: 3)
-fsmLogger.js:96 🟠 ACTION [23:06:13] Evaluating conditions from IDLE state
-fsmLogger.js:96 🟣 CONDITION [23:06:13] 3 resources available, changing to COLLECTING state
-fsmLogger.js:89 🟠 ACTION [23:06:13] Adding action to queue: collect {priority: 2, params: {…}}
-fsmLogger.js:89 🟠 ACTION [23:06:13] Completed action: evaluateIdle {priority: 3, elapsed: 4033}
+Scene.jsx:26 [Scene] Initializing tiles...
+Scene.jsx:33 [Scene] Initializing players with tiles: {A3: {…}, A4: {…}, A5: {…}, A6: {…}, B2: {…}, …}
+Scene.jsx:38 [Scene] Initializing bot...
+fsmLogger.js:96 🔵 INFO [22:07:08] Initializing bot FSM
+fsmLogger.js:96 🟢 STATE [22:07:08] Entering IDLE state - Evaluating conditions
+fsmLogger.js:96 🔵 INFO [22:07:08] Bot status: Fuel=100, At base=true
+fsmLogger.js:89 🟠 ACTION [22:07:08] Adding action to queue: testQueue {priority: 4}
+fsmLogger.js:89 🟠 ACTION [22:07:08] Adding action to queue: exploreDrone {priority: 3}
+fsmLogger.js:89 🟠 ACTION [22:07:08] Adding action to queue: evaluateIdle {priority: 2}
+fsmLogger.js:96 🟢 STATE [22:07:08] Bot initialized in IDLE state with testQueue action
+ShipMovement.jsx:117 Setting initial position: {x: 1.8, y: 0, z: 0}
+ShipMovement.jsx:117 Setting initial position: {x: 1.8, y: 0, z: -3.117691453623979}
+App.jsx:24 [App] Starting bot processing with setInterval
+fsmLogger.js:96 🟠 ACTION [22:07:09] Execute: Start: testQueue (priority: 4) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:09] Starting test queue action - Will complete in 5 seconds
+fsmLogger.js:96 🟠 ACTION [22:07:10] Execute: Continue: testQueue (priority: 4) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:11] Execute: Continue: testQueue (priority: 4) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:12] Execute: Continue: testQueue (priority: 4) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:13] Execute: Continue: testQueue (priority: 4) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:14] Execute: Continue: testQueue (priority: 4) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:15] Execute: Continue: testQueue (priority: 4) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:15] Test queue action completed after 6.0 seconds
+fsmLogger.js:89 🟠 ACTION [22:07:15] completed action: testQueue {elapsed: 7017}
+fsmLogger.js:96 🟠 ACTION [22:07:16] Execute: Start: exploreDrone (priority: 3) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:16] Attempting to find a tile to explore
+fsmLogger.js:96 🔵 INFO [22:07:16] Using exploring radius: 3
+fsmLogger.js:96 🔵 INFO [22:07:16] Found 23 walkable unexplored tiles in radius
+fsmLogger.js:96 🟠 ACTION [22:07:16] Sending drone to explore tile: F1, distance: 0.00
+usePlayerStore.js:285 [PlayerStore] Moving player2/drone3 to tile: F1
+fsmLogger.js:96 🟠 ACTION [22:07:16] Exploration started at 22:07:16
+fsmLogger.js:96 🟠 ACTION [22:07:17] Execute: Continue: exploreDrone (priority: 3) (priority: undefined)
+UnifiedDroneMovement.jsx:287 [UnifiedDroneMovement] Bot exploration count increased to 2
+Scene.jsx:33 [Scene] Initializing players with tiles: {A3: {…}, A4: {…}, A5: {…}, A6: {…}, B2: {…}, …}
+UnifiedDroneMovement.jsx:184 [UnifiedDroneMovement] Drone for player2 returned to ship
+fsmLogger.js:96 🟠 ACTION [22:07:18] Execute: Continue: exploreDrone (priority: 3) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:18] Drone has returned to ship, exploration sequence fully complete after 2.0s
+fsmLogger.js:89 🟠 ACTION [22:07:18] completed action: exploreDrone {elapsed: 10017}
+fsmLogger.js:96 🟠 ACTION [22:07:19] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:19] Evaluating conditions from IDLE state using centralized conditions
+fsmLogger.js:96 🟣 CONDITION [22:07:19] Condition centrale satisfaite: transition vers exploring
+fsmLogger.js:96 🟢 STATE [22:07:19] Transition: idle → exploring
+fsmLogger.js:96 🟢 STATE [22:07:19] Exiting IDLE state, transitioning to exploring
+fsmLogger.js:96 🔵 INFO [22:07:19] Transition details: Fuel=100, Resources={"food":0,"debris":0,"special":0}
+fsmLogger.js:96 🟢 STATE [22:07:19] Entering EXPLORING state
+fsmLogger.js:89 🟠 ACTION [22:07:19] Adding action to queue: exploreDrone {priority: 2}
+fsmLogger.js:89 🟠 ACTION [22:07:19] completed action: exploreDrone {elapsed: 1}
+fsmLogger.js:89 🟠 ACTION [22:07:20] Adding action to queue: exploreDrone {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:20] Execute: Start: exploreDrone (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:20] Attempting to find a tile to explore
+fsmLogger.js:96 🔵 INFO [22:07:20] Using exploring radius: 3
+fsmLogger.js:96 🔵 INFO [22:07:20] Found 22 walkable unexplored tiles in radius
+fsmLogger.js:96 🟠 ACTION [22:07:20] Sending drone to explore tile: E1, distance: 1.00
+usePlayerStore.js:285 [PlayerStore] Moving player2/drone3 to tile: E1
+fsmLogger.js:96 🟠 ACTION [22:07:20] Exploration started at 22:07:20
+fsmLogger.js:96 🟠 ACTION [22:07:21] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:22] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+UnifiedDroneMovement.jsx:243 [UnifiedDroneMovement] Bot drone discovered new resources at E1: {food: 58, debris: 7932, special: 1}
+UnifiedDroneMovement.jsx:287 [UnifiedDroneMovement] Bot exploration count increased to 4
+Scene.jsx:33 [Scene] Initializing players with tiles: {A3: {…}, A4: {…}, A5: {…}, A6: {…}, B2: {…}, …}
+fsmLogger.js:96 🟠 ACTION [22:07:23] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:24] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+UnifiedDroneMovement.jsx:184 [UnifiedDroneMovement] Drone for player2 returned to ship
+fsmLogger.js:96 🟠 ACTION [22:07:25] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:25] Drone has returned to ship, exploration sequence fully complete after 5.0s
+fsmLogger.js:96 🟢 STATE [22:07:25] Transition: exploring → idle
+fsmLogger.js:96 🟢 STATE [22:07:25] Exiting EXPLORING state - Returning to IDLE for evaluation
+fsmLogger.js:96 🟢 STATE [22:07:25] Transition: exploring → idle
+fsmLogger.js:96 🟢 STATE [22:07:25] Entering IDLE state - Evaluating conditions
+fsmLogger.js:96 🔵 INFO [22:07:25] Bot status: Fuel=100, At base=true
+fsmLogger.js:96 🟢 STATE [22:07:25] Entering IDLE state - Evaluating conditions
+fsmLogger.js:96 🔵 INFO [22:07:25] Bot status: Fuel=100, At base=true
+fsmLogger.js:89 🟠 ACTION [22:07:26] Adding action to queue: evaluateIdle {priority: 3}
+fsmLogger.js:96 🟠 ACTION [22:07:26] Execute: Start: evaluateIdle (priority: 3) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:26] Evaluating conditions from IDLE state using centralized conditions
+fsmLogger.js:96 🟣 CONDITION [22:07:26] Condition centrale satisfaite: transition vers exploring
+fsmLogger.js:96 🟢 STATE [22:07:26] Transition: idle → exploring
+fsmLogger.js:96 🟢 STATE [22:07:26] Exiting IDLE state, transitioning to exploring
+fsmLogger.js:96 🔵 INFO [22:07:26] Transition details: Fuel=100, Resources={"food":0,"debris":0,"special":0}
+fsmLogger.js:96 🟢 STATE [22:07:26] Entering EXPLORING state
+fsmLogger.js:89 🟠 ACTION [22:07:26] Adding action to queue: exploreDrone {priority: 2}
+fsmLogger.js:89 🟠 ACTION [22:07:26] completed action: exploreDrone {elapsed: 1}
+fsmLogger.js:89 🟠 ACTION [22:07:27] Adding action to queue: exploreDrone {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:27] Execute: Start: exploreDrone (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:27] Attempting to find a tile to explore
+fsmLogger.js:96 🔵 INFO [22:07:27] Using exploring radius: 3
+fsmLogger.js:96 🔵 INFO [22:07:27] Found 21 walkable unexplored tiles in radius
+fsmLogger.js:96 🟠 ACTION [22:07:27] Sending drone to explore tile: E2, distance: 1.00
+usePlayerStore.js:285 [PlayerStore] Moving player2/drone3 to tile: E2
+fsmLogger.js:96 🟠 ACTION [22:07:27] Exploration started at 22:07:27
+fsmLogger.js:96 🟠 ACTION [22:07:28] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:29] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:30] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+UnifiedDroneMovement.jsx:243 [UnifiedDroneMovement] Bot drone discovered new resources at E2: {food: 60, debris: 9850, special: 0}
+UnifiedDroneMovement.jsx:287 [UnifiedDroneMovement] Bot exploration count increased to 6
+Scene.jsx:33 [Scene] Initializing players with tiles: {A3: {…}, A4: {…}, A5: {…}, A6: {…}, B2: {…}, …}
+fsmLogger.js:96 🟠 ACTION [22:07:31] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:32] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:33] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:34] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+UnifiedDroneMovement.jsx:184 [UnifiedDroneMovement] Drone for player2 returned to ship
+fsmLogger.js:96 🟠 ACTION [22:07:35] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:35] Drone has returned to ship, exploration sequence fully complete after 8.0s
+fsmLogger.js:96 🟢 STATE [22:07:35] Transition: exploring → idle
+fsmLogger.js:96 🟢 STATE [22:07:35] Exiting EXPLORING state - Returning to IDLE for evaluation
+fsmLogger.js:96 🟢 STATE [22:07:35] Transition: exploring → idle
+fsmLogger.js:96 🟢 STATE [22:07:35] Entering IDLE state - Evaluating conditions
+fsmLogger.js:96 🔵 INFO [22:07:35] Bot status: Fuel=100, At base=true
+fsmLogger.js:96 🟢 STATE [22:07:35] Entering IDLE state - Evaluating conditions
+fsmLogger.js:96 🔵 INFO [22:07:35] Bot status: Fuel=100, At base=true
+fsmLogger.js:89 🟠 ACTION [22:07:36] Adding action to queue: evaluateIdle {priority: 3}
+fsmLogger.js:96 🟠 ACTION [22:07:36] Execute: Start: evaluateIdle (priority: 3) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:36] Evaluating conditions from IDLE state using centralized conditions
+fsmLogger.js:96 🟣 CONDITION [22:07:36] Condition centrale satisfaite: transition vers exploring
+fsmLogger.js:96 🟢 STATE [22:07:36] Transition: idle → exploring
+fsmLogger.js:96 🟢 STATE [22:07:36] Exiting IDLE state, transitioning to exploring
+fsmLogger.js:96 🔵 INFO [22:07:36] Transition details: Fuel=100, Resources={"food":0,"debris":0,"special":0}
+fsmLogger.js:96 🟢 STATE [22:07:36] Entering EXPLORING state
+fsmLogger.js:89 🟠 ACTION [22:07:36] Adding action to queue: exploreDrone {priority: 2}
+fsmLogger.js:89 🟠 ACTION [22:07:36] completed action: exploreDrone {elapsed: 0}
+fsmLogger.js:89 🟠 ACTION [22:07:37] Adding action to queue: exploreDrone {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:37] Execute: Start: exploreDrone (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:37] Attempting to find a tile to explore
+fsmLogger.js:96 🔵 INFO [22:07:37] Using exploring radius: 3
+fsmLogger.js:96 🔵 INFO [22:07:37] Found 20 walkable unexplored tiles in radius
+fsmLogger.js:96 🟠 ACTION [22:07:37] Sending drone to explore tile: F0, distance: 1.00
+usePlayerStore.js:285 [PlayerStore] Moving player2/drone3 to tile: F0
+fsmLogger.js:96 🟠 ACTION [22:07:37] Exploration started at 22:07:37
+fsmLogger.js:96 🟠 ACTION [22:07:38] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:39] Execute: Continue: exploreDrone (priority: 2) (priority: undefined)
+UnifiedDroneMovement.jsx:243 [UnifiedDroneMovement] Bot drone discovered new resources at F0: {food: 51, debris: 7113, special: 0}
+UnifiedDroneMovement.jsx:287 [UnifiedDroneMovement] Bot exploration count increased to 8
+Scene.jsx:33 [Scene] Initializing players with tiles: {A3: {…}, A4: {…}, A5: {…}, A6: {…}, B2: {…}, …}
+fsmLogger.js:96 🟣 CONDITION [22:07:40] Exit condition met in state exploring: transitioning to idle
+fsmLogger.js:96 🟢 STATE [22:07:40] Transition: exploring → idle
+fsmLogger.js:96 🟢 STATE [22:07:40] Exiting EXPLORING state - Returning to IDLE for evaluation
+fsmLogger.js:96 🟢 STATE [22:07:40] Transition: exploring → idle
+fsmLogger.js:96 🟢 STATE [22:07:40] Entering IDLE state - Evaluating conditions
+fsmLogger.js:96 🔵 INFO [22:07:40] Bot status: Fuel=100, At base=true
+fsmLogger.js:96 🟢 STATE [22:07:40] Entering IDLE state - Evaluating conditions
+fsmLogger.js:96 🔵 INFO [22:07:40] Bot status: Fuel=100, At base=true
+UnifiedDroneMovement.jsx:184 [UnifiedDroneMovement] Drone for player2 returned to ship
+fsmLogger.js:89 🟠 ACTION [22:07:41] Adding action to queue: evaluateIdle {priority: 3}
+fsmLogger.js:96 🟠 ACTION [22:07:41] Execute: Start: evaluateIdle (priority: 3) (priority: undefined)
+fsmLogger.js:96 🟠 ACTION [22:07:41] Evaluating conditions from IDLE state using centralized conditions
+fsmLogger.js:96 🟣 CONDITION [22:07:41] Condition centrale satisfaite: transition vers collecting
+fsmLogger.js:96 🟢 STATE [22:07:41] Transition: idle → collecting
+fsmLogger.js:96 🟢 STATE [22:07:41] Exiting IDLE state, transitioning to collecting
+fsmLogger.js:96 🔵 INFO [22:07:41] Transition details: Fuel=100, Resources={"food":0,"debris":0,"special":0}
+fsmLogger.js:96 🟢 STATE [22:07:41] Entering COLLECTING state
+fsmLogger.js:89 🟠 ACTION [22:07:41] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:89 🟠 ACTION [22:07:41] completed action: moveToResource {elapsed: 0}
+fsmLogger.js:89 🟠 ACTION [22:07:42] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:42] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:42] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:42] failed action: moveToResource {elapsed: 1}
+fsmLogger.js:89 🟠 ACTION [22:07:43] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:43] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:43] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:43] failed action: moveToResource {elapsed: 1}
+fsmLogger.js:89 🟠 ACTION [22:07:44] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:44] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:44] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:44] failed action: moveToResource {elapsed: 1}
+fsmLogger.js:89 🟠 ACTION [22:07:45] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:45] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:45] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:45] failed action: moveToResource {elapsed: 1}
+fsmLogger.js:89 🟠 ACTION [22:07:46] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:46] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:46] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:46] failed action: moveToResource {elapsed: 1}
+fsmLogger.js:89 🟠 ACTION [22:07:47] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:47] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:47] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:47] failed action: moveToResource {elapsed: 1}
+fsmLogger.js:89 🟠 ACTION [22:07:48] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:48] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:48] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:48] failed action: moveToResource {elapsed: 1}
+fsmLogger.js:89 🟠 ACTION [22:07:49] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:49] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:49] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:49] failed action: moveToResource {elapsed: 1}
+fsmLogger.js:89 🟠 ACTION [22:07:50] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:50] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:50] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:50] failed action: moveToResource {elapsed: 1}
+fsmLogger.js:89 🟠 ACTION [22:07:51] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:51] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:51] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:51] failed action: moveToResource {elapsed: 1}
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+fsmLogger.js:89 🟠 ACTION [22:07:52] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:52] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:52] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:52] failed action: moveToResource {elapsed: 1}
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+fsmLogger.js:89 🟠 ACTION [22:07:53] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:53] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:53] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:53] failed action: moveToResource {elapsed: 1}
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+fsmLogger.js:89 🟠 ACTION [22:07:54] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:54] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:54] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:54] failed action: moveToResource {elapsed: 1}
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+fsmLogger.js:89 🟠 ACTION [22:07:55] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:55] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:55] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:55] failed action: moveToResource {elapsed: 1}
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+Clock.jsx:12 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ Clock.jsx:12
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+fsmLogger.js:89 🟠 ACTION [22:07:56] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:56] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:56] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:56] failed action: moveToResource {elapsed: 1}
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+fsmLogger.js:89 🟠 ACTION [22:07:57] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:57] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:57] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:57] failed action: moveToResource {elapsed: 0}
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+fsmLogger.js:89 🟠 ACTION [22:07:58] Adding action to queue: moveToResource {priority: 2}
+fsmLogger.js:96 🟠 ACTION [22:07:58] Execute: Start: moveToResource (priority: 2) (priority: undefined)
+fsmLogger.js:89 🔴 ERROR [22:07:58] Error in action moveToResource: TypeError: tileStore.getTileAtCoord is not a function
+    at moveToResourceAction.js:76:28
+    at Array.map (<anonymous>)
+    at moveToResourceAction (moveToResourceAction.js:74:42)
+    at Object.executeNextAction (useBotStore.js:216:24)
+    at processBot (useBotStore.js:291:11)
+    at App.jsx:28:9
+fsmLogger.js:89 🟠 ACTION [22:07:58] failed action: moveToResource {elapsed: 1}
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384
+BotDebugger.jsx:204 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at BotDebugger (BotDebugger.jsx:125:37)
+    at div (<anonymous>)
+    at App (App.jsx:14:47)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=42eb1b0c:17701
+printWarning @ chunk-RC3YDMAO.js?v=42eb1b0c:521
+error @ chunk-RC3YDMAO.js?v=42eb1b0c:505
+checkForNestedUpdates @ chunk-RC3YDMAO.js?v=42eb1b0c:19665
+scheduleUpdateOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18533
+dispatchSetState @ chunk-RC3YDMAO.js?v=42eb1b0c:12403
+(anonymous) @ BotDebugger.jsx:204
+commitHookEffectListMount @ chunk-RC3YDMAO.js?v=42eb1b0c:16915
+commitPassiveMountOnFiber @ chunk-RC3YDMAO.js?v=42eb1b0c:18156
+commitPassiveMountEffects_complete @ chunk-RC3YDMAO.js?v=42eb1b0c:18129
+commitPassiveMountEffects_begin @ chunk-RC3YDMAO.js?v=42eb1b0c:18119
+commitPassiveMountEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:18109
+flushPassiveEffectsImpl @ chunk-RC3YDMAO.js?v=42eb1b0c:19490
+flushPassiveEffects @ chunk-RC3YDMAO.js?v=42eb1b0c:19447
+(anonymous) @ chunk-RC3YDMAO.js?v=42eb1b0c:19328
+workLoop @ chunk-RC3YDMAO.js?v=42eb1b0c:197
+flushWork @ chunk-RC3YDMAO.js?v=42eb1b0c:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=42eb1b0c:384

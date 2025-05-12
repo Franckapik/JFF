@@ -44,7 +44,7 @@ export const testQueueAction = (playerStore, tileStore, addAction, changeState) 
   }
   
   // L'action est toujours en cours
-  if (elapsedTime % 1000 < 50) { // Afficher un message toutes les secondes environ
+  if (elapsedTime % 1000 < 100) { // Afficher un message toutes les secondes environ
     fsmLogger.action(`Test queue action in progress: ${(elapsedTime/1000).toFixed(1)}s / 5s`);
   }
   
