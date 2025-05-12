@@ -20,6 +20,15 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
     return false;
   }
   
+  // DEBUGGAGE - Afficher les informations actuelles pour le diagnostic
+  if (!collectResourceAction.started) {
+    fsmLogger.action(`Debug: collectResource called at position ${botVehicle.coord}, state: ${collectResourceAction.started}`);
+    
+    if (botMemory?.currentTargetResource) {
+      fsmLogger.action(`Debug: Target resource coord: ${botMemory.currentTargetResource.coord}, Bot coord: ${botVehicle.coord}`);
+    }
+  }
+  
   // Utiliser la condition pour vérifier si le bot est à capacité maximale
   const capacityCheck = BotConditions.isAtMaxCapacity(botVehicle);
   if (capacityCheck.result) {
@@ -31,14 +40,7 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
   
   // PHASE 1: Initialisation de l'action - Premier appel
   if (!collectResourceAction.started) {
-    // Vérifier si la cible actuelle existe dans la mémoire
-    const currentTarget = botMemory?.currentTargetResource;
-    
-    if (!currentTarget || currentTarget.coord !== botVehicle.coord) {
-      fsmLogger.error('Bot is not at the target resource tile or no target defined');
-      return false;
-    }
-    
+    // Récupérer la tuile actuelle directement à partir de la position actuelle du bot
     const currentTile = tileStore.tiles[botVehicle.coord];
     if (!currentTile) {
       fsmLogger.error(`Cannot find tile at ${botVehicle.coord}`);
@@ -77,6 +79,12 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
     collectResourceAction.tileCoord = botVehicle.coord;
     collectResourceAction.resources = { ...resources };
     
+    // Réserver les ressources pour éviter que d'autres actions les ciblent
+    playerStore.updatePlayerMemory('player2', {
+      isCollecting: true,
+      collectionTile: botVehicle.coord
+    });
+    
     return undefined; // Action en cours, reste bloquante
   }
   
@@ -94,7 +102,7 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
     // Récupérer la tuile actuelle
     const currentTile = tileStore.tiles[collectResourceAction.tileCoord];
     
-    if (currentTile && botVehicle.coord === collectResourceAction.tileCoord) {
+    if (currentTile) {
       // Collecter les ressources
       const resources = collectResourceAction.resources;
       
@@ -120,17 +128,21 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
       
       fsmLogger.action(`Resources collected successfully: ${JSON.stringify(resources)}`);
       
-      // Supprimer cette ressource de la liste des ressources connues
+      // Supprimer cette ressource de la liste des ressources connues et réinitialiser l'état de collecte
       if (botMemory.knownResources) {
         const updatedResources = botMemory.knownResources.filter(r => r.coord !== collectResourceAction.tileCoord);
         playerStore.updatePlayerMemory('player2', {
           knownResources: updatedResources,
-          currentTargetResource: null
+          currentTargetResource: null,
+          isCollecting: false,
+          collectionTile: null
         });
       }
       
       // Vérifier si on est à capacité maximale après la collecte
-      const newCapacityCheck = BotConditions.isAtMaxCapacity(botVehicle);
+      const updatedBotVehicle = playerStore.players?.player2?.vehicles?.ship;
+      const newCapacityCheck = BotConditions.isAtMaxCapacity(updatedBotVehicle);
+      
       if (newCapacityCheck.result) {
         fsmLogger.condition('Max capacity reached after collection, returning to base');
         changeState(BOT_STATES.RETURNING);
@@ -139,6 +151,7 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
         // Sinon chercher une autre ressource à collecter
         if (botMemory.knownResources && botMemory.knownResources.length > 0) {
           fsmLogger.action('More resources available, continuing collection');
+          changeState(BOT_STATES.COLLECTING);
           addAction('moveToResource', PRIORITY.MEDIUM);
         } else {
           fsmLogger.action('No more resources in memory, returning to exploration');
@@ -154,6 +167,13 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
     } else {
       fsmLogger.error(`Bot is no longer at the collection tile. Expected: ${collectResourceAction.tileCoord}, Current: ${botVehicle.coord}`);
       collectResourceAction.reset();
+      
+      // Réinitialiser l'état de collecte
+      playerStore.updatePlayerMemory('player2', {
+        isCollecting: false,
+        collectionTile: null
+      });
+      
       return false; // La collecte a échoué
     }
   }

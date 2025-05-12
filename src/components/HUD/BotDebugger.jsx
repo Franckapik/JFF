@@ -1,6 +1,6 @@
 // src/components/BotDebugger.jsx
 // Composant de débogage pour visualiser l'état de la FSM du bot
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import usePlayerStore from "../../stores/usePlayerStore";
 import useBotStore from "../../stores/useBotStore";
 import { useTileStore } from "../../stores/useNewTileStore";
@@ -154,57 +154,94 @@ const BotDebugger = () => {
   const tiles = useTileStore((state) => state.tiles);
   const hoveredTile = hoveredTileCoord ? tiles[hoveredTileCoord] : null;
   
-  // Ajoute un état au historique lors des changements
+  // Refs pour prévenir les mises à jour en boucle
+  const prevBotStateRef = useRef(botState);
+  const prevActionHistoryRef = useRef([]);
+  const processedActionsRef = useRef(new Set());
+  
+  // Ajoute un état à l'historique lors des changements
   useEffect(() => {
-    if (botState) {
-      setStateHistory(prev => [...prev.slice(-19), { 
-        state: botState, 
-        timestamp: new Date().toLocaleTimeString(),
-        fuel: botVehicle?.fuel,
-        resources: botVehicle?.resources
-      }]);
+    // Vérifier si l'état a vraiment changé pour éviter les rendus inutiles
+    if (botState !== prevBotStateRef.current && botVehicle) {
+      setStateHistory(prev => {
+        // Vérifier si la dernière entrée est identique
+        const lastEntry = prev[prev.length - 1];
+        if (lastEntry && lastEntry.state === botState) {
+          return prev;
+        }
+        
+        return [...prev.slice(-19), { 
+          state: botState, 
+          timestamp: new Date().toLocaleTimeString(),
+          fuel: botVehicle?.fuel,
+          resources: botVehicle?.resources
+        }];
+      });
+      
+      // Mettre à jour la référence
+      prevBotStateRef.current = botState;
     }
   }, [botState, botVehicle]);
   
   // Ajoute un log de condition quand une action d'évaluation est complétée
   useEffect(() => {
+    if (!storeActionHistory || !botVehicle || !botMemory) return;
+    
     // Vérifier si une action d'évaluation a été complétée
-    const completeEvaluateAction = storeActionHistory?.find(
-      action => action.type === 'evaluateIdle' && action.status === ACTION_STATUS.COMPLETED
+    const completeEvaluateActions = storeActionHistory.filter(
+      action => action.type === 'evaluateIdle' && 
+               action.status === ACTION_STATUS.COMPLETED &&
+               !processedActionsRef.current.has(action.timestamp)
     );
     
-    if (completeEvaluateAction && !conditionLog.some(log => log.timestamp === new Date(completeEvaluateAction.completedAt).toLocaleTimeString())) {
-      setConditionLog(prev => [...prev.slice(-9), {
-        timestamp: new Date(completeEvaluateAction.completedAt).toLocaleTimeString(),
-        nextState: botState,
-        conditions: {
-          fuel: botVehicle?.fuel,
-          atCapacity: botVehicle?.isAtCapacity,
-          knownResources: botMemory?.knownResources?.length || 0,
-          explorationCount: botMemory?.explorationCount || 0
-        }
-      }]);
+    if (completeEvaluateActions.length > 0) {
+      // Traiter seulement les nouvelles actions d'évaluation
+      const newLogs = completeEvaluateActions.map(action => {
+        // Marquer cette action comme traitée
+        processedActionsRef.current.add(action.timestamp);
+        
+        return {
+          timestamp: new Date(action.completedAt).toLocaleTimeString(),
+          nextState: botState,
+          conditions: {
+            fuel: botVehicle?.fuel,
+            atCapacity: botVehicle?.isAtCapacity,
+            knownResources: botMemory?.knownResources?.length || 0,
+            explorationCount: botMemory?.explorationCount || 0
+          }
+        };
+      });
+      
+      if (newLogs.length > 0) {
+        setConditionLog(prev => [...prev, ...newLogs].slice(-10));
+      }
     }
-  }, [storeActionHistory, botState, botVehicle, botMemory, ACTION_STATUS, conditionLog]);
+  }, [storeActionHistory, botState, botVehicle, botMemory, ACTION_STATUS]);
   
   // Mise à jour de l'historique des actions quand une action est complétée ou échouée
   useEffect(() => {
-    if (storeActionHistory && storeActionHistory.length > 0) {
+    if (!storeActionHistory) return;
+    
+    // Comparer avec la version précédente pour éviter les mises à jour inutiles
+    const currentHistoryString = JSON.stringify(storeActionHistory);
+    const prevHistoryString = JSON.stringify(prevActionHistoryRef.current);
+    
+    if (currentHistoryString !== prevHistoryString) {
       // Filtrer pour ne pas dupliquer les entrées dans l'historique local
+      const existingIds = new Set(actionHistory.map(a => `${a.type}-${a.timestamp}`));
+      
       const newActions = storeActionHistory.filter(action => 
-        !actionHistory.some(
-          existingAction => 
-            existingAction.type === action.type && 
-            existingAction.timestamp === action.timestamp &&
-            existingAction.status === action.status
-        )
+        !existingIds.has(`${action.type}-${action.timestamp}`)
       );
       
       if (newActions.length > 0) {
         setActionHistory(prev => [...prev, ...newActions].slice(-15));
       }
+      
+      // Mettre à jour la référence
+      prevActionHistoryRef.current = storeActionHistory;
     }
-  }, [storeActionHistory, actionHistory]);
+  }, [storeActionHistory]);
 
   // Formater le nom d'un état pour l'affichage
   const formatStateName = (state) => {

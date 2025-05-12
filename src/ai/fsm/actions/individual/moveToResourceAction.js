@@ -86,6 +86,14 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
       const targetTile = tileStore.tiles[bestResource.coord];
       
       if (targetTile) {
+        // CORRECTION: Vérifier si le bot est déjà à la position cible
+        if (botVehicle.coord === bestResource.coord) {
+          fsmLogger.action(`Bot already at resource location ${bestResource.coord}, proceeding to collection`);
+          // Passer directement à la collecte
+          addAction('collectResource', PRIORITY.HIGH);
+          return true; // Action terminée immédiatement
+        }
+
         fsmLogger.action(`Moving to resource at ${bestResource.coord}, value: ${bestResource.value}, distance: ${bestResource.distance.toFixed(2)}`);
         
         // Enregistrer la cible actuelle dans la mémoire du bot
@@ -145,18 +153,27 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
       // Si le bot s'est arrêté mais n'est pas à la bonne destination
       fsmLogger.action(`Bot stopped but hasn't reached target resource. Current: ${botVehicle.coord}, Target: ${moveToResourceAction.targetCoord}`);
       
-      // Essayer à nouveau de se déplacer vers la cible
-      const targetTile = tileStore.tiles[moveToResourceAction.targetCoord];
-      if (targetTile) {
-        playerStore.moveToTile('player2', 'ship', targetTile);
-        fsmLogger.action('Retrying movement to resource');
-        return undefined; // Action toujours en cours
+      // CORRECTION: Vérifier si le bot est à une position différente de la cible avant de réessayer
+      if (botVehicle.coord !== moveToResourceAction.targetCoord) {
+        // Essayer à nouveau de se déplacer vers la cible
+        const targetTile = tileStore.tiles[moveToResourceAction.targetCoord];
+        if (targetTile) {
+          playerStore.moveToTile('player2', 'ship', targetTile);
+          fsmLogger.action('Retrying movement to resource');
+          return undefined; // Action toujours en cours
+        }
       } else {
-        // Si la cible n'est plus valide
-        fsmLogger.action('Target tile no longer valid, abandoning movement');
+        // Si le bot est à la cible mais qu'on ne l'a pas détecté avant
+        fsmLogger.action('Bot is actually at the target, proceeding to collection');
         moveToResourceAction.reset();
-        return false; // Action échouée
+        addAction('collectResource', PRIORITY.HIGH);
+        return true;
       }
+      
+      // Si la cible n'est plus valide
+      fsmLogger.action('Target tile no longer valid, abandoning movement');
+      moveToResourceAction.reset();
+      return false; // Action échouée
     }
   }
   
