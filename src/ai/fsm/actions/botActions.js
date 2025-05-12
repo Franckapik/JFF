@@ -10,6 +10,7 @@
  * exploreWithDrone - Envoie le drone explorer une tuile non découverte à proximité
  * moveToResourceAction - Déplace le vaisseau vers la meilleure ressource connue
  * collectResourceAction - Collecte la ressource une fois arrivé à la tuile cible
+ * testQueueAction - Action de test qui s'exécute pendant 5 secondes pour tester la file d'actions
  */
 
 import { evaluateConditionsFromIdleAction } from './individual/evaluateConditionsFromIdleAction';
@@ -19,6 +20,7 @@ import { refuelAtBaseAction } from './individual/refuelAtBaseAction';
 import { exploreWithDroneAction } from './individual/exploreWithDroneAction';
 import { moveToResourceAction } from './individual/moveToResourceAction';
 import { collectResourceAction } from './individual/collectResourceAction';
+import { testQueueAction } from './individual/testQueueAction';
 
 /**
  * Registre des actions du bot
@@ -34,6 +36,7 @@ export const BotActions = {
   explorerWithDrone: exploreWithDroneAction,
   moveToResourceAction: moveToResourceAction,
   collectResourceAction: collectResourceAction,
+  testQueueAction: testQueueAction,
   
   // Map des types d'actions aux fonctions d'exécution
   actionMap: {
@@ -44,6 +47,7 @@ export const BotActions = {
     'returnToBase': 'returnToBase',
     'refuel': 'refuelAtBase',
     'exploreDrone': 'explorerWithDrone',
-    'moveToRandomTile': 'moveToRandomTile'
+    'moveToRandomTile': 'moveToRandomTile',
+    'testQueue': 'testQueueAction'              // Nouvelle action de test de la file
   }
 }

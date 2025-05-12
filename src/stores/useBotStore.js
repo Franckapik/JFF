@@ -38,10 +38,13 @@ const useBotStore = create((set, get) => ({
     const playerStore = usePlayerStore.getState();
     BotStateConfig[BOT_STATES.IDLE].onEnterState(playerStore);
     
-    // Ajouter l'action d'évaluation immédiatement
+    // Ajouter l'action de test en premier avec priorité URGENT
+    get().addAction('testQueue', PRIORITY.URGENT);
+    
+    // Ajouter l'action d'évaluation ensuite (elle sera exécutée après l'action de test)
     get().addAction('evaluateIdle', PRIORITY.HIGH);
     
-    fsmLogger.state("Bot initialized in IDLE state");
+    fsmLogger.state("Bot initialized in IDLE state with test action");
   },
   
   // Change l'état du bot
