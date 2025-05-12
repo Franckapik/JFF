@@ -1,5 +1,5 @@
 import React from 'react';
-import useBotStore from '../stores/useBotStore';
+import useBotStore from '../../stores/useBotStore';
 
 const BotControls = () => {
   // Récupération de l'état et des fonctions du store

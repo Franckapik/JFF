@@ -1,5 +1,5 @@
 import React from "react";
-import { useTileStore } from "../stores/useNewTileStore";
+import { useTileStore } from "../../stores/useNewTileStore";
 
 const TileHUD = () => {
   // Get the currently hovered tile's coordinate from the store

@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
 import "./styles/App.css";
-import VehicleSelector from "./components/VehicleSelector";
-import MessageSelector from "./components/MessageSelector";
-import Clock from "./components/Clock";
-import TileHUD from "./components/TileHUD";
-import CollapsibleHUD from "./components/CollapsibleHUD";
-import BotDebugger from "./components/BotDebugger";
+import VehicleSelector from "./components/HUD/VehicleSelector";
+import MessageSelector from "./components/Messagerie/MessageSelector";
+import Clock from "./components/HUD/Clock";
+import TileHUD from "./components/HUD/TileHUD";
+import CollapsibleHUD from "./components/HUD/CollapsibleHUD";
+import BotDebugger from "./components/HUD/BotDebugger";
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(true);

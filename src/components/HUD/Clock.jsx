@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import useGameStore from "../stores/useGameStore"; // Import game store
+import useGameStore from "../../stores/useGameStore"; // Import game store
 
 const Clock = () => {
   const isClockRunning = useGameStore((state) => state.isClockRunning); // Access global clock state
