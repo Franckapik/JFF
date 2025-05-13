@@ -1,4 +1,12 @@
 // src/ai/fsm/actions/individual/moveToResourceAction.js
+/**
+ * IMPORTANT: Cette action ne doit pas contenir de logique de décision d'état.
+ * - Ne pas vérifier les conditions (niveau carburant, capacité max)
+ * - Ne pas décider du prochain état basé sur des conditions
+ * - Toujours retourner à IDLE pour la prise de décision
+ * 
+ * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
+ */
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
@@ -21,33 +29,18 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
     return false;
   }
   
-  // Utiliser la condition centralisée pour vérifier le niveau de carburant
-  const fuelCheck = BotConditions.isLowFuel(botVehicle);
-  if (fuelCheck.result) {
-    fsmLogger.condition('Low fuel detected, abandoning resource collection');
-    changeState(BOT_STATES.RETURNING);
-    addAction('returnToBase', PRIORITY.HIGH);
-    return true; // Action terminée - changement d'état
-  }
-  
-  // Utiliser la condition centralisée pour vérifier la capacité maximale
-  const capacityCheck = BotConditions.isAtMaxCapacity(botVehicle);
-  if (capacityCheck.result) {
-    fsmLogger.condition('Bot is at max capacity, returning to base');
-    changeState(BOT_STATES.RETURNING);
-    addAction('returnToBase', PRIORITY.HIGH);
-    return true; // Action terminée - changement d'état
-  }
+  // Suppression des vérifications de niveau de carburant et de capacité maximale
+  // Ces vérifications doivent être centralisées dans l'état IDLE
   
   // PHASE 1: Initialisation de l'action - Premier appel
   if (!moveToResourceAction.started) {
     // Vérifier si des ressources sont connues
     const knownResources = botMemory.knownResources || [];
     if (knownResources.length === 0) {
-      fsmLogger.condition('No resources in memory, returning to exploration');
-      changeState(BOT_STATES.EXPLORING);
-      addAction('exploreDrone', PRIORITY.MEDIUM);
-      return true; // Action terminée - changement d'état
+      fsmLogger.condition('No resources in memory, returning to IDLE for reevaluation');
+      changeState(BOT_STATES.IDLE);
+      addAction('evaluateIdle', PRIORITY.HIGH);
+      return true; // Action terminée - passage à IDLE pour réévaluation
     }
     
     // Amélioration: Trier les ressources par valeur/distance pour optimiser la collecte

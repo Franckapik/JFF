@@ -1,5 +1,13 @@
 // src/ai/fsm/actions/individual/returnToBaseAction.js
-import { BOT_STATES } from '../../../constants/botConstants';
+/**
+ * IMPORTANT: Cette action ne doit pas contenir de logique de décision d'état.
+ * - Ne pas vérifier les conditions (niveau carburant, capacité max)
+ * - Ne pas décider du prochain état basé sur des conditions
+ * - Toujours retourner à IDLE pour la prise de décision
+ * 
+ * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
+ */
+import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
 
@@ -21,8 +29,9 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
   // Utiliser la condition centralisée pour vérifier si le bot est déjà à la base
   const atBaseCheck = BotConditions.isAtBase(botVehicle);
   if (atBaseCheck.result) {
-    fsmLogger.condition('Bot is already at base, transitioning to IDLE');
+    fsmLogger.condition('Bot is already at base, transitioning to IDLE for reevaluation');
     changeState(BOT_STATES.IDLE);
+    addAction('evaluateIdle', PRIORITY.HIGH);
     return true; // Action terminée avec succès
   }
   

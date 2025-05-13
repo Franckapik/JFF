@@ -1,4 +1,12 @@
 // src/ai/fsm/actions/individual/testQueueAction.js
+/**
+ * IMPORTANT: Cette action ne doit pas contenir de logique de décision d'état.
+ * - Ne pas vérifier les conditions (niveau carburant, capacité max)
+ * - Ne pas décider du prochain état basé sur des conditions
+ * - Toujours retourner à IDLE pour la prise de décision
+ * 
+ * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
+ */
 import { BOT_STATES } from '../../../constants/botConstants';
 import fsmLogger from '../../../../utils/fsmLogger';
 

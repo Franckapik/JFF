@@ -1,4 +1,12 @@
 // src/ai/fsm/actions/individual/collectResourceAction.js
+/**
+ * IMPORTANT: Cette action ne doit pas contenir de logique de décision d'état.
+ * - Ne pas vérifier les conditions (niveau carburant, capacité max)
+ * - Ne pas décider du prochain état basé sur des conditions
+ * - Toujours retourner à IDLE pour la prise de décision
+ * 
+ * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
+ */
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
@@ -27,15 +35,6 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
     if (botMemory?.currentTargetResource) {
       fsmLogger.action(`Debug: Target resource coord: ${botMemory.currentTargetResource.coord}, Bot coord: ${botVehicle.coord}`);
     }
-  }
-  
-  // Utiliser la condition pour vérifier si le bot est à capacité maximale
-  const capacityCheck = BotConditions.isAtMaxCapacity(botVehicle);
-  if (capacityCheck.result) {
-    fsmLogger.condition('Bot is at max capacity while attempting to collect resources, returning to base');
-    changeState(BOT_STATES.RETURNING);
-    addAction('returnToBase', PRIORITY.HIGH);
-    return true; // Action terminée (capacité atteinte)
   }
   
   // PHASE 1: Initialisation de l'action - Premier appel
@@ -139,26 +138,10 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
         });
       }
       
-      // Vérifier si on est à capacité maximale après la collecte
-      const updatedBotVehicle = playerStore.players?.player2?.vehicles?.ship;
-      const newCapacityCheck = BotConditions.isAtMaxCapacity(updatedBotVehicle);
-      
-      if (newCapacityCheck.result) {
-        fsmLogger.condition('Max capacity reached after collection, returning to base');
-        changeState(BOT_STATES.RETURNING);
-        addAction('returnToBase', PRIORITY.HIGH);
-      } else {
-        // Sinon chercher une autre ressource à collecter
-        if (botMemory.knownResources && botMemory.knownResources.length > 0) {
-          fsmLogger.action('More resources available, continuing collection');
-          changeState(BOT_STATES.COLLECTING);
-          addAction('moveToResource', PRIORITY.MEDIUM);
-        } else {
-          fsmLogger.action('No more resources in memory, returning to exploration');
-          changeState(BOT_STATES.EXPLORING);
-          addAction('exploreDrone', PRIORITY.MEDIUM);
-        }
-      }
+      // Au lieu de prendre des décisions ici, retourner à l'état IDLE pour centraliser les décisions
+      fsmLogger.action('Collection completed. Returning to IDLE for next action decision.');
+      changeState(BOT_STATES.IDLE);
+      addAction('evaluateIdle', PRIORITY.HIGH);
       
       // Réinitialiser les variables d'état
       collectResourceAction.reset();

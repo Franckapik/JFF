@@ -1,5 +1,13 @@
 // src/ai/fsm/actions/individual/refuelAtBaseAction.js
-import { BOT_STATES } from '../../../constants/botConstants';
+/**
+ * IMPORTANT: Cette action ne doit pas contenir de logique de décision d'état.
+ * - Ne pas vérifier les conditions (niveau carburant, capacité max)
+ * - Ne pas décider du prochain état basé sur des conditions
+ * - Toujours retourner à IDLE pour la prise de décision
+ * 
+ * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
+ */
+import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
 
@@ -21,16 +29,16 @@ export const refuelAtBaseAction = (playerStore, tileStore, addAction, changeStat
   // Utiliser la condition centralisée pour vérifier si le bot est à la base
   const atBaseCheck = BotConditions.isAtBase(botVehicle);
   if (!atBaseCheck.result) {
-    fsmLogger.condition('Bot is not at base, transitioning to RETURNING');
-    changeState(BOT_STATES.RETURNING);
-    addAction('returnToBase');
-    return true;
+    fsmLogger.condition('Bot is not at base, returning to IDLE for reevaluation');
+    changeState(BOT_STATES.IDLE);
+    addAction('evaluateIdle', PRIORITY.HIGH);
+    return false; // Action échouée, retour à l'évaluation centralisée
   }
   
   // Utiliser la condition centralisée pour vérifier si le plein est complet
   const fullyRefueledCheck = BotConditions.isFullyRefueled(botVehicle);
   if (fullyRefueledCheck.result) {
-    fsmLogger.action('Bot is fully refueled and resources transferred, returning to IDLE');
+    fsmLogger.action('Bot is fully refueled and resources transferred, returning to IDLE for reevaluation');
     
     // Réinitialiser les marqueurs de ressources dans la mémoire du bot
     playerStore.updatePlayerMemory('player2', {
@@ -39,6 +47,7 @@ export const refuelAtBaseAction = (playerStore, tileStore, addAction, changeStat
     });
     
     changeState(BOT_STATES.IDLE);
+    addAction('evaluateIdle', PRIORITY.HIGH);
     return true;
   }
   

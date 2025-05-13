@@ -1,5 +1,13 @@
 // src/ai/fsm/actions/individual/exploreWithDroneAction.js
-import { BOT_STATES } from '../../../constants/botConstants';
+/**
+ * IMPORTANT: Cette action ne doit pas contenir de logique de décision d'état.
+ * - Ne pas vérifier les conditions (niveau carburant, capacité max)
+ * - Ne pas décider du prochain état basé sur des conditions
+ * - Toujours retourner à IDLE pour la prise de décision
+ * 
+ * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
+ */
+import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
 
@@ -28,13 +36,7 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
     return false;
   }
   
-  // Utiliser la condition centralisée pour vérifier le niveau de carburant
-  const fuelCheck = BotConditions.hasEnoughFuel(botVehicle);
-  if (!fuelCheck.result) {
-    fsmLogger.condition(`Low fuel before exploration, returning to IDLE`);
-    changeState(BOT_STATES.IDLE);
-    return true; // Action terminée (annulée à cause du carburant bas)
-  }
+  // Suppression de la vérification du carburant ici, cette vérification sera faite dans l'état IDLE
   
   // Utiliser les conditions centralisées pour vérifier l'état du drone
   const isDroneMoving = BotConditions.isDroneMoving();
