@@ -252,11 +252,6 @@ const usePlayerStore = create((set, get) => ({
     });
   },
 
-  // Pour compatibilité avec le code existant
-  updateShip: (playerId, updates) => {
-    get().updateVehicle(playerId, "ship", updates);
-  },
-
   /**
    * Définit le véhicule actuellement sélectionné
    * @param {string} playerId - ID du joueur
@@ -292,10 +287,7 @@ const usePlayerStore = create((set, get) => ({
     }));
   },
 
-  // === GESTION DES DÉPLACEMENTS ===
-  // Removing finalizeMovement function since it will be handled in the component
-
- /**
+  /**
    * Transfère les ressources d'un véhicule vers le score du joueur
    * @param {string} playerId - ID du joueur
    * @param {string} vehicleId - ID du véhicule (par défaut: "ship")
@@ -373,72 +365,6 @@ const usePlayerStore = create((set, get) => ({
     }
     
     return isAtMaxCapacity;
-  },
-
-  // === GESTION DES INTERACTIONS AVEC L'ENVIRONNEMENT ===
-  /**
-   * Collecte les ressources d'une tuile pour un véhicule spécifique
-   * @param {string} playerId - ID du joueur
-   * @param {string} vehicleId - ID du véhicule
-   * @param {Object} destinationTile - Tuile contenant des ressources
-   */
-  collectResources: (playerId, vehicleId, destinationTile) => {
-    if (destinationTile.collected) return;
-
-    const tileStore = useTileStore.getState();
-    const deductTileResources = tileStore.deductTileResources;
-
-    set((state) => {
-      const player = state.players[playerId];
-      if (!player) return state;
-
-      const vehicle = player.vehicles[vehicleId || 'ship'];
-      if (!vehicle) return state;
-
-      // Calculer la capacité disponible pour chaque type de ressource
-      const availableCapacity = {
-        food: vehicle.maxCapacity ? Math.max(0, vehicle.maxCapacity.food - vehicle.resources.food) : Infinity,
-        debris: vehicle.maxCapacity ? Math.max(0, vehicle.maxCapacity.debris - vehicle.resources.debris) : Infinity,
-        special: vehicle.maxCapacity ? Math.max(0, vehicle.maxCapacity.special - vehicle.resources.special) : Infinity
-      };
-
-      // Calculer les ressources qui peuvent être collectées en fonction de la capacité
-      const collectableResources = {
-        food: Math.min(availableCapacity.food, destinationTile.resources?.food || 0),
-        debris: Math.min(availableCapacity.debris, destinationTile.resources?.debris || 0),
-        special: Math.min(availableCapacity.special, destinationTile.resources?.special || 0)
-      };
-
-      // Mettre à jour les ressources du véhicule
-      const updatedResources = {
-        food: vehicle.resources.food + collectableResources.food,
-        debris: vehicle.resources.debris + collectableResources.debris,
-        special: vehicle.resources.special + collectableResources.special
-      };
-
-      // Déduire les ressources de la tuile
-      deductTileResources(destinationTile.coord, collectableResources);
-
-      // Mettre à jour les ressources du véhicule
-      const updatedState = updateVehicle(state, playerId, vehicleId || 'ship', {
-        resources: updatedResources,
-      });
-      
-      // Vérifier si la capacité maximale est atteinte (à la prochaine itération du state)
-      setTimeout(() => {
-        get().checkResourceCapacity(playerId, vehicleId || 'ship');
-      }, 0);
-      
-      return updatedState;
-    });
-  },
-
-  /**
-   * Répare un véhicule (remise à zéro des dégâts)
-   * @param {string} playerId - ID du joueur
-   */
-  repairVehicle: (playerId) => {
-    set((state) => updateVehicle(state, playerId, "ship", { damage: 0 }));
   },
 
   /**

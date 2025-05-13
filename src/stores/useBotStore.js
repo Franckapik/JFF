@@ -47,11 +47,11 @@ const useBotStore = create((set, get) => ({
       BotStateConfig[BOT_STATES.IDLE].onEnterState(playerStore);
     }
     
-    // Ajouter l'action de test en premier avec priorité URGENT
+/*     // Ajouter l'action de test en premier avec priorité URGENT
     get().addAction('testQueue', PRIORITY.URGENT);
     
     // Ajouter l'action d'exploration après le test
-    get().addAction('exploreDrone', PRIORITY.HIGH);
+    get().addAction('exploreDrone', PRIORITY.HIGH); */
     
     // Finalement ajouter l'action d'évaluation avec priorité normale
     get().addAction('evaluateIdle', PRIORITY.MEDIUM);
@@ -329,11 +329,11 @@ const useBotStore = create((set, get) => ({
       // Réinitialiser l'état à IDLE au démarrage
       get().changeState(BOT_STATES.IDLE);
       
-      // Ajouter d'abord l'action de test
+/*       // Ajouter d'abord l'action de test
       get().addAction('testQueue', PRIORITY.URGENT);
       
       // Puis ajouter une action d'exploration
-      get().addAction('exploreDrone', PRIORITY.HIGH);
+      get().addAction('exploreDrone', PRIORITY.HIGH); */
       
       // Ensuite ajouter l'action d'évaluation initiale
       get().addAction('evaluateIdle', PRIORITY.MEDIUM);
