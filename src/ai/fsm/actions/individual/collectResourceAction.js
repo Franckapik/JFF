@@ -127,14 +127,26 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
       
       fsmLogger.action(`Resources collected successfully: ${JSON.stringify(resources)}`);
       
+      // Créer un nouvel objet de ressource collectée
+      const collectedResource = {
+        coord: collectResourceAction.tileCoord,
+        resources: { ...resources },
+        collectedAt: new Date().toISOString()
+      };
+      
       // Supprimer cette ressource de la liste des ressources connues et réinitialiser l'état de collecte
       if (botMemory.knownResources) {
         const updatedResources = botMemory.knownResources.filter(r => r.coord !== collectResourceAction.tileCoord);
+        
+        // Ajouter la ressource collectée à la liste des ressources collectées
+        const collectedResources = botMemory.collectedResources || [];
+        
         playerStore.updatePlayerMemory('player2', {
           knownResources: updatedResources,
           currentTargetResource: null,
           isCollecting: false,
-          collectionTile: null
+          collectionTile: null,
+          collectedResources: [...collectedResources, collectedResource]
         });
       }
       
