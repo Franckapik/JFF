@@ -56,7 +56,23 @@ export const BotConditions = {
   isAtMaxCapacity: (botVehicle) => {
     if (!botVehicle) return { result: false };
     
-    const isAtCapacity = botVehicle.isAtCapacity === true;
+    // Vérifier d'abord le flag isAtCapacity
+    let isAtCapacity = botVehicle.isAtCapacity === true;
+    
+    // Si le flag n'est pas activé, vérifier directement les niveaux de ressources
+    if (!isAtCapacity && botVehicle.resources && botVehicle.maxCapacity) {
+      const { food, debris, special } = botVehicle.resources;
+      const { food: maxFood, debris: maxDebris, special: maxSpecial } = botVehicle.maxCapacity;
+      
+      // Une seule ressource au maximum suffit pour déclencher l'état "à capacité maximale"
+      isAtCapacity = food >= maxFood || debris >= maxDebris || special >= maxSpecial;
+      
+      // Log de débogage pour voir ce qui se passe
+      if (isAtCapacity) {
+        console.log(`[BotCondition] Ressources au-dessus des limites: Food ${food}/${maxFood}, Debris ${debris}/${maxDebris}, Special ${special}/${maxSpecial}`);
+      }
+    }
+    
     return {
       result: isAtCapacity,
       priority: IDLE_EVALUATION.CAPACITY,
@@ -330,6 +346,17 @@ export const BotConditions = {
     // Transitions spécifiques selon l'état
     switch(currentState) {
       case BOT_STATES.IDLE:
+        // Vérifier explicitement si le vaisseau est à capacité maximale
+        const atCapacity = BotConditions.isAtMaxCapacity(botVehicle);
+        if (atCapacity.result) {
+          return {
+            result: true,
+            state: BOT_STATES.RETURNING,
+            action: { type: 'returnToBase', priority: PRIORITY.HIGH },
+            reason: "at_max_capacity"
+          };
+        }
+        
         // Depuis IDLE, on priorise la collecte si possible
         const hasEnoughResources = BotConditions.hasEnoughKnownResources();
         const hasEnoughFuel = BotConditions.hasEnoughFuel(botVehicle);

@@ -351,8 +351,13 @@ const usePlayerStore = create((set, get) => ({
     const { food, debris, special } = vehicle.resources;
     const { food: maxFood, debris: maxDebris, special: maxSpecial } = vehicle.maxCapacity;
 
-    // Vérifier si une des ressources a atteint sa capacité maximale
+    // NOTE: On considère qu'une seule ressource pleine suffit pour déclencher la capacité maximale
+    // C'est-à-dire, si food OU debris OU special atteint sa capacité maximale
     const isAtMaxCapacity = food >= maxFood || debris >= maxDebris || special >= maxSpecial;  
+    
+    /* Version alternative où toutes les ressources doivent être pleines (ET logique)
+    const isAtMaxCapacity = food >= maxFood && debris >= maxDebris && special >= maxSpecial;
+    */
     
     // Si à capacité max, marquer seulement le vaisseau avec isAtCapacity = true
     if (isAtMaxCapacity) {
