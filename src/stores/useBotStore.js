@@ -254,12 +254,21 @@ const useBotStore = create((set, get) => ({
     
     if (!botVehicle) return;
     
-    // Vérifier les conditions qui déclenchent une transition d'état
-    const conditionResult = BotConditions.checkAllConditions(currentState, botVehicle);
+    // Utiliser la fonction centralisée pour évaluer les transitions d'état
+    const transitionResult = BotConditions.evaluateStateTransition(currentState, botVehicle);
     
-    if (conditionResult.result && conditionResult.state) {
-      fsmLogger.condition(`Exit condition met in state ${currentState}: transitioning to ${conditionResult.state}`);
-      get().changeState(conditionResult.state);
+    if (transitionResult.result && transitionResult.state) {
+      fsmLogger.condition(`Exit condition met in state ${currentState}: transitioning to ${transitionResult.state} (${transitionResult.reason || 'condition met'})`);
+      
+      // Si une action est définie, l'ajouter à la file
+      if (transitionResult.action) {
+        get().addAction(
+          transitionResult.action.type,
+          transitionResult.action.priority
+        );
+      }
+      
+      get().changeState(transitionResult.state);
       return true;
     }
     

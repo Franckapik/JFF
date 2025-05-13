@@ -1,88 +1,50 @@
 // src/ai/fsm/actions/individual/evaluateConditionsFromIdleAction.js
-import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
+// Action qui évalue les conditions depuis l'état IDLE et décide de la transition
+
 import { BotConditions } from '../../conditions/botConditions';
+import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
 import fsmLogger from '../../../../utils/fsmLogger';
 
 /**
- * Évalue les conditions depuis l'état IDLE pour déterminer l'action suivante
- * @param {Object} playerStore - Store des joueurs
- * @param {Object} tileStore - Store des tuiles 
+ * Évalue les conditions depuis l'état IDLE et décide du prochain état
+ * Utilise la fonction centralisée evaluateStateTransition
+ * @param {Object} playerStore - Store du joueur
+ * @param {Object} tileStore - Store des tuiles
  * @param {Function} addAction - Fonction pour ajouter une action
- * @param {Function} changeState - Fonction pour changer l'état du bot
- * @returns {boolean} - True si une action a été effectuée
+ * @param {Function} changeState - Fonction pour changer d'état
+ * @returns {boolean} - true si une transition a été effectuée, false sinon
  */
 export const evaluateConditionsFromIdleAction = (playerStore, tileStore, addAction, changeState) => {
-  fsmLogger.action(`Evaluating conditions from IDLE state using centralized conditions`);
+  fsmLogger.action("Evaluating conditions from IDLE state");
   
+  // 1. Récupérer le véhicule du bot
   const botVehicle = playerStore.players?.player2?.vehicles?.ship;
-  const botMemory = playerStore.players?.player2?.memory;
-  
   if (!botVehicle) {
-    fsmLogger.error('Bot vehicle not found, cannot evaluate conditions');
+    fsmLogger.error("Bot vehicle not found in evaluateConditionsFromIdleAction");
     return false;
   }
   
-  // NOUVELLE LOGIQUE: Vérifier si le bot est déjà sur une tuile avec des ressources
-  // avant d'utiliser l'évaluation de condition standard qui passerait à l'état COLLECTING
-  const currentBotCoord = botVehicle.coord;
+  // 2. Utiliser la nouvelle fonction centralisée pour évaluer les transitions
+  const transitionResult = BotConditions.evaluateStateTransition(BOT_STATES.IDLE, botVehicle);
   
-  // Vérifier si la tuile actuelle est une ressource connue ou une cible actuelle
-  const isCurrentTargetResource = botMemory?.currentTargetResource && 
-                                botMemory.currentTargetResource.coord === currentBotCoord;
-  
-  const isKnownResource = botMemory?.knownResources?.some(res => res.coord === currentBotCoord);
-  
-  if (isCurrentTargetResource || isKnownResource) {
-    // Vérifier si la tuile contient encore des ressources
-    const currentTile = tileStore.tiles[currentBotCoord];
-    const hasResources = currentTile?.resources && (
-      currentTile.resources.food > 0 || 
-      currentTile.resources.debris > 0 || 
-      currentTile.resources.special > 0
-    );
+  // 3. Si une transition est recommandée, l'effectuer
+  if (transitionResult.result && transitionResult.state) {
+    fsmLogger.condition(`Transition from IDLE to ${transitionResult.state} (${transitionResult.reason || 'condition met'})`);
     
-    if (hasResources) {
-      fsmLogger.condition(`Bot est déjà sur une tuile ressource à ${currentBotCoord}, collecte directe sans changer d'état`);
-      
-      // Lancer directement l'action de collecte sans passer par l'état COLLECTING
-      addAction('collectResource', PRIORITY.HIGH);
-      
-      return true; // Action ajoutée avec succès
-    } else {
-      fsmLogger.condition(`Bot est sur une tuile ressource à ${currentBotCoord}, mais aucune ressource restante`);
-      
-      // Si aucune ressource n'est présente, mettre à jour la mémoire du bot
-      if (isKnownResource && botMemory.knownResources) {
-        const updatedResources = botMemory.knownResources.filter(r => r.coord !== currentBotCoord);
-        playerStore.updatePlayerMemory('player2', {
-          knownResources: updatedResources,
-          currentTargetResource: null
-        });
-        
-        fsmLogger.action(`Ressource épuisée supprimée de la mémoire: ${currentBotCoord}`);
-      }
-    }
-  }
-  
-  // Continuer avec la logique standard d'évaluation des conditions
-  const nextStateEvaluation = BotConditions.evaluateNextStateFromIdle(botVehicle);
-  
-  if (nextStateEvaluation.result) {
-    const { state, action } = nextStateEvaluation;
-    
-    fsmLogger.condition(`Condition centrale satisfaite: transition vers ${state}`);
-    
-    // Changer d'état selon l'évaluation
-    changeState(state);
-    
-    // Ajouter l'action associée
-    if (action) {
-      addAction(action.type, action.priority);
+    // Si une action est définie, l'ajouter à la file
+    if (transitionResult.action) {
+      addAction(
+        transitionResult.action.type,
+        transitionResult.action.priority || PRIORITY.MEDIUM
+      );
     }
     
+    // Effectuer la transition
+    changeState(transitionResult.state);
     return true;
   }
   
-  fsmLogger.condition("No actions taken in IDLE evaluation");
-  return false;
+  // 4. Si aucune transition n'est nécessaire, rester en IDLE
+  fsmLogger.condition("No condition met, staying in IDLE");
+  return true; // Action terminée, mais sans transition
 };
