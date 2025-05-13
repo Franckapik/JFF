@@ -288,11 +288,29 @@ const useBotStore = create((set, get) => ({
       const currentState = get().botState;
       const stateConfig = BotStateConfig[currentState];
       
-      if (stateConfig?.defaultAction) {
-        get().addAction(
-          stateConfig.defaultAction.type, 
-          stateConfig.defaultAction.priority
-        );
+      if (stateConfig) {
+        // MODIFICATION: Utiliser getDefaultAction si disponible, sinon defaultAction
+        let defaultAction;
+        
+        // Si l'état a une fonction getDefaultAction, l'utiliser pour déterminer l'action dynamiquement
+        if (typeof stateConfig.getDefaultAction === 'function') {
+          const playerStore = usePlayerStore.getState();
+          const tileStore = useTileStore.getState();
+          defaultAction = stateConfig.getDefaultAction(playerStore, tileStore, get().addAction);
+          fsmLogger.action(`Using dynamic default action for state ${currentState}: ${defaultAction.type} (priority: ${defaultAction.priority})`);
+        }
+        // Sinon, utiliser l'action par défaut statique
+        else if (stateConfig.defaultAction) {
+          defaultAction = stateConfig.defaultAction;
+        }
+        
+        // Si une action par défaut a été déterminée, l'ajouter à la file
+        if (defaultAction) {
+          get().addAction(
+            defaultAction.type, 
+            defaultAction.priority
+          );
+        }
       }
     }
     

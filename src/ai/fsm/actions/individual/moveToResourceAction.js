@@ -86,17 +86,18 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
       const targetTile = tileStore.tiles[bestResource.coord];
       
       if (targetTile) {
-        // CORRECTION: Vérifier si le bot est déjà à la position cible
+        // MODIFICATION: Vérifier si le bot est déjà à la position cible
         if (botVehicle.coord === bestResource.coord) {
-          fsmLogger.action(`Bot already at resource location ${bestResource.coord}, transitioning to IDLE`);
+          fsmLogger.action(`Bot already at resource location ${bestResource.coord}, action complete`);
           
-          // MODIFICATION: Au lieu d'enchaîner directement avec collectResource,
-          // on retourne à l'état IDLE pour laisser le système d'évaluation décider
+          // Enregistrer la cible actuelle dans la mémoire du bot
           playerStore.updatePlayerMemory('player2', {
             currentTargetResource: bestResource
           });
           
-          changeState(BOT_STATES.IDLE);
+          // Terminer cette action avec succès au lieu d'ajouter collectResource directement
+          // L'état COLLECTING va ensuite automatiquement ajouter l'action collectResource
+          // depuis son action par défaut
           return true; // Action terminée immédiatement
         }
 
@@ -152,10 +153,8 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
       // Réinitialiser les variables d'état
       moveToResourceAction.reset();
       
-      // MODIFICATION: Au lieu d'enchaîner directement avec collectResource,
-      // on retourne à l'état IDLE pour laisser le système d'évaluation décider
-      changeState(BOT_STATES.IDLE);
-      return true; // Action terminée avec succès
+      // Action terminée avec succès - l'état COLLECTING ajoutera collectResource dans le prochain cycle
+      return true;
     } else {
       // Si le bot s'est arrêté mais n'est pas à la bonne destination
       fsmLogger.action(`Bot stopped but hasn't reached target resource. Current: ${botVehicle.coord}, Target: ${moveToResourceAction.targetCoord}`);
@@ -171,11 +170,10 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
         }
       } else {
         // Si le bot est à la cible mais qu'on ne l'a pas détecté avant
-        fsmLogger.action('Bot is actually at the target, transitioning to IDLE');
+        fsmLogger.action('Bot is actually at the target, action complete');
         moveToResourceAction.reset();
         
-        // MODIFICATION: Retourner à l'état IDLE au lieu d'ajouter directement collectResource
-        changeState(BOT_STATES.IDLE);
+        // Action terminée avec succès
         return true;
       }
       

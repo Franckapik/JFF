@@ -108,9 +108,47 @@ export const BotStateConfig = {
   
   [BOT_STATES.COLLECTING]: {
     description: "Bot en collecte de ressources",
+    // Modification importante: l'action par défaut est maintenant adaptative
+    getDefaultAction: (playerStore, tileStore, addAction) => {
+      // Vérifier si le bot est sur la tuile cible pour savoir quelle action ajouter
+      const botVehicle = playerStore?.players?.player2?.vehicles?.ship;
+      const botMemory = playerStore?.players?.player2?.memory;
+
+      // Si la mémoire contient une cible de ressource actuelle
+      if (botVehicle && botMemory?.currentTargetResource) {
+        // Si le bot est déjà sur la tuile cible, ajouter directement collectResource
+        if (botVehicle.coord === botMemory.currentTargetResource.coord) {
+          fsmLogger.action("Bot is at resource location, adding collectResource action");
+          return { type: 'collectResource', priority: PRIORITY.HIGH };
+        }
+      }
+      
+      // Sinon, ajouter moveToResource (comportement par défaut)
+      return { type: 'moveToResource', priority: PRIORITY.MEDIUM };
+    },
+    // Conserver l'action par défaut originale pour compatibilité
     defaultAction: { type: 'moveToResource', priority: PRIORITY.MEDIUM },
-    onEnterState: () => {
+    onEnterState: (playerStore) => {
       fsmLogger.state("Entering COLLECTING state");
+      
+      // Solution temporaire: vérifier immédiatement si le bot est déjà sur une tuile de ressource
+      const botVehicle = playerStore?.players?.player2?.vehicles?.ship;
+      const botMemory = playerStore?.players?.player2?.memory;
+      
+      // Si nous avons des ressources ciblées et que le bot est déjà dessus
+      if (botVehicle && botMemory?.knownResources && botMemory.knownResources.length > 0) {
+        // Chercher si le bot est déjà sur une des ressources connues
+        const currentResource = botMemory.knownResources.find(r => r.coord === botVehicle.coord);
+        
+        if (currentResource) {
+          // Enregistrer dans la mémoire du bot quelle est la ressource actuelle
+          playerStore.updatePlayerMemory('player2', {
+            currentTargetResource: currentResource
+          });
+          
+          fsmLogger.action(`Bot already at resource location ${botVehicle.coord}, preparing collection`);
+        }
+      }
     },
     onExitState: (playerStore, changeState) => {
       // Ajout d'une variable statique pour éviter les appels multiples
@@ -120,6 +158,13 @@ export const BotStateConfig = {
       BotStateConfig[BOT_STATES.COLLECTING]._isExiting = true;
       
       fsmLogger.state("Exiting COLLECTING state - Returning to IDLE for evaluation");
+      
+      // Nettoyer les données de ciblage de ressources
+      if (playerStore) {
+        playerStore.updatePlayerMemory('player2', {
+          currentTargetResource: null
+        });
+      }
       
       // Toujours retourner à l'état IDLE après la fin des actions de collecte
       if (changeState) {
