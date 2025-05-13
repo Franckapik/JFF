@@ -45,10 +45,10 @@ IDLE --> RETURNING : [BotActions.evaluateConditionsFromIdle]\nfuel < 50 || isAtC
 IDLE --> COLLECTING : [BotActions.evaluateConditionsFromIdle]\nknownResources.length > 0
 IDLE --> EXPLORING : [BotActions.evaluateConditionsFromIdle]\nfuel >= 50 && !knownResources
 
-' Transitions vers l'état IDLE centralisé
-EXPLORING --> IDLE : [BotStateConfig.onExitState]\nOU\n[BotConditions.checkAllConditions]\nfuel < 50 || hasNewResourceDiscovery
-COLLECTING --> IDLE : [BotStateConfig.onExitState]\nOU\n[BotConditions.checkAllConditions]\n(fuel < 50 || isAtCapacity || knownResources.length === 0)
-RETURNING --> IDLE : [BotStateConfig.onExitState]\nOU\n[BotConditions.checkAllConditions]\ncoord === startCoord
+' Toutes les actions complétées retournent à IDLE
+EXPLORING --> IDLE : [Action complétée]\n(exploreDrone, moveToRandomTile)
+COLLECTING --> IDLE : [Action complétée]\n(collectResource, moveToResource)
+RETURNING --> IDLE : [Action complétée]\n(returnToBase, refuelAtBase)
 
 ' Détails des actions par état
 note bottom of EXPLORING
@@ -56,33 +56,23 @@ note bottom of EXPLORING
   1. explorerWithDrone - Explore le terrain avec le drone
   2. moveToRandomTile - Déplace le vaisseau aléatoirement
   
-  Conditions de retour à IDLE:
-  - Fuel faible (< 50)
-  - Ressources découvertes par drone (via hasNewResourceDiscovery flag)
-  - Drone revenu au vaisseau (via droneReturnedToShip flag)
-  
-  Après EXPLORING, toutes les transitions passent par IDLE
-  pour réévaluation centralisée des conditions
+  Après avoir terminé l'action, retourne à IDLE
+  pour une réévaluation centralisée des conditions
 end note
 
 note bottom of COLLECTING
   Actions dans COLLECTING:
   1. moveToKnownResource - Se déplace vers la ressource
-  2. collectResources - Collecte les ressources
+  2. collectResource - Collecte les ressources
   
-  Conditions de retour à IDLE:
-  - Fuel faible (< 50)
-  - Capacité maximale atteinte
-  - Toutes ressources connues collectées
+  Après avoir terminé la collecte, retourne à IDLE
+  pour réévaluer le prochain état
 end note
 
 note bottom of RETURNING
   Actions dans RETURNING:
   1. returnToBase - Retourne à la base
   2. refuelAtBase - Fait le plein de carburant
-  
-  Conditions de retour à IDLE:
-  - Arrivée à la base
   
   À la sortie:
   - Transfert des ressources au score
@@ -94,12 +84,12 @@ legend right
   **Implémentation Actuelle**
   
   L'état IDLE est central et évalue quelle action prendre ensuite.
-  Toutes les transitions entre états actifs passent obligatoirement
-  par IDLE pour une réévaluation centralisée des conditions.
+  Toutes les actions complétées retournent à IDLE pour une 
+  réévaluation centralisée des conditions.
   
   Le drone du bot peut découvrir des ressources qui mettent à jour
-  le PlayerStore avec des flags (hasNewResourceDiscovery, droneReturnedToShip),
-  déclenchant un retour à IDLE où la prochaine action sera décidée.
+  le PlayerStore, déclenchant un retour à IDLE où la prochaine 
+  action sera décidée.
   
   Le système utilise une file d'actions prioritaires:
   - URGENT (4): Actions critiques
