@@ -28,7 +28,7 @@ export const testQueueAction = (playerStore, tileStore, addAction, changeState) 
   
   // Vérifier si l'action est terminée (après 5 secondes)
   const elapsedTime = Date.now() - testQueueAction.startTime;
-  const isComplete = elapsedTime >= 5000;
+  const isComplete = elapsedTime >= 1000;
   
   if (isComplete) {
     fsmLogger.action(`Test queue action completed after ${(elapsedTime/1000).toFixed(1)} seconds`);

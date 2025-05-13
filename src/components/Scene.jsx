@@ -20,6 +20,7 @@ const Scene = () => {
   const initializeBot = useBotStore((state) => state.initializeBot);
   
   const botInitialized = useRef(false);
+  const playersInitialized = useRef(false);
 
   // Initialize tiles
   useEffect(() => {
@@ -27,11 +28,12 @@ const Scene = () => {
     initializeTiles();
   }, [initializeTiles]);
 
-  // Initialize players
+  // Initialize players only once when tiles are first available
   useEffect(() => {
-    if (Object.keys(tiles).length > 0) {
+    if (Object.keys(tiles).length > 0 && !playersInitialized.current) {
       console.log("[Scene] Initializing players with tiles:", tiles);
       initializePlayer(tiles);
+      playersInitialized.current = true;
       
       // Initialize bot after players are set up
       if (!botInitialized.current) {
