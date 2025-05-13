@@ -4,6 +4,7 @@ import { Vector3 } from "three";
 import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
 import useMessageManager from "../hooks/useMessageManager";
+import fsmLogger from "../utils/fsmLogger";
 
 /**
  * Composant de mouvement de drone unifié qui fonctionne pour les deux joueurs (player1 et player2/bot)
@@ -175,7 +176,7 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
       
       // Gestion du retour au vaisseau
       if (returningToShip && distance <= 0.2 && shipToFollow) {
-        console.log(`[UnifiedDroneMovement] Drone for ${playerId} returned to ship`);
+        fsmLogger.mouvement(`[UnifiedDroneMovement] Drone for ${playerId} returned to ship`);
         setReturningToShip(false);
         setCooldown(3); // 3 secondes de cooldown
         
@@ -234,7 +235,7 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
                             botMemory.knownResources.some(r => r.coord === reachedTileCoord);
         
         if (!alreadyKnown) {
-          console.log(`[UnifiedDroneMovement] Bot drone discovered new resources at ${reachedTileCoord}:`, resources);
+          fsmLogger.mouvement(`[UnifiedDroneMovement] Bot drone discovered new resources at ${reachedTileCoord}:`, resources);
           
           // Créer le nouvel objet de ressource
           const newResource = {
@@ -278,7 +279,7 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
         explorationCount: currentCount + 1
       });
       
-      console.log(`[UnifiedDroneMovement] Bot exploration count increased to ${currentCount + 1}`);
+      fsmLogger.mouvement(`[UnifiedDroneMovement] Bot exploration count increased to ${currentCount + 1}`);
     }
     
     // Mise à jour des états selon le type de drone
