@@ -70,7 +70,8 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
     
     // Temps de collecte proportionnel à la quantité de ressources
     const totalResourceAmount = resources.food + resources.debris + resources.special;
-    const collectionTime = Math.min(5000, Math.max(2000, totalResourceAmount / 1000 * 1000));
+    // Version plus rapide
+    const collectionTime = Math.min(2000, Math.max(1000, totalResourceAmount / 2000 * 1000));
     
     collectResourceAction.started = true;
     collectResourceAction.startTime = Date.now();
