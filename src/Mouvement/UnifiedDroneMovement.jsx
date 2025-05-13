@@ -20,8 +20,9 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
   const updateVehicle = usePlayerStore((state) => state.updateVehicle);
   const updatePlayerMemory = usePlayerStore((state) => state.updatePlayerMemory);
   
-  // Récupérer les vitesses des drones du PlayerStore
-  const droneSpeeds = usePlayerStore((state) => state.movementSpeeds.drone);
+  // Récupérer les vitesses des drones du PlayerStore (simplifiées)
+  const droneSpeed = usePlayerStore((state) => state.movementSpeeds.drone.speed);
+  const droneRotationSpeed = usePlayerStore((state) => state.movementSpeeds.drone.rotationSpeed);
   
   // Sélecteurs pour les vaisseaux et le drone concerné
   const player1Ship = usePlayerStore((state) => state.players.player1?.vehicles?.ship);
@@ -135,8 +136,8 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
     // Animation de flottement
     groupRef.current.position.y = 1.5 + Math.sin(Date.now() * 0.002) * 0.1;
     
-    // Animation de rotation avec vitesse du PlayerStore
-    rotationRef.current += delta * droneSpeeds.rotationSpeed;
+    // Animation de rotation avec vitesse simplifiée
+    rotationRef.current += delta * droneRotationSpeed;
     groupRef.current.rotation.y = rotationRef.current;
 
     // Logique de déplacement
@@ -144,15 +145,8 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
       // Déplacement vers la cible
       direction.normalize();
       
-      // Vitesse différente selon le mode, en utilisant les vitesses du PlayerStore
-      let speed;
-      if (playerId === "player1") {
-        speed = playerDroneTargetTile && !returningToShip ? droneSpeeds.explorationSpeed : droneSpeeds.normalSpeed;
-      } else {
-        speed = drone?.targetTile?.coord && !returningToShip ? droneSpeeds.botExplorationSpeed : droneSpeeds.botNormalSpeed;
-      }
-      
-      groupRef.current.position.addScaledVector(direction, delta * speed);
+      // Utiliser la vitesse simplifiée (la même pour tous les modes)
+      groupRef.current.position.addScaledVector(direction, delta * droneSpeed);
       
       // Mise à jour du statut de mouvement
       if (playerId === "player1") {

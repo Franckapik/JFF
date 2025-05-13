@@ -170,13 +170,13 @@ const ShipMovement = ({ playerId, children }) => {
 
     if (distance > 0.1) {
       direction.normalize();
-      const moveDistance = Math.min(speed * delta, distance);
+      const moveDistance = Math.min(speed * delta, distance); // Utilise la vitesse du PlayerStore
       
       groupRef.current.position.addScaledVector(direction, moveDistance);
 
       const targetAngle = Math.atan2(direction.x, direction.z);
       const currentAngle = rotationRef.current.y;
-      const interpolatedAngle = currentAngle + (targetAngle - currentAngle) * Math.min(rotationSpeed * delta, 1);
+      const interpolatedAngle = currentAngle + (targetAngle - currentAngle) * Math.min(rotationSpeed * delta, 1); // Utilise la vitesse de rotation du PlayerStore
 
       rotationRef.current.set(0, interpolatedAngle, 0);
       groupRef.current.rotation.copy(rotationRef.current);
