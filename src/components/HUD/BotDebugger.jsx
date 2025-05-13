@@ -15,7 +15,7 @@ const debuggerStyle = {
   padding: '10px',
   borderRadius: '8px',
   width: '400px',
-  height: '500px',  // Hauteur fixe
+  height: 'calc(100% - 20px)',  // Hauteur 100% de la fenêtre moins la marge
   display: 'flex',
   flexDirection: 'column',
   fontFamily: 'monospace',
@@ -124,7 +124,7 @@ const BotDebugger = () => {
   // États pour le débogueur
   const [isVisible, setIsVisible] = useState(true);
   const [activeMainTab, setActiveMainTab] = useState('bot'); // 'bot', 'player' ou 'tile'
-  const [activeTab, setActiveTab] = useState('state'); // 'state', 'actions', 'history', 'conditions', 'resources'
+  const [activeTab, setActiveTab] = useState('actions'); // 'actions' est maintenant l'onglet par défaut au lieu de 'state'
   const [stateHistory, setStateHistory] = useState([]);
   const [conditionLog, setConditionLog] = useState([]);
   const [actionHistory, setActionHistory] = useState([]); // Historique des actions
@@ -979,51 +979,101 @@ const BotDebugger = () => {
           Tile
         </button>
       </div>
-      
-      {/* Onglets secondaires - uniquement pour Bot et Player */}
-      {activeMainTab !== 'tile' && (
-        <div style={tabStyle}>
-          <button 
-            onClick={() => setActiveTab('state')} 
-            style={tabButtonStyle(activeTab === 'state')}
-          >
-            État
-          </button>
-          {activeMainTab === 'bot' && (
-            <button 
-              onClick={() => setActiveTab('actions')} 
-              style={tabButtonStyle(activeTab === 'actions')}
-            >
-              Actions ({actionQueue.length})
-            </button>
-          )}
-          {activeMainTab === 'bot' && (
-            <button 
-              onClick={() => setActiveTab('history')} 
-              style={tabButtonStyle(activeTab === 'history')}
-            >
-              Historique
-            </button>
-          )}
-          {activeMainTab === 'bot' && (
-            <button 
-              onClick={() => setActiveTab('conditions')} 
-              style={tabButtonStyle(activeTab === 'conditions')}
-            >
-              Conditions
-            </button>
-          )}
-          <button 
-            onClick={() => setActiveTab('resources')} 
-            style={tabButtonStyle(activeTab === 'resources')}
-          >
-            Resources
-          </button>
-        </div>
-      )}
-      
+
       {/* Conteneur de contenu avec scroll */}
       <div style={contentContainerStyle}>
+        {/* Si on est dans l'onglet Bot, on affiche toujours l'état et les données du véhicule en haut */}
+        {activeMainTab === 'bot' && (
+          <div style={{ 
+            marginBottom: '15px', 
+            padding: '8px', 
+            backgroundColor: 'rgba(0, 40, 0, 0.4)', 
+            borderRadius: '4px'
+          }}>
+            <h4 style={{ marginTop: '0' }}>État actuel: <span style={{ color: '#4caf50' }}>{formatStateName(botState)}</span></h4>
+            <div>Bot actif: <span style={{ color: isRunning ? '#4caf50' : '#ff5722' }}>{isRunning ? 'Oui' : 'Non'}</span></div>
+            
+            <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+              {Object.values(BOT_STATES).map(state => (
+                <div key={state} style={{
+                  ...stateBoxStyle(state === botState),
+                  margin: '0',
+                  flexBasis: 'calc(33% - 5px)'
+                }}>
+                  {formatStateName(state)}
+                </div>
+              ))}
+            </div>
+            
+            {/* Données détaillées du véhicule déplacées ici */}
+            {botVehicle && (
+              <div style={{ marginTop: '10px', fontSize: '12px'}}>
+                <div>Position: {botVehicle?.coord || "Inconnue"}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div>Fuel: {botVehicle?.fuel || 0}/100</div>
+                  <div>En mouvement: {botVehicle?.isMoving ? "Oui" : "Non"}</div>
+                  <div>Capacité max: {botVehicle?.isAtCapacity ? 'Oui' : 'Non'}</div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div>Food: {botVehicle?.resources?.food || 0}</div>
+                  <div>Debris: {botVehicle?.resources?.debris || 0}</div>
+                  <div>Special: {botVehicle?.resources?.special || 0}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Onglets secondaires - uniquement pour Bot et Player */}
+        {activeMainTab !== 'tile' && (
+          <div style={tabStyle}>
+            {/* Pour l'onglet Bot, on n'affiche plus l'onglet état car il est déjà en haut */}
+            {activeMainTab === 'bot' ? (
+              <>
+                <button 
+                  onClick={() => setActiveTab('actions')} 
+                  style={tabButtonStyle(activeTab === 'actions')}
+                >
+                  Queue ({actionQueue.length})
+                </button>
+                <button 
+                  onClick={() => setActiveTab('history')} 
+                  style={tabButtonStyle(activeTab === 'history')}
+                >
+                  History
+                </button>
+                <button 
+                  onClick={() => setActiveTab('conditions')} 
+                  style={tabButtonStyle(activeTab === 'conditions')}
+                >
+                  Conditions
+                </button>
+                <button 
+                  onClick={() => setActiveTab('resources')} 
+                  style={tabButtonStyle(activeTab === 'resources')}
+                >
+                  Ressources
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  onClick={() => setActiveTab('state')} 
+                  style={tabButtonStyle(activeTab === 'state')}
+                >
+                  État
+                </button>
+                <button 
+                  onClick={() => setActiveTab('resources')} 
+                  style={tabButtonStyle(activeTab === 'resources')}
+                >
+                  Resources
+                </button>
+              </>
+            )}
+          </div>
+        )}
+        
         {/* Contenu des onglets */}
         {renderTabContent()}
       </div>
