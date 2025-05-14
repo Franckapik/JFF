@@ -183,8 +183,14 @@ export const BotStateConfig = {
   [BOT_STATES.RETURNING]: {
     description: "Bot en retour vers sa base",
     defaultAction: { type: 'returnToBase', priority: PRIORITY.HIGH },
-    onEnterState: () => {
+    onEnterState: (playerStore, addAction) => {
       fsmLogger.state("Entering RETURNING state");
+      
+      // Ajouter explicitement l'action returnToBase à la file pour s'assurer qu'elle soit exécutée
+      if (addAction) {
+        fsmLogger.action("Adding returnToBase action after entering RETURNING state");
+        addAction('returnToBase', PRIORITY.HIGH);
+      }
     },
     onExitState: (playerStore, changeState) => {
       // Ajout d'une variable statique pour éviter les appels multiples
@@ -193,18 +199,7 @@ export const BotStateConfig = {
       // Marquer que nous sommes en train de sortir pour éviter la récursion
       BotStateConfig[BOT_STATES.RETURNING]._isExiting = true;
       
-      // Lors de la sortie de l'état RETURNING, transférer les ressources
-      if (playerStore && playerStore.transferResourcesToScore) {
-        const botVehicle = playerStore.players?.player2?.vehicles?.ship;
-        if (botVehicle && botVehicle.coord === botVehicle.startCoord) {
-          fsmLogger.state("Transferring resources to score before exiting RETURNING state");
-          playerStore.transferResourcesToScore('player2', 'ship');
-          
-          // Réinitialiser l'indicateur de capacité maximale
-          playerStore.updateVehicle('player2', 'ship', { isAtCapacity: false });
-        }
-      }
-      
+      // Toute la logique de traitement (transfert des ressources) est maintenant gérée par l'état IDLE
       fsmLogger.state("Exiting RETURNING state - Returning to IDLE for evaluation");
       
       // Toujours retourner à l'état IDLE après la fin des actions de retour à la base

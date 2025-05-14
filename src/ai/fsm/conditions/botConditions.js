@@ -191,7 +191,7 @@ export const BotConditions = {
     return {
       result: isAtBase,
       priority: IDLE_EVALUATION.SAFETY,
-      action: isAtBase ? { type: 'refuelAtBase', priority: PRIORITY.MEDIUM } : null
+      action: isAtBase ? { type: 'refuel', priority: PRIORITY.MEDIUM } : null
     };
   },
   
@@ -319,13 +319,17 @@ export const BotConditions = {
     // === TRANSITIONS PRIORITAIRES (SÉCURITÉ) ===
     
     // 1. Vérifier s'il faut retourner à la base (carburant bas ou capacité max)
-    const needsToReturn = BotConditions.shouldReturnToBase(botVehicle);
-    if (needsToReturn.result) {
-      return {
-        result: true,
-        state: BOT_STATES.RETURNING,
-        reason: "safety_critical"
-      };
+    // IMPORTANT: Ne pas vérifier cette condition si déjà dans l'état RETURNING
+    // pour éviter la boucle infinie
+    if (currentState !== BOT_STATES.RETURNING) {
+      const needsToReturn = BotConditions.shouldReturnToBase(botVehicle);
+      if (needsToReturn.result) {
+        return {
+          result: true,
+          state: BOT_STATES.RETURNING,
+          reason: "safety_critical"
+        };
+      }
     }
     
     // 2. Si déjà à la base, priorité au ravitaillement
@@ -335,7 +339,7 @@ export const BotConditions = {
         return {
           result: true,
           state: BOT_STATES.IDLE,
-          action: { type: 'refuelAtBase', priority: PRIORITY.HIGH },
+          action: { type: 'refuel', priority: PRIORITY.HIGH },
           reason: "refueling"
         };
       }
@@ -427,6 +431,11 @@ export const BotConditions = {
             reason: "arrived_at_base"
           };
         }
+        
+        // IMPORTANT: Pour l'état RETURNING, ne pas retourner de résultat positif
+        // si le bot n'est pas à la base, pour éviter la boucle de vérification
+        // La transition vers cet état a déjà ajouté l'action returnToBase
+        return { result: false };
         break;
     }
     

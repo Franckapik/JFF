@@ -12,7 +12,7 @@ import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
 
 /**
- * Fait le plein de carburant et décharge les ressources à la base
+ * Fait le plein de carburant à la base
  * @param {Object} playerStore - Store des joueurs
  * @param {Object} tileStore - Store des tuiles
  * @param {Function} addAction - Fonction pour ajouter une action
@@ -38,29 +38,17 @@ export const refuelAtBaseAction = (playerStore, tileStore, addAction, changeStat
   // Utiliser la condition centralisée pour vérifier si le plein est complet
   const fullyRefueledCheck = BotConditions.isFullyRefueled(botVehicle);
   if (fullyRefueledCheck.result) {
-    fsmLogger.action('Bot is fully refueled and resources transferred, returning to IDLE for reevaluation');
-    
-    // Réinitialiser les marqueurs de ressources dans la mémoire du bot
-    playerStore.updatePlayerMemory('player2', {
-      hasNewResourceDiscovery: false,
-      droneReturnedToShip: false
-    });
-    
+    fsmLogger.action('Bot is fully refueled, returning to IDLE for reevaluation');
     changeState(BOT_STATES.IDLE);
     addAction('evaluateIdle', PRIORITY.HIGH);
     return true;
   }
   
-  // Si le plein n'est pas complet, faire le plein et transférer les ressources
+  // Si le plein n'est pas complet, faire le plein uniquement (sans transfert de ressources)
   const fuelRefilled = playerStore.refuelVehicle('player2', 'ship');
-  const transferred = playerStore.transferResources('player2', 'ship');
   
   if (fuelRefilled) {
     fsmLogger.action(`Refueled bot, current fuel: ${botVehicle.fuel}`);
-  }
-  
-  if (transferred) {
-    fsmLogger.action(`Transferred ${transferred} resources from bot to player score`);
   }
   
   return true;
