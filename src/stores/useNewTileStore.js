@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { generateHexPositions } from '../utils/utils'; // Import the utility function
+import { generateHexPositions, findPath } from '../utils/utils'; // Import des fonctions utiles
 
 export const useTileStore = create((set, get) => ({
     tiles: {},
@@ -28,6 +28,59 @@ export const useTileStore = create((set, get) => ({
         });
     },
     clearTiles: () => set({ tiles: {} }),
+
+    /**
+     * Récupère les tuiles 'walkable' dans un rayon donné autour d'une position
+     * @param {string|Object} source - Coordonnée (format "x,y") ou objet avec propriété coord
+     * @param {number} exploringRadius - Rayon de recherche autour de la position (défaut: 3)
+     * @param {boolean} onlyUnexplored - Si true, retourne uniquement les tuiles non explorées
+     * @param {boolean} excludeDanger - Si true, exclut les tuiles de type 'danger'
+     * @returns {Array} - Liste des tuiles walkable trouvées, triées par distance
+     */
+    getWalkableTilesInRadius: (source, exploringRadius = 3, onlyUnexplored = false, excludeDanger = true) => {
+        // Convertir la source en coordonnées (accepte soit des coordonnées, soit un véhicule)
+        let coord;
+        if (typeof source === 'string') {
+            coord = source;
+        } else if (source && source.coord) {
+            coord = source.coord;
+        } else {
+            console.warn("Source invalide pour getWalkableTilesInRadius");
+            return [];
+        }
+        
+        if (!coord) return [];
+        
+        const tiles = get().tiles;
+        const walkableTiles = [];
+        const calculateDistanceFn = get().calculateDistance;
+        
+        // Parcours de toutes les tuiles pour chercher celles dans le rayon
+        Object.entries(tiles).forEach(([tileCoord, tile]) => {
+            // Utiliser calculateDistance pour obtenir la distance en nombre de tuiles
+            const distance = calculateDistanceFn(coord, tileCoord, false, true);
+            
+            // Vérifier si la tuile est dans le rayon d'exploration
+            if (distance <= exploringRadius) {
+                // Vérifier les autres conditions (walkable, non danger, non explorée)
+                if (tile && 
+                    tile.walkable !== false && 
+                    (!excludeDanger || tile.type !== 'danger') &&
+                    (!onlyUnexplored || !tile.explored)) {
+                    
+                    walkableTiles.push({
+                        coord: tileCoord,
+                        position: tile.position,
+                        tile: tile,
+                        distance: distance
+                    });
+                }
+            }
+        });
+        
+        // Retourne les tuiles walkable triées par proximité
+        return walkableTiles.sort((a, b) => a.distance - b.distance);
+    },
 
     // Initialize tiles using radius and spacing from the store
     initializeTiles: (radius = 3, spacing = 0.1) => {
@@ -192,6 +245,52 @@ export const useTileStore = create((set, get) => ({
         
         // Retourne les ressources triées par proximité
         return resources.sort((a, b) => a.distance - b.distance);
+    },
+
+    /**
+     * Calcule la distance entre deux coordonnées sur la grille
+     * @param {string} coord1 - Première coordonnée au format "x,y"
+     * @param {string} coord2 - Seconde coordonnée au format "x,y"
+     * @param {boolean} formatted - Si true, retourne un nombre formaté avec 1 décimale, sinon retourne le nombre brut
+     * @param {boolean} usePathfinding - Si true, calcule la distance en nombre de tuiles via pathfinding (chemin le plus court)
+     * @returns {number|string} - Distance entre les deux coordonnées (nombre ou chaîne formatée)
+     */
+    calculateDistance: (coord1, coord2, formatted = true, usePathfinding = true) => {
+        // Vérifier si les coordonnées sont valides
+        if (!coord1 || !coord2 || typeof coord1 !== 'string' || typeof coord2 !== 'string') {
+            return formatted ? "N/A" : 0;
+        }
+        
+        try {
+            // Si on veut calculer la distance en nombre de tuiles via pathfinding
+            if (usePathfinding) {
+                const tiles = get().tiles;
+                
+                // Utilise la fonction findPath pour trouver le chemin le plus court
+                const path = findPath(coord1, coord2, tiles);
+                
+                // La longueur du chemin - 1 donne le nombre de tuiles à traverser
+                // Retourne 0 si les coordonnées sont les mêmes
+                const distance = path.length > 0 ? path.length - 1 : 0;
+                return formatted ? distance.toString() : distance;
+            } 
+            // Sinon, calcule la distance euclidienne (en ligne droite)
+            else {
+                const [x1, y1] = coord1.split(',').map(Number);
+                const [x2, y2] = coord2.split(',').map(Number);
+                
+                // Vérifier si les coordonnées sont des nombres valides
+                if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
+                    return formatted ? "N/A" : 0;
+                }
+                
+                const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                return formatted ? distance.toFixed(1) : distance;
+            }
+        } catch (error) {
+            console.error("Error calculating distance:", error);
+            return formatted ? "N/A" : 0;
+        }
     },
 }));
 

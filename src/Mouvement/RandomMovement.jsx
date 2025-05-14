@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { Vector3, Euler } from "three";
 import useMessageManager from "../hooks/useMessageManager"; // Import the custom hook
+import fsmLogger from "../utils/fsmLogger"; // Import the fsmLogger
 
 const RandomMovement = ({ initialPosition, children }) => {
   const currentPosition = useRef(new Vector3(initialPosition.x, initialPosition.y, initialPosition.z));
@@ -36,6 +37,7 @@ const RandomMovement = ({ initialPosition, children }) => {
       // Set the first tile position if not already set
       if (!firstTilePosition) {
         setFirstTilePosition(currentTile.position);
+        fsmLogger.mouvement("[RandomMovement] Setting first tile position:", currentTile.position);
       }
 
       // Update the start marker to the current tile's position
@@ -51,6 +53,8 @@ const RandomMovement = ({ initialPosition, children }) => {
         const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
         previousTileCoord.current = currentTile.coord; // Update the previous tile's coord
         targetPosition.current.set(randomNeighbor.position.x, randomNeighbor.position.y, randomNeighbor.position.z);
+        
+        fsmLogger.mouvement("[RandomMovement] Moving to new target:", randomNeighbor.coord);
 
         // Update the end marker to the target tile's position
         setEndMarker(randomNeighbor.position);
@@ -75,7 +79,11 @@ const RandomMovement = ({ initialPosition, children }) => {
           default:
             break;
         } */
+      } else {
+        fsmLogger.mouvement("[RandomMovement] No available neighbors to move to");
       }
+    } else {
+      fsmLogger.mouvement("[RandomMovement] Unable to find current tile position");
     }
   };
 

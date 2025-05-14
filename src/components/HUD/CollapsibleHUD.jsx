@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../styles/App.css";
+import "../../styles/App.css";
 
 const CollapsibleHUD = ({ title, children, defaultOpen = false, className = "" }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);

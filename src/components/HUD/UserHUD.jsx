@@ -1,7 +1,7 @@
 import React from "react";
-import { useTileStore } from "../stores/useNewTileStore"; // Import tile store
-import usePlayerStore from "../stores/usePlayerStore"; // Import player store
-import useBotStore from "../stores/useBotStore"; // Import BotStore
+import { useTileStore } from "../../stores/useNewTileStore";
+import usePlayerStore from "../../stores/usePlayerStore";
+import useBotStore from "../../stores/useBotStore";
 import "../styles/App.css"; // Import CSS for styling
 
 const UserHUD = () => {

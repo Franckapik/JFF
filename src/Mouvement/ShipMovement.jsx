@@ -6,6 +6,7 @@ import { useTileStore } from "../stores/useNewTileStore";
 import { useFrame } from "@react-three/fiber";
 import { Vector3, Euler } from "three";
 import { calculatePath } from "../utils/utils";
+import fsmLogger from "../utils/fsmLogger";
 
 const ShipMovement = ({ playerId, children }) => {
   // === Références et états locaux ===
@@ -20,9 +21,10 @@ const ShipMovement = ({ playerId, children }) => {
   const [distanceTraveled, setDistanceTraveled] = useState(0);
   const [isInitialPositionSet, setIsInitialPositionSet] = useState(false);
 
-  // Constantes de mouvement
-  const speed = 1.5;
-  const rotationSpeed = 2;
+  // Récupérer les vitesses du PlayerStore au lieu de les coder en dur
+  const shipSpeeds = usePlayerStore((state) => state.movementSpeeds.ship);
+  const speed = shipSpeeds.speed;
+  const rotationSpeed = shipSpeeds.rotationSpeed;
 
   // === Sélecteurs des stores ===
   const tiles = useTileStore((state) => state.tiles);
@@ -44,21 +46,25 @@ const ShipMovement = ({ playerId, children }) => {
 
   // === Fonctions locales ===
   const handleFinalizeMovement = (currentTargetTile) => {
-    if (playerId && playerVehicle && selectedVehicle.vehicleId) {
-      const vehicleId = selectedVehicle.vehicleId;
-      updateVehicle(playerId, vehicleId, {
-        position: currentTargetTile.position,
-        coord: currentTargetTile.coord,
-        progress: 100,
-        isMoving: false,
-        targetTile: { position: null, coord: null },
-      });
-    }
+    if (!playerId || !playerVehicle) return;
+    
+    // Pour le joueur 2 (bot), on utilise toujours "ship"
+    const vehicleId = playerId === "player2" ? "ship" : selectedVehicle.vehicleId;
+    
+    fsmLogger.mouvement(`[ShipMovement] Finalizing movement for ${playerId}/${vehicleId} to ${currentTargetTile.coord}`);
+    
+    updateVehicle(playerId, vehicleId, {
+      position: currentTargetTile.position,
+      coord: currentTargetTile.coord,
+      progress: 100,
+      isMoving: false,
+      targetTile: { position: null, coord: null },
+    });
   };
 
   const processPath = (pathData) => {
     if (!pathData.path || pathData.path.length === 0) {
-      console.log("Empty path returned");
+      fsmLogger.mouvement("[ShipMovement] Empty path returned");
       return;
     }
     
@@ -69,7 +75,11 @@ const ShipMovement = ({ playerId, children }) => {
     setDistanceTraveled(0);
     
     if (playerId && playerVehicle) {
-      updateVehicle(playerId, selectedVehicle.vehicleId, {
+      // Pour le joueur 2 (bot), on utilise toujours "ship"
+      const vehicleId = playerId === "player2" ? "ship" : selectedVehicle.vehicleId;
+      fsmLogger.mouvement(`[ShipMovement] Setting isMoving=true for ${playerId}/${vehicleId}`);
+      
+      updateVehicle(playerId, vehicleId, {
         isMoving: true,
         path: pathData.path,
         totalDistance: pathData.totalDistance
@@ -79,18 +89,18 @@ const ShipMovement = ({ playerId, children }) => {
 
   const recalculatePath = () => {
     if (!groupRef.current || !playerVehicle) {
-      console.log("Missing ref or vehicle:", { groupRef: !!groupRef.current, playerVehicle: !!playerVehicle });
+      fsmLogger.mouvement("[ShipMovement] Missing ref or vehicle:", { groupRef: !!groupRef.current, playerVehicle: !!playerVehicle });
       return;
     }
 
     const targetTile = playerVehicle.targetTile;
         
     if (!targetTile || !targetTile.coord) {
-      console.log(`Missing target tile for ${playerId}:`, targetTile);
+      fsmLogger.mouvement(`[ShipMovement] Missing target tile for ${playerId}:`, targetTile);
       return;
     }
     
-    console.log(`Calculating path for ${playerId} from ${playerVehicle.coord} to ${targetTile.coord}`);
+    fsmLogger.mouvement(`[ShipMovement] Calculating path for ${playerId} from ${playerVehicle.coord} to ${targetTile.coord}`);
     
     const pathData = calculatePath(
       groupRef.current.position,
@@ -105,7 +115,7 @@ const ShipMovement = ({ playerId, children }) => {
   // === Effets ===
   useEffect(() => {
     if (!isInitialPositionSet && playerVehicle?.position && groupRef.current) {
-      console.log("Setting initial position:", playerVehicle.position);
+      fsmLogger.mouvement(`[ShipMovement] Setting initial position for ${playerId}:`, playerVehicle.position);
       groupRef.current.position.set(
         playerVehicle.position.x,
         playerVehicle.position.y,
@@ -119,7 +129,7 @@ const ShipMovement = ({ playerId, children }) => {
     const targetTile = playerVehicle?.targetTile;
 
     if (targetTile && targetTile.coord && playerVehicle && Object.keys(tiles).length > 0 && isInitialPositionSet) {
-      console.log(`[${playerId}] Target changed, recalculating path to:`, targetTile.coord);
+      fsmLogger.mouvement(`[ShipMovement] ${playerId} target changed, recalculating path to:`, targetTile.coord);
       setClockRunning(true);
       setTimeout(recalculatePath, 100);
     }
@@ -129,8 +139,11 @@ const ShipMovement = ({ playerId, children }) => {
   useFrame((_, delta) => {
     if (!playerVehicle || path.length === 0 || currentTargetIndex >= path.length) return;
 
+    // Pour le joueur 2 (bot), on utilise toujours "ship"
+    const vehicleId = playerId === "player2" ? "ship" : selectedVehicle.vehicleId;
+
     if (playerVehicle.fuel <= 0) {
-      updateVehicle(playerId, selectedVehicle.vehicleId, { isMoving: false });
+      updateVehicle(playerId, vehicleId, { isMoving: false });
       return;
     }
 
@@ -153,18 +166,18 @@ const ShipMovement = ({ playerId, children }) => {
     const distance = direction.length();
 
     if (currentTargetIndex === 0 && Math.random() < 0.01) {
-      console.log("Distance to target:", distance, "Target:", targetPosition, "Current:", currentPosition);
+      fsmLogger.mouvement(`[ShipMovement] ${playerId}/${vehicleId} Distance to target:`, distance);
     }
 
     if (distance > 0.1) {
       direction.normalize();
-      const moveDistance = Math.min(speed * delta, distance);
+      const moveDistance = Math.min(speed * delta, distance); // Utilise la vitesse du PlayerStore
       
       groupRef.current.position.addScaledVector(direction, moveDistance);
 
       const targetAngle = Math.atan2(direction.x, direction.z);
       const currentAngle = rotationRef.current.y;
-      const interpolatedAngle = currentAngle + (targetAngle - currentAngle) * Math.min(rotationSpeed * delta, 1);
+      const interpolatedAngle = currentAngle + (targetAngle - currentAngle) * Math.min(rotationSpeed * delta, 1); // Utilise la vitesse de rotation du PlayerStore
 
       rotationRef.current.set(0, interpolatedAngle, 0);
       groupRef.current.rotation.copy(rotationRef.current);
@@ -172,35 +185,30 @@ const ShipMovement = ({ playerId, children }) => {
       setDistanceTraveled(prev => prev + moveDistance);
       const progress = (distanceTraveled / totalPathDistance) * 100;
       
-      if (selectedVehicle.vehicleId) {
-        updateVehicle(playerId, selectedVehicle.vehicleId, {
-          progress: Math.min(progress, 100).toFixed(2),
-        });
-      }
+      updateVehicle(playerId, vehicleId, {
+        progress: Math.min(progress, 100).toFixed(2),
+      });
       
     } else {
-      
-      if (selectedVehicle.vehicleId) {
-        updateVehicle(playerId, selectedVehicle.vehicleId, {
-          position: {
-            x: currentTargetTile.position.x,
-            y: currentTargetTile.position.y,
-            z: currentTargetTile.position.z,
-          },
-          coord: currentTargetCoord,
-        });
-      }
+      updateVehicle(playerId, vehicleId, {
+        position: {
+          x: currentTargetTile.position.x,
+          y: currentTargetTile.position.y,
+          z: currentTargetTile.position.z,
+        },
+        coord: currentTargetCoord,
+      });
       
       if (currentTargetIndex < path.length - 1) {
         setCurrentTargetIndex(prev => prev + 1);
-        consumeFuel(playerId, selectedVehicle.vehicleId);
+        consumeFuel(playerId, vehicleId);
       } else {
         if (!hasReachedTarget) {
           setHasReachedTarget(true);
-          console.log("Arrived at destination");
+          fsmLogger.mouvement(`[ShipMovement] ${playerId}/${vehicleId} Arrived at destination`);
           
           handleFinalizeMovement(currentTargetTile);
-                    
+                  
           setPath([]);
           setCurrentTargetIndex(0);
         }

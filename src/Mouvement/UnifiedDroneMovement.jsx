@@ -4,6 +4,7 @@ import { Vector3 } from "three";
 import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
 import useMessageManager from "../hooks/useMessageManager";
+import fsmLogger from "../utils/fsmLogger";
 
 /**
  * Composant de mouvement de drone unifié qui fonctionne pour les deux joueurs (player1 et player2/bot)
@@ -18,6 +19,11 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
   const tiles = useTileStore((state) => state.tiles);
   const { sendVehicleMessage } = useMessageManager();
   const updateVehicle = usePlayerStore((state) => state.updateVehicle);
+  const updatePlayerMemory = usePlayerStore((state) => state.updatePlayerMemory);
+  
+  // Récupérer les vitesses des drones du PlayerStore (simplifiées)
+  const droneSpeed = usePlayerStore((state) => state.movementSpeeds.drone.speed);
+  const droneRotationSpeed = usePlayerStore((state) => state.movementSpeeds.drone.rotationSpeed);
   
   // Sélecteurs pour les vaisseaux et le drone concerné
   const player1Ship = usePlayerStore((state) => state.players.player1?.vehicles?.ship);
@@ -131,8 +137,8 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
     // Animation de flottement
     groupRef.current.position.y = 1.5 + Math.sin(Date.now() * 0.002) * 0.1;
     
-    // Animation de rotation
-    rotationRef.current += delta * 0.5;
+    // Animation de rotation avec vitesse simplifiée
+    rotationRef.current += delta * droneRotationSpeed;
     groupRef.current.rotation.y = rotationRef.current;
 
     // Logique de déplacement
@@ -140,15 +146,8 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
       // Déplacement vers la cible
       direction.normalize();
       
-      // Vitesse différente selon le mode
-      let speed;
-      if (playerId === "player1") {
-        speed = playerDroneTargetTile && !returningToShip ? 2.5 : 1.8;
-      } else {
-        speed = drone?.targetTile?.coord && !returningToShip ? 2.0 : 1.5;
-      }
-      
-      groupRef.current.position.addScaledVector(direction, delta * speed);
+      // Utiliser la vitesse simplifiée (la même pour tous les modes)
+      groupRef.current.position.addScaledVector(direction, delta * droneSpeed);
       
       // Mise à jour du statut de mouvement
       if (playerId === "player1") {
@@ -177,9 +176,14 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
       
       // Gestion du retour au vaisseau
       if (returningToShip && distance <= 0.2 && shipToFollow) {
-        console.log(`[UnifiedDroneMovement] Drone for ${playerId} returned to ship`);
+        fsmLogger.mouvement(`[UnifiedDroneMovement] Drone for ${playerId} returned to ship`);
         setReturningToShip(false);
         setCooldown(3); // 3 secondes de cooldown
+        
+        if (playerId === "player2") {
+          // Signaler que le drone est revenu au vaisseau
+          updatePlayerMemory('player2', { droneReturnedToShip: true });
+        }
       }
     }
   });
@@ -217,43 +221,66 @@ const UnifiedDroneMovement = ({ playerId = "player1", droneId = "drone1", childr
     }
     
     // Si c'est le bot, mettre à jour sa mémoire des ressources connues
-    if (playerId === "player2" && (resources.food > 0 || resources.debris > 0 || resources.special > 0)) {
-      const playersState = usePlayerStore.getState().players;
-      const botMemory = playersState.player2?.memory;
+    if (playerId === "player2") {
+      // Vérifier s'il y a des ressources sur la tuile
+      const hasResources = resources.food > 0 || resources.debris > 0 || resources.special > 0;
       
-      if (botMemory && botMemory.knownResources) {
+      if (hasResources) {
+        // Récupérer l'état actuel du store
+        const playerState = usePlayerStore.getState();
+        const botMemory = playerState.players?.player2?.memory || { knownResources: [] };
+        
         // Vérifier si la ressource est déjà connue
-        const alreadyKnown = botMemory.knownResources.some(r => r.coord === reachedTileCoord);
+        const alreadyKnown = botMemory.knownResources && 
+                            botMemory.knownResources.some(r => r.coord === reachedTileCoord);
         
         if (!alreadyKnown) {
-          const updatedKnownResources = [
-            ...botMemory.knownResources,
-            {
-              coord: reachedTileCoord,
-              position: reachedTile.position,
-              resources
-            }
-          ];
+          fsmLogger.mouvement(`[UnifiedDroneMovement] Bot drone discovered new resources at ${reachedTileCoord}:`, resources);
           
-          // Mettre à jour la mémoire du bot
-          usePlayerStore.setState((state) => ({
-            players: {
-              ...state.players,
-              player2: {
-                ...state.players.player2,
-                memory: {
-                  ...state.players.player2.memory,
-                  knownResources: updatedKnownResources
-                }
-              }
-            }
-          }));
+          // Créer le nouvel objet de ressource
+          const newResource = {
+            coord: reachedTileCoord,
+            position: reachedTile.position,
+            resources,
+            discoveredAt: new Date().toISOString()
+          };
+          
+          // Utiliser la méthode updatePlayerMemory au lieu de manipuler l'état directement
+          const updatedKnownResources = botMemory.knownResources ? 
+            [...botMemory.knownResources, newResource] : [newResource];
+          
+          // Mise à jour de la mémoire via la méthode appropriée
+          updatePlayerMemory('player2', {
+            knownResources: updatedKnownResources,
+            lastResourceDiscovery: {
+              coord: reachedTileCoord,
+              resources,
+              timestamp: new Date().toISOString()
+            },
+            // Définir un flag indiquant qu'une nouvelle ressource a été découverte
+            // Les conditions du bot pourront vérifier ce flag
+            hasNewResourceDiscovery: true
+          });
         }
       }
     }
     
     // Marquer la tuile comme explorée
     useTileStore.getState().markTileAsExplored(reachedTileCoord);
+    
+    // Incrémenter le compteur d'explorations si c'est le bot
+    if (playerId === "player2") {
+      const playerState = usePlayerStore.getState();
+      const botMemory = playerState.players?.player2?.memory;
+      const currentCount = botMemory?.explorationCount || 0;
+      
+      // Mettre à jour le compteur d'explorations
+      updatePlayerMemory('player2', {
+        explorationCount: currentCount + 1
+      });
+      
+      fsmLogger.mouvement(`[UnifiedDroneMovement] Bot exploration count increased to ${currentCount + 1}`);
+    }
     
     // Mise à jour des états selon le type de drone
     if (playerId === "player1") {

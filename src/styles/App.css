@@ -1154,6 +1154,75 @@
   overflow-y: auto;
 }
 
+/* Styles pour le tableau de mémoire du bot */
+.bot-memory-section {
+  margin-top: 15px;
+  padding: 8px;
+  background-color: rgba(33, 33, 33, 0.6);
+  border-radius: 4px;
+}
+
+.bot-memory-tabs {
+  display: flex;
+  border-bottom: 1px solid #444;
+  margin-bottom: 8px;
+}
+
+.bot-memory-tab {
+  padding: 5px 10px;
+  border: none;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 5px;
+  border-radius: 3px 3px 0 0;
+}
+
+.bot-memory-tab.active {
+  color: #fff;
+  background-color: #444;
+  font-weight: bold;
+}
+
+.bot-memory-empty {
+  padding: 10px;
+  text-align: center;
+  font-style: italic;
+  color: #aaa;
+  font-size: 12px;
+}
+
+.bot-memory-table-container {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+.bot-memory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.bot-memory-table th,
+.bot-memory-table td {
+  padding: 6px;
+  text-align: center;
+  border-bottom: 1px solid #444;
+}
+
+.bot-memory-table th {
+  background-color: #222;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.bot-memory-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
 /* Positionnement des HUDs avec plus d'espace et une meilleure séparation */
 .player-hud-wrapper {
   position: absolute;
@@ -1182,4 +1251,62 @@
 /* Ajustement de la largeur des HUDs spécifiques pour être cohérent */
 .bot-hud, .player-hud, .tile-hud {
   width: 100%; /* Permet de prendre toute la largeur du conteneur parent */
+}
+
+/* Styles pour le système d'onglets des actions */
+.bot-action-tabs {
+  display: flex;
+  border-bottom: 1px solid #444;
+  margin-bottom: 8px;
+}
+
+.bot-action-tab {
+  padding: 5px 10px;
+  border: none;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 5px;
+  border-radius: 3px 3px 0 0;
+}
+
+.bot-action-tab.active {
+  color: #fff;
+  background-color: #444;
+  font-weight: bold;
+}
+
+.bot-action-content {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Style pour le bouton de suppression des actions terminées */
+.bot-hud-clear-completed {
+  margin-top: 8px;
+  padding: 5px 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 3px;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: 12px;
+  width: 100%;
+}
+
+.bot-hud-clear-completed:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Style pour afficher des informations sur l'heure de complétion */
+.bot-hud-action-item {
+  position: relative;
+}
+
+.bot-hud-action-timestamp {
+  display: block;
+  font-size: 10px;
+  color: #aaa;
+  margin-top: 3px;
 }

@@ -24,4 +24,13 @@ Le jeu demarre, je dois avoir plus de ressources pour progresser, je vais :
 
 Je souhaite creer un nouvel hud dans le style identique de BotHUD qui donnerait des informations sur une tuile lorsque celle ci est onHover. 
 
-Je souhaite
+
+
+---TODO
+
+- L'état returning et son action doit etre réécrite selon la structure des autres . 
+- Peut etre que le player doit etre initialisé de maniere dynamique pour avoir plsuieurs bots ou plutot qu'un seul store pour deux joueurs (bot et reel)
+- Messagerie pour le bot 
+
+
+
