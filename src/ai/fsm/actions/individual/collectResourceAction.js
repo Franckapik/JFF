@@ -126,6 +126,9 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
       };
       tileStore.updateTile(collectResourceAction.tileCoord, updatedTile);
       
+      // Marquer explicitement la tuile comme collectée
+      tileStore.markTileAsCollected(collectResourceAction.tileCoord);
+      
       fsmLogger.action(`Resources collected successfully: ${JSON.stringify(resources)}`);
       
       // Créer un nouvel objet de ressource collectée
