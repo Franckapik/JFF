@@ -108,17 +108,47 @@ export const BotStateConfig = {
   
   [BOT_STATES.COLLECTING]: {
     description: "Bot en collecte de ressources",
-    defaultAction: { type: 'moveToResource', priority: PRIORITY.MEDIUM }, // Nouvelle action par défaut
-    onEnterState: () => {
+    // Modification importante: l'action par défaut est maintenant adaptative
+    getDefaultAction: (playerStore, tileStore, addAction) => {
+      // Vérifier si le bot est sur la tuile cible pour savoir quelle action ajouter
+      const botVehicle = playerStore?.players?.player2?.vehicles?.ship;
+      const botMemory = playerStore?.players?.player2?.memory;
+
+      // Si la mémoire contient une cible de ressource actuelle
+      if (botVehicle && botMemory?.currentTargetResource) {
+        // Si le bot est déjà sur la tuile cible, ajouter directement collectResource
+        if (botVehicle.coord === botMemory.currentTargetResource.coord) {
+          fsmLogger.action("Bot is at resource location, adding collectResource action");
+          return { type: 'collectResource', priority: PRIORITY.HIGH };
+        }
+      }
+      
+      // Sinon, ajouter moveToResource (comportement par défaut)
+      return { type: 'moveToResource', priority: PRIORITY.MEDIUM };
+    },
+    // Conserver l'action par défaut originale pour compatibilité
+    defaultAction: { type: 'moveToResource', priority: PRIORITY.MEDIUM },
+    onEnterState: (playerStore) => {
       fsmLogger.state("Entering COLLECTING state");
       
-      // Réinitialisation du statut d'action au début de l'état
-      BotStateConfig[BOT_STATES.COLLECTING].actionStatus = ACTION_STATUS.PENDING;
-      BotStateConfig[BOT_STATES.COLLECTING].lastActionCheck = 0;
-      BotStateConfig[BOT_STATES.COLLECTING].currentCollectSubAction = null;
+      // Solution temporaire: vérifier immédiatement si le bot est déjà sur une tuile de ressource
+      const botVehicle = playerStore?.players?.player2?.vehicles?.ship;
+      const botMemory = playerStore?.players?.player2?.memory;
       
-      // Réinitialisation de la cible de ressource
-      BotStateConfig[BOT_STATES.COLLECTING].targetResource = null;
+      // Si nous avons des ressources ciblées et que le bot est déjà dessus
+      if (botVehicle && botMemory?.knownResources && botMemory.knownResources.length > 0) {
+        // Chercher si le bot est déjà sur une des ressources connues
+        const currentResource = botMemory.knownResources.find(r => r.coord === botVehicle.coord);
+        
+        if (currentResource) {
+          // Enregistrer dans la mémoire du bot quelle est la ressource actuelle
+          playerStore.updatePlayerMemory('player2', {
+            currentTargetResource: currentResource
+          });
+          
+          fsmLogger.action(`Bot already at resource location ${botVehicle.coord}, preparing collection`);
+        }
+      }
     },
     onExitState: (playerStore, changeState) => {
       // Ajout d'une variable statique pour éviter les appels multiples
@@ -129,16 +159,17 @@ export const BotStateConfig = {
       
       fsmLogger.state("Exiting COLLECTING state - Returning to IDLE for evaluation");
       
-      // Nettoyer la file d'action en sortant de l'état
-      if (changeState) {
-        // On passe explicitement à IDLE depuis COLLECTING
-        changeState(BOT_STATES.IDLE);
+      // Nettoyer les données de ciblage de ressources
+      if (playerStore) {
+        playerStore.updatePlayerMemory('player2', {
+          currentTargetResource: null
+        });
       }
       
-      // Réinitialisation des variables d'état
-      BotStateConfig[BOT_STATES.COLLECTING].actionStatus = ACTION_STATUS.PENDING;
-      BotStateConfig[BOT_STATES.COLLECTING].currentCollectSubAction = null;
-      BotStateConfig[BOT_STATES.COLLECTING].targetResource = null;
+      // Toujours retourner à l'état IDLE après la fin des actions de collecte
+      if (changeState) {
+        changeState(BOT_STATES.IDLE);
+      }
       
       // Réinitialiser l'indicateur après un court délai
       setTimeout(() => {
@@ -146,21 +177,20 @@ export const BotStateConfig = {
       }, 50);
     },
     // Initialiser l'indicateur d'état de sortie
-    _isExiting: false,
-    
-    // Nouveaux champs pour gérer le statut de l'action de collecte
-    actionStatus: ACTION_STATUS.PENDING,
-    lastActionCheck: 0, // Horodatage de la dernière vérification d'action
-    currentCollectSubAction: null, // Sous-type d'action en cours (moveToResource, collectResource)
-    targetResource: null, // Ressource cible actuelle
-    cooldownPeriod: 500, // Délai en ms entre les vérifications des actions
+    _isExiting: false
   },
   
   [BOT_STATES.RETURNING]: {
     description: "Bot en retour vers sa base",
     defaultAction: { type: 'returnToBase', priority: PRIORITY.HIGH },
-    onEnterState: () => {
+    onEnterState: (playerStore, addAction) => {
       fsmLogger.state("Entering RETURNING state");
+      
+      // Ajouter explicitement l'action returnToBase à la file pour s'assurer qu'elle soit exécutée
+      if (addAction) {
+        fsmLogger.action("Adding returnToBase action after entering RETURNING state");
+        addAction('returnToBase', PRIORITY.HIGH);
+      }
     },
     onExitState: (playerStore, changeState) => {
       // Ajout d'une variable statique pour éviter les appels multiples
@@ -169,18 +199,7 @@ export const BotStateConfig = {
       // Marquer que nous sommes en train de sortir pour éviter la récursion
       BotStateConfig[BOT_STATES.RETURNING]._isExiting = true;
       
-      // Lors de la sortie de l'état RETURNING, transférer les ressources
-      if (playerStore && playerStore.transferResourcesToScore) {
-        const botVehicle = playerStore.players?.player2?.vehicles?.ship;
-        if (botVehicle && botVehicle.coord === botVehicle.startCoord) {
-          fsmLogger.state("Transferring resources to score before exiting RETURNING state");
-          playerStore.transferResourcesToScore('player2', 'ship');
-          
-          // Réinitialiser l'indicateur de capacité maximale
-          playerStore.updateVehicle('player2', 'ship', { isAtCapacity: false });
-        }
-      }
-      
+      // Toute la logique de traitement (transfert des ressources) est maintenant gérée par l'état IDLE
       fsmLogger.state("Exiting RETURNING state - Returning to IDLE for evaluation");
       
       // Toujours retourner à l'état IDLE après la fin des actions de retour à la base

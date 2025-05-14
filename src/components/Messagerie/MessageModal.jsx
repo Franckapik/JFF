@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
-import { useTileStore } from "../stores/useNewTileStore"; // Import Zustand store
-import "../styles/App.css"; // Import CSS for modal styling
+import { useTileStore } from "../../stores/useNewTileStore"; // Import Zustand store
+import "../../styles/App.css"; // Import CSS for modal styling
 
 const MessageModal = ({ messages, onClose }) => {
   const [selectedMessage, setSelectedMessage] = useState(null); // Track the selected message

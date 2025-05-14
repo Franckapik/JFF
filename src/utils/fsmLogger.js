@@ -21,6 +21,10 @@ const LOG_LEVEL = {
     prefix: '🟣 CONDITION',
     style: 'color: #9C27B0; font-weight: bold'
   },
+  MOUVEMENT: {
+    prefix: '🚀 MOUVEMENT',
+    style: 'color: #00BCD4; font-weight: bold'
+  },
   ERROR: {
     prefix: '🔴 ERROR',
     style: 'color: #F44336; font-weight: bold'
@@ -112,6 +116,7 @@ const fsmLogger = {
   state: (message, data = null) => log('STATE', message, data),
   action: (message, data = null) => log('ACTION', message, data),
   condition: (message, data = null) => log('CONDITION', message, data),
+  mouvement: (message, data = null) => log('MOUVEMENT', message, data),
   error: (message, data = null) => log('ERROR', message, data),
   
   /**

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import usePlayerStore from "../stores/usePlayerStore";
-import useBotStore from "../stores/useBotStore";
-import { useTileStore } from "../stores/useNewTileStore";
+import usePlayerStore from "../../stores/usePlayerStore";
+import useBotStore from "../../stores/useBotStore";
+import { useTileStore } from "../../stores/useNewTileStore";
 import PlayerHUD from "./PlayerHUD";
 import BotHUD from "./BotHUD";
 

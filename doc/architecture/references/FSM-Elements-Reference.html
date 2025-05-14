@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Référence des éléments du système FSM</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+            padding-left: 10px;
+            border-left: 4px solid #3498db;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            overflow-x: auto;
+            display: block;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            text-align: left;
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #e9f7fe;
+        }
+        code {
+            background-color: #f1f1f1;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+        }
+        .state {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .function {
+            color: #2980b9;
+        }
+        .variable {
+            color: #27ae60;
+        }
+        .condition {
+            color: #8e44ad;
+        }
+        .description {
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Référence des éléments du système FSM</h1>
+    
+    <p>Ce document présente des tableaux de référence qui mettent en relation les différents composants du système de machine à états finis (FSM) utilisé par le bot.</p>
+    
+    <h2>Tableau de correspondance</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>État (State)</th>
+                <th>Actions associées</th>
+                <th>Fonctions PlayerStore utilisées</th>
+                <th>Variables/Flags</th>
+                <th>Conditions BotConditions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="state">IDLE</td>
+                <td><code>evaluateConditionsFromIdleAction</code></td>
+                <td><code class="function">updatePlayerMemory</code></td>
+                <td><code class="variable">botState</code></td>
+                <td><code class="condition">evaluateStateTransition</code>, <code class="condition">isLowFuel</code>, <code class="condition">isAtMaxCapacity</code>, <code class="condition">hasEnoughKnownResources</code>, <code class="condition">hasDiscoveredResources</code></td>
+            </tr>
+            <tr>
+                <td class="state">EXPLORING</td>
+                <td><code>exploreDroneAction</code>, <code>moveToRandomTileAction</code></td>
+                <td><code class="function">updatePlayerMemory</code>, <code class="function">moveToTile</code></td>
+                <td><code class="variable">explorationCount</code>, <code class="variable">isMoving</code>, <code class="variable">droneReturnedToShip</code></td>
+                <td><code class="condition">isDroneMoving</code>, <code class="condition">isDroneAtShip</code>, <code class="condition">hasEnoughFuel</code></td>
+            </tr>
+            <tr>
+                <td class="state">COLLECTING</td>
+                <td><code>moveToResourceAction</code>, <code>collectResourceAction</code></td>
+                <td><code class="function">moveToTile</code>, <code class="function">updatePlayerMemory</code>, <code class="function">updateVehicle</code>, <code class="function">checkResourceCapacity</code></td>
+                <td><code class="variable">currentTargetResource</code>, <code class="variable">isCollecting</code>, <code class="variable">collectionTile</code>, <code class="variable">knownResources</code></td>
+                <td><code class="condition">allKnownResourcesCollected</code>, <code class="condition">isShipMoving</code></td>
+            </tr>
+            <tr>
+                <td class="state">RETURNING</td>
+                <td><code>returnToBaseAction</code>, <code>refuelAtBaseAction</code></td>
+                <td><code class="function">moveToTile</code>, <code class="function">transferResourcesToScore</code>, <code class="function">refuelVehicle</code></td>
+                <td><code class="variable">isMoving</code>, <code class="variable">isAtCapacity</code></td>
+                <td><code class="condition">isAtBase</code>, <code class="condition">isFullyRefueled</code>, <code class="condition">shouldReturnToBase</code></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h2>Actions et leurs dépendances</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>Description</th>
+                <th>Fonctions PlayerStore utilisées</th>
+                <th>Variables/Flags</th>
+                <th>Conditions utilisées</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>evaluateConditionsFromIdleAction</code></td>
+                <td class="description">Évalue les conditions pour transition d'état</td>
+                <td>-</td>
+                <td><code class="variable">botState</code></td>
+                <td><code class="condition">evaluateStateTransition</code></td>
+            </tr>
+            <tr>
+                <td><code>moveToRandomTileAction</code></td>
+                <td class="description">Déplacement vers une tuile aléatoire</td>
+                <td><code class="function">moveToTile</code></td>
+                <td><code class="variable">isMoving</code></td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>returnToBaseAction</code></td>
+                <td class="description">Retourne à la base/tuile de départ</td>
+                <td><code class="function">moveToTile</code></td>
+                <td><code class="variable">isMoving</code>, <code class="variable">startCoord</code>, <code class="variable">initiated</code></td>
+                <td><code class="condition">isAtBase</code>, <code class="condition">isShipMoving</code></td>
+            </tr>
+            <tr>
+                <td><code>refuelAtBaseAction</code></td>
+                <td class="description">Ravitaillement et transfert des ressources</td>
+                <td><code class="function">refuelVehicle</code>, <code class="function">transferResourcesToScore</code>, <code class="function">updatePlayerMemory</code></td>
+                <td>-</td>
+                <td><code class="condition">isAtBase</code>, <code class="condition">isFullyRefueled</code></td>
+            </tr>
+            <tr>
+                <td><code>exploreWithDroneAction</code></td>
+                <td class="description">Explore avec un drone</td>
+                <td><code class="function">moveToTile</code>, <code class="function">updatePlayerMemory</code></td>
+                <td><code class="variable">explorationStarted</code>, <code class="variable">knownResources</code>, <code class="variable">droneReturnedToShip</code></td>
+                <td><code class="condition">isDroneMoving</code>, <code class="condition">isDroneAtShip</code></td>
+            </tr>
+            <tr>
+                <td><code>moveToResourceAction</code></td>
+                <td class="description">Déplacement vers une ressource connue</td>
+                <td><code class="function">moveToTile</code>, <code class="function">updatePlayerMemory</code></td>
+                <td><code class="variable">started</code>, <code class="variable">startTime</code>, <code class="variable">targetCoord</code>, <code class="variable">currentTargetResource</code></td>
+                <td><code class="condition">isShipMoving</code></td>
+            </tr>
+            <tr>
+                <td><code>collectResourceAction</code></td>
+                <td class="description">Collecte une ressource</td>
+                <td><code class="function">updateVehicle</code>, <code class="function">updatePlayerMemory</code>, <code class="function">checkResourceCapacity</code></td>
+                <td><code class="variable">started</code>, <code class="variable">startTime</code>, <code class="variable">collectionTime</code>, <code class="variable">tileCoord</code>, <code class="variable">resources</code>, <code class="variable">isCollecting</code></td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>testQueueAction</code></td>
+                <td class="description">Test de la file d'actions</td>
+                <td>-</td>
+                <td><code class="variable">startTime</code></td>
+                <td>-</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h2>Conditions et leurs utilisations</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Condition</th>
+                <th>Description</th>
+                <th>États qui l'utilisent</th>
+                <th>Actions qui l'utilisent</th>
+                <th>Variables examinées</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="condition">isLowFuel</code></td>
+                <td class="description">Vérifie si le carburant est bas</td>
+                <td>IDLE</td>
+                <td><code>evaluateConditionsFromIdleAction</code></td>
+                <td><code class="variable">fuel</code></td>
+            </tr>
+            <tr>
+                <td><code class="condition">hasEnoughFuel</code></td>
+                <td class="description">Vérifie s'il y a assez de carburant</td>
+                <td>IDLE, EXPLORING</td>
+                <td><code>evaluateConditionsFromIdleAction</code>, <code>exploreWithDroneAction</code></td>
+                <td><code class="variable">fuel</code></td>
+            </tr>
+            <tr>
+                <td><code class="condition">isAtMaxCapacity</code></td>
+                <td class="description">Vérifie si capacité maximale atteinte</td>
+                <td>IDLE, COLLECTING</td>
+                <td><code>evaluateConditionsFromIdleAction</code></td>
+                <td><code class="variable">isAtCapacity</code></td>
+            </tr>
+            <tr>
+                <td><code class="condition">hasEnoughKnownResources</code></td>
+                <td class="description">Vérifie s'il y a assez de ressources connues</td>
+                <td>IDLE</td>
+                <td><code>evaluateConditionsFromIdleAction</code></td>
+                <td><code class="variable">knownResources</code></td>
+            </tr>
+            <tr>
+                <td><code class="condition">hasDiscoveredResources</code></td>
+                <td class="description">Vérifie si des ressources ont été découvertes</td>
+                <td>IDLE, EXPLORING</td>
+                <td><code>evaluateConditionsFromIdleAction</code></td>
+                <td><code class="variable">hasNewResourceDiscovery</code>, <code class="variable">droneReturnedToShip</code></td>
+            </tr>
+            <tr>
+                <td><code class="condition">allKnownResourcesCollected</code></td>
+                <td class="description">Vérifie si toutes les ressources connues sont collectées</td>
+                <td>COLLECTING</td>
+                <td><code>evaluateConditionsFromIdleAction</code></td>
+                <td><code class="variable">knownResources</code></td>
+            </tr>
+            <tr>
+                <td><code class="condition">isAtBase</code></td>
+                <td class="description">Vérifie si le véhicule est à la base</td>
+                <td>IDLE, RETURNING</td>
+                <td><code>returnToBaseAction</code>, <code>refuelAtBaseAction</code></td>
+                <td><code class="variable">coord</code>, <code class="variable">startCoord</code></td>
+            </tr>
+            <tr>
+                <td><code class="condition">isFullyRefueled</code></td>
+                <td class="description">Vérifie si le ravitaillement est complet</td>
+                <td>RETURNING</td>
+                <td><code>refuelAtBaseAction</code></td>
+                <td><code class="variable">fuel</code></td>
+            </tr>
+            <tr>
+                <td><code class="condition">isDroneMoving</code></td>
+                <td class="description">Vérifie si le drone est en mouvement</td>
+                <td>EXPLORING</td>
+                <td><code>exploreWithDroneAction</code></td>
+                <td><code class="variable">isMoving</code></td>
+            </tr>
+            <tr>
+                <td><code class="condition">isDroneAtShip</code></td>
+                <td class="description">Vérifie si le drone est au même endroit que le vaisseau</td>
+                <td>EXPLORING</td>
+                <td><code>exploreWithDroneAction</code></td>
+                <td><code class="variable">coord</code></td>
+            </tr>
+            <tr>
+                <td><code class="condition">isShipMoving</code></td>
+                <td class="description">Vérifie si le vaisseau est en mouvement</td>
+                <td>COLLECTING, RETURNING</td>
+                <td><code>moveToResourceAction</code>, <code>returnToBaseAction</code></td>
+                <td><code class="variable">isMoving</code></td>
+            </tr>
+            <tr>
+                <td><code class="condition">shouldReturnToBase</code></td>
+                <td class="description">Vérifie si le bot doit retourner à sa base</td>
+                <td>IDLE</td>
+                <td><code>evaluateConditionsFromIdleAction</code></td>
+                <td>Combine <code class="variable">isLowFuel</code> et <code class="variable">isAtMaxCapacity</code></td>
+            </tr>
+            <tr>
+                <td><code class="condition">evaluateStateTransition</code></td>
+                <td class="description">Fonction centrale d'évaluation des transitions</td>
+                <td>Tous</td>
+                <td><code>evaluateConditionsFromIdleAction</code>, <code>checkStateExitConditions</code></td>
+                <td>Combine plusieurs conditions</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h2>Fonctions du PlayerStore et leurs utilisations</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Fonction PlayerStore</th>
+                <th>Description</th>
+                <th>Actions qui l'utilisent</th>
+                <th>États qui en dépendent</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="function">moveToTile</code></td>
+                <td class="description">Déplace un véhicule vers une tuile</td>
+                <td><code>moveToResourceAction</code>, <code>returnToBaseAction</code>, <code>moveToRandomTileAction</code>, <code>exploreWithDroneAction</code></td>
+                <td>EXPLORING, COLLECTING, RETURNING</td>
+            </tr>
+            <tr>
+                <td><code class="function">updatePlayerMemory</code></td>
+                <td class="description">Met à jour la mémoire d'un joueur</td>
+                <td><code>collectResourceAction</code>, <code>exploreWithDroneAction</code>, <code>refuelAtBaseAction</code>, <code>moveToResourceAction</code></td>
+                <td>Tous</td>
+            </tr>
+            <tr>
+                <td><code class="function">updateVehicle</code></td>
+                <td class="description">Met à jour l'état d'un véhicule</td>
+                <td><code>collectResourceAction</code></td>
+                <td>COLLECTING</td>
+            </tr>
+            <tr>
+                <td><code class="function">transferResourcesToScore</code></td>
+                <td class="description">Transfère les ressources au score</td>
+                <td><code>refuelAtBaseAction</code></td>
+                <td>RETURNING</td>
+            </tr>
+            <tr>
+                <td><code class="function">refuelVehicle</code></td>
+                <td class="description">Ravitaille un véhicule</td>
+                <td><code>refuelAtBaseAction</code></td>
+                <td>RETURNING</td>
+            </tr>
+            <tr>
+                <td><code class="function">checkResourceCapacity</code></td>
+                <td class="description">Vérifie la capacité des ressources</td>
+                <td><code>collectResourceAction</code></td>
+                <td>COLLECTING</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h2>Variables d'état importantes</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Variable/Flag</th>
+                <th>Localisation</th>
+                <th>Description</th>
+                <th>Utilisé par</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="variable">botState</code></td>
+                <td>useBotStore</td>
+                <td class="description">État actuel du bot</td>
+                <td>Tous</td>
+            </tr>
+            <tr>
+                <td><code class="variable">isMoving</code></td>
+                <td>usePlayerStore (vehicles)</td>
+                <td class="description">Indique si un véhicule est en mouvement</td>
+                <td>Plusieurs conditions et actions</td>
+            </tr>
+            <tr>
+                <td><code class="variable">currentTargetResource</code></td>
+                <td>usePlayerStore (memory)</td>
+                <td class="description">Ressource actuellement ciblée</td>
+                <td><code>moveToResourceAction</code>, <code>collectResourceAction</code></td>
+            </tr>
+            <tr>
+                <td><code class="variable">knownResources</code></td>
+                <td>usePlayerStore (memory)</td>
+                <td class="description">Liste des ressources connues</td>
+                <td><code>moveToResourceAction</code>, conditions de ressources</td>
+            </tr>
+            <tr>
+                <td><code class="variable">explorationCount</code></td>
+                <td>usePlayerStore (memory)</td>
+                <td class="description">Nombre d'explorations effectuées</td>
+                <td><code>exploreWithDroneAction</code></td>
+            </tr>
+            <tr>
+                <td><code class="variable">droneReturnedToShip</code></td>
+                <td>usePlayerStore (memory)</td>
+                <td class="description">Flag indiquant que le drone est revenu au vaisseau</td>
+                <td><code>exploreWithDroneAction</code></td>
+            </tr>
+            <tr>
+                <td><code class="variable">isCollecting</code></td>
+                <td>usePlayerStore (memory)</td>
+                <td class="description">Flag indiquant une collecte en cours</td>
+                <td><code>collectResourceAction</code></td>
+            </tr>
+            <tr>
+                <td><code class="variable">isAtCapacity</code></td>
+                <td>usePlayerStore (vehicles)</td>
+                <td class="description">Indique si le véhicule est à capacité maximale</td>
+                <td>Conditions de retour à la base</td>
+            </tr>
+            <tr>
+                <td><code class="variable">fuel</code></td>
+                <td>usePlayerStore (vehicles)</td>
+                <td class="description">Niveau de carburant</td>
+                <td>Conditions de sécurité</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <script>
+        // Script pour améliorer la lisibilité sur les appareils mobiles
+        document.addEventListener('DOMContentLoaded', function() {
+            const tables = document.querySelectorAll('table');
+            tables.forEach(table => {
+                if (window.innerWidth < 768) {
+                    table.style.display = 'block';
+                    table.style.overflowX = 'auto';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,9 +1,9 @@
 // src/components/BotDebugger.jsx
 // Composant de débogage pour visualiser l'état de la FSM du bot
-import React, { useState, useEffect } from 'react';
-import useBotStore from '../stores/useBotStore';
-import usePlayerStore from '../stores/usePlayerStore';
-import { useTileStore } from "../stores/useNewTileStore";
+import React, { useState, useEffect, useRef } from 'react';
+import usePlayerStore from "../../stores/usePlayerStore";
+import useBotStore from "../../stores/useBotStore";
+import { useTileStore } from "../../stores/useNewTileStore";
 
 // Style pour le débogueur
 const debuggerStyle = {
@@ -15,7 +15,7 @@ const debuggerStyle = {
   padding: '10px',
   borderRadius: '8px',
   width: '400px',
-  height: '500px',  // Hauteur fixe
+  height: 'calc(100% - 20px)',  // Hauteur 100% de la fenêtre moins la marge
   display: 'flex',
   flexDirection: 'column',
   fontFamily: 'monospace',
@@ -124,19 +124,20 @@ const BotDebugger = () => {
   // États pour le débogueur
   const [isVisible, setIsVisible] = useState(true);
   const [activeMainTab, setActiveMainTab] = useState('bot'); // 'bot', 'player' ou 'tile'
-  const [activeTab, setActiveTab] = useState('state'); // 'state', 'actions', 'history', 'conditions', 'resources'
+  const [activeTab, setActiveTab] = useState('actions'); // 'actions' est maintenant l'onglet par défaut au lieu de 'state'
   const [stateHistory, setStateHistory] = useState([]);
   const [conditionLog, setConditionLog] = useState([]);
-  const [actionHistory, setActionHistory] = useState([]); // Nouvel état pour l'historique des actions
+  const [actionHistory, setActionHistory] = useState([]); // Historique des actions
   const [activeMemoryTab, setActiveMemoryTab] = useState('resources'); // 'resources', 'collected' ou 'dangers'
   
-  // Récupération de l'état du bot
+  // Récupération de l'état du bot avec le nouveau système
   const {
     botState,
     isRunning,
     actionQueue,
-    completedActions,
-    BOT_STATES
+    actionHistory: storeActionHistory, // Nouveau nom pour éviter la confusion
+    BOT_STATES,
+    ACTION_STATUS // Ajout du statut d'action
   } = useBotStore();
   
   // Récupération des données des joueurs
@@ -153,49 +154,109 @@ const BotDebugger = () => {
   const tiles = useTileStore((state) => state.tiles);
   const hoveredTile = hoveredTileCoord ? tiles[hoveredTileCoord] : null;
   
-  // Ajoute un état au historique lors des changements
+  // Refs pour prévenir les mises à jour en boucle
+  const prevBotStateRef = useRef(botState);
+  const prevActionHistoryRef = useRef([]);
+  const processedActionsRef = useRef(new Set());
+  
+  // Ajoute un état à l'historique lors des changements
   useEffect(() => {
-    if (botState) {
-      setStateHistory(prev => [...prev.slice(-19), { 
-        state: botState, 
-        timestamp: new Date().toLocaleTimeString(),
-        fuel: botVehicle?.fuel,
-        resources: botVehicle?.resources
-      }]);
+    // Vérifier si l'état a vraiment changé pour éviter les rendus inutiles
+    if (botState !== prevBotStateRef.current && botVehicle) {
+      setStateHistory(prev => {
+        // Vérifier si la dernière entrée est identique
+        const lastEntry = prev[prev.length - 1];
+        if (lastEntry && lastEntry.state === botState) {
+          return prev;
+        }
+        
+        return [...prev.slice(-19), { 
+          state: botState, 
+          timestamp: new Date().toLocaleTimeString(),
+          fuel: botVehicle?.fuel,
+          resources: botVehicle?.resources
+        }];
+      });
+      
+      // Mettre à jour la référence
+      prevBotStateRef.current = botState;
     }
   }, [botState, botVehicle]);
   
   // Ajoute un log de condition quand une action d'évaluation est complétée
   useEffect(() => {
-    const lastAction = completedActions[completedActions.length - 1];
-    if (lastAction?.type === 'evaluateIdle') {
-      setConditionLog(prev => [...prev.slice(-9), {
-        timestamp: new Date().toLocaleTimeString(),
-        nextState: botState,
-        conditions: {
-          fuel: botVehicle?.fuel,
-          atCapacity: botVehicle?.isAtCapacity,
-          knownResources: botMemory?.knownResources?.length || 0,
-          explorationCount: botMemory?.explorationCount || 0
-        }
-      }]);
+    if (!storeActionHistory || !botVehicle || !botMemory) return;
+    
+    // Vérifier si une action d'évaluation a été complétée
+    const completeEvaluateActions = storeActionHistory.filter(
+      action => action.type === 'evaluateIdle' && 
+               action.status === ACTION_STATUS.COMPLETED &&
+               !processedActionsRef.current.has(action.timestamp)
+    );
+    
+    if (completeEvaluateActions.length > 0) {
+      // Traiter seulement les nouvelles actions d'évaluation
+      const newLogs = completeEvaluateActions.map(action => {
+        // Marquer cette action comme traitée
+        processedActionsRef.current.add(action.timestamp);
+        
+        return {
+          timestamp: new Date(action.completedAt).toLocaleTimeString(),
+          nextState: botState,
+          conditions: {
+            fuel: botVehicle?.fuel,
+            atCapacity: botVehicle?.isAtCapacity,
+            knownResources: botMemory?.knownResources?.length || 0,
+            explorationCount: botMemory?.explorationCount || 0
+          }
+        };
+      });
+      
+      if (newLogs.length > 0) {
+        setConditionLog(prev => [...prev, ...newLogs].slice(-10));
+      }
     }
-  }, [completedActions, botState, botVehicle, botMemory]);
+  }, [storeActionHistory, botState, botVehicle, botMemory, ACTION_STATUS]);
   
-  // Mise à jour de l'historique des actions quand une action est complétée
+  // Mise à jour de l'historique des actions quand une action est complétée ou échouée
   useEffect(() => {
-    if (completedActions.length > 0) {
-      const lastAction = completedActions[completedActions.length - 1];
-      setActionHistory(prev => [...prev.slice(-14), {
-        ...lastAction,
-        completedAt: new Date().toLocaleTimeString()
-      }]);
+    if (!storeActionHistory) return;
+    
+    // Comparer avec la version précédente pour éviter les mises à jour inutiles
+    const currentHistoryString = JSON.stringify(storeActionHistory);
+    const prevHistoryString = JSON.stringify(prevActionHistoryRef.current);
+    
+    if (currentHistoryString !== prevHistoryString) {
+      // Filtrer pour ne pas dupliquer les entrées dans l'historique local
+      const existingIds = new Set(actionHistory.map(a => `${a.type}-${a.timestamp}`));
+      
+      const newActions = storeActionHistory.filter(action => 
+        !existingIds.has(`${action.type}-${action.timestamp}`)
+      );
+      
+      if (newActions.length > 0) {
+        setActionHistory(prev => [...prev, ...newActions].slice(-15));
+      }
+      
+      // Mettre à jour la référence
+      prevActionHistoryRef.current = storeActionHistory;
     }
-  }, [completedActions]);
+  }, [storeActionHistory]);
 
   // Formater le nom d'un état pour l'affichage
   const formatStateName = (state) => {
     return state.charAt(0).toUpperCase() + state.slice(1);
+  };
+  
+  // Obtenir la couleur pour un statut d'action
+  const getActionStatusColor = (status) => {
+    switch(status) {
+      case ACTION_STATUS.PENDING: return "#f9a825"; // Orange
+      case ACTION_STATUS.IN_PROGRESS: return "#2196F3"; // Bleu
+      case ACTION_STATUS.COMPLETED: return "#4CAF50"; // Vert
+      case ACTION_STATUS.FAILED: return "#f44336"; // Rouge
+      default: return "#aaaaaa"; // Gris
+    }
   };
   
   // Obtenir une couleur pour les ressources en fonction de leur quantité
@@ -246,9 +307,20 @@ const BotDebugger = () => {
               <div style={{ padding: '5px', color: '#888' }}>Aucune action en attente</div>
             ) : (
               actionQueue.map((action, index) => (
-                <div key={index} style={actionItemStyle(false)}>
+                <div key={index} style={{
+                  ...actionItemStyle(false), 
+                  borderLeft: `4px solid ${getActionStatusColor(action.status)}`
+                }}>
                   <div><strong>Type:</strong> {action.type}</div>
                   <div><strong>Priorité:</strong> {action.priority}</div>
+                  <div><strong>Statut:</strong> <span style={{ color: getActionStatusColor(action.status) }}>
+                    {action.status}
+                  </span></div>
+                  {action.status === ACTION_STATUS.IN_PROGRESS && (
+                    <div style={{ fontSize: '10px', color: '#aaa' }}>
+                      En cours depuis {((Date.now() - action.timestamp)/1000).toFixed(1)}s
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -259,14 +331,23 @@ const BotDebugger = () => {
               <div style={{ padding: '5px', color: '#888' }}>Aucune action complétée</div>
             ) : (
               actionHistory.map((action, index) => (
-                <div key={index} style={completedActionStyle}>
+                <div key={index} style={{
+                  padding: '5px',
+                  backgroundColor: action.status === ACTION_STATUS.COMPLETED ? '#2a5b2a' : '#5b2a2a',
+                  margin: '3px 0',
+                  borderRadius: '4px'
+                }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <strong>{action.type}</strong>
-                    <span style={{ fontSize: '10px', color: '#aaa' }}>{action.completedAt}</span>
+                    <span style={{ fontSize: '10px', color: '#aaa' }}>
+                      {new Date(action.completedAt).toLocaleTimeString()}
+                    </span>
                   </div>
                   <div style={{ fontSize: '11px', display: 'flex', justifyContent: 'space-between' }}>
                     <span>Priorité: {action.priority}</span>
-                    <span>Status: {action.success ? 'Réussite' : 'Échec'}</span>
+                    <span style={{ color: getActionStatusColor(action.status) }}>
+                      Status: {action.status}
+                    </span>
                   </div>
                 </div>
               ))
@@ -544,7 +625,7 @@ const BotDebugger = () => {
     }
   };
 
-  // Rendu des différents onglets pour le PLAYER
+  // Rendu des différents onglets pour le PLAYER (inchangé)
   const renderPlayerTabContent = () => {
     switch (activeTab) {
       case 'state':
@@ -701,7 +782,7 @@ const BotDebugger = () => {
     };
   };
   
-  // Rendu du contenu de l'onglet Tile
+  // Rendu du contenu de l'onglet Tile (inchangé)
   const renderTileTabContent = () => {
     if (!hoveredTile) {
       return (
@@ -822,7 +903,7 @@ const BotDebugger = () => {
   const handleResetHistory = () => {
     setStateHistory([]);
     setConditionLog([]);
-    setActionHistory([]); // Réinitialiser aussi l'historique des actions
+    setActionHistory([]);
   };
 
   // Rendu des onglets selon le mode actif (Bot, Player ou Tile)
@@ -898,51 +979,101 @@ const BotDebugger = () => {
           Tile
         </button>
       </div>
-      
-      {/* Onglets secondaires - uniquement pour Bot et Player */}
-      {activeMainTab !== 'tile' && (
-        <div style={tabStyle}>
-          <button 
-            onClick={() => setActiveTab('state')} 
-            style={tabButtonStyle(activeTab === 'state')}
-          >
-            État
-          </button>
-          {activeMainTab === 'bot' && (
-            <button 
-              onClick={() => setActiveTab('actions')} 
-              style={tabButtonStyle(activeTab === 'actions')}
-            >
-              Actions ({actionQueue.length})
-            </button>
-          )}
-          {activeMainTab === 'bot' && (
-            <button 
-              onClick={() => setActiveTab('history')} 
-              style={tabButtonStyle(activeTab === 'history')}
-            >
-              Historique
-            </button>
-          )}
-          {activeMainTab === 'bot' && (
-            <button 
-              onClick={() => setActiveTab('conditions')} 
-              style={tabButtonStyle(activeTab === 'conditions')}
-            >
-              Conditions
-            </button>
-          )}
-          <button 
-            onClick={() => setActiveTab('resources')} 
-            style={tabButtonStyle(activeTab === 'resources')}
-          >
-            Resources
-          </button>
-        </div>
-      )}
-      
+
       {/* Conteneur de contenu avec scroll */}
       <div style={contentContainerStyle}>
+        {/* Si on est dans l'onglet Bot, on affiche toujours l'état et les données du véhicule en haut */}
+        {activeMainTab === 'bot' && (
+          <div style={{ 
+            marginBottom: '15px', 
+            padding: '8px', 
+            backgroundColor: 'rgba(0, 40, 0, 0.4)', 
+            borderRadius: '4px'
+          }}>
+            <h4 style={{ marginTop: '0' }}>État actuel: <span style={{ color: '#4caf50' }}>{formatStateName(botState)}</span></h4>
+            <div>Bot actif: <span style={{ color: isRunning ? '#4caf50' : '#ff5722' }}>{isRunning ? 'Oui' : 'Non'}</span></div>
+            
+            <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+              {Object.values(BOT_STATES).map(state => (
+                <div key={state} style={{
+                  ...stateBoxStyle(state === botState),
+                  margin: '0',
+                  flexBasis: 'calc(33% - 5px)'
+                }}>
+                  {formatStateName(state)}
+                </div>
+              ))}
+            </div>
+            
+            {/* Données détaillées du véhicule déplacées ici */}
+            {botVehicle && (
+              <div style={{ marginTop: '10px', fontSize: '12px'}}>
+                <div>Position: {botVehicle?.coord || "Inconnue"}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div>Fuel: {botVehicle?.fuel || 0}/100</div>
+                  <div>En mouvement: {botVehicle?.isMoving ? "Oui" : "Non"}</div>
+                  <div>Capacité max: {botVehicle?.isAtCapacity ? 'Oui' : 'Non'}</div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div>Food: {botVehicle?.resources?.food || 0}</div>
+                  <div>Debris: {botVehicle?.resources?.debris || 0}</div>
+                  <div>Special: {botVehicle?.resources?.special || 0}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Onglets secondaires - uniquement pour Bot et Player */}
+        {activeMainTab !== 'tile' && (
+          <div style={tabStyle}>
+            {/* Pour l'onglet Bot, on n'affiche plus l'onglet état car il est déjà en haut */}
+            {activeMainTab === 'bot' ? (
+              <>
+                <button 
+                  onClick={() => setActiveTab('actions')} 
+                  style={tabButtonStyle(activeTab === 'actions')}
+                >
+                  Queue ({actionQueue.length})
+                </button>
+                <button 
+                  onClick={() => setActiveTab('history')} 
+                  style={tabButtonStyle(activeTab === 'history')}
+                >
+                  History
+                </button>
+                <button 
+                  onClick={() => setActiveTab('conditions')} 
+                  style={tabButtonStyle(activeTab === 'conditions')}
+                >
+                  Conditions
+                </button>
+                <button 
+                  onClick={() => setActiveTab('resources')} 
+                  style={tabButtonStyle(activeTab === 'resources')}
+                >
+                  Ressources
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  onClick={() => setActiveTab('state')} 
+                  style={tabButtonStyle(activeTab === 'state')}
+                >
+                  État
+                </button>
+                <button 
+                  onClick={() => setActiveTab('resources')} 
+                  style={tabButtonStyle(activeTab === 'resources')}
+                >
+                  Resources
+                </button>
+              </>
+            )}
+          </div>
+        )}
+        
         {/* Contenu des onglets */}
         {renderTabContent()}
       </div>
