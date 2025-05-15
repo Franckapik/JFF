@@ -85,7 +85,19 @@ export const useTileStore = create((set, get) => ({
     // Initialize tiles using radius and spacing from the store
     initializeTiles: (radius = 3, spacing = 0.1) => {
         const hexPositions = generateHexPositions(radius, spacing);
-        const tiles = hexPositions.reduce((acc, tile) => ({ ...acc, [tile.coord]: { ...tile, collected: false } }), {});
+        const tiles = hexPositions.reduce((acc, tile) => {
+            // Ajouter originalResources comme copie des ressources initiales
+            const tileWithOriginal = { 
+                ...tile, 
+                collected: false,
+                // Initialiser resourcePercentage à 100% (toutes les ressources présentes)
+                resourcePercentage: 100,
+                // Stocker les ressources originales pour référence
+                originalResources: tile.resources ? { ...tile.resources } : { food: 0, debris: 0, special: 0 }
+            };
+            return { ...acc, [tile.coord]: tileWithOriginal };
+        }, {});
+        
         set({ tiles });
     },
 
@@ -106,7 +118,7 @@ export const useTileStore = create((set, get) => ({
             updatedTiles[coord] = { 
                 ...updatedTiles[coord], 
                 collected: true,
-                partiallyCollected: false, // Quand la tuile est complètement collectée, elle n'est plus partiellement collectée
+                resourcePercentage: 0, // Mettre à 0% car la tuile est complètement collectée
                 resources: { food: 0, debris: 0, special: 0 }
             };
             return { tiles: updatedTiles };
@@ -149,6 +161,9 @@ export const useTileStore = create((set, get) => ({
         const tile = get().tiles[coord];
         if (!tile || !tile.resources) return false;
         
+        // Ressources initiales (si originalResources n'existe pas, on utilise les ressources actuelles)
+        const originalResources = tile.originalResources || { ...tile.resources };
+        
         // Calcul des ressources restantes sur la tuile
         const remainingResources = {
             food: Math.max(0, (tile.resources.food || 0) - (collectedResources.food || 0)),
@@ -161,13 +176,23 @@ export const useTileStore = create((set, get) => ({
                        remainingResources.debris === 0 && 
                        remainingResources.special === 0;
         
+        // Calculer le pourcentage de ressources restantes (moyenne pondérée)
+        const totalOriginal = originalResources.food + originalResources.debris + originalResources.special;
+        const totalRemaining = remainingResources.food + remainingResources.debris + remainingResources.special;
+        
+        // Calculer le pourcentage, avec protection contre la division par zéro
+        const percentageRemaining = totalOriginal > 0 
+            ? Math.round((totalRemaining / totalOriginal) * 100) 
+            : 0;
+        
         set((state) => {
             const updatedTiles = { ...state.tiles };
             updatedTiles[coord] = {
                 ...updatedTiles[coord],
                 resources: remainingResources,
+                originalResources: originalResources,  // Stocker les ressources originales pour référence
                 collected: isEmpty, // Marquer comme complètement collectée seulement si vide
-                partiallyCollected: !isEmpty && (collectedResources.food > 0 || collectedResources.debris > 0 || collectedResources.special > 0) // Partiellement collectée si des ressources ont été prises mais qu'il en reste
+                resourcePercentage: percentageRemaining // Pourcentage de ressources restantes (0-100)
             };
             return { tiles: updatedTiles };
         });
@@ -185,7 +210,7 @@ export const useTileStore = create((set, get) => ({
                 ...updatedTiles[coord],
                 resources: { food: 0, debris: 0, special: 0 },
                 collected: true,
-                partiallyCollected: false
+                resourcePercentage: 0
             };
             return { tiles: updatedTiles };
         });

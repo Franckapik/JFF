@@ -16,10 +16,13 @@ const Tile = ({ position, radius, color, isHighTile, onClick, coord }) => {
     state.tiles[coord] ? state.tiles[coord].collected : false
   );
   
-  // Récupérer l'état de collection partielle directement du store
-  const isPartiallyCollected = useTileStore((state) => 
-    state.tiles[coord] ? state.tiles[coord].partiallyCollected : false
+  // Récupérer le pourcentage de ressources restantes
+  const resourcePercentage = useTileStore((state) => 
+    state.tiles[coord] ? state.tiles[coord].resourcePercentage : 0
   );
+  
+  // Une tuile est partiellement collectée si le pourcentage est entre 1 et 99%
+  const isPartiallyCollected = resourcePercentage > 0 && resourcePercentage < 100;
   
   // Handle hover events
   const handlePointerOver = () => {
