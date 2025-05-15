@@ -50,13 +50,14 @@ export function generateHexPositions(radius, spacing) {
           walkable: true, // Par défaut, la tuile est accessible
           explored: false, // Par défaut, la tuile n'est pas explorée
           collected: false, // Par défaut, la tuile n'est pas collectée
+          partiallyCollected: false, // Par défaut, la tuile n'est pas partiellement collectée
           type: "resource", // Par défaut, la tuile est une ressource
           neighbors, // Encoded neighbors
           color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Couleur aléatoire
           outer, // Propriété outer
           resources: {
             food: Math.floor(Math.random() * 101), // Random food quantity (0-100)
-            debris: Math.floor(Math.random() * 10001), // Random debris quantity (0-10000)
+            debris: Math.floor(Math.random() * 1001), // Random debris quantity (0-10000)
             special: Math.floor(Math.random() * 3), // Random special quantity (0-2)
           },
           immunity: Math.random() < 0.1, // 10% chance of immunity

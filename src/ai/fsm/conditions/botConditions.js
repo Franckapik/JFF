@@ -61,8 +61,8 @@ export const BotConditions = {
     
     // Si le flag n'est pas activé, vérifier directement les niveaux de ressources
     if (!isAtCapacity && botVehicle.resources && botVehicle.maxCapacity) {
-      const { food, debris, special } = botVehicle.resources;
-      const { food: maxFood, debris: maxDebris, special: maxSpecial } = botVehicle.maxCapacity;
+      const { food = 0, debris = 0, special = 0 } = botVehicle.resources;
+      const { food: maxFood = 1000, debris: maxDebris = 1000, special: maxSpecial = 1000 } = botVehicle.maxCapacity;
       
       // Une seule ressource au maximum suffit pour déclencher l'état "à capacité maximale"
       isAtCapacity = food >= maxFood || debris >= maxDebris || special >= maxSpecial;
@@ -71,6 +71,22 @@ export const BotConditions = {
       if (isAtCapacity) {
         console.log(`[BotCondition] Ressources au-dessus des limites: Food ${food}/${maxFood}, Debris ${debris}/${maxDebris}, Special ${special}/${maxSpecial}`);
       }
+    }
+    
+    // IMPORTANT: Si le bot a déjà déposé ses ressources à la base, 
+    // réinitialiser le flag isAtCapacity
+    if (isAtCapacity && botVehicle.coord === botVehicle.startCoord && 
+        (!botVehicle.resources || 
+         (botVehicle.resources.food === 0 && 
+          botVehicle.resources.debris === 0 && 
+          botVehicle.resources.special === 0))) {
+      
+      // Réinitialiser le flag directement
+      const playerStore = usePlayerStore.getState();
+      playerStore.updateVehicle('player2', 'ship', { isAtCapacity: false });
+      
+      console.log('[BotCondition] Réinitialisation du flag isAtCapacity car le bot est à la base sans ressources');
+      isAtCapacity = false;
     }
     
     return {
