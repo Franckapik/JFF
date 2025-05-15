@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import usePlayerStore from "../../stores/usePlayerStore";
 import useBotStore from "../../stores/useBotStore";
 import { useTileStore } from "../../stores/useNewTileStore";
+import { BOT_PLAYER_ID, HUMAN_PLAYER_ID, getBotMainVehicleId } from '../../ai/constants/playerConstants';
 import PlayerHUD from "./PlayerHUD";
 import BotHUD from "./BotHUD";
 
@@ -63,19 +64,21 @@ const CombinedHUD = () => {
   const actionQueue = useBotStore((state) => state.actionQueue) || [];
   const completedActions = useBotStore((state) => state.completedActions) || [];
   
-  // Récupération des véhicules
-  const player1Ship = players.player1?.vehicles?.ship;
-  const player2Ship = players.player2?.vehicles?.ship;
+  // Récupération des véhicules avec les constantes
+  const humanVehicleId = "ship"; // Vaisseau du joueur humain
+  const botVehicleId = getBotMainVehicleId();
+  const humanShip = players[HUMAN_PLAYER_ID]?.vehicles?.[humanVehicleId];
+  const botShip = players[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
   
   // Ajoute un état au historique lors des changements
   useEffect(() => {
-    if (botState && player2Ship) {
+    if (botState && botShip) {
       const timestamp = new Date().toLocaleTimeString();
       const newStateEntry = {
         state: botState,
         timestamp,
-        position: player2Ship.coord || "Unknown",
-        fuel: player2Ship.fuel || 0
+        position: botShip.coord || "Unknown",
+        fuel: botShip.fuel || 0
       };
       
       setStateHistory(prev => {
@@ -84,7 +87,7 @@ const CombinedHUD = () => {
         return updatedHistory.slice(0, 20);
       });
     }
-  }, [botState, player2Ship]);
+  }, [botState, botShip]);
   
   // Style pour la barre de carburant
   const getFuelBarStyle = (fuelLevel) => {
@@ -109,14 +112,14 @@ const CombinedHUD = () => {
           return (
             <div style={contentStyle}>
               <h4>Status du Joueur</h4>
-              {player1Ship && (
+              {humanShip && (
                 <>
-                  <p><strong>Position:</strong> {player1Ship.coord || "Unknown"}</p>
-                  <p><strong>Carburant:</strong> {player1Ship.fuel}%</p>
+                  <p><strong>Position:</strong> {humanShip.coord || "Unknown"}</p>
+                  <p><strong>Carburant:</strong> {humanShip.fuel}%</p>
                   <div style={{width: '100%', backgroundColor: '#444', height: '10px', marginBottom: '15px'}}>
-                    <div style={{...getFuelBarStyle(player1Ship.fuel), height: '100%'}}></div>
+                    <div style={{...getFuelBarStyle(humanShip.fuel), height: '100%'}}></div>
                   </div>
-                  <p><strong>En mouvement:</strong> {player1Ship.isMoving ? "Oui" : "Non"}</p>
+                  <p><strong>En mouvement:</strong> {humanShip.isMoving ? "Oui" : "Non"}</p>
                 </>
               )}
             </div>
@@ -125,20 +128,20 @@ const CombinedHUD = () => {
           return (
             <div style={contentStyle}>
               <h4>Ressources du Joueur</h4>
-              {player1Ship && (
+              {humanShip && (
                 <>
                   <p><strong>Ressources à bord:</strong></p>
                   <ul>
-                    <li>Food: {player1Ship.resources?.food || 0}</li>
-                    <li>Debris: {player1Ship.resources?.debris || 0}</li>
-                    <li>Special: {player1Ship.resources?.special || 0}</li>
+                    <li>Food: {humanShip.resources?.food || 0}</li>
+                    <li>Debris: {humanShip.resources?.debris || 0}</li>
+                    <li>Special: {humanShip.resources?.special || 0}</li>
                   </ul>
-                  <p><strong>À capacité:</strong> {player1Ship.isAtCapacity ? "Oui" : "Non"}</p>
+                  <p><strong>À capacité:</strong> {humanShip.isAtCapacity ? "Oui" : "Non"}</p>
                   <p><strong>Score total:</strong></p>
                   <ul>
-                    <li>Food: {players.player1?.score?.resources?.food || 0}</li>
-                    <li>Debris: {players.player1?.score?.resources?.debris || 0}</li>
-                    <li>Special: {players.player1?.score?.resources?.special || 0}</li>
+                    <li>Food: {players[HUMAN_PLAYER_ID]?.score?.resources?.food || 0}</li>
+                    <li>Debris: {players[HUMAN_PLAYER_ID]?.score?.resources?.debris || 0}</li>
+                    <li>Special: {players[HUMAN_PLAYER_ID]?.score?.resources?.special || 0}</li>
                   </ul>
                 </>
               )}
@@ -171,14 +174,14 @@ const CombinedHUD = () => {
               <h4>Status du Bot</h4>
               <p><strong>État actuel:</strong> {botState || "Unknown"}</p>
               <p><strong>Bot actif:</strong> {isRunning ? "Oui" : "Non"}</p>
-              {player2Ship && (
+              {botShip && (
                 <>
-                  <p><strong>Position:</strong> {player2Ship.coord || "Unknown"}</p>
-                  <p><strong>Carburant:</strong> {player2Ship.fuel}%</p>
+                  <p><strong>Position:</strong> {botShip.coord || "Unknown"}</p>
+                  <p><strong>Carburant:</strong> {botShip.fuel}%</p>
                   <div style={{width: '100%', backgroundColor: '#444', height: '10px', marginBottom: '15px'}}>
-                    <div style={{...getFuelBarStyle(player2Ship.fuel), height: '100%'}}></div>
+                    <div style={{...getFuelBarStyle(botShip.fuel), height: '100%'}}></div>
                   </div>
-                  <p><strong>En mouvement:</strong> {player2Ship.isMoving ? "Oui" : "Non"}</p>
+                  <p><strong>En mouvement:</strong> {botShip.isMoving ? "Oui" : "Non"}</p>
                 </>
               )}
             </div>
@@ -187,20 +190,20 @@ const CombinedHUD = () => {
           return (
             <div style={contentStyle}>
               <h4>Ressources du Bot</h4>
-              {player2Ship && (
+              {botShip && (
                 <>
                   <p><strong>Ressources à bord:</strong></p>
                   <ul>
-                    <li>Food: {player2Ship.resources?.food || 0}</li>
-                    <li>Debris: {player2Ship.resources?.debris || 0}</li>
-                    <li>Special: {player2Ship.resources?.special || 0}</li>
+                    <li>Food: {botShip.resources?.food || 0}</li>
+                    <li>Debris: {botShip.resources?.debris || 0}</li>
+                    <li>Special: {botShip.resources?.special || 0}</li>
                   </ul>
-                  <p><strong>À capacité:</strong> {player2Ship.isAtCapacity ? "Oui" : "Non"}</p>
+                  <p><strong>À capacité:</strong> {botShip.isAtCapacity ? "Oui" : "Non"}</p>
                   <p><strong>Score total:</strong></p>
                   <ul>
-                    <li>Food: {players.player2?.score?.resources?.food || 0}</li>
-                    <li>Debris: {players.player2?.score?.resources?.debris || 0}</li>
-                    <li>Special: {players.player2?.score?.resources?.special || 0}</li>
+                    <li>Food: {players[BOT_PLAYER_ID]?.score?.resources?.food || 0}</li>
+                    <li>Debris: {players[BOT_PLAYER_ID]?.score?.resources?.debris || 0}</li>
+                    <li>Special: {players[BOT_PLAYER_ID]?.score?.resources?.special || 0}</li>
                   </ul>
                 </>
               )}
