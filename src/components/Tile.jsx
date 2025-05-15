@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useTileAnimation } from "../animations/useTileAnimation";
 import { useTileStore } from "../stores/useNewTileStore";
+import { Html } from "@react-three/drei";
 
 const Tile = ({ position, radius, color, isHighTile, onClick, coord }) => {
   const meshRef = useTileAnimation(isHighTile);
@@ -99,6 +100,28 @@ const Tile = ({ position, radius, color, isHighTile, onClick, coord }) => {
             opacity={0.85}
           />
         </mesh>
+      )}
+      
+      {/* Affichage du pourcentage de ressources restantes */}
+      {isPartiallyCollected && (
+        <Html
+          position={[position[0], 0.4, position[2]]}
+          center
+          distanceFactor={15}
+        >
+          <div style={{
+            background: 'rgba(0,0,0,0.7)',
+            color: '#ff9933',
+            padding: '3px 6px',
+            borderRadius: '4px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            userSelect: 'none',
+            pointerEvents: 'none',
+          }}>
+            {resourcePercentage}%
+          </div>
+        </Html>
       )}
     </>
   );
