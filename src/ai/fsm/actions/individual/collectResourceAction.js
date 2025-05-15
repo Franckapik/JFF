@@ -106,47 +106,93 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
       // Collecter les ressources
       const resources = collectResourceAction.resources;
       
-      // Ajouter les ressources au vaisseau
+      // Récupérer dynamiquement les ressources actuelles et capacités maximales du vaisseau depuis le store
       const currentResources = botVehicle.resources || { food: 0, debris: 0, special: 0 };
-      const updatedResources = {
-        food: currentResources.food + (resources.food || 0),
-        debris: currentResources.debris + (resources.debris || 0),
-        special: currentResources.special + (resources.special || 0)
+      const maxCapacity = botVehicle.maxCapacity || { food: 100, debris: 1000, special: 2 };
+      
+      // Log pour débogage des capacités
+      fsmLogger.action(`Current resources: ${JSON.stringify(currentResources)}, Max capacity: ${JSON.stringify(maxCapacity)}`);
+      
+      // Calculer combien on peut effectivement collecter (limité par la capacité)
+      const collectableResources = {
+        food: Math.min(resources.food || 0, maxCapacity.food - currentResources.food),
+        debris: Math.min(resources.debris || 0, maxCapacity.debris - currentResources.debris),
+        special: Math.min(resources.special || 0, maxCapacity.special - currentResources.special)
       };
       
       // Mettre à jour les ressources du vaisseau
+      const updatedResources = {
+        food: currentResources.food + collectableResources.food,
+        debris: currentResources.debris + collectableResources.debris,
+        special: currentResources.special + collectableResources.special
+      };
+      
       playerStore.updateVehicle('player2', 'ship', {
         resources: updatedResources
       });
       
-      // Retirer les ressources de la tuile
-      const updatedTile = {
-        ...currentTile,
-        resources: { food: 0, debris: 0, special: 0 }
+      // Vérifier si la capacité maximale est atteinte en utilisant la fonction du store
+      // Cette fonction définit également le flag isAtCapacity si nécessaire
+      const isAtCapacity = playerStore.checkResourceCapacity('player2', 'ship');
+      
+      fsmLogger.action(`Resource capacity status: ${isAtCapacity ? 'At max capacity' : 'Space available'}`);
+      
+      // Déduire seulement les ressources collectées de la tuile
+      const remainingResources = {
+        food: Math.max(0, (resources.food || 0) - collectableResources.food),
+        debris: Math.max(0, (resources.debris || 0) - collectableResources.debris),
+        special: Math.max(0, (resources.special || 0) - collectableResources.special)
       };
-      tileStore.updateTile(collectResourceAction.tileCoord, updatedTile);
       
-      // Marquer explicitement la tuile comme collectée
-      tileStore.markTileAsCollected(collectResourceAction.tileCoord);
+      // Vérifier si la tuile est complètement épuisée
+      const isEmpty = 
+        remainingResources.food === 0 && 
+        remainingResources.debris === 0 && 
+        remainingResources.special === 0;
       
-      fsmLogger.action(`Resources collected successfully: ${JSON.stringify(resources)}`);
+      // Mettre à jour la tuile en utilisant la fonction dédiée du tileStore
+      if (isEmpty) {
+        tileStore.markTileAsCollected(collectResourceAction.tileCoord);
+      } else {
+        // Utiliser la fonction deductTileResources pour appliquer les changements partiels
+        tileStore.deductTileResources(collectResourceAction.tileCoord, collectableResources);
+      }
+      
+      fsmLogger.action(`Resources collected: ${JSON.stringify(collectableResources)}, remaining: ${JSON.stringify(remainingResources)}`);
       
       // Créer un nouvel objet de ressource collectée
       const collectedResource = {
         coord: collectResourceAction.tileCoord,
-        resources: { ...resources },
+        resources: { ...collectableResources }, // Utiliser les ressources effectivement collectées
         collectedAt: new Date().toISOString()
       };
       
-      // Supprimer cette ressource de la liste des ressources connues et réinitialiser l'état de collecte
+      // Si la tuile est vide OU si nous sommes à capacité maximale,
+      // retirer cette ressource de la liste des ressources connues
+      const shouldRemoveResource = isEmpty || isAtCapacity;
+      
+      // Supprimer cette ressource de la liste des ressources connues seulement si nécessaire
       if (botMemory.knownResources) {
-        const updatedResources = botMemory.knownResources.filter(r => r.coord !== collectResourceAction.tileCoord);
+        let updatedKnownResources = botMemory.knownResources;
+        
+        if (shouldRemoveResource) {
+          updatedKnownResources = botMemory.knownResources.filter(r => 
+            r.coord !== collectResourceAction.tileCoord);
+        } else {
+          // Sinon, mettre à jour les ressources restantes dans la liste
+          updatedKnownResources = botMemory.knownResources.map(r => {
+            if (r.coord === collectResourceAction.tileCoord) {
+              return { ...r, resources: remainingResources };
+            }
+            return r;
+          });
+        }
         
         // Ajouter la ressource collectée à la liste des ressources collectées
         const collectedResources = botMemory.collectedResources || [];
         
         playerStore.updatePlayerMemory('player2', {
-          knownResources: updatedResources,
+          knownResources: updatedKnownResources,
           currentTargetResource: null,
           isCollecting: false,
           collectionTile: null,

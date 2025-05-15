@@ -16,6 +16,11 @@ const Tile = ({ position, radius, color, isHighTile, onClick, coord }) => {
     state.tiles[coord] ? state.tiles[coord].collected : false
   );
   
+  // Récupérer l'état de collection partielle directement du store
+  const isPartiallyCollected = useTileStore((state) => 
+    state.tiles[coord] ? state.tiles[coord].partiallyCollected : false
+  );
+  
   // Handle hover events
   const handlePointerOver = () => {
     updateHoveredTile(coord);
@@ -70,6 +75,23 @@ const Tile = ({ position, radius, color, isHighTile, onClick, coord }) => {
             color="#ff3333" 
             emissive="#ff0000"
             emissiveIntensity={0.5}
+            transparent
+            opacity={0.85}
+          />
+        </mesh>
+      )}
+      
+      {/* Indicateur de collection partielle - cercle orange sur la tuile */}
+      {isPartiallyCollected && (
+        <mesh
+          position={[position[0], 0.22, position[2]]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <circleGeometry args={[radius * 0.25, 16]} />
+          <meshStandardMaterial 
+            color="#ff9933" 
+            emissive="#ff8800"
+            emissiveIntensity={0.6}
             transparent
             opacity={0.85}
           />

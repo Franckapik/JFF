@@ -51,5 +51,8 @@ export const refuelAtBaseAction = (playerStore, tileStore, addAction, changeStat
     fsmLogger.action(`Refueled bot, current fuel: ${botVehicle.fuel}`);
   }
   
+  // Réinitialiser le flag isAtCapacity
+  playerStore.updateVehicle('player2', 'ship', { isAtCapacity: false });
+  
   return true;
 };

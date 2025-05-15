@@ -105,7 +105,9 @@ export const useTileStore = create((set, get) => ({
             const updatedTiles = { ...state.tiles };
             updatedTiles[coord] = { 
                 ...updatedTiles[coord], 
-                collected: true 
+                collected: true,
+                partiallyCollected: false, // Quand la tuile est complètement collectée, elle n'est plus partiellement collectée
+                resources: { food: 0, debris: 0, special: 0 }
             };
             return { tiles: updatedTiles };
         });
@@ -164,7 +166,8 @@ export const useTileStore = create((set, get) => ({
             updatedTiles[coord] = {
                 ...updatedTiles[coord],
                 resources: remainingResources,
-                collected: isEmpty // Marquer comme collectée uniquement si vide
+                collected: isEmpty, // Marquer comme complètement collectée seulement si vide
+                partiallyCollected: !isEmpty && (collectedResources.food > 0 || collectedResources.debris > 0 || collectedResources.special > 0) // Partiellement collectée si des ressources ont été prises mais qu'il en reste
             };
             return { tiles: updatedTiles };
         });
@@ -181,6 +184,8 @@ export const useTileStore = create((set, get) => ({
             updatedTiles[coord] = {
                 ...updatedTiles[coord],
                 resources: { food: 0, debris: 0, special: 0 },
+                collected: true,
+                partiallyCollected: false
             };
             return { tiles: updatedTiles };
         });
