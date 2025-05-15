@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import useBotStore from '../../stores/useBotStore';
-import usePlayerStore from '../../stores/usePlayerStore';
+import usePlayerStore from '../../stores/playerStore';
 import { useTileStore } from '../../stores/useNewTileStore';
 import { BOT_PLAYER_ID, getBotMainVehicleId } from '../../ai/constants/playerConstants';
 

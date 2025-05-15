@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Vector3 } from "three";
 import { useTileStore } from "../stores/useNewTileStore";
-import usePlayerStore from "../stores/usePlayerStore";
+import usePlayerStore from "../stores/playerStore";
 import useMessageManager from "../hooks/useMessageManager";
 import fsmLogger from "../utils/fsmLogger";
 import { BOT_PLAYER_ID, HUMAN_PLAYER_ID } from '../ai/constants/playerConstants';

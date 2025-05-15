@@ -1,4 +1,4 @@
-import usePlayerStore from "../stores/usePlayerStore"; // Import player store
+import usePlayerStore from "../stores/playerStore"; // Import player store
 
 const useMessageManager = () => {
   const addPlayerMessage = usePlayerStore((state) => state.addPlayerMessage); // Add a message to the store

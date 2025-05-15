@@ -4,7 +4,7 @@ import { useThree } from "@react-three/fiber";
 import { Cone } from "@react-three/drei";
 import Tile from "./Tile";
 import { useTileStore } from "../stores/useNewTileStore";
-import usePlayerStore from "../stores/usePlayerStore";
+import usePlayerStore from "../stores/playerStore";
 import useBotStore from "../stores/useBotStore"; // Utiliser useBotStore à la place de useSimpleBotStore
 import ShipMovement from "../Mouvement/ShipMovement";
 import UnifiedDroneMovement from "../Mouvement/UnifiedDroneMovement"; // Ajout de UnifiedDroneMovement

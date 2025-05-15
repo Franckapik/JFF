@@ -3,7 +3,7 @@
 
 import { BOT_STATES, PRIORITY, IDLE_EVALUATION } from '../../constants/botConstants';
 import { BOT_PLAYER_ID, getBotMainVehicleId } from '../../constants/playerConstants';
-import usePlayerStore from '../../../stores/usePlayerStore';
+import usePlayerStore from '../../../stores/playerStore';
 
 /**
  * Registre des conditions du bot - SYSTÈME CENTRALISÉ

@@ -1,7 +1,7 @@
 // src/stores/useBotStore.js
 // Machine à états finis simplifiée avec file d'actions bloquantes
 import { create } from 'zustand';
-import usePlayerStore from './usePlayerStore';
+import usePlayerStore from './playerStore';
 import { useTileStore } from './useNewTileStore';
 
 // Importations des modules FSM

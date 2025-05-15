@@ -1,5 +1,5 @@
 import React from "react";
-import usePlayerStore from "../../stores/usePlayerStore";
+import usePlayerStore from "../../stores/playerStore";
 
 const VehicleSelector = () => {
   const players = usePlayerStore((state) => state.players); // Get all players

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import usePlayerStore from "../../stores/usePlayerStore";
+import usePlayerStore from "../../stores/playerStore";
 
 const PlayerHUD = () => {
   const players = usePlayerStore((state) => state.players);

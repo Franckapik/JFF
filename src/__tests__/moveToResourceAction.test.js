@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { moveToResourceAction } from '../ai/fsm/actions/individual/moveToResourceAction';
-import usePlayerStore from '../stores/usePlayerStore';
+import usePlayerStore from '../stores/playerStore';
 import { useTileStore } from '../stores/useNewTileStore';
 import { BOT_STATES } from '../ai/constants/botConstants';
 
@@ -25,7 +25,7 @@ vi.mock('../ai/fsm/conditions/botConditions', () => ({
 }));
 
 // Mock des stores Zustand
-vi.mock('../stores/usePlayerStore', () => ({
+vi.mock('../stores/playerStore', () => ({
   default: vi.fn(),
   getState: vi.fn()
 }));

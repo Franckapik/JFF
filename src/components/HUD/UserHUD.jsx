@@ -1,6 +1,6 @@
 import React from "react";
 import { useTileStore } from "../../stores/useNewTileStore";
-import usePlayerStore from "../../stores/usePlayerStore";
+import usePlayerStore from "../../stores/playerStore";
 import useBotStore from "../../stores/useBotStore";
 import "../styles/App.css"; // Import CSS for styling
 

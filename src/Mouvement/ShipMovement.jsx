@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import usePlayerStore from "../stores/usePlayerStore";
+import usePlayerStore from "../stores/playerStore";
 import useGameStore from "../stores/useGameStore";
 import useBotStore from "../stores/useBotStore";
 import { useTileStore } from "../stores/useNewTileStore";

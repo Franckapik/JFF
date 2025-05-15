@@ -1,7 +1,7 @@
 // src/components/BotDebugger.jsx
 // Composant de débogage pour visualiser l'état de la FSM du bot
 import React, { useState, useEffect, useRef } from 'react';
-import usePlayerStore from "../../stores/usePlayerStore";
+import usePlayerStore from "../../stores/playerStore";
 import useBotStore from "../../stores/useBotStore";
 import { useTileStore } from "../../stores/useNewTileStore";
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import usePlayerStore from "../../stores/usePlayerStore";
+import usePlayerStore from "../../stores/playerStore";
 import useBotStore from "../../stores/useBotStore";
 import { useTileStore } from "../../stores/useNewTileStore";
 import { BOT_PLAYER_ID, HUMAN_PLAYER_ID, getBotMainVehicleId } from '../../ai/constants/playerConstants';

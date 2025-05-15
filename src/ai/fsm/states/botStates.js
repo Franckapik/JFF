@@ -2,7 +2,7 @@
 // Définition des comportements spécifiques à chaque état du bot
 
 import { BOT_STATES, PRIORITY, ACTION_STATUS, COLLECT_ACTION_TYPES } from '../../constants/botConstants';
-import usePlayerStore from '../../../stores/usePlayerStore';
+import usePlayerStore from '../../../stores/playerStore';
 import fsmLogger from '../../../utils/fsmLogger';
 
 /**
