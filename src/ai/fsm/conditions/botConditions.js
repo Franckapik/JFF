@@ -2,6 +2,7 @@
 // Conditions centralisées qui déclenchent des transitions d'état dans la FSM
 
 import { BOT_STATES, PRIORITY, IDLE_EVALUATION } from '../../constants/botConstants';
+import { BOT_PLAYER_ID, getBotMainVehicleId } from '../../constants/playerConstants';
 import usePlayerStore from '../../../stores/usePlayerStore';
 
 /**
@@ -105,7 +106,7 @@ export const BotConditions = {
    */
   hasEnoughKnownResources: (minResources = 3) => {
     const playerState = usePlayerStore.getState();
-    const botMemory = playerState.players?.player2?.memory;
+    const botMemory = playerState.players?.[BOT_PLAYER_ID]?.memory;
     
     const hasEnoughResources = botMemory?.knownResources && 
                                botMemory.knownResources.length >= minResources;
@@ -123,7 +124,7 @@ export const BotConditions = {
    */
   hasDiscoveredResources: (currentState) => {
     const playerState = usePlayerStore.getState();
-    const botMemory = playerState.players?.player2?.memory;
+    const botMemory = playerState.players?.[BOT_PLAYER_ID]?.memory;
     
     // Vérifier s'il y a au moins 3 ressources connues
     const hasEnoughResources = botMemory && 
@@ -142,7 +143,7 @@ export const BotConditions = {
     // Si la condition est remplie, réinitialiser les flags dans la mémoire
     if (shouldCollect) {
       // Réinitialiser les flags dans la mémoire
-      usePlayerStore.getState().updatePlayerMemory('player2', {
+      usePlayerStore.getState().updatePlayerMemory(BOT_PLAYER_ID, {
         hasNewResourceDiscovery: false,
         droneReturnedToShip: false
       });
@@ -178,7 +179,7 @@ export const BotConditions = {
    */
   allKnownResourcesCollected: () => {
     const playerState = usePlayerStore.getState();
-    const botMemory = playerState.players?.player2?.memory;
+    const botMemory = playerState.players?.[BOT_PLAYER_ID]?.memory;
     
     // Si le bot n'a pas de mémoire ou pas de ressources connues
     const noResourcesToCollect = !botMemory || 
@@ -218,8 +219,15 @@ export const BotConditions = {
    */
   isDroneAtShip: () => {
     const playerState = usePlayerStore.getState();
-    const botVehicle = playerState.players?.player2?.vehicles?.ship;
-    const botDrone = playerState.players?.player2?.vehicles?.drone3;
+    const botVehicleId = getBotMainVehicleId();
+    const botVehicle = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
+    
+    // Calculer l'ID du premier drone du bot basé sur le player ID
+    const playerNum = BOT_PLAYER_ID.slice(-1); // Extraire le numéro du joueur ('player2' -> '2')
+    const droneStartIdx = (parseInt(playerNum) - 1) * 2 + 1; // Calcule l'index de départ des drones
+    const botDroneId = `drone${droneStartIdx}`;
+    
+    const botDrone = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botDroneId];
     
     if (!botVehicle || !botDrone) return { result: false };
     
@@ -235,7 +243,13 @@ export const BotConditions = {
    */
   isDroneMoving: () => {
     const playerState = usePlayerStore.getState();
-    const botDrone = playerState.players?.player2?.vehicles?.drone3;
+    
+    // Calculer l'ID du premier drone du bot basé sur le player ID
+    const playerNum = BOT_PLAYER_ID.slice(-1); // Extraire le numéro du joueur ('player2' -> '2')
+    const droneStartIdx = (parseInt(playerNum) - 1) * 2 + 1; // Calcule l'index de départ des drones
+    const botDroneId = `drone${droneStartIdx}`;
+    
+    const botDrone = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botDroneId];
     
     if (!botDrone) return { result: false };
     
@@ -250,7 +264,8 @@ export const BotConditions = {
    */
   isShipMoving: () => {
     const playerState = usePlayerStore.getState();
-    const botVehicle = playerState.players?.player2?.vehicles?.ship;
+    const botVehicleId = getBotMainVehicleId();
+    const botVehicle = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
     
     if (!botVehicle) return { result: false };
     
@@ -415,7 +430,7 @@ export const BotConditions = {
         // Vérifier si l'exploration est terminée (drone de retour)
         const droneAtShip = BotConditions.isDroneAtShip();
         const playerState = usePlayerStore.getState();
-        const hasExplored = playerState.players?.player2?.memory?.explorationCount > 0;
+        const hasExplored = playerState.players?.[BOT_PLAYER_ID]?.memory?.explorationCount > 0;
         
         if (droneAtShip.result && hasExplored) {
           return {

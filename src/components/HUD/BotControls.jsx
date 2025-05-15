@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import useBotStore from '../../stores/useBotStore';
 import usePlayerStore from '../../stores/usePlayerStore';
 import { useTileStore } from '../../stores/useNewTileStore';
+import { BOT_PLAYER_ID, getBotMainVehicleId } from '../../ai/constants/playerConstants';
 
 const BotControls = () => {
   // États locaux pour les contrôles avancés
@@ -21,9 +22,10 @@ const BotControls = () => {
     _test
   } = useBotStore();
   
-  // Récupérer des informations supplémentaires
-  const botVehicle = usePlayerStore(state => state.players?.player2?.vehicles?.ship);
-  const botMemory = usePlayerStore(state => state.players?.player2?.memory || {});
+  // Récupérer des informations supplémentaires en utilisant les constantes
+  const botVehicleId = getBotMainVehicleId(); // Obtenir l'ID du véhicule bot dynamiquement
+  const botVehicle = usePlayerStore(state => state.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId]);
+  const botMemory = usePlayerStore(state => state.players?.[BOT_PLAYER_ID]?.memory || {});
   
   // Fonction pour ajouter une action manuelle avec une priorité donnée
   const handleAddAction = (actionType, priority) => {
