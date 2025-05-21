@@ -67,7 +67,8 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
   
   // Sélecteurs pour les vaisseaux et le drone concerné
   const humanShip = usePlayerStore((state) => state.players[HUMAN_PLAYER_ID]?.vehicles?.[getMainShipId()]);
-  const botShip = usePlayerStore((state) => state.players[getBotPlayerId(0)]?.vehicles?.[getMainShipId()]);
+  // On référence tous les vaisseaux de bot, pas juste le Bot 1
+  const allShips = usePlayerStore((state) => state.players);
   const drone = usePlayerStore((state) => state.players[playerId]?.vehicles[droneId]);
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
 
@@ -81,12 +82,13 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
 
   // Détermine le vaisseau à suivre
   const getShipToFollow = () => {
-    if (playerId === getBotPlayerId(0)) {
-      return botShip; // Le drone du bot suit toujours le vaisseau du bot
+    if (playerId !== HUMAN_PLAYER_ID) {
+      // Chaque drone de bot suit son propre vaisseau
+      return allShips[playerId]?.vehicles?.[getMainShipId()];
     } else {
       // Pour le joueur humain, on peut utiliser le vaisseau sélectionné ou par défaut humanShip
       if (isMainShipId(selectedVehicle.vehicleId)) {
-        return selectedVehicle.playerId === HUMAN_PLAYER_ID ? humanShip : botShip;
+        return selectedVehicle.playerId === HUMAN_PLAYER_ID ? humanShip : allShips[selectedVehicle.playerId]?.vehicles?.[getMainShipId()];
       }
       return humanShip;
     }
@@ -110,8 +112,8 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
         setIsPlayerDroneMoving(true);
       }
     }
-  }, [playerId, humanShip?.targetTile, botShip?.targetTile, selectedVehicle, 
-      isPlayerDroneMoving, playerDroneTargetTile, returningToShip, cooldown]);
+  }, [playerId, humanShip?.targetTile, selectedVehicle, 
+      isPlayerDroneMoving, playerDroneTargetTile, returningToShip, cooldown, allShips]);
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
@@ -278,24 +280,28 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
             setCooldown(3);
         }
         
-        if (playerId === getBotPlayerId(0)) {
+        if (playerId !== HUMAN_PLAYER_ID) {
           // Signaler que le drone est revenu au vaisseau
-          updatePlayerMemory(getBotPlayerId(0), { droneReturnedToShip: true });
+          updatePlayerMemory(playerId, { droneReturnedToShip: true });
 
           // Transférer les ressources collectées au vaisseau principal pour les drones de combat
           if (droneType === VEHICLE_TYPES.COMBAT_DRONE && drone.resources) {
             const botShipId = getMainShipId();
-            updateVehicle(getBotPlayerId(0), botShipId, {
-              resources: {
-                food: (botShip.resources.food || 0) + (drone.resources.food || 0),
-                debris: (botShip.resources.debris || 0) + (drone.resources.debris || 0),
-                special: (botShip.resources.special || 0) + (drone.resources.special || 0)
-              }
-            });
-            // Vider les ressources du drone
-            updateVehicle(playerId, droneId, {
-              resources: { food: 0, debris: 0, special: 0 }
-            });
+            const botShip = allShips[playerId]?.vehicles?.[botShipId];
+            
+            if (botShip && botShip.resources) {
+              updateVehicle(playerId, botShipId, {
+                resources: {
+                  food: (botShip.resources.food || 0) + (drone.resources.food || 0),
+                  debris: (botShip.resources.debris || 0) + (drone.resources.debris || 0),
+                  special: (botShip.resources.special || 0) + (drone.resources.special || 0)
+                }
+              });
+              // Vider les ressources du drone
+              updateVehicle(playerId, droneId, {
+                resources: { food: 0, debris: 0, special: 0 }
+              });
+            }
           }
         }
       }
@@ -388,14 +394,14 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
     }
     
     // Si c'est le bot, mettre à jour sa mémoire des ressources connues
-    if (playerId === getBotPlayerId(0)) {
+    if (playerId !== HUMAN_PLAYER_ID) {
       // Vérifier s'il y a des ressources sur la tuile
       const hasResources = resources.food > 0 || resources.debris > 0 || resources.special > 0;
       
       if (hasResources) {
         // Récupérer l'état actuel du store
         const playerState = usePlayerStore.getState();
-        const botMemory = playerState.players?.[getBotPlayerId(0)]?.memory || { knownResources: [] };
+        const botMemory = playerState.players?.[playerId]?.memory || { knownResources: [] };
         
         // Vérifier si la ressource est déjà connue
         const alreadyKnown = botMemory.knownResources && 
@@ -417,7 +423,7 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
             [...botMemory.knownResources, newResource] : [newResource];
           
           // Mise à jour de la mémoire via la méthode appropriée
-          updatePlayerMemory(getBotPlayerId(0), {
+          updatePlayerMemory(playerId, {
             knownResources: updatedKnownResources,
             lastResourceDiscovery: {
               coord: reachedTileCoord,
@@ -436,17 +442,17 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
     useTileStore.getState().markTileAsExplored(reachedTileCoord);
     
     // Incrémenter le compteur d'explorations si c'est le bot
-    if (playerId === getBotPlayerId(0)) {
+    if (playerId !== HUMAN_PLAYER_ID) {
       const playerState = usePlayerStore.getState();
-      const botMemory = playerState.players?.[getBotPlayerId(0)]?.memory;
+      const botMemory = playerState.players?.[playerId]?.memory;
       const currentCount = botMemory?.explorationCount || 0;
       
       // Mettre à jour le compteur d'explorations
-      updatePlayerMemory(getBotPlayerId(0), {
+      updatePlayerMemory(playerId, {
         explorationCount: currentCount + 1
       });
       
-      fsmLogger.mouvement(`[UnifiedDroneMovement] Bot exploration count increased to ${currentCount + 1}`);
+      fsmLogger.mouvement(`[UnifiedDroneMovement] Bot ${playerId} exploration count increased to ${currentCount + 1}`);
     }
     
     // Mise à jour des états selon le type de drone
@@ -466,8 +472,8 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
 
   // Position initiale du drone
   const initialPosition = () => {
-    const ship = playerId === HUMAN_PLAYER_ID ? humanShip : botShip;
-    if (ship?.position) {
+    const shipToFollow = getShipToFollow();
+    if (shipToFollow?.position) {
       // Configuration de la formation en triangle
       const baseHeight = 1.0; // Hauteur de base plus basse
       const radius = 0.8; // Rayon plus grand pour éviter la superposition
@@ -497,8 +503,8 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
       }
       
       // Calculer la position en utilisant des coordonnées polaires
-      const x = ship.position.x + (Math.cos(angle) * radius * direction);
-      const z = ship.position.z + (Math.sin(angle) * radius * direction);
+      const x = shipToFollow.position.x + (Math.cos(angle) * radius * direction);
+      const z = shipToFollow.position.z + (Math.sin(angle) * radius * direction);
       
       return [x, baseHeight + heightOffset, z];
     }
