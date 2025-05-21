@@ -6,8 +6,8 @@ import usePlayerStore from "../stores/playerStore";
 import useMessageManager from "../hooks/useMessageManager";
 import fsmLogger from "../utils/fsmLogger";
 import { 
-  BOT_PLAYER_ID, 
   HUMAN_PLAYER_ID,
+  getBotPlayerId,
   getMainShipId,
   isMainShipId,
   VEHICLE_TYPES,
@@ -67,7 +67,7 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
   
   // Sélecteurs pour les vaisseaux et le drone concerné
   const humanShip = usePlayerStore((state) => state.players[HUMAN_PLAYER_ID]?.vehicles?.[getMainShipId()]);
-  const botShip = usePlayerStore((state) => state.players[BOT_PLAYER_ID]?.vehicles?.[getMainShipId()]);
+  const botShip = usePlayerStore((state) => state.players[getBotPlayerId(0)]?.vehicles?.[getMainShipId()]);
   const drone = usePlayerStore((state) => state.players[playerId]?.vehicles[droneId]);
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
 
@@ -81,7 +81,7 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
 
   // Détermine le vaisseau à suivre
   const getShipToFollow = () => {
-    if (playerId === BOT_PLAYER_ID) {
+    if (playerId === getBotPlayerId(0)) {
       return botShip; // Le drone du bot suit toujours le vaisseau du bot
     } else {
       // Pour le joueur humain, on peut utiliser le vaisseau sélectionné ou par défaut humanShip
@@ -278,14 +278,14 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
             setCooldown(3);
         }
         
-        if (playerId === BOT_PLAYER_ID) {
+        if (playerId === getBotPlayerId(0)) {
           // Signaler que le drone est revenu au vaisseau
-          updatePlayerMemory(BOT_PLAYER_ID, { droneReturnedToShip: true });
+          updatePlayerMemory(getBotPlayerId(0), { droneReturnedToShip: true });
 
           // Transférer les ressources collectées au vaisseau principal pour les drones de combat
           if (droneType === VEHICLE_TYPES.COMBAT_DRONE && drone.resources) {
             const botShipId = getMainShipId();
-            updateVehicle(BOT_PLAYER_ID, botShipId, {
+            updateVehicle(getBotPlayerId(0), botShipId, {
               resources: {
                 food: (botShip.resources.food || 0) + (drone.resources.food || 0),
                 debris: (botShip.resources.debris || 0) + (drone.resources.debris || 0),
@@ -388,14 +388,14 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
     }
     
     // Si c'est le bot, mettre à jour sa mémoire des ressources connues
-    if (playerId === BOT_PLAYER_ID) {
+    if (playerId === getBotPlayerId(0)) {
       // Vérifier s'il y a des ressources sur la tuile
       const hasResources = resources.food > 0 || resources.debris > 0 || resources.special > 0;
       
       if (hasResources) {
         // Récupérer l'état actuel du store
         const playerState = usePlayerStore.getState();
-        const botMemory = playerState.players?.[BOT_PLAYER_ID]?.memory || { knownResources: [] };
+        const botMemory = playerState.players?.[getBotPlayerId(0)]?.memory || { knownResources: [] };
         
         // Vérifier si la ressource est déjà connue
         const alreadyKnown = botMemory.knownResources && 
@@ -417,7 +417,7 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
             [...botMemory.knownResources, newResource] : [newResource];
           
           // Mise à jour de la mémoire via la méthode appropriée
-          updatePlayerMemory(BOT_PLAYER_ID, {
+          updatePlayerMemory(getBotPlayerId(0), {
             knownResources: updatedKnownResources,
             lastResourceDiscovery: {
               coord: reachedTileCoord,
@@ -436,13 +436,13 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
     useTileStore.getState().markTileAsExplored(reachedTileCoord);
     
     // Incrémenter le compteur d'explorations si c'est le bot
-    if (playerId === BOT_PLAYER_ID) {
+    if (playerId === getBotPlayerId(0)) {
       const playerState = usePlayerStore.getState();
-      const botMemory = playerState.players?.[BOT_PLAYER_ID]?.memory;
+      const botMemory = playerState.players?.[getBotPlayerId(0)]?.memory;
       const currentCount = botMemory?.explorationCount || 0;
       
       // Mettre à jour le compteur d'explorations
-      updatePlayerMemory(BOT_PLAYER_ID, {
+      updatePlayerMemory(getBotPlayerId(0), {
         explorationCount: currentCount + 1
       });
       

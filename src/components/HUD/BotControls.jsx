@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import useBotStore from '../../stores/useBotStore';
 import usePlayerStore from '../../stores/playerStore';
 import { useTileStore } from '../../stores/useNewTileStore';
-import { BOT_PLAYER_ID, getBotMainVehicleId } from '../../ai/constants/playerConstants';
+import { getBotPlayerId, getMainShipId } from '../../ai/constants/playerConstants';
 
 const BotControls = () => {
   // États locaux pour les contrôles avancés
@@ -23,9 +23,9 @@ const BotControls = () => {
   } = useBotStore();
   
   // Récupérer des informations supplémentaires en utilisant les constantes
-  const botVehicleId = getBotMainVehicleId(); // Obtenir l'ID du véhicule bot dynamiquement
-  const botVehicle = usePlayerStore(state => state.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId]);
-  const botMemory = usePlayerStore(state => state.players?.[BOT_PLAYER_ID]?.memory || {});
+  const botVehicleId = getMainShipId(); // Obtenir l'ID du véhicule bot dynamiquement
+  const botVehicle = usePlayerStore(state => state.players?.[getBotPlayerId(0)]?.vehicles?.[botVehicleId]);
+  const botMemory = usePlayerStore(state => state.players?.[getBotPlayerId(0)]?.memory || {});
   
   // Fonction pour ajouter une action manuelle avec une priorité donnée
   const handleAddAction = (actionType, priority) => {
@@ -311,7 +311,7 @@ const BotControls = () => {
         <h5 style={{ margin: '0 0 8px 0' }}>FSM Information</h5>
         <p style={{ margin: '0 0 5px 0' }}><strong>États</strong>: Définissent le comportement général du bot</p>
         <p style={{ margin: '0 0 5px 0' }}><strong>Actions</strong>: Tâches spécifiques exécutées par priorité</p>
-        <p style={{ margin: '0 0 5px 0' }}><strong>Priorités</strong>: URGENT (4) > HIGH (3) > MEDIUM (2) > LOW (1)</p>
+        <p style={{ margin: '0 0 5px 0' }}><strong>Priorités</strong>: URGENT (4) {'>'} HIGH (3) {'>'} MEDIUM (2) {'>'} LOW (1)</p>
         <p style={{ margin: '0 0 5px 0' }}><strong>Cycle de vie</strong>: ÉTAT → ACTIONS → IDLE → Évaluation → Nouvel ÉTAT</p>
       </div>
     </div>

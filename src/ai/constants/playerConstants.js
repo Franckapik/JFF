@@ -1,19 +1,8 @@
 // Fichier de constantes pour la gestion des joueurs
-
-// L'ID du joueur contrôlé par l'IA (BOT)
-export const BOT_PLAYER_ID = 'player2';
-
-// L'ID du joueur humain 
 export const HUMAN_PLAYER_ID = 'player1';
 
-// Fonction utilitaire pour obtenir l'ID du joueur bot en fonction du nombre de joueurs
-export const getBotPlayerId = (playerCount = 2) => {
-  // Par défaut, player2 est le bot dans une configuration à 2 joueurs
-  return `player2`;
-};
-
-// Fonction utilitaire pour obtenir l'ID du véhicule principal du bot
-export const getBotMainVehicleId = () => 'ship';
+// Fonction utilitaire pour obtenir les IDs des bots
+export const getBotPlayerId = (botIndex) => `player${botIndex + 2}`;
 
 // Type d'identifiants pour les véhicules
 export const VEHICLE_TYPES = {
@@ -28,6 +17,9 @@ export const getMainShipId = () => VEHICLE_TYPES.SHIP;
 
 // Vérifier si un ID est celui d'un vaisseau principal
 export const isMainShipId = (vehicleId) => vehicleId === VEHICLE_TYPES.SHIP;
+
+// Vérifier si un ID est celui d'un bot
+export const isBotPlayerId = (playerId) => playerId !== HUMAN_PLAYER_ID;
 
 // Obtenir l'ID d'un drone spécifique pour un joueur donné avec son type
 export const getDroneId = (playerId, droneType) => {

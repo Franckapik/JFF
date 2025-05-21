@@ -10,7 +10,7 @@ import ShipMovement from "../Mouvement/ShipMovement";
 import UnifiedDroneMovement from "../Mouvement/UnifiedDroneMovement"; // Ajout de UnifiedDroneMovement
 import { 
   HUMAN_PLAYER_ID, 
-  BOT_PLAYER_ID, 
+  getBotPlayerId, 
   getMainShipId, 
   getDroneId, 
   isMainShipId,
@@ -137,8 +137,8 @@ const Scene = () => {
       {/* Drones du bot (player2) */}
       {/* Drone d'exploration */}
       <UnifiedDroneMovement 
-        playerId={BOT_PLAYER_ID} 
-        droneId={getDroneId(BOT_PLAYER_ID, VEHICLE_TYPES.EXPLORER_DRONE)}
+        playerId={getBotPlayerId(0)} 
+        droneId={getDroneId(getBotPlayerId(0), VEHICLE_TYPES.EXPLORER_DRONE)}
       >
         <Cone 
           args={[0.15, 0.4, 8]} 
@@ -151,8 +151,8 @@ const Scene = () => {
 
       {/* Drone de combat du bot */}
       <UnifiedDroneMovement
-        playerId={BOT_PLAYER_ID}
-        droneId={getDroneId(BOT_PLAYER_ID, VEHICLE_TYPES.COMBAT_DRONE)}
+        playerId={getBotPlayerId(0)}
+        droneId={getDroneId(getBotPlayerId(0), VEHICLE_TYPES.COMBAT_DRONE)}
       >
         <group>
           <Cone 
@@ -175,8 +175,8 @@ const Scene = () => {
 
       {/* Drone spécial du bot */}
       <UnifiedDroneMovement
-        playerId={BOT_PLAYER_ID}
-        droneId={getDroneId(BOT_PLAYER_ID, VEHICLE_TYPES.SPECIAL_DRONE)}
+        playerId={getBotPlayerId(0)}
+        droneId={getDroneId(getBotPlayerId(0), VEHICLE_TYPES.SPECIAL_DRONE)}
       >
         <group>
           <Cone 
@@ -206,11 +206,11 @@ const Scene = () => {
               />
             </mesh>
           </ShipMovement>
-          <ShipMovement playerId={BOT_PLAYER_ID}>
+          <ShipMovement playerId={getBotPlayerId(0)}>
             <mesh castShadow>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
               <meshStandardMaterial
-                color={selectedVehicle.playerId === BOT_PLAYER_ID && isMainShipId(selectedVehicle.vehicleId) ? "yellow" : "red"}
+                color={selectedVehicle.playerId === getBotPlayerId(0) && isMainShipId(selectedVehicle.vehicleId) ? "yellow" : "red"}
               />
             </mesh>
           </ShipMovement>

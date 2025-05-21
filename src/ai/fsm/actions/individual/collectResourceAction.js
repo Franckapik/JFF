@@ -8,7 +8,7 @@
  * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
  */
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
-import { BOT_PLAYER_ID, getBotMainVehicleId } from '../../../constants/playerConstants';
+import { getBotPlayerId, getMainShipId } from '../../../constants/playerConstants';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
 
@@ -21,9 +21,10 @@ import fsmLogger from '../../../../utils/fsmLogger';
  * @returns {boolean|undefined} - True si l'action est terminée, false si échouée, undefined si en cours
  */
 export const collectResourceAction = (playerStore, tileStore, addAction, changeState) => {
-  const botVehicleId = getBotMainVehicleId();
-  const botVehicle = playerStore.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
-  const botMemory = playerStore.players?.[BOT_PLAYER_ID]?.memory;
+  const botId = getBotPlayerId(0);
+  const botVehicleId = getMainShipId();
+  const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
+  const botMemory = playerStore.players?.[botId]?.memory;
   
   if (!botVehicle) {
     fsmLogger.error('Bot vehicle not found');
@@ -58,7 +59,7 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
       // Supprimer cette ressource de la liste des ressources connues
       if (botMemory.knownResources) {
         const updatedResources = botMemory.knownResources.filter(r => r.coord !== botVehicle.coord);
-        playerStore.updatePlayerMemory(BOT_PLAYER_ID, {
+        playerStore.updatePlayerMemory(botId, {
           knownResources: updatedResources,
           currentTargetResource: null
         });
@@ -82,7 +83,7 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
     collectResourceAction.resources = { ...resources };
     
     // Réserver les ressources pour éviter que d'autres actions les ciblent
-    playerStore.updatePlayerMemory(BOT_PLAYER_ID, {
+    playerStore.updatePlayerMemory(botId, {
       isCollecting: true,
       collectionTile: botVehicle.coord
     });
@@ -129,13 +130,13 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
         special: currentResources.special + collectableResources.special
       };
       
-      playerStore.updateVehicle(BOT_PLAYER_ID, botVehicleId, {
+      // Mettre à jour le véhicule avec les nouvelles ressources
+      playerStore.updateVehicle(botId, botVehicleId, {
         resources: updatedResources
       });
-      
-      // Vérifier si la capacité maximale est atteinte en utilisant la fonction du store
-      // Cette fonction définit également le flag isAtCapacity si nécessaire
-      const isAtCapacity = playerStore.checkResourceCapacity(BOT_PLAYER_ID, botVehicleId);
+
+      // Vérifier si le bot est à capacité maximale
+      const isAtCapacity = playerStore.checkResourceCapacity(botId, botVehicleId);
       
       fsmLogger.action(`Resource capacity status: ${isAtCapacity ? 'At max capacity' : 'Space available'}`);
       
@@ -193,7 +194,7 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
         // Ajouter la ressource collectée à la liste des ressources collectées
         const collectedResources = botMemory.collectedResources || [];
         
-        playerStore.updatePlayerMemory(BOT_PLAYER_ID, {
+        playerStore.updatePlayerMemory(botId, {
           knownResources: updatedKnownResources,
           currentTargetResource: null,
           isCollecting: false,
@@ -216,7 +217,7 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
       collectResourceAction.reset();
       
       // Réinitialiser l'état de collecte
-      playerStore.updatePlayerMemory(BOT_PLAYER_ID, {
+      playerStore.updatePlayerMemory(botId, {
         isCollecting: false,
         collectionTile: null
       });

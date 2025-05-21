@@ -4,13 +4,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import usePlayerStore from "../../stores/playerStore";
 import useBotStore from "../../stores/useBotStore";
 import { useTileStore } from "../../stores/useNewTileStore";
-import { 
-  HUMAN_PLAYER_ID, 
-  BOT_PLAYER_ID, 
+import {
+  HUMAN_PLAYER_ID,
+  getBotPlayerId,
   getMainShipId,
   getDroneId,
-  VEHICLE_TYPES 
-} from "../../ai/constants/playerConstants";
+  isMainShipId,
+  VEHICLE_TYPES
+} from '../../ai/constants/playerConstants';
 
 // Style pour le débogueur
 const debuggerStyle = {
@@ -28,6 +29,31 @@ const debuggerStyle = {
   fontFamily: 'monospace',
   fontSize: '12px',
   zIndex: 1000,
+};
+
+const debuggerContainerStyle = {
+  position: 'fixed',
+  bottom: '10px',
+  right: '10px',
+  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+  color: '#fff',
+  padding: '10px',
+  borderRadius: '8px',
+  width: '450px',
+  maxHeight: '80vh',
+  overflowY: 'auto',
+  display: 'flex',
+  flexDirection: 'column',
+  fontFamily: 'monospace',
+  fontSize: '12px',
+  zIndex: 1000,
+};
+
+const headerStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: '10px',
 };
 
 const tabStyle = {
@@ -145,6 +171,7 @@ const BotDebugger = () => {
   const [conditionLog, setConditionLog] = useState([]);
   const [actionHistory, setActionHistory] = useState([]); // Historique des actions
   const [activeMemoryTab, setActiveMemoryTab] = useState('resources'); // 'resources', 'collected' ou 'dangers'
+  const [activeBotId, setActiveBotId] = useState(getBotPlayerId(0)); // ID du bot actif dans le débogueur
   
   // Récupération de l'état du bot avec le nouveau système
   const {
@@ -158,8 +185,9 @@ const BotDebugger = () => {
   
   // Récupération des données des joueurs
   const players = usePlayerStore((state) => state.players);
-  const botVehicle = usePlayerStore(state => state.players?.[BOT_PLAYER_ID]?.vehicles?.[getMainShipId()]);
-  const botMemory = usePlayerStore(state => state.players?.[BOT_PLAYER_ID]?.memory);
+  const botVehicleId = getMainShipId();
+  const botVehicle = usePlayerStore(state => state.players?.[getBotPlayerId(0)]?.vehicles?.[botVehicleId]);
+  const botMemory = usePlayerStore(state => state.players?.[getBotPlayerId(0)]?.memory);
   const playerVehicle = usePlayerStore(state => state.players?.[HUMAN_PLAYER_ID]?.vehicles?.[getMainShipId()]);
   
   // Récupérer la fonction calculateDistance du TileStore
@@ -960,16 +988,29 @@ const BotDebugger = () => {
   // Point d'entrée du rendu principal
 
   return isVisible ? (
-    <div style={debuggerStyle}>
-      {/* En-tête avec titre et boutons de contrôle */}
-      <div style={{ 
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '10px'
-      }}>
-        <h3 style={{ margin: 0 }}>FSM Debugger</h3>
-
+    <div style={debuggerContainerStyle}>
+      {/* En-tête avec sélection du bot */}
+      <div style={headerStyle}>
+        <select 
+          value={activeBotId}
+          onChange={(e) => setActiveBotId(e.target.value)}
+          style={{
+            padding: '5px',
+            backgroundColor: '#333',
+            border: '1px solid #444',
+            color: '#fff',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '12px',
+            marginRight: '10px'
+          }}
+        >
+          {Object.keys(players).filter(key => key.startsWith('player')).map((key, index) => (
+            <option key={key} value={key}>
+              {`Bot ${index + 1}`}
+            </option>
+          ))}
+        </select>
 
         <div>
           <button onClick={handleResetHistory} style={{ 
@@ -1026,7 +1067,7 @@ const BotDebugger = () => {
       {/* Conteneur de contenu avec scroll */}
       <div style={contentContainerStyle}>
         {/* Afficher les IDs des véhicules selon l'onglet actif */}
-        {activeMainTab === 'bot' && <VehicleIds playerId={BOT_PLAYER_ID} />}
+        {activeMainTab === 'bot' && <VehicleIds playerId={activeBotId} />}
         {activeMainTab === 'player' && <VehicleIds playerId={HUMAN_PLAYER_ID} />}
         
         {/* Si on est dans l'onglet Bot, on affiche toujours l'état et les données du véhicule en haut */}

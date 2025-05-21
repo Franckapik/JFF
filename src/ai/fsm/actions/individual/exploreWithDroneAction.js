@@ -9,8 +9,8 @@
  */
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
 import { 
-  BOT_PLAYER_ID, 
-  getBotMainVehicleId, 
+  getBotPlayerId, 
+  getMainShipId, 
   getDroneId,
   VEHICLE_TYPES
 } from '../../../constants/playerConstants';
@@ -26,20 +26,21 @@ import fsmLogger from '../../../../utils/fsmLogger';
  * @returns {boolean|undefined} - True si l'action est terminée, false si elle a échoué, undefined si elle est en cours
  */
 export const exploreWithDroneAction = (playerStore, tileStore, addAction, changeState) => {
-  const botVehicleId = getBotMainVehicleId();
-  const botVehicle = playerStore.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
+  const botId = getBotPlayerId(0);
+  const botVehicleId = getMainShipId();
+  const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   
   // Obtenir l'ID du drone d'exploration du bot
-  const botDroneId = getDroneId(BOT_PLAYER_ID, VEHICLE_TYPES.EXPLORER_DRONE);
+  const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
   
-  const botDrone = playerStore.players?.[BOT_PLAYER_ID]?.vehicles?.[botDroneId];
+  const botDrone = playerStore.players?.[botId]?.vehicles?.[botDroneId];
   
   // Vérifier si le drone est actif
   if (botDrone && !botDrone.isActive) {
     fsmLogger.error(`Explorer drone is not active`);
     return false;
   }
-  const playerState = playerStore.players?.[BOT_PLAYER_ID];
+  const playerState = playerStore.players?.[botId];
   
   // Vérifier que le vaisseau existe
   if (!botVehicle || !botVehicle.coord) {
@@ -70,7 +71,7 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
     
     // Réinitialiser le flag de retour au vaisseau s'il existe
     if (droneReturnedToShip) {
-      playerStore.updatePlayerMemory(BOT_PLAYER_ID, { droneReturnedToShip: false });
+      playerStore.updatePlayerMemory(botId, { droneReturnedToShip: false });
     }
     
     fsmLogger.action(`Attempting to find a tile to explore`);
@@ -95,14 +96,14 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
       
       fsmLogger.action(`Sending drone to explore tile: ${targetTileInfo.coord}, distance: ${targetTileInfo.distance.toFixed(2)}`);
       
-      playerStore.moveToTile(BOT_PLAYER_ID, botDroneId, {
+      playerStore.moveToTile(botId, botDroneId, {
         coord: targetTileInfo.coord,
         position: targetTileInfo.position
       });
       
       // Incrémenter le compteur d'explorations
       const currentExplorationCount = playerState.memory.explorationCount || 0;
-      playerStore.updatePlayerMemory(BOT_PLAYER_ID, {
+      playerStore.updatePlayerMemory(botId, {
         explorationCount: currentExplorationCount + 1
       });
       
@@ -119,7 +120,7 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
       const randomTile = tileStore.selectRandomWalkableTile();
       if (randomTile) {
         fsmLogger.action(`No unexplored tiles nearby, sending drone to random tile: ${randomTile.coord}`);
-        playerStore.moveToTile(BOT_PLAYER_ID, botDroneId, randomTile);
+        playerStore.moveToTile(botId, botDroneId, randomTile);
         
         // Marquer que l'exploration a démarré et sauvegarder la tuile cible
         exploreWithDroneAction.explorationStarted = true;
@@ -156,7 +157,7 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
     fsmLogger.action(`Drone has returned to ship, exploration sequence fully complete after ${(elapsedTime/1000).toFixed(1)}s`);
     
     // Réinitialiser le flag dans la mémoire du bot
-    playerStore.updatePlayerMemory(BOT_PLAYER_ID, { droneReturnedToShip: false });
+    playerStore.updatePlayerMemory(botId, { droneReturnedToShip: false });
     
     // Réinitialiser les variables statiques
     exploreWithDroneAction.reset();

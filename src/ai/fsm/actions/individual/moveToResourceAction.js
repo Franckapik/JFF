@@ -8,7 +8,7 @@
  * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
  */
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
-import { BOT_PLAYER_ID, getBotMainVehicleId } from '../../../constants/playerConstants';
+import { getBotPlayerId, getMainShipId } from '../../../constants/playerConstants';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
 import { findPath } from '../../../../utils/utils';
@@ -22,9 +22,10 @@ import { findPath } from '../../../../utils/utils';
  * @returns {boolean|undefined} - True si l'action est terminée, false si échec, undefined si en cours
  */
 export const moveToResourceAction = (playerStore, tileStore, addAction, changeState) => {
-  const botVehicleId = getBotMainVehicleId();
-  const botVehicle = playerStore.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
-  const botMemory = playerStore.players?.[BOT_PLAYER_ID]?.memory;
+  const botId = getBotPlayerId(0);
+  const botVehicleId = getMainShipId();
+  const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
+  const botMemory = playerStore.players?.[botId]?.memory;
   
   if (!botVehicle || !botMemory) {
     fsmLogger.error('Bot vehicle or memory not found');
@@ -86,7 +87,7 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
           fsmLogger.action(`Bot already at resource location ${bestResource.coord}, action complete`);
           
           // Enregistrer la cible actuelle dans la mémoire du bot
-          playerStore.updatePlayerMemory(BOT_PLAYER_ID, {
+          playerStore.updatePlayerMemory(botId, {
             currentTargetResource: bestResource
           });
           
@@ -99,12 +100,12 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
         fsmLogger.action(`Moving to resource at ${bestResource.coord}, value: ${bestResource.value}, distance: ${bestResource.distance.toFixed(2)}`);
         
         // Enregistrer la cible actuelle dans la mémoire du bot
-        playerStore.updatePlayerMemory(BOT_PLAYER_ID, {
+        playerStore.updatePlayerMemory(botId, {
           currentTargetResource: bestResource
         });
         
         // Déplacer le bot vers la ressource
-        playerStore.moveToTile(BOT_PLAYER_ID, botVehicleId, targetTile);
+        playerStore.moveToTile(botId, botVehicleId, targetTile);
         
         // Initialisation des variables de suivi d'état
         moveToResourceAction.started = true;
@@ -159,7 +160,7 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
         // Essayer à nouveau de se déplacer vers la cible
         const targetTile = tileStore.tiles[moveToResourceAction.targetCoord];
         if (targetTile) {
-          playerStore.moveToTile(BOT_PLAYER_ID, botVehicleId, targetTile);
+          playerStore.moveToTile(botId, botVehicleId, targetTile);
           fsmLogger.action('Retrying movement to resource');
           return undefined; // Action toujours en cours
         }

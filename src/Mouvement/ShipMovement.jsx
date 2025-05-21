@@ -3,18 +3,18 @@ import usePlayerStore from "../stores/playerStore";
 import useGameStore from "../stores/useGameStore";
 import useBotStore from "../stores/useBotStore";
 import { useTileStore } from "../stores/useNewTileStore";
-import { BOT_PLAYER_ID, HUMAN_PLAYER_ID, getMainShipId } from "../ai/constants/playerConstants";
+import { isBotPlayerId, HUMAN_PLAYER_ID, getMainShipId } from "../ai/constants/playerConstants";
 import { useFrame } from "@react-three/fiber";
 import { Vector3, Euler } from "three";
 import { calculatePath } from "../utils/utils";
 import fsmLogger from "../utils/fsmLogger";
 
 const ShipMovement = ({ playerId, children }) => {
-  // === Références et états locaux ===
+  // === Références ===
   const groupRef = useRef();
   const rotationRef = useRef(new Euler(0, 0, 0));
   
-  // États pour le suivi du mouvement
+  // === États pour le suivi du mouvement ===
   const [path, setPath] = useState([]);
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [hasReachedTarget, setHasReachedTarget] = useState(false);
@@ -22,35 +22,26 @@ const ShipMovement = ({ playerId, children }) => {
   const [distanceTraveled, setDistanceTraveled] = useState(0);
   const [isInitialPositionSet, setIsInitialPositionSet] = useState(false);
 
-  // Récupérer les vitesses du PlayerStore au lieu de les coder en dur
-  const shipSpeeds = usePlayerStore((state) => state.movementSpeeds.ship);
-  const speed = shipSpeeds.speed;
-  const rotationSpeed = shipSpeeds.rotationSpeed;
-
   // === Sélecteurs des stores ===
   const tiles = useTileStore((state) => state.tiles);
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
   const playerVehicles = usePlayerStore((state) => state.players[playerId]?.vehicles);
   const updateVehicle = usePlayerStore((state) => state.updateVehicle);
   const consumeFuel = usePlayerStore(state => state.consumeFuel);
+  const shipSpeeds = usePlayerStore((state) => state.movementSpeeds.ship);
+  const speed = shipSpeeds.speed;
+  const rotationSpeed = shipSpeeds.rotationSpeed;
   
   const botStore = useBotStore();
-  
-  const playerVehicle =
-    playerId === BOT_PLAYER_ID
-      ? playerVehicles?.[getMainShipId()]
-      : selectedVehicle.playerId === playerId 
-        ? playerVehicles[selectedVehicle.vehicleId]
-        : null;
-
   const setClockRunning = useGameStore((state) => state.setClockRunning);
+  const playerVehicle = playerVehicles?.[getMainShipId()];
 
   // === Fonctions locales ===
   const handleFinalizeMovement = (currentTargetTile) => {
     if (!playerId || !playerVehicle) return;
     
-    // Pour le bot, on utilise toujours le vaisseau principal
-    const vehicleId = playerId === BOT_PLAYER_ID ? getMainShipId() : selectedVehicle.vehicleId;
+    // Pour les bots, on utilise toujours le vaisseau principal
+    const vehicleId = isBotPlayerId(playerId) ? getMainShipId() : selectedVehicle.vehicleId;
     
     fsmLogger.mouvement(`[ShipMovement] Finalizing movement for ${playerId}/${vehicleId} to ${currentTargetTile.coord}`);
     
@@ -76,8 +67,8 @@ const ShipMovement = ({ playerId, children }) => {
     setDistanceTraveled(0);
     
     if (playerId && playerVehicle) {
-      // Pour le bot, on utilise toujours le vaisseau principal
-      const vehicleId = playerId === BOT_PLAYER_ID ? getMainShipId() : selectedVehicle.vehicleId;
+      // Pour les bots, on utilise toujours le vaisseau principal
+      const vehicleId = isBotPlayerId(playerId) ? getMainShipId() : selectedVehicle.vehicleId;
       fsmLogger.mouvement(`[ShipMovement] Setting isMoving=true for ${playerId}/${vehicleId}`);
       
       updateVehicle(playerId, vehicleId, {
@@ -140,8 +131,8 @@ const ShipMovement = ({ playerId, children }) => {
   useFrame((_, delta) => {
     if (!playerVehicle || path.length === 0 || currentTargetIndex >= path.length) return;
 
-    // Pour le joueur 2 (bot), on utilise toujours "ship"
-    const vehicleId = playerId === BOT_PLAYER_ID ? getMainShipId() : selectedVehicle.vehicleId;
+    // Pour les bots, on utilise toujours "ship"
+    const vehicleId = isBotPlayerId(playerId) ? getMainShipId() : selectedVehicle.vehicleId;
 
     if (playerVehicle.fuel <= 0) {
       updateVehicle(playerId, vehicleId, { isMoving: false });

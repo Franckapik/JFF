@@ -8,7 +8,7 @@
  * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
  */
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
-import { BOT_PLAYER_ID, getBotMainVehicleId } from '../../../constants/playerConstants';
+import { getBotPlayerId, getMainShipId } from '../../../constants/playerConstants';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
 
@@ -21,8 +21,8 @@ import fsmLogger from '../../../../utils/fsmLogger';
  * @returns {boolean|undefined} - True si l'action est terminée, false si elle a échoué, undefined si elle est en cours
  */
 export const returnToBaseAction = (playerStore, tileStore, addAction, changeState) => {
-  const botVehicleId = getBotMainVehicleId();
-  const botVehicle = playerStore.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
+  const botVehicleId = getMainShipId();
+  const botVehicle = playerStore.players?.[getBotPlayerId(0)]?.vehicles?.[botVehicleId];
   if (!botVehicle) {
     fsmLogger.error('Bot vehicle not found');
     return false; // Action échouée
@@ -58,7 +58,7 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
     fsmLogger.action(`Moving bot to base at ${baseCoord}`);
     
     // Déplacer le bot vers sa base
-    playerStore.moveToTile(BOT_PLAYER_ID, botVehicleId, baseTile);
+    playerStore.moveToTile(getBotPlayerId(0), botVehicleId, baseTile);
     returnToBaseAction.initiated = true;
     return undefined; // Action en cours
   }
