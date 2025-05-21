@@ -9,7 +9,9 @@ import {
   BOT_PLAYER_ID, 
   HUMAN_PLAYER_ID,
   getMainShipId,
-  isMainShipId 
+  isMainShipId,
+  VEHICLE_TYPES,
+  isDroneId
 } from '../ai/constants/playerConstants';
 
 /**
@@ -27,9 +29,41 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
   const updateVehicle = usePlayerStore((state) => state.updateVehicle);
   const updatePlayerMemory = usePlayerStore((state) => state.updatePlayerMemory);
   
-  // Récupérer les vitesses des drones du PlayerStore (simplifiées)
-  const droneSpeed = usePlayerStore((state) => state.movementSpeeds.drone.speed);
-  const droneRotationSpeed = usePlayerStore((state) => state.movementSpeeds.drone.rotationSpeed);
+  // Get the drone's type based on its ID
+  const getDroneType = () => {
+    if (droneId.startsWith(VEHICLE_TYPES.EXPLORER_DRONE)) return VEHICLE_TYPES.EXPLORER_DRONE;
+    if (droneId.startsWith(VEHICLE_TYPES.COMBAT_DRONE)) return VEHICLE_TYPES.COMBAT_DRONE;
+    if (droneId.startsWith(VEHICLE_TYPES.SPECIAL_DRONE)) return VEHICLE_TYPES.SPECIAL_DRONE;
+    return null;
+  };
+  
+  // Get drone type specific speeds and behaviors
+  const droneType = getDroneType();
+  const droneSpeed = usePlayerStore((state) => {
+    switch(droneType) {
+      case VEHICLE_TYPES.EXPLORER_DRONE:
+        return state.movementSpeeds.drone.speed * 1.2; // Explorer drones are faster
+      case VEHICLE_TYPES.COMBAT_DRONE:
+        return state.movementSpeeds.drone.speed * 0.9; // Combat drones are slower
+      case VEHICLE_TYPES.SPECIAL_DRONE:
+        return state.movementSpeeds.drone.speed; // Regular speed
+      default:
+        return state.movementSpeeds.drone.speed;
+    }
+  });
+  
+  const droneRotationSpeed = usePlayerStore((state) => {
+    switch(droneType) {
+      case VEHICLE_TYPES.EXPLORER_DRONE:
+        return state.movementSpeeds.drone.rotationSpeed * 0.8; // More stable rotation
+      case VEHICLE_TYPES.COMBAT_DRONE:
+        return state.movementSpeeds.drone.rotationSpeed * 1.2; // More aggressive rotation
+      case VEHICLE_TYPES.SPECIAL_DRONE:
+        return state.movementSpeeds.drone.rotationSpeed * 0.5; // Slow, scanning rotation
+      default:
+        return state.movementSpeeds.drone.rotationSpeed;
+    }
+  });
   
   // Sélecteurs pour les vaisseaux et le drone concerné
   const humanShip = usePlayerStore((state) => state.players[HUMAN_PLAYER_ID]?.vehicles?.[getMainShipId()]);
@@ -168,27 +202,101 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
     } 
     // Gestion de l'arrivée à destination
     else {
-      if (playerId === HUMAN_PLAYER_ID) {
-        // Drone du joueur humain
-        if (playerDroneTargetTile && isPlayerDroneMoving && !returningToShip) {
-          handleDroneReachedTarget(playerDroneTargetTile);
+      // Vérifier si le drone est activé
+      if (!drone?.isActive) {
+        // Les drones non explorateurs reviennent au vaisseau s'ils sont inactifs
+        if (droneType !== VEHICLE_TYPES.EXPLORER_DRONE) {
+          setReturningToShip(true);
         }
-      } else {
-        // Drone du bot (player2)
-        if (drone?.targetTile?.coord && drone.isMoving && !returningToShip) {
-          handleDroneReachedTarget(drone.targetTile.coord);
-        }
+        return;
+      }
+
+      // Comportement spécifique selon le type de drone
+      switch(droneType) {
+        case VEHICLE_TYPES.EXPLORER_DRONE:
+          // Comportement normal d'exploration
+          if (playerId === HUMAN_PLAYER_ID) {
+            if (playerDroneTargetTile && isPlayerDroneMoving && !returningToShip) {
+              handleDroneReachedTarget(playerDroneTargetTile);
+            }
+          } else {
+            if (drone?.targetTile?.coord && drone.isMoving && !returningToShip) {
+              handleDroneReachedTarget(drone.targetTile.coord);
+            }
+          }
+          break;
+
+        case VEHICLE_TYPES.COMBAT_DRONE:
+          // Le drone de combat peut attaquer et poser des mines
+          if (drone?.targetTile?.coord && drone.isMoving && !returningToShip) {
+            handleDroneReachedTarget(drone.targetTile.coord);
+            // Poser une mine si la capacité est disponible
+            if (drone.mineLayingCapacity > 0) {
+              updateVehicle(playerId, droneId, {
+                mineLayingCapacity: drone.mineLayingCapacity - 1
+              });
+              sendVehicleMessage(playerId, droneId, 'mine_laid');
+            }
+          }
+          break;
+
+        case VEHICLE_TYPES.SPECIAL_DRONE:
+          // Le drone spécial a une portée de scan plus grande
+          if (drone?.targetTile?.coord && drone.isMoving && !returningToShip) {
+            handleDroneReachedTarget(drone.targetTile.coord);
+            // Scanner la zone pour des objets spéciaux
+            if (drone.specialDetection) {
+              // Scan en spiral pour trouver des objets spéciaux
+              const scanRadius = drone.specialScanRange || 5;
+              sendVehicleMessage(playerId, droneId, 'special_scan', { radius: scanRadius });
+            }
+          }
+          break;
       }
       
       // Gestion du retour au vaisseau
       if (returningToShip && distance <= 0.2 && shipToFollow) {
-        fsmLogger.mouvement(`[UnifiedDroneMovement] Drone for ${playerId} returned to ship`);
+        fsmLogger.mouvement(`[UnifiedDroneMovement] ${droneType} for ${playerId} returned to ship`);
         setReturningToShip(false);
-        setCooldown(3); // 3 secondes de cooldown
+        
+        // Cooldown variable selon le type de drone
+        switch(droneType) {
+          case VEHICLE_TYPES.EXPLORER_DRONE:
+            setCooldown(2); // Plus court pour le drone d'exploration
+            break;
+          case VEHICLE_TYPES.COMBAT_DRONE:
+            setCooldown(4); // Plus long pour le drone de combat
+            // Réinitialiser la capacité de poses de mines
+            if (drone.mineLayingCapacity < 3) {
+              updateVehicle(playerId, droneId, { mineLayingCapacity: 3 });
+            }
+            break;
+          case VEHICLE_TYPES.SPECIAL_DRONE:
+            setCooldown(3); // Normal pour le drone spécial
+            break;
+          default:
+            setCooldown(3);
+        }
         
         if (playerId === BOT_PLAYER_ID) {
           // Signaler que le drone est revenu au vaisseau
           updatePlayerMemory(BOT_PLAYER_ID, { droneReturnedToShip: true });
+
+          // Transférer les ressources collectées au vaisseau principal pour les drones de combat
+          if (droneType === VEHICLE_TYPES.COMBAT_DRONE && drone.resources) {
+            const botShipId = getMainShipId();
+            updateVehicle(BOT_PLAYER_ID, botShipId, {
+              resources: {
+                food: (botShip.resources.food || 0) + (drone.resources.food || 0),
+                debris: (botShip.resources.debris || 0) + (drone.resources.debris || 0),
+                special: (botShip.resources.special || 0) + (drone.resources.special || 0)
+              }
+            });
+            // Vider les ressources du drone
+            updateVehicle(playerId, droneId, {
+              resources: { food: 0, debris: 0, special: 0 }
+            });
+          }
         }
       }
     }
@@ -204,26 +312,79 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
     // Récupérer les informations de ressources
     const resources = reachedTile.resources || { food: 0, debris: 0, special: 0 };
     
-    // Envoyer un message adapté au type de tuile
-    sendVehicleMessage(playerId, droneId, 'resource', resources);
-    
-    if (reachedTile.type) {
-      switch (reachedTile.type) {
-        case "resource":
-          sendVehicleMessage(playerId, droneId, 'resource', resources);
-          break;
-        case "danger":
-          sendVehicleMessage(playerId, droneId, 'danger');
-          break;
-        case "fuel":
-          sendVehicleMessage(playerId, droneId, 'fuel');
-          break;
-        case "repair":
-          sendVehicleMessage(playerId, droneId, 'repair');
-          break;
-        default:
-          break;
-      }
+    // Comportement spécifique selon le type de drone
+    switch(droneType) {
+      case VEHICLE_TYPES.EXPLORER_DRONE:
+        // Envoyer des informations détaillées sur les ressources et dangers
+        if (reachedTile.type === "resource") {
+          sendVehicleMessage(playerId, droneId, 'resource', {
+            ...resources,
+            explorationBonus: drone.explorationBonus,
+            coord: reachedTileCoord
+          });
+        } else if (reachedTile.type === "danger") {
+          sendVehicleMessage(playerId, droneId, 'danger', {
+            severity: "high",
+            coord: reachedTileCoord
+          });
+        }
+        break;
+
+      case VEHICLE_TYPES.COMBAT_DRONE:
+        // Vérifier les menaces et collecter des ressources si possible
+        if (reachedTile.type === "danger") {
+          sendVehicleMessage(playerId, droneId, 'combat_engage', {
+            damage: drone.damage,
+            coord: reachedTileCoord
+          });
+        } else if (resources.food > 0 || resources.debris > 0) {
+          // Le drone de combat peut collecter de petites quantités
+          const collectedResources = {
+            food: Math.min(resources.food, drone.maxCapacity.food),
+            debris: Math.min(resources.debris, drone.maxCapacity.debris),
+            special: Math.min(resources.special, drone.maxCapacity.special)
+          };
+          sendVehicleMessage(playerId, droneId, 'resource', collectedResources);
+        }
+        break;
+
+      case VEHICLE_TYPES.SPECIAL_DRONE:
+        // Scanner spécifiquement pour les ressources spéciales
+        if (resources.special > 0) {
+          sendVehicleMessage(playerId, droneId, 'special_discovered', {
+            special: resources.special,
+            coord: reachedTileCoord,
+            scanRange: drone.specialScanRange
+          });
+        } else {
+          // Envoyer des données de scan même si rien n'est trouvé
+          sendVehicleMessage(playerId, droneId, 'scan_complete', {
+            coord: reachedTileCoord,
+            scanRange: drone.specialScanRange
+          });
+        }
+        break;
+
+      default:
+        // Comportement par défaut pour les autres types
+        if (reachedTile.type) {
+          switch (reachedTile.type) {
+            case "resource":
+              sendVehicleMessage(playerId, droneId, 'resource', resources);
+              break;
+            case "danger":
+              sendVehicleMessage(playerId, droneId, 'danger');
+              break;
+            case "fuel":
+              sendVehicleMessage(playerId, droneId, 'fuel');
+              break;
+            case "repair":
+              sendVehicleMessage(playerId, droneId, 'repair');
+              break;
+            default:
+              break;
+          }
+        }
     }
     
     // Si c'est le bot, mettre à jour sa mémoire des ressources connues

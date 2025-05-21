@@ -18,7 +18,9 @@ export const getBotMainVehicleId = () => 'ship';
 // Type d'identifiants pour les véhicules
 export const VEHICLE_TYPES = {
   SHIP: 'ship',
-  DRONE: 'drone'
+  EXPLORER_DRONE: 'explorer_drone',
+  COMBAT_DRONE: 'combat_drone',
+  SPECIAL_DRONE: 'special_drone'
 };
 
 // Obtenir l'ID du vaisseau principal
@@ -27,22 +29,29 @@ export const getMainShipId = () => VEHICLE_TYPES.SHIP;
 // Vérifier si un ID est celui d'un vaisseau principal
 export const isMainShipId = (vehicleId) => vehicleId === VEHICLE_TYPES.SHIP;
 
-// Obtenir l'ID d'un drone spécifique pour un joueur donné
-export const getDroneId = (playerId, index = 1) => {
+// Obtenir l'ID d'un drone spécifique pour un joueur donné avec son type
+export const getDroneId = (playerId, droneType) => {
   const playerNum = playerId.slice(-1);
-  const droneStartIdx = (parseInt(playerNum) - 1) * 2 + 1;
-  return `${VEHICLE_TYPES.DRONE}${droneStartIdx + index - 1}`;
+  return `${droneType}_${playerNum}`;
 };
 
 // Obtenir tous les IDs de drones pour un joueur
 export const getAllDroneIds = (playerId) => {
-  const playerNum = playerId.slice(-1);
-  const droneStartIdx = (parseInt(playerNum) - 1) * 2 + 1;
   return [
-    `${VEHICLE_TYPES.DRONE}${droneStartIdx}`,
-    `${VEHICLE_TYPES.DRONE}${droneStartIdx + 1}`
+    getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE),
+    getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE),
+    getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)
   ];
 };
 
 // Vérifier si un ID est celui d'un drone
-export const isDroneId = (vehicleId) => vehicleId.startsWith(VEHICLE_TYPES.DRONE);
+export const isDroneId = (vehicleId) => {
+  return vehicleId.startsWith(VEHICLE_TYPES.EXPLORER_DRONE) ||
+         vehicleId.startsWith(VEHICLE_TYPES.COMBAT_DRONE) ||
+         vehicleId.startsWith(VEHICLE_TYPES.SPECIAL_DRONE);
+};
+
+// Vérifie si un drone est actif par défaut au démarrage
+export const isDroneActiveByDefault = (droneType) => {
+  return droneType === VEHICLE_TYPES.EXPLORER_DRONE;
+};

@@ -13,7 +13,8 @@ import {
   BOT_PLAYER_ID, 
   getMainShipId, 
   getDroneId, 
-  isMainShipId 
+  isMainShipId,
+  VEHICLE_TYPES
 } from "../ai/constants/playerConstants";
 
 const Scene = () => {
@@ -74,8 +75,12 @@ const Scene = () => {
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
       
-      {/* Drone du joueur 1 - Utilisation du composant unifié (ajouté depuis SimpleScene) */}
-      <UnifiedDroneMovement playerId={HUMAN_PLAYER_ID} droneId={getDroneId(HUMAN_PLAYER_ID, 1)}>
+      {/* Drones du joueur 1 */}
+      {/* Drone d'exploration - Design conique simple */}
+      <UnifiedDroneMovement 
+        playerId={HUMAN_PLAYER_ID} 
+        droneId={getDroneId(HUMAN_PLAYER_ID, VEHICLE_TYPES.EXPLORER_DRONE)}
+      >
         <Cone 
           args={[0.3, 0.8, 8]} 
           rotation={[Math.PI, 0, 0]}
@@ -84,9 +89,57 @@ const Scene = () => {
           <meshStandardMaterial color="purple" metalness={0.5} roughness={0.3} />
         </Cone>
       </UnifiedDroneMovement>
+
+      {/* Drone de combat - Design plus agressif avec des ailes */}
+      <UnifiedDroneMovement
+        playerId={HUMAN_PLAYER_ID}
+        droneId={getDroneId(HUMAN_PLAYER_ID, VEHICLE_TYPES.COMBAT_DRONE)}
+      >
+        <group>
+          <Cone 
+            args={[0.4, 0.6, 6]} 
+            rotation={[Math.PI, 0, 0]}
+            castShadow
+          >
+            <meshStandardMaterial color="darkred" metalness={0.7} roughness={0.2} />
+          </Cone>
+          <mesh position={[0.3, 0, 0]} rotation={[0, 0, Math.PI/4]}>
+            <boxGeometry args={[0.4, 0.1, 0.1]} />
+            <meshStandardMaterial color="red" metalness={0.7} roughness={0.2} />
+          </mesh>
+          <mesh position={[-0.3, 0, 0]} rotation={[0, 0, -Math.PI/4]}>
+            <boxGeometry args={[0.4, 0.1, 0.1]} />
+            <meshStandardMaterial color="red" metalness={0.7} roughness={0.2} />
+          </mesh>
+        </group>
+      </UnifiedDroneMovement>
+
+      {/* Drone spécial - Design unique avec scanner */}
+      <UnifiedDroneMovement
+        playerId={HUMAN_PLAYER_ID}
+        droneId={getDroneId(HUMAN_PLAYER_ID, VEHICLE_TYPES.SPECIAL_DRONE)}
+      >
+        <group>
+          <Cone 
+            args={[0.25, 0.7, 8]} 
+            rotation={[Math.PI, 0, 0]}
+            castShadow
+          >
+            <meshStandardMaterial color="cyan" metalness={0.6} roughness={0.3} emissive="cyan" emissiveIntensity={0.3} />
+          </Cone>
+          <mesh position={[0, -0.2, 0]} rotation={[Math.PI/2, 0, 0]}>
+            <torusGeometry args={[0.3, 0.05, 8, 16]} />
+            <meshStandardMaterial color="lightblue" metalness={0.6} roughness={0.3} emissive="blue" emissiveIntensity={0.5} />
+          </mesh>
+        </group>
+      </UnifiedDroneMovement>
       
-      {/* Drone du bot (player2) - Utilisation du composant unifié (ajouté depuis SimpleScene) */}
-      <UnifiedDroneMovement playerId={BOT_PLAYER_ID} droneId={getDroneId(BOT_PLAYER_ID, 1)}>
+      {/* Drones du bot (player2) */}
+      {/* Drone d'exploration */}
+      <UnifiedDroneMovement 
+        playerId={BOT_PLAYER_ID} 
+        droneId={getDroneId(BOT_PLAYER_ID, VEHICLE_TYPES.EXPLORER_DRONE)}
+      >
         <Cone 
           args={[0.3, 0.8, 8]} 
           rotation={[Math.PI, 0, 0]}
@@ -95,6 +148,53 @@ const Scene = () => {
           <meshStandardMaterial color="magenta" metalness={0.5} roughness={0.3} />
         </Cone>
       </UnifiedDroneMovement>
+
+      {/* Drone de combat du bot */}
+      <UnifiedDroneMovement
+        playerId={BOT_PLAYER_ID}
+        droneId={getDroneId(BOT_PLAYER_ID, VEHICLE_TYPES.COMBAT_DRONE)}
+      >
+        <group>
+          <Cone 
+            args={[0.4, 0.6, 6]} 
+            rotation={[Math.PI, 0, 0]}
+            castShadow
+          >
+            <meshStandardMaterial color="crimson" metalness={0.7} roughness={0.2} />
+          </Cone>
+          <mesh position={[0.3, 0, 0]} rotation={[0, 0, Math.PI/4]}>
+            <boxGeometry args={[0.4, 0.1, 0.1]} />
+            <meshStandardMaterial color="darkred" metalness={0.7} roughness={0.2} />
+          </mesh>
+          <mesh position={[-0.3, 0, 0]} rotation={[0, 0, -Math.PI/4]}>
+            <boxGeometry args={[0.4, 0.1, 0.1]} />
+            <meshStandardMaterial color="darkred" metalness={0.7} roughness={0.2} />
+          </mesh>
+        </group>
+      </UnifiedDroneMovement>
+
+      {/* Drone spécial du bot */}
+      <UnifiedDroneMovement
+        playerId={BOT_PLAYER_ID}
+        droneId={getDroneId(BOT_PLAYER_ID, VEHICLE_TYPES.SPECIAL_DRONE)}
+      >
+        <group>
+          <Cone 
+            args={[0.25, 0.7, 8]} 
+            rotation={[Math.PI, 0, 0]}
+            castShadow
+          >
+            <meshStandardMaterial color="magenta" metalness={0.6} roughness={0.3} emissive="magenta" emissiveIntensity={0.3} />
+          </Cone>
+          <mesh position={[0, -0.2, 0]} rotation={[Math.PI/2, 0, 0]}>
+            <torusGeometry args={[0.3, 0.05, 8, 16]} />
+            <meshStandardMaterial color="purple" metalness={0.6} roughness={0.3} emissive="purple" emissiveIntensity={0.5} />
+          </mesh>
+        </group>
+      </UnifiedDroneMovement>
+
+      {/* Pour l'instant nous ne rendons que les drones d'exploration 
+          Les autres drones seront ajoutés quand ils seront activés */}
       
       {Object.keys(tiles).length > 0 && (
         <>

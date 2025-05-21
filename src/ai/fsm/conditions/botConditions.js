@@ -2,7 +2,12 @@
 // Conditions centralisées qui déclenchent des transitions d'état dans la FSM
 
 import { BOT_STATES, PRIORITY, IDLE_EVALUATION } from '../../constants/botConstants';
-import { BOT_PLAYER_ID, getBotMainVehicleId, getDroneId } from '../../constants/playerConstants';
+import { 
+  BOT_PLAYER_ID, 
+  getBotMainVehicleId, 
+  getDroneId,
+  VEHICLE_TYPES
+} from '../../constants/playerConstants';
 import usePlayerStore from '../../../stores/playerStore';
 
 /**
@@ -221,7 +226,7 @@ export const BotConditions = {
     const playerState = usePlayerStore.getState();
     const botVehicleId = getBotMainVehicleId();
     const botVehicle = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
-    const botDroneId = getDroneId(BOT_PLAYER_ID, 1);
+    const botDroneId = getDroneId(BOT_PLAYER_ID, VEHICLE_TYPES.EXPLORER_DRONE);
     const botDrone = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botDroneId];
     
     if (!botVehicle || !botDrone) return { result: false };
@@ -238,7 +243,7 @@ export const BotConditions = {
    */
   isDroneMoving: () => {
     const playerState = usePlayerStore.getState();
-    const botDroneId = getDroneId(BOT_PLAYER_ID, 1);
+    const botDroneId = getDroneId(BOT_PLAYER_ID, VEHICLE_TYPES.EXPLORER_DRONE);
     const botDrone = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botDroneId];
     
     if (!botDrone) return { result: false };

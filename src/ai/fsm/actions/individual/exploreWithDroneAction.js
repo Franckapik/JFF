@@ -8,7 +8,12 @@
  * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
  */
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
-import { BOT_PLAYER_ID, getBotMainVehicleId, getDroneId } from '../../../constants/playerConstants';
+import { 
+  BOT_PLAYER_ID, 
+  getBotMainVehicleId, 
+  getDroneId,
+  VEHICLE_TYPES
+} from '../../../constants/playerConstants';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
 
@@ -24,10 +29,16 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
   const botVehicleId = getBotMainVehicleId();
   const botVehicle = playerStore.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
   
-  // Obtenir l'ID du premier drone du bot
-  const botDroneId = getDroneId(BOT_PLAYER_ID, 1);
+  // Obtenir l'ID du drone d'exploration du bot
+  const botDroneId = getDroneId(BOT_PLAYER_ID, VEHICLE_TYPES.EXPLORER_DRONE);
   
   const botDrone = playerStore.players?.[BOT_PLAYER_ID]?.vehicles?.[botDroneId];
+  
+  // Vérifier si le drone est actif
+  if (botDrone && !botDrone.isActive) {
+    fsmLogger.error(`Explorer drone is not active`);
+    return false;
+  }
   const playerState = playerStore.players?.[BOT_PLAYER_ID];
   
   // Vérifier que le vaisseau existe
