@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { GridHelper } from "three";
 import { useThree } from "@react-three/fiber";
-import { Cone } from "@react-three/drei";
+import { Cone, Html } from "@react-three/drei";
 import Tile from "./Tile";
 import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/playerStore";
@@ -248,16 +248,46 @@ const Scene = () => {
         ))}
       {Object.values(tiles)
         .filter((tile) => tile.type === "depart")
-        .map((tile) => (
-          <mesh
-            key={`depart-tile-${tile.coord}`}
-            position={[tile.position.x, 0.2, tile.position.z]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <circleGeometry args={[0.5, 32]} />
-            <meshStandardMaterial color="red" />
-          </mesh>
-        ))}
+        .map((tile, index) => {
+          // Déterminer à quel joueur appartient cette base
+          // Les bases sont attribuées selon leur index dans le tableau des tuiles "depart"
+          const playerId = index === 0 ? HUMAN_PLAYER_ID : getBotPlayerId(index - 1);
+          const isPlayerBase = playerId === HUMAN_PLAYER_ID;
+          
+          return (
+            <React.Fragment key={`depart-tile-${tile.coord}`}>
+              <mesh
+                position={[tile.position.x, 0.2, tile.position.z]}
+                rotation={[-Math.PI / 2, 0, 0]}
+              >
+                <circleGeometry args={[0.5, 32]} />
+                <meshStandardMaterial color={isPlayerBase ? "blue" : "red"} />
+              </mesh>
+              
+              {/* Identifiant du joueur au-dessus de sa base */}
+              <Html
+                position={[tile.position.x, 0.5, tile.position.z]}
+                center
+                distanceFactor={15}
+              >
+                <div style={{
+                  background: isPlayerBase ? 'rgba(0,50,200,0.8)' : 'rgba(200,50,0,0.8)',
+                  color: 'white',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  userSelect: 'none',
+                  pointerEvents: 'none',
+                  whiteSpace: 'nowrap',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+                }}>
+                  {isPlayerBase ? 'Joueur 1' : `Bot ${index}`}
+                </div>
+              </Html>
+            </React.Fragment>
+          );
+        })}
       {Object.values(tiles)
         .filter((tile) => tile.type === "fuel")
         .map((tile) => (
