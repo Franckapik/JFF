@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import usePlayerStore from "../../stores/playerStore";
+import { HUMAN_PLAYER_ID, getMainShipId } from "../../ai/constants/playerConstants";
 
 const PlayerHUD = () => {
   const players = usePlayerStore((state) => state.players);
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
-  const player1Ship = players.player1?.vehicles?.ship;
+  const player1Ship = players[HUMAN_PLAYER_ID]?.vehicles?.[getMainShipId()];
   
   // État local pour les onglets des ressources
   const [activeResourceTab, setActiveResourceTab] = useState('total');

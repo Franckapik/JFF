@@ -5,7 +5,12 @@ import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/playerStore";
 import useMessageManager from "../hooks/useMessageManager";
 import fsmLogger from "../utils/fsmLogger";
-import { BOT_PLAYER_ID, HUMAN_PLAYER_ID } from '../ai/constants/playerConstants';
+import { 
+  BOT_PLAYER_ID, 
+  HUMAN_PLAYER_ID,
+  getMainShipId,
+  isMainShipId 
+} from '../ai/constants/playerConstants';
 
 /**
  * Composant de mouvement de drone unifié qui fonctionne pour les deux joueurs (HUMAN_PLAYER_ID et BOT_PLAYER_ID)
@@ -27,8 +32,8 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
   const droneRotationSpeed = usePlayerStore((state) => state.movementSpeeds.drone.rotationSpeed);
   
   // Sélecteurs pour les vaisseaux et le drone concerné
-  const humanShip = usePlayerStore((state) => state.players[HUMAN_PLAYER_ID]?.vehicles?.ship);
-  const botShip = usePlayerStore((state) => state.players[BOT_PLAYER_ID]?.vehicles?.ship);
+  const humanShip = usePlayerStore((state) => state.players[HUMAN_PLAYER_ID]?.vehicles?.[getMainShipId()]);
+  const botShip = usePlayerStore((state) => state.players[BOT_PLAYER_ID]?.vehicles?.[getMainShipId()]);
   const drone = usePlayerStore((state) => state.players[playerId]?.vehicles[droneId]);
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
 
@@ -46,7 +51,7 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
       return botShip; // Le drone du bot suit toujours le vaisseau du bot
     } else {
       // Pour le joueur humain, on peut utiliser le vaisseau sélectionné ou par défaut humanShip
-      if (selectedVehicle.vehicleId === "ship") {
+      if (isMainShipId(selectedVehicle.vehicleId)) {
         return selectedVehicle.playerId === HUMAN_PLAYER_ID ? humanShip : botShip;
       }
       return humanShip;

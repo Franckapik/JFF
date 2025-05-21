@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import usePlayerStore from "../../stores/playerStore";
 import useBotStore from "../../stores/useBotStore";
 import { useTileStore } from "../../stores/useNewTileStore";
+import { BOT_PLAYER_ID, getMainShipId } from "../../ai/constants/playerConstants";
 
 // Renommé de SimpleUserHUD à BotHUD
 const BotHUD = () => {
@@ -11,8 +12,8 @@ const BotHUD = () => {
   const completedActions = useBotStore((state) => state.completedActions) || []; // Récupération des actions terminées
   const clearCompletedActions = useBotStore((state) => state.clearCompletedActions); // Fonction pour vider l'historique
   const players = usePlayerStore((state) => state.players);
-  const player2Ship = players.player2?.vehicles?.ship;
-  const botMemory = players.player2?.memory;
+  const botShip = players[BOT_PLAYER_ID]?.vehicles?.[getMainShipId()];
+  const botMemory = players[BOT_PLAYER_ID]?.memory;
   
   // Récupérer la fonction calculateDistance du TileStore
   const calculateDistance = useTileStore((state) => state.calculateDistance);

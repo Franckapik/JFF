@@ -8,6 +8,13 @@ import usePlayerStore from "../stores/playerStore";
 import useBotStore from "../stores/useBotStore"; // Utiliser useBotStore à la place de useSimpleBotStore
 import ShipMovement from "../Mouvement/ShipMovement";
 import UnifiedDroneMovement from "../Mouvement/UnifiedDroneMovement"; // Ajout de UnifiedDroneMovement
+import { 
+  HUMAN_PLAYER_ID, 
+  BOT_PLAYER_ID, 
+  getMainShipId, 
+  getDroneId, 
+  isMainShipId 
+} from "../ai/constants/playerConstants";
 
 const Scene = () => {
   const initializeTiles = useTileStore((state) => state.initializeTiles);
@@ -52,10 +59,8 @@ const Scene = () => {
   }, [camera]);
 
   const handleTileClick = (tile) => {
-    const playerId = "player1";
-
     if (selectedVehicle.vehicleId) {
-      moveToTile(playerId, selectedVehicle.vehicleId, {
+      moveToTile(HUMAN_PLAYER_ID, selectedVehicle.vehicleId, {
         coord: tile.coord,
         position: tile.position,
       });
@@ -70,7 +75,7 @@ const Scene = () => {
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
       
       {/* Drone du joueur 1 - Utilisation du composant unifié (ajouté depuis SimpleScene) */}
-      <UnifiedDroneMovement playerId="player1" droneId="drone1">
+      <UnifiedDroneMovement playerId={HUMAN_PLAYER_ID} droneId={getDroneId(HUMAN_PLAYER_ID, 1)}>
         <Cone 
           args={[0.3, 0.8, 8]} 
           rotation={[Math.PI, 0, 0]}
@@ -81,7 +86,7 @@ const Scene = () => {
       </UnifiedDroneMovement>
       
       {/* Drone du bot (player2) - Utilisation du composant unifié (ajouté depuis SimpleScene) */}
-      <UnifiedDroneMovement playerId="player2" droneId="drone3">
+      <UnifiedDroneMovement playerId={BOT_PLAYER_ID} droneId={getDroneId(BOT_PLAYER_ID, 1)}>
         <Cone 
           args={[0.3, 0.8, 8]} 
           rotation={[Math.PI, 0, 0]}
@@ -93,19 +98,19 @@ const Scene = () => {
       
       {Object.keys(tiles).length > 0 && (
         <>
-          <ShipMovement playerId="player1">
+          <ShipMovement playerId={HUMAN_PLAYER_ID}>
             <mesh castShadow>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
               <meshStandardMaterial
-                color={selectedVehicle.playerId === "player1" && selectedVehicle.vehicleId === "ship" ? "yellow" : "blue"}
+                color={selectedVehicle.playerId === HUMAN_PLAYER_ID && isMainShipId(selectedVehicle.vehicleId) ? "yellow" : "blue"}
               />
             </mesh>
           </ShipMovement>
-          <ShipMovement playerId="player2">
+          <ShipMovement playerId={BOT_PLAYER_ID}>
             <mesh castShadow>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
               <meshStandardMaterial
-                color={selectedVehicle.playerId === "player2" && selectedVehicle.vehicleId === "ship" ? "yellow" : "red"}
+                color={selectedVehicle.playerId === BOT_PLAYER_ID && isMainShipId(selectedVehicle.vehicleId) ? "yellow" : "red"}
               />
             </mesh>
           </ShipMovement>

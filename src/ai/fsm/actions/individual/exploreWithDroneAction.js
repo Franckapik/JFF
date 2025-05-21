@@ -8,7 +8,7 @@
  * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
  */
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
-import { BOT_PLAYER_ID, getBotMainVehicleId } from '../../../constants/playerConstants';
+import { BOT_PLAYER_ID, getBotMainVehicleId, getDroneId } from '../../../constants/playerConstants';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
 
@@ -24,10 +24,8 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
   const botVehicleId = getBotMainVehicleId();
   const botVehicle = playerStore.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
   
-  // Calculer l'ID du premier drone du bot basé sur le player ID
-  const playerNum = BOT_PLAYER_ID.slice(-1); // Extraire le numéro du joueur ('player2' -> '2')
-  const droneStartIdx = (parseInt(playerNum) - 1) * 2 + 1; // Calcule l'index de départ des drones
-  const botDroneId = `drone${droneStartIdx}`;
+  // Obtenir l'ID du premier drone du bot
+  const botDroneId = getDroneId(BOT_PLAYER_ID, 1);
   
   const botDrone = playerStore.players?.[BOT_PLAYER_ID]?.vehicles?.[botDroneId];
   const playerState = playerStore.players?.[BOT_PLAYER_ID];

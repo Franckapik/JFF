@@ -2,6 +2,7 @@
  * Slice pour la gestion des véhicules et leurs mouvements
  */
 import { updateVehicle as updateVehicleUtil } from '../../../utils/utils';
+import { isMainShipId } from '../../../ai/constants/playerConstants';
 
 const createVehicleSlice = (set, get) => {
   return {
@@ -25,7 +26,7 @@ const createVehicleSlice = (set, get) => {
         const updatedVehicle = { ...vehicle, ...updates };
         
         // Logique spécifique pour les vaisseaux à la base (dépôt des ressources)
-        if (vehicleId === 'ship' && 
+        if (isMainShipId(vehicleId) && 
             updatedVehicle.coord &&
             updatedVehicle.coord === updatedVehicle.startCoord &&
             !updatedVehicle.isMoving) {

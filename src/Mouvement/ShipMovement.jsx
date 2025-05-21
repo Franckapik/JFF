@@ -3,6 +3,7 @@ import usePlayerStore from "../stores/playerStore";
 import useGameStore from "../stores/useGameStore";
 import useBotStore from "../stores/useBotStore";
 import { useTileStore } from "../stores/useNewTileStore";
+import { BOT_PLAYER_ID, HUMAN_PLAYER_ID, getMainShipId } from "../ai/constants/playerConstants";
 import { useFrame } from "@react-three/fiber";
 import { Vector3, Euler } from "three";
 import { calculatePath } from "../utils/utils";
@@ -36,8 +37,8 @@ const ShipMovement = ({ playerId, children }) => {
   const botStore = useBotStore();
   
   const playerVehicle =
-    playerId === "player2"
-      ? playerVehicles?.ship
+    playerId === BOT_PLAYER_ID
+      ? playerVehicles?.[getMainShipId()]
       : selectedVehicle.playerId === playerId 
         ? playerVehicles[selectedVehicle.vehicleId]
         : null;
@@ -48,8 +49,8 @@ const ShipMovement = ({ playerId, children }) => {
   const handleFinalizeMovement = (currentTargetTile) => {
     if (!playerId || !playerVehicle) return;
     
-    // Pour le joueur 2 (bot), on utilise toujours "ship"
-    const vehicleId = playerId === "player2" ? "ship" : selectedVehicle.vehicleId;
+    // Pour le bot, on utilise toujours le vaisseau principal
+    const vehicleId = playerId === BOT_PLAYER_ID ? getMainShipId() : selectedVehicle.vehicleId;
     
     fsmLogger.mouvement(`[ShipMovement] Finalizing movement for ${playerId}/${vehicleId} to ${currentTargetTile.coord}`);
     
@@ -75,8 +76,8 @@ const ShipMovement = ({ playerId, children }) => {
     setDistanceTraveled(0);
     
     if (playerId && playerVehicle) {
-      // Pour le joueur 2 (bot), on utilise toujours "ship"
-      const vehicleId = playerId === "player2" ? "ship" : selectedVehicle.vehicleId;
+      // Pour le bot, on utilise toujours le vaisseau principal
+      const vehicleId = playerId === BOT_PLAYER_ID ? getMainShipId() : selectedVehicle.vehicleId;
       fsmLogger.mouvement(`[ShipMovement] Setting isMoving=true for ${playerId}/${vehicleId}`);
       
       updateVehicle(playerId, vehicleId, {
@@ -140,7 +141,7 @@ const ShipMovement = ({ playerId, children }) => {
     if (!playerVehicle || path.length === 0 || currentTargetIndex >= path.length) return;
 
     // Pour le joueur 2 (bot), on utilise toujours "ship"
-    const vehicleId = playerId === "player2" ? "ship" : selectedVehicle.vehicleId;
+    const vehicleId = playerId === BOT_PLAYER_ID ? getMainShipId() : selectedVehicle.vehicleId;
 
     if (playerVehicle.fuel <= 0) {
       updateVehicle(playerId, vehicleId, { isMoving: false });

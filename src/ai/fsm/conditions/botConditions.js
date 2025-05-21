@@ -2,7 +2,7 @@
 // Conditions centralisées qui déclenchent des transitions d'état dans la FSM
 
 import { BOT_STATES, PRIORITY, IDLE_EVALUATION } from '../../constants/botConstants';
-import { BOT_PLAYER_ID, getBotMainVehicleId } from '../../constants/playerConstants';
+import { BOT_PLAYER_ID, getBotMainVehicleId, getDroneId } from '../../constants/playerConstants';
 import usePlayerStore from '../../../stores/playerStore';
 
 /**
@@ -221,12 +221,7 @@ export const BotConditions = {
     const playerState = usePlayerStore.getState();
     const botVehicleId = getBotMainVehicleId();
     const botVehicle = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
-    
-    // Calculer l'ID du premier drone du bot basé sur le player ID
-    const playerNum = BOT_PLAYER_ID.slice(-1); // Extraire le numéro du joueur ('player2' -> '2')
-    const droneStartIdx = (parseInt(playerNum) - 1) * 2 + 1; // Calcule l'index de départ des drones
-    const botDroneId = `drone${droneStartIdx}`;
-    
+    const botDroneId = getDroneId(BOT_PLAYER_ID, 1);
     const botDrone = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botDroneId];
     
     if (!botVehicle || !botDrone) return { result: false };
@@ -243,12 +238,7 @@ export const BotConditions = {
    */
   isDroneMoving: () => {
     const playerState = usePlayerStore.getState();
-    
-    // Calculer l'ID du premier drone du bot basé sur le player ID
-    const playerNum = BOT_PLAYER_ID.slice(-1); // Extraire le numéro du joueur ('player2' -> '2')
-    const droneStartIdx = (parseInt(playerNum) - 1) * 2 + 1; // Calcule l'index de départ des drones
-    const botDroneId = `drone${droneStartIdx}`;
-    
+    const botDroneId = getDroneId(BOT_PLAYER_ID, 1);
     const botDrone = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botDroneId];
     
     if (!botDrone) return { result: false };

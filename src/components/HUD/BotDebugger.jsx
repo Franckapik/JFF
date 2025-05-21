@@ -4,6 +4,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import usePlayerStore from "../../stores/playerStore";
 import useBotStore from "../../stores/useBotStore";
 import { useTileStore } from "../../stores/useNewTileStore";
+import { 
+  HUMAN_PLAYER_ID, 
+  BOT_PLAYER_ID, 
+  getMainShipId 
+} from "../../ai/constants/playerConstants";
 
 // Style pour le débogueur
 const debuggerStyle = {
@@ -142,9 +147,9 @@ const BotDebugger = () => {
   
   // Récupération des données des joueurs
   const players = usePlayerStore((state) => state.players);
-  const botVehicle = usePlayerStore(state => state.players?.player2?.vehicles?.ship);
-  const botMemory = usePlayerStore(state => state.players?.player2?.memory);
-  const playerVehicle = usePlayerStore(state => state.players?.player1?.vehicles?.ship);
+  const botVehicle = usePlayerStore(state => state.players?.[BOT_PLAYER_ID]?.vehicles?.[getMainShipId()]);
+  const botMemory = usePlayerStore(state => state.players?.[BOT_PLAYER_ID]?.memory);
+  const playerVehicle = usePlayerStore(state => state.players?.[HUMAN_PLAYER_ID]?.vehicles?.[getMainShipId()]);
   
   // Récupérer la fonction calculateDistance du TileStore
   const calculateDistance = useTileStore((state) => state.calculateDistance);

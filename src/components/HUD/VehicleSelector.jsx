@@ -1,5 +1,6 @@
 import React from "react";
 import usePlayerStore from "../../stores/playerStore";
+import { HUMAN_PLAYER_ID, isMainShipId } from "../../ai/constants/playerConstants";
 
 const VehicleSelector = () => {
   const players = usePlayerStore((state) => state.players); // Get all players
@@ -30,8 +31,8 @@ const VehicleSelector = () => {
     return selectedVehicle.playerId === playerId && selectedVehicle.vehicleId === vehicleId;
   };
 
-  // On ne traite que le player1
-  const player = players.player1;
+  // On ne traite que le joueur humain
+  const player = players[HUMAN_PLAYER_ID];
 
   return (
     <div className="vehicle-selector vehicle-selector-container" style={{ height: "auto", width: "120px" }}>
@@ -41,14 +42,14 @@ const VehicleSelector = () => {
         {Object.entries(player.vehicles).map(([vehicleKey, vehicle]) => {
           // Vérifier si c'est un véhicule valide (avec un ID)
           if (isVehicle(vehicle, vehicleKey)) {
-            const displayName = vehicleKey === 'ship' 
+            const displayName = isMainShipId(vehicleKey)
               ? 'Vaisseau' 
               : `Drone ${vehicle.id.slice(-1)}`;
               
             return (
               <li key={vehicleKey}>
                 <button
-                  onClick={() => handleSelect('player1', vehicleKey)}
+                  onClick={() => handleSelect(HUMAN_PLAYER_ID, vehicleKey)}
                   className={isSelected('player1', vehicleKey) ? "selected" : ""}
                 >
                   {displayName}

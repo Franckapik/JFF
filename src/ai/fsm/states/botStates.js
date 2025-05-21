@@ -2,6 +2,7 @@
 // Définition des comportements spécifiques à chaque état du bot
 
 import { BOT_STATES, PRIORITY, ACTION_STATUS, COLLECT_ACTION_TYPES } from '../../constants/botConstants';
+import { BOT_PLAYER_ID, getMainShipId } from '../../constants/playerConstants';
 import usePlayerStore from '../../../stores/playerStore';
 import fsmLogger from '../../../utils/fsmLogger';
 
@@ -21,7 +22,7 @@ export const BotStateConfig = {
       
       // Récupérer l'état actuel du bot si playerStore est fourni
       if (playerStore) {
-        const botVehicle = playerStore.players?.player2?.vehicles?.ship;
+        const botVehicle = playerStore.players?.[BOT_PLAYER_ID]?.vehicles?.[getMainShipId()];
         fsmLogger.info(`Bot status: Fuel=${botVehicle?.fuel}, At base=${botVehicle?.coord === botVehicle?.startCoord}`);
       }
     },
@@ -29,7 +30,7 @@ export const BotStateConfig = {
       fsmLogger.state(`Exiting IDLE state, transitioning to ${targetState}`);
       
       // Des actions spécifiques pourraient être ajoutées ici selon l'état de destination
-      const botVehicle = playerStore?.players?.player2?.vehicles?.ship;
+      const botVehicle = playerStore?.players?.[BOT_PLAYER_ID]?.vehicles?.[getMainShipId()];
       if (botVehicle) {
         // Enregistrer l'état de transition pour référence ou débogage
         fsmLogger.info(`Transition details: Fuel=${botVehicle.fuel}, Resources=${JSON.stringify(botVehicle.resources)}`);
@@ -42,7 +43,7 @@ export const BotStateConfig = {
       if (!botVehicle) return null;
       
       // Récupérer la mémoire du bot
-      const botMemory = playerStore?.players?.player2?.memory;
+      const botMemory = playerStore?.players?.[BOT_PLAYER_ID]?.memory;
       
       // 1. SAFETY - Vérifier le niveau de carburant (PRIORITÉ LA PLUS HAUTE)
       if (botVehicle.fuel < 50) {
