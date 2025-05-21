@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import usePlayerStore from './playerStore';
 import { useTileStore } from './useNewTileStore';
+import useGameStore from './useGameStore';
 
 // Importations des modules FSM
 import { BOT_STATES, PRIORITY } from '../ai/constants/botConstants';
@@ -10,6 +11,7 @@ import { BotActions } from '../ai/fsm/actions/botActions';
 import { BotConditions } from '../ai/fsm/conditions/botConditions';
 import { BotStateConfig } from '../ai/fsm/states/botStates';
 import fsmLogger from '../utils/fsmLogger';
+import { getBotPlayerId } from '../ai/constants/playerConstants';
 
 // Statuts d'action
 const ACTION_STATUS = {
@@ -24,6 +26,9 @@ const useBotStore = create((set, get) => ({
   // État initial du bot
   botState: BOT_STATES.IDLE,
   isRunning: false,
+  currentBotIndex: 0, // L'index du bot actif (par défaut le premier)
+  currentBotId: getBotPlayerId(0), // L'ID du bot actif (par défaut "player2")
+  processingMode: 'parallel', // Mode de traitement: 'parallel' ou 'sequential'
   
   // File d'actions avec priorités et statuts
   actionQueue: [], // [{type, priority, params, timestamp, status}]
@@ -31,32 +36,117 @@ const useBotStore = create((set, get) => ({
   // Historique des actions pour débogage
   actionHistory: [], // [{type, status, timestamp, completedAt}]
   
-  // Fonction d'initialisation - démarre le bot
-  initializeBot: () => {
-    fsmLogger.info("Initializing bot FSM");
-    set({
+  // Stockage des états de chaque bot
+  botStates: {}, // Stocke l'état de chaque bot par index (e.g., {0: {botState, actionQueue, ...}, 1: {...}})
+  
+  // Définir le mode de traitement (parallèle ou séquentiel)
+  setProcessingMode: (mode) => {
+    if (mode !== 'parallel' && mode !== 'sequential') {
+      fsmLogger.error(`Invalid processing mode: ${mode}. Must be 'parallel' or 'sequential'.`);
+      return;
+    }
+    fsmLogger.info(`Setting processing mode to ${mode}`);
+    set({ processingMode: mode });
+  },
+  
+  // Fonction pour changer le bot actif
+  switchActiveBot: (botIndex) => {
+    const botId = getBotPlayerId(botIndex);
+    fsmLogger.info(`Switching active bot to Bot ${botIndex + 1} (${botId})`);
+    
+    // Préserver l'état isRunning actuel
+    const currentRunningState = get().isRunning;
+    
+    // Sauvegarder l'état actuel du bot actif
+    const currentBotIndex = get().currentBotIndex;
+    const currentState = {
+      botState: get().botState,
+      actionQueue: [...get().actionQueue],
+    };
+    
+    // Récupérer ou initialiser l'état du nouveau bot
+    const nextBotState = get().botStates[botIndex] || {
       botState: BOT_STATES.IDLE,
-      isRunning: true,
+      actionQueue: []
+    };
+    
+    // Mettre à jour le stockage des états des bots
+    const updatedBotStates = { ...get().botStates };
+    updatedBotStates[currentBotIndex] = currentState;
+    
+    set({
+      currentBotIndex: botIndex,
+      currentBotId: botId,
+      botState: nextBotState.botState,
+      actionQueue: [...nextBotState.actionQueue],
+      botStates: updatedBotStates,
+      isRunning: currentRunningState // Conserver l'état isRunning
+    });
+    
+    // Exécute l'action onEnterState de l'état initial pour le nouveau bot
+    const playerStore = usePlayerStore.getState();
+    if (BotStateConfig[BOT_STATES.IDLE]?.onEnterState) {
+      BotStateConfig[BOT_STATES.IDLE].onEnterState(playerStore, botId);
+    }
+    
+    // Ajouter l'action d'évaluation avec priorité normale
+    get().addAction('evaluateIdle', PRIORITY.MEDIUM, { botId });
+    
+    return botId;
+  },
+  
+  // Fonction d'initialisation - démarre le bot avec un index de bot spécifique
+  initializeBot: (botIndex = 0) => {
+    fsmLogger.info(`Initializing bot FSM for Bot ${botIndex + 1} (player${botIndex + 2})`);
+    
+    // Récupérer l'ID du bot en fonction de l'index
+    const botId = getBotPlayerId(botIndex);
+    
+    // Sauvegarder l'état actuel du bot courant si nécessaire
+    const currentBotIndex = get().currentBotIndex;
+    if (currentBotIndex !== botIndex) {
+      const currentState = {
+        botState: get().botState,
+        actionQueue: [...get().actionQueue],
+      };
+      
+      // Mettre à jour le stockage des états
+      const updatedBotStates = { ...get().botStates };
+      updatedBotStates[currentBotIndex] = currentState;
+      set({ botStates: updatedBotStates });
+    }
+    
+    // Initialiser l'état pour ce bot
+    const initialBotState = {
+      botState: BOT_STATES.IDLE,
+      actionQueue: []
+    };
+    
+    // Mettre à jour le stockage des états avec le nouvel état initial
+    const updatedBotStates = { ...get().botStates };
+    updatedBotStates[botIndex] = initialBotState;
+    
+    // Définir cet état comme actif
+    set({
+      currentBotIndex: botIndex,
+      currentBotId: botId,
+      botState: BOT_STATES.IDLE,
       actionQueue: [],
-      actionHistory: []
+      botStates: updatedBotStates
     });
     
     // Exécute l'action onEnterState de l'état initial
     const playerStore = usePlayerStore.getState();
     if (BotStateConfig[BOT_STATES.IDLE]?.onEnterState) {
-      BotStateConfig[BOT_STATES.IDLE].onEnterState(playerStore);
+      BotStateConfig[BOT_STATES.IDLE].onEnterState(playerStore, botId);
     }
     
-/*     // Ajouter l'action de test en premier avec priorité URGENT
-    get().addAction('testQueue', PRIORITY.URGENT);
+    // Ajouter l'action d'évaluation avec priorité normale
+    get().addAction('evaluateIdle', PRIORITY.MEDIUM, { botId });
     
-    // Ajouter l'action d'exploration après le test
-    get().addAction('exploreDrone', PRIORITY.HIGH); */
+    fsmLogger.state(`Bot ${botIndex + 1} (${botId}) initialized in IDLE state`);
     
-    // Finalement ajouter l'action d'évaluation avec priorité normale
-    get().addAction('evaluateIdle', PRIORITY.MEDIUM);
-    
-    fsmLogger.state("Bot initialized in IDLE state with testQueue action");
+    return botId; // Retourner l'ID du bot initialisé
   },
   
   // Change l'état du bot
@@ -250,7 +340,8 @@ const useBotStore = create((set, get) => ({
     if (currentState === BOT_STATES.IDLE) return;
     
     const playerStore = usePlayerStore.getState();
-    const botVehicle = playerStore.players?.player2?.vehicles?.ship;
+    const currentBotId = get().currentBotId;
+    const botVehicle = playerStore.players?.[currentBotId]?.vehicles?.ship;
     
     if (!botVehicle) return;
     
@@ -273,6 +364,32 @@ const useBotStore = create((set, get) => ({
     }
     
     return false;
+  },
+  
+  // Traite un cycle pour tous les bots en parallèle
+  processAllBots: () => {
+    // Récupérer le botCount depuis useGameStore
+    const { botCount } = useGameStore.getState();
+    fsmLogger.info(`Processing all ${botCount} bots in parallel`);
+    
+    // Sauvegarder le bot actif actuel
+    const currentBotIndex = get().currentBotIndex;
+    
+    // Traiter chaque bot l'un après l'autre
+    for (let i = 0; i < botCount; i++) {
+      // Passer temporairement à ce bot
+      get().switchActiveBot(i);
+      
+      // Traiter ce bot
+      get().processBot();
+      
+      fsmLogger.info(`Processed Bot ${i + 1} (${getBotPlayerId(i)})`);
+    }
+    
+    // Revenir au bot actif d'origine
+    get().switchActiveBot(currentBotIndex);
+    
+    return botCount; // Renvoyer le nombre de bots traités
   },
   
   // Gestion principale du bot (à appeler dans useFrame)

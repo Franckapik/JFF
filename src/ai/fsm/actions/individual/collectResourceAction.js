@@ -21,13 +21,14 @@ import fsmLogger from '../../../../utils/fsmLogger';
  * @returns {boolean|undefined} - True si l'action est terminée, false si échouée, undefined si en cours
  */
 export const collectResourceAction = (playerStore, tileStore, addAction, changeState) => {
-  const botId = getBotPlayerId(0);
+  // Récupérer l'ID du bot actif via BotConditions
+  const botId = BotConditions.getCurrentBotId();
   const botVehicleId = getMainShipId();
   const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   const botMemory = playerStore.players?.[botId]?.memory;
   
   if (!botVehicle) {
-    fsmLogger.error('Bot vehicle not found');
+    fsmLogger.error(`Bot vehicle not found for ${botId}`);
     return false;
   }
   

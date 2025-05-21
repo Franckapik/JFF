@@ -10,6 +10,7 @@ import {
 } from '../../constants/playerConstants';
 import usePlayerStore from '../../../stores/playerStore';
 import useGameStore from '../../../stores/useGameStore';
+import useBotStore from '../../../stores/useBotStore';
 
 /**
  * Registre des conditions du bot - SYSTÈME CENTRALISÉ
@@ -17,9 +18,12 @@ import useGameStore from '../../../stores/useGameStore';
  * sont maintenant gérées ici pour éviter la duplication de logique
  */
 export const BotConditions = {
-  // Récupère l'ID du bot actif (pour l'instant, juste le premier bot)
-  // TODO: Faire évoluer pour gérer plusieurs bots actifs
-  getCurrentBotId: () => getBotPlayerId(0),
+  // Récupère l'ID du bot actif en fonction du store useBotStore
+  getCurrentBotId: () => {
+    // On utilise le currentBotId du store useBotStore au lieu d'une valeur fixe
+    const botStore = useBotStore.getState();
+    return botStore.currentBotId || getBotPlayerId(0); // Fallback sur player2 si non défini
+  },
 
   // === CONDITIONS DE SÉCURITÉ (PRIORITÉ LA PLUS HAUTE) ===
   

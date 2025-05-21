@@ -1,21 +1,18 @@
 import React, { useEffect, useRef } from "react";
 import { GridHelper } from "three";
 import { useThree } from "@react-three/fiber";
-import { Cone, Html } from "@react-three/drei";
+import { Html } from "@react-three/drei";
 import Tile from "./Tile";
+import Bot from "./Bot";
 import { useTileStore } from "../stores/useNewTileStore";
 import usePlayerStore from "../stores/playerStore";
-import useBotStore from "../stores/useBotStore"; // Utiliser useBotStore à la place de useSimpleBotStore
-import ShipMovement from "../Mouvement/ShipMovement";
-import UnifiedDroneMovement from "../Mouvement/UnifiedDroneMovement"; // Ajout de UnifiedDroneMovement
+import useBotStore from "../stores/useBotStore";
+import useGameStore from "../stores/useGameStore";
 import { 
   HUMAN_PLAYER_ID, 
   getBotPlayerId, 
   getMainShipId, 
-  getDroneId, 
   isMainShipId,
-  VEHICLE_TYPES,
-  isDroneActiveByDefault
 } from "../ai/constants/playerConstants";
 
 const Scene = () => {
@@ -28,9 +25,14 @@ const Scene = () => {
   // Utilisation de useBotStore au lieu de useSimpleBotStore
   const initializeBot = useBotStore((state) => state.initializeBot);
   
-  // Sélecteurs pour l'état d'activation des drones
-  const humanDrones = usePlayerStore((state) => state.players[HUMAN_PLAYER_ID]?.vehicles);
-  const botDrones = usePlayerStore((state) => state.players[getBotPlayerId(0)]?.vehicles);
+  // Récupérer le nombre de bots depuis useGameStore
+  const botCount = useGameStore((state) => state.botCount);
+  
+  // Définir un tableau des indices de bots dynamiquement en fonction de botCount
+  const botIndices = Array.from({ length: botCount }, (_, index) => index);
+  
+  // Définir un tableau de couleurs pour les différents bots
+  const botColors = ["red", "orange", "green", "purple", "teal", "brown", "magenta", "cyan"];
   
   const botInitialized = useRef(false);
   const playersInitialized = useRef(false);
@@ -48,14 +50,20 @@ const Scene = () => {
       initializePlayer(tiles);
       playersInitialized.current = true;
       
-      // Initialize bot after players are set up
+      // Initialize bots after players are set up
       if (!botInitialized.current) {
-        console.log("[Scene] Initializing bot...");
-        initializeBot();
+        console.log("[Scene] Initializing bots...");
+        
+        // Initialiser tous les bots dynamiquement en fonction de botCount
+        for (let i = 0; i < botCount; i++) {
+          console.log(`[Scene] Initializing Bot ${i+1} (player${i+2})`);
+          initializeBot(i);
+        }
+        
         botInitialized.current = true;
       }
     }
-  }, [tiles, initializePlayer, initializeBot]);
+  }, [tiles, initializePlayer, initializeBot, botCount]);
 
   // Camera setup
   const { camera } = useThree();
@@ -80,160 +88,34 @@ const Scene = () => {
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
       
-      {/* Drones du joueur 1 */}
-      {/* Drone d'exploration - toujours visible car actif par défaut */}
-      {(!humanDrones || humanDrones[getDroneId(HUMAN_PLAYER_ID, VEHICLE_TYPES.EXPLORER_DRONE)]?.isActive !== false) && (
-        <UnifiedDroneMovement 
-          playerId={HUMAN_PLAYER_ID} 
-          droneId={getDroneId(HUMAN_PLAYER_ID, VEHICLE_TYPES.EXPLORER_DRONE)}
-        >
-          <Cone 
-            args={[0.15, 0.4, 8]} 
-            rotation={[Math.PI, 0, 0]}
-            castShadow
-          >
-            <meshStandardMaterial color="purple" metalness={0.5} roughness={0.3} />
-          </Cone>
-        </UnifiedDroneMovement>
-      )}
-
-      {/* Drone de combat - n'afficher que s'il est actif */}
-      {humanDrones && humanDrones[getDroneId(HUMAN_PLAYER_ID, VEHICLE_TYPES.COMBAT_DRONE)]?.isActive && (
-        <UnifiedDroneMovement
-          playerId={HUMAN_PLAYER_ID}
-          droneId={getDroneId(HUMAN_PLAYER_ID, VEHICLE_TYPES.COMBAT_DRONE)}
-        >
-          <group>
-            <Cone 
-              args={[0.2, 0.3, 6]} 
-              rotation={[Math.PI, 0, 0]}
-              castShadow
-            >
-              <meshStandardMaterial color="darkred" metalness={0.7} roughness={0.2} />
-            </Cone>
-            <mesh position={[0.15, 0, 0]} rotation={[0, 0, Math.PI/4]}>
-              <boxGeometry args={[0.2, 0.05, 0.05]} />
-              <meshStandardMaterial color="red" metalness={0.7} roughness={0.2} />
-            </mesh>
-            <mesh position={[-0.15, 0, 0]} rotation={[0, 0, -Math.PI/4]}>
-              <boxGeometry args={[0.2, 0.05, 0.05]} />
-              <meshStandardMaterial color="red" metalness={0.7} roughness={0.2} />
-            </mesh>
-          </group>
-        </UnifiedDroneMovement>
-      )}
-
-      {/* Drone spécial - n'afficher que s'il est actif */}
-      {humanDrones && humanDrones[getDroneId(HUMAN_PLAYER_ID, VEHICLE_TYPES.SPECIAL_DRONE)]?.isActive && (
-        <UnifiedDroneMovement
-          playerId={HUMAN_PLAYER_ID}
-          droneId={getDroneId(HUMAN_PLAYER_ID, VEHICLE_TYPES.SPECIAL_DRONE)}
-        >
-          <group>
-            <Cone 
-              args={[0.12, 0.35, 8]} 
-              rotation={[Math.PI, 0, 0]}
-              castShadow
-            >
-              <meshStandardMaterial color="cyan" metalness={0.6} roughness={0.3} emissive="cyan" emissiveIntensity={0.3} />
-            </Cone>
-            <mesh position={[0, -0.1, 0]} rotation={[Math.PI/2, 0, 0]}>
-              <torusGeometry args={[0.15, 0.025, 8, 16]} />
-              <meshStandardMaterial color="lightblue" metalness={0.6} roughness={0.3} emissive="blue" emissiveIntensity={0.5} />
-            </mesh>
-          </group>
-        </UnifiedDroneMovement>
+      {/* Joueur humain utilisant le composant Bot */}
+      {Object.keys(tiles).length > 0 && (
+        <Bot 
+          isHuman={true}
+          selectedVehicle={selectedVehicle}
+          color="blue"
+        />
       )}
       
-      {/* Drones du bot (player2) */}
-      {/* Drone d'exploration - toujours visible car actif par défaut */}
-      {(!botDrones || botDrones[getDroneId(getBotPlayerId(0), VEHICLE_TYPES.EXPLORER_DRONE)]?.isActive !== false) && (
-        <UnifiedDroneMovement 
-          playerId={getBotPlayerId(0)} 
-          droneId={getDroneId(getBotPlayerId(0), VEHICLE_TYPES.EXPLORER_DRONE)}
-        >
-          <Cone 
-            args={[0.15, 0.4, 8]} 
-            rotation={[Math.PI, 0, 0]}
-            castShadow
-          >
-            <meshStandardMaterial color="magenta" metalness={0.5} roughness={0.3} />
-          </Cone>
-        </UnifiedDroneMovement>
-      )}
-
-      {/* Drone de combat du bot - n'afficher que s'il est actif */}
-      {botDrones && botDrones[getDroneId(getBotPlayerId(0), VEHICLE_TYPES.COMBAT_DRONE)]?.isActive && (
-        <UnifiedDroneMovement
-          playerId={getBotPlayerId(0)}
-          droneId={getDroneId(getBotPlayerId(0), VEHICLE_TYPES.COMBAT_DRONE)}
-        >
-          <group>
-            <Cone 
-              args={[0.2, 0.3, 6]} 
-              rotation={[Math.PI, 0, 0]}
-              castShadow
-            >
-              <meshStandardMaterial color="crimson" metalness={0.7} roughness={0.2} />
-            </Cone>
-            <mesh position={[0.15, 0, 0]} rotation={[0, 0, Math.PI/4]}>
-              <boxGeometry args={[0.2, 0.05, 0.05]} />
-              <meshStandardMaterial color="darkred" metalness={0.7} roughness={0.2} />
-            </mesh>
-            <mesh position={[-0.15, 0, 0]} rotation={[0, 0, -Math.PI/4]}>
-              <boxGeometry args={[0.2, 0.05, 0.05]} />
-              <meshStandardMaterial color="darkred" metalness={0.7} roughness={0.2} />
-            </mesh>
-          </group>
-        </UnifiedDroneMovement>
-      )}
-
-      {/* Drone spécial du bot - n'afficher que s'il est actif */}
-      {botDrones && botDrones[getDroneId(getBotPlayerId(0), VEHICLE_TYPES.SPECIAL_DRONE)]?.isActive && (
-        <UnifiedDroneMovement
-          playerId={getBotPlayerId(0)}
-          droneId={getDroneId(getBotPlayerId(0), VEHICLE_TYPES.SPECIAL_DRONE)}
-        >
-          <group>
-            <Cone 
-              args={[0.12, 0.35, 8]} 
-              rotation={[Math.PI, 0, 0]}
-              castShadow
-            >
-              <meshStandardMaterial color="magenta" metalness={0.6} roughness={0.3} emissive="magenta" emissiveIntensity={0.3} />
-            </Cone>
-            <mesh position={[0, -0.1, 0]} rotation={[Math.PI/2, 0, 0]}>
-              <torusGeometry args={[0.15, 0.025, 8, 16]} />
-              <meshStandardMaterial color="purple" metalness={0.6} roughness={0.3} emissive="purple" emissiveIntensity={0.5} />
-            </mesh>
-          </group>
-        </UnifiedDroneMovement>
-      )}
+      {/* Rendu des bots en utilisant le composant réutilisable et une boucle */}
+      {botIndices.map((botIndex) => {        
+        // Utiliser la couleur correspondant à l'index du bot (avec modulo pour gérer plus de bots que de couleurs)
+        const colorIndex = botIndex % botColors.length;
+        
+        return (
+          <Bot 
+            key={`bot-${botIndex}`}
+            botIndex={botIndex}
+            selectedVehicle={selectedVehicle}
+            color={botColors[colorIndex]}
+          />
+        );
+      })}
 
       {/* Commentaire à garder pour future référence */}
       {/* Pour l'instant nous ne rendons que les drones d'exploration 
           Les autres drones seront ajoutés quand ils seront activés */}
       
-      {Object.keys(tiles).length > 0 && (
-        <>
-          <ShipMovement playerId={HUMAN_PLAYER_ID}>
-            <mesh castShadow>
-              <boxGeometry args={[0.5, 0.5, 0.5]} />
-              <meshStandardMaterial
-                color={selectedVehicle.playerId === HUMAN_PLAYER_ID && isMainShipId(selectedVehicle.vehicleId) ? "yellow" : "blue"}
-              />
-            </mesh>
-          </ShipMovement>
-          <ShipMovement playerId={getBotPlayerId(0)}>
-            <mesh castShadow>
-              <boxGeometry args={[0.5, 0.5, 0.5]} />
-              <meshStandardMaterial
-                color={selectedVehicle.playerId === getBotPlayerId(0) && isMainShipId(selectedVehicle.vehicleId) ? "yellow" : "red"}
-              />
-            </mesh>
-          </ShipMovement>
-        </>
-      )}
       {Object.values(tiles)
         .filter((tile) => tile.walkable)
         .map((tile) => (
@@ -254,6 +136,10 @@ const Scene = () => {
           const playerId = index === 0 ? HUMAN_PLAYER_ID : getBotPlayerId(index - 1);
           const isPlayerBase = playerId === HUMAN_PLAYER_ID;
           
+          // Utiliser la même couleur que les bots pour les bases
+          const baseColor = isPlayerBase ? "blue" : 
+            botColors[(index - 1) % botColors.length];
+          
           return (
             <React.Fragment key={`depart-tile-${tile.coord}`}>
               <mesh
@@ -261,7 +147,7 @@ const Scene = () => {
                 rotation={[-Math.PI / 2, 0, 0]}
               >
                 <circleGeometry args={[0.5, 32]} />
-                <meshStandardMaterial color={isPlayerBase ? "blue" : "red"} />
+                <meshStandardMaterial color={baseColor} />
               </mesh>
               
               {/* Identifiant du joueur au-dessus de sa base */}
@@ -271,7 +157,7 @@ const Scene = () => {
                 distanceFactor={15}
               >
                 <div style={{
-                  background: isPlayerBase ? 'rgba(0,50,200,0.8)' : 'rgba(200,50,0,0.8)',
+                  background: isPlayerBase ? 'rgba(0,50,200,0.8)' : getBackgroundColor(baseColor),
                   color: 'white',
                   padding: '4px 8px',
                   borderRadius: '4px',
@@ -312,6 +198,22 @@ const Scene = () => {
         ))}
     </>
   );
+};
+
+// Fonction utilitaire pour convertir une couleur en arrière-plan RGBA
+const getBackgroundColor = (color) => {
+  const colorMap = {
+    'red': 'rgba(200,50,0,0.8)',
+    'orange': 'rgba(255,140,0,0.8)',
+    'green': 'rgba(0,150,50,0.8)',
+    'purple': 'rgba(100,0,150,0.8)',
+    'teal': 'rgba(0,128,128,0.8)',
+    'brown': 'rgba(139,69,19,0.8)',
+    'magenta': 'rgba(255,0,255,0.8)',
+    'cyan': 'rgba(0,180,180,0.8)'
+  };
+  
+  return colorMap[color] || 'rgba(100,100,100,0.8)';
 };
 
 export default Scene;

@@ -4,6 +4,7 @@
 import { BOT_STATES, PRIORITY, ACTION_STATUS, COLLECT_ACTION_TYPES } from '../../constants/botConstants';
 import { getBotPlayerId, getMainShipId } from '../../constants/playerConstants';
 import usePlayerStore from '../../../stores/playerStore';
+import useBotStore from '../../../stores/useBotStore';
 import fsmLogger from '../../../utils/fsmLogger';
 
 /**
@@ -17,33 +18,41 @@ export const BotStateConfig = {
   [BOT_STATES.IDLE]: {
     description: "État central d'évaluation des conditions",
     defaultAction: { type: 'evaluateIdle', priority: PRIORITY.HIGH },
-    onEnterState: (playerStore) => {
-      fsmLogger.state("Entering IDLE state - Evaluating conditions");
+    onEnterState: (playerStore, botId) => {
+      fsmLogger.state(`Entering IDLE state for bot ${botId} - Evaluating conditions`);
       
       // Récupérer l'état actuel du bot si playerStore est fourni
       if (playerStore) {
-        const botVehicle = playerStore.players?.[getBotPlayerId(0)]?.vehicles?.[getMainShipId()];
-        fsmLogger.info(`Bot status: Fuel=${botVehicle?.fuel}, At base=${botVehicle?.coord === botVehicle?.startCoord}`);
+        // Utiliser le botId fourni ou le récupérer du store useBotStore
+        const activeBotId = botId || useBotStore.getState().currentBotId || getBotPlayerId(0);
+        const botVehicle = playerStore.players?.[activeBotId]?.vehicles?.[getMainShipId()];
+        fsmLogger.info(`Bot ${activeBotId} status: Fuel=${botVehicle?.fuel}, At base=${botVehicle?.coord === botVehicle?.startCoord}`);
       }
     },
     onExitState: (playerStore, changeState, targetState) => {
       fsmLogger.state(`Exiting IDLE state, transitioning to ${targetState}`);
       
       // Des actions spécifiques pourraient être ajoutées ici selon l'état de destination
-      const botVehicle = playerStore?.players?.[getBotPlayerId(0)]?.vehicles?.[getMainShipId()];
+      const botStore = useBotStore.getState();
+      const activeBotId = botStore.currentBotId || getBotPlayerId(0);
+      const botVehicle = playerStore?.players?.[activeBotId]?.vehicles?.[getMainShipId()];
       if (botVehicle) {
         // Enregistrer l'état de transition pour référence ou débogage
-        fsmLogger.info(`Transition details: Fuel=${botVehicle.fuel}, Resources=${JSON.stringify(botVehicle.resources)}`);
+        fsmLogger.info(`Bot ${activeBotId} transition details: Fuel=${botVehicle.fuel}, Resources=${JSON.stringify(botVehicle.resources)}`);
       }
     },
     // Nouvelle fonction d'évaluation centralisée
     evaluateConditions: (botVehicle, playerStore) => {
-      fsmLogger.condition("Evaluating conditions from IDLE state");
+      // Récupérer le botId actif
+      const botStore = useBotStore.getState();
+      const activeBotId = botStore.currentBotId || getBotPlayerId(0);
+      
+      fsmLogger.condition(`Evaluating conditions from IDLE state for bot ${activeBotId}`);
 
       if (!botVehicle) return null;
       
       // Récupérer la mémoire du bot
-      const botMemory = playerStore?.players?.[getBotPlayerId(0)]?.memory;
+      const botMemory = playerStore?.players?.[activeBotId]?.memory;
       
       // 1. SAFETY - Vérifier le niveau de carburant (PRIORITÉ LA PLUS HAUTE)
       if (botVehicle.fuel < 50) {
@@ -81,8 +90,9 @@ export const BotStateConfig = {
   [BOT_STATES.EXPLORING]: {
     description: "Bot en exploration de la carte",
     defaultAction: { type: 'exploreDrone', priority: PRIORITY.MEDIUM },
-    onEnterState: () => {
-      fsmLogger.state("Entering EXPLORING state");
+    onEnterState: (playerStore, botId) => {
+      const activeBotId = botId || useBotStore.getState().currentBotId || getBotPlayerId(0);
+      fsmLogger.state(`Entering EXPLORING state for bot ${activeBotId}`);
     },
     onExitState: (playerStore, changeState) => {
       // Ajout d'une variable statique pour éviter les appels multiples
@@ -91,7 +101,11 @@ export const BotStateConfig = {
       // Marquer que nous sommes en train de sortir pour éviter la récursion
       BotStateConfig[BOT_STATES.EXPLORING]._isExiting = true;
       
-      fsmLogger.state("Exiting EXPLORING state - Returning to IDLE for evaluation");
+      // Récupérer le botId actif
+      const botStore = useBotStore.getState();
+      const activeBotId = botStore.currentBotId || getBotPlayerId(0);
+      
+      fsmLogger.state(`Exiting EXPLORING state for bot ${activeBotId} - Returning to IDLE for evaluation`);
       
       // Toujours retourner à l'état IDLE après la fin des actions d'exploration
       if (changeState) {
@@ -111,9 +125,13 @@ export const BotStateConfig = {
     description: "Bot en collecte de ressources",
     // Modification importante: l'action par défaut est maintenant adaptative
     getDefaultAction: (playerStore, tileStore, addAction) => {
+      // Récupérer le botId actif
+      const botStore = useBotStore.getState();
+      const activeBotId = botStore.currentBotId || getBotPlayerId(0);
+      
       // Vérifier si le bot est sur la tuile cible pour savoir quelle action ajouter
-      const botVehicle = playerStore?.players?.player2?.vehicles?.ship;
-      const botMemory = playerStore?.players?.player2?.memory;
+      const botVehicle = playerStore?.players?.[activeBotId]?.vehicles?.ship;
+      const botMemory = playerStore?.players?.[activeBotId]?.memory;
 
       // Si la mémoire contient une cible de ressource actuelle
       if (botVehicle && botMemory?.currentTargetResource) {
@@ -130,11 +148,15 @@ export const BotStateConfig = {
     // Conserver l'action par défaut originale pour compatibilité
     defaultAction: { type: 'moveToResource', priority: PRIORITY.MEDIUM },
     onEnterState: (playerStore) => {
-      fsmLogger.state("Entering COLLECTING state");
+      // Récupérer le botId actif
+      const botStore = useBotStore.getState();
+      const activeBotId = botStore.currentBotId || getBotPlayerId(0);
+      
+      fsmLogger.state(`Entering COLLECTING state for bot ${activeBotId}`);
       
       // Solution temporaire: vérifier immédiatement si le bot est déjà sur une tuile de ressource
-      const botVehicle = playerStore?.players?.player2?.vehicles?.ship;
-      const botMemory = playerStore?.players?.player2?.memory;
+      const botVehicle = playerStore?.players?.[activeBotId]?.vehicles?.ship;
+      const botMemory = playerStore?.players?.[activeBotId]?.memory;
       
       // Si nous avons des ressources ciblées et que le bot est déjà dessus
       if (botVehicle && botMemory?.knownResources && botMemory.knownResources.length > 0) {
@@ -143,11 +165,11 @@ export const BotStateConfig = {
         
         if (currentResource) {
           // Enregistrer dans la mémoire du bot quelle est la ressource actuelle
-          playerStore.updatePlayerMemory('player2', {
+          playerStore.updatePlayerMemory(activeBotId, {
             currentTargetResource: currentResource
           });
           
-          fsmLogger.action(`Bot already at resource location ${botVehicle.coord}, preparing collection`);
+          fsmLogger.action(`Bot ${activeBotId} already at resource location ${botVehicle.coord}, preparing collection`);
         }
       }
     },
@@ -158,11 +180,15 @@ export const BotStateConfig = {
       // Marquer que nous sommes en train de sortir pour éviter la récursion
       BotStateConfig[BOT_STATES.COLLECTING]._isExiting = true;
       
-      fsmLogger.state("Exiting COLLECTING state - Returning to IDLE for evaluation");
+      // Récupérer le botId actif
+      const botStore = useBotStore.getState();
+      const activeBotId = botStore.currentBotId || getBotPlayerId(0);
+      
+      fsmLogger.state(`Exiting COLLECTING state for bot ${activeBotId} - Returning to IDLE for evaluation`);
       
       // Nettoyer les données de ciblage de ressources
       if (playerStore) {
-        playerStore.updatePlayerMemory('player2', {
+        playerStore.updatePlayerMemory(activeBotId, {
           currentTargetResource: null
         });
       }

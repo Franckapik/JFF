@@ -22,13 +22,14 @@ import { findPath } from '../../../../utils/utils';
  * @returns {boolean|undefined} - True si l'action est terminée, false si échec, undefined si en cours
  */
 export const moveToResourceAction = (playerStore, tileStore, addAction, changeState) => {
-  const botId = getBotPlayerId(0);
+  // Récupérer l'ID du bot actif via BotConditions
+  const botId = BotConditions.getCurrentBotId();
   const botVehicleId = getMainShipId();
   const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   const botMemory = playerStore.players?.[botId]?.memory;
   
   if (!botVehicle || !botMemory) {
-    fsmLogger.error('Bot vehicle or memory not found');
+    fsmLogger.error(`Bot vehicle or memory not found for ${botId}`);
     return false;
   }
   

@@ -26,7 +26,7 @@ import fsmLogger from '../../../../utils/fsmLogger';
  * @returns {boolean|undefined} - True si l'action est terminée, false si elle a échoué, undefined si elle est en cours
  */
 export const exploreWithDroneAction = (playerStore, tileStore, addAction, changeState) => {
-  const botId = getBotPlayerId(0);
+  const botId = BotConditions.getCurrentBotId();
   const botVehicleId = getMainShipId();
   const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   

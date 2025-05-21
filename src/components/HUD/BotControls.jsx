@@ -3,6 +3,7 @@ import useBotStore from '../../stores/useBotStore';
 import usePlayerStore from '../../stores/playerStore';
 import { useTileStore } from '../../stores/useNewTileStore';
 import { getBotPlayerId, getMainShipId } from '../../ai/constants/playerConstants';
+import MultiBotControls from './MultiBotControls';
 
 const BotControls = () => {
   // États locaux pour les contrôles avancés
@@ -19,13 +20,14 @@ const BotControls = () => {
     initializeBot,
     BOT_STATES,
     PRIORITY,
-    _test
+    _test,
+    currentBotId
   } = useBotStore();
   
   // Récupérer des informations supplémentaires en utilisant les constantes
   const botVehicleId = getMainShipId(); // Obtenir l'ID du véhicule bot dynamiquement
-  const botVehicle = usePlayerStore(state => state.players?.[getBotPlayerId(0)]?.vehicles?.[botVehicleId]);
-  const botMemory = usePlayerStore(state => state.players?.[getBotPlayerId(0)]?.memory || {});
+  const botVehicle = usePlayerStore(state => state.players?.[currentBotId]?.vehicles?.[botVehicleId]);
+  const botMemory = usePlayerStore(state => state.players?.[currentBotId]?.memory || {});
   
   // Fonction pour ajouter une action manuelle avec une priorité donnée
   const handleAddAction = (actionType, priority) => {
@@ -51,6 +53,9 @@ const BotControls = () => {
     <div className="bot-controls" style={{ maxHeight: '90vh', overflow: 'auto', padding: '15px' }}>
       <h3>Bot Controls (FSM)</h3>
       
+      {/* Composant de contrôle pour les bots multiples */}
+      <MultiBotControls />
+      
       {/* Section d'état et contrôles principaux */}
       <div style={{ 
         backgroundColor: 'rgba(0, 0, 0, 0.05)', 
@@ -59,6 +64,9 @@ const BotControls = () => {
         marginBottom: '15px'
       }}>
         <div className="bot-controls-info">
+          <p>
+            Active Bot: <strong>{currentBotId}</strong>
+          </p>
           <p>
             Current State: <strong style={{ 
               color: botState === 'idle' ? '#4CAF50' : 
