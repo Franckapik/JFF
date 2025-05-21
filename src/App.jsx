@@ -5,8 +5,6 @@ import "./styles/App.css";
 // import VehicleSelector from "./components/HUD/VehicleSelector"; // Commenté car non utile pour l'instant
 import MessageSelector from "./components/Messagerie/MessageSelector";
 import Clock from "./components/HUD/Clock";
-import TileHUD from "./components/HUD/TileHUD";
-import CollapsibleHUD from "./components/HUD/CollapsibleHUD";
 import BotDebugger from "./components/HUD/BotDebugger";
 import BotControls from "./components/HUD/BotControls"; 
 import useBotStore from "./stores/useBotStore";
@@ -58,12 +56,6 @@ const App = () => {
             <Scene />
           </Canvas>
           
-          {/* TileHUD avec CollapsibleHUD */}
-          <div className="tile-hud-wrapper">
-            <CollapsibleHUD title="Tile Information" defaultOpen={false}>
-              <TileHUD />
-            </CollapsibleHUD>
-          </div>
           
           {/* BotControls - repositionné à gauche avec hauteur 100% */}
           <div className="bot-controls-wrapper" style={{ 
