@@ -7,7 +7,9 @@ import { useTileStore } from "../../stores/useNewTileStore";
 import { 
   HUMAN_PLAYER_ID, 
   BOT_PLAYER_ID, 
-  getMainShipId 
+  getMainShipId,
+  getDroneId,
+  VEHICLE_TYPES 
 } from "../../ai/constants/playerConstants";
 
 // Style pour le débogueur
@@ -119,6 +121,15 @@ const contentContainerStyle = {
   overflow: 'auto',
   paddingRight: '5px',
   marginRight: '-5px', // Compenser le padding pour éviter le double scroll
+};
+
+// Style pour l'affichage des IDs de véhicules
+const vehicleIdStyle = {
+  padding: '5px',
+  backgroundColor: '#333',
+  borderRadius: '4px',
+  marginBottom: '5px',
+  fontSize: '11px',
 };
 
 /**
@@ -276,7 +287,30 @@ const BotDebugger = () => {
     if (quantity > 0) return "#673AB7"; // Violet pour les ressources spéciales
     return "#777777"; // Gris pour aucune
   };
-  
+
+  // Composant pour afficher les IDs des véhicules
+  const VehicleIds = ({ playerId }) => {
+    const mainShipId = getMainShipId();
+    const explorerDroneId = getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE);
+    const combatDroneId = getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE);
+    const specialDroneId = getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE);
+
+    return (
+      <div style={{ 
+        marginBottom: '10px',
+        backgroundColor: '#222',
+        padding: '8px',
+        borderRadius: '4px'
+      }}>
+        <div style={{ marginBottom: '4px', color: '#888' }}>Vehicle IDs:</div>
+        <div style={{ color: '#4caf50', marginBottom: '2px' }}>Ship: {mainShipId}</div>
+        <div style={{ color: '#2196f3', marginBottom: '2px' }}>Explorer Drone: {explorerDroneId}</div>
+        <div style={{ color: '#ff5722', marginBottom: '2px' }}>Combat Drone: {combatDroneId}</div>
+        <div style={{ color: '#9c27b0', marginBottom: '2px' }}>Special Drone: {specialDroneId}</div>
+      </div>
+    );
+  };
+
   // Rendu des différents onglets pour le BOT
   const renderBotTabContent = () => {
     switch (activeTab) {
@@ -923,6 +957,8 @@ const BotDebugger = () => {
     return <div>Onglet inconnu</div>;
   };
   
+  // Point d'entrée du rendu principal
+
   return isVisible ? (
     <div style={debuggerStyle}>
       {/* En-tête avec titre et boutons de contrôle */}
@@ -933,6 +969,8 @@ const BotDebugger = () => {
         marginBottom: '10px'
       }}>
         <h3 style={{ margin: 0 }}>FSM Debugger</h3>
+
+
         <div>
           <button onClick={handleResetHistory} style={{ 
             padding: '2px 5px',
@@ -987,6 +1025,10 @@ const BotDebugger = () => {
 
       {/* Conteneur de contenu avec scroll */}
       <div style={contentContainerStyle}>
+        {/* Afficher les IDs des véhicules selon l'onglet actif */}
+        {activeMainTab === 'bot' && <VehicleIds playerId={BOT_PLAYER_ID} />}
+        {activeMainTab === 'player' && <VehicleIds playerId={HUMAN_PLAYER_ID} />}
+        
         {/* Si on est dans l'onglet Bot, on affiche toujours l'état et les données du véhicule en haut */}
         {activeMainTab === 'bot' && (
           <div style={{ 
