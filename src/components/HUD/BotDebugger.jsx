@@ -186,8 +186,8 @@ const BotDebugger = () => {
   // Récupération des données des joueurs
   const players = usePlayerStore((state) => state.players);
   const botVehicleId = getMainShipId();
-  const botVehicle = usePlayerStore(state => state.players?.[getBotPlayerId(0)]?.vehicles?.[botVehicleId]);
-  const botMemory = usePlayerStore(state => state.players?.[getBotPlayerId(0)]?.memory);
+  const botVehicle = usePlayerStore(state => state.players?.[activeBotId]?.vehicles?.[botVehicleId]);
+  const botMemory = usePlayerStore(state => state.players?.[activeBotId]?.memory);
   const playerVehicle = usePlayerStore(state => state.players?.[HUMAN_PLAYER_ID]?.vehicles?.[getMainShipId()]);
   
   // Récupérer la fonction calculateDistance du TileStore
@@ -330,6 +330,9 @@ const BotDebugger = () => {
         padding: '8px',
         borderRadius: '4px'
       }}>
+        <div style={{ marginBottom: '8px', color: '#aaa', fontWeight: 'bold' }}>
+          Player ID: <span style={{ color: '#fff' }}>{playerId}</span>
+        </div>
         <div style={{ marginBottom: '4px', color: '#888' }}>Vehicle IDs:</div>
         <div style={{ color: '#4caf50', marginBottom: '2px' }}>Ship: {mainShipId}</div>
         <div style={{ color: '#2196f3', marginBottom: '2px' }}>Explorer Drone: {explorerDroneId}</div>
@@ -657,30 +660,30 @@ const BotDebugger = () => {
               {/* Food Total */}
               <div style={{marginBottom: '8px'}}>
                 <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '3px'}}>
-                  <span>Food:</span> {players?.player2?.score?.resources?.food || 0}
+                  <span>Food:</span> {players?.[activeBotId]?.score?.resources?.food || 0}
                 </div>
                 <div style={{width: '100%', backgroundColor: '#444', borderRadius: '3px', height: '8px', overflow: 'hidden'}}>
-                  <div style={getResourceBarStyle(players?.player2?.score?.resources?.food || 0, 100)}></div>
+                  <div style={getResourceBarStyle(players?.[activeBotId]?.score?.resources?.food || 0, 100)}></div>
                 </div>
               </div>
               
               {/* Debris Total */}
               <div style={{marginBottom: '8px'}}>
                 <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '3px'}}>
-                  <span>Debris:</span> {players?.player2?.score?.resources?.debris || 0}
+                  <span>Debris:</span> {players?.[activeBotId]?.score?.resources?.debris || 0}
                 </div>
                 <div style={{width: '100%', backgroundColor: '#444', borderRadius: '3px', height: '8px', overflow: 'hidden'}}>
-                  <div style={getResourceBarStyle(players?.player2?.score?.resources?.debris || 0, 200)}></div>
+                  <div style={getResourceBarStyle(players?.[activeBotId]?.score?.resources?.debris || 0, 200)}></div>
                 </div>
               </div>
               
               {/* Special Total */}
               <div style={{marginBottom: '8px'}}>
                 <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '3px'}}>
-                  <span>Special:</span> {players?.player2?.score?.resources?.special || 0}
+                  <span>Special:</span> {players?.[activeBotId]?.score?.resources?.special || 0}
                 </div>
                 <div style={{width: '100%', backgroundColor: '#444', borderRadius: '3px', height: '8px', overflow: 'hidden'}}>
-                  <div style={getResourceBarStyle(players?.player2?.score?.resources?.special || 0, 10)}></div>
+                  <div style={getResourceBarStyle(players?.[activeBotId]?.score?.resources?.special || 0, 10)}></div>
                 </div>
               </div>
             </div>
@@ -1005,11 +1008,13 @@ const BotDebugger = () => {
             marginRight: '10px'
           }}
         >
-          {Object.keys(players).filter(key => key.startsWith('player')).map((key, index) => (
-            <option key={key} value={key}>
-              {`Bot ${index + 1}`}
-            </option>
-          ))}
+          {Object.keys(players)
+            .filter(key => key.startsWith('player') && key !== HUMAN_PLAYER_ID)
+            .map((key, index) => (
+              <option key={key} value={key}>
+                {`Bot ${index + 1} (${key})`}
+              </option>
+            ))}
         </select>
 
         <div>
