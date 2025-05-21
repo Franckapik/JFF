@@ -322,6 +322,33 @@ const BotDebugger = () => {
     const explorerDroneId = getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE);
     const combatDroneId = getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE);
     const specialDroneId = getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE);
+    
+    // Récupérer les véhicules du joueur pour vérifier le statut d'activation
+    const vehicles = usePlayerStore((state) => state.players[playerId]?.vehicles);
+    
+    // Obtenir le statut d'activation de chaque drone
+    const explorerDroneActive = vehicles?.[explorerDroneId]?.isActive !== false;
+    const combatDroneActive = vehicles?.[combatDroneId]?.isActive === true;
+    const specialDroneActive = vehicles?.[specialDroneId]?.isActive === true;
+    
+    // Styles pour les statuts actifs/inactifs
+    const activeStatusStyle = { 
+      backgroundColor: '#4caf50', 
+      color: 'white', 
+      padding: '1px 4px', 
+      borderRadius: '2px', 
+      fontSize: '10px',
+      marginLeft: '5px'
+    };
+    
+    const inactiveStatusStyle = { 
+      backgroundColor: '#f44336', 
+      color: 'white', 
+      padding: '1px 4px', 
+      borderRadius: '2px', 
+      fontSize: '10px',
+      marginLeft: '5px'
+    };
 
     return (
       <div style={{ 
@@ -335,9 +362,24 @@ const BotDebugger = () => {
         </div>
         <div style={{ marginBottom: '4px', color: '#888' }}>Vehicle IDs:</div>
         <div style={{ color: '#4caf50', marginBottom: '2px' }}>Ship: {mainShipId}</div>
-        <div style={{ color: '#2196f3', marginBottom: '2px' }}>Explorer Drone: {explorerDroneId}</div>
-        <div style={{ color: '#ff5722', marginBottom: '2px' }}>Combat Drone: {combatDroneId}</div>
-        <div style={{ color: '#9c27b0', marginBottom: '2px' }}>Special Drone: {specialDroneId}</div>
+        <div style={{ color: '#2196f3', marginBottom: '2px', display: 'flex', alignItems: 'center' }}>
+          Explorer Drone: {explorerDroneId}
+          <span style={explorerDroneActive ? activeStatusStyle : inactiveStatusStyle}>
+            {explorerDroneActive ? 'ACTIF' : 'INACTIF'}
+          </span>
+        </div>
+        <div style={{ color: '#ff5722', marginBottom: '2px', display: 'flex', alignItems: 'center' }}>
+          Combat Drone: {combatDroneId}
+          <span style={combatDroneActive ? activeStatusStyle : inactiveStatusStyle}>
+            {combatDroneActive ? 'ACTIF' : 'INACTIF'}
+          </span>
+        </div>
+        <div style={{ color: '#9c27b0', marginBottom: '2px', display: 'flex', alignItems: 'center' }}>
+          Special Drone: {specialDroneId}
+          <span style={specialDroneActive ? activeStatusStyle : inactiveStatusStyle}>
+            {specialDroneActive ? 'ACTIF' : 'INACTIF'}
+          </span>
+        </div>
       </div>
     );
   };
