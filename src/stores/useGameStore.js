@@ -5,8 +5,8 @@ const useGameStore = create((set) => ({
   setClockRunning: (isRunning) => set({ isClockRunning: isRunning }), // Action to update the clock state
   
   // Configuration des joueurs
-  playerCount: 2, // Nombre total de joueurs (1 humain + X bots)
-  botCount: 1,    // Nombre de bots
+  playerCount: 3, // Nombre total de joueurs (1 humain + X bots)
+  botCount: 2,    // Nombre de bots
   
   // Actions
   setPlayerCount: (count) => {

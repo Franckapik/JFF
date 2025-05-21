@@ -2,8 +2,11 @@ import { Vector3 } from "three";
 // Remove the redundant import of calculatePathData
 // import { calculatePathData } from "./utils"; 
 import usePlayerStore from "../stores/playerStore"; // Import player store
+import useGameStore from "../stores/useGameStore"; // Import game store
 
 export function generateHexPositions(radius, spacing) {
+  const gameStore = useGameStore.getState(); // Get current game state
+  const playerCount = gameStore.playerCount; // Get total number of players
   
   const hexPositions = [];
   const sqrt3 = Math.sqrt(3);
@@ -23,6 +26,7 @@ export function generateHexPositions(radius, spacing) {
     return `${letter}${r + radius}`; // Offset r to ensure it's non-negative
   };
 
+  // Generate base hex grid
   for (let q = -radius; q <= radius; q++) {
     for (let r = -radius; r <= radius; r++) {
       const s = -q - r;
@@ -79,50 +83,64 @@ export function generateHexPositions(radius, spacing) {
     walkableTiles[index].walkable = false;
   });
 
-  // Randomly assign starting tiles for the random vehicle and the target vehicle
+  // Assign starting tiles for all players
   const availableTiles = hexPositions.filter((tile) => tile.walkable && !tile.outer);
-  const randomVehicleTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
-  let targetVehicleTile;
-  do {
-    targetVehicleTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
-  } while (targetVehicleTile.coord === randomVehicleTile.coord);
+  const playerStartTiles = [];
+  
+  // Select random starting positions for each player
+  for (let i = 0; i < playerCount; i++) {
+    let startTile;
+    do {
+      startTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
+    } while (playerStartTiles.some(tile => tile.coord === startTile.coord));
+    
+    playerStartTiles.push(startTile);
+    startTile.type = "depart";
+    startTile.playerId = i === 0 ? "player1" : `player${i + 1}`;
+  }
 
-  randomVehicleTile.randomVehicleStart = true;
-  randomVehicleTile.type = "depart"; // Set type to "depart"
-  targetVehicleTile.targetVehicleStart = true;
-  targetVehicleTile.type = "depart"; // Set type to "depart"
-
+  // Set starting positions for all players
   hexPositions.forEach((tile) => {
-    if (tile.targetVehicleStart || tile.randomVehicleStart) {
-      tile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on starting tiles
+    if (tile.type === "depart") {
+      tile.walkable = true;
+      tile.resources = {
+        food: 100,
+        debris: 100,
+        special: 50
+      };
     }
   });
 
-  // Place a fuel station
-  const fuelStationCandidates = hexPositions.filter((tile) => tile.walkable && tile.type === "resource");
-  if (fuelStationCandidates.length > 0) {
-    const fuelStationTile = fuelStationCandidates[Math.floor(Math.random() * fuelStationCandidates.length)];
-    fuelStationTile.type = "fuel";
-    fuelStationTile.color = "orange"; // Black color for the fuel station
-    fuelStationTile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on the fuel station tile
-    fuelStationTile.immunity = true; // Set immunity to true for the fuel station tile
+  // Add stations and danger tiles
+  const stationCandidates = hexPositions.filter((tile) => tile.walkable && tile.type === "resource");
+  
+  // Place fuel stations (fixed number: 2)
+  const numFuelStations = 2;
+  for (let i = 0; i < numFuelStations; i++) {
+    if (stationCandidates.length > 0) {
+      const fuelStationIndex = Math.floor(Math.random() * stationCandidates.length);
+      const fuelStationTile = stationCandidates[fuelStationIndex];
+      fuelStationTile.type = "fuel";
+      stationCandidates.splice(fuelStationIndex, 1);
+    }
   }
 
-  // Place a repair station
-  const repairStationCandidates = hexPositions.filter((tile) => tile.walkable && tile.type === "resource");
-  if (repairStationCandidates.length > 0) {
-    const repairStationTile = repairStationCandidates[Math.floor(Math.random() * repairStationCandidates.length)];
-    repairStationTile.type = "repair";
-    repairStationTile.color = "green"; // Green color for the repair station
-    repairStationTile.resources = { food: 0, debris: 0, special: 0 }; // Ensure no resources on the repair station tile
-    repairStationTile.immunity = true; // Set immunity to true for the repair station tile
+  // Place repair stations (fixed number: 2)
+  const numRepairStations = 2;
+  for (let i = 0; i < numRepairStations; i++) {
+    if (stationCandidates.length > 0) {
+      const repairStationIndex = Math.floor(Math.random() * stationCandidates.length);
+      const repairStationTile = stationCandidates[repairStationIndex];
+      repairStationTile.type = "repair";
+      stationCandidates.splice(repairStationIndex, 1);
+    }
   }
 
-  // Randomly assign danger tiles
+  // Assign danger tiles (10% of remaining resource tiles)
   const dangerTiles = hexPositions.filter((tile) => tile.walkable && tile.type === "resource");
   dangerTiles.slice(0, Math.floor(dangerTiles.length * 0.1)).forEach((tile) => {
     tile.type = "danger";
-    tile.color = "red"; // Red color for danger tiles
+    tile.resources = null;
   });
 
   return hexPositions;
