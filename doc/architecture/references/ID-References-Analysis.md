@@ -6,100 +6,107 @@ Ce document analyse toutes les références aux IDs de joueurs et de véhicules 
 
 ### Constants (`src/ai/constants/playerConstants.js`)
 ```javascript
+// IDs des joueurs
 export const BOT_PLAYER_ID = 'player2';
 export const HUMAN_PLAYER_ID = 'player1';
+
+// Types de véhicules
 export const VEHICLE_TYPES = {
   SHIP: 'ship',
-  DRONE: 'drone'
+  EXPLORER_DRONE: 'explorer_drone',
+  COMBAT_DRONE: 'combat_drone',
+  SPECIAL_DRONE: 'special_drone'
 };
 ```
 
-### Fonctions utilitaires
+### Fonctions utilitaires (`playerConstants.js`)
 ```javascript
 // Gestion des IDs de joueurs
-getBotPlayerId(playerCount = 2) // Retourne 'player2'
+getBotPlayerId(playerCount = 2)           // Retourne 'player2'
 
 // Gestion des IDs de véhicules
-getMainShipId()            // Retourne 'ship'
-getBotMainVehicleId()      // Retourne 'ship'
-getDroneId(playerId, index)// Retourne 'drone{X}' où X est calculé à partir du playerId
-getAllDroneIds(playerId)   // Retourne tableau des IDs de drones pour un joueur
-isMainShipId(vehicleId)    // Vérifie si l'ID est celui d'un vaisseau
-isDroneId(vehicleId)       // Vérifie si l'ID est celui d'un drone
+getMainShipId()                          // Retourne 'ship'
+getBotMainVehicleId()                    // Retourne 'ship'
+getDroneId(playerId, droneType)          // Retourne '{droneType}_{playerNum}'
+getAllDroneIds(playerId)                 // Retourne tableau des IDs de drones
+isMainShipId(vehicleId)                  // Vérifie si c'est un vaisseau
+isDroneId(vehicleId)                     // Vérifie si c'est un drone
+isDroneActiveByDefault(droneType)        // Vérifie l'activation par défaut
 ```
 
 ## 2. Points de changement majeurs
 
-### 2.1 Création des joueurs (`playerFactory.js`)
-- La création des véhicules est basée sur le numéro du joueur
-- Les IDs de drones sont générés séquentiellement
-- Modifications nécessaires pour supporter plusieurs bots
+### 2.1 Création des joueurs et véhicules (`playerFactory.js`, `vehicleFactory.js`)
 
-### 2.2 Composants d'interface
+#### playerFactory.js
+- Création des véhicules basée sur l'ID du joueur
+- Création séquentielle des drones (explorer, combat, special)
+- Structure du joueur avec vehicles, score, memory et messages
 
-#### BotHUD.jsx
-- Références directes à \`player2\` et \`ship\`
-- Affichage spécifique au bot
+#### vehicleFactory.js
+- Création des véhicules avec propriétés spécifiques par type
+- Gestion des capacités spéciales par type de drone
+- Systèmes de ressources et capacités différentes selon le type
 
-#### VehicleSelector.jsx
-- Filtrage sur HUMAN_PLAYER_ID
-- Sélection de véhicules limitée au joueur humain
+### 2.2 Système de mouvement (`UnifiedDroneMovement.jsx`)
 
-#### PlayerHUD.jsx
-- Références à \`player1\` et ses véhicules
-- Gestion des drones liée au joueur humain
+#### Gestion des mouvements
+- Vitesses et rotations spécifiques par type de drone
+- Comportements différents pour bot et joueur humain
+- Gestion du retour au vaisseau et cooldown
 
-### 2.3 Système de mouvement
+#### Comportements spécialisés
+- Explorer Drone: Exploration et scan de base
+- Combat Drone: Combat et collecte limitée
+- Special Drone: Scan spécial et détection d'objets
 
-#### UnifiedDroneMovement.jsx
-- Logique différente pour bot vs joueur humain
-- Utilisation de BOT_PLAYER_ID et HUMAN_PLAYER_ID
-
-#### ShipMovement.jsx
-- Gestion des mouvements basée sur le type de joueur
-- Références à BOT_PLAYER_ID
+### 2.3 Composant de Debug (`BotDebugger.jsx`)
+- Affichage des IDs de tous les véhicules
+- Monitoring des états et ressources
+- Interface de debug pour bot et joueur humain
 
 ## 3. Points d'attention pour la migration
 
 ### 3.1 Structure des données
-- Le store des joueurs utilise des IDs comme clés
-- Les véhicules sont stockés par joueur
-- La mémoire et le score sont liés au joueur
+- Store des joueurs avec IDs comme clés
+- Véhicules stockés par joueur
+- Gestion de la mémoire et du score par joueur
 
-### 3.2 FSM et Actions
-- Les actions du bot sont actuellement centrées sur BOT_PLAYER_ID
-- La logique FSM devra être instanciable par bot
+### 3.2 Actions et conditions FSM
+- Actions du bot référençant BOT_PLAYER_ID
+- Conditions centralisées dans botConditions.js
+- Vérifications d'état des drones et du vaisseau
 
-### 3.3 Messages et communication
-- Système de messages par joueur
+### 3.3 Système de messages
+- Messages spécifiques par type de drone
 - Communication entre véhicules d'un même joueur
 
 ## 4. Plan de migration suggéré
 
 1. Refactoring des constantes
-   - Remplacer BOT_PLAYER_ID/HUMAN_PLAYER_ID par un système dynamique
-   - Créer un générateur d'IDs de joueurs
+   - Système dynamique d'attribution des IDs
+   - Gestion flexible du nombre de bots
 
-2. Modification de la création des joueurs
-   - Rendre createPlayer plus flexible
-   - Supporter différents types de joueurs (humain/bot)
+2. Modification du système de création
+   - Fonction createPlayer adaptable
+   - Factory de véhicules générique
 
-3. Adaptation de l'interface
-   - Rendre BotHUD générique pour plusieurs bots
-   - Adapter VehicleSelector pour tous types de joueurs
+3. Adaptation du système de mouvement
+   - UnifiedDroneMovement multi-bot
+   - Gestion des collisions entre bots
 
-4. Refactoring du système de mouvement
-   - Unifier la logique bot/humain
-   - Rendre le système indépendant du type de joueur
+4. Mise à jour du système de messages
+   - Canal de communication par bot
+   - Isolation des messages entre bots
 
-5. FSM et Actions
-   - Rendre la FSM instanciable par bot
-   - Isoler l'état par instance de bot
+5. Implémentation multi-bot FSM
+   - Instance FSM par bot
+   - Partage de ressources contrôlé
 
 ## 5. Points de vigilance
 
-- Performances avec plusieurs bots
-- Synchronisation des états
-- Gestion de la mémoire partagée/isolée
-- Conflits de ressources
-- Interface utilisateur adaptative
+- Performance avec plusieurs bots actifs
+- Gestion des collisions et conflits
+- Isolation des états et mémoires
+- Équilibrage des ressources
+- Communication inter-bots
