@@ -468,12 +468,41 @@ const UnifiedDroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", 
   const initialPosition = () => {
     const ship = playerId === HUMAN_PLAYER_ID ? humanShip : botShip;
     if (ship?.position) {
-      // Position légèrement décalée par rapport au vaisseau
-      const offsetX = playerId === HUMAN_PLAYER_ID ? 0.5 : -0.5;
-      const offsetZ = playerId === HUMAN_PLAYER_ID ? 0.5 : -0.5;
-      return [ship.position.x + offsetX, 1.5, ship.position.z + offsetZ];
+      // Configuration de la formation en triangle
+      const baseHeight = 1.0; // Hauteur de base plus basse
+      const radius = 0.8; // Rayon plus grand pour éviter la superposition
+      const isHuman = playerId === HUMAN_PLAYER_ID;
+      const direction = isHuman ? 1 : -1; // Inverse la direction pour le bot
+      
+      // Calculer l'angle en fonction du type de drone
+      let angle = 0;
+      let heightOffset = 0;
+      
+      switch(droneType) {
+        case VEHICLE_TYPES.EXPLORER_DRONE:
+          angle = 0; // Devant
+          heightOffset = 0;
+          break;
+        case VEHICLE_TYPES.COMBAT_DRONE:
+          angle = (2 * Math.PI) / 3; // 120 degrés
+          heightOffset = 0.3; // Plus haut
+          break;
+        case VEHICLE_TYPES.SPECIAL_DRONE:
+          angle = (4 * Math.PI) / 3; // 240 degrés
+          heightOffset = -0.3; // Plus bas
+          break;
+        default:
+          angle = 0;
+          heightOffset = 0;
+      }
+      
+      // Calculer la position en utilisant des coordonnées polaires
+      const x = ship.position.x + (Math.cos(angle) * radius * direction);
+      const z = ship.position.z + (Math.sin(angle) * radius * direction);
+      
+      return [x, baseHeight + heightOffset, z];
     }
-    return [0, 1.5, 0]; // Position par défaut
+    return [0, 1.0, 0]; // Position par défaut
   };
 
   return (

@@ -82,7 +82,7 @@ const Scene = () => {
         droneId={getDroneId(HUMAN_PLAYER_ID, VEHICLE_TYPES.EXPLORER_DRONE)}
       >
         <Cone 
-          args={[0.3, 0.8, 8]} 
+          args={[0.15, 0.4, 8]} 
           rotation={[Math.PI, 0, 0]}
           castShadow
         >
@@ -97,18 +97,18 @@ const Scene = () => {
       >
         <group>
           <Cone 
-            args={[0.4, 0.6, 6]} 
+            args={[0.2, 0.3, 6]} 
             rotation={[Math.PI, 0, 0]}
             castShadow
           >
             <meshStandardMaterial color="darkred" metalness={0.7} roughness={0.2} />
           </Cone>
-          <mesh position={[0.3, 0, 0]} rotation={[0, 0, Math.PI/4]}>
-            <boxGeometry args={[0.4, 0.1, 0.1]} />
+          <mesh position={[0.15, 0, 0]} rotation={[0, 0, Math.PI/4]}>
+            <boxGeometry args={[0.2, 0.05, 0.05]} />
             <meshStandardMaterial color="red" metalness={0.7} roughness={0.2} />
           </mesh>
-          <mesh position={[-0.3, 0, 0]} rotation={[0, 0, -Math.PI/4]}>
-            <boxGeometry args={[0.4, 0.1, 0.1]} />
+          <mesh position={[-0.15, 0, 0]} rotation={[0, 0, -Math.PI/4]}>
+            <boxGeometry args={[0.2, 0.05, 0.05]} />
             <meshStandardMaterial color="red" metalness={0.7} roughness={0.2} />
           </mesh>
         </group>
@@ -121,14 +121,14 @@ const Scene = () => {
       >
         <group>
           <Cone 
-            args={[0.25, 0.7, 8]} 
+            args={[0.12, 0.35, 8]} 
             rotation={[Math.PI, 0, 0]}
             castShadow
           >
             <meshStandardMaterial color="cyan" metalness={0.6} roughness={0.3} emissive="cyan" emissiveIntensity={0.3} />
           </Cone>
-          <mesh position={[0, -0.2, 0]} rotation={[Math.PI/2, 0, 0]}>
-            <torusGeometry args={[0.3, 0.05, 8, 16]} />
+          <mesh position={[0, -0.1, 0]} rotation={[Math.PI/2, 0, 0]}>
+            <torusGeometry args={[0.15, 0.025, 8, 16]} />
             <meshStandardMaterial color="lightblue" metalness={0.6} roughness={0.3} emissive="blue" emissiveIntensity={0.5} />
           </mesh>
         </group>
@@ -141,7 +141,7 @@ const Scene = () => {
         droneId={getDroneId(BOT_PLAYER_ID, VEHICLE_TYPES.EXPLORER_DRONE)}
       >
         <Cone 
-          args={[0.3, 0.8, 8]} 
+          args={[0.15, 0.4, 8]} 
           rotation={[Math.PI, 0, 0]}
           castShadow
         >
@@ -156,18 +156,18 @@ const Scene = () => {
       >
         <group>
           <Cone 
-            args={[0.4, 0.6, 6]} 
+            args={[0.2, 0.3, 6]} 
             rotation={[Math.PI, 0, 0]}
             castShadow
           >
             <meshStandardMaterial color="crimson" metalness={0.7} roughness={0.2} />
           </Cone>
-          <mesh position={[0.3, 0, 0]} rotation={[0, 0, Math.PI/4]}>
-            <boxGeometry args={[0.4, 0.1, 0.1]} />
+          <mesh position={[0.15, 0, 0]} rotation={[0, 0, Math.PI/4]}>
+            <boxGeometry args={[0.2, 0.05, 0.05]} />
             <meshStandardMaterial color="darkred" metalness={0.7} roughness={0.2} />
           </mesh>
-          <mesh position={[-0.3, 0, 0]} rotation={[0, 0, -Math.PI/4]}>
-            <boxGeometry args={[0.4, 0.1, 0.1]} />
+          <mesh position={[-0.15, 0, 0]} rotation={[0, 0, -Math.PI/4]}>
+            <boxGeometry args={[0.2, 0.05, 0.05]} />
             <meshStandardMaterial color="darkred" metalness={0.7} roughness={0.2} />
           </mesh>
         </group>
@@ -180,14 +180,14 @@ const Scene = () => {
       >
         <group>
           <Cone 
-            args={[0.25, 0.7, 8]} 
+            args={[0.12, 0.35, 8]} 
             rotation={[Math.PI, 0, 0]}
             castShadow
           >
             <meshStandardMaterial color="magenta" metalness={0.6} roughness={0.3} emissive="magenta" emissiveIntensity={0.3} />
           </Cone>
-          <mesh position={[0, -0.2, 0]} rotation={[Math.PI/2, 0, 0]}>
-            <torusGeometry args={[0.3, 0.05, 8, 16]} />
+          <mesh position={[0, -0.1, 0]} rotation={[Math.PI/2, 0, 0]}>
+            <torusGeometry args={[0.15, 0.025, 8, 16]} />
             <meshStandardMaterial color="purple" metalness={0.6} roughness={0.3} emissive="purple" emissiveIntensity={0.5} />
           </mesh>
         </group>
