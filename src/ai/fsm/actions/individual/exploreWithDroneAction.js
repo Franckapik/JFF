@@ -14,6 +14,7 @@ import {
   getDroneId,
   VEHICLE_TYPES
 } from '../../../constants/playerConstants';
+import useDroneState, { DRONE_STATES } from '../../../../hooks/useDroneState';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
 
@@ -54,7 +55,9 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
   // Utiliser les conditions centralisées pour vérifier l'état du drone
   const isDroneMoving = BotConditions.isDroneMoving();
   const droneAtShip = BotConditions.isDroneAtShip();
-  const droneReturnedToShip = playerState?.memory?.droneReturnedToShip === true;
+  // Use the drone state machine instead of flags
+  const droneState = useDroneState.getState();
+  const droneReturnedToShip = droneState.isDroneDocked(botDroneId);
   
   // PHASE 1: Première exécution - Envoyer le drone explorer
   if (!playerState?.memory?.explorationState?.started) {
@@ -149,12 +152,12 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
     fsmLogger.action(`Exploration in progress: ${(elapsedTime/1000).toFixed(1)}s elapsed`);
   }
   
-  if (droneReturnedToShip || (droneAtShip.result && !isDroneMoving.result && explorationState.started)) {
+  // Use drone state machine to check completion
+  if (droneState.isDroneDocked(botDroneId)) {
     fsmLogger.action(`Drone has returned to ship, exploration sequence fully complete after ${(elapsedTime/1000).toFixed(1)}s`);
     
-    // Réinitialiser le flag dans la mémoire du bot
+    // Reset exploration state
     playerStore.updatePlayerMemory(botId, { 
-      droneReturnedToShip: false,
       explorationState: null
     });
     

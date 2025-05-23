@@ -11,6 +11,7 @@ import {
 import usePlayerStore from '../../../stores/playerStore';
 import useGameStore from '../../../stores/useGameStore';
 import useBotStore from '../../../stores/useBotStore';
+import useDroneState, { DRONE_STATES } from '../../../hooks/useDroneState';
 
 /**
  * Registre des conditions du bot - SYSTÈME CENTRALISÉ
@@ -150,18 +151,19 @@ export const BotConditions = {
     // Vérifier s'il y a une nouvelle découverte de ressource
     const hasNewDiscovery = botMemory?.hasNewResourceDiscovery === true;
     
-    // Vérifier si le drone est revenu au vaisseau après une exploration
-    const droneReturnedToShip = botMemory?.droneReturnedToShip === true;
+    // Use drone state machine to check if drone has returned
+    const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
+    const droneState = useDroneState.getState();
+    const droneReturnedToShip = droneState.isDroneDocked(botDroneId);
     
     // On doit avoir assez de ressources ET soit une nouvelle découverte, soit le drone de retour
     const shouldCollect = hasEnoughResources && (hasNewDiscovery || droneReturnedToShip);
     
     // Si la condition est remplie, réinitialiser les flags dans la mémoire
     if (shouldCollect) {
-      // Réinitialiser les flags dans la mémoire
+      // Only reset discovery flag, drone state is managed by the state machine
       usePlayerStore.getState().updatePlayerMemory(botId, {
-        hasNewResourceDiscovery: false,
-        droneReturnedToShip: false
+        hasNewResourceDiscovery: false
       });
       
       // Si nous sommes dans un état actif (non-IDLE), retourner à IDLE pour réévaluation
@@ -296,18 +298,12 @@ export const BotConditions = {
    * @returns {Object} - Résultat avec drone et vaisseau au même endroit
    */
   isDroneAtShip: () => {
-    const playerState = usePlayerStore.getState();
     const botId = BotConditions.getCurrentBotId();
-    const botVehicleId = getMainShipId();
-    const botVehicle = playerState.players?.[botId]?.vehicles?.[botVehicleId];
     const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
-    const botDrone = playerState.players?.[botId]?.vehicles?.[botDroneId];
+    const droneState = useDroneState.getState();
     
-    if (!botVehicle || !botDrone) return { result: false };
-    
-    const droneAtShip = botDrone.coord === botVehicle.coord;
     return {
-      result: droneAtShip
+      result: droneState.isDroneDocked(botDroneId)
     };
   },
   
@@ -316,15 +312,13 @@ export const BotConditions = {
    * @returns {Object} - Résultat avec état de mouvement du drone
    */
   isDroneMoving: () => {
-    const playerState = usePlayerStore.getState();
     const botId = BotConditions.getCurrentBotId();
     const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
-    const botDrone = playerState.players?.[botId]?.vehicles?.[botDroneId];
-    
-    if (!botDrone) return { result: false };
+    const droneState = useDroneState.getState();
     
     return {
-      result: botDrone.isMoving === true
+      result: droneState.isDroneInState(botDroneId, DRONE_STATES.MOVING_TO_TARGET) ||
+              droneState.isDroneInState(botDroneId, DRONE_STATES.RETURNING_TO_SHIP)
     };
   },
   

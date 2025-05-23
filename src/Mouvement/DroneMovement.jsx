@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useTileStore } from "../stores/useTileStore";
 import usePlayerStore from "../stores/playerStore";
+import useDroneState, { DRONE_STATES } from "../hooks/useDroneState";
 import { 
   HUMAN_PLAYER_ID,
   getMainShipId,
@@ -28,6 +29,26 @@ const DroneMovement = React.memo(({ playerId = HUMAN_PLAYER_ID, droneId = "drone
     return humanShip;
   }, [playerId, allShips, selectedVehicle, humanShip]);
 
+  // Initialize drone state on component mount
+  useEffect(() => {
+    const droneState = useDroneState.getState();
+    droneState.initializeDrone(droneId);
+  }, [droneId]);
+
+  // Handle returning to ship when needed
+  useEffect(() => {
+    const droneState = useDroneState.getState();
+    if (droneState.isDroneInState(droneId, DRONE_STATES.RETURNING_TO_SHIP)) {
+      const shipToFollow = getShipToFollow();
+      if (shipToFollow?.coord) {
+        playerStore.getState().updateVehicle(playerId, droneId, {
+          isMoving: true,
+          targetTile: { coord: shipToFollow.coord }
+        });
+      }
+    }
+  }, [droneId, playerId, getShipToFollow]);
+
   // Gestion de l'arrivée à destination avec useCallback
   const handleDroneReachedTarget = React.useCallback((reachedTileCoord) => {
     if (!reachedTileCoord) return;
@@ -35,8 +56,19 @@ const DroneMovement = React.memo(({ playerId = HUMAN_PLAYER_ID, droneId = "drone
     const reachedTile = tiles[reachedTileCoord];
     if (!reachedTile) return;
     
+    // Get current state to manage transitions
+    const droneState = useDroneState.getState();
+    
     // Marquer la tuile comme explorée
     useTileStore.getState().markTileAsExplored(reachedTileCoord);
+    
+    // Transition state based on current state and target
+    const shipToFollow = getShipToFollow();
+    if (reachedTileCoord === shipToFollow?.coord) {
+      droneState.transitionDroneState(droneId, DRONE_STATES.DOCKED_WITH_SHIP);
+    } else {
+      droneState.transitionDroneState(droneId, DRONE_STATES.AT_TARGET);
+    }
     
     // Arrêter le mouvement
     updateVehicle(playerId, droneId, {
