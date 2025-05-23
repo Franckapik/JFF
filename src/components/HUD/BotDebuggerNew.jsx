@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import usePlayerStore from "../../stores/playerStore";
 import useBotStore from "../../stores/useBotStore";
-import { useTileStore } from "../../stores/useNewTileStore";
+import { useTileStore } from "../../stores/useTileStore";
 import {
   HUMAN_PLAYER_ID,
   getBotPlayerId,

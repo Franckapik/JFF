@@ -2,7 +2,7 @@
 // Machine à états finis simplifiée avec file d'actions bloquantes
 import { create } from 'zustand';
 import usePlayerStore from './playerStore';
-import { useTileStore } from './useNewTileStore';
+import { useTileStore } from './useTileStore';
 import useGameStore from './useGameStore';
 
 // Importations des modules FSM

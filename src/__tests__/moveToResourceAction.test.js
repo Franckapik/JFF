@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { moveToResourceAction } from '../ai/fsm/actions/individual/moveToResourceAction';
 import usePlayerStore from '../stores/playerStore';
-import { useTileStore } from '../stores/useNewTileStore';
+import { useTileStore } from '../stores/useTileStore';
 import { BOT_STATES } from '../ai/constants/botConstants';
 
 // Mock des dépendances externes
@@ -30,7 +30,7 @@ vi.mock('../stores/playerStore', () => ({
   getState: vi.fn()
 }));
 
-vi.mock('../stores/useNewTileStore', () => ({
+vi.mock('../stores/useTileStore', () => ({
   useTileStore: {
     getState: vi.fn()
   }

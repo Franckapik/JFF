@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTileAnimation } from "../animations/useTileAnimation";
-import { useTileStore } from "../stores/useNewTileStore";
+import { useTileStore } from "../stores/useTileStore";
 import { Html } from "@react-three/drei";
 
 const Tile = ({ position, radius, color, isHighTile, onClick, coord }) => {

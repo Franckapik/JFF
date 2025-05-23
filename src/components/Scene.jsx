@@ -4,7 +4,7 @@ import { useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import Tile from "./Tile";
 import Bot from "./Bot";
-import { useTileStore } from "../stores/useNewTileStore";
+import { useTileStore } from "../stores/useTileStore";
 import usePlayerStore from "../stores/playerStore";
 import useBotStore from "../stores/useBotStore";
 import useGameStore from "../stores/useGameStore";
