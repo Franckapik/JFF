@@ -154,10 +154,10 @@ export const BotConditions = {
     // Use drone state machine to check if drone has returned
     const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
     const droneState = useDroneState.getState();
-    const droneReturnedToShip = droneState.isDroneDocked(botDroneId);
+    const isDroneDocked = droneState.isDroneDocked(botDroneId);
     
     // On doit avoir assez de ressources ET soit une nouvelle découverte, soit le drone de retour
-    const shouldCollect = hasEnoughResources && (hasNewDiscovery || droneReturnedToShip);
+    const shouldCollect = hasEnoughResources && (hasNewDiscovery || isDroneDocked);
     
     // Si la condition est remplie, réinitialiser les flags dans la mémoire
     if (shouldCollect) {
@@ -553,7 +553,9 @@ export const BotConditions = {
       const hasResources = resourcesToCollect.length > 0;
       
       // Vérifier si le drone a terminé son exploration et est revenu
-      const droneReturned = playerState.players[botId]?.memory?.droneReturnedToShip === true;
+      const droneState = useDroneState.getState();
+      const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
+      const droneReturned = droneState.isDroneDocked(botDroneId);
       
       // On peut procéder si on a des ressources à collecter OU si le drone est revenu
       return hasResources || droneReturned;

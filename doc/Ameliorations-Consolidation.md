@@ -101,9 +101,9 @@ Ce document présente les éléments fragiles, incohérents, redondants ou rapid
 
 ### 5.3 Incohérence dans la gestion du retour des drones
 
-- **Description**: Le flag `droneReturnedToShip` est géré de manière variable et n'est pas toujours réinitialisé correctement.
-- **Impact**: Les drones peuvent rester bloqués dans un état de retour.
-- **Solution proposée**: Implémenter une machine à états pour les drones eux-mêmes, avec des transitions claires.
+- **Description**: ✅ Le flag `droneReturnedToShip` est désormais déprécié et remplacé par la machine à états `useDroneState`.
+- **Impact**: Résolu - Les drones utilisent maintenant un système de transitions d'état clair et robuste.
+- **Solution mise en œuvre**: Une machine à états (`useDroneState`) a été implémentée pour les drones, avec des transitions claires entre DOCKED_WITH_SHIP, MOVING_TO_TARGET, AT_TARGET et RETURNING_TO_SHIP.
 
 ## 6. Qualité du code et maintenabilité
 

@@ -1,5 +1,7 @@
 # Guide d'intégration des drones au système FSM
 
+> **[IMPORTANT]** La gestion des états des drones a été modernisée avec une machine à états dédiée `useDroneState`. Le flag `droneReturnedToShip` dans la mémoire du joueur est désormais **DÉPRÉCIÉ**. Toutes les vérifications d'état des drones doivent utiliser les méthodes de `useDroneState`, notamment `isDroneDocked()`, `isDroneInState()`, etc.
+
 Ce guide explique comment intégrer efficacement les différents types de drones au système de Machine à États Finis (FSM) du bot. Il couvre les aspects d'actions, de conditions et de transitions d'état liés aux drones.
 
 ## Table des matières
@@ -11,6 +13,7 @@ Ce guide explique comment intégrer efficacement les différents types de drones
 5. [Variables de mémoire importantes](#5-variables-de-mémoire-importantes)
 6. [Patterns d'utilisation avancés](#6-patterns-dutilisation-avancés)
 7. [Dépannage et debugging](#7-dépannage-et-debugging)
+8. [Machine à États des Drones (useDroneState)](#8-machine-à-états-des-drones-usedronestate)
 
 ## 1. Introduction
 
@@ -40,8 +43,9 @@ if (!exploreWithDroneAction.explorationStarted) {
   // ...
 }
 
-// Vérifier si le drone est revenu au vaisseau
-if (droneReturnedToShip) {
+// Vérifier si le drone est revenu au vaisseau en utilisant la machine d'état
+const droneState = useDroneState.getState();
+if (droneState.isDroneDocked(botDroneId)) {
   // Fin de l'exploration, passer à la suite
   // ...
 }
@@ -117,9 +121,12 @@ export const hasDiscoveredResources = () => {
   const store = usePlayerStore.getState();
   const botMemory = store.players?.[botId]?.memory;
   
-  // Soit le flag est explicitement à true, soit le drone est revenu et a des ressources connues
+  // Soit le flag est explicitement à true, soit le drone est revenu (vérifié via useDroneState) et a des ressources connues
   const explicitDiscovery = botMemory?.hasNewResourceDiscovery === true;
-  const implicitDiscovery = botMemory?.droneReturnedToShip && 
+  const droneState = useDroneState.getState();
+  const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
+  const isDroneDocked = droneState.isDroneDocked(botDroneId);
+  const implicitDiscovery = isDroneDocked && 
                            botMemory?.knownResources?.length > 0;
   
   return {
@@ -206,7 +213,7 @@ export const COLLECTING = {
 const botMemory = {
   // Explorer Drone
   explorationCount: 0,           // Nombre d'explorations réalisées
-  droneReturnedToShip: false,    // Flag indiquant si le drone est revenu
+  // droneReturnedToShip: false, // DÉPRÉCIÉ - Utiliser useDroneState.isDroneDocked() à la place
   hasNewResourceDiscovery: false, // Une nouvelle ressource a été découverte
   
   // Combat Drone
@@ -229,9 +236,13 @@ const botMemory = {
 // Mise à jour après exploration
 updatePlayerMemory(botId, {
   explorationCount: currentCount + 1,
-  droneReturnedToShip: true,
+  // Ne plus utiliser droneReturnedToShip - utiliser useDroneState à la place
   hasNewResourceDiscovery: hasNewResources
 });
+
+// L'état du drone est géré via useDroneState
+const droneState = useDroneState.getState();
+droneState.transitionDroneState(botDroneId, DRONE_STATES.DOCKED_WITH_SHIP);
 
 // Enregistrement d'un scan spécial
 updatePlayerMemory(botId, {
@@ -307,7 +318,8 @@ const droneDefensePatternAction = (botId, playerStore, tileStore, changeState) =
 |----------|----------------|----------|
 | Le drone ne bouge pas | `isActive` est à false | Activer le drone avec `updateVehicle(botId, droneId, { isActive: true })` |
 | Drone bloqué en mouvement | Problème de tuile cible | Vérifier si `targetTile` est valide et accessible |
-| Pas de retour après exploration | Flag `droneReturnedToShip` non mis à jour | S'assurer que `UnifiedDroneMovement` met à jour ce flag |
+| Pas de retour après exploration | Transition d'état du drone non effectuée | Vérifier les transitions avec `useDroneState.transitionDroneState()` et le bon état cible |
+| Transitions d'état incorrectes | Séquence de transition invalide | S'assurer que les transitions suivent le flux valide : DOCKED_WITH_SHIP → MOVING_TO_TARGET → AT_TARGET → RETURNING_TO_SHIP → DOCKED_WITH_SHIP |
 | Ressources non détectées | Message du drone non traité | Vérifier l'intégration avec `sendVehicleMessage` et le gestionnaire de messages |
 
 ### 7.2 Utilisation des logs pour le debugging
@@ -327,4 +339,96 @@ fsmLogger.mouvement(`[UnifiedDroneMovement] Drone for ${playerId} returned to sh
 fsmLogger.message(`Drone ${droneId} sent message: ${type}`, payload);
 ```
 
-En suivant ce guide, vous serez en mesure d'intégrer efficacement les drones au système FSM et de tirer pleinement parti de leurs capacités spécialisées pour améliorer le comportement du bot.
+## 8. Machine à États des Drones (useDroneState)
+
+### 8.1 Vue d'ensemble
+
+Les drones utilisent désormais un système de machine à états dédié, implémenté avec Zustand, qui remplace l'ancienne approche basée sur des flags dans la mémoire du joueur. Ce système gère les transitions entre différents états du drone de manière robuste et prévisible.
+
+```javascript
+import useDroneState, { DRONE_STATES } from '../../../../hooks/useDroneState';
+
+// États disponibles
+const DRONE_STATES = {
+  IDLE: 'IDLE',
+  MOVING_TO_TARGET: 'MOVING_TO_TARGET',
+  AT_TARGET: 'AT_TARGET',
+  RETURNING_TO_SHIP: 'RETURNING_TO_SHIP',
+  DOCKED_WITH_SHIP: 'DOCKED_WITH_SHIP'
+};
+```
+
+### 8.2 Transitions d'état valides
+
+Le système n'autorise que des transitions valides entre les états :
+
+```
+DOCKED_WITH_SHIP → MOVING_TO_TARGET
+MOVING_TO_TARGET → AT_TARGET ou RETURNING_TO_SHIP
+AT_TARGET → RETURNING_TO_SHIP
+RETURNING_TO_SHIP → DOCKED_WITH_SHIP
+IDLE → MOVING_TO_TARGET ou RETURNING_TO_SHIP
+```
+
+### 8.3 Utilisation dans le code
+
+#### Initialisation
+
+```javascript
+// Dans un composant ou une action
+const droneState = useDroneState.getState();
+droneState.initializeDrone(droneId); // Initialise à DOCKED_WITH_SHIP
+```
+
+#### Transitions d'état
+
+```javascript
+// Pour changer l'état d'un drone
+droneState.transitionDroneState(droneId, DRONE_STATES.MOVING_TO_TARGET);
+```
+
+#### Vérifications d'état
+
+```javascript
+// Vérifier si un drone est dans un état spécifique
+if (droneState.isDroneInState(droneId, DRONE_STATES.AT_TARGET)) {
+  // Logique spécifique à l'état AT_TARGET
+}
+
+// Vérifier si un drone est docké avec le vaisseau (remplace droneReturnedToShip)
+if (droneState.isDroneDocked(droneId)) {
+  // Le drone est revenu au vaisseau
+}
+```
+
+### 8.4 Migration depuis l'ancien système
+
+Si vous rencontrez encore du code utilisant l'ancien flag `droneReturnedToShip`, voici comment le migrer :
+
+#### Remplacer les vérifications
+
+```javascript
+// Ancien code
+if (playerState.players[botId]?.memory?.droneReturnedToShip) {
+  // Actions...
+}
+
+// Nouveau code
+const droneState = useDroneState.getState();
+const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
+if (droneState.isDroneDocked(botDroneId)) {
+  // Actions...
+}
+```
+
+#### Remplacer les mises à jour
+
+```javascript
+// Ancien code
+playerStore.updatePlayerMemory(botId, { droneReturnedToShip: true });
+
+// Nouveau code
+const droneState = useDroneState.getState();
+const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
+droneState.transitionDroneState(botDroneId, DRONE_STATES.DOCKED_WITH_SHIP);
+```

@@ -35,17 +35,30 @@ const DroneMovement = React.memo(({ playerId = HUMAN_PLAYER_ID, droneId = "drone
     droneState.initializeDrone(droneId);
   }, [droneId]);
 
-  // Handle returning to ship when needed
+  // Handle returning to ship when needed and drone movement states
   useEffect(() => {
     const droneState = useDroneState.getState();
+    const currentState = droneState.getDroneState(droneId);
+    const vehicle = usePlayerStore.getState().players[playerId]?.vehicles[droneId];
+
     if (droneState.isDroneInState(droneId, DRONE_STATES.RETURNING_TO_SHIP)) {
       const shipToFollow = getShipToFollow();
       if (shipToFollow?.coord) {
-        playerStore.getState().updateVehicle(playerId, droneId, {
+        usePlayerStore.getState().updateVehicle(playerId, droneId, {
           isMoving: true,
           targetTile: { coord: shipToFollow.coord }
         });
       }
+    } else if (currentState?.currentState === DRONE_STATES.DOCKED_WITH_SHIP && vehicle?.targetTile?.coord) {
+      // Si le drone est docké et reçoit une nouvelle cible, transition vers MOVING_TO_TARGET
+      droneState.transitionDroneState(droneId, DRONE_STATES.MOVING_TO_TARGET);
+      // Activer le mouvement vers la nouvelle cible
+      usePlayerStore.getState().updateVehicle(playerId, droneId, {
+        isMoving: true
+      });
+    } else if (currentState?.currentState === DRONE_STATES.AT_TARGET && !vehicle?.isMoving) {
+      // Si le drone a atteint sa cible et n'est plus en mouvement, retourner au vaisseau
+      droneState.transitionDroneState(droneId, DRONE_STATES.RETURNING_TO_SHIP);
     }
   }, [droneId, playerId, getShipToFollow]);
 
@@ -58,15 +71,20 @@ const DroneMovement = React.memo(({ playerId = HUMAN_PLAYER_ID, droneId = "drone
     
     // Get current state to manage transitions
     const droneState = useDroneState.getState();
+    const currentState = droneState.getDroneState(droneId);
     
     // Marquer la tuile comme explorée
     useTileStore.getState().markTileAsExplored(reachedTileCoord);
     
-    // Transition state based on current state and target
+    // Get ship to determine the type of target reached
     const shipToFollow = getShipToFollow();
+    
+    // Handle state transitions based on target and current state
     if (reachedTileCoord === shipToFollow?.coord) {
+      // Reached the ship - transition to docked state
       droneState.transitionDroneState(droneId, DRONE_STATES.DOCKED_WITH_SHIP);
-    } else {
+    } else if (currentState?.currentState === DRONE_STATES.MOVING_TO_TARGET) {
+      // Reached a non-ship target while moving - transition to at target
       droneState.transitionDroneState(droneId, DRONE_STATES.AT_TARGET);
     }
     
@@ -75,7 +93,7 @@ const DroneMovement = React.memo(({ playerId = HUMAN_PLAYER_ID, droneId = "drone
       isMoving: false,
       targetTile: null
     });
-  }, [tiles, playerId, droneId, updateVehicle]);
+  }, [tiles, playerId, droneId, updateVehicle, getShipToFollow]);
 
   // Utilisation du hook de mouvement
   const {

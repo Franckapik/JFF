@@ -6,6 +6,7 @@ import useBotStore from '../stores/useBotStore';
 import { useTileStore } from '../stores/useTileStore';
 import { isBotPlayerId, getMainShipId } from '../ai/constants/playerConstants';
 import fsmLogger from '../utils/fsmLogger';
+import { calculatePath } from '../utils/utils';
 
 /**
  * Hook partagé pour la gestion du mouvement des véhicules (drones et vaisseaux)
@@ -68,6 +69,29 @@ export const useVehicleMovement = ({
   // État actif du mouvement
   const [isMovementActive, setIsMovementActive] = useState(false);
   
+  // Surveiller les changements de cible pour initialiser le mouvement
+  useEffect(() => {
+    if (vehicle?.targetTile?.coord && !isMovementActive) {
+      const start = groupRef.current?.position;
+      if (start) {
+        const pathData = calculatePath(
+          start,
+          vehicle.targetTile.coord,
+          tiles,
+          vehicle.coord
+        );
+        if (pathData?.path?.length > 0) {
+          setIsMovementActive(true);
+          setPath(pathData.path);
+          setCurrentTargetIndex(0);
+          setHasReachedTarget(false);
+          setTotalPathDistance(pathData.totalDistance);
+          setDistanceTraveled(0);
+        }
+      }
+    }
+  }, [vehicle?.targetTile?.coord, tiles]);
+
   // Log state changes in movement
   useEffect(() => {
     if (isMovementActive) {

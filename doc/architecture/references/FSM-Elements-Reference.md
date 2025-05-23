@@ -7,7 +7,7 @@ Ce document présente un tableau de référence qui met en relation les différe
 | État (State) | Actions associées | Fonctions PlayerStore utilisées | Variables/Flags | Conditions BotConditions |
 |--------------|-------------------|--------------------------------|----------------|--------------------------|
 | **IDLE** | `evaluateConditionsFromIdleAction` | `updatePlayerMemory` | `botState` | `evaluateStateTransition`, `isLowFuel`, `isAtMaxCapacity`, `hasEnoughKnownResources`, `hasDiscoveredResources` |
-| **EXPLORING** | `exploreDroneAction`, `moveToRandomTileAction` | `updatePlayerMemory`, `moveToTile` | `explorationCount`, `isMoving`, `droneReturnedToShip` | `isDroneMoving`, `isDroneAtShip`, `hasEnoughFuel` |
+| **EXPLORING** | `exploreDroneAction`, `moveToRandomTileAction` | `updatePlayerMemory`, `moveToTile` | `explorationCount`, `isMoving` | `isDroneMoving`, `isDroneAtShip`, `hasEnoughFuel` |
 | **COLLECTING** | `moveToResourceAction`, `collectResourceAction` | `moveToTile`, `updatePlayerMemory`, `updateVehicle`, `checkResourceCapacity` | `currentTargetResource`, `isCollecting`, `collectionTile`, `knownResources` | `allKnownResourcesCollected`, `isShipMoving` |
 | **RETURNING** | `returnToBaseAction`, `refuelAtBaseAction` | `moveToTile`, `transferResourcesToScore`, `refuelVehicle` | `isMoving`, `isAtCapacity` | `isAtBase`, `isFullyRefueled`, `shouldReturnToBase` |
 
@@ -19,7 +19,7 @@ Ce document présente un tableau de référence qui met en relation les différe
 | `moveToRandomTileAction` | Déplacement vers une tuile aléatoire | `moveToTile` | `isMoving` | - |
 | `returnToBaseAction` | Retourne à la base/tuile de départ | `moveToTile` | `isMoving`, `startCoord`, `initiated` | `isAtBase`, `isShipMoving` |
 | `refuelAtBaseAction` | Ravitaillement et transfert des ressources | `refuelVehicle`, `transferResourcesToScore`, `updatePlayerMemory` | - | `isAtBase`, `isFullyRefueled` |
-| `exploreWithDroneAction` | Explore avec un drone | `moveToTile`, `updatePlayerMemory` | `explorationStarted`, `knownResources`, `droneReturnedToShip`, `hasNewResourceDiscovery`, `explorationCount` | `isDroneMoving`, `isDroneAtShip` |
+| `exploreWithDroneAction` | Explore avec un drone | `moveToTile`, `updatePlayerMemory` | `explorationStarted`, `knownResources`, `hasNewResourceDiscovery`, `explorationCount` | `isDroneMoving`, `isDroneAtShip` |
 | `moveToResourceAction` | Déplacement vers une ressource connue | `moveToTile`, `updatePlayerMemory` | `started`, `startTime`, `targetCoord`, `currentTargetResource` | `isShipMoving` |
 | `collectResourceAction` | Collecte une ressource | `updateVehicle`, `updatePlayerMemory`, `checkResourceCapacity` | `started`, `startTime`, `collectionTime`, `tileCoord`, `resources`, `isCollecting` | - |
 | `testQueueAction` | Test de la file d'actions | - | `startTime` | - |
@@ -32,7 +32,7 @@ Ce document présente un tableau de référence qui met en relation les différe
 | `hasEnoughFuel` | Vérifie s'il y a assez de carburant | IDLE, EXPLORING | `evaluateConditionsFromIdleAction`, `exploreWithDroneAction` | `fuel` |
 | `isAtMaxCapacity` | Vérifie si capacité maximale atteinte | IDLE, COLLECTING | `evaluateConditionsFromIdleAction` | `isAtCapacity` |
 | `hasEnoughKnownResources` | Vérifie s'il y a assez de ressources connues | IDLE | `evaluateConditionsFromIdleAction` | `knownResources` |
-| `hasDiscoveredResources` | Vérifie si des ressources ont été découvertes | IDLE, EXPLORING | `evaluateConditionsFromIdleAction` | `hasNewResourceDiscovery`, `droneReturnedToShip` |
+| `hasDiscoveredResources` | Vérifie si des ressources ont été découvertes | IDLE, EXPLORING | `evaluateConditionsFromIdleAction` | `hasNewResourceDiscovery`, utilise `useDroneState.isDroneDocked()` |
 | `allKnownResourcesCollected` | Vérifie si toutes les ressources connues sont collectées | COLLECTING | `evaluateConditionsFromIdleAction` | `knownResources` |
 | `isAtBase` | Vérifie si le véhicule est à la base | IDLE, RETURNING | `returnToBaseAction`, `refuelAtBaseAction` | `coord`, `startCoord` |
 | `isFullyRefueled` | Vérifie si le ravitaillement est complet | RETURNING | `refuelAtBaseAction` | `fuel` |
@@ -62,7 +62,7 @@ Ce document présente un tableau de référence qui met en relation les différe
 | `currentTargetResource` | usePlayerStore (memory) | Ressource actuellement ciblée | `moveToResourceAction`, `collectResourceAction` |
 | `knownResources` | usePlayerStore (memory) | Liste des ressources connues | `moveToResourceAction`, conditions de ressources |
 | `explorationCount` | usePlayerStore (memory) | Nombre d'explorations effectuées | `exploreWithDroneAction` |
-| `droneReturnedToShip` | usePlayerStore (memory) | Flag indiquant que le drone est revenu au vaisseau | `exploreWithDroneAction` |
+| `droneReturnedToShip` | ~~usePlayerStore (memory)~~ **DÉPRÉCIÉ** | ~~Flag indiquant que le drone est revenu au vaisseau~~ Remplacé par `useDroneState.isDroneDocked()` | ~~`exploreWithDroneAction`~~ Utiliser `useDroneState.isDroneDocked()` à la place |
 | `isCollecting` | usePlayerStore (memory) | Flag indiquant une collecte en cours | `collectResourceAction` |
 | `isAtCapacity` | usePlayerStore (vehicles) | Indique si le véhicule est à capacité maximale | Conditions de retour à la base |
 | `fuel` | usePlayerStore (vehicles) | Niveau de carburant | Conditions de sécurité |

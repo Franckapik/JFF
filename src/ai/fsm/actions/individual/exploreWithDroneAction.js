@@ -57,7 +57,7 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
   const droneAtShip = BotConditions.isDroneAtShip();
   // Use the drone state machine instead of flags
   const droneState = useDroneState.getState();
-  const droneReturnedToShip = droneState.isDroneDocked(botDroneId);
+  const isDroneDocked = droneState.isDroneDocked(botDroneId); // Renamed for clarity
   
   // PHASE 1: Première exécution - Envoyer le drone explorer
   if (!playerState?.memory?.explorationState?.started) {
@@ -65,11 +65,6 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
     if (isDroneMoving.result) {
       fsmLogger.action(`Drone is already moving, waiting for it to complete its current movement`);
       return undefined;
-    }
-    
-    // Réinitialiser le flag de retour au vaisseau s'il existe
-    if (droneReturnedToShip) {
-      playerStore.updatePlayerMemory(botId, { droneReturnedToShip: false });
     }
     
     fsmLogger.action(`Attempting to find a tile to explore`);
