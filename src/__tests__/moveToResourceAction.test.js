@@ -128,9 +128,6 @@ describe('moveToResourceAction', () => {
     
     // L'action devrait être en cours (non terminée)
     expect(result).toBeUndefined();
-    
-    // L'action devrait être marquée comme démarrée
-    expect(moveToResourceAction.started).toBe(true);
   });
 
   it('devrait terminer l\'action quand le bot est déjà sur la ressource cible', () => {
@@ -224,18 +221,10 @@ describe('moveToResourceAction', () => {
       }
     };
     
-    // Simuler que l'action a déjà démarré
-    moveToResourceAction.started = true;
-    moveToResourceAction.targetCoord = '1,1';
-    moveToResourceAction.startTime = Date.now() - 5000; // 5 secondes se sont écoulées
-    
-    // Appeler à nouveau l'action avec le bot arrivé à destination
+    // Appeler l'action avec le bot arrivé à destination
     const result = moveToResourceAction(arrivedStore, mockTileStore, addAction, changeState);
     
-    // Vérifier que l'action est maintenant terminée
+    // Vérifier que l'action est terminée
     expect(result).toBe(true);
-    
-    // Vérifier que l'état a été réinitialisé
-    expect(moveToResourceAction.started).toBe(false);
   });
 });

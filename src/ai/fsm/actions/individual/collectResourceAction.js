@@ -21,20 +21,20 @@ import fsmLogger from '../../../../utils/fsmLogger';
  * @returns {boolean|undefined} - True si l'action est terminée, false si échouée, undefined si en cours
  */
 export const collectResourceAction = (playerStore, tileStore, addAction, changeState) => {
-  // Récupérer l'ID du bot actif via BotConditions
   const botId = BotConditions.getCurrentBotId();
   const botVehicleId = getMainShipId();
   const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   const botMemory = playerStore.players?.[botId]?.memory;
+  const collectionState = botMemory?.collectionState;
   
   if (!botVehicle) {
     fsmLogger.error(`Bot vehicle not found for ${botId}`);
     return false;
   }
   
-  // DEBUGGAGE - Afficher les informations actuelles pour le diagnostic
-  if (!collectResourceAction.started) {
-    fsmLogger.action(`Debug: collectResource called at position ${botVehicle.coord}, state: ${collectResourceAction.started}`);
+  // DEBUGGAGE - Afficher les informations actuelles
+  if (!collectionState?.started) {
+    fsmLogger.action(`Debug: collectResource called at position ${botVehicle.coord}, state: ${collectionState?.started}`);
     
     if (botMemory?.currentTargetResource) {
       fsmLogger.action(`Debug: Target resource coord: ${botMemory.currentTargetResource.coord}, Bot coord: ${botVehicle.coord}`);
@@ -42,22 +42,19 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
   }
   
   // PHASE 1: Initialisation de l'action - Premier appel
-  if (!collectResourceAction.started) {
-    // Récupérer la tuile actuelle directement à partir de la position actuelle du bot
+  if (!collectionState?.started) {
     const currentTile = tileStore.tiles[botVehicle.coord];
     if (!currentTile) {
       fsmLogger.error(`Cannot find tile at ${botVehicle.coord}`);
       return false;
     }
     
-    // Vérifier s'il y a des ressources à collecter sur la tuile
     const resources = currentTile.resources || { food: 0, debris: 0, special: 0 };
     const hasResources = resources.food > 0 || resources.debris > 0 || resources.special > 0;
     
     if (!hasResources) {
       fsmLogger.action(`No resources to collect at ${botVehicle.coord}`);
       
-      // Supprimer cette ressource de la liste des ressources connues
       if (botMemory.knownResources) {
         const updatedResources = botMemory.knownResources.filter(r => r.coord !== botVehicle.coord);
         playerStore.updatePlayerMemory(botId, {
@@ -69,47 +66,41 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
       return false;
     }
     
-    // Commencer la collecte des ressources
     fsmLogger.action(`Starting resource collection at ${botVehicle.coord}: ${JSON.stringify(resources)}`);
     
-    // Temps de collecte proportionnel à la quantité de ressources
     const totalResourceAmount = resources.food + resources.debris + resources.special;
-    // Version plus rapide
     const collectionTime = Math.min(2000, Math.max(1000, totalResourceAmount / 2000 * 1000));
     
-    collectResourceAction.started = true;
-    collectResourceAction.startTime = Date.now();
-    collectResourceAction.collectionTime = collectionTime;
-    collectResourceAction.tileCoord = botVehicle.coord;
-    collectResourceAction.resources = { ...resources };
-    
-    // Réserver les ressources pour éviter que d'autres actions les ciblent
     playerStore.updatePlayerMemory(botId, {
+      collectionState: {
+        started: true,
+        startTime: Date.now(),
+        collectionTime: collectionTime,
+        tileCoord: botVehicle.coord,
+        resources: { ...resources }
+      },
       isCollecting: true,
       collectionTile: botVehicle.coord
     });
     
-    return undefined; // Action en cours, reste bloquante
+    return undefined;
   }
   
   // PHASE 2: Suivi de la collecte en cours
-  const elapsedTime = Date.now() - collectResourceAction.startTime;
+  const elapsedTime = Date.now() - collectionState.startTime;
   
   // Afficher un message de progression toutes les secondes environ
   if (elapsedTime % 1000 < 100) { 
-    const percentComplete = Math.min(100, Math.round((elapsedTime / collectResourceAction.collectionTime) * 100));
-    fsmLogger.action(`Resource collection in progress: ${percentComplete}% (${(elapsedTime/1000).toFixed(1)}s/${(collectResourceAction.collectionTime/1000).toFixed(1)}s)`);
+    const percentComplete = Math.min(100, Math.round((elapsedTime / collectionState.collectionTime) * 100));
+    fsmLogger.action(`Resource collection in progress: ${percentComplete}% (${(elapsedTime/1000).toFixed(1)}s/${(collectionState.collectionTime/1000).toFixed(1)}s)`);
   }
   
   // Si le temps de collecte est écoulé
-  if (elapsedTime >= collectResourceAction.collectionTime) {
+  if (elapsedTime >= collectionState.collectionTime) {
     // Récupérer la tuile actuelle
-    const currentTile = tileStore.tiles[collectResourceAction.tileCoord];
+    const currentTile = tileStore.tiles[collectionState.tileCoord];
     
     if (currentTile) {
-      // Collecter les ressources
-      const resources = collectResourceAction.resources;
-      
       // Récupérer dynamiquement les ressources actuelles et capacités maximales du vaisseau depuis le store
       const currentResources = botVehicle.resources || { food: 0, debris: 0, special: 0 };
       const maxCapacity = botVehicle.maxCapacity || { food: 100, debris: 1000, special: 2 };
@@ -119,9 +110,9 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
       
       // Calculer combien on peut effectivement collecter (limité par la capacité)
       const collectableResources = {
-        food: Math.min(resources.food || 0, maxCapacity.food - currentResources.food),
-        debris: Math.min(resources.debris || 0, maxCapacity.debris - currentResources.debris),
-        special: Math.min(resources.special || 0, maxCapacity.special - currentResources.special)
+        food: Math.min(collectionState.resources.food || 0, maxCapacity.food - currentResources.food),
+        debris: Math.min(collectionState.resources.debris || 0, maxCapacity.debris - currentResources.debris),
+        special: Math.min(collectionState.resources.special || 0, maxCapacity.special - currentResources.special)
       };
       
       // Mettre à jour les ressources du vaisseau
@@ -143,9 +134,9 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
       
       // Déduire seulement les ressources collectées de la tuile
       const remainingResources = {
-        food: Math.max(0, (resources.food || 0) - collectableResources.food),
-        debris: Math.max(0, (resources.debris || 0) - collectableResources.debris),
-        special: Math.max(0, (resources.special || 0) - collectableResources.special)
+        food: Math.max(0, (collectionState.resources.food || 0) - collectableResources.food),
+        debris: Math.max(0, (collectionState.resources.debris || 0) - collectableResources.debris),
+        special: Math.max(0, (collectionState.resources.special || 0) - collectableResources.special)
       };
       
       // Vérifier si la tuile est complètement épuisée
@@ -156,17 +147,17 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
       
       // Mettre à jour la tuile en utilisant la fonction dédiée du tileStore
       if (isEmpty) {
-        tileStore.markTileAsCollected(collectResourceAction.tileCoord);
+        tileStore.markTileAsCollected(collectionState.tileCoord);
       } else {
         // Utiliser la fonction deductTileResources pour appliquer les changements partiels
-        tileStore.deductTileResources(collectResourceAction.tileCoord, collectableResources);
+        tileStore.deductTileResources(collectionState.tileCoord, collectableResources);
       }
       
       fsmLogger.action(`Resources collected: ${JSON.stringify(collectableResources)}, remaining: ${JSON.stringify(remainingResources)}`);
       
       // Créer un nouvel objet de ressource collectée
       const collectedResource = {
-        coord: collectResourceAction.tileCoord,
+        coord: collectionState.tileCoord,
         resources: { ...collectableResources }, // Utiliser les ressources effectivement collectées
         collectedAt: new Date().toISOString()
       };
@@ -181,11 +172,11 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
         
         if (shouldRemoveResource) {
           updatedKnownResources = botMemory.knownResources.filter(r => 
-            r.coord !== collectResourceAction.tileCoord);
+            r.coord !== collectionState.tileCoord);
         } else {
           // Sinon, mettre à jour les ressources restantes dans la liste
           updatedKnownResources = botMemory.knownResources.map(r => {
-            if (r.coord === collectResourceAction.tileCoord) {
+            if (r.coord === collectionState.tileCoord) {
               return { ...r, resources: remainingResources };
             }
             return r;
@@ -200,7 +191,8 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
           currentTargetResource: null,
           isCollecting: false,
           collectionTile: null,
-          collectedResources: [...collectedResources, collectedResource]
+          collectedResources: [...collectedResources, collectedResource],
+          collectionState: null
         });
       }
       
@@ -209,18 +201,14 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
       changeState(BOT_STATES.IDLE);
       addAction('evaluateIdle', PRIORITY.HIGH);
       
-      // Réinitialiser les variables d'état
-      collectResourceAction.reset();
-      
       return true; // Action terminée avec succès
     } else {
-      fsmLogger.error(`Bot is no longer at the collection tile. Expected: ${collectResourceAction.tileCoord}, Current: ${botVehicle.coord}`);
-      collectResourceAction.reset();
+      fsmLogger.error(`Bot is no longer at the collection tile. Expected: ${collectionState.tileCoord}, Current: ${botVehicle.coord}`);
       
-      // Réinitialiser l'état de collecte
       playerStore.updatePlayerMemory(botId, {
         isCollecting: false,
-        collectionTile: null
+        collectionTile: null,
+        collectionState: null
       });
       
       return false; // La collecte a échoué
@@ -230,18 +218,4 @@ export const collectResourceAction = (playerStore, tileStore, addAction, changeS
   return undefined; // La collecte est toujours en cours
 };
 
-// Propriétés statiques pour suivre l'état de l'action
-collectResourceAction.started = false;
-collectResourceAction.startTime = null;
-collectResourceAction.collectionTime = null;
-collectResourceAction.tileCoord = null;
-collectResourceAction.resources = null;
-
-// Méthode pour réinitialiser les variables statiques
-collectResourceAction.reset = function() {
-  this.started = false;
-  this.startTime = null;
-  this.collectionTime = null;
-  this.tileCoord = null;
-  this.resources = null;
-};
+// Tout l'état est maintenant géré dans la mémoire du bot via collectionState

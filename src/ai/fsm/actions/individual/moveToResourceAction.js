@@ -22,7 +22,6 @@ import { findPath } from '../../../../utils/utils';
  * @returns {boolean|undefined} - True si l'action est terminée, false si échec, undefined si en cours
  */
 export const moveToResourceAction = (playerStore, tileStore, addAction, changeState) => {
-  // Récupérer l'ID du bot actif via BotConditions
   const botId = BotConditions.getCurrentBotId();
   const botVehicleId = getMainShipId();
   const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
@@ -33,11 +32,10 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
     return false;
   }
   
-  // Suppression des vérifications de niveau de carburant et de capacité maximale
-  // Ces vérifications doivent être centralisées dans l'état IDLE
+  const movementState = botMemory.movementState || {};
   
   // PHASE 1: Initialisation de l'action - Premier appel
-  if (!moveToResourceAction.started) {
+  if (!movementState.started) {
     // Vérifier si des ressources sont connues
     const knownResources = botMemory.knownResources || [];
     if (knownResources.length === 0) {
@@ -78,40 +76,33 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
     // Choisir la meilleure ressource
     if (rankedResources.length > 0) {
       const bestResource = rankedResources[0];
-      
-      // Vérifier si la tuile existe dans le store de tuiles
       const targetTile = tileStore.tiles[bestResource.coord];
       
       if (targetTile) {
-        // MODIFICATION: Vérifier si le bot est déjà à la position cible
+        // Vérifier si le bot est déjà à la position cible
         if (botVehicle.coord === bestResource.coord) {
           fsmLogger.action(`Bot already at resource location ${bestResource.coord}, action complete`);
           
-          // Enregistrer la cible actuelle dans la mémoire du bot
           playerStore.updatePlayerMemory(botId, {
-            currentTargetResource: bestResource
+            currentTargetResource: bestResource,
+            movementState: null
           });
           
-          // Terminer cette action avec succès au lieu d'ajouter collectResource directement
-          // L'état COLLECTING va ensuite automatiquement ajouter l'action collectResource
-          // depuis son action par défaut
           return true; // Action terminée immédiatement
         }
 
         fsmLogger.action(`Moving to resource at ${bestResource.coord}, value: ${bestResource.value}, distance: ${bestResource.distance.toFixed(2)}`);
         
-        // Enregistrer la cible actuelle dans la mémoire du bot
         playerStore.updatePlayerMemory(botId, {
-          currentTargetResource: bestResource
+          currentTargetResource: bestResource,
+          movementState: {
+            started: true,
+            startTime: Date.now(),
+            targetCoord: bestResource.coord
+          }
         });
         
-        // Déplacer le bot vers la ressource
         playerStore.moveToTile(botId, botVehicleId, targetTile);
-        
-        // Initialisation des variables de suivi d'état
-        moveToResourceAction.started = true;
-        moveToResourceAction.startTime = Date.now();
-        moveToResourceAction.targetCoord = bestResource.coord;
         
         return undefined; // Action en cours, reste bloquante
       }
@@ -123,8 +114,7 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
   }
   
   // PHASE 2: Suivi de l'action en cours
-  // Calculer le temps écoulé depuis le début de l'action
-  const elapsedTime = Date.now() - moveToResourceAction.startTime;
+  const elapsedTime = Date.now() - movementState.startTime;
   
   // Afficher un message de progression toutes les secondes environ
   if (elapsedTime % 1000 < 100) { 
@@ -137,29 +127,29 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
   // Timeout de sécurité - si l'action prend trop de temps
   if (elapsedTime > 30000) { // 30 secondes max
     fsmLogger.action(`Resource movement timed out after ${(elapsedTime/1000).toFixed(1)}s`);
-    moveToResourceAction.reset();
+    playerStore.updatePlayerMemory(botId, { movementState: null });
+    
     return false; // Action échouée (timeout)
   }
   
   // Si le bot a atteint sa destination ou n'est plus en mouvement
   if (!isMovingCheck.result) {
     // Vérifier si le bot est arrivé à la ressource cible
-    if (botVehicle.coord === moveToResourceAction.targetCoord) {
+    if (botVehicle.coord === movementState.targetCoord) {
       fsmLogger.action(`Bot has reached resource at ${botVehicle.coord} after ${(elapsedTime/1000).toFixed(1)}s`);
       
-      // Réinitialiser les variables d'état
-      moveToResourceAction.reset();
+      playerStore.updatePlayerMemory(botId, { movementState: null });
       
       // Action terminée avec succès - l'état COLLECTING ajoutera collectResource dans le prochain cycle
       return true;
     } else {
       // Si le bot s'est arrêté mais n'est pas à la bonne destination
-      fsmLogger.action(`Bot stopped but hasn't reached target resource. Current: ${botVehicle.coord}, Target: ${moveToResourceAction.targetCoord}`);
+      fsmLogger.action(`Bot stopped but hasn't reached target resource. Current: ${botVehicle.coord}, Target: ${movementState.targetCoord}`);
       
       // CORRECTION: Vérifier si le bot est à une position différente de la cible avant de réessayer
-      if (botVehicle.coord !== moveToResourceAction.targetCoord) {
+      if (botVehicle.coord !== movementState.targetCoord) {
         // Essayer à nouveau de se déplacer vers la cible
-        const targetTile = tileStore.tiles[moveToResourceAction.targetCoord];
+        const targetTile = tileStore.tiles[movementState.targetCoord];
         if (targetTile) {
           playerStore.moveToTile(botId, botVehicleId, targetTile);
           fsmLogger.action('Retrying movement to resource');
@@ -168,7 +158,7 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
       } else {
         // Si le bot est à la cible mais qu'on ne l'a pas détecté avant
         fsmLogger.action('Bot is actually at the target, action complete');
-        moveToResourceAction.reset();
+        playerStore.updatePlayerMemory(botId, { movementState: null });
         
         // Action terminée avec succès
         return true;
@@ -176,23 +166,11 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
       
       // Si la cible n'est plus valide
       fsmLogger.action('Target tile no longer valid, abandoning movement');
-      moveToResourceAction.reset();
+      playerStore.updatePlayerMemory(botId, { movementState: null });
       return false; // Action échouée
     }
   }
   
   // Le bot est toujours en mouvement
   return undefined; // Action en cours, reste bloquante
-};
-
-// Propriétés statiques pour suivre l'état de l'action
-moveToResourceAction.started = false;
-moveToResourceAction.startTime = null;
-moveToResourceAction.targetCoord = null;
-
-// Méthode pour réinitialiser les variables statiques
-moveToResourceAction.reset = function() {
-  this.started = false;
-  this.startTime = null;
-  this.targetCoord = null;
 };

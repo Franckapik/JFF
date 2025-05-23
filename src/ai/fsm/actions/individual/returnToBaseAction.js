@@ -40,7 +40,7 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
   }
   
   // Si l'action vient d'être lancée, initialiser le mouvement
-  if (!returnToBaseAction.initiated) {
+  if (!botMemory?.returnState?.started) {
     // Récupérer la tuile de départ (base) du bot
     const baseCoord = botVehicle.startCoord;
     if (!baseCoord) {
@@ -60,7 +60,12 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
     
     // Déplacer le bot vers sa base
     playerStore.moveToTile(getBotPlayerId(0), botVehicleId, baseTile);
-    returnToBaseAction.initiated = true;
+    playerStore.updatePlayerMemory(botId, {
+      returnState: {
+        started: true,
+        startTime: Date.now()
+      }
+    });
     return undefined; // Action en cours
   }
   
@@ -68,7 +73,7 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
   const updatedAtBaseCheck = BotConditions.isAtBase(botVehicle);
   if (updatedAtBaseCheck.result) {
     fsmLogger.action('Bot has reached the base');
-    returnToBaseAction.initiated = false; // Réinitialiser pour la prochaine utilisation
+    playerStore.updatePlayerMemory(botId, { returnState: null }); // Réinitialiser l'état
     changeState(BOT_STATES.IDLE);
     addAction('evaluateIdle', PRIORITY.HIGH);
     return true; // Action terminée avec succès
@@ -81,7 +86,7 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
     // quelque chose a mal fonctionné
     if (!updatedAtBaseCheck.result) {
       fsmLogger.error('Bot stopped moving but did not reach the base');
-      returnToBaseAction.initiated = false; // Réinitialiser pour la prochaine utilisation
+      playerStore.updatePlayerMemory(botId, { returnState: null }); // Réinitialiser l'état
       return false; // Action échouée
     }
   }
@@ -90,5 +95,4 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
   return undefined;
 };
 
-// Propriété statique pour suivre l'état d'exécution
-returnToBaseAction.initiated = false;
+// L'état est maintenant géré dans la mémoire du bot

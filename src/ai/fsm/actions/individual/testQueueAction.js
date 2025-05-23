@@ -20,29 +20,35 @@ import fsmLogger from '../../../../utils/fsmLogger';
  * @returns {boolean|undefined} - True si l'action est terminée, false si elle a échoué, undefined si elle est en cours
  */
 export const testQueueAction = (playerStore, tileStore, addAction, changeState) => {
-  const botVehicle = playerStore.players?.player2?.vehicles?.ship;
+  const botId = BotConditions.getCurrentBotId();
+  const botVehicle = playerStore.players?.[botId]?.vehicles?.ship;
   if (!botVehicle) {
     fsmLogger.error('Bot vehicle not found');
     return false; // Échec de l'action
   }
   
   // Vérifier si l'action est déjà en cours d'exécution
-  if (!testQueueAction.startTime) {
+  const botMemory = playerStore.players?.[botId]?.memory;
+  if (!botMemory?.testState?.startTime) {
     // Initialisation de l'action - premier appel
-    testQueueAction.startTime = Date.now();
+    playerStore.updatePlayerMemory(botId, {
+      testState: {
+        startTime: Date.now()
+      }
+    });
     fsmLogger.action('Starting test queue action - Will complete in 5 seconds');
     return undefined; // Action en cours, reste bloquante
   }
   
   // Vérifier si l'action est terminée (après 5 secondes)
-  const elapsedTime = Date.now() - testQueueAction.startTime;
+  const elapsedTime = Date.now() - botMemory.testState.startTime;
   const isComplete = elapsedTime >= 1000;
   
   if (isComplete) {
     fsmLogger.action(`Test queue action completed after ${(elapsedTime/1000).toFixed(1)} seconds`);
     
-    // Réinitialiser le statut pour la prochaine exécution
-    testQueueAction.startTime = null;
+    // Réinitialiser l'état
+    playerStore.updatePlayerMemory(botId, { testState: null });
     
     // On peut optionnellement ajouter une autre action ou changer d'état
     // après la fin de cette action
@@ -59,5 +65,4 @@ export const testQueueAction = (playerStore, tileStore, addAction, changeState) 
   return undefined; // Action toujours en cours, reste bloquante
 };
 
-// Propriété statique pour suivre l'état d'exécution
-testQueueAction.startTime = null;
+// L'état est maintenant géré dans la mémoire du bot
