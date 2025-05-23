@@ -21,6 +21,51 @@ Space Resource Gathering est un jeu de stratégie en temps réel où les joueurs
 - **Vaisseau principal (ship)**: capacité de stockage élevée, peut subir des dommages
 - **Drones**: plus rapides mais avec une capacité de stockage limitée
 
+### Système de drones spécialisés
+Le jeu dispose de trois types de drones, chacun avec des capacités et des comportements uniques:
+
+#### Explorer Drone
+- **Rôle principal**: Exploration et détection des ressources
+- **Caractéristiques**:
+  - Vitesse: +20% (plus rapide que les autres drones)
+  - Stabilité: +20% (rotation plus stable)
+  - Cooldown: 2 secondes (récupération rapide)
+  - Actif par défaut
+- **Capacités spéciales**:
+  - Détection détaillée des ressources avec bonus d'exploration
+  - Identification précise des dangers
+  - Formation devant le vaisseau mère
+
+#### Combat Drone
+- **Rôle principal**: Combat et protection
+- **Caractéristiques**:
+  - Vitesse: -10% (plus lent mais robuste)
+  - Agressivité: +20% (rotation plus rapide)
+  - Cooldown: 4 secondes (récupération lente)
+  - Nécessite activation manuelle
+- **Capacités spéciales**:
+  - Engager le combat avec les menaces
+  - Poser des mines (jusqu'à 3, rechargées au retour)
+  - Collecte limitée avec transfert automatique au vaisseau
+  - Formation à 120° du vaisseau, légèrement plus haut
+
+#### Special Drone
+- **Rôle principal**: Détection d'objets rares et scan avancé
+- **Caractéristiques**:
+  - Vitesse: standard
+  - Scan: -50% (rotation très lente pour scan précis)
+  - Cooldown: 3 secondes (récupération moyenne)
+  - Nécessite activation manuelle
+- **Capacités spéciales**:
+  - Scan avancé avec rayon étendu (5 tuiles par défaut)
+  - Détection spécialisée d'objets rares
+  - Formation à 240° du vaisseau, légèrement plus bas
+
+#### Formation des drones
+Les drones s'organisent en formation triangulaire autour de leur vaisseau mère:
+- Pour le joueur humain: à droite du vaisseau
+- Pour les bots IA: à gauche du vaisseau
+
 ### États des véhicules
 - Position (coordonnées sur la grille)
 - En mouvement (isMoving)

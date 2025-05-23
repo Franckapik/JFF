@@ -51,14 +51,15 @@ isDroneActiveByDefault(droneType)        // Vérifie l'activation par défaut
 ### 2.2 Système de mouvement (`UnifiedDroneMovement.jsx`)
 
 #### Gestion des mouvements
-- Vitesses et rotations spécifiques par type de drone
-- Comportements différents pour bot et joueur humain
-- Gestion du retour au vaisseau et cooldown
+- Vitesses et rotations spécifiques par type de drone (Explorer: +20% vitesse, Combat: -10% vitesse, Special: vitesse standard)
+- Comportements différents pour bot et joueur humain (position droite/gauche, états locaux/store)
+- Gestion du retour au vaisseau et cooldown variable (Explorer: 2s, Combat: 4s, Special: 3s)
+- Formation triangulaire avec hauteurs différentes autour du vaisseau parent
 
 #### Comportements spécialisés
-- Explorer Drone: Exploration et scan de base
-- Combat Drone: Combat et collecte limitée
-- Special Drone: Scan spécial et détection d'objets
+- Explorer Drone: Exploration, détection détaillée des ressources et dangers
+- Combat Drone: Combat, pose de mines, collecte limitée avec transfert automatique au vaisseau
+- Special Drone: Scan spécial à rayon étendu, détection d'objets rares
 
 ### 2.3 Composant de Debug (`BotDebugger.jsx`)
 - Affichage des IDs de tous les véhicules

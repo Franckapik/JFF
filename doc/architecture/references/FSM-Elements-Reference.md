@@ -19,7 +19,7 @@ Ce document présente un tableau de référence qui met en relation les différe
 | `moveToRandomTileAction` | Déplacement vers une tuile aléatoire | `moveToTile` | `isMoving` | - |
 | `returnToBaseAction` | Retourne à la base/tuile de départ | `moveToTile` | `isMoving`, `startCoord`, `initiated` | `isAtBase`, `isShipMoving` |
 | `refuelAtBaseAction` | Ravitaillement et transfert des ressources | `refuelVehicle`, `transferResourcesToScore`, `updatePlayerMemory` | - | `isAtBase`, `isFullyRefueled` |
-| `exploreWithDroneAction` | Explore avec un drone | `moveToTile`, `updatePlayerMemory` | `explorationStarted`, `knownResources`, `droneReturnedToShip` | `isDroneMoving`, `isDroneAtShip` |
+| `exploreWithDroneAction` | Explore avec un drone | `moveToTile`, `updatePlayerMemory` | `explorationStarted`, `knownResources`, `droneReturnedToShip`, `hasNewResourceDiscovery`, `explorationCount` | `isDroneMoving`, `isDroneAtShip` |
 | `moveToResourceAction` | Déplacement vers une ressource connue | `moveToTile`, `updatePlayerMemory` | `started`, `startTime`, `targetCoord`, `currentTargetResource` | `isShipMoving` |
 | `collectResourceAction` | Collecte une ressource | `updateVehicle`, `updatePlayerMemory`, `checkResourceCapacity` | `started`, `startTime`, `collectionTime`, `tileCoord`, `resources`, `isCollecting` | - |
 | `testQueueAction` | Test de la file d'actions | - | `startTime` | - |
@@ -66,3 +66,34 @@ Ce document présente un tableau de référence qui met en relation les différe
 | `isCollecting` | usePlayerStore (memory) | Flag indiquant une collecte en cours | `collectResourceAction` |
 | `isAtCapacity` | usePlayerStore (vehicles) | Indique si le véhicule est à capacité maximale | Conditions de retour à la base |
 | `fuel` | usePlayerStore (vehicles) | Niveau de carburant | Conditions de sécurité |
+
+## Types de drones et comportements spécifiques
+
+| Type de drone | ID Constant | Propriétés spécifiques | Comportements | Temps de cooldown |
+|--------------|-------------|------------------------|---------------|------------------|
+| Explorer Drone | `VEHICLE_TYPES.EXPLORER_DRONE` | `explorationBonus`, vitesse +20%, rotation -20% | Détection des ressources et dangers, exploration principale | 2 secondes |
+| Combat Drone | `VEHICLE_TYPES.COMBAT_DRONE` | `damage`, `mineLayingCapacity`, vitesse -10%, rotation +20% | Combat, pose de mines, collecte limitée avec transfert vers le vaisseau | 4 secondes |
+| Special Drone | `VEHICLE_TYPES.SPECIAL_DRONE` | `specialDetection`, `specialScanRange`, rotation -50% | Scan avancé, détection d'objets rares, portée étendue | 3 secondes |
+
+## Mécaniques des drones
+
+### Messages envoyés par les drones
+
+| Type de message | Envoyé par | Contenu | Utilisé pour |
+|----------------|------------|---------|-------------|
+| 'resource' | Tous | Ressources découvertes | Mise à jour de la mémoire, transition vers l'état COLLECTING |
+| 'danger' | Explorer/Combat | Information sur les dangers | Évitement des dangers |
+| 'combat_engage' | Combat Drone | Dégâts infligés | Résolution des combats |
+| 'mine_laid' | Combat Drone | Notification de mine posée | Suivi des mines posées |
+| 'special_scan' | Special Drone | Rayon de scan | Début d'un scan étendu |
+| 'special_discovered' | Special Drone | Ressources spéciales | Découverte de ressources rares |
+| 'scan_complete' | Special Drone | Zone scannée | Fin d'un scan |
+
+### Formation et positionnement
+
+Les drones se positionnent en formation triangulaire autour du vaisseau parent:
+- Explorer Drone: Devant, hauteur moyenne
+- Combat Drone: 120° (2π/3), hauteur +0.3
+- Special Drone: 240° (4π/3), hauteur -0.3
+
+Pour les drones du joueur humain, la formation est à droite du vaisseau. Pour les bots, la formation est à gauche.
