@@ -93,31 +93,11 @@ describe('MultiBotSystem', () => {
     expect(store.actionQueue[0].type).toBe('collectResource');
   });
 
-  it('should change processing mode correctly', () => {
-    const store = useBotStore.getState();
-    
-    // Default is parallel
-    expect(store.processingMode).toBe('parallel');
-    
-    // Change to sequential
-    store.setProcessingMode('sequential');
-    expect(store.processingMode).toBe('sequential');
-    
-    // Change back to parallel
-    store.setProcessingMode('parallel');
-    expect(store.processingMode).toBe('parallel');
-    
-    // Should not accept invalid modes
-    store.setProcessingMode('invalid');
-    expect(store.processingMode).toBe('parallel'); // Should remain unchanged
-  });
-
   it('should process all bots in parallel mode', () => {
     const store = useBotStore.getState();
     const processBotSpy = vi.spyOn(store, 'processBot');
     
-    // Set up processing mode and start
-    store.setProcessingMode('parallel');
+    // Start processing
     store.toggleBotProcessing(); // Start processing
     
     // Process all bots

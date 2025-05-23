@@ -28,7 +28,6 @@ const useBotStore = create((set, get) => ({
   isRunning: false,
   currentBotIndex: 0, // L'index du bot actif (par défaut le premier)
   currentBotId: getBotPlayerId(0), // L'ID du bot actif (par défaut "player2")
-  processingMode: 'parallel', // Mode de traitement: 'parallel' ou 'sequential'
   
   // File d'actions avec priorités et statuts
   actionQueue: [], // [{type, priority, params, timestamp, status}]
@@ -38,16 +37,6 @@ const useBotStore = create((set, get) => ({
   
   // Stockage des états de chaque bot
   botStates: {}, // Stocke l'état de chaque bot par index (e.g., {0: {botState, actionQueue, ...}, 1: {...}})
-  
-  // Définir le mode de traitement (parallèle ou séquentiel)
-  setProcessingMode: (mode) => {
-    if (mode !== 'parallel' && mode !== 'sequential') {
-      fsmLogger.error(`Invalid processing mode: ${mode}. Must be 'parallel' or 'sequential'.`);
-      return;
-    }
-    fsmLogger.info(`Setting processing mode to ${mode}`);
-    set({ processingMode: mode });
-  },
   
   // Fonction pour changer le bot actif
   switchActiveBot: (botIndex) => {

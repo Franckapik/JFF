@@ -16,9 +16,7 @@ const MultiBotControls = () => {
     switchActiveBot,
     currentBotIndex,
     initializeBot,
-    botState,
-    processingMode,
-    setProcessingMode
+    botState
   } = useBotStore();
   
   // Récupérer le nombre de bots du gameStore
@@ -57,11 +55,6 @@ const MultiBotControls = () => {
     };
   });
   
-  // Fonction pour changer le mode de traitement
-  const toggleProcessingMode = () => {
-    setProcessingMode(processingMode === 'parallel' ? 'sequential' : 'parallel');
-  };
-  
   return (
     <div className="multi-bot-controls" style={{ padding: '10px', backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: '5px', margin: '10px 0' }}>
       <h3 style={{ margin: '0 0 10px 0' }}>Multi-Bot Controls</h3>
@@ -95,31 +88,6 @@ const MultiBotControls = () => {
           }}
         >
           Reinitialize All Bots
-        </button>
-      </div>
-      
-      {/* Sélecteur de mode de traitement */}
-      <div style={{ 
-        display: 'flex',
-        alignItems: 'center',
-        marginBottom: '10px',
-        backgroundColor: 'rgba(0, 0, 0, 0.05)',
-        padding: '8px',
-        borderRadius: '4px'
-      }}>
-        <span style={{ marginRight: '10px', fontWeight: 'bold' }}>Processing Mode:</span>
-        <button
-          onClick={toggleProcessingMode}
-          style={{
-            backgroundColor: processingMode === 'parallel' ? '#4CAF50' : '#FF9800',
-            color: 'white',
-            border: 'none',
-            padding: '6px 12px',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          {processingMode === 'parallel' ? "Parallel (All Bots)" : "Sequential (One by One)"}
         </button>
       </div>
       
