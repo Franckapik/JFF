@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Euler } from 'three';
 import usePlayerStore from '../stores/playerStore';
@@ -58,17 +58,37 @@ export const useVehicleMovement = ({
       targetTile: { position: null, coord: null },
     });
 
+    setIsMovementActive(false);
+
     if (onTargetReached) {
       onTargetReached(currentTargetTile.coord);
     }
   };
 
-  // Logique de mouvement dans useFrame
+  // État actif du mouvement
+  const [isMovementActive, setIsMovementActive] = useState(false);
+  
+  // Log state changes in movement
+  useEffect(() => {
+    if (isMovementActive) {
+      fsmLogger.mouvement(`[VehicleMovement] Activated movement for ${playerId}/${vehicleId}`);
+    } else {
+      fsmLogger.mouvement(`[VehicleMovement] Deactivated movement for ${playerId}/${vehicleId}`);
+    }
+  }, [isMovementActive, playerId, vehicleId]);
+
+  // Logique de mouvement dans useFrame, conditionnellement activé
   useFrame((_, delta) => {
-    if (!vehicle || !groupRef.current || path.length === 0 || currentTargetIndex >= path.length) return;
+    if (!isMovementActive) return;
+
+    if (!vehicle || !groupRef.current || path.length === 0 || currentTargetIndex >= path.length) {
+      setIsMovementActive(false);
+      return;
+    }
 
     if (vehicle.fuel <= 0) {
       updateVehicle(playerId, vehicleId, { isMoving: false });
+      setIsMovementActive(false);
       return;
     }
 
@@ -146,6 +166,7 @@ export const useVehicleMovement = ({
     setHasReachedTarget(false);
     setTotalPathDistance(pathData.totalDistance);
     setDistanceTraveled(0);
+    setIsMovementActive(true);
     
     updateVehicle(playerId, vehicleId, {
       isMoving: true,
@@ -169,7 +190,7 @@ export const useVehicleMovement = ({
     initializePath,
     initializePosition,
     currentPosition: groupRef.current?.position,
-    isMoving: path.length > 0,
+    isMoving: isMovementActive,
     path,
   };
 };
