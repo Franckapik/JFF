@@ -9,7 +9,7 @@ import {
 import { useVehicleMovement } from "../hooks/useVehicleMovement";
 import { useFloatingAnimation } from "../animations/useFloatingAnimation";
 
-const DroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", children }) => {
+const DroneMovement = React.memo(({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", children }) => {
   // === Stores ===
   const tiles = useTileStore((state) => state.tiles);
   const updateVehicle = usePlayerStore((state) => state.updateVehicle);
@@ -17,8 +17,8 @@ const DroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", childre
   const allShips = usePlayerStore((state) => state.players);
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
 
-  // Détermine le vaisseau à suivre
-  const getShipToFollow = () => {
+  // Détermine le vaisseau à suivre avec useCallback
+  const getShipToFollow = React.useCallback(() => {
     if (playerId !== HUMAN_PLAYER_ID) {
       return allShips[playerId]?.vehicles?.[getMainShipId()];
     }
@@ -26,10 +26,10 @@ const DroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", childre
       return selectedVehicle.playerId === HUMAN_PLAYER_ID ? humanShip : allShips[selectedVehicle.playerId]?.vehicles?.[getMainShipId()];
     }
     return humanShip;
-  };
+  }, [playerId, allShips, selectedVehicle, humanShip]);
 
-  // Gestion de l'arrivée à destination
-  const handleDroneReachedTarget = (reachedTileCoord) => {
+  // Gestion de l'arrivée à destination avec useCallback
+  const handleDroneReachedTarget = React.useCallback((reachedTileCoord) => {
     if (!reachedTileCoord) return;
     
     const reachedTile = tiles[reachedTileCoord];
@@ -43,7 +43,7 @@ const DroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", childre
       isMoving: false,
       targetTile: null
     });
-  };
+  }, [tiles, playerId, droneId, updateVehicle]);
 
   // Utilisation du hook de mouvement
   const {
@@ -59,8 +59,8 @@ const DroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", childre
   // Animation de flottement
   useFloatingAnimation(groupRef);
 
-  // Position initiale du drone relative au vaisseau
-  const initialPosition = () => {
+  // Position initiale du drone relative au vaisseau avec useMemo
+  const initialPosition = React.useMemo(() => {
     const shipToFollow = getShipToFollow();
     if (shipToFollow?.position) {
       const baseHeight = 1.0;
@@ -73,13 +73,21 @@ const DroneMovement = ({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", childre
       return [x, baseHeight, z];
     }
     return [0, 1.0, 0];
-  };
+  }, [getShipToFollow, playerId]);
 
   return (
-    <group ref={groupRef} position={initialPosition()}>
+    <group ref={groupRef} position={initialPosition}>
       {children}
     </group>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison function for memoization
+  return (
+    prevProps.playerId === nextProps.playerId &&
+    prevProps.droneId === nextProps.droneId &&
+    // Children will need to be re-rendered if they change
+    prevProps.children === nextProps.children
+  );
+});
 
 export default DroneMovement;

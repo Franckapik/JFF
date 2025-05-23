@@ -7,8 +7,8 @@ import { calculatePath } from "../utils/utils";
 import fsmLogger from "../utils/fsmLogger";
 import { useVehicleMovement } from "../hooks/useVehicleMovement";
 
-const ShipMovement = ({ playerId, children }) => {
-  // === Sélecteurs des stores ===
+const ShipMovement = React.memo(({ playerId, children }) => {
+  // === Sélecteurs des stores avec sélecteurs optimisés ===
   const tiles = useTileStore((state) => state.tiles);
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
   const playerVehicles = usePlayerStore((state) => state.players[playerId]?.vehicles);
@@ -16,7 +16,10 @@ const ShipMovement = ({ playerId, children }) => {
   const setClockRunning = useGameStore((state) => state.setClockRunning);
   
   // Pour les bots, on utilise toujours le vaisseau principal
-  const vehicleId = isBotPlayerId(playerId) ? getMainShipId() : selectedVehicle.vehicleId;
+  const vehicleId = React.useMemo(() => 
+    isBotPlayerId(playerId) ? getMainShipId() : selectedVehicle.vehicleId,
+    [playerId, selectedVehicle.vehicleId]
+  );
 
   // Utilisation du hook de mouvement
   const {
@@ -31,7 +34,7 @@ const ShipMovement = ({ playerId, children }) => {
     vehicleType: 'ship'
   });
 
-  const recalculatePath = () => {
+  const recalculatePath = React.useCallback(() => {
     if (!groupRef.current || !playerVehicle) {
       fsmLogger.mouvement("[ShipMovement] Missing ref or vehicle:", { groupRef: !!groupRef.current, playerVehicle: !!playerVehicle });
       return;
@@ -54,14 +57,14 @@ const ShipMovement = ({ playerId, children }) => {
     );
     
     initializePath(pathData);
-  };
+  }, [groupRef, playerVehicle, playerId, tiles, initializePath]);
 
   // === Effets ===
   useEffect(() => {
     if (playerVehicle?.position) {
       initializePosition(playerVehicle.position);
     }
-  }, [playerVehicle]);
+  }, [playerVehicle?.position, initializePosition]);
 
   useEffect(() => {
     const targetTile = playerVehicle?.targetTile;
@@ -69,14 +72,22 @@ const ShipMovement = ({ playerId, children }) => {
     if (targetTile && targetTile.coord && playerVehicle && Object.keys(tiles).length > 0) {
       fsmLogger.mouvement(`[ShipMovement] ${playerId} target changed, recalculating path to:`, targetTile.coord);
       setClockRunning(true);
-      setTimeout(recalculatePath, 100);
+      const timeoutId = setTimeout(recalculatePath, 100);
+      return () => clearTimeout(timeoutId);
     }
-  }, [playerId, playerVehicle?.targetTile?.coord, Object.keys(tiles).length]);
+  }, [playerId, playerVehicle?.targetTile?.coord, Object.keys(tiles).length, recalculatePath, setClockRunning]);
 
   // === Rendu ===
   return (
       <group ref={groupRef}>{children}</group>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison function for memoization
+  return (
+    prevProps.playerId === nextProps.playerId &&
+    // Children will need to be re-rendered if they change
+    prevProps.children === nextProps.children
+  );
+});
 
 export default ShipMovement;

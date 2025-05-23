@@ -3,21 +3,21 @@ import { useTileAnimation } from "../animations/useTileAnimation";
 import { useTileStore } from "../stores/useTileStore";
 import { Html } from "@react-three/drei";
 
-const Tile = ({ position, radius, color, isHighTile, onClick, coord }) => {
+const Tile = React.memo(({ position, radius, color, isHighTile, onClick, coord }) => {
   const meshRef = useTileAnimation(isHighTile);
   const updateHoveredTile = useTileStore((state) => state.updateHoveredTile);
   
-  // Récupérer l'état d'exploration directement du store
+  // Récupérer l'état d'exploration directement du store avec un sélecteur memoizé
   const isExplored = useTileStore((state) => 
     state.tiles[coord] ? state.tiles[coord].explored : false
   );
   
-  // Récupérer l'état de collection directement du store
+  // Récupérer l'état de collection directement du store avec un sélecteur memoizé
   const isCollected = useTileStore((state) => 
     state.tiles[coord] ? state.tiles[coord].collected : false
   );
   
-  // Récupérer le pourcentage de ressources restantes
+  // Récupérer le pourcentage de ressources restantes avec un sélecteur memoizé
   const resourcePercentage = useTileStore((state) => 
     state.tiles[coord] ? state.tiles[coord].resourcePercentage : 0
   );
@@ -25,14 +25,14 @@ const Tile = ({ position, radius, color, isHighTile, onClick, coord }) => {
   // Une tuile est partiellement collectée si le pourcentage est entre 1 et 99%
   const isPartiallyCollected = resourcePercentage > 0 && resourcePercentage < 100;
   
-  // Handle hover events
-  const handlePointerOver = () => {
+  // Handle hover events avec useCallback
+  const handlePointerOver = React.useCallback(() => {
     updateHoveredTile(coord);
-  };
+  }, [coord, updateHoveredTile]);
   
-  const handlePointerOut = () => {
+  const handlePointerOut = React.useCallback(() => {
     updateHoveredTile(null);
-  };
+  }, [updateHoveredTile]);
 
   return (
     <>
@@ -47,62 +47,11 @@ const Tile = ({ position, radius, color, isHighTile, onClick, coord }) => {
         <meshStandardMaterial
           color={color}
           metalness={0.1} // Faible effet métallique
-          roughness={0.8} // Rugosité élevée pour un aspect plastique/silicone
+          roughness={0.7} // Surface rugueuse
         />
       </mesh>
-      
-      {/* Indicateur d'exploration - petit cercle sur la tuile */}
-      {isExplored && (
-        <mesh
-          position={[position[0], 0.21, position[2]]}
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <circleGeometry args={[radius * 0.3, 16]} />
-          <meshStandardMaterial 
-            color="#00ffaa" 
-            emissive="#00ffaa"
-            emissiveIntensity={0.3}
-            transparent
-            opacity={0.7}
-          />
-        </mesh>
-      )}
-      
-      {/* Indicateur de collection - cercle rouge sur la tuile */}
-      {isCollected && (
-        <mesh
-          position={[position[0], 0.22, position[2]]}
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <circleGeometry args={[radius * 0.25, 16]} />
-          <meshStandardMaterial 
-            color="#ff3333" 
-            emissive="#ff0000"
-            emissiveIntensity={0.5}
-            transparent
-            opacity={0.85}
-          />
-        </mesh>
-      )}
-      
-      {/* Indicateur de collection partielle - cercle orange sur la tuile */}
-      {isPartiallyCollected && (
-        <mesh
-          position={[position[0], 0.22, position[2]]}
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <circleGeometry args={[radius * 0.25, 16]} />
-          <meshStandardMaterial 
-            color="#ff9933" 
-            emissive="#ff8800"
-            emissiveIntensity={0.6}
-            transparent
-            opacity={0.85}
-          />
-        </mesh>
-      )}
-      
-      {/* Affichage du pourcentage de ressources restantes */}
+
+      {/* Affichage du pourcentage de ressources si la tuile est partiellement collectée */}
       {isPartiallyCollected && (
         <Html
           position={[position[0], 0.4, position[2]]}
@@ -125,6 +74,18 @@ const Tile = ({ position, radius, color, isHighTile, onClick, coord }) => {
       )}
     </>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison function pour optimiser les re-rendus
+  return (
+    prevProps.coord === nextProps.coord &&
+    prevProps.color === nextProps.color &&
+    prevProps.radius === nextProps.radius &&
+    prevProps.isHighTile === nextProps.isHighTile &&
+    prevProps.position[0] === nextProps.position[0] &&
+    prevProps.position[1] === nextProps.position[1] &&
+    prevProps.position[2] === nextProps.position[2]
+    // We don't compare onClick as it's a callback and should be memoized by the parent
+  );
+});
 
 export default Tile;

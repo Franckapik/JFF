@@ -22,7 +22,7 @@ import {
  * @param {string} props.color - Couleur unique pour le bot et ses drones
  * @param {boolean} props.isHuman - Indique si c'est le joueur humain
  */
-const Bot = ({ 
+const Bot = React.memo(({ 
   botIndex = null, 
   selectedVehicle,
   color = "red",
@@ -66,7 +66,7 @@ const Bot = ({
             <meshStandardMaterial color="gold" emissive="gold" emissiveIntensity={0.5} />
           </mesh>
         )}
-        
+
         {/* Étiquette indiquant le joueur ou le numéro du bot */}
         <Html position={[0, 0.7, 0]} center>
           <div style={{
@@ -179,6 +179,15 @@ const Bot = ({
       )}
     </>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison function to determine if re-render is needed
+  return (
+    prevProps.botIndex === nextProps.botIndex &&
+    prevProps.color === nextProps.color &&
+    prevProps.isHuman === nextProps.isHuman &&
+    prevProps.selectedVehicle.playerId === nextProps.selectedVehicle.playerId &&
+    prevProps.selectedVehicle.vehicleId === nextProps.selectedVehicle.vehicleId
+  );
+});
 
 export default Bot;
