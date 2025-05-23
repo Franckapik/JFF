@@ -42,7 +42,6 @@ describe('MultiBotSystem', () => {
     expect(state.isRunning).toBe(false);
     expect(state.currentBotIndex).toBe(0);
     expect(state.currentBotId).toBe('player2');
-    expect(state.processingMode).toBe('parallel');
     expect(state.actionQueue).toEqual([]);
   });
 

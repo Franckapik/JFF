@@ -6,8 +6,6 @@ import "./styles/App.css";
 import MessageSelector from "./components/Messagerie/MessageSelector";
 import Clock from "./components/HUD/Clock";
 import BotDebugger from "./components/HUD/BotDebugger";
-import BotControls from "./components/HUD/BotControls"; 
-import useBotStore from "./stores/useBotStore";
 import MultiBotManager from "./components/MultiBotManager";
 
 const App = () => {
@@ -36,21 +34,7 @@ const App = () => {
             <Scene />
           </Canvas>
           
-          
-          {/* BotControls - repositionné à gauche avec hauteur 100% */}
-          <div className="bot-controls-wrapper" style={{ 
-            position: 'absolute',
-            top: '0',
-            left: '0',
-            height: '100%',
-            width: '330px',
-            backgroundColor: 'rgba(245, 245, 245, 0.95)',
-            zIndex: 1000,
-            overflowY: 'auto',
-            boxShadow: '2px 0 10px rgba(0, 0, 0, 0.2)'
-          }}>
-            <BotControls />
-          </div>
+          {/* BotControls supprimé pour laisser les bots fonctionner automatiquement */}
         </div>
         
         {/* Clock HUD */}
@@ -64,10 +48,8 @@ const App = () => {
         <BotDebugger />
       </div>
 
-      {/* MultiBotManager - nouveau composant pour gérer le changement de bot */}
-      <div style={{ position: 'absolute', top: '0', left: '0', height: '100vh', zIndex: 1000 }}>
-        <MultiBotManager />
-      </div>
+      {/* MultiBotManager - gère automatiquement les bots */}
+      <MultiBotManager />
     </div>
   );
 };
