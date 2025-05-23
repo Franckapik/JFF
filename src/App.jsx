@@ -33,8 +33,6 @@ const App = () => {
           <Canvas camera={{ fov: 70, position: [5, 5, 5] }}>
             <Scene />
           </Canvas>
-          
-          {/* BotControls supprimé pour laisser les bots fonctionner automatiquement */}
         </div>
         
         {/* Clock HUD */}
@@ -42,11 +40,9 @@ const App = () => {
           <Clock isTimerRunning={isTimerRunning} />
         </div>
       </div>
-      
-      {/* Bot Debugger - maintenant à l'opposé de BotControls */}
-      <div style={{ position: 'absolute', top: '0', right: '0', height: '100vh', zIndex: 1000 }}>
-        <BotDebugger />
-      </div>
+
+      {/* Bot Debugger - positionné à gauche de l'écran */}
+      <BotDebugger />
 
       {/* MultiBotManager - gère automatiquement les bots */}
       <MultiBotManager />
