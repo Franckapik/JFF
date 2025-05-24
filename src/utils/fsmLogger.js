@@ -68,19 +68,24 @@ const addToBuffer = (entry) => {
  * @param {string} type - Type de log (STATE, ACTION, CONDITION, etc.)
  * @param {string} message - Message à journaliser
  * @param {Object} data - Données supplémentaires
+ * @param {string} playerId - ID du joueur/bot concerné (optionnel)
  */
-const log = (type, message, data = null) => {
+const log = (type, message, data = null, playerId = null) => {
   if (!config.enableConsole && !config.enableBuffering) return;
   
   const typeConfig = LOG_LEVEL[type] || LOG_LEVEL.INFO;
   const timestamp = new Date().toISOString();
   
+  // Modifier le message pour inclure l'ID du joueur/bot si fourni
+  const enhancedMessage = playerId ? `[${playerId}] ${message}` : message;
+  
   // Créer l'entrée de log
   const logEntry = {
     type,
-    message,
+    message: enhancedMessage,
     data,
-    timestamp
+    timestamp,
+    playerId // Stocker l'ID du joueur/bot pour référence
   };
   
   // Ajouter au buffer si activé
@@ -91,14 +96,14 @@ const log = (type, message, data = null) => {
     // Modification: n'afficher le paramètre data que s'il n'est pas null
     if (data !== null) {
       console.log(
-        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${message}`,
+        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}`,
         typeConfig.style,
         'color: inherit',
         data
       );
     } else {
       console.log(
-        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${message}`,
+        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}`,
         typeConfig.style,
         'color: inherit'
       );
@@ -112,21 +117,22 @@ const log = (type, message, data = null) => {
  * Fonctions spécifiques pour chaque type de log
  */
 const fsmLogger = {
-  info: (message, data = null) => log('INFO', message, data),
-  state: (message, data = null) => log('STATE', message, data),
-  action: (message, data = null) => log('ACTION', message, data),
-  condition: (message, data = null) => log('CONDITION', message, data),
-  mouvement: (message, data = null) => log('MOUVEMENT', message, data),
-  error: (message, data = null) => log('ERROR', message, data),
+  info: (message, data = null, playerId = null) => log('INFO', message, data, playerId),
+  state: (message, data = null, playerId = null) => log('STATE', message, data, playerId),
+  action: (message, data = null, playerId = null) => log('ACTION', message, data, playerId),
+  condition: (message, data = null, playerId = null) => log('CONDITION', message, data, playerId),
+  mouvement: (message, data = null, playerId = null) => log('MOUVEMENT', message, data, playerId),
+  error: (message, data = null, playerId = null) => log('ERROR', message, data, playerId),
   
   /**
    * Enregistre une transition d'état
    * @param {string} from - État de départ
    * @param {string} to - État d'arrivée
    * @param {Object} context - Contexte de la transition
+   * @param {string} playerId - ID du joueur/bot concerné
    */
-  stateTransition: (from, to, context = null) => {
-    return log('STATE', `Transition: ${from} → ${to}`, context);
+  stateTransition: (from, to, context = null, playerId = null) => {
+    return log('STATE', `Transition: ${from} → ${to}`, context, playerId);
   },
   
   /**
@@ -134,9 +140,10 @@ const fsmLogger = {
    * @param {string} actionType - Type d'action
    * @param {number} priority - Priorité de l'action
    * @param {Object} result - Résultat de l'action
+   * @param {string} playerId - ID du joueur/bot concerné
    */
-  actionExecution: (actionType, priority, result = null) => {
-    return log('ACTION', `Execute: ${actionType} (priority: ${priority})`, result);
+  actionExecution: (actionType, priority, result = null, playerId = null) => {
+    return log('ACTION', `Execute: ${actionType} (priority: ${priority})`, result, playerId);
   },
   
   /**
@@ -144,10 +151,11 @@ const fsmLogger = {
    * @param {string} condition - Nom de la condition
    * @param {boolean} result - Résultat de l'évaluation
    * @param {Object} context - Contexte de l'évaluation
+   * @param {string} playerId - ID du joueur/bot concerné
    */
-  conditionEvaluation: (condition, result, context = null) => {
+  conditionEvaluation: (condition, result, context = null, playerId = null) => {
     const resultStr = result ? 'TRUE' : 'FALSE';
-    return log('CONDITION', `Evaluate: ${condition} = ${resultStr}`, context);
+    return log('CONDITION', `Evaluate: ${condition} = ${resultStr}`, context, playerId);
   },
   
   /**

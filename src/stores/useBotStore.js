@@ -36,12 +36,10 @@ const useBotStore = create((set, get) => ({
   actionHistory: [], // [{type, status, timestamp, completedAt}]
   
   // Stockage des états de chaque bot
-  botStates: {}, // Stocke l'état de chaque bot par index (e.g., {0: {botState, actionQueue, ...}, 1: {...}})
-  
-  // Fonction pour changer le bot actif
+  botStates: {}, // Stocke l'état de chaque bot par index (e.g., {0: {botState, actionQueue, ...}, 1: {...}})    // Fonction pour changer le bot actif
   switchActiveBot: (botIndex) => {
     const botId = getBotPlayerId(botIndex);
-    fsmLogger.info(`Switching active bot to Bot ${botIndex + 1} (${botId})`);
+    fsmLogger.info(`Switching active bot to Bot ${botIndex + 1} (${botId})`, null, botId);
     
     // Préserver l'état isRunning actuel
     const currentRunningState = get().isRunning;
@@ -86,10 +84,9 @@ const useBotStore = create((set, get) => ({
   
   // Fonction d'initialisation - démarre le bot avec un index de bot spécifique
   initializeBot: (botIndex = 0) => {
-    fsmLogger.info(`Initializing bot FSM for Bot ${botIndex + 1} (player${botIndex + 2})`);
-    
     // Récupérer l'ID du bot en fonction de l'index
     const botId = getBotPlayerId(botIndex);
+    fsmLogger.info(`Initializing bot FSM for Bot ${botIndex + 1} (${botId})`, null, botId);
     
     // Sauvegarder l'état actuel du bot courant si nécessaire
     const currentBotIndex = get().currentBotIndex;
@@ -133,7 +130,7 @@ const useBotStore = create((set, get) => ({
     // Ajouter l'action d'évaluation avec priorité normale
     get().addAction('evaluateIdle', PRIORITY.MEDIUM, { botId });
     
-    fsmLogger.state(`Bot ${botIndex + 1} (${botId}) initialized in IDLE state`);
+    fsmLogger.state(`Bot ${botIndex + 1} (${botId}) initialized in IDLE state`, null, botId);
     
     return botId; // Retourner l'ID du bot initialisé
   },
@@ -149,7 +146,8 @@ const useBotStore = create((set, get) => ({
     const currentStateConfig = BotStateConfig[currentState];
     const newStateConfig = BotStateConfig[newState];
     
-    fsmLogger.state(`Transition: ${currentState} → ${newState}`);
+    const currentBotId = get().currentBotId;
+    fsmLogger.state(`Transition: ${currentState} → ${newState}`, null, currentBotId);
     
     // Exécuter la fonction de sortie d'état si définie
     if (currentStateConfig?.onExitState) {
@@ -157,7 +155,7 @@ const useBotStore = create((set, get) => ({
         const playerStore = usePlayerStore.getState();
         currentStateConfig.onExitState(playerStore, get().changeState, newState);
       } catch (error) {
-        fsmLogger.error(`Error in exit handler for state ${currentState}:`, error);
+        fsmLogger.error(`Error in exit handler for state ${currentState}:`, error, currentBotId);
       }
     }
     
@@ -173,14 +171,15 @@ const useBotStore = create((set, get) => ({
         const playerStore = usePlayerStore.getState();
         newStateConfig.onEnterState(playerStore);
       } catch (error) {
-        fsmLogger.error(`Error in entry handler for state ${newState}:`, error);
+        fsmLogger.error(`Error in entry handler for state ${newState}:`, error, currentBotId);
       }
     }
   },
   
   // Retourner à l'état IDLE avec une raison
   returnToIdle: (reason) => {
-    fsmLogger.state(`Returning to IDLE state: ${reason}`);
+    const currentBotId = get().currentBotId;
+    fsmLogger.state(`Returning to IDLE state: ${reason}`, null, currentBotId);
     get().changeState(BOT_STATES.IDLE);
   },
   
@@ -188,7 +187,8 @@ const useBotStore = create((set, get) => ({
   addAction: (actionType, priority = PRIORITY.MEDIUM, params = {}) => {
     // Vérifie si l'action existe dans le registre
     if (!BotActions.actionMap[actionType]) {
-      fsmLogger.error(`Unknown action type: ${actionType}`);
+      const currentBotId = get().currentBotId;
+      fsmLogger.error(`Unknown action type: ${actionType}`, null, currentBotId);
       return;
     }
     
@@ -200,7 +200,8 @@ const useBotStore = create((set, get) => ({
       status: ACTION_STATUS.PENDING
     };
     
-    fsmLogger.action(`Adding action to queue: ${actionType}`, { priority });
+    const currentBotId = get().currentBotId;
+    fsmLogger.action(`Adding action to queue: ${actionType}`, { priority }, currentBotId);
     
     // Insérer l'action dans la file et trier par priorité
     set((state) => {
@@ -256,9 +257,10 @@ const useBotStore = create((set, get) => ({
           return { actionQueue: updatedQueue };
         });
         
+        const currentBotId = get().currentBotId;
         fsmLogger.action(`${status} action: ${action.type}`, { 
           elapsed: Date.now() - action.timestamp 
-        });
+        }, currentBotId);
       }
     }
   },
@@ -272,13 +274,14 @@ const useBotStore = create((set, get) => ({
     const nextAction = actionQueue[0];
     
     // Vérifier si l'action est déjà en cours d'exécution
+    const currentBotId = get().currentBotId;
     if (nextAction.status === ACTION_STATUS.IN_PROGRESS) {
       // Si l'action est déjà en cours, on continue son exécution
-      fsmLogger.actionExecution(`Continue: ${nextAction.type} (priority: ${nextAction.priority})`);
+      fsmLogger.actionExecution(`Continue: ${nextAction.type} (priority: ${nextAction.priority})`, null, currentBotId);
     } else {
       // Sinon, on marque l'action comme en cours
       get().updateActionStatus(0, ACTION_STATUS.IN_PROGRESS);
-      fsmLogger.actionExecution(`Start: ${nextAction.type} (priority: ${nextAction.priority})`);
+      fsmLogger.actionExecution(`Start: ${nextAction.type} (priority: ${nextAction.priority})`, null, currentBotId);
     }
     
     // Récupère les stores nécessaires
@@ -310,12 +313,12 @@ const useBotStore = create((set, get) => ({
         // Si undefined ou autre valeur, l'action reste bloquante (IN_PROGRESS)
         return true;
       } catch (error) {
-        fsmLogger.error(`Error in action ${nextAction.type}:`, error);
+        fsmLogger.error(`Error in action ${nextAction.type}:`, error, currentBotId);
         get().updateActionStatus(0, ACTION_STATUS.FAILED, { error: error.message });
         return false;
       }
     } else {
-      fsmLogger.error(`Action function not found for type: ${nextAction.type}`);
+      fsmLogger.error(`Action function not found for type: ${nextAction.type}`, null, currentBotId);
       get().updateActionStatus(0, ACTION_STATUS.FAILED, { error: "Action not found" });
       return false;
     }
@@ -338,7 +341,7 @@ const useBotStore = create((set, get) => ({
     const transitionResult = BotConditions.evaluateStateTransition(currentState, botVehicle);
     
     if (transitionResult.result && transitionResult.state) {
-      fsmLogger.condition(`Exit condition met in state ${currentState}: transitioning to ${transitionResult.state} (${transitionResult.reason || 'condition met'})`);
+      fsmLogger.condition(`Exit condition met in state ${currentState}: transitioning to ${transitionResult.state} (${transitionResult.reason || 'condition met'})`, null, currentBotId);
       
       // Si une action est définie, l'ajouter à la file
       if (transitionResult.action) {
@@ -372,7 +375,8 @@ const useBotStore = create((set, get) => ({
       // Traiter ce bot
       get().processBot();
       
-      fsmLogger.info(`Processed Bot ${i + 1} (${getBotPlayerId(i)})`);
+      const botId = getBotPlayerId(i);
+      fsmLogger.info(`Processed Bot ${i + 1} (${botId})`, null, botId);
     }
     
     // Revenir au bot actif d'origine
@@ -403,7 +407,8 @@ const useBotStore = create((set, get) => ({
           const playerStore = usePlayerStore.getState();
           const tileStore = useTileStore.getState();
           defaultAction = stateConfig.getDefaultAction(playerStore, tileStore, get().addAction);
-          fsmLogger.action(`Using dynamic default action for state ${currentState}: ${defaultAction.type} (priority: ${defaultAction.priority})`);
+          const currentBotId = get().currentBotId;
+          fsmLogger.action(`Using dynamic default action for state ${currentState}: ${defaultAction.type} (priority: ${defaultAction.priority})`, null, currentBotId);
         }
         // Sinon, utiliser l'action par défaut statique
         else if (stateConfig.defaultAction) {
@@ -431,7 +436,8 @@ const useBotStore = create((set, get) => ({
     set({ isRunning: !currentlyRunning });
     
     if (!currentlyRunning) {
-      fsmLogger.info("Starting bot processing");
+      const currentBotId = get().currentBotId;
+      fsmLogger.info("Starting bot processing", null, currentBotId);
       // Réinitialiser l'état à IDLE au démarrage
       get().changeState(BOT_STATES.IDLE);
       
@@ -444,14 +450,16 @@ const useBotStore = create((set, get) => ({
       // Ensuite ajouter l'action d'évaluation initiale
       get().addAction('evaluateIdle', PRIORITY.MEDIUM);
     } else {
-      fsmLogger.info("Stopping bot processing");
+      const currentBotId = get().currentBotId;
+      fsmLogger.info("Stopping bot processing", null, currentBotId);
     }
   },
   
   // Fonctions pour les tests et le débogage
   _test: {
     resetState: () => {
-      fsmLogger.info("Resetting bot state for testing");
+      const currentBotId = get().currentBotId;
+      fsmLogger.info("Resetting bot state for testing", null, currentBotId);
       set({
         botState: BOT_STATES.IDLE,
         isRunning: false,

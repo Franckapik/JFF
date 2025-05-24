@@ -2,6 +2,7 @@
  * Slice pour la gestion des ressources, des scores et des capacités
  */
 import { updateVehicle as updateVehicleUtil } from '../../../utils/utils';
+import fsmLogger from '../../../utils/fsmLogger';
 
 const createResourceSlice = (set, get) => {
   return {
@@ -82,7 +83,7 @@ const createResourceSlice = (set, get) => {
       
       // Si à capacité max, marquer seulement le vaisseau avec isAtCapacity = true
       if (isAtMaxCapacity) {
-        console.log(`${playerId}/${vehicleId} est à sa capacité maximale.`);
+        fsmLogger.info(`${playerId}/${vehicleId} est à sa capacité maximale.`, null, playerId);
         
         // Mettre à jour le vaisseau avec la nouvelle propriété
         set((state) => updateVehicleUtil(state, playerId, vehicleId, { 

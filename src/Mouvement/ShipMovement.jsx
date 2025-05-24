@@ -36,18 +36,18 @@ const ShipMovement = React.memo(({ playerId, children }) => {
 
   const recalculatePath = React.useCallback(() => {
     if (!groupRef.current || !playerVehicle) {
-      fsmLogger.mouvement("[ShipMovement] Missing ref or vehicle:", { groupRef: !!groupRef.current, playerVehicle: !!playerVehicle });
+      fsmLogger.mouvement("[ShipMovement] Missing ref or vehicle:", { groupRef: !!groupRef.current, playerVehicle: !!playerVehicle }, playerId);
       return;
     }
 
     const targetTile = playerVehicle.targetTile;
         
     if (!targetTile || !targetTile.coord) {
-      fsmLogger.mouvement(`[ShipMovement] Missing target tile for ${playerId}:`, targetTile);
+      fsmLogger.mouvement(`[ShipMovement] Missing target tile for ${playerId}:`, targetTile, playerId);
       return;
     }
     
-    fsmLogger.mouvement(`[ShipMovement] Calculating path for ${playerId} from ${playerVehicle.coord} to ${targetTile.coord}`);
+    fsmLogger.mouvement(`[ShipMovement] Calculating path for ${playerId} from ${playerVehicle.coord} to ${targetTile.coord}`, null, playerId);
     
     const pathData = calculatePath(
       groupRef.current.position,
@@ -70,7 +70,7 @@ const ShipMovement = React.memo(({ playerId, children }) => {
     const targetTile = playerVehicle?.targetTile;
     
     if (targetTile && targetTile.coord && playerVehicle && Object.keys(tiles).length > 0) {
-      fsmLogger.mouvement(`[ShipMovement] ${playerId} target changed, recalculating path to:`, targetTile.coord);
+      fsmLogger.mouvement(`[ShipMovement] ${playerId} target changed, recalculating path to:`, targetTile.coord, playerId);
       setClockRunning(true);
       const timeoutId = setTimeout(recalculatePath, 100);
       return () => clearTimeout(timeoutId);

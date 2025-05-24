@@ -8,6 +8,7 @@ import { useTileStore } from "../stores/useTileStore";
 import usePlayerStore from "../stores/playerStore";
 import useBotStore from "../stores/useBotStore";
 import useGameStore from "../stores/useGameStore";
+import fsmLogger from "../utils/fsmLogger";
 import { 
   HUMAN_PLAYER_ID, 
   getBotPlayerId, 
@@ -39,24 +40,25 @@ const Scene = () => {
 
   // Initialize tiles
   useEffect(() => {
-    console.log("[Scene] Initializing tiles...");
+    fsmLogger.info("[Scene] Initializing tiles...");
     initializeTiles();
   }, [initializeTiles]);
 
   // Initialize players only once when tiles are first available
   useEffect(() => {
     if (Object.keys(tiles).length > 0 && !playersInitialized.current) {
-      console.log("[Scene] Initializing players with tiles:", tiles);
+      fsmLogger.info("[Scene] Initializing players with tiles:", tiles);
       initializePlayer(tiles);
       playersInitialized.current = true;
       
       // Initialize bots after players are set up
       if (!botInitialized.current) {
-        console.log("[Scene] Initializing bots...");
+        fsmLogger.info("[Scene] Initializing bots...");
         
         // Initialiser tous les bots dynamiquement en fonction de botCount
         for (let i = 0; i < botCount; i++) {
-          console.log(`[Scene] Initializing Bot ${i+1} (player${i+2})`);
+          const botId = `player${i+2}`;
+          fsmLogger.info(`[Scene] Initializing Bot ${i+1} (${botId})`, null, botId);
           initializeBot(i);
         }
         

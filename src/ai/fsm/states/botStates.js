@@ -20,16 +20,17 @@ export const BotStateConfig = {
     description: "État central d'évaluation des conditions",
     defaultAction: { type: 'evaluateIdle', priority: PRIORITY.HIGH },
     onEnterState: (playerStore, botId) => {
-      fsmLogger.state(`Entering IDLE state for bot ${botId} - Evaluating conditions`);
+      fsmLogger.state(`Entering IDLE state for bot ${botId} - Evaluating conditions`, null, botId);
       
       if (playerStore) {
         const activeBotId = botId || useBotStore.getState().currentBotId || getBotPlayerId(0);
         const botVehicle = playerStore.players?.[activeBotId]?.vehicles?.[getMainShipId()];
-        fsmLogger.info(`Bot ${activeBotId} status: Fuel=${botVehicle?.fuel}, At base=${botVehicle?.coord === botVehicle?.startCoord}`);
+        fsmLogger.info(`Bot ${activeBotId} status: Fuel=${botVehicle?.fuel}, At base=${botVehicle?.coord === botVehicle?.startCoord}`, null, activeBotId);
       }
     },
     onExitState: (playerStore, changeState, targetState) => {
-      fsmLogger.state(`Exiting IDLE state, transitioning to ${targetState}`);
+      const activeBotId = useBotStore.getState().currentBotId || getBotPlayerId(0);
+      fsmLogger.state(`Exiting IDLE state, transitioning to ${targetState}`, null, activeBotId);
     }
   },
   
@@ -38,7 +39,7 @@ export const BotStateConfig = {
     defaultAction: { type: 'exploreDrone', priority: PRIORITY.MEDIUM },
     onEnterState: (playerStore, botId) => {
       const activeBotId = botId || useBotStore.getState().currentBotId || getBotPlayerId(0);
-      fsmLogger.state(`Entering EXPLORING state for bot ${activeBotId}`);
+      fsmLogger.state(`Entering EXPLORING state for bot ${activeBotId}`, null, activeBotId);
     },
     onExitState: (playerStore, changeState) => {
       const botStore = useBotStore.getState();
@@ -50,7 +51,7 @@ export const BotStateConfig = {
         return;
       }
 
-      fsmLogger.state(`Exiting EXPLORING state for bot ${activeBotId} - Returning to IDLE for evaluation`);
+      fsmLogger.state(`Exiting EXPLORING state for bot ${activeBotId} - Returning to IDLE for evaluation`, null, activeBotId);
       
       // Marquer la transition comme en cours
       playerStore.updatePlayerMemory(activeBotId, {
@@ -79,7 +80,7 @@ export const BotStateConfig = {
 
       if (botVehicle && botMemory?.currentTargetResource) {
         if (botVehicle.coord === botMemory.currentTargetResource.coord) {
-          fsmLogger.action("Bot is at resource location, adding collectResource action");
+          fsmLogger.action("Bot is at resource location, adding collectResource action", null, activeBotId);
           return { type: 'collectResource', priority: PRIORITY.HIGH };
         }
       }
@@ -91,7 +92,7 @@ export const BotStateConfig = {
       const botStore = useBotStore.getState();
       const activeBotId = botStore.currentBotId || getBotPlayerId(0);
       
-      fsmLogger.state(`Entering COLLECTING state for bot ${activeBotId}`);
+      fsmLogger.state(`Entering COLLECTING state for bot ${activeBotId}`, null, activeBotId);
       
       const botVehicle = playerStore?.players?.[activeBotId]?.vehicles?.ship;
       const botMemory = playerStore?.players?.[activeBotId]?.memory;
@@ -103,7 +104,7 @@ export const BotStateConfig = {
           playerStore.updatePlayerMemory(activeBotId, {
             currentTargetResource: currentResource
           });
-          fsmLogger.action(`Bot ${activeBotId} already at resource location ${botVehicle.coord}, preparing collection`);
+          fsmLogger.action(`Bot ${activeBotId} already at resource location ${botVehicle.coord}, preparing collection`, null, activeBotId);
         }
       }
     },
@@ -117,7 +118,7 @@ export const BotStateConfig = {
         return;
       }
 
-      fsmLogger.state(`Exiting COLLECTING state for bot ${activeBotId} - Returning to IDLE for evaluation`);
+      fsmLogger.state(`Exiting COLLECTING state for bot ${activeBotId} - Returning to IDLE for evaluation`, null, activeBotId);
 
       // Marquer la transition comme en cours
       playerStore.updatePlayerMemory(activeBotId, {
@@ -145,10 +146,12 @@ export const BotStateConfig = {
     description: "Bot en retour vers sa base",
     defaultAction: { type: 'returnToBase', priority: PRIORITY.HIGH },
     onEnterState: (playerStore, addAction) => {
-      fsmLogger.state("Entering RETURNING state");
+      const activeBotId = useBotStore.getState().currentBotId || getBotPlayerId(0);
+      fsmLogger.state("Entering RETURNING state", null, activeBotId);
       
       if (addAction) {
-        fsmLogger.action("Adding returnToBase action after entering RETURNING state");
+        const activeBotId = useBotStore.getState().currentBotId || getBotPlayerId(0);
+        fsmLogger.action("Adding returnToBase action after entering RETURNING state", null, activeBotId);
         addAction('returnToBase', PRIORITY.HIGH);
       }
     },
@@ -162,7 +165,7 @@ export const BotStateConfig = {
         return;
       }
 
-      fsmLogger.state("Exiting RETURNING state - Returning to IDLE for evaluation");
+      fsmLogger.state("Exiting RETURNING state - Returning to IDLE for evaluation", null, activeBotId);
 
       // Marquer la transition comme en cours
       playerStore.updatePlayerMemory(activeBotId, {

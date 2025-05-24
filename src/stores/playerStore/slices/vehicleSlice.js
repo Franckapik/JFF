@@ -3,6 +3,7 @@
  */
 import { updateVehicle as updateVehicleUtil } from '../../../utils/utils';
 import { isMainShipId } from '../../../ai/constants/playerConstants';
+import fsmLogger from '../../../utils/fsmLogger';
 
 const createVehicleSlice = (set, get) => {
   return {
@@ -82,11 +83,11 @@ const createVehicleSlice = (set, get) => {
      * @param {Object} targetTile - Tuile cible
      */
     moveToTile: (playerId, vehicleId, targetTile) => {
-      console.log(`[PlayerStore] Moving ${playerId}/${vehicleId} to tile:`, targetTile.coord);
+      fsmLogger.mouvement(`[PlayerStore] Moving ${playerId}/${vehicleId} to tile:`, targetTile.coord, playerId);
       
       // Vérifier que les données sont valides
       if (!targetTile || !targetTile.position || !targetTile.coord) {
-        console.error("Invalid target tile data:", targetTile);
+        fsmLogger.error("Invalid target tile data:", targetTile, playerId);
         return;
       }
       

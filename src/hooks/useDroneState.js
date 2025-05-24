@@ -3,6 +3,14 @@ import { create } from 'zustand';
 import { VEHICLE_TYPES } from '../ai/constants/playerConstants';
 import fsmLogger from '../utils/fsmLogger';
 
+// Fonction utilitaire pour extraire le playerId à partir d'un droneId
+// Format attendu: player2/explorer_drone
+const extractPlayerId = (droneId) => {
+  if (!droneId) return null;
+  const parts = droneId.split('/');
+  return parts.length > 0 ? parts[0] : null;
+};
+
 // Drone states enum
 export const DRONE_STATES = {
   IDLE: 'IDLE',
@@ -30,7 +38,7 @@ export const useDroneState = create((set, get) => ({
           }
         }
       });
-      fsmLogger.state(`[DroneState] Initialized drone ${droneId} in DOCKED_WITH_SHIP state`);
+      fsmLogger.state(`[DroneState] Initialized drone ${droneId} in DOCKED_WITH_SHIP state`, null, extractPlayerId(droneId));
     }
   },
 
@@ -40,7 +48,7 @@ export const useDroneState = create((set, get) => ({
     const droneState = currentStates[droneId];
     
     if (!droneState) {
-      fsmLogger.error(`[DroneState] Attempted to transition uninitialized drone ${droneId}`);
+      fsmLogger.error(`[DroneState] Attempted to transition uninitialized drone ${droneId}`, null, extractPlayerId(droneId));
       return false;
     }
 
@@ -55,7 +63,7 @@ export const useDroneState = create((set, get) => ({
 
     // Check if transition is valid
     if (!validTransitions[droneState.currentState]?.includes(newState)) {
-      fsmLogger.error(`[DroneState] Invalid transition for drone ${droneId}: ${droneState.currentState} -> ${newState}`);
+      fsmLogger.error(`[DroneState] Invalid transition for drone ${droneId}: ${droneState.currentState} -> ${newState}`, null, extractPlayerId(droneId));
       return false;
     }
 
@@ -70,7 +78,7 @@ export const useDroneState = create((set, get) => ({
       }
     });
 
-    fsmLogger.state(`[DroneState] Transitioned drone ${droneId}: ${droneState.currentState} -> ${newState}`);
+    fsmLogger.state(`[DroneState] Transitioned drone ${droneId}: ${droneState.currentState} -> ${newState}`, null, extractPlayerId(droneId));
     return true;
   },
 

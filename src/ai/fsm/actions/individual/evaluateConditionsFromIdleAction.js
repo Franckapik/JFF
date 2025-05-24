@@ -24,12 +24,12 @@ import fsmLogger from '../../../../utils/fsmLogger';
 export const evaluateConditionsFromIdleAction = (playerStore, tileStore, addAction, changeState) => {
   // Récupérer l'ID du bot actif
   const botId = BotConditions.getCurrentBotId();
-  fsmLogger.action(`Evaluating conditions from IDLE state for bot ${botId}`);
+  fsmLogger.action(`Evaluating conditions from IDLE state for bot ${botId}`, null, botId);
   
   // 1. Récupérer le véhicule du bot actif
   const botVehicle = playerStore.players?.[botId]?.vehicles?.ship;
   if (!botVehicle) {
-    fsmLogger.error(`Bot vehicle not found for ${botId} in evaluateConditionsFromIdleAction`);
+    fsmLogger.error(`Bot vehicle not found for ${botId} in evaluateConditionsFromIdleAction`, null, botId);
     return false;
   }
   
@@ -38,7 +38,7 @@ export const evaluateConditionsFromIdleAction = (playerStore, tileStore, addActi
   
   // 3. Si une transition est recommandée, l'effectuer
   if (transitionResult.result && transitionResult.state) {
-    fsmLogger.condition(`Transition from IDLE to ${transitionResult.state} (${transitionResult.reason || 'condition met'})`);
+    fsmLogger.condition(`Transition from IDLE to ${transitionResult.state} (${transitionResult.reason || 'condition met'})`, null, botId);
     
     // Si une action est définie, l'ajouter à la file
     if (transitionResult.action) {

@@ -38,17 +38,17 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
 
   // Vérifier si le drone est actif
   if (botDrone && !botDrone.isActive) {
-    fsmLogger.error(`Explorer drone is not active`);
+    fsmLogger.error(`Explorer drone is not active`, null, botId);
     return false;
   }
   
   if (!botVehicle || !botVehicle.coord) {
-    fsmLogger.error(`Bot vehicle not initialized properly`);
+    fsmLogger.error(`Bot vehicle not initialized properly`, null, botId);
     return false;
   }
   
   if (!botDrone) {
-    fsmLogger.error(`Bot drone not found`);
+    fsmLogger.error(`Bot drone not found`, null, botId);
     return false;
   }
 
@@ -63,14 +63,14 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
   if (!playerState?.memory?.explorationState?.started) {
     // Si le drone est déjà en mouvement, attendre qu'il s'arrête
     if (isDroneMoving.result) {
-      fsmLogger.action(`Drone is already moving, waiting for it to complete its current movement`);
+      fsmLogger.action(`Drone is already moving, waiting for it to complete its current movement`, null, botId);
       return undefined;
     }
     
-    fsmLogger.action(`Attempting to find a tile to explore`);
+    fsmLogger.action(`Attempting to find a tile to explore`, null, botId);
     
     const exploringRadius = playerState?.exploringRadius || 3;
-    fsmLogger.info(`Using exploring radius: ${exploringRadius}`);
+    fsmLogger.info(`Using exploring radius: ${exploringRadius}`, null, botId);
     
     const walkableTilesInRadius = tileStore.getWalkableTilesInRadius(
       botVehicle,
@@ -79,12 +79,12 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
       true
     );
     
-    fsmLogger.info(`Found ${walkableTilesInRadius.length} walkable unexplored tiles in radius`);
+    fsmLogger.info(`Found ${walkableTilesInRadius.length} walkable unexplored tiles in radius`, null, botId);
     
     if (walkableTilesInRadius.length > 0) {
       const targetTileInfo = walkableTilesInRadius[0];
       
-      fsmLogger.action(`Sending drone to explore tile: ${targetTileInfo.coord}, distance: ${targetTileInfo.distance.toFixed(2)}`);
+      fsmLogger.action(`Sending drone to explore tile: ${targetTileInfo.coord}, distance: ${targetTileInfo.distance.toFixed(2)}`, null, botId);
       
       playerStore.moveToTile(botId, botDroneId, {
         coord: targetTileInfo.coord,
