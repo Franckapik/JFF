@@ -39,6 +39,10 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
     return true; // Action terminée avec succès
   }
   
+  // Accéder à la mémoire du bot via playerState
+  const playerState = playerStore.players?.[botId];
+  const botMemory = playerState?.memory;
+
   // Si l'action vient d'être lancée, initialiser le mouvement
   if (!botMemory?.returnState?.started) {
     // Récupérer la tuile de départ (base) du bot
