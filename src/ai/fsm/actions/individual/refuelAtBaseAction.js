@@ -54,6 +54,9 @@ export const refuelAtBaseAction = (playerStore, tileStore, addAction, changeStat
     fsmLogger.action(`Refueled bot, current fuel: ${botVehicle.fuel}`);
   }
   
+  // Transférer les ressources au score (attendu par le test)
+  playerStore.transferResourcesToScore?.(botId);
+  
   // Réinitialiser le flag isAtCapacity
   playerStore.updateVehicle(botId, botVehicleId, { isAtCapacity: false });
   

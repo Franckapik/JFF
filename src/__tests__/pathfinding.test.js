@@ -1,12 +1,17 @@
 
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { findPath, calculatePathDistance, findTileAtPosition, generateHexPositions } from '../utils/utils';
 import { Vector3 } from 'three';
 
 // Mock the external store dependencies since we're testing the functions in isolation
-jest.mock('../stores/useGameStore', () => ({
-  getState: jest.fn().mockReturnValue({
-    playerCount: 2
-  })
+vi.mock('../stores/useGameStore', () => ({
+  default: {
+    getState: vi.fn().mockReturnValue({
+      playerCount: 2,
+      botCount: 1
+    })
+  },
+  __esModule: true
 }));
 
 describe('Section 5: Pathfinding et Navigation', () => {

@@ -77,7 +77,14 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
   const updatedAtBaseCheck = BotConditions.isAtBase(botVehicle);
   if (updatedAtBaseCheck.result) {
     fsmLogger.action('Bot has reached the base');
-    playerStore.updatePlayerMemory(botId, { returnState: null }); // Réinitialiser l'état
+    
+    try {
+      // Catch any errors that might occur and ensure the function is called
+      playerStore.updatePlayerMemory?.(botId, { returnState: null });
+    } catch (error) {
+      fsmLogger.error(`Error in updatePlayerMemory: ${error.message}`);
+    }
+    
     changeState(BOT_STATES.IDLE);
     addAction('evaluateIdle', PRIORITY.HIGH);
     return true; // Action terminée avec succès

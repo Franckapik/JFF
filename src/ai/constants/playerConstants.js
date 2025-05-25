@@ -2,7 +2,7 @@
 export const HUMAN_PLAYER_ID = 'player1';
 
 // Fonction utilitaire pour obtenir les IDs des bots
-export const getBotPlayerId = (botIndex) => `player${botIndex + 2}`;
+export const getBotPlayerId = (botIndex) => `bot-${botIndex}`;
 
 // Type d'identifiants pour les véhicules
 export const VEHICLE_TYPES = {
@@ -13,23 +13,44 @@ export const VEHICLE_TYPES = {
 };
 
 // Obtenir l'ID du vaisseau principal
-export const getMainShipId = () => VEHICLE_TYPES.SHIP;
+export const getMainShipId = (playerId) => {
+  if (playerId === null) return 'null-ship';
+  if (playerId === undefined) return 'undefined-ship';
+  return `${playerId}-ship`;
+};
 
 // Vérifier si un ID est celui d'un vaisseau principal
-export const isMainShipId = (vehicleId) => vehicleId === VEHICLE_TYPES.SHIP;
+export const isMainShipId = (vehicleId) => {
+  if (!vehicleId) return false;
+  return vehicleId.endsWith('-ship');
+};
 
 // Vérifier si un ID est celui d'un bot
-export const isBotPlayerId = (playerId) => playerId !== HUMAN_PLAYER_ID;
+export const isBotPlayerId = (playerId) => {
+  if (!playerId) return false;
+  return playerId.startsWith('bot-') && playerId.length > 4;
+};
 
 // Obtenir l'ID d'un drone spécifique pour un joueur donné avec son type
 export const getDroneId = (playerId, droneType) => {
-  const playerNum = playerId.slice(-1);
-  return `${droneType}_${playerNum}`;
+  // Gestion des cas null/undefined
+  const safePlayerId = playerId === null ? 'null' : 
+                       playerId === undefined ? 'undefined' : String(playerId);
+  const safeDroneType = droneType === null ? 'null' : 
+                        droneType === undefined ? 'undefined' : String(droneType);
+  
+  return `${safePlayerId}-drone-${safeDroneType}`;
 };
 
 // Obtenir tous les IDs de drones pour un joueur
 export const getAllDroneIds = (playerId) => {
+  if (playerId === null || playerId === undefined) {
+    return [];
+  }
+  
   return [
+    getDroneId(playerId, 'explorer'),
+    getDroneId(playerId, 'collector'),
     getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE),
     getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE),
     getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)
@@ -38,12 +59,17 @@ export const getAllDroneIds = (playerId) => {
 
 // Vérifier si un ID est celui d'un drone
 export const isDroneId = (vehicleId) => {
-  return vehicleId.startsWith(VEHICLE_TYPES.EXPLORER_DRONE) ||
-         vehicleId.startsWith(VEHICLE_TYPES.COMBAT_DRONE) ||
-         vehicleId.startsWith(VEHICLE_TYPES.SPECIAL_DRONE);
+  if (!vehicleId) return false;
+  
+  // Doit contenir '-drone-' et avoir un format complet player-id-drone-type
+  const parts = vehicleId.split('-');
+  return vehicleId.includes('-drone-') && 
+         parts.length >= 4 &&   // Au minimum 4 parties : [player, id, drone, type]
+         parts[parts.length - 1].length > 0;  // Le type ne doit pas être vide
 };
 
 // Vérifie si un drone est actif par défaut au démarrage
 export const isDroneActiveByDefault = (droneType) => {
-  return droneType === VEHICLE_TYPES.EXPLORER_DRONE;
+  if (!droneType) return false;
+  return droneType === 'explorer' || droneType === VEHICLE_TYPES.EXPLORER_DRONE;
 };
