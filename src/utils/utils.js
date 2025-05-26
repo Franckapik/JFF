@@ -146,22 +146,6 @@ export function generateHexPositions(radius, spacing) {
   return hexPositions;
 }
 
-export function generateInitialDrones(count, spacing = 1) {
-  const drones = [];
-  if (count > 0) {
-    const angle = 0; // Single drone at angle 0
-    const x = Math.cos(angle) * spacing;
-    const z = Math.sin(angle) * spacing;
-    drones.push({
-      id: 1, // Single drone with ID 1
-      position: { x, y: 0, z },
-      isMoving: false,
-      targetTile: null,
-    });
-  }
-  return drones; // Always return an array
-}
-
 /**
  * Fonction utilitaire pour mettre à jour un véhicule dans l'état du store
  * @param {Object} state - L'état actuel du store
