@@ -1,4 +1,3 @@
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { findPath, calculatePathDistance, findTileAtPosition, generateHexPositions } from '../utils/utils';
 import { Vector3 } from 'three';
@@ -391,6 +390,87 @@ describe('Section 5: Pathfinding et Navigation', () => {
       // Danger tiles should have no resources
       dangerTiles.forEach(tile => {
         expect(tile.resources).toBeNull();
+      });
+    });
+    
+    it('should handle radius 0 correctly', () => {
+      const radius = 0;
+      const spacing = 0.1;
+      
+      const hexPositions = generateHexPositions(radius, spacing);
+      
+      // For radius = 0, we should have just 1 tile (the center)
+      expect(hexPositions.length).toBe(1);
+      
+      // Check that the tile is at the center
+      const centerTile = hexPositions[0];
+      expect(centerTile.position.x).toBeCloseTo(0);
+      expect(centerTile.position.z).toBeCloseTo(0);
+    });
+    
+    it('should create walkable and non-walkable tiles', () => {
+      const radius = 3;
+      const spacing = 0.1;
+      
+      const hexPositions = generateHexPositions(radius, spacing);
+      
+      // Check that there are walkable tiles
+      const walkableTiles = hexPositions.filter(tile => tile.walkable === true);
+      expect(walkableTiles.length).toBeGreaterThan(0);
+      
+      // Check that there are non-walkable tiles
+      const nonWalkableTiles = hexPositions.filter(tile => tile.walkable === false);
+      expect(nonWalkableTiles.length).toBeGreaterThan(0);
+    });
+    
+    it('should position tiles with proper spacing', () => {
+      const radius = 2;
+      const spacing = 0.5; // Large spacing
+      
+      const hexPositions = generateHexPositions(radius, spacing);
+      
+      // Get adjacent tiles
+      const centerTile = hexPositions.find(tile => 
+        tile.position.x === 0 && tile.position.z === 0
+      );
+      
+      if (!centerTile) {
+        throw new Error('Center tile not found, this is unexpected');
+      }
+      
+      const neighbors = centerTile.neighbors.map(neighborCoord => 
+        hexPositions.find(tile => tile.coord === neighborCoord)
+      );
+      
+      // Check spacing between center and at least one neighbor
+      const firstNeighbor = neighbors[0];
+      const distance = Math.sqrt(
+        Math.pow(firstNeighbor.position.x - centerTile.position.x, 2) + 
+        Math.pow(firstNeighbor.position.z - centerTile.position.z, 2)
+      );
+      
+      // With spacing 0.5, the distance should be around 1.7 + 0.5 = 2.2
+      // We use toBeGreaterThan since the exact formula may vary
+      expect(distance).toBeGreaterThan(2);
+    });
+    
+    it('should distribute resources on tiles', () => {
+      const radius = 2;
+      const spacing = 0.1;
+      
+      const hexPositions = generateHexPositions(radius, spacing);
+      
+      // Check that resource tiles have resources
+      const resourceTiles = hexPositions.filter(tile => tile.type === 'resource');
+      expect(resourceTiles.length).toBeGreaterThan(0);
+      
+      // Each resource tile should have at least one type of resource
+      resourceTiles.forEach(tile => {
+        expect(tile.resources).toBeDefined();
+        const totalResources = (tile.resources.food || 0) + 
+                              (tile.resources.debris || 0) + 
+                              (tile.resources.special || 0);
+        expect(totalResources).toBeGreaterThan(0);
       });
     });
   });

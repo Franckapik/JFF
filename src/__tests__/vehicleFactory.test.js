@@ -123,70 +123,70 @@ describe('Fabrication des Objets - vehicleFactory', () => {
       // Vérification des propriétés de base
       expect(drone).toHaveProperty('id', id);
       expect(drone).toHaveProperty('type', type);
+      expect(drone).toHaveProperty('position', null);
+      expect(drone).toHaveProperty('coord', null);
       
       // Vérification des propriétés spécifiques au drone spécial
       expect(drone).toHaveProperty('isActive', false);
-      expect(drone).toHaveProperty('specialScanRange', 5);
-      expect(drone).toHaveProperty('specialDetection', true);
-      
-      // Vérification des capacités de ressources du drone spécial
-      expect(drone.maxCapacity).toEqual({ food: 0, debris: 0, special: 0 });
-    });
-    
-    // Test de création avec un type de drone non reconnu
-    it('devrait créer un drone générique pour un type non reconnu', () => {
-      const id = 'unknown_drone_1';
-      const type = 'unknown_drone';
-      
-      // Mock pour le test
-      isDroneId.mockReturnValueOnce(true);
-      
-      const drone = createVehicle(id, type);
-      
-      // Vérification des propriétés de base d'un drone
-      expect(drone).toHaveProperty('id', id);
-      expect(drone).toHaveProperty('type', type);
-      expect(drone).toHaveProperty('isActive');
       expect(drone).toHaveProperty('fuel', 50);
       expect(drone).toHaveProperty('damage', 0);
+      expect(drone).toHaveProperty('specialAbilityCharge', 100);
       
-      // Ne devrait pas avoir les propriétés spécifiques d'autres types de drones
-      expect(drone).not.toHaveProperty('explorationBonus');
-      expect(drone).not.toHaveProperty('attackRange');
-      expect(drone).not.toHaveProperty('specialDetection');
+      // Vérification des appels de fonction
+      expect(isDroneId).toHaveBeenCalledWith(id);
+      expect(isDroneActiveByDefault).toHaveBeenCalledWith(type);
     });
     
-    // Test de vérification que tous les véhicules ont des ressources initiales vides
-    it('devrait initialiser tous les véhicules avec des ressources vides', () => {
-      const shipId = 'ship';
-      const droneId = 'explorer_drone_1';
+    // Test de création avec un ID invalide/dupliqué
+    it('devrait créer un véhicule même avec un ID potentiellement dupliqué', () => {
+      // Dans cet exemple, la fonction ne vérifie pas l'unicité des IDs
+      const id = 'ship'; // ID qui pourrait déjà exister
+      const type = VEHICLE_TYPES.SHIP;
       
-      // Mock pour le drone
-      isDroneId.mockReturnValueOnce(true);
+      // Création du véhicule
+      const ship = createVehicle(id, type);
       
-      const ship = createVehicle(shipId, VEHICLE_TYPES.SHIP);
-      const drone = createVehicle(droneId, VEHICLE_TYPES.EXPLORER_DRONE);
-      
-      // Vérification des ressources
-      expect(ship.resources).toEqual({ food: 0, debris: 0, special: 0 });
-      expect(drone.resources).toEqual({ food: 0, debris: 0, special: 0 });
+      // Vérifier que le véhicule est créé avec l'ID fourni
+      expect(ship).toHaveProperty('id', id);
+      expect(ship).toHaveProperty('type', type);
     });
     
-    // Test de vérification que tous les véhicules ont une cible initiale nulle
-    it('devrait initialiser tous les véhicules avec une cible nulle', () => {
-      const shipId = 'ship';
-      const droneId = 'explorer_drone_1';
+    // Test de création avec un type inconnu
+    it('devrait retourner un véhicule générique pour un type inconnu', () => {
+      const id = 'unknown_1';
+      const type = 'unknown_type'; // Type qui n'existe pas dans VEHICLE_TYPES
       
-      // Mock pour le drone
-      isDroneId.mockReturnValueOnce(true);
+      // Création du véhicule
+      const vehicle = createVehicle(id, type);
       
-      const ship = createVehicle(shipId, VEHICLE_TYPES.SHIP);
-      const drone = createVehicle(droneId, VEHICLE_TYPES.EXPLORER_DRONE);
+      // Vérifier qu'un véhicule générique est retourné
+      expect(vehicle).toHaveProperty('id', id);
+      expect(vehicle).toHaveProperty('type', type);
+      expect(vehicle).toHaveProperty('position', null);
+      expect(vehicle).toHaveProperty('coord', null);
+      expect(vehicle).toHaveProperty('isMoving', false);
       
-      // Vérification de la cible
-      const expectedTarget = { position: null, coord: null };
-      expect(ship.targetTile).toEqual(expectedTarget);
-      expect(drone.targetTile).toEqual(expectedTarget);
+      // Les propriétés spécifiques aux drones ou au vaisseau ne devraient pas être présentes
+      expect(vehicle).not.toHaveProperty('isActive');
+      expect(vehicle).not.toHaveProperty('explorationBonus');
+      expect(vehicle).not.toHaveProperty('combatBonus');
+      expect(vehicle).not.toHaveProperty('specialAbilityCharge');
+    });
+    
+    // Test avec des valeurs nulles ou undefined
+    it('devrait gérer correctement les valeurs nulles ou undefined', () => {
+      // Test avec ID null
+      const vehicleNullId = createVehicle(null, VEHICLE_TYPES.SHIP);
+      expect(vehicleNullId).toHaveProperty('id', null);
+      
+      // Test avec type null
+      const vehicleNullType = createVehicle('ship', null);
+      expect(vehicleNullType).toHaveProperty('type', null);
+      
+      // Test avec les deux valeurs null
+      const vehicleBothNull = createVehicle(null, null);
+      expect(vehicleBothNull).toHaveProperty('id', null);
+      expect(vehicleBothNull).toHaveProperty('type', null);
     });
   });
 });

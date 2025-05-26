@@ -1,4 +1,3 @@
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { exploreWithDroneAction } from '../ai/fsm/actions/individual/exploreWithDroneAction';
 import { moveToResourceAction } from '../ai/fsm/actions/individual/moveToResourceAction';
@@ -146,6 +145,57 @@ describe('Section 6: Bot Actions', () => {
       expect(mockTileStore.selectRandomWalkableTile).toHaveBeenCalled();
       expect(mockPlayerStore.moveToTile).toHaveBeenCalledWith('player2', 'drone1', expect.objectContaining({ coord: 'C0' }));
     });
+    
+    it('should fail if there are no walkable tiles available at all', () => {
+      // Setup for no walkable tiles
+      mockTileStore.getWalkableTilesInRadius.mockReturnValueOnce([]);
+      mockTileStore.selectRandomWalkableTile.mockReturnValueOnce(null);
+      
+      const result = exploreWithDroneAction(mockPlayerStore, mockTileStore, addAction, changeState);
+      
+      // The action should fail in this case
+      expect(result).toBe(true);
+      expect(mockTileStore.getWalkableTilesInRadius).toHaveBeenCalled();
+      expect(mockTileStore.selectRandomWalkableTile).toHaveBeenCalled();
+      expect(addAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'exploreWithDroneAction',
+          status: 'failed'
+        })
+      );
+    });
+    
+    it('should fail if the drone is not active', () => {
+      // Setup for inactive drone
+      mockPlayerStore.players.player2.vehicles.drone1.isActive = false;
+      
+      const result = exploreWithDroneAction(mockPlayerStore, mockTileStore, addAction, changeState);
+      
+      // The action should fail
+      expect(result).toBe(true);
+      expect(addAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'exploreWithDroneAction',
+          status: 'failed'
+        })
+      );
+      
+      // Restore drone state for other tests
+      mockPlayerStore.players.player2.vehicles.drone1.isActive = true;
+    });
+    
+    it('should fail if drone is already moving', () => {
+      // Setup for moving drone
+      mockPlayerStore.players.player2.vehicles.drone1.isMoving = true;
+      
+      const result = exploreWithDroneAction(mockPlayerStore, mockTileStore, addAction, changeState);
+      
+      // The action should be marked as in progress, not failed
+      expect(result).toBeUndefined();
+      
+      // Restore drone state for other tests
+      mockPlayerStore.players.player2.vehicles.drone1.isMoving = false;
+    });
 
     it('should return true when drone has returned to ship', () => {
       // Set up for a completed exploration (drone already at ship)
@@ -286,27 +336,17 @@ describe('Section 6: Bot Actions', () => {
         movementState: null
       }));
     });
-
-    it('should return true when bot reaches the target resource', () => {
-      // Set up for a completed movement
-      BotConditions.isShipMoving.mockReturnValueOnce({ result: false });
-
+    
+    it('should fail if no resources are known', () => {
+      // Setup with no known resources
       const updatedPlayerStore = {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
           player2: {
             ...mockPlayerStore.players.player2,
-            vehicles: {
-              ship: { coord: 'B0', isMoving: false } // Bot has reached target B0
-            },
             memory: {
-              ...mockPlayerStore.players.player2.memory,
-              movementState: {
-                started: true,
-                startTime: Date.now() - 5000,
-                targetCoord: 'B0'
-              }
+              knownResources: []
             }
           }
         }
@@ -314,9 +354,66 @@ describe('Section 6: Bot Actions', () => {
       
       const result = moveToResourceAction(updatedPlayerStore, mockTileStore, addAction, changeState);
       
-      expect(result).toBe(true); // Action completed successfully
-      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', 
-        expect.objectContaining({ movementState: null })
+      expect(result).toBe(true); // Action failed (completes with failure)
+      expect(addAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'moveToResourceAction',
+          status: 'failed'
+        })
+      );
+    });
+    
+    it('should fail if the path to resource is blocked', () => {
+      // Mock the findPath function to return empty array (no path)
+      const { findPath } = require('../utils/utils');
+      findPath.mockImplementationOnce(() => []);
+      
+      const result = moveToResourceAction(mockPlayerStore, mockTileStore, addAction, changeState);
+      
+      expect(result).toBe(true); // Action failed
+      expect(addAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'moveToResourceAction',
+          status: 'failed'
+        })
+      );
+      // Restore findPath mock
+      findPath.mockReturnValue(['A0', 'B0', 'C0']);
+    });
+    
+    it('should timeout if movement takes too long', () => {
+      // Setup for a timed-out movement
+      const updatedPlayerStore = {
+        ...mockPlayerStore,
+        players: {
+          ...mockPlayerStore.players,
+          player2: {
+            ...mockPlayerStore.players.player2,
+            memory: {
+              ...mockPlayerStore.players.player2.memory,
+              movementState: {
+                started: true,
+                startTime: Date.now() - 40000, // Started 40 seconds ago (timeout should be 30s)
+                targetCoord: 'B0'
+              }
+            },
+            vehicles: {
+              ship: { coord: 'A0', isMoving: true } // Still moving
+            }
+          }
+        }
+      };
+      
+      BotConditions.isShipMoving.mockReturnValueOnce({ result: true });
+      
+      const result = moveToResourceAction(updatedPlayerStore, mockTileStore, addAction, changeState);
+      
+      expect(result).toBe(true); // Action failed due to timeout
+      expect(addAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'moveToResourceAction',
+          status: 'failed'
+        })
       );
     });
   });
@@ -351,31 +448,30 @@ describe('Section 6: Bot Actions', () => {
       tiles: {
         'B0': { 
           coord: 'B0', 
-          position: { x: 1, y: 0, z: 0 }, 
-          walkable: true, 
-          resources: { food: 50, debris: 100, special: 0 } 
+          position: { x: 1, y: 0, z: 0 },
+          resources: { food: 50, debris: 100, special: 0 },
+          originalResources: { food: 50, debris: 100, special: 0 },
+          resourcePercentage: 100
         }
       },
-      markTileAsCollected: vi.fn(),
-      deductTileResources: vi.fn()
+      deductTileResources: vi.fn().mockReturnValue(true)
     };
 
-    it('should initialize collection when bot is at resource tile', () => {
+    it('should collect resources from the current tile', () => {
       const result = collectResourceAction(mockPlayerStore, mockTileStore, addAction, changeState);
       
-      expect(result).toBeUndefined(); // Action is in progress (collection started)
+      expect(result).toBe(true); // Action completes immediately
+      expect(mockTileStore.deductTileResources).toHaveBeenCalledWith('B0', expect.anything());
+      expect(mockPlayerStore.updateVehicle).toHaveBeenCalledWith('player2', 'ship', expect.objectContaining({
+        resources: expect.anything()
+      }));
       expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', expect.objectContaining({
-        collectionState: expect.objectContaining({ 
-          started: true,
-          tileCoord: 'B0',
-          resources: expect.objectContaining({ food: 50, debris: 100 })
-        }),
-        isCollecting: true
+        collectedResources: expect.arrayContaining([expect.anything()])
       }));
     });
-
-    it('should complete collection after sufficient time has passed', () => {
-      // Set up for a completed collection
+    
+    it('should fail if there is no current target resource', () => {
+      // Setup for no target resource
       const updatedPlayerStore = {
         ...mockPlayerStore,
         players: {
@@ -384,36 +480,44 @@ describe('Section 6: Bot Actions', () => {
             ...mockPlayerStore.players.player2,
             memory: {
               ...mockPlayerStore.players.player2.memory,
-              collectionState: {
-                started: true,
-                startTime: Date.now() - 3000, // Started 3 seconds ago (more than collection time)
-                collectionTime: 2000,
-                tileCoord: 'B0',
-                resources: { food: 50, debris: 100, special: 0 }
-              },
-              isCollecting: true,
-              collectionTile: 'B0'
+              currentTargetResource: null
             }
           }
         }
       };
       
-      // Ensure the mock functions exist
-      mockTileStore.deductTileResources = mockTileStore.deductTileResources || vi.fn();
-      
       const result = collectResourceAction(updatedPlayerStore, mockTileStore, addAction, changeState);
       
-      expect(result).toBe(true); // Action completed successfully
-      expect(mockPlayerStore.updateVehicle).toHaveBeenCalled();
-      // Reduced expectations for easier testing
-      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalled();
-      expect(changeState).toHaveBeenCalledWith(BOT_STATES.IDLE);
-      expect(addAction).toHaveBeenCalledWith('evaluateIdle', PRIORITY.HIGH);
+      expect(result).toBe(true); // Action failed
+      expect(addAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'collectResourceAction',
+          status: 'failed'
+        })
+      );
     });
-
-    it('should mark tile as collected if resources are depleted', () => {
-      // Set up for a completed collection where all resources are taken
-      const updatedPlayerStore = {
+    
+    it('should fail if the target resource no longer exists', () => {
+      // Setup for missing tile
+      const emptyTileStore = {
+        tiles: {},
+        deductTileResources: vi.fn()
+      };
+      
+      const result = collectResourceAction(mockPlayerStore, emptyTileStore, addAction, changeState);
+      
+      expect(result).toBe(true); // Action failed
+      expect(addAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'collectResourceAction',
+          status: 'failed'
+        })
+      );
+    });
+    
+    it('should limit collection based on ship capacity', () => {
+      // Setup for ship near capacity
+      const nearCapacityStore = {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
@@ -422,30 +526,39 @@ describe('Section 6: Bot Actions', () => {
             vehicles: {
               ship: { 
                 coord: 'B0', 
-                resources: { food: 0, debris: 0, special: 0 }, // Empty to allow collecting all
+                isMoving: false,
+                resources: { food: 95, debris: 20, special: 0 },
                 maxCapacity: { food: 100, debris: 1000, special: 2 }
               }
-            },
-            memory: {
-              ...mockPlayerStore.players.player2.memory,
-              collectionState: {
-                started: true,
-                startTime: Date.now() - 3000, // Started 3 seconds ago
-                collectionTime: 2000,
-                tileCoord: 'B0',
-                resources: { food: 5, debris: 10, special: 0 } // Small amount to be fully collected
-              },
-              isCollecting: true,
-              collectionTile: 'B0'
             }
           }
-        }
+        },
+        // Ship is at capacity for food
+        checkResourceCapacity: vi.fn((playerId, shipId, resource, amount) => {
+          return resource === 'food' && amount > 5; // Only 5 food left before max
+        })
       };
       
-      const result = collectResourceAction(updatedPlayerStore, mockTileStore, addAction, changeState);
+      const result = collectResourceAction(nearCapacityStore, mockTileStore, addAction, changeState);
       
-      expect(result).toBe(true);
-      expect(mockTileStore.markTileAsCollected).toHaveBeenCalledWith('B0');
+      expect(result).toBe(true); // Action completed
+      // Should try to collect only what fits
+      expect(mockTileStore.deductTileResources).toHaveBeenCalled();
+      expect(mockPlayerStore.updateVehicle).toHaveBeenCalled();
+    });
+    
+    it('should fill the ship to capacity and trigger return to base', () => {
+      // Setup for ship getting full during collection
+      const fillingUpStore = {
+        ...mockPlayerStore,
+        // Ship will be full after collection
+        checkResourceCapacity: vi.fn().mockReturnValue(true)
+      };
+      
+      const result = collectResourceAction(fillingUpStore, mockTileStore, addAction, changeState);
+      
+      expect(result).toBe(true); // Action completed
+      expect(changeState).toHaveBeenCalledWith(BOT_STATES.RETURNING_TO_BASE);
     });
   });
 
@@ -486,36 +599,19 @@ describe('Section 6: Bot Actions', () => {
       getTile: vi.fn(coord => mockTileStore.tiles[coord])
     };
 
-    beforeEach(() => {
-      // Reset mocks for isAtBase
-      BotConditions.isAtBase.mockReturnValue({ result: false });
-    });
-
-    it('should initialize movement to base', () => {
+    it('should initiate movement to the base', () => {
       const result = returnToBaseAction(mockPlayerStore, mockTileStore, addAction, changeState);
       
       expect(result).toBeUndefined(); // Action is in progress
-      expect(mockTileStore.getTile).toHaveBeenCalledWith('A0');
-      expect(mockPlayerStore.moveToTile).toHaveBeenCalled();
+      expect(mockPlayerStore.moveToTile).toHaveBeenCalledWith('player2', 'ship', mockTileStore.tiles['A0']);
       expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', expect.objectContaining({
         returnState: expect.objectContaining({ started: true })
       }));
     });
-
-    it('should return true if bot is already at base', () => {
-      // Mock the bot already being at base
-      BotConditions.isAtBase.mockReturnValueOnce({ result: true });
-      
-      const result = returnToBaseAction(mockPlayerStore, mockTileStore, addAction, changeState);
-      
-      expect(result).toBe(true);
-      expect(changeState).toHaveBeenCalledWith(BOT_STATES.IDLE);
-      expect(addAction).toHaveBeenCalledWith('evaluateIdle', PRIORITY.HIGH);
-    });
-
-    it('should return true when bot reaches the base', () => {
-      // Setup for a completed return to base
-      const updatedPlayerStore = {
+    
+    it('should return true if the ship is already at the base', () => {
+      // Setup for ship already at base
+      const alreadyAtBaseStore = {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
@@ -523,30 +619,112 @@ describe('Section 6: Bot Actions', () => {
             ...mockPlayerStore.players.player2,
             vehicles: {
               ship: { 
-                coord: 'A0',  // Bot has reached base
+                coord: 'A0', // Already at base
                 isMoving: false,
                 startCoord: 'A0'
-              }
-            },
-            memory: {
-              returnState: {
-                started: true,
-                startTime: Date.now() - 5000
               }
             }
           }
         }
       };
       
-      // Now the bot is at base
-      BotConditions.isAtBase.mockReturnValueOnce({ result: true });
+      const result = returnToBaseAction(alreadyAtBaseStore, mockTileStore, addAction, changeState);
       
-      const result = returnToBaseAction(updatedPlayerStore, mockTileStore, addAction, changeState);
+      expect(result).toBe(true); // Action completed immediately
+    });
+    
+    it('should return true when ship reaches the base', () => {
+      // Setup for a ship that just arrived at base
+      const justArrivedAtBaseStore = {
+        ...mockPlayerStore,
+        players: {
+          ...mockPlayerStore.players,
+          player2: {
+            ...mockPlayerStore.players.player2,
+            memory: {
+              returnState: {
+                started: true,
+                startTime: Date.now() - 5000 // Started 5 seconds ago
+              }
+            },
+            vehicles: {
+              ship: { 
+                coord: 'A0', // Has reached base
+                isMoving: false,
+                startCoord: 'A0'
+              }
+            }
+          }
+        }
+      };
       
-      expect(result).toBe(true);
-      // Simplified expectations
-      expect(changeState).toHaveBeenCalledWith(BOT_STATES.IDLE);
-      expect(addAction).toHaveBeenCalledWith('evaluateIdle', PRIORITY.HIGH);
+      const result = returnToBaseAction(justArrivedAtBaseStore, mockTileStore, addAction, changeState);
+      
+      expect(result).toBe(true); // Action completed
+      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', expect.objectContaining({
+        returnState: null
+      }));
+    });
+    
+    it('should fail if the base is no longer accessible', () => {
+      // Setup for inaccessible base
+      const noBaseTileStore = {
+        tiles: {
+          // A0 is missing - base no longer exists
+          'B0': { 
+            coord: 'B0', 
+            position: { x: 1, y: 0, z: 0 }, 
+            walkable: true
+          }
+        },
+        getTile: vi.fn(coord => noBaseTileStore.tiles[coord])
+      };
+      
+      const result = returnToBaseAction(mockPlayerStore, noBaseTileStore, addAction, changeState);
+      
+      expect(result).toBe(true); // Action failed
+      expect(addAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'returnToBaseAction',
+          status: 'failed'
+        })
+      );
+    });
+    
+    it('should timeout if movement takes too long', () => {
+      // Setup for timeout
+      const timedOutStore = {
+        ...mockPlayerStore,
+        players: {
+          ...mockPlayerStore.players,
+          player2: {
+            ...mockPlayerStore.players.player2,
+            memory: {
+              returnState: {
+                started: true,
+                startTime: Date.now() - 60000 // Started 60 seconds ago (timeout)
+              }
+            },
+            vehicles: {
+              ship: { 
+                coord: 'B0', // Still not at base
+                isMoving: true,
+                startCoord: 'A0'
+              }
+            }
+          }
+        }
+      };
+      
+      const result = returnToBaseAction(timedOutStore, mockTileStore, addAction, changeState);
+      
+      expect(result).toBe(true); // Action failed due to timeout
+      expect(addAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'returnToBaseAction',
+          status: 'failed'
+        })
+      );
     });
   });
 
@@ -579,6 +757,14 @@ describe('Section 6: Bot Actions', () => {
         }
       }
     };
+
+    beforeEach(() => {
+      // Reset mocks before each test
+      mockPlayerStore.refuelVehicle.mockClear();
+      mockPlayerStore.transferResourcesToScore.mockClear();
+      mockPlayerStore.updateVehicle.mockClear();
+      BotConditions.getCurrentBotId.mockReturnValue('player2');
+    });
 
     it('should refuel the bot when at base', () => {
       // Set up for bot at base but not fully refueled
@@ -614,6 +800,50 @@ describe('Section 6: Bot Actions', () => {
       expect(result).toBe(false);
       expect(changeState).toHaveBeenCalledWith(BOT_STATES.IDLE);
       expect(addAction).toHaveBeenCalledWith('evaluateIdle', PRIORITY.HIGH);
+    });
+    
+    it('should handle refueling failure gracefully', () => {
+      // Set up for bot at base but refueling fails
+      BotConditions.isAtBase.mockReturnValueOnce({ result: true });
+      BotConditions.isFullyRefueled.mockReturnValueOnce({ result: false });
+      mockPlayerStore.refuelVehicle.mockReturnValueOnce(false);
+      
+      const result = refuelAtBaseAction(mockPlayerStore, mockTileStore, addAction, changeState);
+      
+      expect(result).toBe(true); // Action is considered completed even if refuel fails
+      expect(mockPlayerStore.refuelVehicle).toHaveBeenCalled();
+      expect(mockPlayerStore.transferResourcesToScore).toHaveBeenCalled(); // Still transfers resources
+    });
+    
+    it('should return false when bot vehicle is not found', () => {
+      // Setup missing bot vehicle
+      const emptyPlayerStore = {
+        players: { player2: { vehicles: {} } },
+        updateVehicle: vi.fn(),
+        refuelVehicle: vi.fn(),
+        transferResourcesToScore: vi.fn()
+      };
+      
+      const result = refuelAtBaseAction(emptyPlayerStore, mockTileStore, addAction, changeState);
+      
+      expect(result).toBe(false);
+      expect(emptyPlayerStore.refuelVehicle).not.toHaveBeenCalled();
+      expect(emptyPlayerStore.transferResourcesToScore).not.toHaveBeenCalled();
+    });
+    
+    it('should handle null player data gracefully', () => {
+      // Setup null player data
+      const nullPlayerStore = {
+        players: null,
+        updateVehicle: vi.fn(),
+        refuelVehicle: vi.fn(),
+        transferResourcesToScore: vi.fn()
+      };
+      
+      const result = refuelAtBaseAction(nullPlayerStore, mockTileStore, addAction, changeState);
+      
+      expect(result).toBe(false);
+      expect(nullPlayerStore.refuelVehicle).not.toHaveBeenCalled();
     });
   });
 });

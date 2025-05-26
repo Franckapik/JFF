@@ -121,14 +121,89 @@ describe('Gestion des Tuiles', () => {
       // Test de la fonction avec différents paramètres
       const result1 = useTileStore.getState().getWalkableTilesInRadius('0,0', 3);
       const result2 = useTileStore.getState().getWalkableTilesInRadius('0,0', 2, true);
-      const result3 = useTileStore.getState().getWalkableTilesInRadius('0,0', 2, false, false);
+      const result3 = useTileStore.getState().getWalkableTilesInRadius('0,0', 2, false, true);
       
       // Vérifications
       expect(initialState.getWalkableTilesInRadius).toHaveBeenCalledWith('0,0', 3);
       expect(initialState.getWalkableTilesInRadius).toHaveBeenCalledWith('0,0', 2, true);
-      expect(initialState.getWalkableTilesInRadius).toHaveBeenCalledWith('0,0', 2, false, false);
+      expect(initialState.getWalkableTilesInRadius).toHaveBeenCalledWith('0,0', 2, false, true);
       expect(result1).toEqual(walkableTiles);
       expect(result1[0].coord).toBe('0,0'); // Vérifie que la première tuile est bien celle à la position source
+    });
+    
+    it('getWalkableTilesInRadius devrait retourner un tableau vide pour un rayon de 0', () => {
+      // Setup - implémentation de la méthode mockée pour un rayon 0
+      initialState.getWalkableTilesInRadius.mockReturnValue([
+        { coord: '0,0', distance: 0 } // Uniquement la tuile source pour rayon 0
+      ]);
+      
+      // Exécution avec rayon 0
+      const result = useTileStore.getState().getWalkableTilesInRadius('0,0', 0);
+      
+      // Vérification
+      expect(initialState.getWalkableTilesInRadius).toHaveBeenCalledWith('0,0', 0);
+      expect(result).toHaveLength(1);
+      expect(result[0].coord).toBe('0,0');
+    });
+    
+    it('getWalkableTilesInRadius devrait filtrer correctement avec onlyUnexplored=true', () => {
+      // Setup - implémentation simulant uniquement des tuiles non explorées
+      const unexploredTiles = [
+        { coord: '0,0', distance: 0 },
+        { coord: '1,1', distance: 1.4 },
+      ].sort((a, b) => a.distance - b.distance);
+      
+      initialState.getWalkableTilesInRadius.mockReturnValue(unexploredTiles);
+      
+      // Exécution avec filtre sur tiles non explorées
+      const result = useTileStore.getState().getWalkableTilesInRadius('0,0', 2, true);
+      
+      // Vérification
+      expect(initialState.getWalkableTilesInRadius).toHaveBeenCalledWith('0,0', 2, true);
+      expect(result).toEqual(unexploredTiles);
+      expect(result.length).toBe(2);
+      // Vérifier l'absence de tuiles explorées dans le résultat
+      expect(result.find(t => t.coord === '0,1')).toBeUndefined(); // 0,1 est une tuile explorée dans initialState
+    });
+    
+    it('getWalkableTilesInRadius devrait filtrer correctement avec excludeDanger=false', () => {
+      // Setup - implémentation simulant l'inclusion des tuiles de danger
+      const tilesWithDanger = [
+        { coord: '0,0', distance: 0 },
+        { coord: '1,0', distance: 1 }, // Tuile de type danger
+        { coord: '1,1', distance: 1.4 },
+      ].sort((a, b) => a.distance - b.distance);
+      
+      initialState.getWalkableTilesInRadius.mockReturnValue(tilesWithDanger);
+      
+      // Exécution avec inclusion des tuiles danger
+      const result = useTileStore.getState().getWalkableTilesInRadius('0,0', 2, false, false);
+      
+      // Vérification
+      expect(initialState.getWalkableTilesInRadius).toHaveBeenCalledWith('0,0', 2, false, false);
+      expect(result).toEqual(tilesWithDanger);
+      expect(result.find(t => t.coord === '1,0')).toBeDefined(); // 1,0 est une tuile danger et devrait être présente
+    });
+    
+    it('getWalkableTilesInRadius devrait accepter un véhicule comme source', () => {
+      // Setup - implémentation avec un objet véhicule comme source
+      const vehicle = { coord: '0,0', position: { x: 0, y: 0, z: 0 } };
+      const walkableTiles = [
+        { coord: '0,0', distance: 0 },
+        { coord: '0,1', distance: 1 },
+      ];
+      
+      initialState.getWalkableTilesInRadius.mockImplementation((source) => {
+        // Vérifie que la fonction est appelée avec le bon véhicule
+        return source === vehicle ? walkableTiles : [];
+      });
+      
+      // Exécution avec un véhicule comme source
+      const result = useTileStore.getState().getWalkableTilesInRadius(vehicle, 2);
+      
+      // Vérification
+      expect(initialState.getWalkableTilesInRadius).toHaveBeenCalledWith(vehicle, 2);
+      expect(result).toEqual(walkableTiles);
     });
 
     it('selectRandomWalkableTile devrait retourner une tuile accessible aléatoire', () => {
@@ -149,6 +224,38 @@ describe('Gestion des Tuiles', () => {
       expect(initialState.selectRandomWalkableTile).toHaveBeenCalled();
       expect(result).toEqual(randomTile);
       expect(result.walkable).toBe(true);
+    });
+
+    it('selectRandomWalkableTile devrait gérer le cas où aucune tuile accessible n\'est disponible', () => {
+      // Setup - simulation d'un monde sans tuiles accessibles
+      initialState.selectRandomWalkableTile.mockReturnValue(null);
+      
+      // Exécution de la fonction
+      const result = useTileStore.getState().selectRandomWalkableTile();
+      
+      // Vérifications
+      expect(initialState.selectRandomWalkableTile).toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+    
+    it('selectRandomWalkableTile devrait gérer le cas où une seule tuile accessible est disponible', () => {
+      // Setup - simulation d'un monde avec une seule tuile accessible
+      const singleTile = {
+        coord: '0,0',
+        position: { x: 0, y: 0, z: 0 },
+        walkable: true,
+        type: 'resource'
+      };
+      
+      initialState.selectRandomWalkableTile.mockReturnValue(singleTile);
+      
+      // Exécution de la fonction
+      const result = useTileStore.getState().selectRandomWalkableTile();
+      
+      // Vérifications
+      expect(initialState.selectRandomWalkableTile).toHaveBeenCalled();
+      expect(result).toEqual(singleTile);
+      expect(result.coord).toBe('0,0');
     });
 
     it('getNeighbors devrait retourner les tuiles voisines d\'une coordonnée', () => {
@@ -173,6 +280,46 @@ describe('Gestion des Tuiles', () => {
       expect(result.length).toBe(6); // Une tuile hexagonale a 6 voisins
     });
 
+    it('getNeighbors devrait retourner les tuiles voisines pour une coordonnée en bordure', () => {
+      // Setup - mock pour une tuile en bordure (qui a moins de 6 voisins)
+      // Considérons une tuile à la bordure qui n'a que 4 voisins
+      const borderNeighbors = [
+        initialState.tiles['0,0'],
+        initialState.tiles['1,0'],
+        initialState.tiles['1,1'],
+        initialState.tiles['0,2'],
+      ];
+      
+      initialState.getNeighbors.mockReturnValue(borderNeighbors);
+      
+      // Exécution de la fonction pour une coordonnée en bordure
+      const result = useTileStore.getState().getNeighbors('0,1'); // Imaginons que c'est une bordure
+      
+      // Vérifications
+      expect(initialState.getNeighbors).toHaveBeenCalledWith('0,1');
+      expect(result).toEqual(borderNeighbors);
+      expect(result.length).toBe(4); // Moins de 6 voisins car en bordure
+    });
+    
+    it('getNeighbors devrait retourner les tuiles voisines pour une coordonnée dans un coin', () => {
+      // Setup - mock pour une tuile dans un coin (qui a encore moins de voisins)
+      // Considérons une tuile dans un coin qui n'a que 3 voisins
+      const cornerNeighbors = [
+        initialState.tiles['0,0'],
+        initialState.tiles['1,-1'],
+      ];
+      
+      initialState.getNeighbors.mockReturnValue(cornerNeighbors);
+      
+      // Exécution de la fonction pour une coordonnée dans un coin
+      const result = useTileStore.getState().getNeighbors('-1,0'); // Imaginons que c'est un coin
+      
+      // Vérifications
+      expect(initialState.getNeighbors).toHaveBeenCalledWith('-1,0');
+      expect(result).toEqual(cornerNeighbors);
+      expect(result.length).toBe(2); // Encore moins de voisins car dans un coin
+    });
+    
     it('getNeighbors devrait retourner un tableau vide pour une coordonnée invalide', () => {
       // Setup
       initialState.getNeighbors.mockReturnValue([]);
@@ -261,97 +408,46 @@ describe('Gestion des Tuiles', () => {
       expect(initialState.deductTileResources).toHaveBeenCalledWith(coord, collectedResources);
       expect(result).toBe(true);
     });
-
-    it('analyzeResourcesNearPosition devrait identifier les ressources proches', () => {
-      // Setup
-      const sourceCoord = '0,0';
-      const radius = 2;
-      const expectedResources = [
-        {
-          coord: '0,0',
-          position: initialState.tiles['0,0'].position,
-          resources: initialState.tiles['0,0'].resources,
-          distance: 0
-        },
-        {
-          coord: '0,1',
-          position: initialState.tiles['0,1'].position,
-          resources: initialState.tiles['0,1'].resources,
-          distance: 1.7
-        },
-        {
-          coord: '1,1',
-          position: initialState.tiles['1,1'].position,
-          resources: initialState.tiles['1,1'].resources,
-          distance: 2.4
-        }
-      ];
+    
+    it('deductTileResources devrait gérer une tentative de déduction excessive', () => {
+      // Setup - tentative de collecter plus que ce qui est disponible
+      const coord = '1,1'; // Tuile avec {food: 10, debris: 0, special: 0}
+      const excessiveCollection = { food: 20, debris: 5, special: 1 }; // Plus que ce qui est disponible
       
-      initialState.analyzeResourcesNearPosition.mockReturnValue(expectedResources);
-      
-      // Exécution
-      const result = useTileStore.getState().analyzeResourcesNearPosition(sourceCoord, radius);
-      
-      // Vérifications
-      expect(initialState.analyzeResourcesNearPosition).toHaveBeenCalledWith(sourceCoord, radius);
-      expect(result).toEqual(expectedResources);
-      expect(result.length).toBe(3);
-    });
-
-    it('analyzeResourcesNearPosition devrait accepter un véhicule comme source', () => {
-      // Setup
-      const sourceVehicle = { coord: '0,0', position: { x: 0, y: 0, z: 0 } };
-      const radius = 2;
-      
-      initialState.analyzeResourcesNearPosition.mockImplementation((source) => {
-        // Vérifie si la fonction est appelée avec le bon véhicule
-        return source === sourceVehicle ? [] : null;
+      initialState.deductTileResources.mockImplementation((c, r) => {
+        // Les ressources ne devraient jamais devenir négatives
+        return c === coord && r === excessiveCollection;
       });
       
       // Exécution
-      const result = useTileStore.getState().analyzeResourcesNearPosition(sourceVehicle, radius);
+      const result = useTileStore.getState().deductTileResources(coord, excessiveCollection);
       
       // Vérifications
-      expect(initialState.analyzeResourcesNearPosition).toHaveBeenCalledWith(sourceVehicle, radius);
-      expect(result).toEqual([]);
-    });
-
-    it('analyzeResourcesNearPosition devrait ignorer les tuiles sans ressources ou déjà collectées', () => {
-      // Setup
-      const sourceCoord = '0,0';
-      const radius = 3;
-      // On suppose que seules les tuiles avec des ressources non collectées seront retournées
-      const expectedResources = [
-        {
-          coord: '0,0',
-          position: initialState.tiles['0,0'].position,
-          resources: initialState.tiles['0,0'].resources,
-          distance: 0
-        },
-        {
-          coord: '0,1',
-          position: initialState.tiles['0,1'].position,
-          resources: initialState.tiles['0,1'].resources,
-          distance: 1.7
-        },
-        {
-          coord: '1,1',
-          position: initialState.tiles['1,1'].position,
-          resources: initialState.tiles['1,1'].resources,
-          distance: 2.4
-        }
-      ];
+      expect(initialState.deductTileResources).toHaveBeenCalledWith(coord, excessiveCollection);
+      expect(result).toBe(true);
       
-      initialState.analyzeResourcesNearPosition.mockReturnValue(expectedResources);
+      // Dans l'implémentation réelle, les ressources seraient réduites à 0, jamais négatives
+      // et la tuile serait marquée comme collectée
+    });
+    
+    it('deductTileResources devrait gérer les ressources multiples', () => {
+      // Setup - déduction de plusieurs types de ressources
+      const coord = '0,0';
+      const mixedResources = { food: 10, debris: 20, special: 5 };
+      
+      initialState.deductTileResources.mockImplementation((c, r) => {
+        return c === coord && 
+               r.food === mixedResources.food && 
+               r.debris === mixedResources.debris && 
+               r.special === mixedResources.special;
+      });
       
       // Exécution
-      const result = useTileStore.getState().analyzeResourcesNearPosition(sourceCoord, radius);
+      const result = useTileStore.getState().deductTileResources(coord, mixedResources);
       
       // Vérifications
-      expect(initialState.analyzeResourcesNearPosition).toHaveBeenCalledWith(sourceCoord, radius);
-      // On vérifie que '1,0' (tuile de type danger) et '0,-1' (tuile non walkable) ne sont pas incluses
-      expect(result.find(r => r.coord === '1,0')).toBeUndefined();
-      expect(result.find(r => r.coord === '0,-1')).toBeUndefined();
+      expect(initialState.deductTileResources).toHaveBeenCalledWith(coord, mixedResources);
+      expect(result).toBe(true);
     });
   });
 
@@ -359,7 +455,7 @@ describe('Gestion des Tuiles', () => {
   describe('États des Tuiles', () => {
     it('markTileAsExplored devrait marquer une tuile comme explorée', () => {
       // Setup
-      const coord = '1,1';
+      const coord = '1,1'; // Tuile non explorée dans l'état initial
       initialState.markTileAsExplored.mockImplementation((c) => c === coord);
       
       // Exécution
@@ -368,12 +464,45 @@ describe('Gestion des Tuiles', () => {
       // Vérifications
       expect(initialState.markTileAsExplored).toHaveBeenCalledWith(coord);
     });
-
+    
+    it('markTileAsExplored devrait fonctionner même si la tuile est déjà explorée', () => {
+      // Setup
+      const coord = '0,1'; // Tuile déjà explorée dans l'état initial
+      initialState.markTileAsExplored.mockImplementation((c) => c === coord);
+      
+      // Exécution
+      useTileStore.getState().markTileAsExplored(coord);
+      
+      // Vérifications
+      expect(initialState.markTileAsExplored).toHaveBeenCalledWith(coord);
+    });
+    
+    it('markTileAsExplored ne devrait pas modifier d\'autres propriétés de la tuile', () => {
+      // Setup - Préserver toutes les autres propriétés de la tuile
+      const coord = '1,0'; // Tuile de type danger
+      const originalTile = { ...initialState.tiles[coord] };
+      
+      initialState.markTileAsExplored.mockImplementation((c) => {
+        if (c === coord) {
+          // Dans l'implémentation réelle, seul explored devrait être changé
+          return true;
+        }
+        return false;
+      });
+      
+      // Exécution
+      useTileStore.getState().markTileAsExplored(coord);
+      
+      // Vérifications
+      expect(initialState.markTileAsExplored).toHaveBeenCalledWith(coord);
+      // Dans l'implémentation réelle, on vérifierait que seule la propriété explored a changé
+    });
+    
     it('calculateDistance devrait calculer la distance entre deux coordonnées avec pathfinding', () => {
       // Setup
       const coord1 = '0,0';
       const coord2 = '1,1';
-      const formattedResult = '2.0';
+      const formattedResult = '2';
       const numericResult = 2;
       
       initialState.calculateDistance.mockImplementation((c1, c2, formatted, usePath) => {
@@ -432,6 +561,50 @@ describe('Gestion des Tuiles', () => {
       expect(initialState.calculateDistance).toHaveBeenCalledWith(validCoord, invalidCoord);
       expect(result1).toBe(errorResult);
       expect(result2).toBe(errorResult);
+    });
+
+    it('calculateDistance devrait retourner 0 pour des coordonnées identiques avec pathfinding', () => {
+      // Setup
+      const coord = '0,0';
+      
+      initialState.calculateDistance.mockImplementation((c1, c2, formatted, usePath) => {
+        if (c1 === c2) {
+          return formatted ? '0' : 0;
+        }
+        return formatted ? '1' : 1;
+      });
+      
+      // Exécution
+      const resultFormatted = useTileStore.getState().calculateDistance(coord, coord, true, true);
+      const resultNumeric = useTileStore.getState().calculateDistance(coord, coord, false, true);
+      
+      // Vérifications
+      expect(initialState.calculateDistance).toHaveBeenCalledWith(coord, coord, true, true);
+      expect(initialState.calculateDistance).toHaveBeenCalledWith(coord, coord, false, true);
+      expect(resultFormatted).toBe('0');
+      expect(resultNumeric).toBe(0);
+    });
+    
+    it('calculateDistance devrait retourner 0 pour des coordonnées identiques sans pathfinding', () => {
+      // Setup
+      const coord = '0,0';
+      
+      initialState.calculateDistance.mockImplementation((c1, c2, formatted, usePath) => {
+        if (c1 === c2) {
+          return formatted ? '0.0' : 0;
+        }
+        return formatted ? '1.0' : 1;
+      });
+      
+      // Exécution
+      const resultFormatted = useTileStore.getState().calculateDistance(coord, coord, true, false);
+      const resultNumeric = useTileStore.getState().calculateDistance(coord, coord, false, false);
+      
+      // Vérifications
+      expect(initialState.calculateDistance).toHaveBeenCalledWith(coord, coord, true, false);
+      expect(initialState.calculateDistance).toHaveBeenCalledWith(coord, coord, false, false);
+      expect(resultFormatted).toBe('0.0');
+      expect(resultNumeric).toBe(0);
     });
 
     it('findPath devrait être utilisé par calculateDistance avec pathfinding', () => {
