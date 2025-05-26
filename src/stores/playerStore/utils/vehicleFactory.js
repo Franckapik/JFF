@@ -38,7 +38,8 @@ export const createVehicle = (id, type) => {
     };
   }
   
-  if (isDroneId(id)) {
+  // Sécuriser l'appel à isDroneId contre les valeurs null/undefined
+  if (id && isDroneId(id)) {
     const droneType = type;
     const droneBase = {
       ...baseVehicle,
@@ -67,7 +68,8 @@ export const createVehicle = (id, type) => {
           ...droneBase,
           maxCapacity: { food: 0, debris: 0, special: 0 },  // Can't carry resources
           specialScanRange: 5,  // Better at finding special objects
-          specialDetection: true  // Can detect special items
+          specialDetection: true,  // Can detect special items
+          specialAbilityCharge: 100  // Special ability charge at 100%
         };
       default:
         return droneBase;
