@@ -33,7 +33,7 @@ export const BotActions = {
   moveToRandomTile: moveToRandomTileAction,
   returnToBase: returnToBaseAction,
   refuelAtBase: refuelAtBaseAction,
-  explorerWithDrone: exploreWithDroneAction,
+  exploreDrone: exploreWithDroneAction,
   moveToResourceAction: moveToResourceAction,
   collectResourceAction: collectResourceAction,
   testQueueAction: testQueueAction,
@@ -46,7 +46,7 @@ export const BotActions = {
     'collectResource': 'collectResourceAction', // Nouvelle action de collecte de ressource
     'returnToBase': 'returnToBase',
     'refuel': 'refuelAtBase',
-    'exploreDrone': 'explorerWithDrone',
+    'exploreDrone': 'exploreDrone',
     'moveToRandomTile': 'moveToRandomTile',
     'testQueue': 'testQueueAction'              // Nouvelle action de test de la file
   }

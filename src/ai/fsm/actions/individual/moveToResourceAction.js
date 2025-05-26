@@ -41,7 +41,10 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
     if (knownResources.length === 0) {
       fsmLogger.condition('No resources in memory, returning to IDLE for reevaluation');
       changeState(BOT_STATES.IDLE);
-      addAction('evaluateIdle', PRIORITY.HIGH);
+      addAction({
+          type: 'moveToResourceAction',
+          status: 'failed'
+        });
       return true; // Action terminée - passage à IDLE pour réévaluation
     }
     
@@ -52,6 +55,12 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
       
       // Utiliser la fonction de calcul de distance du fichier utils.js
       const path = findPath(botVehicle.coord, resource.coord, tileStore.tiles);
+      
+      // Handle case where path is blocked or doesn't exist
+      if (!path || path.length === 0) {
+        return null; // Skip this resource as it's not reachable
+      }
+      
       const distance = path.length > 0 ? path.length - 1 : Infinity; // Distance = nombre de déplacements dans le chemin
       
       // Calculer la valeur totale des ressources
@@ -77,6 +86,30 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
     if (rankedResources.length > 0) {
       const bestResource = rankedResources[0];
       const targetTile = tileStore.tiles[bestResource.coord];
+      
+      // Special handling for blocked paths
+      // First check if the target tile exists in the tileStore
+      if (!targetTile) {
+        fsmLogger.error(`Target tile at ${bestResource.coord} does not exist`);
+        addAction({
+          type: 'moveToResourceAction',
+          status: 'failed',
+          reason: 'noTargetTile'
+        });
+        return true; // Action échouée mais terminée
+      }
+      
+      // Then check for path accessibility
+      const path = findPath(botVehicle.coord, bestResource.coord, tileStore.tiles);
+      if (!path || path.length === 0) {
+        fsmLogger.error(`Path to resource at ${bestResource.coord} is blocked`);
+        addAction({
+          type: 'moveToResourceAction',
+          status: 'failed',
+          reason: 'pathBlocked'
+        });
+        return true; // Action échouée mais terminée
+      }
       
       if (targetTile) {
         // Vérifier si le bot est déjà à la position cible
@@ -129,7 +162,12 @@ export const moveToResourceAction = (playerStore, tileStore, addAction, changeSt
     fsmLogger.action(`Resource movement timed out after ${(elapsedTime/1000).toFixed(1)}s`);
     playerStore.updatePlayerMemory(botId, { movementState: null });
     
-    return false; // Action échouée (timeout)
+    addAction({
+      type: 'moveToResourceAction',
+      status: 'failed'
+    });
+    
+    return true; // Action échouée mais terminée (timeout)
   }
   
   // Si le bot a atteint sa destination ou n'est plus en mouvement

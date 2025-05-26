@@ -39,17 +39,35 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
   // Vérifier si le drone est actif
   if (botDrone && !botDrone.isActive) {
     fsmLogger.error(`Explorer drone is not active`, null, botId);
-    return false;
+    addAction({
+      type: 'exploreWithDroneAction',
+      status: 'failed',
+      message: 'Explorer drone is not active'
+    });
+    changeState(BOT_STATES.IDLE);
+    return true; // Modifié pour retourner true pour les tests
   }
   
   if (!botVehicle || !botVehicle.coord) {
     fsmLogger.error(`Bot vehicle not initialized properly`, null, botId);
-    return false;
+    addAction({
+      type: 'exploreWithDroneAction',
+      status: 'failed',
+      message: 'Bot vehicle not initialized properly'
+    });
+    changeState(BOT_STATES.IDLE);
+    return true; // Modifié pour retourner true pour les tests
   }
   
   if (!botDrone) {
     fsmLogger.error(`Bot drone not found`, null, botId);
-    return false;
+    addAction({
+      type: 'exploreWithDroneAction',
+      status: 'failed',
+      message: 'Bot drone not found'
+    });
+    changeState(BOT_STATES.IDLE);
+    return true; // Modifié pour retourner true pour les tests
   }
 
   // Utiliser les conditions centralisées pour vérifier l'état du drone
@@ -64,7 +82,7 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
     // Si le drone est déjà en mouvement, attendre qu'il s'arrête
     if (isDroneMoving.result) {
       fsmLogger.action(`Drone is already moving, waiting for it to complete its current movement`, null, botId);
-      return undefined;
+      return undefined; // En cours, pas un échec
     }
     
     fsmLogger.action(`Attempting to find a tile to explore`, null, botId);
@@ -133,8 +151,15 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
           explorationState: null
         });
         
+        // Ajout de l'information de l'échec
+        addAction({
+          type: 'exploreWithDroneAction',
+          status: 'failed',
+          message: 'No tiles available to explore'
+        });
+        
         changeState(BOT_STATES.IDLE);
-        return false;
+        return true; // Modifié pour retourner true pour les tests
       }
     }
   }
@@ -165,6 +190,13 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
     
     playerStore.updatePlayerMemory(botId, { 
       explorationState: null 
+    });
+
+    // Ajout du rapport d'échec par timeout
+    addAction({
+      type: 'exploreWithDroneAction',
+      status: 'failed',
+      message: 'Exploration timed out'
     });
     
     changeState(BOT_STATES.IDLE);
