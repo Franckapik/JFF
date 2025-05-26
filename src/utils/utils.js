@@ -73,30 +73,65 @@ export function generateHexPositions(radius, spacing) {
   // Randomly set two tiles as non-walkable
   const walkableTiles = hexPositions.filter((tile) => tile.walkable && !tile.outer);
   const randomIndices = [];
-  while (randomIndices.length < 2 && walkableTiles.length > 0) {
+  // Correction: S'assurer que la boucle ne devient pas infinie si walkableTiles.length < 2
+  const numTilesToMakeNonWalkable = Math.min(2, walkableTiles.length);
+  while (randomIndices.length < numTilesToMakeNonWalkable && walkableTiles.length > 0) {
     const randomIndex = Math.floor(Math.random() * walkableTiles.length);
     if (!randomIndices.includes(randomIndex)) {
       randomIndices.push(randomIndex);
     }
   }
   randomIndices.forEach((index) => {
-    walkableTiles[index].walkable = false;
+    if (walkableTiles[index]) { // Vérifier si l'index est valide
+      walkableTiles[index].walkable = false;
+    }
   });
 
   // Assign starting tiles for all players
-  const availableTiles = hexPositions.filter((tile) => tile.walkable && !tile.outer);
+  // Correction: Filtrer à nouveau availableTiles après avoir rendu certaines non-marchables
+  const availableTiles = hexPositions.filter((tile) => tile.walkable && !tile.outer && tile.type !== 'fuel' && tile.type !== 'repair' && tile.type !== 'danger');
   const playerStartTiles = [];
   
+  // Correction: Gérer le cas où il n'y a pas assez de tuiles disponibles pour tous les joueurs
+  if (availableTiles.length < playerCount) {
+    console.warn(`generateHexPositions: Not enough available tiles (${availableTiles.length}) for ${playerCount} players. Some players might not get a starting tile.`);
+  }
+
+  const numPlayersToPlace = Math.min(playerCount, availableTiles.length);
+
   // Select random starting positions for each player
-  for (let i = 0; i < playerCount; i++) {
+  for (let i = 0; i < numPlayersToPlace; i++) {
     let startTile;
+    let attempts = 0; // Pour éviter une boucle infinie si la logique de sélection a un problème
     do {
       startTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
-    } while (playerStartTiles.some(tile => tile.coord === startTile.coord));
+      attempts++;
+      if (attempts > availableTiles.length * 2 && availableTiles.length > 0) { // Limite de tentatives
+        console.warn("generateHexPositions: Could not find a unique starting tile after multiple attempts. Breaking loop.");
+        // Tenter de prendre la première tuile non encore assignée pour éviter une erreur complète
+        const unassignedTile = availableTiles.find(t => !playerStartTiles.some(pst => pst.coord === t.coord));
+        if (unassignedTile) {
+          startTile = unassignedTile;
+          break;
+        } else {
+          // Si toutes les tuiles disponibles sont déjà dans playerStartTiles (ne devrait pas arriver avec la logique actuelle)
+          // ou si availableTiles est vide, on ne peut rien faire de plus.
+          console.error("generateHexPositions: No available or unassigned tile found for player start. Player will not be placed.");
+          startTile = null; // Indique qu'aucune tuile n'a pu être assignée
+          break;
+        }
+      }
+    } while (startTile && playerStartTiles.some(tile => tile.coord === startTile.coord) && attempts <= availableTiles.length * 2);
     
-    playerStartTiles.push(startTile);
-    startTile.type = "depart";
-    startTile.playerId = i === 0 ? "player1" : `player${i + 1}`;
+    if (startTile) { // S'assurer qu'une tuile a été trouvée
+      playerStartTiles.push(startTile);
+      startTile.type = "depart";
+      startTile.playerId = i === 0 ? "player1" : `player${i + 1}`; // Assigner playerId correctement
+      // Retirer la tuile assignée des tuiles disponibles pour la prochaine itération (si on veut garantir l'unicité plus strictement)
+      // Cependant, la condition `playerStartTiles.some` devrait suffire.
+      // const indexToRemove = availableTiles.findIndex(t => t.coord === startTile.coord);
+      // if (indexToRemove > -1) availableTiles.splice(indexToRemove, 1);
+    }
   }
 
   // Set starting positions for all players
