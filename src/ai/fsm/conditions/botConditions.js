@@ -224,10 +224,14 @@ export const BotConditions = {
     if (!botVehicle) return { result: false };
     
     const isAtBase = botVehicle.coord === botVehicle.startCoord;
+    // Ne déclencher le ravitaillement que si le carburant n'est pas déjà plein
+    const needsRefuel = isAtBase && botVehicle.fuel < 100;
+    
     return {
       result: isAtBase,
       priority: IDLE_EVALUATION.SAFETY,
-      action: isAtBase ? { type: 'refuel', priority: PRIORITY.MEDIUM } : null
+      // Remove automatic refuel action to prevent refueling loop
+      action: null
     };
   },
   
@@ -428,15 +432,27 @@ export const BotConditions = {
       }
     }
     
-    // 2. Si déjà à la base, priorité au ravitaillement
+    // 2. Si déjà à la base, priorité au ravitaillement si nécessaire
     const atBase = BotConditions.isAtBase(botVehicle);
+    const fullyRefueled = BotConditions.isFullyRefueled(botVehicle);
+    
     if (atBase.result) {
-      if (!BotConditions.isFullyRefueled(botVehicle).result) {
+      // Si besoin de ravitaillement (seulement si le carburant n'est pas plein)
+      if (!fullyRefueled.result && botVehicle.fuel < 100) {
         return {
           result: true,
           state: BOT_STATES.IDLE,
           action: { type: 'refuel', priority: PRIORITY.HIGH },
           reason: "refueling"
+        };
+      } 
+      // Si plein de carburant et à la base, on peut passer à l'exploration
+      else if (currentState === BOT_STATES.IDLE) {
+        return {
+          result: true,
+          state: BOT_STATES.EXPLORING,
+          action: { type: 'exploreDrone', priority: PRIORITY.MEDIUM },
+          reason: "starting_exploration"
         };
       }
     }
@@ -547,6 +563,12 @@ export const BotConditions = {
   evaluateFromIdle: () => {
     const playerState = usePlayerStore.getState();
     const botId = BotConditions.getCurrentBotId();
+    const botVehicleId = getMainShipId();
+    const botVehicle = playerState.players?.[botId]?.vehicles?.[botVehicleId];
+    
+    if (!botVehicle) return { result: false };
+    
+    // Récupérer l'état du bot
     const canProceed = () => {
       // Vérifier s'il y a des ressources à collecter
       const resourcesToCollect = playerState.players[botId]?.memory?.knownResources || [];
@@ -573,22 +595,12 @@ export const BotConditions = {
       return { result: false };
     }
     
-    // Si on est à la base et le carburant est plein, on peut commencer à explorer
-    const atBase = BotConditions.isAtBase();
-    const fullyRefueled = BotConditions.isFullyRefueled();
-    
-    if (atBase.result && fullyRefueled.result) {
-      return {
-        result: true,
-        state: BOT_STATES.EXPLORING,
-        action: { type: 'exploreDrone', priority: PRIORITY.MEDIUM },
-        reason: "start_exploring"
-      };
-    }
+    // Vérifier si le bot est à la base
+    const atBase = BotConditions.isAtBase(botVehicle);
     
     // Si on n'est pas à la base, vérifier si on doit retourner
     if (!atBase.result) {
-      const returnToBase = BotConditions.shouldReturnToBase();
+      const returnToBase = BotConditions.shouldReturnToBase(botVehicle);
       if (returnToBase.result) {
         return {
           result: true,
@@ -597,6 +609,52 @@ export const BotConditions = {
           reason: "return_to_base"
         };
       }
+    }
+    
+    // Si on est à la base et qu'on a besoin de ravitaillement (fuel < 100)
+    if (atBase.result && botVehicle.fuel < 100) {
+      return {
+        result: true,
+        action: { type: 'refuel', priority: PRIORITY.HIGH },
+        reason: "need_refuel"
+      };
+    }
+    
+    // Si on est à la base et le carburant est plein, vérifier si on a des ressources
+    // connues à collecter
+    const hasEnoughResources = BotConditions.hasEnoughKnownResources();
+    const fullyRefueled = botVehicle.fuel >= 100;
+    
+    if (atBase.result && fullyRefueled) {
+      // Si on a des ressources connues, on passe à la collecte
+      if (hasEnoughResources.result) {
+        return {
+          result: true,
+          state: BOT_STATES.COLLECTING,
+          action: { type: 'moveToResource', priority: PRIORITY.HIGH },
+          reason: "collect_known_resources"
+        };
+      }
+      // Sinon on explore pour trouver des ressources
+      else {
+        return {
+          result: true,
+          state: BOT_STATES.EXPLORING,
+          action: { type: 'exploreDrone', priority: PRIORITY.MEDIUM },
+          reason: "start_exploring"
+        };
+      }
+    }
+    
+    // Si aucune condition n'est satisfaite mais que nous sommes à la base avec carburant plein,
+    // démarrer l'exploration par défaut pour éviter de rester bloqué
+    if (atBase.result && botVehicle.fuel >= 100) {
+      return {
+        result: true,
+        state: BOT_STATES.EXPLORING,
+        action: { type: 'exploreDrone', priority: PRIORITY.MEDIUM },
+        reason: "default_exploration"
+      };
     }
     
     // Aucune action nécessaire pour l'instant

@@ -1,516 +1,233 @@
- 🔵 INFO [17:27:09] Initializing bot FSM for Bot 1 (player2)
- 🟢 STATE [17:27:09] Entering IDLE state for bot player2 - Evaluating conditions
- 🔵 INFO [17:27:09] Bot player2 status: Fuel=100, At base=true
- 🟠 ACTION [17:27:09] Adding action to queue: evaluateIdle Object
- 🟢 STATE [17:27:09] Bot 1 (player2) initialized in IDLE state
- [MultiBotManager] Initialized Bot 1 (player2)
- 🔵 INFO [17:27:09] Initializing bot FSM for Bot 2 (player3)
- 🟢 STATE [17:27:09] Entering IDLE state for bot player3 - Evaluating conditions
- 🔵 INFO [17:27:09] Bot player3 status: Fuel=100, At base=true
- 🟠 ACTION [17:27:09] Adding action to queue: evaluateIdle Object
- 🟢 STATE [17:27:09] Bot 2 (player3) initialized in IDLE state
- [MultiBotManager] Initialized Bot 2 (player3)
- 🔵 INFO [17:27:09] Starting bot processing
- 🟠 ACTION [17:27:09] Adding action to queue: evaluateIdle Object
- [MultiBotManager] Bots started automatically
- 🔵 INFO [17:27:09] Switching active bot to Bot 1 (player2)
- 🟢 STATE [17:27:09] Entering IDLE state for bot player2 - Evaluating conditions
- 🔵 INFO [17:27:09] Bot player2 status: Fuel=100, At base=true
- 🟠 ACTION [17:27:09] Adding action to queue: evaluateIdle Object
- [MultiBotManager] Starting parallel processing mode
- 🚀 MOUVEMENT [17:27:09] [VehicleMovement] Deactivated movement for player2/ship
- 🟢 STATE [17:27:09] [DroneState] Initialized drone explorer_drone_2 in DOCKED_WITH_SHIP state
- 🚀 MOUVEMENT [17:27:09] [VehicleMovement] Deactivated movement for player2/explorer_drone_2
- 🚀 MOUVEMENT [17:27:09] [VehicleMovement] Deactivated movement for player3/ship
- 🟢 STATE [17:27:09] [DroneState] Initialized drone explorer_drone_3 in DOCKED_WITH_SHIP state
- 🚀 MOUVEMENT [17:27:09] [VehicleMovement] Deactivated movement for player3/explorer_drone_3
- [Scene] Initializing tiles...
- 🚀 MOUVEMENT [17:27:09] [VehicleMovement] Deactivated movement for player1/ship
- 🟢 STATE [17:27:09] [DroneState] Initialized drone explorer_drone_1 in DOCKED_WITH_SHIP state
- 🚀 MOUVEMENT [17:27:09] [VehicleMovement] Deactivated movement for player1/explorer_drone_1
- [Scene] Initializing players with tiles: Object
- [Scene] Initializing bots...
- [Scene] Initializing Bot 1 (player2)
- 🔵 INFO [17:27:09] Initializing bot FSM for Bot 1 (player2)
- 🟢 STATE [17:27:09] Entering IDLE state for bot player2 - Evaluating conditions
- 🔵 INFO [17:27:09] Bot player2 status: Fuel=100, At base=true
- 🟠 ACTION [17:27:09] Adding action to queue: evaluateIdle Object
- 🟢 STATE [17:27:09] Bot 1 (player2) initialized in IDLE state
- [Scene] Initializing Bot 2 (player3)
- 🔵 INFO [17:27:09] Initializing bot FSM for Bot 2 (player3)
- 🟢 STATE [17:27:09] Entering IDLE state for bot player3 - Evaluating conditions
- 🔵 INFO [17:27:09] Bot player3 status: Fuel=100, At base=true
- 🟠 ACTION [17:27:09] Adding action to queue: evaluateIdle Object
- 🟢 STATE [17:27:09] Bot 2 (player3) initialized in IDLE state
- 🚀 MOUVEMENT [17:27:09] [VehicleMovement] Setting initial position for player1: Object
- 🚀 MOUVEMENT [17:27:09] [VehicleMovement] Setting initial position for player2: Object
- 🚀 MOUVEMENT [17:27:09] [VehicleMovement] Setting initial position for player3: Object
- 🔵 INFO [17:27:10] Processing all 2 bots in parallel
- 🔵 INFO [17:27:10] Switching active bot to Bot 1 (player2)
- 🟢 STATE [17:27:10] Entering IDLE state for bot player2 - Evaluating conditions
- 🔵 INFO [17:27:10] Bot player2 status: Fuel=100, At base=true
- 🟠 ACTION [17:27:10] Adding action to queue: evaluateIdle Object
- 🟠 ACTION [17:27:10] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
- 🟠 ACTION [17:27:10] Evaluating conditions from IDLE state for bot player2
- 🟣 CONDITION [17:27:10] Transition from IDLE to exploring (discovery)
- 🟠 ACTION [17:27:10] Adding action to queue: exploreDrone Object
- 🟢 STATE [17:27:10] Transition: idle → exploring
- 🟢 STATE [17:27:10] Exiting IDLE state, transitioning to exploring
- 🟢 STATE [17:27:10] Entering EXPLORING state for bot player2
- 🔵 INFO [17:27:10] Processed Bot 1 (player2)
- 🔵 INFO [17:27:10] Switching active bot to Bot 2 (player3)
- 🟢 STATE [17:27:10] Entering IDLE state for bot player3 - Evaluating conditions
- 🔵 INFO [17:27:10] Bot player3 status: Fuel=100, At base=true
- 🟠 ACTION [17:27:10] Adding action to queue: evaluateIdle Object
- 🟠 ACTION [17:27:10] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
- 🟠 ACTION [17:27:10] Evaluating conditions from IDLE state for bot player3
- 🟣 CONDITION [17:27:10] Transition from IDLE to exploring (discovery)
- 🟠 ACTION [17:27:10] Adding action to queue: exploreDrone Object
- 🟢 STATE [17:27:10] Transition: idle → exploring
- 🟢 STATE [17:27:10] Exiting IDLE state, transitioning to exploring
- 🟢 STATE [17:27:10] Entering EXPLORING state for bot player3
- 🔵 INFO [17:27:10] Processed Bot 2 (player3)
- 🔵 INFO [17:27:10] Switching active bot to Bot 2 (player3)
- 🟢 STATE [17:27:10] Entering IDLE state for bot player3 - Evaluating conditions
- 🔵 INFO [17:27:10] Bot player3 status: Fuel=100, At base=true
- 🟠 ACTION [17:27:10] Adding action to queue: evaluateIdle Object
- 🔵 INFO [17:27:11] Processing all 2 bots in parallel
- 🔵 INFO [17:27:11] Switching active bot to Bot 1 (player2)
- 🟢 STATE [17:27:11] Entering IDLE state for bot player2 - Evaluating conditions
- 🔵 INFO [17:27:11] Bot player2 status: Fuel=100, At base=true
- 🟠 ACTION [17:27:11] Adding action to queue: evaluateIdle Object
-fsmLogger.js:100 🟠 ACTION [17:27:11] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:11] Evaluating conditions from IDLE state for bot player2
-fsmLogger.js:100 🟣 CONDITION [17:27:11] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:11] Adding action to queue: exploreDrone Object
-fsmLogger.js:93 🟠 ACTION [17:27:11] completed action: evaluateIdle Object
-fsmLogger.js:100 🔵 INFO [17:27:11] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:11] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:11] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:11] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:11] Adding action to queue: evaluateIdle Object
-fsmLogger.js:100 🟠 ACTION [17:27:11] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:11] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:11] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:11] Adding action to queue: exploreDrone Object
-fsmLogger.js:100 🟢 STATE [17:27:11] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:11] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:11] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:11] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:11] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:11] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:11] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:11] Adding action to queue: evaluateIdle Object
-fsmLogger.js:100 🔵 INFO [17:27:12] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:12] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:12] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:12] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:12] Adding action to queue: evaluateIdle Object
-fsmLogger.js:100 🟠 ACTION [17:27:12] Execute: Start: exploreDrone (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:12] Attempting to find a tile to explore
-fsmLogger.js:100 🔵 INFO [17:27:12] Using exploring radius: 3
-fsmLogger.js:100 🔵 INFO [17:27:12] Found 20 walkable unexplored tiles in radius
-fsmLogger.js:100 🟠 ACTION [17:27:12] Sending drone to explore tile: D5, distance: 0.00
-vehicleSlice.js:85 [PlayerStore] Moving player2/explorer_drone_2 to tile: D5
-fsmLogger.js:100 🟠 ACTION [17:27:12] Exploration started at 17:27:12
-fsmLogger.js:100 🔵 INFO [17:27:12] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:12] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:12] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:12] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:12] Adding action to queue: evaluateIdle Object
-fsmLogger.js:100 🟠 ACTION [17:27:12] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:12] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:12] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:12] Adding action to queue: exploreDrone Object
-fsmLogger.js:100 🟢 STATE [17:27:12] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:12] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:12] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:12] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:12] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:12] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:12] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:12] Adding action to queue: evaluateIdle Object
-fsmLogger.js:100 🔵 INFO [17:27:13] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:13] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:13] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:13] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:13] Adding action to queue: evaluateIdle Object
-fsmLogger.js:100 🟣 CONDITION [17:27:13] Exit condition met in state exploring: transitioning to idle (exploration_complete)
-fsmLogger.js:100 🟢 STATE [17:27:13] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:13] Exiting EXPLORING state for bot player2 - Returning to IDLE for evaluation
-fsmLogger.js:100 🟢 STATE [17:27:13] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:13] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:13] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🟢 STATE [17:27:13] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:13] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🔵 INFO [17:27:13] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:13] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:13] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:13] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:13] Adding action to queue: evaluateIdle Object
-fsmLogger.js:100 🟠 ACTION [17:27:13] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:13] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:13] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:13] Adding action to queue: exploreDrone Object
-fsmLogger.js:100 🟢 STATE [17:27:13] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:13] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:13] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:13] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:13] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:13] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:13] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:13] Adding action to queue: evaluateIdle Object
-fsmLogger.js:100 🔵 INFO [17:27:14] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:14] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:14] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:14] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:14] Adding action to queue: evaluateIdle Object
-fsmLogger.js:100 🟠 ACTION [17:27:14] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:14] Evaluating conditions from IDLE state for bot player2
-fsmLogger.js:100 🟣 CONDITION [17:27:14] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:14] Adding action to queue: exploreDrone Object
-fsmLogger.js:100 🟢 STATE [17:27:14] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:14] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:14] Entering EXPLORING state for bot player2
-fsmLogger.js:100 🔵 INFO [17:27:14] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:14] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:14] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:14] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:14] Adding action to queue: evaluateIdle Object
-fsmLogger.js:100 🟠 ACTION [17:27:14] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:14] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:14] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:14] Adding action to queue: exploreDrone Object
-fsmLogger.js:100 🟢 STATE [17:27:14] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:14] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:14] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:14] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:14] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:14] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:14] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:14] Adding action to queue: evaluateIdle Object
-fsmLogger.js:100 🔵 INFO [17:27:15] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:15] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:15] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:15] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:15] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟣 CONDITION [17:27:15] Exit condition met in state exploring: transitioning to idle (exploration_complete)
-fsmLogger.js:100 🟢 STATE [17:27:15] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:15] Exiting EXPLORING state for bot player2 - Returning to IDLE for evaluation
-fsmLogger.js:100 🟢 STATE [17:27:15] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:15] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:15] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🟢 STATE [17:27:15] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:15] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🔵 INFO [17:27:15] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:15] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:15] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:15] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:15] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:15] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:15] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:15] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:15] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:15] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:15] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:15] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:15] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:15] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:15] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:15] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:15] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🔵 INFO [17:27:16] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:16] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:16] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:16] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:16] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:16] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:16] Evaluating conditions from IDLE state for bot player2
-fsmLogger.js:100 🟣 CONDITION [17:27:16] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:16] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:16] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:16] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:16] Entering EXPLORING state for bot player2
-fsmLogger.js:100 🔵 INFO [17:27:16] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:16] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:16] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:16] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:16] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:16] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:16] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:16] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:16] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:16] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:16] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:16] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:16] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:16] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:16] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:16] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:16] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🔵 INFO [17:27:17] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:17] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:17] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:17] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:17] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟣 CONDITION [17:27:17] Exit condition met in state exploring: transitioning to idle (exploration_complete)
-fsmLogger.js:100 🟢 STATE [17:27:17] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:17] Exiting EXPLORING state for bot player2 - Returning to IDLE for evaluation
-fsmLogger.js:100 🟢 STATE [17:27:17] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:17] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:17] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🟢 STATE [17:27:17] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:17] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🔵 INFO [17:27:17] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:17] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:17] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:17] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:17] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:17] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:17] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:17] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:17] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:17] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:17] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:17] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:17] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:17] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:17] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:17] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:17] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🔵 INFO [17:27:18] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:18] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:18] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:18] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:18] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:18] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:18] Evaluating conditions from IDLE state for bot player2
-fsmLogger.js:100 🟣 CONDITION [17:27:18] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:18] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:18] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:18] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:18] Entering EXPLORING state for bot player2
-fsmLogger.js:100 🔵 INFO [17:27:18] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:18] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:18] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:18] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:18] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:18] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:18] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:18] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:18] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:18] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:18] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:18] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:18] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:18] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:18] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:18] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:18] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🔵 INFO [17:27:19] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:19] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:19] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:19] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:19] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟣 CONDITION [17:27:19] Exit condition met in state exploring: transitioning to idle (exploration_complete)
-fsmLogger.js:100 🟢 STATE [17:27:19] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:19] Exiting EXPLORING state for bot player2 - Returning to IDLE for evaluation
-fsmLogger.js:100 🟢 STATE [17:27:19] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:19] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:19] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🟢 STATE [17:27:19] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:19] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🔵 INFO [17:27:19] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:19] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:19] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:19] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:19] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:19] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:19] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:19] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:19] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:19] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:19] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:19] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:19] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:19] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:19] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:19] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:19] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🔵 INFO [17:27:20] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:20] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:20] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:20] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:20] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:20] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:20] Evaluating conditions from IDLE state for bot player2
-fsmLogger.js:100 🟣 CONDITION [17:27:20] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:20] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:20] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:20] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:20] Entering EXPLORING state for bot player2
-fsmLogger.js:100 🔵 INFO [17:27:20] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:20] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:20] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:20] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:20] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:20] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:20] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:20] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:20] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:20] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:20] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:20] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:20] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:20] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:20] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:20] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:20] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🔵 INFO [17:27:21] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:21] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:21] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:21] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:21] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟣 CONDITION [17:27:21] Exit condition met in state exploring: transitioning to idle (exploration_complete)
-fsmLogger.js:100 🟢 STATE [17:27:21] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:21] Exiting EXPLORING state for bot player2 - Returning to IDLE for evaluation
-fsmLogger.js:100 🟢 STATE [17:27:21] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:21] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:21] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🟢 STATE [17:27:21] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:21] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🔵 INFO [17:27:21] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:21] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:21] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:21] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:21] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:21] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:21] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:21] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:21] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:21] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:21] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:21] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:21] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:21] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:21] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:21] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:21] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🔵 INFO [17:27:22] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:22] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:22] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:22] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:22] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:22] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:22] Evaluating conditions from IDLE state for bot player2
-fsmLogger.js:100 🟣 CONDITION [17:27:22] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:22] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:22] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:22] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:22] Entering EXPLORING state for bot player2
-fsmLogger.js:100 🔵 INFO [17:27:22] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:22] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:22] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:22] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:22] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:22] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:22] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:22] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:22] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:22] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:22] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:22] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:22] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:22] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:22] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:22] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:22] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🔵 INFO [17:27:23] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:23] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:23] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:23] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:23] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟣 CONDITION [17:27:23] Exit condition met in state exploring: transitioning to idle (exploration_complete)
-fsmLogger.js:100 🟢 STATE [17:27:23] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:23] Exiting EXPLORING state for bot player2 - Returning to IDLE for evaluation
-fsmLogger.js:100 🟢 STATE [17:27:23] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:23] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:23] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🟢 STATE [17:27:23] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:23] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🔵 INFO [17:27:23] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:23] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:23] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:23] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:23] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:23] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:23] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:23] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:23] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:23] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:23] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:23] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:23] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:23] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:23] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:23] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:23] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🔵 INFO [17:27:24] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:24] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:24] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:24] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:24] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:24] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:24] Evaluating conditions from IDLE state for bot player2
-fsmLogger.js:100 🟣 CONDITION [17:27:24] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:24] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:24] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:24] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:24] Entering EXPLORING state for bot player2
-fsmLogger.js:100 🔵 INFO [17:27:24] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:24] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:24] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:24] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:24] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:24] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:24] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:24] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:24] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:24] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:24] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:24] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:24] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:24] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:24] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:24] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:24] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🔵 INFO [17:27:25] Processing all 2 bots in parallel
-fsmLogger.js:100 🔵 INFO [17:27:25] Switching active bot to Bot 1 (player2)
-fsmLogger.js:100 🟢 STATE [17:27:25] Entering IDLE state for bot player2 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:25] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:25] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟣 CONDITION [17:27:25] Exit condition met in state exploring: transitioning to idle (exploration_complete)
-fsmLogger.js:100 🟢 STATE [17:27:25] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:25] Exiting EXPLORING state for bot player2 - Returning to IDLE for evaluation
-fsmLogger.js:100 🟢 STATE [17:27:25] Transition: exploring → idle
-fsmLogger.js:100 🟢 STATE [17:27:25] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:25] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🟢 STATE [17:27:25] Entering IDLE state for bot undefined - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:25] Bot player2 status: Fuel=100, At base=true
-fsmLogger.js:100 🔵 INFO [17:27:25] Processed Bot 1 (player2)
-fsmLogger.js:100 🔵 INFO [17:27:25] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:25] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:25] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:25] Adding action to queue: evaluateIdle {priority: 2}
-fsmLogger.js:100 🟠 ACTION [17:27:25] Execute: Start: evaluateIdle (priority: 2) (priority: undefined)
-fsmLogger.js:100 🟠 ACTION [17:27:25] Evaluating conditions from IDLE state for bot player3
-fsmLogger.js:100 🟣 CONDITION [17:27:25] Transition from IDLE to exploring (discovery)
-fsmLogger.js:93 🟠 ACTION [17:27:25] Adding action to queue: exploreDrone {priority: 2}
-fsmLogger.js:100 🟢 STATE [17:27:25] Transition: idle → exploring
-fsmLogger.js:100 🟢 STATE [17:27:25] Exiting IDLE state, transitioning to exploring
-fsmLogger.js:100 🟢 STATE [17:27:25] Entering EXPLORING state for bot player3
-fsmLogger.js:100 🔵 INFO [17:27:25] Processed Bot 2 (player3)
-fsmLogger.js:100 🔵 INFO [17:27:25] Switching active bot to Bot 2 (player3)
-fsmLogger.js:100 🟢 STATE [17:27:25] Entering IDLE state for bot player3 - Evaluating conditions
-fsmLogger.js:100 🔵 INFO [17:27:25] Bot player3 status: Fuel=100, At base=true
-fsmLogger.js:93 🟠 ACTION [17:27:25] Adding action to queue: evaluateIdle {priority: 2}
+fsmLogger.js:119 🔵 INFO [19:10:01] [bot-0] Initializing bot FSM for Bot 1 (bot-0)
+fsmLogger.js:119 🟢 STATE [19:10:01] [bot-0] Entering IDLE state for bot bot-0
+fsmLogger.js:112 🟠 ACTION [19:10:01] [bot-0] Adding action to queue: evaluateIdle {priority: 2}
+fsmLogger.js:119 🟢 STATE [19:10:01] [bot-0] Bot 1 (bot-0) initialized in IDLE state
+fsmLogger.js:119 🔵 INFO [19:10:01] [bot-0] [MultiBotManager] Initialized Bot 1 (bot-0)
+fsmLogger.js:119 🔵 INFO [19:10:01] [bot-0] Starting bot processing
+fsmLogger.js:112 🟠 ACTION [19:10:01] [bot-0] Adding action to queue: evaluateIdle {priority: 2}
+fsmLogger.js:119 🔵 INFO [19:10:01] [MultiBotManager] Bots started automatically
+fsmLogger.js:119 🔵 INFO [19:10:01] [bot-0] Switching active bot to Bot 1 (bot-0)
+fsmLogger.js:119 🟢 STATE [19:10:01] [bot-0] Entering IDLE state for bot bot-0
+fsmLogger.js:112 🟠 ACTION [19:10:01] [bot-0] Adding action to queue: evaluateIdle {priority: 2}
+fsmLogger.js:119 🔵 INFO [19:10:01] [MultiBotManager] Starting parallel processing mode
+fsmLogger.js:119 🚀 MOUVEMENT [19:10:01] [VehicleMovement] Deactivated movement for bot-0/undefined-ship
+fsmLogger.js:119 🟢 STATE [19:10:01] [bot-0-drone-explorer_drone] [DroneState] Initialized drone bot-0-drone-explorer_drone in DOCKED_WITH_SHIP state
+fsmLogger.js:119 🚀 MOUVEMENT [19:10:01] [VehicleMovement] Deactivated movement for bot-0/bot-0-drone-explorer_drone
+fsmLogger.js:119 🔵 INFO [19:10:01] [Scene] Initializing tiles...
+fsmLogger.js:119 🚀 MOUVEMENT [19:10:01] [VehicleMovement] Deactivated movement for player1/ship
+fsmLogger.js:119 🟢 STATE [19:10:01] [player1-drone-explorer_drone] [DroneState] Initialized drone player1-drone-explorer_drone in DOCKED_WITH_SHIP state
+fsmLogger.js:119 🚀 MOUVEMENT [19:10:01] [VehicleMovement] Deactivated movement for player1/player1-drone-explorer_drone
+fsmLogger.js:112 🔵 INFO [19:10:01] [Scene] Initializing players with tiles: {A3: {…}, A4: {…}, A5: {…}, A6: {…}, B2: {…}, …}
+playerBaseSlice.js:51 Not enough starting tiles of type 'depart' found. Need 2 (for 1 human players and 1 bots), but found only 1. Check tile generation or player/bot count in useGameStore. {needed: 2, found: 1, playerCountFromGameStore: 1, botCountFromGameStore: 1, playersToInitialize: {…}, …} Error Component Stack
+    at Scene (Scene.jsx:20:27)
+    at Suspense (<anonymous>)
+    at ErrorBoundary (chunk-Q4YQWOCV.js?v=ffdcef8a:16084:5)
+    at FiberProvider (chunk-Q4YQWOCV.js?v=ffdcef8a:17704:21)
+    at Provider (chunk-Q4YQWOCV.js?v=ffdcef8a:17371:3)
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=ffdcef8a:17701
+initializePlayer @ playerBaseSlice.js:51
+(anonymous) @ Scene.jsx:51
+commitHookEffectListMount @ chunk-Q4YQWOCV.js?v=ffdcef8a:10915
+commitPassiveMountOnFiber @ chunk-Q4YQWOCV.js?v=ffdcef8a:12223
+commitPassiveMountEffects_complete @ chunk-Q4YQWOCV.js?v=ffdcef8a:12195
+commitPassiveMountEffects_begin @ chunk-Q4YQWOCV.js?v=ffdcef8a:12185
+commitPassiveMountEffects @ chunk-Q4YQWOCV.js?v=ffdcef8a:12175
+flushPassiveEffectsImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13943
+flushPassiveEffects @ chunk-Q4YQWOCV.js?v=ffdcef8a:13906
+commitRootImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13875
+commitRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13747
+performSyncWorkOnRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13336
+flushSyncCallbacks @ chunk-Q4YQWOCV.js?v=ffdcef8a:2770
+commitRootImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13891
+commitRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13747
+finishConcurrentRender @ chunk-Q4YQWOCV.js?v=ffdcef8a:13246
+performConcurrentWorkOnRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13159
+workLoop @ chunk-Q4YQWOCV.js?v=ffdcef8a:278
+flushWork @ chunk-Q4YQWOCV.js?v=ffdcef8a:257
+performWorkUntilDeadline @ chunk-Q4YQWOCV.js?v=ffdcef8a:465
+chunk-Q4YQWOCV.js?v=ffdcef8a:10678 Uncaught Error: Not enough starting tiles of type 'depart' found. Need 2 (for 1 human players and 1 bots), but found only 1. Check tile generation or player/bot count in useGameStore.
+    at initializePlayer (playerBaseSlice.js:59:15)
+    at Scene.jsx:51:7
+    at commitHookEffectListMount (chunk-Q4YQWOCV.js?v=ffdcef8a:10915:34)
+    at commitPassiveMountOnFiber (chunk-Q4YQWOCV.js?v=ffdcef8a:12223:19)
+    at commitPassiveMountEffects_complete (chunk-Q4YQWOCV.js?v=ffdcef8a:12195:17)
+    at commitPassiveMountEffects_begin (chunk-Q4YQWOCV.js?v=ffdcef8a:12185:15)
+    at commitPassiveMountEffects (chunk-Q4YQWOCV.js?v=ffdcef8a:12175:11)
+    at flushPassiveEffectsImpl (chunk-Q4YQWOCV.js?v=ffdcef8a:13943:11)
+    at flushPassiveEffects (chunk-Q4YQWOCV.js?v=ffdcef8a:13906:22)
+    at commitRootImpl (chunk-Q4YQWOCV.js?v=ffdcef8a:13875:13)
+initializePlayer @ playerBaseSlice.js:59
+(anonymous) @ Scene.jsx:51
+commitHookEffectListMount @ chunk-Q4YQWOCV.js?v=ffdcef8a:10915
+commitPassiveMountOnFiber @ chunk-Q4YQWOCV.js?v=ffdcef8a:12223
+commitPassiveMountEffects_complete @ chunk-Q4YQWOCV.js?v=ffdcef8a:12195
+commitPassiveMountEffects_begin @ chunk-Q4YQWOCV.js?v=ffdcef8a:12185
+commitPassiveMountEffects @ chunk-Q4YQWOCV.js?v=ffdcef8a:12175
+flushPassiveEffectsImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13943
+flushPassiveEffects @ chunk-Q4YQWOCV.js?v=ffdcef8a:13906
+commitRootImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13875
+commitRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13747
+performSyncWorkOnRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13336
+flushSyncCallbacks @ chunk-Q4YQWOCV.js?v=ffdcef8a:2770
+commitRootImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13891
+commitRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13747
+finishConcurrentRender @ chunk-Q4YQWOCV.js?v=ffdcef8a:13246
+performConcurrentWorkOnRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13159
+workLoop @ chunk-Q4YQWOCV.js?v=ffdcef8a:278
+flushWork @ chunk-Q4YQWOCV.js?v=ffdcef8a:257
+performWorkUntilDeadline @ chunk-Q4YQWOCV.js?v=ffdcef8a:465
+hook.js:608 The above error occurred in the <Scene> component:
+
+    at Scene (http://localhost:5173/src/components/Scene.jsx?t=1748279281700:37:27)
+    at Suspense
+    at ErrorBoundary (http://localhost:5173/node_modules/.vite/deps/chunk-Q4YQWOCV.js?v=ffdcef8a:16084:5)
+    at FiberProvider (http://localhost:5173/node_modules/.vite/deps/chunk-Q4YQWOCV.js?v=ffdcef8a:17704:21)
+    at Provider (http://localhost:5173/node_modules/.vite/deps/chunk-Q4YQWOCV.js?v=ffdcef8a:17371:3)
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=ffdcef8a:17701
+logCapturedError @ chunk-Q4YQWOCV.js?v=ffdcef8a:7769
+callback @ chunk-Q4YQWOCV.js?v=ffdcef8a:7815
+callCallback @ chunk-Q4YQWOCV.js?v=ffdcef8a:3720
+commitUpdateQueue @ chunk-Q4YQWOCV.js?v=ffdcef8a:3737
+commitLayoutEffectOnFiber @ chunk-Q4YQWOCV.js?v=ffdcef8a:11070
+commitLayoutMountEffects_complete @ chunk-Q4YQWOCV.js?v=ffdcef8a:12044
+commitLayoutEffects_begin @ chunk-Q4YQWOCV.js?v=ffdcef8a:12033
+commitLayoutEffects @ chunk-Q4YQWOCV.js?v=ffdcef8a:11984
+commitRootImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13822
+commitRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13747
+performSyncWorkOnRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13336
+flushSyncCallbacks @ chunk-Q4YQWOCV.js?v=ffdcef8a:2770
+commitRootImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13891
+commitRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13747
+finishConcurrentRender @ chunk-Q4YQWOCV.js?v=ffdcef8a:13246
+performConcurrentWorkOnRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13159
+workLoop @ chunk-Q4YQWOCV.js?v=ffdcef8a:278
+flushWork @ chunk-Q4YQWOCV.js?v=ffdcef8a:257
+performWorkUntilDeadline @ chunk-Q4YQWOCV.js?v=ffdcef8a:465
+chunk-Q4YQWOCV.js?v=ffdcef8a:17969 Uncaught Error: Not enough starting tiles of type 'depart' found. Need 2 (for 1 human players and 1 bots), but found only 1. Check tile generation or player/bot count in useGameStore.
+    at initializePlayer (playerBaseSlice.js:59:15)
+    at Scene.jsx:51:7
+    at commitHookEffectListMount (chunk-Q4YQWOCV.js?v=ffdcef8a:10915:34)
+    at commitPassiveMountOnFiber (chunk-Q4YQWOCV.js?v=ffdcef8a:12223:19)
+    at commitPassiveMountEffects_complete (chunk-Q4YQWOCV.js?v=ffdcef8a:12195:17)
+    at commitPassiveMountEffects_begin (chunk-Q4YQWOCV.js?v=ffdcef8a:12185:15)
+    at commitPassiveMountEffects (chunk-Q4YQWOCV.js?v=ffdcef8a:12175:11)
+    at flushPassiveEffectsImpl (chunk-Q4YQWOCV.js?v=ffdcef8a:13943:11)
+    at flushPassiveEffects (chunk-Q4YQWOCV.js?v=ffdcef8a:13906:22)
+    at commitRootImpl (chunk-Q4YQWOCV.js?v=ffdcef8a:13875:13)
+initializePlayer @ playerBaseSlice.js:59
+(anonymous) @ Scene.jsx:51
+commitHookEffectListMount @ chunk-Q4YQWOCV.js?v=ffdcef8a:10915
+commitPassiveMountOnFiber @ chunk-Q4YQWOCV.js?v=ffdcef8a:12223
+commitPassiveMountEffects_complete @ chunk-Q4YQWOCV.js?v=ffdcef8a:12195
+commitPassiveMountEffects_begin @ chunk-Q4YQWOCV.js?v=ffdcef8a:12185
+commitPassiveMountEffects @ chunk-Q4YQWOCV.js?v=ffdcef8a:12175
+flushPassiveEffectsImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13943
+flushPassiveEffects @ chunk-Q4YQWOCV.js?v=ffdcef8a:13906
+commitRootImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13875
+commitRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13747
+performSyncWorkOnRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13336
+flushSyncCallbacks @ chunk-Q4YQWOCV.js?v=ffdcef8a:2770
+commitRootImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13891
+commitRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13747
+finishConcurrentRender @ chunk-Q4YQWOCV.js?v=ffdcef8a:13246
+performConcurrentWorkOnRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13159
+workLoop @ chunk-Q4YQWOCV.js?v=ffdcef8a:278
+flushWork @ chunk-Q4YQWOCV.js?v=ffdcef8a:257
+performWorkUntilDeadline @ chunk-Q4YQWOCV.js?v=ffdcef8a:465
+chunk-Q4YQWOCV.js?v=ffdcef8a:17969 Uncaught Error: Not enough starting tiles of type 'depart' found. Need 2 (for 1 human players and 1 bots), but found only 1. Check tile generation or player/bot count in useGameStore.
+    at initializePlayer (playerBaseSlice.js:59:15)
+    at Scene.jsx:51:7
+    at commitHookEffectListMount (chunk-Q4YQWOCV.js?v=ffdcef8a:10915:34)
+    at commitPassiveMountOnFiber (chunk-Q4YQWOCV.js?v=ffdcef8a:12223:19)
+    at commitPassiveMountEffects_complete (chunk-Q4YQWOCV.js?v=ffdcef8a:12195:17)
+    at commitPassiveMountEffects_begin (chunk-Q4YQWOCV.js?v=ffdcef8a:12185:15)
+    at commitPassiveMountEffects (chunk-Q4YQWOCV.js?v=ffdcef8a:12175:11)
+    at flushPassiveEffectsImpl (chunk-Q4YQWOCV.js?v=ffdcef8a:13943:11)
+    at flushPassiveEffects (chunk-Q4YQWOCV.js?v=ffdcef8a:13906:22)
+    at commitRootImpl (chunk-Q4YQWOCV.js?v=ffdcef8a:13875:13)
+initializePlayer @ playerBaseSlice.js:59
+(anonymous) @ Scene.jsx:51
+commitHookEffectListMount @ chunk-Q4YQWOCV.js?v=ffdcef8a:10915
+commitPassiveMountOnFiber @ chunk-Q4YQWOCV.js?v=ffdcef8a:12223
+commitPassiveMountEffects_complete @ chunk-Q4YQWOCV.js?v=ffdcef8a:12195
+commitPassiveMountEffects_begin @ chunk-Q4YQWOCV.js?v=ffdcef8a:12185
+commitPassiveMountEffects @ chunk-Q4YQWOCV.js?v=ffdcef8a:12175
+flushPassiveEffectsImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13943
+flushPassiveEffects @ chunk-Q4YQWOCV.js?v=ffdcef8a:13906
+commitRootImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13875
+commitRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13747
+performSyncWorkOnRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13336
+flushSyncCallbacks @ chunk-Q4YQWOCV.js?v=ffdcef8a:2770
+commitRootImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13891
+commitRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13747
+finishConcurrentRender @ chunk-Q4YQWOCV.js?v=ffdcef8a:13246
+performConcurrentWorkOnRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13159
+workLoop @ chunk-Q4YQWOCV.js?v=ffdcef8a:278
+flushWork @ chunk-Q4YQWOCV.js?v=ffdcef8a:257
+performWorkUntilDeadline @ chunk-Q4YQWOCV.js?v=ffdcef8a:465
+hook.js:608 The above error occurred in the <ForwardRef(Canvas)> component:
+
+    at Canvas (http://localhost:5173/node_modules/.vite/deps/chunk-Q4YQWOCV.js?v=ffdcef8a:17929:3)
+    at FiberProvider (http://localhost:5173/node_modules/.vite/deps/chunk-Q4YQWOCV.js?v=ffdcef8a:17704:21)
+    at CanvasWrapper
+    at div
+    at div
+    at div
+    at App (http://localhost:5173/src/App.jsx?t=1748279281700:28:47)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+overrideMethod @ hook.js:608
+console.error @ chunk-Q4YQWOCV.js?v=ffdcef8a:17701
+logCapturedError @ chunk-RC3YDMAO.js?v=ffdcef8a:14032
+update.callback @ chunk-RC3YDMAO.js?v=ffdcef8a:14052
+callCallback @ chunk-RC3YDMAO.js?v=ffdcef8a:11248
+commitUpdateQueue @ chunk-RC3YDMAO.js?v=ffdcef8a:11265
+commitLayoutEffectOnFiber @ chunk-RC3YDMAO.js?v=ffdcef8a:17093
+commitLayoutMountEffects_complete @ chunk-RC3YDMAO.js?v=ffdcef8a:17980
+commitLayoutEffects_begin @ chunk-RC3YDMAO.js?v=ffdcef8a:17969
+commitLayoutEffects @ chunk-RC3YDMAO.js?v=ffdcef8a:17920
+commitRootImpl @ chunk-RC3YDMAO.js?v=ffdcef8a:19353
+commitRoot @ chunk-RC3YDMAO.js?v=ffdcef8a:19277
+finishConcurrentRender @ chunk-RC3YDMAO.js?v=ffdcef8a:18760
+performConcurrentWorkOnRoot @ chunk-RC3YDMAO.js?v=ffdcef8a:18718
+workLoop @ chunk-RC3YDMAO.js?v=ffdcef8a:197
+flushWork @ chunk-RC3YDMAO.js?v=ffdcef8a:176
+performWorkUntilDeadline @ chunk-RC3YDMAO.js?v=ffdcef8a:384
+chunk-RC3YDMAO.js?v=ffdcef8a:19413 Uncaught Error: Not enough starting tiles of type 'depart' found. Need 2 (for 1 human players and 1 bots), but found only 1. Check tile generation or player/bot count in useGameStore.
+    at initializePlayer (playerBaseSlice.js:59:15)
+    at Scene.jsx:51:7
+    at commitHookEffectListMount (chunk-Q4YQWOCV.js?v=ffdcef8a:10915:34)
+    at commitPassiveMountOnFiber (chunk-Q4YQWOCV.js?v=ffdcef8a:12223:19)
+    at commitPassiveMountEffects_complete (chunk-Q4YQWOCV.js?v=ffdcef8a:12195:17)
+    at commitPassiveMountEffects_begin (chunk-Q4YQWOCV.js?v=ffdcef8a:12185:15)
+    at commitPassiveMountEffects (chunk-Q4YQWOCV.js?v=ffdcef8a:12175:11)
+    at flushPassiveEffectsImpl (chunk-Q4YQWOCV.js?v=ffdcef8a:13943:11)
+    at flushPassiveEffects (chunk-Q4YQWOCV.js?v=ffdcef8a:13906:22)
+    at commitRootImpl (chunk-Q4YQWOCV.js?v=ffdcef8a:13875:13)
+initializePlayer @ playerBaseSlice.js:59
+(anonymous) @ Scene.jsx:51
+commitHookEffectListMount @ chunk-Q4YQWOCV.js?v=ffdcef8a:10915
+commitPassiveMountOnFiber @ chunk-Q4YQWOCV.js?v=ffdcef8a:12223
+commitPassiveMountEffects_complete @ chunk-Q4YQWOCV.js?v=ffdcef8a:12195
+commitPassiveMountEffects_begin @ chunk-Q4YQWOCV.js?v=ffdcef8a:12185
+commitPassiveMountEffects @ chunk-Q4YQWOCV.js?v=ffdcef8a:12175
+flushPassiveEffectsImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13943
+flushPassiveEffects @ chunk-Q4YQWOCV.js?v=ffdcef8a:13906
+commitRootImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13875
+commitRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13747
+performSyncWorkOnRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13336
+flushSyncCallbacks @ chunk-Q4YQWOCV.js?v=ffdcef8a:2770
+commitRootImpl @ chunk-Q4YQWOCV.js?v=ffdcef8a:13891
+commitRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13747
+finishConcurrentRender @ chunk-Q4YQWOCV.js?v=ffdcef8a:13246
+performConcurrentWorkOnRoot @ chunk-Q4YQWOCV.js?v=ffdcef8a:13159
+workLoop @ chunk-Q4YQWOCV.js?v=ffdcef8a:278
+flushWork @ chunk-Q4YQWOCV.js?v=ffdcef8a:257
+performWorkUntilDeadline @ chunk-Q4YQWOCV.js?v=ffdcef8a:465
+MultiBotManager.jsx:58 [MultiBotManager] Stopped bot processing
+chunk-4OO23XFX.js?v=ffdcef8a:17835 THREE.WebGLRenderer: Context Lost.

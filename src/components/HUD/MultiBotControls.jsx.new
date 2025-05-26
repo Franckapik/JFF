@@ -1,9 +1,0 @@
-import React from 'react';
-
-/**
- * Composant MultiBotControls supprimé - les bots fonctionnent maintenant en mode automatique
- * Ce composant vide est conservé pour préserver la compatibilité avec les importations existantes
- */
-const MultiBotControls = () => null;
-
-export default MultiBotControls;

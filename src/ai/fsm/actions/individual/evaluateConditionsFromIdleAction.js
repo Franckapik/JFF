@@ -14,7 +14,7 @@ import fsmLogger from '../../../../utils/fsmLogger';
 
 /**
  * Évalue les conditions depuis l'état IDLE et décide du prochain état
- * Utilise la fonction centralisée evaluateStateTransition
+ * Utilise la fonction centralisée evaluateStateTransition ou evaluateFromIdle
  * @param {Object} playerStore - Store du joueur
  * @param {Object} tileStore - Store des tuiles
  * @param {Function} addAction - Fonction pour ajouter une action
@@ -33,10 +33,33 @@ export const evaluateConditionsFromIdleAction = (playerStore, tileStore, addActi
     return false;
   }
   
-  // 2. Utiliser la nouvelle fonction centralisée pour évaluer les transitions
+  // 2. D'abord essayer la fonction plus spécifique evaluateFromIdle
+  const idleResult = BotConditions.evaluateFromIdle();
+  if (idleResult.result) {
+    // Si une transition est recommandée par evaluateFromIdle, l'effectuer
+    const targetState = idleResult.state || BOT_STATES.IDLE;
+    fsmLogger.condition(`Transition from IDLE to ${targetState} (${idleResult.reason || 'condition met from evaluateFromIdle'})`, null, botId);
+    
+    // Si une action est définie, l'ajouter à la file
+    if (idleResult.action) {
+      addAction(
+        idleResult.action.type,
+        idleResult.action.priority || PRIORITY.MEDIUM
+      );
+    }
+    
+    // Si l'état cible est différent de l'état actuel, effectuer la transition
+    if (targetState !== BOT_STATES.IDLE) {
+      changeState(targetState);
+    }
+    
+    return true;
+  }
+  
+  // 3. Si evaluateFromIdle n'a pas donné de résultat, essayer la fonction générique
   const transitionResult = BotConditions.evaluateStateTransition(BOT_STATES.IDLE, botVehicle);
   
-  // 3. Si une transition est recommandée, l'effectuer
+  // 4. Si une transition est recommandée par evaluateStateTransition, l'effectuer
   if (transitionResult.result && transitionResult.state) {
     fsmLogger.condition(`Transition from IDLE to ${transitionResult.state} (${transitionResult.reason || 'condition met'})`, null, botId);
     
@@ -53,7 +76,15 @@ export const evaluateConditionsFromIdleAction = (playerStore, tileStore, addActi
     return true;
   }
   
-  // 4. Si aucune transition n'est nécessaire, rester en IDLE
+  // 5. Si aucune transition n'est recommandée, forcer l'exploration si le bot est à la base et a du carburant
+  if (botVehicle.coord === botVehicle.startCoord && botVehicle.fuel >= 100) {
+    fsmLogger.condition(`Forcing transition from IDLE to EXPLORING (preventing idle loop)`, null, botId);
+    addAction('exploreDrone', PRIORITY.MEDIUM);
+    changeState(BOT_STATES.EXPLORING);
+    return true;
+  }
+  
+  // 6. Si aucune transition n'est nécessaire, rester en IDLE
   fsmLogger.condition("No condition met, staying in IDLE");
   return true; // Action terminée, mais sans transition
 };

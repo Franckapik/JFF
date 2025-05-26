@@ -41,9 +41,22 @@ const createPlayerBaseSlice = (set, get) => {
      * @param {Object} tiles - Les tuiles du jeu
      */
     initializePlayer: (tiles) => {
+      const 수요players = get().players;
+      const numberOfPlayers = Object.keys(수요players).length;
       const startingTiles = Object.values(tiles).filter((tile) => tile.type === "depart");
-      if (startingTiles.length < Object.keys(get().players).length) {
-        throw new Error(`Not enough starting tiles of type 'depart' found. Need ${Object.keys(get().players).length}.`);
+
+      if (startingTiles.length < numberOfPlayers) {
+        // Message d'erreur amélioré
+        const errorMessage = `Not enough starting tiles of type 'depart' found. Need ${numberOfPlayers} (for ${playerCount} human players and ${botCount} bots), but found only ${startingTiles.length}. Check tile generation or player/bot count in useGameStore.`;
+        console.error(errorMessage, {
+          needed: numberOfPlayers,
+          found: startingTiles.length,
+          playerCountFromGameStore: playerCount,
+          botCountFromGameStore: botCount,
+          playersToInitialize: 수요players,
+          availableStartingTiles: startingTiles
+        });
+        throw new Error(errorMessage);
       }
 
       set((state) => {

@@ -6,8 +6,15 @@ import useGameStore from "../stores/useGameStore"; // Import game store
 
 export function generateHexPositions(radius, spacing) {
   const gameStore = useGameStore.getState(); // Get current game state
-  const playerCount = gameStore.playerCount; // Get total number of players
-  
+  const humanPlayerCount = gameStore.playerCount; // Number of human players
+  const botPlayerCount = gameStore.botCount;     // Number of bot players
+  const totalPlayers = humanPlayerCount + botPlayerCount; // Total players
+
+  // Note: The original line was: const playerCount = gameStore.playerCount; // Get total number of players
+  // If the local variable 'playerCount' was used later in this function
+  // with the expectation that it represented total players, 'totalPlayers' should be used instead.
+  // The following code for hex grid generation does not appear to use these counts.
+
   const hexPositions = [];
   const sqrt3 = Math.sqrt(3);
 
@@ -105,12 +112,12 @@ export function generateHexPositions(radius, spacing) {
   
   // Déterminer dynamiquement le nombre de joueurs en fonction du rayon
   // pour éviter les problèmes dans les petits plateaux de jeu
-  let adjustedPlayerCount = playerCount;
+  let adjustedPlayerCount = totalPlayers; // Changed from humanPlayerCount to totalPlayers
   if (radius === 0) {
     adjustedPlayerCount = 1; // Un seul joueur pour un rayon de 0
-  } else if (radius === 1 && playerCount > 3) {
+  } else if (radius === 1 && humanPlayerCount > 3) {
     adjustedPlayerCount = 3; // Limite à 3 joueurs pour un rayon de 1
-  } else if (availableTiles.length < playerCount) {
+  } else if (availableTiles.length < humanPlayerCount) {
     adjustedPlayerCount = Math.max(1, availableTiles.length);
   }
   

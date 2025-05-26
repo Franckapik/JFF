@@ -178,7 +178,9 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
     
     // Reset exploration state
     playerStore.updatePlayerMemory(botId, { 
-      explorationState: null
+      explorationState: null,
+      // Marquer que le drone a découvert quelque chose
+      hasNewResourceDiscovery: true
     });
     
     changeState(BOT_STATES.IDLE);
