@@ -3,28 +3,28 @@ import { useTileStore } from "../stores/useTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
 import useDroneState, { DRONE_STATES } from "../hooks/useDroneState";
 import { 
-  HUMAN_PLAYER_ID,
+  getHumanPlayerId,
   getMainShipId,
   isMainShipId
 } from '../ai/constants/playerConstants';
 import { useVehicleMovement } from "../hooks/useVehicleMovement";
 import { useFloatingAnimation } from "../animations/useFloatingAnimation";
 
-const DroneMovement = React.memo(({ playerId = HUMAN_PLAYER_ID, droneId = "drone1", children }) => {
+const DroneMovement = React.memo(({ playerId = getHumanPlayerId(1), droneId = "drone1", children }) => {
   // === Stores ===
   const tiles = useTileStore((state) => state.tiles);
   const updateVehicle = usePlayerStore((state) => state.updateVehicle);
-  const humanShip = usePlayerStore((state) => state.players[HUMAN_PLAYER_ID]?.vehicles?.[getMainShipId()]);
+  const humanShip = usePlayerStore((state) => state.players[getHumanPlayerId(1)]?.vehicles?.[getMainShipId()]);
   const allShips = usePlayerStore((state) => state.players);
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
 
   // Détermine le vaisseau à suivre avec useCallback
   const getShipToFollow = React.useCallback(() => {
-    if (playerId !== HUMAN_PLAYER_ID) {
+    if (playerId !== getHumanPlayerId(1)) {
       return allShips[playerId]?.vehicles?.[getMainShipId()];
     }
     if (isMainShipId(selectedVehicle.vehicleId)) {
-      return selectedVehicle.playerId === HUMAN_PLAYER_ID ? humanShip : allShips[selectedVehicle.playerId]?.vehicles?.[getMainShipId()];
+      return selectedVehicle.playerId === getHumanPlayerId(1) ? humanShip : allShips[selectedVehicle.playerId]?.vehicles?.[getMainShipId()];
     }
     return humanShip;
   }, [playerId, allShips, selectedVehicle, humanShip]);
@@ -115,7 +115,7 @@ const DroneMovement = React.memo(({ playerId = HUMAN_PLAYER_ID, droneId = "drone
     if (shipToFollow?.position) {
       const baseHeight = 1.0;
       const radius = 0.8;
-      const direction = playerId === HUMAN_PLAYER_ID ? 1 : -1;
+      const direction = playerId === getHumanPlayerId(1) ? 1 : -1;
       
       const x = shipToFollow.position.x + (radius * direction);
       const z = shipToFollow.position.z;

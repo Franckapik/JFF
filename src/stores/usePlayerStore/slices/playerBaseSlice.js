@@ -3,7 +3,7 @@
  */
 import useGameStore from '../../useGameStore/';
 import { createPlayer } from '../utils/playerFactory';
-import { HUMAN_PLAYER_ID, getBotId, getMainShipId, VEHICLE_TYPES } from '../../../ai/constants/playerConstants';
+import { getHumanPlayerId, getBotId, getMainShipId, VEHICLE_TYPES } from '../../../ai/constants/playerConstants';
 
 const createPlayerBaseSlice = (set, get) => {
   // Récupérer la configuration depuis gameStore
@@ -11,7 +11,7 @@ const createPlayerBaseSlice = (set, get) => {
   
   // Générer les joueurs dynamiquement
   const initialPlayers = {
-    [HUMAN_PLAYER_ID]: createPlayer(HUMAN_PLAYER_ID)
+    [getHumanPlayerId(1)]: createPlayer(getHumanPlayerId(1))
   };
 
   // Créer les bots
@@ -22,7 +22,7 @@ const createPlayerBaseSlice = (set, get) => {
 
   return {
     // === ÉTAT INITIAL ===
-    selectedVehicle: { playerId: HUMAN_PLAYER_ID, vehicleId: getMainShipId(HUMAN_PLAYER_ID) },
+    selectedVehicle: { playerId: getHumanPlayerId(1), vehicleId: getMainShipId(getHumanPlayerId(1)) },
     movementSpeeds: {
       [VEHICLE_TYPES.SHIP]: {
         speed: 2,

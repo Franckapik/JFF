@@ -10,7 +10,7 @@ import {
   getDroneId, 
   isMainShipId,
   VEHICLE_TYPES,
-  HUMAN_PLAYER_ID
+  getHumanPlayerId
 } from "../ai/constants/playerConstants";
 
 /**
@@ -29,7 +29,7 @@ const Bot = React.memo(({
   isHuman = false
 }) => {
   // Déterminer l'ID du joueur (humain ou bot)
-  const playerId = isHuman ? HUMAN_PLAYER_ID : getBotId(botIndex);
+  const playerId = isHuman ? getHumanPlayerId(1) : getBotId(botIndex);
   
   // Récupérer le bot actif depuis le store (seulement pertinent pour les bots, pas pour le joueur humain)
   const currentBotIndex = useBotStore(state => state.currentBotIndex);

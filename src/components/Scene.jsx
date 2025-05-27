@@ -10,7 +10,7 @@ import useBotStore from "../stores/useBotStore/";
 import useGameStore from "../stores/useGameStore";
 import fsmLogger from "../utils/fsmLogger";
 import { 
-  HUMAN_PLAYER_ID, 
+  getHumanPlayerId, 
   getBotId, 
   getMainShipId, 
   isMainShipId,
@@ -76,7 +76,7 @@ const Scene = () => {
 
   const handleTileClick = (tile) => {
     if (selectedVehicle.vehicleId) {
-      moveToTile(HUMAN_PLAYER_ID, selectedVehicle.vehicleId, {
+      moveToTile(getHumanPlayerId(1), selectedVehicle.vehicleId, {
         coord: tile.coord,
         position: tile.position,
       });
@@ -135,8 +135,8 @@ const Scene = () => {
         .map((tile, index) => {
           // Déterminer à quel joueur appartient cette base
           // Les bases sont attribuées selon leur index dans le tableau des tuiles "depart"
-          const playerId = index === 0 ? HUMAN_PLAYER_ID : getBotId(index - 1);
-          const isPlayerBase = playerId === HUMAN_PLAYER_ID;
+          const playerId = index === 0 ? getHumanPlayerId(1) : getBotId(index - 1);
+          const isPlayerBase = playerId === getHumanPlayerId(1);
           
           // Utiliser la même couleur que les bots pour les bases
           const baseColor = isPlayerBase ? "blue" : 

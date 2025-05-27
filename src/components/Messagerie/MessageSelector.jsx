@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import usePlayerStore from "../../stores/usePlayerStore"; // Import player store
 import MessageModal from "./MessageModal";
-import { HUMAN_PLAYER_ID } from "../../ai/constants/playerConstants";
+import { getHumanPlayerId } from "../../ai/constants/playerConstants";
 
-const MessageSelector = ({ playerId = HUMAN_PLAYER_ID }) => {
+const MessageSelector = ({ playerId = getHumanPlayerId(1) }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const playerMessages = usePlayerStore((state) => state.players[playerId]?.messages || []); // Get messages for the player
   const markMessagesAsRead = usePlayerStore((state) => state.markMessagesAsRead); // Get the function to mark messages as read

@@ -1,6 +1,6 @@
 import { test, expect, beforeEach, vi } from 'vitest';
 import useDroneState, { DRONE_STATES } from '../hooks/useDroneState';
-import { HUMAN_PLAYER_ID, getDroneId } from '../ai/constants/playerConstants';
+import { getHumanPlayerId, getDroneId } from '../ai/constants/playerConstants';
 
 // Mocking fsmLogger
 vi.mock('../utils/fsmLogger', () => ({
@@ -21,7 +21,7 @@ beforeEach(() => {
 test('initializeDrone should initialize a drone with DOCKED_WITH_SHIP state', () => {
   // Get the store
   const store = useDroneState.getState();
-  const droneId = getDroneId(HUMAN_PLAYER_ID, 'explorer');
+  const droneId = getDroneId(getHumanPlayerId(1), 'explorer');
 
   // Initialize the drone
   store.initializeDrone(droneId);
@@ -36,7 +36,7 @@ test('initializeDrone should initialize a drone with DOCKED_WITH_SHIP state', ()
 test('initializeDrone should not re-initialize a drone if it already has a state', () => {
   // Get the store
   const store = useDroneState.getState();
-  const droneId = getDroneId(HUMAN_PLAYER_ID, 'explorer');
+  const droneId = getDroneId(getHumanPlayerId(1), 'explorer');
 
   // Initialize the drone
   store.initializeDrone(droneId);
@@ -98,7 +98,7 @@ test('transitionDroneState should not transition if the drone state is uninitial
 test('transitionDroneState should not allow invalid transitions', () => {
   // Get the store
   const store = useDroneState.getState();
-  const droneId = getDroneId(HUMAN_PLAYER_ID, 'combat');
+  const droneId = getDroneId(getHumanPlayerId(1), 'combat');
 
   // Initialize drone
   store.initializeDrone(droneId);
@@ -118,7 +118,7 @@ test('transitionDroneState should not allow invalid transitions', () => {
 test('transitionDroneState should handle a complete valid transition sequence', () => {
   // Get the store
   const store = useDroneState.getState();
-  const droneId = getDroneId(HUMAN_PLAYER_ID, 'special');
+  const droneId = getDroneId(getHumanPlayerId(1), 'special');
 
   // Initialize drone
   store.initializeDrone(droneId);
@@ -151,7 +151,7 @@ test('transitionDroneState should handle a complete valid transition sequence', 
 test('isDroneInState should correctly check if a drone is in a specific state', () => {
   // Get the store
   const store = useDroneState.getState();
-  const droneId = getDroneId(HUMAN_PLAYER_ID, 'explorer');
+  const droneId = getDroneId(getHumanPlayerId(1), 'explorer');
 
   // Initialize drone
   store.initializeDrone(droneId);
@@ -180,7 +180,7 @@ test('isDroneInState should return false for uninitialized drones', () => {
 test('getDroneState should return the current state for an initialized drone', () => {
   // Get the store
   const store = useDroneState.getState();
-  const droneId = getDroneId(HUMAN_PLAYER_ID, 'explorer');
+  const droneId = getDroneId(getHumanPlayerId(1), 'explorer');
 
   // Initialize drone
   store.initializeDrone(droneId);
@@ -206,7 +206,7 @@ test('getDroneState should return null for an uninitialized drone', () => {
 test('isDroneDocked should return true when a drone is in DOCKED_WITH_SHIP state', () => {
   // Get the store
   const store = useDroneState.getState();
-  const droneId = getDroneId(HUMAN_PLAYER_ID, 'explorer');
+  const droneId = getDroneId(getHumanPlayerId(1), 'explorer');
 
   // Initialize drone
   store.initializeDrone(droneId);
@@ -218,7 +218,7 @@ test('isDroneDocked should return true when a drone is in DOCKED_WITH_SHIP state
 test('isDroneDocked should return false when a drone is not in DOCKED_WITH_SHIP state', () => {
   // Get the store
   const store = useDroneState.getState();
-  const droneId = getDroneId(HUMAN_PLAYER_ID, 'explorer');
+  const droneId = getDroneId(getHumanPlayerId(1), 'explorer');
 
   // Initialize drone
   store.initializeDrone(droneId);

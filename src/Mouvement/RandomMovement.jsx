@@ -4,9 +4,9 @@ import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { Vector3, Euler } from "three";
 import useMessageManager from "../hooks/useMessageManager"; // Import the custom hook
 import fsmLogger from "../utils/fsmLogger"; // Import the fsmLogger
-import { HUMAN_PLAYER_ID } from "../ai/constants/playerConstants"; // Import player constants
+import { getHumanPlayerId } from "../ai/constants/playerConstants"; // Import player constants
 
-const RandomMovement = ({ initialPosition, children, playerId = HUMAN_PLAYER_ID }) => {
+const RandomMovement = ({ initialPosition, children, playerId = getHumanPlayerId(1) }) => {
   const currentPosition = useRef(new Vector3(initialPosition.x, initialPosition.y, initialPosition.z));
   const targetPosition = useRef(new Vector3(initialPosition.x, initialPosition.y, initialPosition.z));
   const previousTileCoord = useRef(null); // Track the previous tile's coord

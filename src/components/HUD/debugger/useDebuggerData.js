@@ -3,7 +3,7 @@ import usePlayerStore from "../../../stores/usePlayerStore";
 import useBotStore from "../../../stores/useBotStore/";
 import { useTileStore } from "../../../stores/useTileStore";
 import {
-  HUMAN_PLAYER_ID,
+  getHumanPlayerId,
   getBotId,
   getMainShipId,
   getDroneId,
@@ -36,8 +36,8 @@ export const useDebuggerData = () => {
   const botMemory = usePlayerStore(state => state.players?.[activeBotId]?.memory);
   
   // Données du joueur humain
-  const playerVehicle = usePlayerStore(state => state.players?.[HUMAN_PLAYER_ID]?.vehicles?.[getMainShipId()]);
-  const playerData = usePlayerStore(state => state.players?.[HUMAN_PLAYER_ID]);
+  const playerVehicle = usePlayerStore(state => state.players?.[getHumanPlayerId(1)]?.vehicles?.[getMainShipId()]);
+  const playerData = usePlayerStore(state => state.players?.[getHumanPlayerId(1)]);
   
   // Récupérer la fonction calculateDistance du TileStore
   const calculateDistance = useTileStore((state) => state.calculateDistance);
@@ -49,7 +49,7 @@ export const useDebuggerData = () => {
   
   // Nombre de bots dans le jeu
   const botCount = usePlayerStore(state => 
-    Object.keys(state.players || {}).filter(id => id !== HUMAN_PLAYER_ID).length
+    Object.keys(state.players || {}).filter(id => id !== getHumanPlayerId(1)).length
   );
 
   // Changer le bot actif

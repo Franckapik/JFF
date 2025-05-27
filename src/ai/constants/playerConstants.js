@@ -3,8 +3,6 @@
 // Fonction utilitaire pour obtenir les IDs des joueurs humains
 export const getHumanPlayerId = (playerIndex = 1) => `player-${playerIndex}`;
 
-export const HUMAN_PLAYER_ID = getHumanPlayerId(1);
-
 // Fonction utilitaire pour obtenir les IDs des bots
 export const getBotId = (botIndex) => `bot-${botIndex}`;
 

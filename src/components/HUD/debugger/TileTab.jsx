@@ -1,6 +1,6 @@
 import React from 'react';
 import ResourceBar from './ResourceBar';
-import { HUMAN_PLAYER_ID } from '../../../ai/constants/playerConstants';
+import { getHumanPlayerId } from '../../../ai/constants/playerConstants';
 
 /**
  * Composant pour les informations de base d'une tuile
@@ -178,7 +178,7 @@ const TileDistances = ({
         <div className="debugger-data-item">
           <span className="debugger-label">Explorée par:</span>
           <span className="debugger-value">
-            {hoveredTile.exploredBy === HUMAN_PLAYER_ID 
+            {hoveredTile.exploredBy === getHumanPlayerId(1) 
               ? "Joueur" 
               : `Bot ${parseInt(hoveredTile.exploredBy?.replace("bot", "")) + 1}`}
           </span>
