@@ -10,13 +10,12 @@ import { useVehicleMovement } from "../hooks/useVehicleMovement";
 const ShipMovement = React.memo(({ playerId, children }) => {
   // === Sélecteurs des stores avec sélecteurs optimisés ===
   const tiles = useTileStore((state) => state.tiles);
-  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
   const playerVehicles = usePlayerStore((state) => state.players[playerId]?.vehicles);
   
   // CORRECTION: Utiliser le playerId pour obtenir l'ID correct du vaisseau
   const vehicleId = React.useMemo(() => 
-    isBotPlayerId(playerId) ? getMainShipId(playerId) : selectedVehicle.vehicleId,
-    [playerId, selectedVehicle.vehicleId]
+    getMainShipId(playerId),
+    [playerId]
   );
   
   const playerVehicle = playerVehicles?.[vehicleId];

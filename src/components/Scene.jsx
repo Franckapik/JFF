@@ -20,7 +20,6 @@ const Scene = () => {
   const initializeTiles = useTileStore((state) => state.initializeTiles);
   const tiles = useTileStore((state) => state.tiles);
   const initializePlayer = usePlayerStore((state) => state.initializePlayer);
-  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
   const moveToTile = usePlayerStore((state) => state.moveToTile);
   
   // Utilisation de useBotStore au lieu de useSimpleBotStore
@@ -75,12 +74,12 @@ const Scene = () => {
   }, [camera]);
 
   const handleTileClick = (tile) => {
-    if (selectedVehicle.vehicleId) {
-      moveToTile(getHumanPlayerId(1), selectedVehicle.vehicleId, {
-        coord: tile.coord,
-        position: tile.position,
-      });
-    }
+    // Use the main ship ID directly for movement
+    const mainShipId = getMainShipId(getHumanPlayerId(1));
+    moveToTile(getHumanPlayerId(1), mainShipId, {
+      coord: tile.coord,
+      position: tile.position,
+    });
   };
 
   return (
@@ -94,7 +93,6 @@ const Scene = () => {
       {Object.keys(tiles).length > 0 && (
         <Bot 
           isHuman={true}
-          selectedVehicle={selectedVehicle}
           color="blue"
         />
       )}
@@ -108,7 +106,6 @@ const Scene = () => {
           <Bot 
             key={`bot-${botIndex}`}
             botIndex={botIndex}
-            selectedVehicle={selectedVehicle}
             color={botColors[colorIndex]}
           />
         );

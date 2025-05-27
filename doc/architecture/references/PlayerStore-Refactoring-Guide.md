@@ -7,7 +7,6 @@ Ce document détaille les problèmes identifiés dans la structure du PlayerStor
 ### Problèmes identifiés
 - Présence simultanée de `"undefined-ship"` et `"ship"` pour le même joueur
 - Les IDs ne suivent pas le format défini dans `playerConstants.js`
-- `selectedVehicle.vehicleId` utilise `"ship"` au lieu du format d'ID approprié
 
 ### Solutions proposées
 
@@ -29,7 +28,6 @@ function createPlayerVehicles(playerId) {
 1. Auditer tous les appels à `getMainShipId` pour s'assurer qu'ils reçoivent un playerId valide
 2. Remplacer toutes les occurrences de `"ship"` comme ID par le format approprié `${playerId}-ship`
 3. Nettoyer les entrées dupliquées en consolidant les propriétés
-4. Mettre à jour les références dans `selectedVehicle`
 
 ## 2. Manque de Cohérence dans les Propriétés des Véhicules
 
@@ -131,49 +129,7 @@ function getMaxCapacityForType(vehicleType) {
 2. Supprimer les entrées dupliquées après migration des données
 3. S'assurer que l'initialisation définit correctement les coordonnées et positions
 
-## 4. Correction des Références de Véhicules Sélectionnés
-
-### Problèmes identifiés
-- `selectedVehicle` fait référence à `"ship"` qui n'est pas un ID de véhicule correct
-
-### Solution proposée
-
-```javascript
-// Exemple de fonction de sélection de véhicule
-function selectVehicle(state, playerId, vehicleType) {
-  const vehicleId = vehicleType === VEHICLE_TYPES.SHIP
-    ? getMainShipId(playerId)
-    : getDroneId(playerId, vehicleType);
-    
-  // Vérifier que le véhicule existe
-  const player = state.players[playerId];
-  if (!player || !player.vehicles[vehicleId]) {
-    console.error(`Le véhicule ${vehicleId} n'existe pas pour le joueur ${playerId}`);
-    return false;
-  }
-  
-  state.selectedVehicle = { playerId, vehicleId };
-  return true;
-}
-
-// Fonction pour migrer les sélections existantes
-function migrateVehicleSelections(state) {
-  if (state.selectedVehicle) {
-    const { playerId, vehicleId } = state.selectedVehicle;
-    
-    // Si l'ID est simplement "ship", le convertir en format correct
-    if (vehicleId === "ship") {
-      state.selectedVehicle.vehicleId = getMainShipId(playerId);
-    }
-  }
-}
-```
-
-### Tâches de refactoring
-1. Mettre à jour `selectedVehicle` pour référencer l'ID du véhicule correct
-2. Ajouter une validation pour s'assurer que les véhicules sélectionnés existent
-
-## 5. Création et Initialisation des Véhicules
+## 4. Création et Initialisation des Véhicules
 
 ### Problèmes identifiés
 - Conditions de course possibles pendant la création des véhicules
@@ -274,7 +230,6 @@ function validatePlayerVehicles(gameState) {
 
 2. **Étape 2: Migration des IDs**
    - Standardiser tous les IDs de véhicules selon le modèle approprié
-   - Mettre à jour les références dans `selectedVehicle`
 
 3. **Étape 3: Consolidation des structures de véhicules**
    - Implémenter la fonction `createVehicleByType`
@@ -290,7 +245,6 @@ function validatePlayerVehicles(gameState) {
 
 6. **Étape 6: Mise à jour du code UI**
    - Mettre à jour tout code UI qui référence directement les IDs de véhicules
-   - Assurer que la sélection de véhicules fonctionne avec la nouvelle structure
 
 ## Validation
 
@@ -332,18 +286,6 @@ function checkPlayerStoreConsistency(playerStore) {
       }
     });
   });
-  
-  // Vérifier selectedVehicle
-  if (playerStore.selectedVehicle) {
-    const { playerId, vehicleId } = playerStore.selectedVehicle;
-    const player = playerStore.players[playerId];
-    
-    if (!player) {
-      issues.push(`selectedVehicle référence un joueur inexistant: ${playerId}`);
-    } else if (!player.vehicles[vehicleId]) {
-      issues.push(`selectedVehicle référence un véhicule inexistant: ${vehicleId} pour le joueur ${playerId}`);
-    }
-  }
   
   return {
     isValid: issues.length === 0,

@@ -16,18 +16,14 @@ const DroneMovement = React.memo(({ playerId = getHumanPlayerId(1), droneId = "d
   const updateVehicle = usePlayerStore((state) => state.updateVehicle);
   const humanShip = usePlayerStore((state) => state.players[getHumanPlayerId(1)]?.vehicles?.[getMainShipId()]);
   const allShips = usePlayerStore((state) => state.players);
-  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
 
   // Détermine le vaisseau à suivre avec useCallback
   const getShipToFollow = React.useCallback(() => {
     if (playerId !== getHumanPlayerId(1)) {
       return allShips[playerId]?.vehicles?.[getMainShipId()];
     }
-    if (isMainShipId(selectedVehicle.vehicleId)) {
-      return selectedVehicle.playerId === getHumanPlayerId(1) ? humanShip : allShips[selectedVehicle.playerId]?.vehicles?.[getMainShipId()];
-    }
     return humanShip;
-  }, [playerId, allShips, selectedVehicle, humanShip]);
+  }, [playerId, allShips, humanShip]);
 
   // Initialize drone state on component mount
   useEffect(() => {

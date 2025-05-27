@@ -18,13 +18,11 @@ import {
  * Peut également être utilisé pour le joueur humain
  * @param {Object} props
  * @param {number|null} props.botIndex - Index du bot (0 pour Bot 1, 1 pour Bot 2, etc.), null pour le joueur humain
- * @param {Object} props.selectedVehicle - Véhicule actuellement sélectionné
  * @param {string} props.color - Couleur unique pour le bot et ses drones
  * @param {boolean} props.isHuman - Indique si c'est le joueur humain
  */
 const Bot = React.memo(({ 
   botIndex = null, 
-  selectedVehicle,
   color = "red",
   isHuman = false
 }) => {
@@ -37,9 +35,6 @@ const Bot = React.memo(({
   
   // Sélecteur pour les véhicules du bot ou du joueur
   const vehicles = usePlayerStore((state) => state.players[playerId]?.vehicles);
-  
-  // Déterminer si ce vaisseau est sélectionné
-  const isSelected = selectedVehicle.playerId === playerId && isMainShipId(selectedVehicle.vehicleId);
   
   // Si le joueur/bot n'a pas été initialisé, ne rien rendre
   if (!vehicles) {
@@ -54,8 +49,8 @@ const Bot = React.memo(({
           <boxGeometry args={[0.5, 0.5, 0.5]} />
           <meshStandardMaterial
             color={color}
-            emissive={isSelected ? "white" : isActiveBot ? "gold" : "black"}
-            emissiveIntensity={isSelected ? 0.6 : isActiveBot ? 0.3 : 0}
+            emissive={isActiveBot ? "gold" : "black"}
+            emissiveIntensity={isActiveBot ? 0.3 : 0}
           />
         </mesh>
         
@@ -182,9 +177,7 @@ const Bot = React.memo(({
   return (
     prevProps.botIndex === nextProps.botIndex &&
     prevProps.color === nextProps.color &&
-    prevProps.isHuman === nextProps.isHuman &&
-    prevProps.selectedVehicle.playerId === nextProps.selectedVehicle.playerId &&
-    prevProps.selectedVehicle.vehicleId === nextProps.selectedVehicle.vehicleId
+    prevProps.isHuman === nextProps.isHuman
   );
 });
 

@@ -22,7 +22,6 @@ const createPlayerBaseSlice = (set, get) => {
 
   return {
     // === ÉTAT INITIAL ===
-    selectedVehicle: { playerId: getHumanPlayerId(1), vehicleId: getMainShipId(getHumanPlayerId(1)) },
     movementSpeeds: {
       [VEHICLE_TYPES.SHIP]: {
         speed: 2,
@@ -82,17 +81,6 @@ const createPlayerBaseSlice = (set, get) => {
         
         return { players: updatedPlayers };
       });
-    },
-
-    /**
-     * Sélectionne le véhicule actif pour un joueur
-     * @param {string} playerId - ID du joueur
-     * @param {string} vehicleId - ID du véhicule
-     */
-    selectVehicle: (playerId, vehicleId) => {
-      set(() => ({
-        selectedVehicle: { playerId, vehicleId },
-      }));
     },
   };
 };
