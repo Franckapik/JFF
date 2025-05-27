@@ -2,7 +2,7 @@
  * Slice pour la gestion des véhicules et leurs mouvements
  */
 import { updateVehicle as updateVehicleUtil } from '../../../utils/utils';
-import { isMainShipId } from '../../../ai/constants/playerConstants';
+import { isMainShipId, getMainShipId } from '../../../ai/constants/playerConstants';
 import fsmLogger from '../../../utils/fsmLogger';
 
 const createVehicleSlice = (set, get) => {
@@ -133,7 +133,8 @@ const createVehicleSlice = (set, get) => {
      * @param {string} playerId - ID du joueur
      */
     refuelVehicle: (playerId) => {
-      set((state) => updateVehicleUtil(state, playerId, "ship", { fuel: 100 }));
+      const shipId = getMainShipId(playerId);
+      set((state) => updateVehicleUtil(state, playerId, shipId, { fuel: 100 }));
     },
   };
 };

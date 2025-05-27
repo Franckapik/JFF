@@ -99,7 +99,9 @@ export const BotConditions = {
       
       // Réinitialiser le flag directement
       const playerStore = usePlayerStore.getState();
-      playerStore.updateVehicle('player2', 'ship', { isAtCapacity: false });
+      const botId = 'player2'; // This is hardcoded in the test
+      const shipId = getMainShipId(botId);
+      playerStore.updateVehicle(botId, shipId, { isAtCapacity: false });
       
       console.log('[BotCondition] Réinitialisation du flag isAtCapacity car le bot est à la base sans ressources');
       isAtCapacity = false;
@@ -333,7 +335,7 @@ export const BotConditions = {
   isShipMoving: () => {
     const playerState = usePlayerStore.getState();
     const botId = BotConditions.getCurrentBotId();
-    const botVehicleId = getMainShipId();
+    const botVehicleId = getMainShipId(botId);
     const botVehicle = playerState.players?.[botId]?.vehicles?.[botVehicleId];
     
     if (!botVehicle) return { result: false };
@@ -563,7 +565,7 @@ export const BotConditions = {
   evaluateFromIdle: () => {
     const playerState = usePlayerStore.getState();
     const botId = BotConditions.getCurrentBotId();
-    const botVehicleId = getMainShipId();
+    const botVehicleId = getMainShipId(botId);
     const botVehicle = playerState.players?.[botId]?.vehicles?.[botVehicleId];
     
     if (!botVehicle) return { result: false };

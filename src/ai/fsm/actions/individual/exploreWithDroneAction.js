@@ -28,7 +28,7 @@ import fsmLogger from '../../../../utils/fsmLogger';
  */
 export const exploreWithDroneAction = (playerStore, tileStore, addAction, changeState) => {
   const botId = BotConditions.getCurrentBotId();
-  const botVehicleId = getMainShipId();
+  const botVehicleId = getMainShipId(botId);
   const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   
   // Obtenir l'ID du drone d'exploration du bot

@@ -22,7 +22,7 @@ import fsmLogger from '../../../../utils/fsmLogger';
  */
 export const collectResourceAction = (playerStore, tileStore, addAction, changeState) => {
   const botId = BotConditions.getCurrentBotId();
-  const botVehicleId = getMainShipId();
+  const botVehicleId = getMainShipId(botId);
   const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   const botMemory = playerStore.players?.[botId]?.memory;
   const collectionState = botMemory?.collectionState;

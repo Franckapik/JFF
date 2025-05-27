@@ -4,6 +4,7 @@ import { BotStateConfig } from '../../../ai/fsm/states/botStates';
 import { BotConditions } from '../../../ai/fsm/conditions/botConditions';
 import usePlayerStore from '../../usePlayerStore';
 import fsmLogger from '../../../utils/fsmLogger';
+import { getMainShipId } from '../../../ai/constants/playerConstants';
 
 export const createStateTransitionSlice = (set, get) => ({
   // État du bot
@@ -62,7 +63,8 @@ export const createStateTransitionSlice = (set, get) => ({
     
     const playerStore = usePlayerStore.getState();
     const currentBotId = get().currentBotId;
-    const botVehicle = playerStore.players?.[currentBotId]?.vehicles?.ship;
+    const botVehicleId = getMainShipId(currentBotId);
+    const botVehicle = playerStore.players?.[currentBotId]?.vehicles?.[botVehicleId];
     
     if (!botVehicle) return;
     

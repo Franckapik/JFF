@@ -3,20 +3,22 @@
  */
 import { updateVehicle as updateVehicleUtil } from '../../../utils/utils';
 import fsmLogger from '../../../utils/fsmLogger';
+import { getMainShipId } from '../../../ai/constants/playerConstants';
 
 const createResourceSlice = (set, get) => {
   return {
     /**
      * Transfère les ressources d'un véhicule vers le score du joueur
      * @param {string} playerId - ID du joueur
-     * @param {string} vehicleId - ID du véhicule (par défaut: "ship")
+     * @param {string} vehicleId - ID du véhicule (par défaut: l'ID du vaisseau principal du joueur)
      * @returns {boolean} - true si le transfert a réussi, false sinon
      */
-     transferResourcesToScore: (playerId, vehicleId = "ship") => {
+     transferResourcesToScore: (playerId, vehicleId = null) => {
+      const mainShipId = vehicleId || getMainShipId(playerId);
       const player = get().players[playerId];
       if (!player) return false;
       
-      const vehicle = player.vehicles[vehicleId];
+      const vehicle = player.vehicles[mainShipId];
       if (!vehicle) return false;
       
       // Vérifier si le véhicule est à sa base
@@ -52,7 +54,7 @@ const createResourceSlice = (set, get) => {
               ...state.players[playerId],
               vehicles: {
                 ...state.players[playerId].vehicles,
-                [vehicleId]: updatedVehicle
+                [mainShipId]: updatedVehicle
               },
               score: updatedScore
             }

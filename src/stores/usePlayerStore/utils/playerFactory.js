@@ -13,7 +13,7 @@ import {
  */
 export const createPlayer = (playerId) => {
   const vehicles = {
-    [getMainShipId()]: createVehicle(getMainShipId(), VEHICLE_TYPES.SHIP),
+    [getMainShipId(playerId)]: createVehicle(getMainShipId(playerId), VEHICLE_TYPES.SHIP),
   };
 
   // Ajouter les drones avec leurs types spécifiques

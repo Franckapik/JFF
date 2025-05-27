@@ -38,7 +38,7 @@ state RETURNING <<Critical>> {
   description: "Bot en retour vers sa base"
   defaultAction: "returnToBase (HIGH priority)"
   onEnterState: "console.log('[BotState] Entering RETURNING state')"
-  onExitState: "playerStore.transferResourcesToScore('player2', 'ship')"
+  onExitState: "playerStore.transferResourcesToScore('player2')"
 }
 
 ' Définition des transitions et conditions

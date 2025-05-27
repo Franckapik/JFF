@@ -5,7 +5,7 @@ import { collectResourceAction } from '../ai/fsm/actions/individual/collectResou
 import { returnToBaseAction } from '../ai/fsm/actions/individual/returnToBaseAction';
 import { refuelAtBaseAction } from '../ai/fsm/actions/individual/refuelAtBaseAction';
 import { BOT_STATES, PRIORITY } from '../ai/constants/botConstants';
-import { VEHICLE_TYPES } from '../ai/constants/playerConstants';
+import { VEHICLE_TYPES, getMainShipId } from '../ai/constants/playerConstants';
 
 // Mock external dependencies
 vi.mock('../utils/fsmLogger', () => ({
@@ -50,7 +50,7 @@ vi.mock('../hooks/useDroneState', () => ({
 
 vi.mock('../ai/constants/playerConstants', () => ({
   getBotPlayerId: vi.fn(() => 'player2'),
-  getMainShipId: vi.fn(() => 'ship'),
+  getMainShipId: vi.fn((playerId) => `${playerId || 'player2'}-ship`),
   getDroneId: vi.fn(() => 'drone1'),
   VEHICLE_TYPES: {
     EXPLORER_DRONE: 'explorerDrone',
@@ -481,7 +481,8 @@ describe('Section 6: Bot Actions', () => {
       
       expect(result).toBe(true); // Action completes immediately
       expect(mockTileStore.deductTileResources).toHaveBeenCalledWith('B0', expect.anything());
-      expect(mockPlayerStore.updateVehicle).toHaveBeenCalledWith('player2', 'ship', expect.objectContaining({
+      const shipId = getMainShipId('player2');
+      expect(mockPlayerStore.updateVehicle).toHaveBeenCalledWith('player2', shipId, expect.objectContaining({
         resources: expect.anything()
       }));
       expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', expect.objectContaining({
@@ -622,7 +623,8 @@ describe('Section 6: Bot Actions', () => {
       const result = returnToBaseAction(mockPlayerStore, mockTileStore, addAction, changeState);
       
       expect(result).toBeUndefined(); // Action is in progress
-      expect(mockPlayerStore.moveToTile).toHaveBeenCalledWith('player2', 'ship', mockTileStore.tiles['A0']);
+      const shipId = getMainShipId('player2');
+      expect(mockPlayerStore.moveToTile).toHaveBeenCalledWith('player2', shipId, mockTileStore.tiles['A0']);
       expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', expect.objectContaining({
         returnState: expect.objectContaining({ started: true })
       }));
@@ -795,7 +797,9 @@ describe('Section 6: Bot Actions', () => {
       expect(result).toBe(true);
       expect(mockPlayerStore.refuelVehicle).toHaveBeenCalled();
       expect(mockPlayerStore.transferResourcesToScore).toHaveBeenCalled();
-      expect(mockPlayerStore.updateVehicle).toHaveBeenCalledWith('player2', 'ship', { isAtCapacity: false });
+      // Using proper format for ship ID with the getMainShipId function
+      const shipId = getMainShipId('player2');
+      expect(mockPlayerStore.updateVehicle).toHaveBeenCalledWith('player2', shipId, { isAtCapacity: false });
     });
 
     it('should return true when bot is fully refueled', () => {

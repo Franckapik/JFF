@@ -10,6 +10,7 @@
 
 import { BotConditions } from '../../conditions/botConditions';
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
+import { getMainShipId } from '../../../constants/playerConstants';
 import fsmLogger from '../../../../utils/fsmLogger';
 
 /**
@@ -27,7 +28,8 @@ export const evaluateConditionsFromIdleAction = (playerStore, tileStore, addActi
   fsmLogger.action(`Evaluating conditions from IDLE state for bot ${botId}`, null, botId);
   
   // 1. Récupérer le véhicule du bot actif
-  const botVehicle = playerStore.players?.[botId]?.vehicles?.ship;
+  const botVehicleId = getMainShipId(botId);
+  const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   if (!botVehicle) {
     fsmLogger.error(`Bot vehicle not found for ${botId} in evaluateConditionsFromIdleAction`, null, botId);
     return false;

@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import usePlayerStore from "../stores/usePlayerStore";
 import useGameStore from "../stores/useGameStore/";
 import { useTileStore } from "../stores/useTileStore";
-import { isBotPlayerId, getMainShipId } from "../ai/constants/playerConstants";
+import { isBotPlayerId, getMainShipId, VEHICLE_TYPES } from "../ai/constants/playerConstants";
 import { calculatePath } from "../utils/utils";
 import fsmLogger from "../utils/fsmLogger";
 import { useVehicleMovement } from "../hooks/useVehicleMovement";
@@ -31,7 +31,7 @@ const ShipMovement = React.memo(({ playerId, children }) => {
   } = useVehicleMovement({
     playerId,
     vehicleId,
-    vehicleType: 'ship'
+    vehicleType: VEHICLE_TYPES.SHIP
   });
 
   const recalculatePath = React.useCallback(() => {

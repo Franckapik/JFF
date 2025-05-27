@@ -22,7 +22,7 @@ import fsmLogger from '../../../../utils/fsmLogger';
  */
 export const refuelAtBaseAction = (playerStore, tileStore, addAction, changeState) => {
   const botId = BotConditions.getCurrentBotId();
-  const botVehicleId = getMainShipId();
+  const botVehicleId = getMainShipId(botId);
   const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   if (!botVehicle) {
     fsmLogger.error(`Bot vehicle not found for ${botId}`);

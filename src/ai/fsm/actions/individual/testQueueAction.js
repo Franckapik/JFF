@@ -9,6 +9,8 @@
  */
 import { BOT_STATES } from '../../../constants/botConstants';
 import fsmLogger from '../../../../utils/fsmLogger';
+import { BotConditions } from '../../conditions/botConditions';
+import { getMainShipId } from '../../../constants/playerConstants';
 
 /**
  * Action de test pour vérifier le fonctionnement de la queue d'actions
@@ -21,7 +23,8 @@ import fsmLogger from '../../../../utils/fsmLogger';
  */
 export const testQueueAction = (playerStore, tileStore, addAction, changeState) => {
   const botId = BotConditions.getCurrentBotId();
-  const botVehicle = playerStore.players?.[botId]?.vehicles?.ship;
+  const botVehicleId = getMainShipId(botId);
+  const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   if (!botVehicle) {
     fsmLogger.error('Bot vehicle not found');
     return false; // Échec de l'action

@@ -10,6 +10,7 @@
 import { BOT_STATES } from '../../../constants/botConstants';
 import fsmLogger from '../../../../utils/fsmLogger';
 import { BotConditions } from '../../conditions/botConditions';
+import { getMainShipId } from '../../../constants/playerConstants';
 
 /**
  * Se déplace vers une tuile aléatoire
@@ -22,7 +23,8 @@ import { BotConditions } from '../../conditions/botConditions';
 export const moveToRandomTileAction = (playerStore, tileStore, addAction, changeState) => {
   // Récupérer l'ID du bot actif depuis BotConditions
   const botId = BotConditions.getCurrentBotId();
-  const botVehicle = playerStore.players?.[botId]?.vehicles?.ship;
+  const botVehicleId = getMainShipId(botId);
+  const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   
   if (!botVehicle || botVehicle.isMoving) {
     return false;
@@ -31,7 +33,7 @@ export const moveToRandomTileAction = (playerStore, tileStore, addAction, change
   const randomTile = tileStore.selectRandomWalkableTile();
   if (randomTile) {
     fsmLogger.action(`Moving bot ${botId} to random tile: ${randomTile.coord}`);
-    playerStore.moveToTile(botId, 'ship', randomTile);
+    playerStore.moveToTile(botId, botVehicleId, randomTile);
     
     // Toujours retourner à IDLE après un déplacement aléatoire pour réévaluation
     fsmLogger.condition(`Random movement complete, returning to IDLE for re-evaluation`);

@@ -3,7 +3,7 @@
  */
 import useGameStore from '../../useGameStore/';
 import { createPlayer } from '../utils/playerFactory';
-import { HUMAN_PLAYER_ID, getBotPlayerId } from '../../../ai/constants/playerConstants';
+import { HUMAN_PLAYER_ID, getBotPlayerId, getMainShipId, VEHICLE_TYPES } from '../../../ai/constants/playerConstants';
 
 const createPlayerBaseSlice = (set, get) => {
   // Récupérer la configuration depuis gameStore
@@ -22,9 +22,9 @@ const createPlayerBaseSlice = (set, get) => {
 
   return {
     // === ÉTAT INITIAL ===
-    selectedVehicle: { playerId: HUMAN_PLAYER_ID, vehicleId: 'ship' },
+    selectedVehicle: { playerId: HUMAN_PLAYER_ID, vehicleId: getMainShipId(HUMAN_PLAYER_ID) },
     movementSpeeds: {
-      ship: {
+      [VEHICLE_TYPES.SHIP]: {
         speed: 2,
         rotationSpeed: 2.0
       },
@@ -64,12 +64,13 @@ const createPlayerBaseSlice = (set, get) => {
         
         Object.keys(updatedPlayers).forEach((playerId, index) => {
           if (index < startingTiles.length) {
+            const shipId = getMainShipId(playerId);
             updatedPlayers[playerId] = {
               ...updatedPlayers[playerId],
               vehicles: {
                 ...updatedPlayers[playerId].vehicles,
-                ship: {
-                  ...updatedPlayers[playerId].vehicles.ship,
+                [shipId]: {
+                  ...updatedPlayers[playerId].vehicles[shipId],
                   position: startingTiles[index].position,
                   coord: startingTiles[index].coord,
                   startCoord: startingTiles[index].coord,

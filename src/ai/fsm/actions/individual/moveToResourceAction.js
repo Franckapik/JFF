@@ -23,7 +23,7 @@ import { findPath } from '../../../../utils/utils';
  */
 export const moveToResourceAction = (playerStore, tileStore, addAction, changeState) => {
   const botId = BotConditions.getCurrentBotId();
-  const botVehicleId = getMainShipId();
+  const botVehicleId = getMainShipId(botId);
   const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   const botMemory = playerStore.players?.[botId]?.memory;
   

@@ -4,7 +4,7 @@ import { Vector3, Euler } from 'three';
 import usePlayerStore from '../stores/usePlayerStore';
 import useBotStore from '../stores/useBotStore/';
 import { useTileStore } from '../stores/useTileStore';
-import { isBotPlayerId, getMainShipId } from '../ai/constants/playerConstants';
+import { isBotPlayerId, getMainShipId, VEHICLE_TYPES } from '../ai/constants/playerConstants';
 import fsmLogger from '../utils/fsmLogger';
 import { calculatePath } from '../utils/utils';
 
@@ -43,7 +43,7 @@ export const useVehicleMovement = ({
   // Vitesses du véhicule
   const speeds = usePlayerStore((state) => {
     if (customSpeed) return customSpeed;
-    return vehicleType === 'ship' ? state.movementSpeeds.ship : state.movementSpeeds.drone;
+    return vehicleType === VEHICLE_TYPES.SHIP ? state.movementSpeeds.ship : state.movementSpeeds.drone;
   });
 
   const handleFinalizeMovement = (currentTargetTile) => {
