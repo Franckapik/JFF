@@ -17,7 +17,7 @@ const ACTION_STATUS = {
 export const createExecutionSlice = (set, get) => ({
   // Exécute l'action la plus prioritaire de la file
   executeNextAction: () => {
-    const actionQueue = get().actionQueue;
+    const actionQueue = get().getActionQueue();
     if (actionQueue.length === 0) return false;
     
     const nextAction = actionQueue[0];
@@ -90,8 +90,8 @@ export const createExecutionSlice = (set, get) => ({
     const exitConditionMet = get().checkStateExitConditions();
     if (exitConditionMet) return;
     
-    if (get().actionQueue.length === 0) {
-      const currentState = get().botState;
+    if (get().getActionQueue().length === 0) {
+      const currentState = get().getBotState();
       const stateConfig = BotStateConfig[currentState];
       
       if (stateConfig) {
@@ -124,11 +124,22 @@ export const createExecutionSlice = (set, get) => ({
     resetState: () => {
       const currentBotId = get().currentBotId;
       fsmLogger.info("Resetting bot state for testing", null, currentBotId);
-      set({
-        botState: get().BOT_STATES?.IDLE,
-        isRunning: false,
-        actionQueue: [],
-        actionHistory: []
+      set((state) => {
+        const { currentBotIndex, botStates } = state;
+        if (!botStates[currentBotIndex]) return state;
+        
+        const updatedBotStates = { ...botStates };
+        updatedBotStates[currentBotIndex] = {
+          ...updatedBotStates[currentBotIndex],
+          botState: get().BOT_STATES?.IDLE || 'idle',
+          actionQueue: []
+        };
+        
+        return { 
+          botStates: updatedBotStates,
+          isRunning: false,
+          actionHistory: []
+        };
       });
       return true;
     },

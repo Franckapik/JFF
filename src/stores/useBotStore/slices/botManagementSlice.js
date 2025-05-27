@@ -22,12 +22,8 @@ export const createBotManagementSlice = (set, get) => ({
     // Préserver l'état isRunning actuel
     const currentRunningState = get().isRunning;
     
-    // Sauvegarder l'état actuel du bot actif
+    // Sauvegarder l'état actuel du bot actif (plus besoin car tout est dans botStates)
     const currentBotIndex = get().currentBotIndex;
-    const currentState = {
-      botState: get().botState,
-      actionQueue: [...get().actionQueue],
-    };
     
     // Récupérer ou initialiser l'état du nouveau bot
     const nextBotState = get().botStates[botIndex] || {
@@ -35,15 +31,16 @@ export const createBotManagementSlice = (set, get) => ({
       actionQueue: []
     };
     
-    // Mettre à jour le stockage des états des bots
+    // ← CORRECTION : Créer updatedBotStates ici
     const updatedBotStates = { ...get().botStates };
-    updatedBotStates[currentBotIndex] = currentState;
+    if (!updatedBotStates[botIndex]) {
+      updatedBotStates[botIndex] = nextBotState;
+    }
     
+    // Mettre à jour seulement les indices du bot actif
     set({
       currentBotIndex: botIndex,
       currentBotId: botId,
-      botState: nextBotState.botState,
-      actionQueue: [...nextBotState.actionQueue],
       botStates: updatedBotStates,
       isRunning: currentRunningState
     });
@@ -59,18 +56,8 @@ export const createBotManagementSlice = (set, get) => ({
     const botId = getBotId(botIndex);
     fsmLogger.info(`Initializing bot FSM for Bot ${botIndex} (${botId})`, null, botId);
     
-    // Sauvegarder l'état actuel si nécessaire
+    // Sauvegarder l'état actuel si nécessaire (plus besoin car tout est dans botStates)
     const currentBotIndex = get().currentBotIndex;
-    if (currentBotIndex !== botIndex) {
-      const currentState = {
-        botState: get().botState,
-        actionQueue: [...get().actionQueue],
-      };
-      
-      const updatedBotStates = { ...get().botStates };
-      updatedBotStates[currentBotIndex] = currentState;
-      set({ botStates: updatedBotStates });
-    }
     
     // Initialiser l'état pour ce bot
     const initialBotState = {
@@ -84,8 +71,6 @@ export const createBotManagementSlice = (set, get) => ({
     set({
       currentBotIndex: botIndex,
       currentBotId: botId,
-      botState: BOT_STATES.IDLE,
-      actionQueue: [],
       botStates: updatedBotStates
     });
     
@@ -121,5 +106,82 @@ export const createBotManagementSlice = (set, get) => ({
     }
     
     get().addAction('evaluateIdle', PRIORITY.MEDIUM, { botId });
+  },
+  
+  // PHASE 3.2: Validation and debugging methods
+  
+  /**
+   * Validates the current bot state for consistency
+   * @returns {Object} Validation result with any issues found
+   */
+  validateBotState: () => {
+    const { currentBotIndex, currentBotId, botStates } = get();
+    const issues = [];
+    
+    // Check if current bot exists
+    if (!botStates[currentBotIndex]) {
+      issues.push(`Missing bot state for index ${currentBotIndex}`);
+    }
+    
+    // Check for action queue consistency
+    const actionQueue = get().getActionQueue();
+    const duplicateEvaluateIdle = actionQueue.filter(action => action.type === 'evaluateIdle');
+    if (duplicateEvaluateIdle.length > 1) {
+      issues.push(`Found ${duplicateEvaluateIdle.length} evaluateIdle actions in queue`);
+    }
+    
+    // Check for stuck actions (in progress for too long)
+    const stuckActions = actionQueue.filter(action => 
+      action.status === 'in_progress' && 
+      Date.now() - action.timestamp > 60000 // 60 seconds
+    );
+    if (stuckActions.length > 0) {
+      issues.push(`Found ${stuckActions.length} stuck actions (>60s in progress)`);
+    }
+    
+    return {
+      valid: issues.length === 0,
+      issues,
+      botId: currentBotId,
+      botIndex: currentBotIndex,
+      queueLength: actionQueue.length
+    };
+  },
+  
+  /**
+   * Returns debug information about the current bot state
+   * @returns {Object} Debug information
+   */
+  debugBotState: () => {
+    const { currentBotIndex, currentBotId, botStates, isRunning } = get();
+    const actionQueue = get().getActionQueue();
+    const currentState = get().getBotState();
+    
+    return {
+      // Basic info
+      currentBotIndex,
+      currentBotId,
+      isRunning,
+      currentState,
+      
+      // Queue info
+      actionQueue: actionQueue.map(action => ({
+        type: action.type,
+        status: action.status,
+        priority: action.priority,
+        age: Date.now() - action.timestamp
+      })),
+      
+      // Bot states summary
+      botStatesSummary: Object.keys(botStates).map(index => ({
+        index: parseInt(index),
+        state: botStates[index]?.botState || 'unknown',
+        queueLength: botStates[index]?.actionQueue?.length || 0,
+        activeActions: botStates[index]?.actionQueue?.filter(a => a.status === 'in_progress')?.length || 0
+      })),
+      
+      // Validation
+      validation: get().validateBotState()
+    };
   },
 });

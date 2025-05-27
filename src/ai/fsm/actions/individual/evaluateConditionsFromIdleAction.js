@@ -13,6 +13,9 @@ import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
 import { getMainShipId } from '../../../constants/playerConstants';
 import fsmLogger from '../../../../utils/fsmLogger';
 
+// Throttling constants to prevent infinite loops
+const EVALUATE_IDLE_THROTTLE_MS = 2000; // Minimum 2 seconds between evaluateIdle actions
+
 /**
  * Évalue les conditions depuis l'état IDLE et décide du prochain état
  * Utilise la fonction centralisée evaluateStateTransition ou evaluateFromIdle
@@ -25,6 +28,26 @@ import fsmLogger from '../../../../utils/fsmLogger';
 export const evaluateConditionsFromIdleAction = (playerStore, tileStore, addAction, changeState) => {
   // Récupérer l'ID du bot actif
   const botId = BotConditions.getCurrentBotId();
+  
+  // PHASE 0: Throttling to prevent infinite loops
+  const botMemory = playerStore.players?.[botId]?.memory;
+  const lastEvaluateTime = botMemory?.lastEvaluateIdleTime || 0;
+  const currentTime = Date.now();
+  
+  if (currentTime - lastEvaluateTime < EVALUATE_IDLE_THROTTLE_MS) {
+    fsmLogger.action(`evaluateIdle throttled for bot ${botId} (last execution ${((currentTime - lastEvaluateTime)/1000).toFixed(1)}s ago)`, null, botId);
+    return true; // Action completed (throttled)
+  }
+  
+  // Update last evaluation time to prevent immediate re-execution
+  try {
+    playerStore.updatePlayerMemory(botId, {
+      lastEvaluateIdleTime: currentTime
+    });
+  } catch (error) {
+    fsmLogger.error(`Failed to update lastEvaluateIdleTime: ${error.message}`, null, botId);
+  }
+  
   fsmLogger.action(`Evaluating conditions from IDLE state for bot ${botId}`, null, botId);
   
   // 1. Récupérer le véhicule du bot actif

@@ -7,12 +7,15 @@ import fsmLogger from '../../../utils/fsmLogger';
 import { getMainShipId } from '../../../ai/constants/playerConstants';
 
 export const createStateTransitionSlice = (set, get) => ({
-  // État du bot
-  botState: BOT_STATES.IDLE,
+  // Getter pour accéder à l'état du bot actif
+  getBotState: () => {
+    const { currentBotIndex, botStates } = get();
+    return botStates[currentBotIndex]?.botState || BOT_STATES.IDLE;
+  },
   
   // Change l'état du bot
   changeState: (newState) => {
-    const currentState = get().botState;
+    const currentState = get().getBotState();
     
     if (currentState === newState) return;
     
@@ -32,9 +35,18 @@ export const createStateTransitionSlice = (set, get) => ({
       }
     }
     
-    set({ 
-      botState: newState,
-      actionQueue: []
+    set((state) => {
+      const { currentBotIndex, botStates } = state;
+      if (!botStates[currentBotIndex]) return state;
+      
+      const updatedBotStates = { ...botStates };
+      updatedBotStates[currentBotIndex] = {
+        ...updatedBotStates[currentBotIndex],
+        botState: newState,
+        actionQueue: [] // Vider la queue lors du changement d'état
+      };
+      
+      return { botStates: updatedBotStates };
     });
     
     // Exécuter la fonction d'entrée dans le nouvel état
@@ -57,7 +69,7 @@ export const createStateTransitionSlice = (set, get) => ({
   
   // Vérifie les conditions de sortie d'état
   checkStateExitConditions: () => {
-    const currentState = get().botState;
+    const currentState = get().getBotState();
     
     if (currentState === BOT_STATES.IDLE) return;
     

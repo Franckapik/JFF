@@ -1959,3 +1959,186 @@
   color: #2196F3;
   font-weight: bold;
 }
+
+/* ====== STYLES POUR ACTIONS TAB ====== */
+.actions-tab {
+  padding: 10px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.actions-tab .section {
+  margin-bottom: 20px;
+  background-color: #1a1a1a;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.actions-tab h4 {
+  margin: 0 0 10px 0;
+  color: #2196F3;
+  font-size: 14px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 5px;
+}
+
+.action-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.action-item {
+  background-color: #333;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-left: 4px solid #666;
+}
+
+.action-item.pending {
+  border-left-color: #FF9800;
+}
+
+.action-item.running {
+  border-left-color: #2196F3;
+  background-color: rgba(33, 150, 243, 0.1);
+}
+
+.action-item.completed {
+  border-left-color: #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.action-item.failed {
+  border-left-color: #f44336;
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
+.action-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.action-type {
+  font-weight: bold;
+  color: #fff;
+}
+
+.action-priority {
+  background-color: #666;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  margin: 0 5px;
+}
+
+.action-status {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.action-status.pending {
+  background-color: #FF9800;
+  color: white;
+}
+
+.action-status.running {
+  background-color: #2196F3;
+  color: white;
+}
+
+.action-status.completed {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.action-status.failed {
+  background-color: #f44336;
+  color: white;
+}
+
+.action-params {
+  margin-top: 5px;
+  padding: 5px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.action-params .param {
+  display: inline-block;
+  margin-right: 10px;
+  color: #aaa;
+}
+
+.action-params .param::before {
+  content: "• ";
+  color: #666;
+}
+
+.action-result {
+  margin-top: 5px;
+  padding: 5px;
+  background-color: rgba(76, 175, 80, 0.1);
+  border-radius: 3px;
+  font-size: 11px;
+  color: #4CAF50;
+}
+
+.action-time {
+  color: #aaa;
+  font-size: 10px;
+}
+
+.no-actions {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+}
+
+.bot-state-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.bot-state-info > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  border-bottom: 1px dotted #333;
+}
+
+.bot-state-info > div:last-child {
+  border-bottom: none;
+}
+
+/* Styles pour l'historique d'actions */
+.action-list.history .action-item {
+  opacity: 0.8;
+  border-left-width: 2px;
+}
+
+.action-list.history .action-item.history {
+  background-color: #2a2a2a;
+}
+
+/* Amélioration de la scrollbar pour les listes d'actions */
+.action-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.action-list::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.action-list::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}

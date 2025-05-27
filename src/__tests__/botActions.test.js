@@ -50,6 +50,7 @@ vi.mock('../hooks/useDroneState', () => ({
 
 vi.mock('../ai/constants/playerConstants', () => ({
   getBotPlayerId: vi.fn(() => 'bot-1'),
+  getBotId: vi.fn((index) => 'bot-1'), // ← CORRECTION : toujours retourner 'bot-1' pour les tests
   getMainShipId: vi.fn((playerId) => `${playerId || 'bot-1'}-ship`),
   getDroneId: vi.fn(() => 'drone1'),
   VEHICLE_TYPES: {
@@ -97,7 +98,7 @@ describe('Section 6: Bot Actions', () => {
       players: {
         'bot-1': {
           vehicles: {
-            ship: { coord: 'A0', isMoving: false },
+            'bot-1-ship': { coord: 'A0', isMoving: false },
             drone1: { coord: 'A0', isMoving: false, isActive: true }
           },
           memory: {
@@ -264,7 +265,7 @@ describe('Section 6: Bot Actions', () => {
       players: {
         'bot-1': {
           vehicles: {
-            ship: { 
+            'bot-1-ship': { 
               coord: 'A0', 
               isMoving: false,
               resources: { food: 10, debris: 20, special: 0 }
@@ -417,7 +418,7 @@ describe('Section 6: Bot Actions', () => {
               }
             },
             vehicles: {
-              ship: { coord: 'A0', isMoving: true } // Still moving
+              'bot-1-ship': { coord: 'A0', isMoving: true } // Still moving
             }
           }
         }
@@ -442,7 +443,7 @@ describe('Section 6: Bot Actions', () => {
       players: {
         'bot-1': {
           vehicles: {
-            ship: { 
+            'bot-1-ship': { 
               coord: 'B0', 
               isMoving: false,
               resources: { food: 10, debris: 20, special: 0 },
@@ -544,7 +545,7 @@ describe('Section 6: Bot Actions', () => {
           'bot-1': {
             ...mockPlayerStore.players['bot-1'],
             vehicles: {
-              ship: { 
+              'bot-1-ship': { 
                 coord: 'B0', 
                 isMoving: false,
                 resources: { food: 95, debris: 20, special: 0 },
@@ -587,14 +588,14 @@ describe('Section 6: Bot Actions', () => {
       players: {
         'bot-1': {
           vehicles: {
-            ship: { 
+            'bot-1-ship': {  // ← CHANGÉ de 'ship' à 'bot-1-ship'
               coord: 'B0', 
               isMoving: false,
               startCoord: 'A0'
             }
           },
           memory: {
-            returnState: null  // This prevents the botMemory?.returnState?.started check from failing
+            returnState: null
           }
         }
       },
@@ -639,7 +640,7 @@ describe('Section 6: Bot Actions', () => {
           'bot-1': {
             ...mockPlayerStore.players['bot-1'],
             vehicles: {
-              ship: { 
+              'bot-1-ship': {  // ← CHANGÉ de 'ship' à 'bot-1-ship'
                 coord: 'A0', // Already at base
                 isMoving: false,
                 startCoord: 'A0'
@@ -669,7 +670,7 @@ describe('Section 6: Bot Actions', () => {
               }
             },
             vehicles: {
-              ship: { 
+              'bot-1-ship': {  // ← CHANGÉ de 'ship' à 'bot-1-ship'
                 coord: 'A0', // Has reached base
                 isMoving: false,
                 startCoord: 'A0'
@@ -727,7 +728,7 @@ describe('Section 6: Bot Actions', () => {
               }
             },
             vehicles: {
-              ship: { 
+              'bot-1-ship': {  // ← CHANGÉ de 'ship' à 'bot-1-ship'
                 coord: 'B0', // Still not at base
                 isMoving: true,
                 startCoord: 'A0'
@@ -754,7 +755,7 @@ describe('Section 6: Bot Actions', () => {
       players: {
         'bot-1': {
           vehicles: {
-            ship: { 
+            'bot-1-ship': {  // ← CHANGÉ de 'ship' à 'bot-1-ship'
               coord: 'A0', 
               isMoving: false,
               fuel: 50,

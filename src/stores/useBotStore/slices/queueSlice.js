@@ -12,11 +12,14 @@ const ACTION_STATUS = {
 };
 
 export const createQueueSlice = (set, get) => ({
-  // File d'actions avec priorités et statuts
-  actionQueue: [],
-  
   // Historique des actions pour débogage
   actionHistory: [],
+
+  // Getter pour accéder à la file du bot actif
+  getActionQueue: () => {
+    const { currentBotIndex, botStates } = get();
+    return botStates[currentBotIndex]?.actionQueue || [];
+  },
   
   // Ajoute une action à la file d'attente
   addAction: (actionType, priority = PRIORITY.MEDIUM, params = {}) => {
@@ -24,6 +27,21 @@ export const createQueueSlice = (set, get) => ({
       const currentBotId = get().currentBotId;
       fsmLogger.error(`Unknown action type: ${actionType}`, null, currentBotId);
       return;
+    }
+    
+    // DUPLICATION PREVENTION: Check for duplicate evaluateIdle actions
+    if (actionType === 'evaluateIdle') {
+      const currentQueue = get().getActionQueue();
+      const hasEvaluateIdle = currentQueue.some(action => 
+        action.type === 'evaluateIdle' && 
+        (action.status === ACTION_STATUS.PENDING || action.status === ACTION_STATUS.IN_PROGRESS)
+      );
+      
+      if (hasEvaluateIdle) {
+        const currentBotId = get().currentBotId;
+        fsmLogger.action(`Skipping duplicate evaluateIdle action for bot ${currentBotId}`, null, currentBotId);
+        return; // Don't add duplicate evaluateIdle
+      }
     }
     
     const newAction = {
@@ -38,33 +56,53 @@ export const createQueueSlice = (set, get) => ({
     fsmLogger.action(`Adding action to queue: ${actionType}`, { priority }, currentBotId);
     
     set((state) => {
-      const updatedQueue = [...state.actionQueue, newAction]
+      const { currentBotIndex, botStates } = state;
+      if (!botStates[currentBotIndex]) return state;
+      
+      const currentBotQueue = [...(botStates[currentBotIndex].actionQueue || []), newAction]
         .sort((a, b) => {
           if (b.priority !== a.priority) return b.priority - a.priority;
           return a.timestamp - b.timestamp;
         });
       
-      return { actionQueue: updatedQueue };
+      const updatedBotStates = { ...botStates };
+      updatedBotStates[currentBotIndex] = {
+        ...updatedBotStates[currentBotIndex],
+        actionQueue: currentBotQueue
+      };
+      
+      return { botStates: updatedBotStates };
     });
   },
   
   // Met à jour le statut d'une action
   updateActionStatus: (index, status, result = null) => {
+    const actionQueue = get().getActionQueue();
+    
     set((state) => {
-      if (index < 0 || index >= state.actionQueue.length) return state;
+      if (index < 0 || index >= actionQueue.length) return state;
       
-      const updatedQueue = [...state.actionQueue];
+      const { currentBotIndex, botStates } = state;
+      if (!botStates[currentBotIndex]) return state;
+      
+      const updatedQueue = [...actionQueue];
       updatedQueue[index] = {
         ...updatedQueue[index],
         status,
         result
       };
       
-      return { actionQueue: updatedQueue };
+      const updatedBotStates = { ...botStates };
+      updatedBotStates[currentBotIndex] = {
+        ...updatedBotStates[currentBotIndex],
+        actionQueue: updatedQueue
+      };
+      
+      return { botStates: updatedBotStates };
     });
     
     if (status === ACTION_STATUS.COMPLETED || status === ACTION_STATUS.FAILED) {
-      const action = get().actionQueue[index];
+      const action = actionQueue[index];
       
       if (action) {
         const historyEntry = {
@@ -81,9 +119,19 @@ export const createQueueSlice = (set, get) => ({
         });
         
         set((state) => {
-          const updatedQueue = [...state.actionQueue];
+          const { currentBotIndex, botStates } = state;
+          if (!botStates[currentBotIndex]) return state;
+          
+          const updatedQueue = [...(botStates[currentBotIndex].actionQueue || [])];
           updatedQueue.splice(index, 1);
-          return { actionQueue: updatedQueue };
+          
+          const updatedBotStates = { ...botStates };
+          updatedBotStates[currentBotIndex] = {
+            ...updatedBotStates[currentBotIndex],
+            actionQueue: updatedQueue
+          };
+          
+          return { botStates: updatedBotStates };
         });
         
         const currentBotId = get().currentBotId;
