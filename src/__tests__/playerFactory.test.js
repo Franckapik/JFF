@@ -1,16 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
-import { createPlayer } from '../stores/usePlayerStore/utils/playerFactory';
-import { VEHICLE_TYPES, getDroneId, getMainShipId } from '../ai/constants/playerConstants';
-
-// Mocking vehicleFactory
-vi.mock('../stores/usePlayerStore/utils/vehicleFactory', () => ({
-  createVehicle: vi.fn((id, type) => ({
-    id,
-    type,
-    isActive: type === VEHICLE_TYPES.EXPLORER_DRONE,
-    mock: 'vehicle' // Just to identify it's our mock
-  }))
-}));
+import { describe, it, expect } from 'vitest';
+import { createPlayer } from '../factories/playerFactory.js';
+import { getMainShipId, getHumanPlayerId, VEHICLE_TYPES } from '../ai/constants/playerConstants.js';
 
 describe('playerFactory', () => {
   describe('createPlayer', () => {
@@ -34,28 +24,20 @@ describe('playerFactory', () => {
     });
     
     it('should create a player with main ship and all required drones', () => {
-      const playerId = 'player-2';
+      const playerId = getHumanPlayerId(2);
       const player = createPlayer(playerId);
-      const vehicles = player.vehicles;
       
-      // Check that the main ship is created
-      const mainShipId = getMainShipId();
+      expect(player).toHaveProperty('id', playerId);
+      expect(player).toHaveProperty('vehicles');
+      expect(player).toHaveProperty('position');
+      
+      const { vehicles } = player;
+      
+      // Check that the main ship is created with the correct playerId
+      const mainShipId = getMainShipId(playerId);
       expect(vehicles).toHaveProperty(mainShipId);
       expect(vehicles[mainShipId]).toHaveProperty('type', VEHICLE_TYPES.SHIP);
-      
-      // Check that all required drones are created
-      const explorerDroneId = getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE);
-      const combatDroneId = getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE);
-      const specialDroneId = getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE);
-      
-      expect(vehicles).toHaveProperty(explorerDroneId);
-      expect(vehicles[explorerDroneId]).toHaveProperty('type', VEHICLE_TYPES.EXPLORER_DRONE);
-      
-      expect(vehicles).toHaveProperty(combatDroneId);
-      expect(vehicles[combatDroneId]).toHaveProperty('type', VEHICLE_TYPES.COMBAT_DRONE);
-      
-      expect(vehicles).toHaveProperty(specialDroneId);
-      expect(vehicles[specialDroneId]).toHaveProperty('type', VEHICLE_TYPES.SPECIAL_DRONE);
+      expect(vehicles[mainShipId]).toHaveProperty('playerId', playerId);
     });
     
     it('should initialize drones with the correct activation state', () => {

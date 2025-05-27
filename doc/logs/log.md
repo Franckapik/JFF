@@ -1,266 +1,39 @@
-// PlayerStore
-{
-  "selectedVehicle": {
-    "playerId": "player1",
-    "vehicleId": "ship"
-  },
-  "movementSpeeds": {
-    "ship": {
-      "speed": 2,
-      "rotationSpeed": 2
-    },
-    "drone": {
-      "speed": 3,
-      "rotationSpeed": 2.5
-    }
-  },
-  "players": {
-    "player1": {
-      "id": "player1",
-      "exploringRadius": 3,
-      "vehicles": {
-        "undefined-ship": {
-          "id": "undefined-ship",
-          "type": "ship",
-          "position": null,
-          "coord": null,
-          "isMoving": false,
-          "progress": 0,
-          "resources": {
-            "food": 0,
-            "debris": 0,
-            "special": 0
-          },
-          "targetTile": {
-            "position": null,
-            "coord": null
-          },
-          "fuel": 100,
-          "damage": 0,
-          "totalDistance": 0,
-          "path": [],
-          "startCoord": null,
-          "isAtCapacity": false,
-          "maxCapacity": {
-            "food": 100,
-            "debris": 1000,
-            "special": 2
-          }
-        },
-        "player1-drone-explorer_drone": {
-          "id": "player1-drone-explorer_drone",
-          "type": "explorer_drone",
-          "position": null,
-          "coord": null,
-          "isMoving": false,
-          "progress": 0,
-          "resources": {
-            "food": 0,
-            "debris": 0,
-            "special": 0
-          },
-          "targetTile": {
-            "position": null,
-            "coord": null
-          }
-        },
-        "player1-drone-combat_drone": {
-          "id": "player1-drone-combat_drone",
-          "type": "combat_drone",
-          "position": null,
-          "coord": null,
-          "isMoving": false,
-          "progress": 0,
-          "resources": {
-            "food": 0,
-            "debris": 0,
-            "special": 0
-          },
-          "targetTile": {
-            "position": null,
-            "coord": null
-          }
-        },
-        "player1-drone-special_drone": {
-          "id": "player1-drone-special_drone",
-          "type": "special_drone",
-          "position": null,
-          "coord": null,
-          "isMoving": false,
-          "progress": 0,
-          "resources": {
-            "food": 0,
-            "debris": 0,
-            "special": 0
-          },
-          "targetTile": {
-            "position": null,
-            "coord": null
-          }
-        },
-        "ship": {
-          "position": {
-            "x": -1.8,
-            "y": 0,
-            "z": 0
-          },
-          "coord": "C3",
-          "startCoord": "C3"
-        }
-      },
-      "score": {
-        "resources": {
-          "food": 0,
-          "debris": 0,
-          "special": 0
-        }
-      },
-      "memory": {
-        "knownResources": [],
-        "knownDangers": [],
-        "explorationCount": 0,
-        "collectedResources": []
-      },
-      "messages": []
-    },
-    "bot-0": {
-      "id": "bot-0",
-      "exploringRadius": 3,
-      "vehicles": {
-        "undefined-ship": {
-          "id": "undefined-ship",
-          "type": "ship",
-          "position": null,
-          "coord": null,
-          "isMoving": false,
-          "progress": 0,
-          "resources": {
-            "food": 0,
-            "debris": 0,
-            "special": 0
-          },
-          "targetTile": {
-            "position": null,
-            "coord": null
-          },
-          "fuel": 100,
-          "damage": 0,
-          "totalDistance": 0,
-          "path": [],
-          "startCoord": null,
-          "isAtCapacity": false,
-          "maxCapacity": {
-            "food": 100,
-            "debris": 1000,
-            "special": 2
-          }
-        },
-        "bot-0-drone-explorer_drone": {
-          "id": "bot-0-drone-explorer_drone",
-          "type": "explorer_drone",
-          "position": null,
-          "coord": null,
-          "isMoving": false,
-          "progress": 0,
-          "resources": {
-            "food": 0,
-            "debris": 0,
-            "special": 0
-          },
-          "targetTile": {
-            "position": null,
-            "coord": null
-          },
-          "isActive": true,
-          "fuel": 50,
-          "damage": 0,
-          "maxCapacity": {
-            "food": 0,
-            "debris": 0,
-            "special": 0
-          },
-          "explorationBonus": 1.5
-        },
-        "bot-0-drone-combat_drone": {
-          "id": "bot-0-drone-combat_drone",
-          "type": "combat_drone",
-          "position": null,
-          "coord": null,
-          "isMoving": false,
-          "progress": 0,
-          "resources": {
-            "food": 0,
-            "debris": 0,
-            "special": 0
-          },
-          "targetTile": {
-            "position": null,
-            "coord": null
-          },
-          "isActive": false,
-          "fuel": 50,
-          "damage": 5,
-          "maxCapacity": {
-            "food": 20,
-            "debris": 50,
-            "special": 1
-          },
-          "attackRange": 2,
-          "mineLayingCapacity": 3
-        },
-        "bot-0-drone-special_drone": {
-          "id": "bot-0-drone-special_drone",
-          "type": "special_drone",
-          "position": null,
-          "coord": null,
-          "isMoving": false,
-          "progress": 0,
-          "resources": {
-            "food": 0,
-            "debris": 0,
-            "special": 0
-          },
-          "targetTile": {
-            "position": null,
-            "coord": null
-          },
-          "isActive": false,
-          "fuel": 50,
-          "damage": 0,
-          "maxCapacity": {
-            "food": 0,
-            "debris": 0,
-            "special": 0
-          },
-          "specialScanRange": 5,
-          "specialDetection": true,
-          "specialAbilityCharge": 100
-        },
-        "ship": {
-          "position": {
-            "x": -0.9,
-            "y": 0,
-            "z": -1.5588457268119895
-          },
-          "coord": "D2",
-          "startCoord": "D2"
-        }
-      },
-      "score": {
-        "resources": {
-          "food": 0,
-          "debris": 0,
-          "special": 0
-        }
-      },
-      "memory": {
-        "knownResources": [],
-        "knownDangers": [],
-        "explorationCount": 0,
-        "collectedResources": [],
-        "transitionState": null
-      },
-      "messages": []
-    }
-  }
-}
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/botActions.test.js [ src/__tests__/botActions.test.js ]
+Error: Expression expected
+ ❯ getRollupError node_modules/rollup/dist/es/shared/parseAst.js:397:41
+ ❯ convertProgram node_modules/rollup/dist/es/shared/parseAst.js:1085:26
+ ❯ parseAstAsync node_modules/rollup/dist/es/shared/parseAst.js:2071:106
+ ❯ ssrTransformScript node_modules/vite/dist/node/chunks/dep-DbT5NFX0.js:52390:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/__tests__/playerFactory.test.js [ src/__tests__/playerFactory.test.js ]
+Error: Failed to resolve import "../factories/playerFactory.js" from "src/__tests__/playerFactory.test.js". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/fanch/Documents/jff/react-three-vite/src/__tests__/playerFactory.test.js:2:31
+  1  |  import { describe, it, expect } from 'vitest';
+  2  |  import { createPlayer } from '../factories/playerFactory.js';
+     |                                ^
+  3  |  import { getMainShipId, getHumanPlayerId, VEHICLE_TYPES } from '../ai/constants/playerConstants.js';
+  4  |  
+ ❯ TransformPluginContext._formatError node_modules/vite/dist/node/chunks/dep-DbT5NFX0.js:49258:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-DbT5NFX0.js:49253:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-DbT5NFX0.js:64241:23
+ ❯ node_modules/vite/dist/node/chunks/dep-DbT5NFX0.js:64373:39
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-DbT5NFX0.js:64300:7
+ ❯ PluginContainer.transform node_modules/vite/dist/node/chunks/dep-DbT5NFX0.js:49099:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-DbT5NFX0.js:51938:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 9 passed (11)
+      Tests  172 passed (172)
+   Start at  12:58:00
+   Duration  3.55s (transform 1.61s, setup 0ms, collect 2.92s, tests 311ms, environment 11.97s, prepare 1.57s)
+
+ FAIL  Tests failed. Watching for file changes...
+       press h to show help, press q to quit
+Cancelling test run. Press CTRL+c again to exit forcefully.

@@ -49,8 +49,8 @@ vi.mock('../hooks/useDroneState', () => ({
 }));
 
 vi.mock('../ai/constants/playerConstants', () => ({
-  getBotId: vi.fn(() => 'player-2'),
-  getMainShipId: vi.fn((playerId) => `${playerId || 'player-2'}-ship`),
+  getBotPlayerId: vi.fn(() => 'bot-1'),
+  getMainShipId: vi.fn((playerId) => `${playerId || 'bot-1'}-ship`),
   getDroneId: vi.fn(() => 'drone1'),
   VEHICLE_TYPES: {
     EXPLORER_DRONE: 'explorerDrone',
@@ -59,13 +59,10 @@ vi.mock('../ai/constants/playerConstants', () => ({
   }
 }));
 
-// Import the mocked BotConditions
-import { BotConditions } from '../ai/fsm/conditions/botConditions';
-
 // Mock the BotConditions module
 vi.mock('../ai/fsm/conditions/botConditions', () => ({
   BotConditions: {
-    getCurrentBotId: vi.fn(() => 'player-2'),
+    getCurrentBotId: vi.fn(() => 'bot-1'),
     isShipMoving: vi.fn().mockReturnValue({ result: false }),
     isAtBase: vi.fn().mockReturnValue({ result: false }),
     isFullyRefueled: vi.fn().mockReturnValue({ result: false }),
@@ -73,6 +70,9 @@ vi.mock('../ai/fsm/conditions/botConditions', () => ({
     isDroneAtShip: vi.fn().mockReturnValue({ result: true })
   }
 }));
+
+// Import the mocked BotConditions after the mock
+import { BotConditions } from '../ai/fsm/conditions/botConditions';
 
 describe('Section 6: Bot Actions', () => {
   // Common mocks
@@ -95,7 +95,7 @@ describe('Section 6: Bot Actions', () => {
     // Setup mocks for exploreWithDroneAction tests
     const mockPlayerStore = {
       players: {
-        player-2: {
+        'bot-1': {
           vehicles: {
             ship: { coord: 'A0', isMoving: false },
             drone1: { coord: 'A0', isMoving: false, isActive: true }
@@ -203,7 +203,7 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player-2: {
+          'bot-1': {
             ...mockPlayerStore.players['bot-1'],
             memory: {
               ...mockPlayerStore.players['bot-1'].memory,
@@ -232,7 +232,7 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player-2: {
+          'bot-1': {
             ...mockPlayerStore.players['bot-1'],
             memory: {
               ...mockPlayerStore.players['bot-1'].memory,
@@ -262,7 +262,7 @@ describe('Section 6: Bot Actions', () => {
   describe('moveToResourceAction', () => {
     const mockPlayerStore = {
       players: {
-        player-2: {
+        'bot-1': {
           vehicles: {
             ship: { 
               coord: 'A0', 
@@ -317,7 +317,7 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player-2: {
+          'bot-1': {
             ...mockPlayerStore.players['bot-1'],
             memory: {
               knownResources: [
@@ -343,7 +343,7 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player-2: {
+          'bot-1': {
             ...mockPlayerStore.players['bot-1'],
             memory: {
               knownResources: []
@@ -369,7 +369,7 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player-2: {
+          'bot-1': {
             ...mockPlayerStore.players['bot-1'],
             memory: {
               ...mockPlayerStore.players['bot-1'].memory,
@@ -406,7 +406,7 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player-2: {
+          'bot-1': {
             ...mockPlayerStore.players['bot-1'],
             memory: {
               ...mockPlayerStore.players['bot-1'].memory,
@@ -440,7 +440,7 @@ describe('Section 6: Bot Actions', () => {
   describe('collectResourceAction', () => {
     const mockPlayerStore = {
       players: {
-        player-2: {
+        'bot-1': {
           vehicles: {
             ship: { 
               coord: 'B0', 
@@ -496,7 +496,7 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player-2: {
+          'bot-1': {
             ...mockPlayerStore.players['bot-1'],
             memory: {
               ...mockPlayerStore.players['bot-1'].memory,
@@ -541,7 +541,7 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player-2: {
+          'bot-1': {
             ...mockPlayerStore.players['bot-1'],
             vehicles: {
               ship: { 
@@ -585,7 +585,7 @@ describe('Section 6: Bot Actions', () => {
   describe('returnToBaseAction', () => {
     const mockPlayerStore = {
       players: {
-        player-2: {
+        'bot-1': {
           vehicles: {
             ship: { 
               coord: 'B0', 
@@ -636,7 +636,7 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player-2: {
+          'bot-1': {
             ...mockPlayerStore.players['bot-1'],
             vehicles: {
               ship: { 
@@ -660,7 +660,7 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player-2: {
+          'bot-1': {
             ...mockPlayerStore.players['bot-1'],
             memory: {
               returnState: {
@@ -718,7 +718,7 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player-2: {
+          'bot-1': {
             ...mockPlayerStore.players['bot-1'],
             memory: {
               returnState: {
@@ -752,7 +752,7 @@ describe('Section 6: Bot Actions', () => {
   describe('refuelAtBaseAction', () => {
     const mockPlayerStore = {
       players: {
-        player-2: {
+        'bot-1': {
           vehicles: {
             ship: { 
               coord: 'A0', 
@@ -841,7 +841,7 @@ describe('Section 6: Bot Actions', () => {
     it('should return false when bot vehicle is not found', () => {
       // Setup missing bot vehicle
       const emptyPlayerStore = {
-        players: { player-2: { vehicles: {} } },
+        players: { 'bot-1': { vehicles: {} } },
         updateVehicle: vi.fn(),
         refuelVehicle: vi.fn(),
         transferResourcesToScore: vi.fn()
