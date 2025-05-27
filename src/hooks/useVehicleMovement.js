@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Euler } from 'three';
-import usePlayerStore from '../stores/playerStore';
-import useBotStore from '../stores/useBotStore';
+import usePlayerStore from '../stores/usePlayerStore';
+import useBotStore from '../stores/useBotStore/';
 import { useTileStore } from '../stores/useTileStore';
 import { isBotPlayerId, getMainShipId } from '../ai/constants/playerConstants';
 import fsmLogger from '../utils/fsmLogger';

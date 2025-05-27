@@ -3,8 +3,8 @@
 
 import { BOT_STATES, PRIORITY } from '../../constants/botConstants';
 import { getBotPlayerId, getMainShipId } from '../../constants/playerConstants';
-import usePlayerStore from '../../../stores/playerStore';
-import useBotStore from '../../../stores/useBotStore';
+import usePlayerStore from '../../../stores/usePlayerStore';
+import useBotStore from '../../../stores/useBotStore/';
 import fsmLogger from '../../../utils/fsmLogger';
 
 /**

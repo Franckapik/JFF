@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import useBotStore from '../stores/useBotStore';
+import useBotStore from '../stores/useBotStore/';
 import useGameStore from '../stores/useGameStore';
 import { getBotPlayerId } from '../ai/constants/playerConstants';
 import fsmLogger from '../utils/fsmLogger';

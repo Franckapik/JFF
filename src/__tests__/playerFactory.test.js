@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createPlayer } from '../stores/playerStore/utils/playerFactory';
+import { createPlayer } from '../stores/usePlayerStore/utils/playerFactory';
 import { VEHICLE_TYPES, getDroneId, getMainShipId } from '../ai/constants/playerConstants';
 
 // Mocking vehicleFactory
-vi.mock('../stores/playerStore/utils/vehicleFactory', () => ({
+vi.mock('../stores/usePlayerStore/utils/vehicleFactory', () => ({
   createVehicle: vi.fn((id, type) => ({
     id,
     type,

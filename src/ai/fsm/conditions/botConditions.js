@@ -8,9 +8,9 @@ import {
   getDroneId,
   VEHICLE_TYPES
 } from '../../constants/playerConstants';
-import usePlayerStore from '../../../stores/playerStore';
+import usePlayerStore from '../../../stores/usePlayerStore';
 import useGameStore from '../../../stores/useGameStore';
-import useBotStore from '../../../stores/useBotStore';
+import useBotStore from '../../../stores/useBotStore/';
 import useDroneState, { DRONE_STATES } from '../../../hooks/useDroneState';
 
 /**

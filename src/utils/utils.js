@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
 // Remove the redundant import of calculatePathData
 // import { calculatePathData } from "./utils"; 
-import usePlayerStore from "../stores/playerStore"; // Import player store
+import usePlayerStore from "../stores/usePlayerStore"; // Import player store
 import useGameStore from "../stores/useGameStore"; // Import game store
 
 export function generateHexPositions(radius, spacing) {

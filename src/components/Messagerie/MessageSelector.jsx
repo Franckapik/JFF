@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import usePlayerStore from "../../stores/playerStore"; // Import player store
+import usePlayerStore from "../../stores/usePlayerStore"; // Import player store
 import MessageModal from "./MessageModal";
 
 const MessageSelector = ({ playerId = "player1" }) => {

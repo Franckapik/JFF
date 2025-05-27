@@ -5,8 +5,8 @@ import { Html } from "@react-three/drei";
 import Tile from "./Tile";
 import Bot from "./Bot";
 import { useTileStore } from "../stores/useTileStore";
-import usePlayerStore from "../stores/playerStore";
-import useBotStore from "../stores/useBotStore";
+import usePlayerStore from "../stores/usePlayerStore";
+import useBotStore from "../stores/useBotStore/";
 import useGameStore from "../stores/useGameStore";
 import fsmLogger from "../utils/fsmLogger";
 import { 

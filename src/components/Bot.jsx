@@ -2,8 +2,8 @@ import React from "react";
 import { Cone, Html } from "@react-three/drei";
 import ShipMovement from "../Mouvement/ShipMovement";
 import DroneMovement from "../Mouvement/DroneMovement";
-import usePlayerStore from "../stores/playerStore";
-import useBotStore from "../stores/useBotStore";
+import usePlayerStore from "../stores/usePlayerStore";
+import useBotStore from "../stores/useBotStore/";
 import { 
   getBotPlayerId, 
   getMainShipId, 

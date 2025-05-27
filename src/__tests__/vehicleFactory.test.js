@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createVehicle } from '../stores/playerStore/utils/vehicleFactory';
+import { createVehicle } from '../stores/usePlayerStore/utils/vehicleFactory';
 import { VEHICLE_TYPES, isDroneActiveByDefault, isDroneId } from '../ai/constants/playerConstants';
 
 // Mock des dépendances externes

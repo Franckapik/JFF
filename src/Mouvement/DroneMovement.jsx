@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useTileStore } from "../stores/useTileStore";
-import usePlayerStore from "../stores/playerStore";
+import usePlayerStore from "../stores/usePlayerStore";
 import useDroneState, { DRONE_STATES } from "../hooks/useDroneState";
 import { 
   HUMAN_PLAYER_ID,

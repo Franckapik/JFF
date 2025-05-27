@@ -52,7 +52,7 @@ Ce document analyse la couverture de test actuelle basée sur `doc/tests/testabl
 | `markTileAsExplored`           | Oui                             | Marquer une tuile non explorée, déjà explorée. Mock `tileStore`.                                                          |
 | `calculateDistance`            | Oui                             | Distance entre mêmes points, points adjacents, éloignés. `formatted`, `usePathfinding` (avec mocks).                      |
 
-### 1.4. Fabrication des Objets (`/src/stores/playerStore/utils/vehicleFactory.js`)
+### 1.4. Fabrication des Objets (`/src/stores/usePlayerStore/utils/vehicleFactory.js`)
 **Fichier de test principal:** `src/__tests__/vehicleFactory.test.js` (Existe)
 
 | Fonction        | Test Existant (Présomption)     | Suggestions d'amélioration                                                              |
@@ -89,8 +89,8 @@ Ces fonctions sont mentionnées à la fin de `testable-functions.md` et devraien
 | Fonction                    | Source Potentielle (à confirmer)      | Fichier de Test Suggéré                     | État Actuel / Suggestions                                                                                                |
 |-----------------------------|---------------------------------------|---------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
 | `fsmLogger.*`               | `src/utils/fsmLogger.js`              | `src/__tests__/fsmLogger.test.js`           | **Probablement manquant.** Vérifier si le logger écrit correctement les messages. Mock les sorties console. Test chaque niveau. |
-| `updateVehicle`             | `src/stores/playerStore/...`          | `src/__tests__/playerStore.test.js` ou `vehicleUtils.test.js` | **À vérifier.** Tester la mise à jour des propriétés du véhicule, gestion des IDs invalides. Mock le store.        |
-| `generateInitialDrones`     | `src/stores/playerStore/...` ou setup | `src/__tests__/playerStore.test.js` ou `gameSetup.test.js` | **À vérifier.** Vérifier le nombre de drones créés, leur positionnement, IDs.                                |
+| `updateVehicle`             | `src/stores/usePlayerStore/...`          | `src/__tests__/usePlayerStore.test.js` ou `vehicleUtils.test.js` | **À vérifier.** Tester la mise à jour des propriétés du véhicule, gestion des IDs invalides. Mock le store.        |
+| `generateInitialDrones`     | `src/stores/usePlayerStore/...` ou setup | `src/__tests__/usePlayerStore.test.js` ou `gameSetup.test.js` | **À vérifier.** Vérifier le nombre de drones créés, leur positionnement, IDs.                                |
 | `setClockRunning`           | `src/stores/useGameStore.js`          | `src/__tests__/useGameStore.test.js`        | **Probablement manquant.** Tester le changement d'état du store.                                                          |
 | `setPlayerCount`            | `src/stores/useGameStore.js`          | `src/__tests__/useGameStore.test.js`        | **Probablement manquant.** Tester le changement d'état du store, limites (min/max joueurs).                              |
 | `formatStateName`           | UI / FSM Utility                      | `src/__tests__/uiUtils.test.js` ou `fsmUtils.test.js` | **Probablement manquant.** Tester différents noms d'états, cas vides/nuls.                                           |

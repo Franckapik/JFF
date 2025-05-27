@@ -1,6 +1,6 @@
 import React from 'react';
-import usePlayerStore from '../../../stores/playerStore';
-import useBotStore from '../../../stores/useBotStore';
+import usePlayerStore from '../../../stores/usePlayerStore';
+import useBotStore from '../../../stores/useBotStore/';
 import { useTileStore } from '../../../stores/useTileStore';
 import useGameStore from '../../../stores/useGameStore';
 

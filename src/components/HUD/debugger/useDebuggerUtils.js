@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import usePlayerStore from "../../../stores/playerStore";
+import usePlayerStore from "../../../stores/usePlayerStore";
 
 /**
  * Hook personnalisé pour les fonctions utilitaires du debugger

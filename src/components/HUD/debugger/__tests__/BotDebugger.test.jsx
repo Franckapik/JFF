@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import BotDebugger from '../BotDebugger';
 
 // Mock des stores Zustand
-vi.mock('../../../stores/playerStore', () => ({
+vi.mock('../../../stores/usePlayerStore', () => ({
   default: {
     getState: () => ({
       players: {

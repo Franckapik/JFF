@@ -129,7 +129,7 @@ calculateDistance(coord1, coord2, formatted, usePathfinding)
 ```
 
 ## 4. Fabrication des Objets
-_Source: `/src/stores/playerStore/utils/vehicleFactory.js`_
+_Source: `/src/stores/usePlayerStore/utils/vehicleFactory.js`_
 
 ### Création de Véhicules
 ```javascript
