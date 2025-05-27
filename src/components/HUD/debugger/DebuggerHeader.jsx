@@ -35,6 +35,12 @@ const DebuggerHeader = React.memo(({
         >
           Tile
         </button>
+        <button
+          className={`debugger-bot-button debugger-bot-tile ${activeTab === 'stores' ? 'debugger-bot-active' : ''}`}
+          onClick={() => setActiveTab('stores')}
+        >
+          Stores
+        </button>
       </div>
     </div>
   );

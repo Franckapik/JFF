@@ -14,6 +14,7 @@ import StateTab from './debugger/StateTab';
 import ResourcesTab from './debugger/ResourcesTab';
 import PlayerTab from './debugger/PlayerTab';
 import TileTab from './debugger/TileTab';
+import StoresTab from './debugger/StoresTab';
 
 /**
  * Version refactorisée du BotDebugger
@@ -105,6 +106,8 @@ const BotDebuggerNew = () => {
             getTileResourceBarStyle={getTileResourceBarStyle}
           />
         );
+      case 'stores':
+        return <StoresTab />;
       default:
         return <div className="debugger-empty-message">Onglet non trouvé</div>;
     }

@@ -1305,7 +1305,7 @@
   left: 0;
   top: 0;
   height: 100vh;
-  width: 350px;
+  width: 500px;
   background-color: rgba(0, 0, 0, 0.85);
   color: #fff;
   display: flex;
@@ -1845,4 +1845,117 @@
   font-size: 10px;
   color: #aaa;
   margin-top: 3px;
+}
+
+/* Styles pour les boutons de copie et headers des stores */
+.debugger-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #333;
+}
+
+.debugger-copy-button {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.debugger-copy-button:hover {
+  background-color: #1976D2;
+}
+
+.debugger-copy-button:active {
+  background-color: #0D47A1;
+}
+
+.debugger-copy-all {
+  background-color: #4CAF50;
+}
+
+.debugger-copy-all:hover {
+  background-color: #388E3C;
+}
+
+.debugger-copy-all:active {
+  background-color: #2E7D32;
+}
+
+/* Améliorer la sélection du texte dans le debugger */
+.debugger-store-content {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+.debugger-store-item {
+  margin-bottom: 8px;
+  padding: 4px;
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.debugger-store-key {
+  font-weight: bold;
+  color: #4CAF50;
+  margin-bottom: 2px;
+}
+
+.debugger-store-value {
+  margin-left: 10px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Styles pour les différents types de valeurs */
+.debugger-value-null {
+  color: #9E9E9E;
+  font-style: italic;
+}
+
+.debugger-value-undefined {
+  color: #9E9E9E;
+  font-style: italic;
+}
+
+.debugger-value-boolean {
+  color: #FF9800;
+}
+
+.debugger-value-number {
+  color: #2196F3;
+}
+
+.debugger-value-string {
+  color: #4CAF50;
+}
+
+.debugger-value-function {
+  color: #9C27B0;
+  font-style: italic;
+}
+
+.debugger-array {
+  margin-left: 10px;
+}
+
+.debugger-object {
+  margin-left: 10px;
+}
+
+.debugger-object-entry {
+  margin-bottom: 2px;
+}
+
+.debugger-key {
+  color: #2196F3;
+  font-weight: bold;
 }

@@ -9,6 +9,7 @@ export { default as StateTab } from './StateTab';
 export { default as ResourcesTab } from './ResourcesTab';
 export { default as PlayerTab } from './PlayerTab';
 export { default as TileTab } from './TileTab';
+export { default as StoresTab } from './StoresTab';
 
 // Export des hooks
 export { useDebuggerData, useDebuggerUtils } from './useDebuggerData';
