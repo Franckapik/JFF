@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import useBotStore from '../stores/useBotStore/';
 import useGameStore from '../stores/useGameStore/';
-import { getBotPlayerId } from '../ai/constants/playerConstants';
+import { getBotId } from '../ai/constants/playerConstants';
 import fsmLogger from '../utils/fsmLogger';
 
 /**
@@ -24,7 +24,7 @@ const MultiBotManager = () => {
   useEffect(() => {
     // Initialiser tous les bots au démarrage
     for (let i = 0; i < botCount; i++) {
-      const botId = getBotPlayerId(i);
+      const botId = getBotId(i);
       initializeBot(i);
       fsmLogger.info(`[MultiBotManager] Initialized Bot ${i + 1} (${botId})`, null, botId);
     }

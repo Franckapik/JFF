@@ -2,7 +2,7 @@
 // Définition des comportements spécifiques à chaque état du bot
 
 import { BOT_STATES, PRIORITY } from '../../constants/botConstants';
-import { getBotPlayerId, getMainShipId } from '../../constants/playerConstants';
+import { getBotId, getMainShipId } from '../../constants/playerConstants';
 import usePlayerStore from '../../../stores/usePlayerStore';
 import useBotStore from '../../../stores/useBotStore/';
 import fsmLogger from '../../../utils/fsmLogger';
@@ -17,7 +17,7 @@ const StateUtils = {
    * @returns {string} - ID du bot actif
    */
   getActiveBotId: (botId) => {
-    return botId || useBotStore.getState().currentBotId || getBotPlayerId(0);
+    return botId || useBotStore.getState().currentBotId || getBotId(0);
   },
   
   /**

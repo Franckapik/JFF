@@ -79,7 +79,7 @@ const useCombatDroneAction = (botId, playerStore, tileStore, changeState) => {
 ```javascript
 // Vérifier si un drone est en mouvement
 export const isDroneMoving = () => {
-  const botId = getBotPlayerId();
+  const botId = getBotId();
   const store = usePlayerStore.getState();
   const droneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
   const drone = store.players?.[botId]?.vehicles?.[droneId];
@@ -93,7 +93,7 @@ export const isDroneMoving = () => {
 
 // Vérifier si un drone est revenu au vaisseau
 export const isDroneAtShip = () => {
-  const botId = getBotPlayerId();
+  const botId = getBotId();
   const store = usePlayerStore.getState();
   const shipId = getMainShipId();
   const droneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
@@ -117,7 +117,7 @@ export const isDroneAtShip = () => {
 ```javascript
 // Vérifier si le drone a découvert de nouvelles ressources
 export const hasDiscoveredResources = () => {
-  const botId = getBotPlayerId();
+  const botId = getBotId();
   const store = usePlayerStore.getState();
   const botMemory = store.players?.[botId]?.memory;
   

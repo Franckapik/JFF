@@ -1,7 +1,7 @@
 // src/stores/useBotStore/slices/botManagementSlice.js
 import { BOT_STATES, PRIORITY } from '../../../ai/constants/botConstants';
 import { BotStateConfig } from '../../../ai/fsm/states/botStates';
-import { getBotPlayerId } from '../../../ai/constants/playerConstants';
+import { getBotId } from '../../../ai/constants/playerConstants';
 import usePlayerStore from '../../usePlayerStore';
 import fsmLogger from '../../../utils/fsmLogger';
 
@@ -9,14 +9,14 @@ export const createBotManagementSlice = (set, get) => ({
   // État initial du bot
   isRunning: false,
   currentBotIndex: 0,
-  currentBotId: getBotPlayerId(0),
+  currentBotId: getBotId(0),
   
   // Stockage des états de chaque bot
   botStates: {},
   
   // Fonction pour changer le bot actif
   switchActiveBot: (botIndex) => {
-    const botId = getBotPlayerId(botIndex);
+    const botId = getBotId(botIndex);
     fsmLogger.info(`Switching active bot to Bot ${botIndex + 1} (${botId})`, null, botId);
     
     // Préserver l'état isRunning actuel
@@ -56,7 +56,7 @@ export const createBotManagementSlice = (set, get) => ({
   
   // Fonction d'initialisation
   initializeBot: (botIndex = 0) => {
-    const botId = getBotPlayerId(botIndex);
+    const botId = getBotId(botIndex);
     fsmLogger.info(`Initializing bot FSM for Bot ${botIndex + 1} (${botId})`, null, botId);
     
     // Sauvegarder l'état actuel si nécessaire

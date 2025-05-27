@@ -8,7 +8,7 @@ import {
 
 /**
  * Crée un nouveau joueur avec ses propriétés initiales
- * @param {string} playerId - Identifiant du joueur (ex: 'player1')
+ * @param {string} playerId - Identifiant du joueur (ex: 'player-1')
  * @returns {Object} - Objet joueur
  */
 export const createPlayer = (playerId) => {

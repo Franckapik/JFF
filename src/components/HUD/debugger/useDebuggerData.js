@@ -4,7 +4,7 @@ import useBotStore from "../../../stores/useBotStore/";
 import { useTileStore } from "../../../stores/useTileStore";
 import {
   HUMAN_PLAYER_ID,
-  getBotPlayerId,
+  getBotId,
   getMainShipId,
   getDroneId,
   VEHICLE_TYPES
@@ -17,7 +17,7 @@ export const useDebuggerData = () => {
   // États pour le débogueur
   const [activeTab, setActiveTab] = useState('actions');
   const [activeSubTab, setActiveSubTab] = useState('resources');
-  const [activeBotId, setActiveBotId] = useState(getBotPlayerId(0));
+  const [activeBotId, setActiveBotId] = useState(getBotId(0));
   
   // Récupération de l'état du bot
   const {
@@ -55,7 +55,7 @@ export const useDebuggerData = () => {
   // Changer le bot actif
   const handleBotChange = (index) => {
     switchActiveBot(index);
-    setActiveBotId(getBotPlayerId(index));
+    setActiveBotId(getBotId(index));
   };
 
   return {

@@ -15,7 +15,7 @@ vi.mock('../stores/usePlayerStore/utils/vehicleFactory', () => ({
 describe('playerFactory', () => {
   describe('createPlayer', () => {
     it('should create a player with all required properties', () => {
-      const playerId = 'player1';
+      const playerId = 'player-1';
       const player = createPlayer(playerId);
       
       // Check basic player properties
@@ -34,7 +34,7 @@ describe('playerFactory', () => {
     });
     
     it('should create a player with main ship and all required drones', () => {
-      const playerId = 'player2';
+      const playerId = 'player-2';
       const player = createPlayer(playerId);
       const vehicles = player.vehicles;
       
@@ -59,7 +59,7 @@ describe('playerFactory', () => {
     });
     
     it('should initialize drones with the correct activation state', () => {
-      const playerId = 'player3';
+      const playerId = 'player-3';
       const player = createPlayer(playerId);
       const vehicles = player.vehicles;
       
@@ -72,7 +72,7 @@ describe('playerFactory', () => {
     });
     
     it('should use proper drone IDs based on playerId and drone type', () => {
-      const playerId = 'player4';
+      const playerId = 'player-4';
       const player = createPlayer(playerId);
       const vehicles = player.vehicles;
       
@@ -83,7 +83,7 @@ describe('playerFactory', () => {
     });
     
     it('should initialize player with empty resources and scores', () => {
-      const playerId = 'player5';
+      const playerId = 'player-5';
       const player = createPlayer(playerId);
       
       // Check initial resource scores

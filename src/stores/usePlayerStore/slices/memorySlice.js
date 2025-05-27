@@ -6,7 +6,7 @@ const createMemorySlice = (set) => {
   return {
     /**
      * Met à jour la mémoire d'un joueur
-     * @param {string} playerId - ID du joueur (ex: 'player1', 'player2')
+     * @param {string} playerId - ID du joueur (ex: 'player-1', 'player-2')
      * @param {Object} updates - Propriétés à mettre à jour dans la mémoire
      */
     updatePlayerMemory: (playerId, updates) => {

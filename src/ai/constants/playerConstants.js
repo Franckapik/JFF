@@ -1,8 +1,12 @@
 // Fichier de constantes pour la gestion des joueurs
-export const HUMAN_PLAYER_ID = 'player1';
+
+// Fonction utilitaire pour obtenir les IDs des joueurs humains
+export const getHumanPlayerId = (playerIndex = 1) => `player-${playerIndex}`;
+
+export const HUMAN_PLAYER_ID = getHumanPlayerId(1);
 
 // Fonction utilitaire pour obtenir les IDs des bots
-export const getBotPlayerId = (botIndex) => `bot-${botIndex}`;
+export const getBotId = (botIndex) => `bot-${botIndex}`;
 
 // Type d'identifiants pour les véhicules
 export const VEHICLE_TYPES = {

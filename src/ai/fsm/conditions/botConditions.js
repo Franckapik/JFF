@@ -3,7 +3,7 @@
 
 import { BOT_STATES, PRIORITY, IDLE_EVALUATION } from '../../constants/botConstants';
 import { 
-  getBotPlayerId,
+  getBotId,
   getMainShipId, 
   getDroneId,
   VEHICLE_TYPES
@@ -23,7 +23,7 @@ export const BotConditions = {
   getCurrentBotId: () => {
     // On utilise le currentBotId du store useBotStore au lieu d'une valeur fixe
     const botStore = useBotStore.getState();
-    return botStore.currentBotId || getBotPlayerId(0); // Fallback sur player2 si non défini
+    return botStore.currentBotId || getBotId(0); // Fallback sur bot-0 si non défini
   },
 
   // === CONDITIONS DE SÉCURITÉ (PRIORITÉ LA PLUS HAUTE) ===
@@ -99,7 +99,7 @@ export const BotConditions = {
       
       // Réinitialiser le flag directement
       const playerStore = usePlayerStore.getState();
-      const botId = 'player2'; // This is hardcoded in the test
+      const botId = BotConditions.getCurrentBotId(); // Utiliser la fonction pour obtenir l'ID du bot actuel
       const shipId = getMainShipId(botId);
       playerStore.updateVehicle(botId, shipId, { isAtCapacity: false });
       
@@ -123,7 +123,7 @@ export const BotConditions = {
    */
   hasEnoughKnownResources: (minResources = 3) => {
     const playerState = usePlayerStore.getState();
-    const botId = getBotPlayerId(0);
+    const botId = getBotId(0);
     const botMemory = playerState.players?.[botId]?.memory;
     
     const hasEnoughResources = botMemory?.knownResources && 
@@ -142,7 +142,7 @@ export const BotConditions = {
    */
   hasDiscoveredResources: (currentState) => {
     const playerState = usePlayerStore.getState();
-    const botId = getBotPlayerId(0);
+    const botId = getBotId(0);
     const botMemory = playerState.players?.[botId]?.memory;
     
     // Vérifier s'il y a au moins 3 ressources connues
@@ -199,7 +199,7 @@ export const BotConditions = {
    */
   allKnownResourcesCollected: () => {
     const playerState = usePlayerStore.getState();
-    const botId = getBotPlayerId(0);
+    const botId = getBotId(0);
     const botMemory = playerState.players?.[botId]?.memory;
     
     // Si le bot n'a pas de mémoire ou pas de ressources connues

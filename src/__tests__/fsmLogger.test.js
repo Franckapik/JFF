@@ -184,28 +184,28 @@ describe('fsmLogger', () => {
 
   describe('Filtrage des logs par joueur', () => {
     it('devrait filtrer les logs par ID de joueur', () => {
-      fsmLogger.info('Message for player 1', null, 'player1');
-      fsmLogger.info('Message for player 2', null, 'player2');
+      fsmLogger.info('Message for player 1', null, 'player-1');
+      fsmLogger.info('Message for player 2', null, 'player-2');
       fsmLogger.info('Generic message without player');
       
-      const player1Logs = fsmLogger.getLogBuffer(null, null, 'player1');
+      const player1Logs = fsmLogger.getLogBuffer(null, null, 'player-1');
       expect(player1Logs.length).toBeGreaterThan(0);
-      expect(player1Logs.every(log => log.playerId === 'player1')).toBeTruthy();
+      expect(player1Logs.every(log => log.playerId === 'player-1')).toBeTruthy();
       
-      const player2Logs = fsmLogger.getLogBuffer(null, null, 'player2');
+      const player2Logs = fsmLogger.getLogBuffer(null, null, 'player-2');
       expect(player2Logs.length).toBeGreaterThan(0);
-      expect(player2Logs.every(log => log.playerId === 'player2')).toBeTruthy();
+      expect(player2Logs.every(log => log.playerId === 'player-2')).toBeTruthy();
     });
     
     it('devrait combiner les filtres de type et de joueur', () => {
-      fsmLogger.info('Info for player 1', null, 'player1');
-      fsmLogger.error('Error for player 1', null, 'player1');
-      fsmLogger.info('Info for player 2', null, 'player2');
+      fsmLogger.info('Info for player 1', null, 'player-1');
+      fsmLogger.error('Error for player 1', null, 'player-1');
+      fsmLogger.info('Info for player 2', null, 'player-2');
       
-      const player1InfoLogs = fsmLogger.getLogBuffer(null, 'INFO', 'player1');
+      const player1InfoLogs = fsmLogger.getLogBuffer(null, 'INFO', 'player-1');
       expect(player1InfoLogs.length).toBeGreaterThan(0);
       expect(player1InfoLogs.every(log => 
-        log.type === 'INFO' && log.playerId === 'player1'
+        log.type === 'INFO' && log.playerId === 'player-1'
       )).toBeTruthy();
     });
   });

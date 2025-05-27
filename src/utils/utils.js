@@ -3,6 +3,7 @@ import { Vector3 } from "three";
 // import { calculatePathData } from "./utils"; 
 import usePlayerStore from "../stores/usePlayerStore"; // Import player store
 import useGameStore from "../stores/useGameStore/"; // Import game store
+import { HUMAN_PLAYER_ID, getBotId } from "../ai/constants/playerConstants";
 
 export function generateHexPositions(radius, spacing) {
   const gameStore = useGameStore.getState(); // Get current game state
@@ -150,7 +151,7 @@ export function generateHexPositions(radius, spacing) {
     if (startTile) { // S'assurer qu'une tuile a été trouvée
       playerStartTiles.push(startTile);
       startTile.type = "depart";
-      startTile.playerId = i === 0 ? "player1" : `player${i + 1}`; // Assigner playerId correctement
+      startTile.playerId = i === 0 ? HUMAN_PLAYER_ID : getBotId(i - 1); // Assigner playerId correctement
       // Retirer la tuile assignée des tuiles disponibles pour la prochaine itération (si on veut garantir l'unicité plus strictement)
       // Cependant, la condition `playerStartTiles.some` devrait suffire.
       // const indexToRemove = availableTiles.findIndex(t => t.coord === startTile.coord);

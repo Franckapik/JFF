@@ -49,8 +49,8 @@ vi.mock('../hooks/useDroneState', () => ({
 }));
 
 vi.mock('../ai/constants/playerConstants', () => ({
-  getBotPlayerId: vi.fn(() => 'player2'),
-  getMainShipId: vi.fn((playerId) => `${playerId || 'player2'}-ship`),
+  getBotId: vi.fn(() => 'player-2'),
+  getMainShipId: vi.fn((playerId) => `${playerId || 'player-2'}-ship`),
   getDroneId: vi.fn(() => 'drone1'),
   VEHICLE_TYPES: {
     EXPLORER_DRONE: 'explorerDrone',
@@ -65,7 +65,7 @@ import { BotConditions } from '../ai/fsm/conditions/botConditions';
 // Mock the BotConditions module
 vi.mock('../ai/fsm/conditions/botConditions', () => ({
   BotConditions: {
-    getCurrentBotId: vi.fn(() => 'player2'),
+    getCurrentBotId: vi.fn(() => 'player-2'),
     isShipMoving: vi.fn().mockReturnValue({ result: false }),
     isAtBase: vi.fn().mockReturnValue({ result: false }),
     isFullyRefueled: vi.fn().mockReturnValue({ result: false }),
@@ -95,7 +95,7 @@ describe('Section 6: Bot Actions', () => {
     // Setup mocks for exploreWithDroneAction tests
     const mockPlayerStore = {
       players: {
-        player2: {
+        player-2: {
           vehicles: {
             ship: { coord: 'A0', isMoving: false },
             drone1: { coord: 'A0', isMoving: false, isActive: true }
@@ -129,8 +129,8 @@ describe('Section 6: Bot Actions', () => {
       
       expect(result).toBeUndefined(); // Action is in progress
       expect(mockTileStore.getWalkableTilesInRadius).toHaveBeenCalled();
-      expect(mockPlayerStore.moveToTile).toHaveBeenCalledWith('player2', 'drone1', expect.objectContaining({ coord: 'B0' }));
-      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', expect.objectContaining({
+      expect(mockPlayerStore.moveToTile).toHaveBeenCalledWith('bot-1', 'drone1', expect.objectContaining({ coord: 'B0' }));
+      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('bot-1', expect.objectContaining({
         explorationCount: 1,
         explorationState: expect.objectContaining({ started: true })
       }));
@@ -143,7 +143,7 @@ describe('Section 6: Bot Actions', () => {
       
       expect(result).toBeUndefined();
       expect(mockTileStore.selectRandomWalkableTile).toHaveBeenCalled();
-      expect(mockPlayerStore.moveToTile).toHaveBeenCalledWith('player2', 'drone1', expect.objectContaining({ coord: 'C0' }));
+      expect(mockPlayerStore.moveToTile).toHaveBeenCalledWith('bot-1', 'drone1', expect.objectContaining({ coord: 'C0' }));
     });
     
     it('should fail if there are no walkable tiles available at all', () => {
@@ -167,7 +167,7 @@ describe('Section 6: Bot Actions', () => {
     
     it('should fail if the drone is not active', () => {
       // Setup for inactive drone
-      mockPlayerStore.players.player2.vehicles.drone1.isActive = false;
+      mockPlayerStore.players['bot-1'].vehicles.drone1.isActive = false;
       
       const result = exploreWithDroneAction(mockPlayerStore, mockTileStore, addAction, changeState);
       
@@ -181,12 +181,12 @@ describe('Section 6: Bot Actions', () => {
       );
       
       // Restore drone state for other tests
-      mockPlayerStore.players.player2.vehicles.drone1.isActive = true;
+      mockPlayerStore.players['bot-1'].vehicles.drone1.isActive = true;
     });
     
     it('should fail if drone is already moving', () => {
       // Setup for moving drone
-      mockPlayerStore.players.player2.vehicles.drone1.isMoving = true;
+      mockPlayerStore.players['bot-1'].vehicles.drone1.isMoving = true;
       
       const result = exploreWithDroneAction(mockPlayerStore, mockTileStore, addAction, changeState);
       
@@ -194,7 +194,7 @@ describe('Section 6: Bot Actions', () => {
       expect(result).toBeUndefined();
       
       // Restore drone state for other tests
-      mockPlayerStore.players.player2.vehicles.drone1.isMoving = false;
+      mockPlayerStore.players['bot-1'].vehicles.drone1.isMoving = false;
     });
 
     it('should return true when drone has returned to ship', () => {
@@ -203,10 +203,10 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player2: {
-            ...mockPlayerStore.players.player2,
+          player-2: {
+            ...mockPlayerStore.players['bot-1'],
             memory: {
-              ...mockPlayerStore.players.player2.memory,
+              ...mockPlayerStore.players['bot-1'].memory,
               explorationState: {
                 started: true,
                 startTime: Date.now() - 5000, // Started 5 seconds ago
@@ -220,7 +220,7 @@ describe('Section 6: Bot Actions', () => {
       const result = exploreWithDroneAction(updatedPlayerStore, mockTileStore, addAction, changeState);
       
       expect(result).toBe(true); // Action completed successfully
-      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', 
+      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('bot-1', 
         expect.objectContaining({ explorationState: null })
       );
       expect(changeState).toHaveBeenCalledWith(BOT_STATES.IDLE);
@@ -232,10 +232,10 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player2: {
-            ...mockPlayerStore.players.player2,
+          player-2: {
+            ...mockPlayerStore.players['bot-1'],
             memory: {
-              ...mockPlayerStore.players.player2.memory,
+              ...mockPlayerStore.players['bot-1'].memory,
               explorationState: {
                 started: true,
                 startTime: Date.now() - 40000, // Started 40 seconds ago (timeout is 30s)
@@ -252,7 +252,7 @@ describe('Section 6: Bot Actions', () => {
       const result = exploreWithDroneAction(updatedPlayerStore, mockTileStore, addAction, changeState);
       
       expect(result).toBe(false); // Action failed due to timeout
-      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', 
+      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('bot-1', 
         expect.objectContaining({ explorationState: null })
       );
       expect(changeState).toHaveBeenCalledWith(BOT_STATES.IDLE);
@@ -262,7 +262,7 @@ describe('Section 6: Bot Actions', () => {
   describe('moveToResourceAction', () => {
     const mockPlayerStore = {
       players: {
-        player2: {
+        player-2: {
           vehicles: {
             ship: { 
               coord: 'A0', 
@@ -305,7 +305,7 @@ describe('Section 6: Bot Actions', () => {
       
       expect(result).toBeUndefined(); // Action is in progress
       expect(mockPlayerStore.moveToTile).toHaveBeenCalled();
-      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', expect.objectContaining({
+      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('bot-1', expect.objectContaining({
         currentTargetResource: expect.anything(),
         movementState: expect.objectContaining({ started: true })
       }));
@@ -317,8 +317,8 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player2: {
-            ...mockPlayerStore.players.player2,
+          player-2: {
+            ...mockPlayerStore.players['bot-1'],
             memory: {
               knownResources: [
                 { coord: 'A0', resources: { food: 50, debris: 100, special: 0 } }
@@ -331,7 +331,7 @@ describe('Section 6: Bot Actions', () => {
       const result = moveToResourceAction(updatedPlayerStore, mockTileStore, addAction, changeState);
       
       expect(result).toBe(true); // Action completed immediately
-      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', expect.objectContaining({
+      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('bot-1', expect.objectContaining({
         currentTargetResource: expect.anything(),
         movementState: null
       }));
@@ -343,8 +343,8 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player2: {
-            ...mockPlayerStore.players.player2,
+          player-2: {
+            ...mockPlayerStore.players['bot-1'],
             memory: {
               knownResources: []
             }
@@ -369,10 +369,10 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player2: {
-            ...mockPlayerStore.players.player2,
+          player-2: {
+            ...mockPlayerStore.players['bot-1'],
             memory: {
-              ...mockPlayerStore.players.player2.memory,
+              ...mockPlayerStore.players['bot-1'].memory,
               knownResources: [
                 { coord: 'Z9', resources: { food: 50, debris: 100, special: 0 } } // Coordinate that doesn't exist in our mock tilestore
               ]
@@ -406,10 +406,10 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player2: {
-            ...mockPlayerStore.players.player2,
+          player-2: {
+            ...mockPlayerStore.players['bot-1'],
             memory: {
-              ...mockPlayerStore.players.player2.memory,
+              ...mockPlayerStore.players['bot-1'].memory,
               movementState: {
                 started: true,
                 startTime: Date.now() - 40000, // Started 40 seconds ago (timeout should be 30s)
@@ -440,7 +440,7 @@ describe('Section 6: Bot Actions', () => {
   describe('collectResourceAction', () => {
     const mockPlayerStore = {
       players: {
-        player2: {
+        player-2: {
           vehicles: {
             ship: { 
               coord: 'B0', 
@@ -481,11 +481,11 @@ describe('Section 6: Bot Actions', () => {
       
       expect(result).toBe(true); // Action completes immediately
       expect(mockTileStore.deductTileResources).toHaveBeenCalledWith('B0', expect.anything());
-      const shipId = getMainShipId('player2');
-      expect(mockPlayerStore.updateVehicle).toHaveBeenCalledWith('player2', shipId, expect.objectContaining({
+      const shipId = getMainShipId('bot-1');
+      expect(mockPlayerStore.updateVehicle).toHaveBeenCalledWith('bot-1', shipId, expect.objectContaining({
         resources: expect.anything()
       }));
-      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', expect.objectContaining({
+      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('bot-1', expect.objectContaining({
         collectedResources: expect.arrayContaining([expect.anything()])
       }));
     });
@@ -496,10 +496,10 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player2: {
-            ...mockPlayerStore.players.player2,
+          player-2: {
+            ...mockPlayerStore.players['bot-1'],
             memory: {
-              ...mockPlayerStore.players.player2.memory,
+              ...mockPlayerStore.players['bot-1'].memory,
               currentTargetResource: null
             }
           }
@@ -541,8 +541,8 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player2: {
-            ...mockPlayerStore.players.player2,
+          player-2: {
+            ...mockPlayerStore.players['bot-1'],
             vehicles: {
               ship: { 
                 coord: 'B0', 
@@ -585,7 +585,7 @@ describe('Section 6: Bot Actions', () => {
   describe('returnToBaseAction', () => {
     const mockPlayerStore = {
       players: {
-        player2: {
+        player-2: {
           vehicles: {
             ship: { 
               coord: 'B0', 
@@ -623,9 +623,9 @@ describe('Section 6: Bot Actions', () => {
       const result = returnToBaseAction(mockPlayerStore, mockTileStore, addAction, changeState);
       
       expect(result).toBeUndefined(); // Action is in progress
-      const shipId = getMainShipId('player2');
-      expect(mockPlayerStore.moveToTile).toHaveBeenCalledWith('player2', shipId, mockTileStore.tiles['A0']);
-      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', expect.objectContaining({
+      const shipId = getMainShipId('bot-1');
+      expect(mockPlayerStore.moveToTile).toHaveBeenCalledWith('bot-1', shipId, mockTileStore.tiles['A0']);
+      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('bot-1', expect.objectContaining({
         returnState: expect.objectContaining({ started: true })
       }));
     });
@@ -636,8 +636,8 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player2: {
-            ...mockPlayerStore.players.player2,
+          player-2: {
+            ...mockPlayerStore.players['bot-1'],
             vehicles: {
               ship: { 
                 coord: 'A0', // Already at base
@@ -660,8 +660,8 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player2: {
-            ...mockPlayerStore.players.player2,
+          player-2: {
+            ...mockPlayerStore.players['bot-1'],
             memory: {
               returnState: {
                 started: true,
@@ -682,7 +682,7 @@ describe('Section 6: Bot Actions', () => {
       const result = returnToBaseAction(justArrivedAtBaseStore, mockTileStore, addAction, changeState);
       
       expect(result).toBe(true); // Action completed
-      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('player2', expect.objectContaining({
+      expect(mockPlayerStore.updatePlayerMemory).toHaveBeenCalledWith('bot-1', expect.objectContaining({
         returnState: null
       }));
     });
@@ -718,8 +718,8 @@ describe('Section 6: Bot Actions', () => {
         ...mockPlayerStore,
         players: {
           ...mockPlayerStore.players,
-          player2: {
-            ...mockPlayerStore.players.player2,
+          player-2: {
+            ...mockPlayerStore.players['bot-1'],
             memory: {
               returnState: {
                 started: true,
@@ -752,7 +752,7 @@ describe('Section 6: Bot Actions', () => {
   describe('refuelAtBaseAction', () => {
     const mockPlayerStore = {
       players: {
-        player2: {
+        player-2: {
           vehicles: {
             ship: { 
               coord: 'A0', 
@@ -784,7 +784,7 @@ describe('Section 6: Bot Actions', () => {
       mockPlayerStore.refuelVehicle.mockClear();
       mockPlayerStore.transferResourcesToScore.mockClear();
       mockPlayerStore.updateVehicle.mockClear();
-      BotConditions.getCurrentBotId.mockReturnValue('player2');
+      BotConditions.getCurrentBotId.mockReturnValue('bot-1');
     });
 
     it('should refuel the bot when at base', () => {
@@ -798,8 +798,8 @@ describe('Section 6: Bot Actions', () => {
       expect(mockPlayerStore.refuelVehicle).toHaveBeenCalled();
       expect(mockPlayerStore.transferResourcesToScore).toHaveBeenCalled();
       // Using proper format for ship ID with the getMainShipId function
-      const shipId = getMainShipId('player2');
-      expect(mockPlayerStore.updateVehicle).toHaveBeenCalledWith('player2', shipId, { isAtCapacity: false });
+      const shipId = getMainShipId('bot-1');
+      expect(mockPlayerStore.updateVehicle).toHaveBeenCalledWith('bot-1', shipId, { isAtCapacity: false });
     });
 
     it('should return true when bot is fully refueled', () => {
@@ -841,7 +841,7 @@ describe('Section 6: Bot Actions', () => {
     it('should return false when bot vehicle is not found', () => {
       // Setup missing bot vehicle
       const emptyPlayerStore = {
-        players: { player2: { vehicles: {} } },
+        players: { player-2: { vehicles: {} } },
         updateVehicle: vi.fn(),
         refuelVehicle: vi.fn(),
         transferResourcesToScore: vi.fn()

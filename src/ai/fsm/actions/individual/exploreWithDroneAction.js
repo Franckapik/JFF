@@ -9,7 +9,7 @@
  */
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
 import { 
-  getBotPlayerId, 
+  getBotId, 
   getMainShipId, 
   getDroneId,
   VEHICLE_TYPES

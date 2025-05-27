@@ -3,7 +3,7 @@
  */
 import useGameStore from '../../useGameStore/';
 import { createPlayer } from '../utils/playerFactory';
-import { HUMAN_PLAYER_ID, getBotPlayerId, getMainShipId, VEHICLE_TYPES } from '../../../ai/constants/playerConstants';
+import { HUMAN_PLAYER_ID, getBotId, getMainShipId, VEHICLE_TYPES } from '../../../ai/constants/playerConstants';
 
 const createPlayerBaseSlice = (set, get) => {
   // Récupérer la configuration depuis gameStore
@@ -16,7 +16,7 @@ const createPlayerBaseSlice = (set, get) => {
 
   // Créer les bots
   for (let i = 0; i < botCount; i++) {
-    const botId = getBotPlayerId(i);
+    const botId = getBotId(i);
     initialPlayers[botId] = createPlayer(botId);
   }
 

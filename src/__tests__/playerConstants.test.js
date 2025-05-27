@@ -1,6 +1,6 @@
 import { describe, it, test, expect } from 'vitest';
 import { 
-  getBotPlayerId, 
+  getBotId, 
   getMainShipId, 
   isMainShipId, 
   isBotPlayerId,
@@ -12,27 +12,27 @@ import {
 
 describe('Fonctions d\'identification des joueurs', () => {
   
-  // Tests pour getBotPlayerId
-  describe('getBotPlayerId', () => {
+  // Tests pour getBotId
+  describe('getBotId', () => {
     test('devrait générer l\'ID correct pour le bot 0', () => {
-      expect(getBotPlayerId(0)).toBe('bot-0');
+      expect(getBotId(0)).toBe('bot-0');
     });
 
     test('devrait générer l\'ID correct pour le bot 3', () => {
-      expect(getBotPlayerId(3)).toBe('bot-3');
+      expect(getBotId(3)).toBe('bot-3');
     });
     
     test('devrait gérer les index négatifs', () => {
-      expect(getBotPlayerId(-1)).toBe('bot--1');
+      expect(getBotId(-1)).toBe('bot--1');
     });
 
     test('devrait convertir les valeurs non-numériques en chaînes', () => {
-      expect(getBotPlayerId('test')).toBe('bot-test');
+      expect(getBotId('test')).toBe('bot-test');
     });
     
     test('devrait gérer null/undefined', () => {
-      expect(getBotPlayerId(null)).toBe('bot-null');
-      expect(getBotPlayerId(undefined)).toBe('bot-undefined');
+      expect(getBotId(null)).toBe('bot-null');
+      expect(getBotId(undefined)).toBe('bot-undefined');
     });
   });
 

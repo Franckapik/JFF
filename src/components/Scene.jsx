@@ -11,7 +11,7 @@ import useGameStore from "../stores/useGameStore";
 import fsmLogger from "../utils/fsmLogger";
 import { 
   HUMAN_PLAYER_ID, 
-  getBotPlayerId, 
+  getBotId, 
   getMainShipId, 
   isMainShipId,
 } from "../ai/constants/playerConstants";
@@ -135,7 +135,7 @@ const Scene = () => {
         .map((tile, index) => {
           // Déterminer à quel joueur appartient cette base
           // Les bases sont attribuées selon leur index dans le tableau des tuiles "depart"
-          const playerId = index === 0 ? HUMAN_PLAYER_ID : getBotPlayerId(index - 1);
+          const playerId = index === 0 ? HUMAN_PLAYER_ID : getBotId(index - 1);
           const isPlayerBase = playerId === HUMAN_PLAYER_ID;
           
           // Utiliser la même couleur que les bots pour les bases

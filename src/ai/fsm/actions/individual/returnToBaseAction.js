@@ -8,7 +8,7 @@
  * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
  */
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
-import { getBotPlayerId, getMainShipId } from '../../../constants/playerConstants';
+import { getBotId, getMainShipId } from '../../../constants/playerConstants';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
 
@@ -78,7 +78,7 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
     fsmLogger.action(`Moving bot to base at ${baseCoord}`);
     
     // Déplacer le bot vers sa base
-    playerStore.moveToTile(getBotPlayerId(0), botVehicleId, baseTile);
+    playerStore.moveToTile(getBotId(0), botVehicleId, baseTile);
     playerStore.updatePlayerMemory(botId, {
       returnState: {
         started: true,

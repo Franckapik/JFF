@@ -50,7 +50,7 @@ _Source: `/src/ai/constants/playerConstants.js`_
 ### Identification
 ```javascript
 // Obtient l'ID du joueur bot par son index
-getBotPlayerId(botIndex)
+getBotId(botIndex)
 
 // Obtient l'ID du vaisseau principal
 getMainShipId()
@@ -202,7 +202,7 @@ Voici quelques exemples de prompts pour générer des tests :
 "Créer des tests pour isValidGridCoord et isValidWorldPosition avec différents types d'entrées"
 
 3. Pour tester la gestion des joueurs :
-"Écrire des tests pour les fonctions getBotPlayerId et isDroneId avec différents scénarios"
+"Écrire des tests pour les fonctions getBotId et isDroneId avec différents scénarios"
 
 4. Pour tester le pathfinding :
 "Développer des tests pour findPath avec différentes configurations de tuiles et obstacles"

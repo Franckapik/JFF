@@ -4,7 +4,7 @@ import { BotStateConfig } from '../../../ai/fsm/states/botStates';
 import usePlayerStore from '../../usePlayerStore';
 import { useTileStore } from '../../useTileStore';
 import useGameStore from '../../useGameStore/';
-import { getBotPlayerId } from '../../../ai/constants/playerConstants';
+import { getBotId } from '../../../ai/constants/playerConstants';
 import fsmLogger from '../../../utils/fsmLogger';
 
 const ACTION_STATUS = {
@@ -74,7 +74,7 @@ export const createExecutionSlice = (set, get) => ({
       get().switchActiveBot(i);
       get().processBot();
       
-      const botId = getBotPlayerId(i);
+      const botId = getBotId(i);
       fsmLogger.info(`Processed Bot ${i + 1} (${botId})`, null, botId);
     }
     

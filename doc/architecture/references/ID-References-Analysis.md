@@ -22,7 +22,7 @@ export const VEHICLE_TYPES = {
 ### Fonctions utilitaires (`playerConstants.js`)
 ```javascript
 // Gestion des IDs de joueurs
-getBotPlayerId(playerCount = 2)           // Retourne 'player2'
+getBotId(playerCount = 2)           // Retourne 'player2'
 
 // Gestion des IDs de véhicules
 getMainShipId()                          // Retourne 'ship'

@@ -278,7 +278,7 @@ const handleSpecialDroneMessage = (message) => {
 ```javascript
 // Vérifier si des ressources spéciales ont été découvertes
 export const hasDiscoveredSpecialResources = () => {
-  const botId = getBotPlayerId();
+  const botId = getBotId();
   const store = usePlayerStore.getState();
   const botMemory = store.players?.[botId]?.memory;
   
@@ -294,7 +294,7 @@ export const hasDiscoveredSpecialResources = () => {
 
 // Vérifier s'il y a un combat en cours
 export const hasCombatEngagement = () => {
-  const botId = getBotPlayerId();
+  const botId = getBotId();
   const store = usePlayerStore.getState();
   const botMemory = store.players?.[botId]?.memory;
   

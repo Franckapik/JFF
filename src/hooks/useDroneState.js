@@ -4,11 +4,11 @@ import { VEHICLE_TYPES } from '../ai/constants/playerConstants';
 import fsmLogger from '../utils/fsmLogger';
 
 // Fonction utilitaire pour extraire le playerId à partir d'un droneId
-// Format attendu: player2/explorer_drone
+// Format attendu: player-1-drone-explorer
 const extractPlayerId = (droneId) => {
   if (!droneId) return null;
-  const parts = droneId.split('/');
-  return parts.length > 0 ? parts[0] : null;
+  const parts = droneId.split('-');
+  return parts.length >= 2 ? `${parts[0]}-${parts[1]}` : null;
 };
 
 // Drone states enum

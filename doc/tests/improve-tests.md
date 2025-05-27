@@ -24,7 +24,7 @@ Ce document analyse la couverture de test actuelle basée sur `doc/tests/testabl
 
 | Fonction                 | Test Existant (Présomption)     | Suggestions d'amélioration                                                                 |
 |--------------------------|---------------------------------|--------------------------------------------------------------------------------------------|
-| `getBotPlayerId`         | Oui                             | Tester avec index valides, hors limites, non numériques.                                    |
+| `getBotId`         | Oui                             | Tester avec index valides, hors limites, non numériques.                                    |
 | `getMainShipId`          | Oui                             | Vérifier la constance de l'ID retourné.                                                    |
 | `isMainShipId`           | Oui                             | Tester avec l'ID du vaisseau principal, ID de bot, ID de drone, `null`, `undefined`.         |
 | `isBotPlayerId`          | Oui                             | Tester avec des ID de bots valides, ID du vaisseau principal, ID de drone, `null`.           |

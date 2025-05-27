@@ -27,7 +27,7 @@ const useBotStore = create((set, get) => ({
   botState: BOT_STATES.IDLE,
   isRunning: false,
   currentBotIndex: 0,
-  currentBotId: getBotPlayerId(0),
+  currentBotId: getBotId(0),
   processingMode: 'parallel', // 'parallel' or 'sequential'
   
   // Bot state storage
