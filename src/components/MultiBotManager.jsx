@@ -23,10 +23,10 @@ const MultiBotManager = () => {
   // Effet pour initialiser et démarrer automatiquement les bots
   useEffect(() => {
     // Initialiser tous les bots au démarrage
-    for (let i = 0; i < botCount; i++) {
+    for (let i = 0; i < 1; i++) {
       const botId = getBotId(i);
       initializeBot(i);
-      fsmLogger.info(`[MultiBotManager] Initialized Bot ${i + 1} (${botId})`, null, botId);
+      fsmLogger.info(`[MultiBotManager] Initialized Bot ${i} (${botId})`, null, botId);
     }
     
     // Démarre automatiquement les bots au montage du composant s'ils ne sont pas déjà en cours

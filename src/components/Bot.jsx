@@ -70,18 +70,16 @@ const Bot = React.memo(({
         {/* Étiquette indiquant le joueur ou le numéro du bot */}
         <Html position={[0, 0.7, 0]} center>
           <div style={{
+            background: 'rgba(0, 0, 0, 0.8)',
             color: 'white',
-            background: isActiveBot ? 'rgba(218, 165, 32, 0.7)' : 
-                      isSelected ? 'rgba(255, 255, 255, 0.7)' :
-                      isHuman ? 'rgba(0, 100, 255, 0.7)' : `rgba(0, 0, 0, 0.5)`,
-            padding: '2px 6px',
-            borderRadius: '10px',
+            padding: '4px 8px',
+            borderRadius: '4px',
             fontSize: '12px',
             fontWeight: 'bold',
-            userSelect: 'none',
-            textAlign: 'center',
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none'
           }}>
-            {isHuman ? 'Joueur 1' : `Bot ${botIndex + 1}`}
+            {isHuman ? 'Joueur 1' : `Bot ${botIndex}`}
           </div>
         </Html>
       </ShipMovement>

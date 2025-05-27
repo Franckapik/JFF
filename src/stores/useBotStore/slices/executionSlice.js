@@ -75,7 +75,7 @@ export const createExecutionSlice = (set, get) => ({
       get().processBot();
       
       const botId = getBotId(i);
-      fsmLogger.info(`Processed Bot ${i + 1} (${botId})`, null, botId);
+      fsmLogger.info(`Processed Bot ${i} (${botId})`, null, botId);
     }
     
     get().switchActiveBot(currentBotIndex);

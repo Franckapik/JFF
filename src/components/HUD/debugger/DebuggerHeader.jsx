@@ -20,7 +20,7 @@ const DebuggerHeader = React.memo(({
             className={`debugger-bot-button ${currentBotIndex === index ? 'debugger-bot-active' : ''}`}
             onClick={() => handleBotChange(index)}
           >
-            Bot {index + 1}
+            Bot {index}
           </button>
         ))}
         <button

@@ -123,7 +123,7 @@ export const BotConditions = {
    */
   hasEnoughKnownResources: (minResources = 3) => {
     const playerState = usePlayerStore.getState();
-    const botId = getBotId(0);
+    const botId = BotConditions.getCurrentBotId(); // ✅ Correct
     const botMemory = playerState.players?.[botId]?.memory;
     
     const hasEnoughResources = botMemory?.knownResources && 
@@ -142,7 +142,7 @@ export const BotConditions = {
    */
   hasDiscoveredResources: (currentState) => {
     const playerState = usePlayerStore.getState();
-    const botId = getBotId(0);
+    const botId = BotConditions.getCurrentBotId(); // ✅ Correct
     const botMemory = playerState.players?.[botId]?.memory;
     
     // Vérifier s'il y a au moins 3 ressources connues
@@ -199,7 +199,7 @@ export const BotConditions = {
    */
   allKnownResourcesCollected: () => {
     const playerState = usePlayerStore.getState();
-    const botId = getBotId(0);
+    const botId = BotConditions.getCurrentBotId(); // ✅ Correct
     const botMemory = playerState.players?.[botId]?.memory;
     
     // Si le bot n'a pas de mémoire ou pas de ressources connues

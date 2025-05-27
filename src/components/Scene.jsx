@@ -57,8 +57,8 @@ const Scene = () => {
         
         // Initialiser tous les bots dynamiquement en fonction de botCount
         for (let i = 0; i < botCount; i++) {
-          const botId = `player${i+2}`;
-          fsmLogger.info(`[Scene] Initializing Bot ${i+1} (${botId})`, null, botId);
+          const botId = getBotId(i); // Utiliser la nouvelle nomenclature
+          fsmLogger.info(`[Scene] Initializing Bot ${i} (${botId})`, null, botId);
           initializeBot(i);
         }
         

@@ -17,7 +17,7 @@ export const createBotManagementSlice = (set, get) => ({
   // Fonction pour changer le bot actif
   switchActiveBot: (botIndex) => {
     const botId = getBotId(botIndex);
-    fsmLogger.info(`Switching active bot to Bot ${botIndex + 1} (${botId})`, null, botId);
+    fsmLogger.info(`Switching active bot to Bot ${botIndex} (${botId})`, null, botId);
     
     // Préserver l'état isRunning actuel
     const currentRunningState = get().isRunning;
@@ -57,7 +57,7 @@ export const createBotManagementSlice = (set, get) => ({
   // Fonction d'initialisation
   initializeBot: (botIndex = 0) => {
     const botId = getBotId(botIndex);
-    fsmLogger.info(`Initializing bot FSM for Bot ${botIndex + 1} (${botId})`, null, botId);
+    fsmLogger.info(`Initializing bot FSM for Bot ${botIndex} (${botId})`, null, botId);
     
     // Sauvegarder l'état actuel si nécessaire
     const currentBotIndex = get().currentBotIndex;
@@ -91,7 +91,7 @@ export const createBotManagementSlice = (set, get) => ({
     
     get()._initializeBotState(botId);
     
-    fsmLogger.state(`Bot ${botIndex + 1} (${botId}) initialized in IDLE state`, null, botId);
+    fsmLogger.state(`Bot ${botIndex} (${botId}) initialized in IDLE state`, null, botId);
     
     return botId;
   },
