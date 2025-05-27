@@ -2,7 +2,7 @@ import React from 'react';
 import usePlayerStore from '../../../stores/usePlayerStore';
 import useBotStore from '../../../stores/useBotStore/';
 import { useTileStore } from '../../../stores/useTileStore';
-import useGameStore from '../../../stores/useGameStore';
+import useGameStore from '../../../stores/useGameStore/';
 
 /**
  * Fonction utilitaire pour copier du texte dans le presse-papiers

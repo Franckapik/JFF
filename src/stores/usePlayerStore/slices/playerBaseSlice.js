@@ -1,7 +1,7 @@
 /**
  * Slice pour la gestion de base des joueurs
  */
-import useGameStore from '../../useGameStore';
+import useGameStore from '../../useGameStore/';
 import { createPlayer } from '../utils/playerFactory';
 import { HUMAN_PLAYER_ID, getBotPlayerId } from '../../../ai/constants/playerConstants';
 

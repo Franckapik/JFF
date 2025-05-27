@@ -3,7 +3,7 @@ import { findPath, calculatePathDistance, findTileAtPosition, generateHexPositio
 import { Vector3 } from 'three';
 
 // Mock the external store dependencies since we're testing the functions in isolation
-vi.mock('../stores/useGameStore', () => ({
+vi.mock('../stores/useGameStore/', () => ({
   default: {
     getState: vi.fn().mockReturnValue({
       playerCount: 2,

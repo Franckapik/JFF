@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import useGameStore from '../stores/useGameStore';
+import useGameStore from '../stores/useGameStore/';
 
 describe('useGameStore', () => {
   // Réinitialiser le store à ses valeurs par défaut avant chaque test

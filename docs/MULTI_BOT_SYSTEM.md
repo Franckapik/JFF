@@ -99,7 +99,7 @@ The system persists each bot's state when switching between bots, allowing them 
 ## Recent Improvements
 
 1. **Fixed Import Issues**:
-   - Corrected import paths (e.g., `./useGameStore` instead of `./gameStore`)
+   - Corrected import paths (e.g., `./useGameStore/` instead of `./gameStore`)
    - Replaced all `require()` calls with proper ES module imports
 
 2. **Enhanced State Management**:

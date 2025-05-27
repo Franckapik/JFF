@@ -3,7 +3,7 @@ import { BotActions } from '../../../ai/fsm/actions/botActions';
 import { BotStateConfig } from '../../../ai/fsm/states/botStates';
 import usePlayerStore from '../../usePlayerStore';
 import { useTileStore } from '../../useTileStore';
-import useGameStore from '../../useGameStore';
+import useGameStore from '../../useGameStore/';
 import { getBotPlayerId } from '../../../ai/constants/playerConstants';
 import fsmLogger from '../../../utils/fsmLogger';
 

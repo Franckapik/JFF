@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import usePlayerStore from "../stores/usePlayerStore";
-import useGameStore from "../stores/useGameStore";
+import useGameStore from "../stores/useGameStore/";
 import { useTileStore } from "../stores/useTileStore";
 import { isBotPlayerId, getMainShipId } from "../ai/constants/playerConstants";
 import { calculatePath } from "../utils/utils";
