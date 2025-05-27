@@ -199,12 +199,19 @@ export const useVehicleMovement = ({
     });
   };
 
-  // Fonction pour initialiser la position
+  // CORRECTION: Fonction pour initialiser la position avec synchronisation du store
   const initializePosition = (position) => {
     if (!isInitialPositionSet && position && groupRef.current) {
-      fsmLogger.mouvement(`[VehicleMovement] Setting initial position for ${playerId}:`, position);
+      fsmLogger.mouvement(`[VehicleMovement] Setting initial position for ${playerId}/${vehicleId}:`, position);
       groupRef.current.position.set(position.x, position.y, position.z);
       setIsInitialPositionSet(true);
+      
+      // IMPORTANT: Synchroniser la position dans le store si elle n'était pas définie
+      if (!vehicle?.position) {
+        updateVehicle(playerId, vehicleId, {
+          position: { x: position.x, y: position.y, z: position.z }
+        });
+      }
     }
   };
 

@@ -12,14 +12,15 @@ const ShipMovement = React.memo(({ playerId, children }) => {
   const tiles = useTileStore((state) => state.tiles);
   const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
   const playerVehicles = usePlayerStore((state) => state.players[playerId]?.vehicles);
-  const playerVehicle = playerVehicles?.[getMainShipId()];
-  const setClockRunning = useGameStore((state) => state.setClockRunning);
   
-  // Pour les bots, on utilise toujours le vaisseau principal
+  // CORRECTION: Utiliser le playerId pour obtenir l'ID correct du vaisseau
   const vehicleId = React.useMemo(() => 
-    isBotPlayerId(playerId) ? getMainShipId() : selectedVehicle.vehicleId,
+    isBotPlayerId(playerId) ? getMainShipId(playerId) : selectedVehicle.vehicleId,
     [playerId, selectedVehicle.vehicleId]
   );
+  
+  const playerVehicle = playerVehicles?.[vehicleId];
+  const setClockRunning = useGameStore((state) => state.setClockRunning);
 
   // Utilisation du hook de mouvement
   const {
@@ -60,11 +61,18 @@ const ShipMovement = React.memo(({ playerId, children }) => {
   }, [groupRef, playerVehicle, playerId, tiles, initializePath]);
 
   // === Effets ===
+  // CORRECTION: Consolidation des données de position
   useEffect(() => {
-    if (playerVehicle?.position) {
-      initializePosition(playerVehicle.position);
+    if (playerVehicle && Object.keys(tiles).length > 0) {
+      // Si le véhicule n'a pas de position mais a une coordonnée, utiliser la position de la tuile
+      if (!playerVehicle.position && playerVehicle.coord && tiles[playerVehicle.coord]) {
+        const tilePosition = tiles[playerVehicle.coord].position;
+        initializePosition(tilePosition);
+      } else if (playerVehicle.position) {
+        initializePosition(playerVehicle.position);
+      }
     }
-  }, [playerVehicle?.position, initializePosition]);
+  }, [playerVehicle?.position, playerVehicle?.coord, tiles, initializePosition]);
 
   useEffect(() => {
     const targetTile = playerVehicle?.targetTile;

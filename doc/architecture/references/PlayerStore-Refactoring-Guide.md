@@ -123,34 +123,7 @@ function getMaxCapacityForType(vehicleType) {
 
 ### Solution proposée
 
-```javascript
-// Exemple de correction pour l'initialisation des positions
-function initializePlayerPosition(player, startCoord) {
-  if (!player || !player.id) return;
-  
-  const shipId = getMainShipId(player.id);
-  const ship = player.vehicles[shipId];
-  
-  if (ship) {
-    const position = convertCoordToPosition(startCoord);
-    ship.position = position;
-    ship.coord = startCoord;
-    ship.startCoord = startCoord;
-    
-    // Supprimer l'ancienne entrée si elle existe
-    if (player.vehicles["ship"]) {
-      // Transférer toutes les données manquantes
-      Object.keys(player.vehicles["ship"]).forEach(key => {
-        if (ship[key] === null && player.vehicles["ship"][key] !== null) {
-          ship[key] = player.vehicles["ship"][key];
-        }
-      });
-      
-      // Supprimer l'entrée dupliquée
-      delete player.vehicles["ship"];
-    }
-  }
-}
+
 ```
 
 ### Tâches de refactoring
