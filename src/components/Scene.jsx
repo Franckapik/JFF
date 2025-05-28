@@ -40,6 +40,7 @@ const Scene = () => {
    * ======================================== */
   
   // Tile management
+  const tiles = useTileStore((state) => state.tiles);
   const initializeTiles = useTileStore((state) => state.initializeTiles);
   const getWalkableTiles = useTileStore((state) => state.getWalkableTiles);
   const getDepartTiles = useTileStore((state) => state.getDepartTiles);
@@ -95,7 +96,7 @@ const Scene = () => {
     
     if (walkableTiles.length > 0 && !playersInitialized) {
       fsmLogger.info("[Scene] Initializing players with tiles");
-      initializePlayer({ tiles: walkableTiles });
+      initializePlayer(walkableTiles);
       markPlayersAsInitialized();
     }
     

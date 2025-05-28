@@ -3,7 +3,6 @@ import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
 import "./styles/App.css";
 // import VehicleSelector from "./components/HUD/VehicleSelector"; // Commenté car non utile pour l'instant
-import MessageSelector from "./components/Messagerie/MessageSelector";
 import Clock from "./components/HUD/Clock";
 import BotDebugger from "./components/HUD/BotDebugger";
 import MultiBotManager from "./components/MultiBotManager";
@@ -22,10 +21,7 @@ const App = () => {
       </div>
       */}
 
-      {/* New container for MessageSelector */}
-      <div className="message-selector-container">
-        <MessageSelector />
-      </div>
+
 
       {/* Main content area */}
       <div className="main-content">

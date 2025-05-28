@@ -17,6 +17,7 @@
 import { create } from 'zustand';
 
 // Import des slices spécialisés
+import createPlayerSlice from './slices/playerSlice';
 import createVehicleSlice from './slices/vehicleSlice';
 import createMovementSlice from './slices/movementSlice';
 import createFuelSlice from './slices/fuelSlice';
@@ -28,22 +29,14 @@ import createMessageSlice from './slices/messageSlice';
  * Crée un store Zustand en combinant tous les slices spécialisés
  */
 const usePlayerStore = create((set, get) => ({
-  // État initial
-  players: {},
-
-  // Combine tous les slices spécialisés
+  // Combine tous les slices (playerSlice fournit l'état initial et initializePlayer)
+  ...createPlayerSlice(set, get),
   ...createVehicleSlice(set, get),
   ...createMovementSlice(set, get),
   ...createFuelSlice(set, get),
   ...createResourceSlice(set, get),
   ...createMemorySlice(set, get),
   ...createMessageSlice(set, get),
-
-  // Actions générales qui orchestrent les slices
-  initializePlayer: (tiles) => {
-    // ...existing code...
-    // Utilise maintenant les méthodes des slices spécialisés
-  },
 
   // Wrapper pour maintenir la compatibilité
   updateVehicle: (playerId, vehicleId, updates) => {
