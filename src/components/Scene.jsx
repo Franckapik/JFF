@@ -12,7 +12,7 @@ import { Html } from "@react-three/drei";
 
 // Components
 import Tile from "./Tile";
-import Bot from "./Bot";
+import Fleet from "./Fleet";
 
 // Stores
 import { useTileStore } from "../stores/useTileStore";
@@ -158,15 +158,15 @@ const Scene = () => {
       
       {/* Human player (rendered as Bot component) */}
       {Object.keys(tiles).length > 0 && (
-        <Bot 
+        <Fleet 
           isHuman={true}
           color="blue"
         />
       )}
       
-      {/* AI Bots with dynamic colors */}
+      {/* AI Fleets with dynamic colors */}
       {botIndices.map((botIndex) => (
-        <Bot 
+        <Fleet 
           key={`bot-${botIndex}`}
           botIndex={botIndex}
           color={getBotColor(botIndex)}

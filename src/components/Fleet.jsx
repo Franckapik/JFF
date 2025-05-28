@@ -15,17 +15,17 @@ import {
 
 /**
  * =================================================================
- * Composant Bot
+ * Composant Fleet
  * =================================================================
  * Un composant réutilisable qui encapsule la logique de rendu 
- * d'un bot et ses drones. Peut également être utilisé pour le joueur humain.
+ * d'une flotte et ses drones. Peut également être utilisé pour le joueur humain.
  * 
  * @param {Object} props
  * @param {number|null} props.botIndex - Index du bot (0 pour Bot 1, 1 pour Bot 2, etc.), null pour le joueur humain
  * @param {string} props.color - Couleur unique pour le bot et ses drones
  * @param {boolean} props.isHuman - Indique si c'est le joueur humain
  */
-const Bot = React.memo(({ 
+const Fleet = React.memo(({ 
   botIndex = null, 
   color = "red",
   isHuman = false
@@ -217,4 +217,4 @@ const Bot = React.memo(({
   );
 });
 
-export default Bot;
+export default Fleet;
