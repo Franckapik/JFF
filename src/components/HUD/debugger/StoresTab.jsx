@@ -35,6 +35,7 @@ const formatDataAsJSON = (data, title) => {
  */
 const StoreSection = React.memo(({ title, data, color = "#2196F3" }) => {
   const [copied, setCopied] = React.useState(false);
+  const [expandedView, setExpandedView] = React.useState(false);
 
   const handleCopy = async () => {
     const jsonData = formatDataAsJSON(data, title);
@@ -45,7 +46,8 @@ const StoreSection = React.memo(({ title, data, color = "#2196F3" }) => {
     }
   };
   const renderValue = (value, key, depth = 0) => {
-    if (depth > 3) return <span className="debugger-value">...</span>; // Limite la profondeur
+    const maxDepth = expandedView ? 10 : 6; // Plus de profondeur en mode étendu
+    if (depth > maxDepth) return <span className="debugger-value">...</span>;
     
     if (value === null) return <span className="debugger-value-null">null</span>;
     if (value === undefined) return <span className="debugger-value-undefined">undefined</span>;
@@ -56,10 +58,12 @@ const StoreSection = React.memo(({ title, data, color = "#2196F3" }) => {
     
     if (Array.isArray(value)) {
       if (value.length === 0) return <span className="debugger-value">[]</span>;
-      if (value.length > 5) {
+      const maxArrayItems = expandedView ? 20 : 10; // Plus d'éléments en mode étendu
+      if (value.length > maxArrayItems) {
+        const showItems = expandedView ? 10 : 5;
         return (
           <span className="debugger-value">
-            [{value.slice(0, 3).map((item, i) => renderValue(item, i, depth + 1)).reduce((prev, curr, i) => [prev, ', ', curr])}, ... +{value.length - 3} more]
+            [{value.slice(0, showItems).map((item, i) => renderValue(item, i, depth + 1)).reduce((prev, curr, i) => [prev, ', ', curr])}, ... +{value.length - showItems} more]
           </span>
         );
       }
@@ -80,8 +84,8 @@ const StoreSection = React.memo(({ title, data, color = "#2196F3" }) => {
       const entries = Object.entries(value);
       if (entries.length === 0) return <span className="debugger-value">{"{}"}</span>;
       
-      // Limiter le nombre d'entrées affichées
-      const maxEntries = 10;
+      // Plus d'entrées en mode étendu
+      const maxEntries = expandedView ? 50 : 20;
       const displayEntries = entries.slice(0, maxEntries);
       
       return (
@@ -111,13 +115,23 @@ const StoreSection = React.memo(({ title, data, color = "#2196F3" }) => {
         <h3 className="debugger-section-title" style={{ color }}>
           {title}
         </h3>
-        <button 
-          className="debugger-copy-button"
-          onClick={handleCopy}
-          title={`Copier ${title} en JSON`}
-        >
-          {copied ? '✓ Copié' : '📋 Copier'}
-        </button>
+        <div style={{ display: 'flex', gap: '5px' }}>
+          <button 
+            className={`debugger-copy-button ${expandedView ? '' : 'debugger-copy-all'}`}
+            onClick={() => setExpandedView(!expandedView)}
+            title={expandedView ? 'Vue simplifiée' : 'Vue détaillée'}
+            style={{ fontSize: '9px', padding: '2px 6px' }}
+          >
+            {expandedView ? '🔽 Moins' : '🔼 Plus'}
+          </button>
+          <button 
+            className="debugger-copy-button"
+            onClick={handleCopy}
+            title={`Copier ${title} en JSON`}
+          >
+            {copied ? '✓ Copié' : '📋 Copier'}
+          </button>
+        </div>
       </div>
       <div className="debugger-store-content">
         {Object.entries(data).map(([key, value]) => (
