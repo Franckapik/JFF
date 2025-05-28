@@ -14,8 +14,12 @@ import {
 } from "../ai/constants/playerConstants";
 
 /**
- * Composant Bot réutilisable qui encapsule la logique de rendu d'un bot et ses drones
- * Peut également être utilisé pour le joueur humain
+ * =================================================================
+ * Composant Bot
+ * =================================================================
+ * Un composant réutilisable qui encapsule la logique de rendu 
+ * d'un bot et ses drones. Peut également être utilisé pour le joueur humain.
+ * 
  * @param {Object} props
  * @param {number|null} props.botIndex - Index du bot (0 pour Bot 1, 1 pour Bot 2, etc.), null pour le joueur humain
  * @param {string} props.color - Couleur unique pour le bot et ses drones
@@ -26,6 +30,12 @@ const Bot = React.memo(({
   color = "red",
   isHuman = false
 }) => {
+  /**
+   * -----------------------------------------------------------------
+   * LOGIQUE DU COMPOSANT
+   * -----------------------------------------------------------------
+   */
+  
   // Déterminer l'ID du joueur (humain ou bot)
   const playerId = isHuman ? getHumanPlayerId(1) : getBotId(botIndex);
   
@@ -41,9 +51,17 @@ const Bot = React.memo(({
     return null;
   }
 
+  /**
+   * -----------------------------------------------------------------
+   * RENDU DU COMPOSANT
+   * -----------------------------------------------------------------
+   */
   return (
     <>
-      {/* Vaisseau principal */}
+      {/**
+       * VAISSEAU PRINCIPAL
+       * Représente le vaisseau principal du joueur ou du bot
+       */}
       <ShipMovement playerId={playerId}>
         <mesh castShadow>
           <boxGeometry args={[0.5, 0.5, 0.5]} />
@@ -79,7 +97,10 @@ const Bot = React.memo(({
         </Html>
       </ShipMovement>
 
-      {/* Drone d'exploration - toujours visible car actif par défaut */}
+      {/**
+       * DRONE D'EXPLORATION
+       * Toujours visible par défaut, sauf si explicitement désactivé
+       */}
       {(!vehicles || vehicles[getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE)]?.isActive !== false) && (
         <DroneMovement 
           playerId={playerId} 
@@ -99,13 +120,17 @@ const Bot = React.memo(({
         </DroneMovement>
       )}
 
-      {/* Drone de combat - n'afficher que s'il est actif */}
+      {/**
+       * DRONE DE COMBAT
+       * N'est affiché que s'il est actif dans les véhicules du joueur
+       */}
       {vehicles && vehicles[getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE)]?.isActive && (
         <DroneMovement
           playerId={playerId}
           droneId={getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE)}
         >
           <group>
+            {/* Corps du drone */}
             <Cone 
               args={[0.2, 0.3, 6]} 
               rotation={[Math.PI, 0, 0]}
@@ -117,6 +142,7 @@ const Bot = React.memo(({
                 roughness={0.2} 
               />
             </Cone>
+            {/* Arme droite */}
             <mesh position={[0.15, 0, 0]} rotation={[0, 0, Math.PI/4]}>
               <boxGeometry args={[0.2, 0.05, 0.05]} />
               <meshStandardMaterial 
@@ -125,6 +151,7 @@ const Bot = React.memo(({
                 roughness={0.2} 
               />
             </mesh>
+            {/* Arme gauche */}
             <mesh position={[-0.15, 0, 0]} rotation={[0, 0, -Math.PI/4]}>
               <boxGeometry args={[0.2, 0.05, 0.05]} />
               <meshStandardMaterial 
@@ -137,13 +164,17 @@ const Bot = React.memo(({
         </DroneMovement>
       )}
 
-      {/* Drone spécial - n'afficher que s'il est actif */}
+      {/**
+       * DRONE SPÉCIAL
+       * Unité avancée avec des capacités spéciales, n'est affichée que si elle est active
+       */}
       {vehicles && vehicles[getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)]?.isActive && (
         <DroneMovement
           playerId={playerId}
           droneId={getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)}
         >
           <group>
+            {/* Corps du drone spécial */}
             <Cone 
               args={[0.12, 0.35, 8]} 
               rotation={[Math.PI, 0, 0]}
@@ -157,6 +188,7 @@ const Bot = React.memo(({
                 emissiveIntensity={0.3} 
               />
             </Cone>
+            {/* Anneau technologique */}
             <mesh position={[0, -0.1, 0]} rotation={[Math.PI/2, 0, 0]}>
               <torusGeometry args={[0.15, 0.025, 8, 16]} />
               <meshStandardMaterial 
@@ -172,8 +204,12 @@ const Bot = React.memo(({
       )}
     </>
   );
-}, (prevProps, nextProps) => {
-  // Custom comparison function to determine if re-render is needed
+}, 
+/**
+ * Fonction de comparaison pour memoization
+ * Empêche les re-rendus inutiles si les props n'ont pas changé
+ */
+(prevProps, nextProps) => {
   return (
     prevProps.botIndex === nextProps.botIndex &&
     prevProps.color === nextProps.color &&

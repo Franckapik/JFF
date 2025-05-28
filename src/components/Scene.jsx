@@ -194,40 +194,22 @@ const Scene = () => {
       
       {getDepartTiles().map((tile) => {
         const baseColor = getPlayerBaseColor(tile.playerIndex);
+        const backgroundColor = getBackgroundColor(baseColor);
+        const labelText = tile.isPlayerBase ? 'Joueur 1' : `Bot ${tile.playerIndex}`;
         
         return (
-          <React.Fragment key={`depart-tile-${tile.coord}`}>
-            {/* Base platform */}
-            <mesh
-              position={[tile.position.x, 0.2, tile.position.z]}
-              rotation={[-Math.PI / 2, 0, 0]}
-            >
-              <circleGeometry args={[0.5, 32]} />
-              <meshStandardMaterial color={baseColor} />
-            </mesh>
-            
-            {/* Player identifier label */}
-            <Html
-              position={[tile.position.x, 0.5, tile.position.z]}
-              center
-              distanceFactor={15}
-            >
-              <div style={{
-                background: getBackgroundColor(baseColor),
-                color: 'white',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                userSelect: 'none',
-                pointerEvents: 'none',
-                whiteSpace: 'nowrap',
-                textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
-              }}>
-                {tile.isPlayerBase ? 'Joueur 1' : `Bot ${tile.playerIndex}`}
-              </div>
-            </Html>
-          </React.Fragment>
+          <Tile
+            key={`depart-tile-${tile.coord}`}
+            position={[tile.position.x, 0, tile.position.z]}
+            radius={1}
+            color={tile.color || "#888888"} // couleur de base si non définie
+            coord={tile.coord}
+            isDepart={true}
+            baseColor={baseColor}
+            backgroundColor={backgroundColor}
+            labelText={labelText}
+            playerIndex={tile.playerIndex}
+          />
         );
       })}
 
