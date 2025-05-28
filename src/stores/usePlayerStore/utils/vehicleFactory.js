@@ -17,7 +17,7 @@ export const createVehicle = (id, type) => {
     position: null,
     coord: null,
     isMoving: false,
-    progress: 0,
+    progress: 0, // ✅ FIX #3.5: Progress commence à 0 par défaut
     resources: { food: 0, debris: 0, special: 0 },
     targetTile: {
       position: null,

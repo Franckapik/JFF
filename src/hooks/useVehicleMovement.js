@@ -87,10 +87,16 @@ export const useVehicleMovement = ({
           setHasReachedTarget(false);
           setTotalPathDistance(pathData.totalDistance);
           setDistanceTraveled(0);
+          
+          // ✅ FIX #3.5: Réinitialiser le progress à 0 au début du mouvement
+          updateVehicle(playerId, vehicleId, {
+            progress: 0,
+            isMoving: true
+          });
         }
       }
     }
-  }, [vehicle?.targetTile?.coord, tiles]);
+  }, [vehicle?.targetTile?.coord, tiles, playerId, vehicleId, updateVehicle]);
 
   // Log state changes in movement
   useEffect(() => {
@@ -149,11 +155,16 @@ export const useVehicleMovement = ({
       rotationRef.current.set(0, interpolatedAngle, 0);
       groupRef.current.rotation.copy(rotationRef.current);
 
-      setDistanceTraveled(prev => prev + moveDistance);
-      const progress = (distanceTraveled / totalPathDistance) * 100;
-      
-      updateVehicle(playerId, vehicleId, {
-        progress: Math.min(progress, 100).toFixed(2),
+      setDistanceTraveled(prev => {
+        const newDistance = prev + moveDistance;
+        // ✅ FIX #3.5: Calculer le progress correctement
+        const progress = totalPathDistance > 0 ? (newDistance / totalPathDistance) * 100 : 0;
+        
+        updateVehicle(playerId, vehicleId, {
+          progress: Math.min(progress, 100).toFixed(2),
+        });
+        
+        return newDistance;
       });
       
     } else {

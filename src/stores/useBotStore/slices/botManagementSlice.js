@@ -16,6 +16,13 @@ export const createBotManagementSlice = (set, get) => ({
   
   // Fonction pour changer le bot actif
   switchActiveBot: (botIndex) => {
+    const { currentBotIndex } = get();
+    
+    // ✅ GARDE SIMPLE : Ne rien faire si déjà actif
+    if (currentBotIndex === botIndex) {
+      return getBotId(botIndex); // Retourner le botId sans processing
+    }
+    
     const botId = getBotId(botIndex);
     fsmLogger.info(`Switching active bot to Bot ${botIndex} (${botId})`, null, botId);
     
@@ -23,7 +30,6 @@ export const createBotManagementSlice = (set, get) => ({
     const currentRunningState = get().isRunning;
     
     // Sauvegarder l'état actuel du bot actif (plus besoin car tout est dans botStates)
-    const currentBotIndex = get().currentBotIndex;
     
     // Récupérer ou initialiser l'état du nouveau bot
     const nextBotState = get().botStates[botIndex] || {
@@ -45,8 +51,8 @@ export const createBotManagementSlice = (set, get) => ({
       isRunning: currentRunningState
     });
     
-    // Exécuter les actions d'initialisation
-    get()._initializeBotState(botId);
+    // ❌ COMMENTÉ : Cette ligne force IDLE à chaque switch
+    // get()._initializeBotState(botId);
     
     return botId;
   },

@@ -46,6 +46,7 @@ let config = {
   enableConsole: true, // Activé pour voir les logs dans la console
   minLevel: 0, // Niveau minimum pour afficher un log
   enableBuffering: true, // Activer/désactiver le stockage des logs dans le buffer
+  visibleTypes: null, // Filtrer les types visibles dans la console (null = tous, ou array de types)
 };
 
 /**
@@ -100,6 +101,11 @@ const log = (type, message, data = null, playerId = null, ...additionalArgs) => 
   
   // Afficher dans la console si activé
   if (config.enableConsole) {
+    // Filtrer par type si visibleTypes est défini
+    if (config.visibleTypes && !config.visibleTypes.includes(type)) {
+      return logEntry; // Ne pas afficher mais retourner l'entrée pour le buffer
+    }
+    
     // Spécifiquement pour les tests, afin de correspondre aux attentes des tests
     if (message === 'Info message') {
       console.log(typeConfig.prefix, message);
@@ -279,5 +285,10 @@ const fsmLogger = {
     // car cela interfère avec le test qui désactive enableConsole
   }
 };
+
+// Configurer pour n'afficher que les mouvements
+fsmLogger.configure({
+  visibleTypes: ['MOUVEMENT']
+});
 
 export default fsmLogger;

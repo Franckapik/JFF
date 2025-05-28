@@ -125,7 +125,19 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
     fsmLogger.info(`Found ${walkableTilesInRadius.length} walkable unexplored tiles in radius`, null, botId);
     
     if (walkableTilesInRadius.length > 0) {
-      const targetTileInfo = walkableTilesInRadius[0];
+      // ✅ FIX #2: Filtrer les destinations différentes de la position du vaisseau
+      const validTargets = walkableTilesInRadius.filter(tile => tile.coord !== botVehicle.coord);
+      
+      if (validTargets.length === 0) {
+        fsmLogger.warn(`All tiles are at ship position (${botVehicle.coord}), no valid exploration target`, null, botId);
+        
+        // Réinitialiser l'état d'exploration
+        playerStore.updatePlayerMemory(botId, { explorationState: null });
+        changeState(BOT_STATES.IDLE);
+        return true;
+      }
+      
+      const targetTileInfo = validTargets[0];
       
       fsmLogger.action(`Sending drone to explore tile: ${targetTileInfo.coord}, distance: ${targetTileInfo.distance.toFixed(2)}`, null, botId);
       
@@ -153,7 +165,8 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
     } else {
       // Si aucune tuile non-explorée n'est trouvée à proximité, chercher une tuile aléatoire
       const randomTile = tileStore.selectRandomWalkableTile();
-      if (randomTile) {
+      
+      if (randomTile && randomTile.coord !== botVehicle.coord) {
         fsmLogger.action(`No unexplored tiles nearby, sending drone to random tile: ${randomTile.coord}`);
         playerStore.moveToTile(botId, botDroneId, randomTile);
         
@@ -169,7 +182,7 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
         
         return undefined;
       } else {
-        fsmLogger.action(`Could not find any tile to explore, exploration failed`);
+        fsmLogger.action(`Could not find any valid tile to explore (all at ship position), exploration failed`);
         
         // Réinitialiser l'état d'exploration dans la mémoire
         playerStore.updatePlayerMemory(botId, {
@@ -228,6 +241,53 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
     
     changeState(BOT_STATES.IDLE);
     return false;
+  }
+  
+  // Ajouter des logs de diagnostic après la ligne 46
+
+  console.log('=== DRONE MOVEMENT DEBUG ===');
+  console.log('botDrone.position:', botDrone.position);
+  console.log('botDrone.coord:', botDrone.coord);
+  console.log('botDrone.progress:', botDrone.progress);
+  console.log('botDrone.targetTile:', botDrone.targetTile);
+  console.log('botDrone.isMoving:', botDrone.isMoving);
+
+  // ✅ FIX #3.5: Vérifier si le drone a vraiment atteint sa destination
+  if (botDrone.progress === "100.00" && botDrone.targetTile?.coord) {
+    console.log('✅ DRONE REACHED TARGET: Progress 100%');
+    
+    // ✅ FIX #4: Déclencher le callback onTargetReached si nécessaire
+    if (botDrone.coord !== botDrone.targetTile.coord) {
+      console.log('🔧 SYNCING: Updating drone coord to match target');
+      playerStore.updateVehicle(botId, botDroneId, {
+        coord: botDrone.targetTile.coord,
+        position: botDrone.targetTile.position,
+        progress: 100,
+        isMoving: false,
+        targetTile: { position: null, coord: null }
+      });
+      
+      // Marquer la tuile comme explorée
+      tileStore.markTileAsExplored(botDrone.targetTile.coord);
+      
+      // Transition du drone vers AT_TARGET puis RETURNING_TO_SHIP
+      droneState.transitionDroneState(botDroneId, DRONE_STATES.AT_TARGET);
+      
+      // Programmer le retour vers le vaisseau
+      setTimeout(() => {
+        droneState.transitionDroneState(botDroneId, DRONE_STATES.RETURNING_TO_SHIP);
+        const shipCoord = botVehicle.coord;
+        const shipTile = tileStore.tiles[shipCoord];
+        if (shipTile) {
+          playerStore.moveToTile(botId, botDroneId, {
+            coord: shipCoord,
+            position: shipTile.position
+          });
+        }
+      }, 1000); // Attendre 1 seconde avant de retourner
+      
+      return undefined; // Continuer l'exécution
+    }
   }
   
   return undefined;
