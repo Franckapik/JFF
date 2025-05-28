@@ -1,101 +1,153 @@
 /**
- * Slice pour la gestion des ressources, des scores et des capacités
+ * ============================================================================
+ * RESOURCE SLICE - Gestion des ressources des véhicules
+ * ============================================================================
+ * 
+ * Ce slice gère exclusivement les ressources transportées par les véhicules :
+ * - Dépôt automatique des ressources à la base
+ * - Vérification de capacité
+ * - Transfert de ressources
+ * 
+ * @author Votre nom
+ * @version 1.0.0
  */
-import { updateVehicle as updateVehicleUtil } from '../../../utils/utils';
+
+import { isMainShipId } from '../../../ai/constants/playerConstants';
 import fsmLogger from '../../../utils/fsmLogger';
-import { getMainShipId } from '../../../ai/constants/playerConstants';
+import { 
+  checkVehicleCapacity, 
+  calculateUpdatedResources, 
+  canDepositResources,
+  calculateUpdatedScore,
+  createEmptyVehicle
+} from '../utils';
+
+// ============================================================================
+// CREATION DU SLICE
+// ============================================================================
 
 const createResourceSlice = (set, get) => {
   return {
+    
+    // ========================================================================
+    // GESTION DES RESSOURCES - DEPOT ET TRANSFERT
+    // ========================================================================
+    
     /**
-     * Transfère les ressources d'un véhicule vers le score du joueur
+     * Vérifie et effectue le dépôt automatique des ressources à la base
+     * 
      * @param {string} playerId - ID du joueur
-     * @param {string} vehicleId - ID du véhicule (par défaut: l'ID du vaisseau principal du joueur)
-     * @returns {boolean} - true si le transfert a réussi, false sinon
+     * @param {string} vehicleId - ID du véhicule
+     * @returns {boolean} True si un dépôt a été effectué
      */
-     transferResourcesToScore: (playerId, vehicleId = null) => {
-      const mainShipId = vehicleId || getMainShipId(playerId);
-      const player = get().players[playerId];
-      if (!player) return false;
-      
-      const vehicle = player.vehicles[mainShipId];
-      if (!vehicle) return false;
-      
-      // Vérifier si le véhicule est à sa base
-      if (vehicle.coord !== vehicle.startCoord) {
-        return false;
-      }
-      
-      // Transférer les ressources au score
-      const resources = vehicle.resources;
-      
+    processResourceDeposit: (playerId, vehicleId) => {
       set((state) => {
-        // 1. Mettre à jour le score du joueur
-        const updatedScore = {
-          ...state.players[playerId].score,
-          resources: {
-            food: state.players[playerId].score.resources.food + resources.food,
-            debris: state.players[playerId].score.resources.debris + resources.debris,
-            special: state.players[playerId].score.resources.special + resources.special,
-          }
-        };
+        const player = state.players[playerId];
+        if (!player) return state;
         
-        // 2. Réinitialiser les ressources du véhicule
-        const updatedVehicle = {
-          ...vehicle,
-          resources: { food: 0, debris: 0, special: 0 }
-        };
+        const vehicle = player.vehicles[vehicleId];
+        if (!vehicle) return state;
+
+        // Vérifier si c'est un vaisseau principal qui revient à sa base
+        if (canDepositResources(vehicle, vehicleId)) {
+          
+          // Transfert des ressources du vaisseau vers le score du joueur
+          const updatedScore = calculateUpdatedScore(player.score.resources, vehicle.resources);
+          
+          // Vidange de la soute du vaisseau après transfert
+          const updatedVehicle = createEmptyVehicle(vehicle);
+          
+          fsmLogger.action(`Resources deposited at base: ${JSON.stringify(vehicle.resources)}`);
+          
+          return {
+            players: {
+              ...state.players,
+              [playerId]: {
+                ...player,
+                vehicles: {
+                  ...player.vehicles,
+                  [vehicleId]: updatedVehicle
+                },
+                score: {
+                  ...player.score,
+                  resources: updatedScore
+                }
+              }
+            }
+          };
+        }
         
-        // 3. Mettre à jour l'état
+        return state;
+      });
+    },
+
+    /**
+     * Vérifie si un véhicule est à capacité maximale
+     * @param {string} playerId - ID du joueur
+     * @param {string} vehicleId - ID du véhicule
+     * @returns {boolean} True si à capacité maximale
+     */
+    isAtCapacity: (playerId, vehicleId) => {
+      const { players } = get();
+      const vehicle = players[playerId]?.vehicles?.[vehicleId];
+      
+      return checkVehicleCapacity(vehicle);
+    },
+
+    /**
+     * Ajoute des ressources à un véhicule
+     * @param {string} playerId - ID du joueur
+     * @param {string} vehicleId - ID du véhicule
+     * @param {Object} resources - Ressources à ajouter
+     */
+    addResources: (playerId, vehicleId, resources) => {
+      const { updateVehicle, players } = get();
+      const vehicle = players[playerId]?.vehicles?.[vehicleId];
+      if (!vehicle) return;
+
+      const updated = calculateUpdatedResources(vehicle.resources, resources);
+      updateVehicle(playerId, vehicleId, { resources: updated });
+    },
+
+    /**
+     * Transfère toutes les ressources d'un véhicule vers le score du joueur
+     * @param {string} playerId - ID du joueur
+     * @param {string} vehicleId - ID du véhicule
+     */
+    transferResourcesToScore: (playerId, vehicleId) => {
+      set((state) => {
+        const player = state.players[playerId];
+        if (!player) return state;
+        
+        const vehicle = player.vehicles[vehicleId];
+        if (!vehicle) return state;
+
+        const shipResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
+        const updatedScore = calculateUpdatedScore(player.score.resources, shipResources);
+
         return {
           players: {
             ...state.players,
             [playerId]: {
-              ...state.players[playerId],
+              ...player,
               vehicles: {
-                ...state.players[playerId].vehicles,
-                [mainShipId]: updatedVehicle
+                ...player.vehicles,
+                [vehicleId]: createEmptyVehicle(vehicle)
               },
-              score: updatedScore
+              score: {
+                ...player.score,
+                resources: updatedScore
+              }
             }
           }
         };
       });
-      
-      return true;
-    },
-
-    /**
-     * Vérifie si un véhicule a atteint sa capacité maximale de ressources
-     * @param {string} playerId - ID du joueur
-     * @param {string} vehicleId - ID du véhicule
-     * @returns {boolean} - true si le véhicule est à capacité maximale
-     */
-    checkResourceCapacity: (playerId, vehicleId) => {
-      const player = get().players[playerId];
-      const vehicle = player.vehicles[vehicleId];
-
-      if (!vehicle.maxCapacity) return; // Skip if the vehicle has no maxCapacity (e.g., drones)
-
-      const { food, debris, special } = vehicle.resources;
-      const { food: maxFood, debris: maxDebris, special: maxSpecial } = vehicle.maxCapacity;
-
-      // NOTE: On considère qu'une seule ressource pleine suffit pour déclencher la capacité maximale
-      const isAtMaxCapacity = food >= maxFood || debris >= maxDebris || special >= maxSpecial;  
-      
-      // Si à capacité max, marquer seulement le vaisseau avec isAtCapacity = true
-      if (isAtMaxCapacity) {
-        fsmLogger.info(`${playerId}/${vehicleId} est à sa capacité maximale.`, null, playerId);
-        
-        // Mettre à jour le vaisseau avec la nouvelle propriété
-        set((state) => updateVehicleUtil(state, playerId, vehicleId, { 
-          isAtCapacity: true 
-        }));
-      }
-      
-      return isAtMaxCapacity;
     },
   };
 };
+
+// ============================================================================
+// EXPORT
+// ============================================================================
 
 export default createResourceSlice;

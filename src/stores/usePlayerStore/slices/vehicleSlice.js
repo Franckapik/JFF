@@ -1,16 +1,45 @@
 /**
- * Slice pour la gestion des véhicules et leurs mouvements
+ * ============================================================================
+ * VEHICLE SLICE - Gestion de base des véhicules
+ * ============================================================================
+ * 
+ * Ce slice se concentre uniquement sur la gestion de base des véhicules :
+ * - État et propriétés des véhicules (CRUD simple)
+ * - Mise à jour générique des propriétés
+ * 
+ * RESPONSABILITÉS DÉPLACÉES :
+ * - Logique de dépôt de ressources → resourceSlice
+ * - Gestion du carburant → fuelSlice
+ * - Système de mouvement → movementSlice
+ * 
+ * @author Votre nom
+ * @version 2.0.0
  */
-import { updateVehicle as updateVehicleUtil } from '../../../utils/utils';
-import { isMainShipId, getMainShipId } from '../../../ai/constants/playerConstants';
+
+import { isMainShipId } from '../../../ai/constants/playerConstants';
 import fsmLogger from '../../../utils/fsmLogger';
+import { createUpdatedVehicleState } from '../utils';
+
+// ============================================================================
+// CREATION DU SLICE
+// ============================================================================
 
 const createVehicleSlice = (set, get) => {
   return {
+    
+    // ========================================================================
+    // GESTION DE BASE DES VEHICULES - CRUD ET PROPRIETES
+    // ========================================================================
+    
     /**
      * Met à jour l'état d'un véhicule avec de nouvelles propriétés
-     * @param {string} playerId - ID du joueur
-     * @param {string} vehicleId - ID du véhicule (ship, drone1, drone2, etc.)
+     * 
+     * Version simplifiée qui se contente de mettre à jour les propriétés
+     * sans logique métier complexe. Les logiques spécialisées sont déléguées
+     * aux autres slices.
+     * 
+     * @param {string} playerId - ID unique du joueur propriétaire
+     * @param {string} vehicleId - ID du véhicule
      * @param {Object} updates - Propriétés à mettre à jour
      */
     updateVehicle: (playerId, vehicleId, updates) => {
@@ -20,123 +49,55 @@ const createVehicleSlice = (set, get) => {
         
         const vehicle = player.vehicles[vehicleId];
         if (!vehicle) {
-          console.warn(`Vehicle '${vehicleId}' not found for player '${playerId}'.`);
+          fsmLogger.player(`Vehicle '${vehicleId}' not found for player '${playerId}'.`, null, playerId);
           return state;
         }
         
-        const updatedVehicle = { ...vehicle, ...updates };
-        
-        // Logique spécifique pour les vaisseaux à la base (dépôt des ressources)
-        if (isMainShipId(vehicleId) && 
-            updatedVehicle.coord &&
-            updatedVehicle.coord === updatedVehicle.startCoord &&
-            !updatedVehicle.isMoving) {
-          // Mise à jour du score avec les ressources du vaisseau
-          const updatedScore = { ...player.score.resources };
-          const shipResources = updatedVehicle.resources;
-          
-          updatedScore.food += shipResources.food;
-          updatedScore.debris += shipResources.debris;
-          updatedScore.special += shipResources.special;
-          
-          // Réinitialiser les ressources du vaisseau
-          updatedVehicle.resources = { food: 0, debris: 0, special: 0 };
-          
-          return {
-            players: {
-              ...state.players,
-              [playerId]: {
-                ...player,
-                vehicles: {
-                  ...player.vehicles,
-                  [vehicleId]: updatedVehicle
-                },
-                score: {
-                  ...player.score,
-                  resources: updatedScore
-                }
-              }
-            }
-          };
-        }
-        
-        // Mise à jour standard du véhicule
-        return {
-          players: {
-            ...state.players,
-            [playerId]: {
-              ...player,
-              vehicles: {
-                ...player.vehicles,
-                [vehicleId]: updatedVehicle
-              }
-            }
-          }
-        };
+        // Mise à jour simple sans logique métier
+        return createUpdatedVehicleState(state, playerId, vehicleId, updates);
       });
     },
 
-    /**
-     * Met à jour la tuile cible d'un véhicule et initie un mouvement
-     * @param {string} playerId - ID du joueur
-     * @param {string} vehicleId - ID du véhicule
-     * @param {Object} targetTile - Tuile cible
-     */
-    moveToTile: (playerId, vehicleId, targetTile) => {
-      fsmLogger.mouvement(`[PlayerStore] Moving ${playerId}/${vehicleId} to tile:`, targetTile.coord, playerId);
-      
-      // Vérifier que les données sont valides
-      if (!targetTile || !targetTile.position || !targetTile.coord) {
-        fsmLogger.error("Invalid target tile data:", targetTile, playerId);
-        return;
-      }
-      
-      set((state) => updateVehicleUtil(state, playerId, vehicleId, {
-        targetTile: {
-          position: targetTile.position,
-          coord: targetTile.coord,
-        },
-        isMoving: true
-      }));
-    },
+    // ========================================================================
+    // ACCESSEURS ET UTILITAIRES DE BASE
+    // ========================================================================
     
     /**
-     * Consomme du carburant pour un véhicule spécifique
+     * Récupère un véhicule spécifique
      * @param {string} playerId - ID du joueur
      * @param {string} vehicleId - ID du véhicule
-     * @param {number} amount - Quantité de carburant à consommer (par défaut: 5)
-     * @returns {boolean} - true si suffisamment de carburant, false sinon
+     * @returns {Object|null} Le véhicule ou null
      */
-    consumeFuel: (playerId, vehicleId, amount = 5) => {
+    getVehicle: (playerId, vehicleId) => {
       const player = get().players[playerId];
-      if (!player) return false;
-      
-      const vehicle = player.vehicles[vehicleId];
-      if (!vehicle) return false;
-      
-      // Vérifier s'il y a suffisamment de carburant
-      if (vehicle.fuel <= 0) {
-        set((state) => updateVehicleUtil(state, playerId, vehicleId, { isMoving: false }));
-        return false;
-      }
-      
-      // Consommer le carburant et mettre à jour le véhicule
-      const newFuelLevel = Math.max(vehicle.fuel - amount, 0);
-      set((state) => updateVehicleUtil(state, playerId, vehicleId, { fuel: newFuelLevel }));
-      
-      // Retourner true si le nouveau niveau est > 0, false sinon
-      return newFuelLevel > 0;
+      return player?.vehicles?.[vehicleId] || null;
     },
-    
+
     /**
-     * Ravitaille un véhicule en carburant (remise à 100)
+     * Récupère tous les véhicules d'un joueur
      * @param {string} playerId - ID du joueur
+     * @returns {Object} Tous les véhicules du joueur
      */
-    refuelVehicle: (playerId) => {
-      const shipId = getMainShipId(playerId);
-      set((state) => updateVehicleUtil(state, playerId, shipId, { fuel: 100 }));
+    getPlayerVehicles: (playerId) => {
+      const player = get().players[playerId];
+      return player?.vehicles || {};
+    },
+
+    /**
+     * Vérifie si un véhicule existe
+     * @param {string} playerId - ID du joueur
+     * @param {string} vehicleId - ID du véhicule
+     * @returns {boolean} True si le véhicule existe
+     */
+    vehicleExists: (playerId, vehicleId) => {
+      const player = get().players[playerId];
+      return !!(player?.vehicles?.[vehicleId]);
     },
   };
 };
+
+// ============================================================================
+// EXPORT
+// ============================================================================
 
 export default createVehicleSlice;

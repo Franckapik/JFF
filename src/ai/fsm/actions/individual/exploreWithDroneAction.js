@@ -27,30 +27,17 @@ import fsmLogger from '../../../../utils/fsmLogger';
  * @returns {boolean|undefined} - True si l'action est terminée, false si elle a échoué, undefined si elle est en cours
  */
 export const exploreWithDroneAction = (playerStore, tileStore, addAction, changeState) => {
-  console.log('=== exploreWithDroneAction START ===');
-  
   const botId = BotConditions.getCurrentBotId();
-  console.log('botId:', botId);
-  
   const botVehicleId = getMainShipId(botId);
-  console.log('botVehicleId:', botVehicleId);
-  
   const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
-  console.log('botVehicle:', botVehicle);
   
   // Obtenir l'ID du drone d'exploration du bot
   const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
-  console.log('botDroneId:', botDroneId);
-  
   const botDrone = playerStore.players?.[botId]?.vehicles?.[botDroneId];
-  console.log('botDrone:', botDrone);
-  
   const playerState = playerStore.players?.[botId];
-  console.log('playerState:', playerState);
 
   // Vérifier si le drone est actif
   if (botDrone && !botDrone.isActive) {
-    console.log('=== EARLY RETURN: Drone not active ===');
     fsmLogger.error(`Explorer drone is not active`, null, botId);
     addAction({
       type: 'exploreWithDroneAction',
@@ -62,7 +49,6 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
   }
   
   if (!botVehicle || !botVehicle.coord) {
-    console.log('=== EARLY RETURN: Bot vehicle not initialized ===');
     fsmLogger.error(`Bot vehicle not initialized properly`, null, botId);
     addAction({
       type: 'exploreWithDroneAction',
@@ -74,7 +60,6 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
   }
   
   if (!botDrone) {
-    console.log('=== EARLY RETURN: Bot drone not found ===');
     fsmLogger.error(`Bot drone not found`, null, botId);
     addAction({
       type: 'exploreWithDroneAction',
@@ -87,23 +72,14 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
 
   // Utiliser les conditions centralisées pour vérifier l'état du drone
   const isDroneMoving = BotConditions.isDroneMoving();
-  console.log('isDroneMoving:', isDroneMoving);
-  
   const droneAtShip = BotConditions.isDroneAtShip();
-  console.log('droneAtShip:', droneAtShip);
   
   // Use the drone state machine instead of flags
   const droneState = useDroneState.getState();
-  console.log('droneState:', droneState);
-  
   const isDroneDocked = droneState.isDroneDocked(botDroneId);
-  console.log('isDroneDocked:', isDroneDocked);
   
   // PHASE 1: Première exécution - Envoyer le drone explorer
-  console.log('playerState.memory.explorationState:', playerState?.memory?.explorationState);
-  
   if (!playerState?.memory?.explorationState?.started) {
-    console.log('=== PHASE 1: Starting exploration ===');
     // Si le drone est déjà en mouvement, attendre qu'il s'arrête
     if (isDroneMoving.result) {
       fsmLogger.action(`Drone is already moving, waiting for it to complete its current movement`, null, botId);
@@ -242,23 +218,11 @@ export const exploreWithDroneAction = (playerStore, tileStore, addAction, change
     changeState(BOT_STATES.IDLE);
     return false;
   }
-  
-  // Ajouter des logs de diagnostic après la ligne 46
-
-  console.log('=== DRONE MOVEMENT DEBUG ===');
-  console.log('botDrone.position:', botDrone.position);
-  console.log('botDrone.coord:', botDrone.coord);
-  console.log('botDrone.progress:', botDrone.progress);
-  console.log('botDrone.targetTile:', botDrone.targetTile);
-  console.log('botDrone.isMoving:', botDrone.isMoving);
 
   // ✅ FIX #3.5: Vérifier si le drone a vraiment atteint sa destination
   if (botDrone.progress === "100.00" && botDrone.targetTile?.coord) {
-    console.log('✅ DRONE REACHED TARGET: Progress 100%');
-    
     // ✅ FIX #4: Déclencher le callback onTargetReached si nécessaire
     if (botDrone.coord !== botDrone.targetTile.coord) {
-      console.log('🔧 SYNCING: Updating drone coord to match target');
       playerStore.updateVehicle(botId, botDroneId, {
         coord: botDrone.targetTile.coord,
         position: botDrone.targetTile.position,

@@ -25,6 +25,10 @@ const LOG_LEVEL = {
     prefix: '🚀 MOUVEMENT',
     style: 'color: #00BCD4; font-weight: bold'
   },
+  PLAYER: {
+    prefix: '👤 PLAYER',
+    style: 'color: #FF5722; font-weight: bold'
+  },
   ERROR: {
     prefix: '🔴 ERROR',
     style: 'color: #F44336; font-weight: bold'
@@ -177,6 +181,12 @@ const fsmLogger = {
     const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
     return log('MOUVEMENT', message, data, playerId);
   },
+  player: (...args) => {
+    const message = args[0] || '';
+    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
+    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
+    return log('PLAYER', message, data, playerId);
+  },
   error: (...args) => {
     const message = args[0] || '';
     const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
@@ -288,7 +298,7 @@ const fsmLogger = {
 
 // Configurer pour n'afficher que les mouvements
 fsmLogger.configure({
-  visibleTypes: ['MOUVEMENT']
+  visibleTypes: ['PLAYER']
 });
 
 export default fsmLogger;
