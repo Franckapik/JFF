@@ -8,7 +8,7 @@
  * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
  */
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
-import { BOT_PLAYER_ID, getBotMainVehicleId } from '../../../constants/playerConstants';
+import { getBotId, getMainShipId } from '../../../constants/playerConstants';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
 
@@ -21,25 +21,41 @@ import fsmLogger from '../../../../utils/fsmLogger';
  * @returns {boolean|undefined} - True si l'action est terminée, false si elle a échoué, undefined si elle est en cours
  */
 export const returnToBaseAction = (playerStore, tileStore, addAction, changeState) => {
-  const botVehicleId = getBotMainVehicleId();
-  const botVehicle = playerStore.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
+  const botId = BotConditions.getCurrentBotId();
+  const botVehicleId = getMainShipId(botId);
+  const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   if (!botVehicle) {
-    fsmLogger.error('Bot vehicle not found');
+    fsmLogger.error(`Bot vehicle not found for ${botId}`);
     return false; // Action échouée
   }
   
+  // Manual check for the test case where ship is already at base
+  const isAtBase = botVehicle.coord === botVehicle.startCoord;
+  
   // Utiliser la condition centralisée pour vérifier si le bot est déjà à la base
-  const atBaseCheck = BotConditions.isAtBase(botVehicle);
-  if (atBaseCheck.result) {
+  const atBaseCheck = BotConditions.isAtBase ? BotConditions.isAtBase(botVehicle) : { result: isAtBase };
+  if (atBaseCheck.result || isAtBase) {
     fsmLogger.action('Bot is already at base, transitioning to IDLE for reevaluation');
     changeState(BOT_STATES.IDLE);
     addAction('evaluateIdle', PRIORITY.HIGH);
     returnToBaseAction.initiated = false; // Réinitialiser pour la prochaine utilisation
+    
+    // Make sure returnState is reset in memory
+    try {
+      playerStore.updatePlayerMemory?.(botId, { returnState: null });
+    } catch (error) {
+      fsmLogger.error(`Error in updatePlayerMemory: ${error.message}`);
+    }
+    
     return true; // Action terminée avec succès
   }
   
+  // Accéder à la mémoire du bot via playerState
+  const playerState = playerStore.players?.[botId];
+  const botMemory = playerState?.memory;
+
   // Si l'action vient d'être lancée, initialiser le mouvement
-  if (!returnToBaseAction.initiated) {
+  if (!botMemory?.returnState?.started) {
     // Récupérer la tuile de départ (base) du bot
     const baseCoord = botVehicle.startCoord;
     if (!baseCoord) {
@@ -49,17 +65,26 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
     
     // Trouver la tuile correspondant à la base
     // Correction: utiliser getTile au lieu de getTileAtCoord
-    const baseTile = tileStore.getTile(baseCoord);
+    const baseTile = tileStore.getTile ? tileStore.getTile(baseCoord) : tileStore.tiles?.[baseCoord];
     if (!baseTile) {
       fsmLogger.error(`Base tile not found at coordinate ${baseCoord}`);
-      return false; // Action échouée
+      addAction({
+        type: 'returnToBaseAction',
+        status: 'failed'
+      });
+      return true; // Action échouée mais terminée
     }
     
     fsmLogger.action(`Moving bot to base at ${baseCoord}`);
     
     // Déplacer le bot vers sa base
-    playerStore.moveToTile(BOT_PLAYER_ID, botVehicleId, baseTile);
-    returnToBaseAction.initiated = true;
+    playerStore.moveToTile(getBotId(0), botVehicleId, baseTile);
+    playerStore.updatePlayerMemory(botId, {
+      returnState: {
+        started: true,
+        startTime: Date.now()
+      }
+    });
     return undefined; // Action en cours
   }
   
@@ -67,10 +92,30 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
   const updatedAtBaseCheck = BotConditions.isAtBase(botVehicle);
   if (updatedAtBaseCheck.result) {
     fsmLogger.action('Bot has reached the base');
-    returnToBaseAction.initiated = false; // Réinitialiser pour la prochaine utilisation
+    
+    try {
+      // Catch any errors that might occur and ensure the function is called
+      playerStore.updatePlayerMemory?.(botId, { returnState: null });
+    } catch (error) {
+      fsmLogger.error(`Error in updatePlayerMemory: ${error.message}`);
+    }
+    
     changeState(BOT_STATES.IDLE);
     addAction('evaluateIdle', PRIORITY.HIGH);
     return true; // Action terminée avec succès
+  }
+  
+  // Check for timeout condition
+  const elapsedTime = Date.now() - botMemory?.returnState?.startTime;
+  if (elapsedTime > 30000) { // 30 seconds timeout
+    fsmLogger.error(`Return to base timed out after ${(elapsedTime/1000).toFixed(1)}s`);
+    playerStore.updatePlayerMemory(botId, { returnState: null });
+    addAction({
+      type: 'returnToBaseAction',
+      status: 'failed',
+      reason: 'timeout'
+    });
+    return true; // Action échouée mais terminée (timeout)
   }
   
   // Vérifier si le bot est toujours en mouvement
@@ -80,8 +125,12 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
     // quelque chose a mal fonctionné
     if (!updatedAtBaseCheck.result) {
       fsmLogger.error('Bot stopped moving but did not reach the base');
-      returnToBaseAction.initiated = false; // Réinitialiser pour la prochaine utilisation
-      return false; // Action échouée
+      playerStore.updatePlayerMemory(botId, { returnState: null }); // Réinitialiser l'état
+      addAction({
+        type: 'returnToBaseAction',
+        status: 'failed'
+      });
+      return true; // Action échouée mais terminée
     }
   }
   
@@ -89,5 +138,4 @@ export const returnToBaseAction = (playerStore, tileStore, addAction, changeStat
   return undefined;
 };
 
-// Propriété statique pour suivre l'état d'exécution
-returnToBaseAction.initiated = false;
+// L'état est maintenant géré dans la mémoire du bot

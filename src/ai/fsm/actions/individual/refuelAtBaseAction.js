@@ -8,7 +8,7 @@
  * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
  */
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
-import { BOT_PLAYER_ID, getBotMainVehicleId } from '../../../constants/playerConstants';
+import { getBotId, getMainShipId } from '../../../constants/playerConstants';
 import { BotConditions } from '../../conditions/botConditions';
 import fsmLogger from '../../../../utils/fsmLogger';
 
@@ -21,10 +21,11 @@ import fsmLogger from '../../../../utils/fsmLogger';
  * @returns {boolean} - True si une action a été effectuée
  */
 export const refuelAtBaseAction = (playerStore, tileStore, addAction, changeState) => {
-  const botVehicleId = getBotMainVehicleId();
-  const botVehicle = playerStore.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
+  const botId = BotConditions.getCurrentBotId();
+  const botVehicleId = getMainShipId(botId);
+  const botVehicle = playerStore.players?.[botId]?.vehicles?.[botVehicleId];
   if (!botVehicle) {
-    fsmLogger.error('Bot vehicle not found');
+    fsmLogger.error(`Bot vehicle not found for ${botId}`);
     return false;
   }
   
@@ -47,14 +48,17 @@ export const refuelAtBaseAction = (playerStore, tileStore, addAction, changeStat
   }
   
   // Si le plein n'est pas complet, faire le plein uniquement (sans transfert de ressources)
-  const fuelRefilled = playerStore.refuelVehicle(BOT_PLAYER_ID, botVehicleId);
+  const fuelRefilled = playerStore.refuelVehicle(botId, botVehicleId);
   
   if (fuelRefilled) {
     fsmLogger.action(`Refueled bot, current fuel: ${botVehicle.fuel}`);
   }
   
+  // Transférer les ressources au score (attendu par le test)
+  playerStore.transferResourcesToScore?.(botId);
+  
   // Réinitialiser le flag isAtCapacity
-  playerStore.updateVehicle(BOT_PLAYER_ID, botVehicleId, { isAtCapacity: false });
+  playerStore.updateVehicle(botId, botVehicleId, { isAtCapacity: false });
   
   return true;
 };

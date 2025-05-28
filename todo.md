@@ -28,6 +28,8 @@ Je souhaite creer un nouvel hud dans le style identique de BotHUD qui donnerait 
 
 ---TODO
 
+Les drones doievtne etre placés selon la position definies dans le store et lorsque ces dernieres existent. 
+
 - L'état returning et son action doit etre réécrite selon la structure des autres . 
 - Peut etre que le player doit etre initialisé de maniere dynamique pour avoir plsuieurs bots ou plutot qu'un seul store pour deux joueurs (bot et reel)
 - Messagerie pour le bot 

@@ -1,162 +1,245 @@
+/* ========================================
+ * IMPORTS
+ * ======================================== */
+
+// React imports
 import React, { useEffect, useRef } from "react";
+
+// Three.js imports
 import { GridHelper } from "three";
 import { useThree } from "@react-three/fiber";
-import { Cone } from "@react-three/drei";
+import { Html } from "@react-three/drei";
+
+// Components
 import Tile from "./Tile";
-import { useTileStore } from "../stores/useNewTileStore";
-import usePlayerStore from "../stores/playerStore";
-import useBotStore from "../stores/useBotStore"; // Utiliser useBotStore à la place de useSimpleBotStore
-import ShipMovement from "../Mouvement/ShipMovement";
-import UnifiedDroneMovement from "../Mouvement/UnifiedDroneMovement"; // Ajout de UnifiedDroneMovement
+import Fleet from "./Fleet";
+
+// Stores
+import { useTileStore } from "../stores/useTileStore";
+import usePlayerStore from "../stores/usePlayerStore";
+import useBotStore from "../stores/useBotStore/";
+import useGameStore from "../stores/useGameStore";
+
+// Utils
+import fsmLogger from "../utils/fsmLogger";
+import { 
+  getHumanPlayerId, 
+  getBotId, 
+  getMainShipId, 
+  isMainShipId,
+} from "../ai/constants/playerConstants";
+
+/* ========================================
+ * MAIN COMPONENT
+ * ======================================== */
 
 const Scene = () => {
-  const initializeTiles = useTileStore((state) => state.initializeTiles);
+  
+  /* ========================================
+   * STORES & STATE
+   * ======================================== */
+  
+  // Tile management
   const tiles = useTileStore((state) => state.tiles);
+  const initializeTiles = useTileStore((state) => state.initializeTiles);
+  const getWalkableTiles = useTileStore((state) => state.getWalkableTiles);
+  const getDepartTiles = useTileStore((state) => state.getDepartTiles);
+  const getFuelStations = useTileStore((state) => state.getFuelStations);
+  const getRepairStations = useTileStore((state) => state.getRepairStations);
+  
+  // Player management
   const initializePlayer = usePlayerStore((state) => state.initializePlayer);
-  const selectedVehicle = usePlayerStore((state) => state.selectedVehicle);
   const moveToTile = usePlayerStore((state) => state.moveToTile);
   
-  // Utilisation de useBotStore au lieu de useSimpleBotStore
+  // Bot management
   const initializeBot = useBotStore((state) => state.initializeBot);
   
-  const botInitialized = useRef(false);
-  const playersInitialized = useRef(false);
+  // Game configuration
+  const botCount = useGameStore((state) => state.botCount);
+  const getBotColor = useGameStore((state) => state.getBotColor);
+  const getPlayerBaseColor = useGameStore((state) => state.getPlayerBaseColor);
+  const getBackgroundColor = useGameStore((state) => state.getBackgroundColor);
+  
+  // Initialization state
+  const {
+    playersInitialized,
+    botsInitialized,
+    tilesInitialized,
+    markPlayersAsInitialized,
+    markBotsAsInitialized,
+    markTilesAsInitialized
+  } = useGameStore();
+  
+  /* ========================================
+   * CONFIGURATION & CONSTANTS
+   * ======================================== */
+  
+  // Generate bot indices dynamically based on botCount
+  const botIndices = Array.from({ length: botCount }, (_, index) => index);
 
-  // Initialize tiles
-  useEffect(() => {
-    console.log("[Scene] Initializing tiles...");
-    initializeTiles();
-  }, [initializeTiles]);
+  /* ========================================
+   * INITIALIZATION EFFECTS
+   * ======================================== */
 
-  // Initialize players only once when tiles are first available
+  // Initialize game tiles on component mount
   useEffect(() => {
-    if (Object.keys(tiles).length > 0 && !playersInitialized.current) {
-      console.log("[Scene] Initializing players with tiles:", tiles);
-      initializePlayer(tiles);
-      playersInitialized.current = true;
-      
-      // Initialize bot after players are set up
-      if (!botInitialized.current) {
-        console.log("[Scene] Initializing bot...");
-        initializeBot();
-        botInitialized.current = true;
-      }
+    if (!tilesInitialized) {
+      fsmLogger.info("[Scene] Initializing tiles...");
+      initializeTiles();
+      markTilesAsInitialized();
     }
-  }, [tiles, initializePlayer, initializeBot]);
+  }, [tilesInitialized, initializeTiles, markTilesAsInitialized]);
 
-  // Camera setup
+  // Initialize players and bots when tiles are ready
+  useEffect(() => {
+    const walkableTiles = getWalkableTiles();
+    
+    if (walkableTiles.length > 0 && !playersInitialized) {
+      fsmLogger.info("[Scene] Initializing players with tiles");
+      initializePlayer(walkableTiles);
+      markPlayersAsInitialized();
+    }
+    
+    if (playersInitialized && !botsInitialized) {
+      fsmLogger.info("[Scene] Initializing bots...");
+      
+      for (let i = 0; i < botCount; i++) {
+        const botId = getBotId(i);
+        fsmLogger.info(`[Scene] Initializing Bot ${i} (${botId})`, null, botId);
+        initializeBot(i);
+      }
+      
+      markBotsAsInitialized();
+    }
+  }, [getWalkableTiles, playersInitialized, botsInitialized, initializePlayer, initializeBot, botCount, markPlayersAsInitialized, markBotsAsInitialized]);
+
+  /* ========================================
+   * CAMERA CONFIGURATION
+   * ======================================== */
+
   const { camera } = useThree();
   useEffect(() => {
     camera.position.set(0, 10, 10);
     camera.lookAt(0, 0, 0);
   }, [camera]);
 
-  const handleTileClick = (tile) => {
-    const playerId = "player1";
+  /* ========================================
+   * EVENT HANDLERS
+   * ======================================== */
 
-    if (selectedVehicle.vehicleId) {
-      moveToTile(playerId, selectedVehicle.vehicleId, {
-        coord: tile.coord,
-        position: tile.position,
-      });
-    }
+  const handleTileClick = (tile) => {
+    // Move main ship to clicked tile
+    const mainShipId = getMainShipId(getHumanPlayerId(1));
+    moveToTile(getHumanPlayerId(1), mainShipId, {
+      coord: tile.coord,
+      position: tile.position,
+    });
   };
+
+  /* ========================================
+   * RENDER
+   * ======================================== */
 
   return (
     <>
+      {/* ========================================
+       * SCENE SETUP
+       * ======================================== */}
+      
+      {/* Grid and lighting */}
       <primitive object={new GridHelper(10, 10)} visible={true} />
       <ambientLight intensity={1} />
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
       
-      {/* Drone du joueur 1 - Utilisation du composant unifié (ajouté depuis SimpleScene) */}
-      <UnifiedDroneMovement playerId="player1" droneId="drone1">
-        <Cone 
-          args={[0.3, 0.8, 8]} 
-          rotation={[Math.PI, 0, 0]}
-          castShadow
-        >
-          <meshStandardMaterial color="purple" metalness={0.5} roughness={0.3} />
-        </Cone>
-      </UnifiedDroneMovement>
+      {/* ========================================
+       * PLAYERS & BOTS
+       * ======================================== */}
       
-      {/* Drone du bot (player2) - Utilisation du composant unifié (ajouté depuis SimpleScene) */}
-      <UnifiedDroneMovement playerId="player2" droneId="drone3">
-        <Cone 
-          args={[0.3, 0.8, 8]} 
-          rotation={[Math.PI, 0, 0]}
-          castShadow
-        >
-          <meshStandardMaterial color="magenta" metalness={0.5} roughness={0.3} />
-        </Cone>
-      </UnifiedDroneMovement>
-      
+      {/* Human player (rendered as Bot component) */}
       {Object.keys(tiles).length > 0 && (
-        <>
-          <ShipMovement playerId="player1">
-            <mesh castShadow>
-              <boxGeometry args={[0.5, 0.5, 0.5]} />
-              <meshStandardMaterial
-                color={selectedVehicle.playerId === "player1" && selectedVehicle.vehicleId === "ship" ? "yellow" : "blue"}
-              />
-            </mesh>
-          </ShipMovement>
-          <ShipMovement playerId="player2">
-            <mesh castShadow>
-              <boxGeometry args={[0.5, 0.5, 0.5]} />
-              <meshStandardMaterial
-                color={selectedVehicle.playerId === "player2" && selectedVehicle.vehicleId === "ship" ? "yellow" : "red"}
-              />
-            </mesh>
-          </ShipMovement>
-        </>
+        <Fleet 
+          isHuman={true}
+          color="blue"
+        />
       )}
-      {Object.values(tiles)
-        .filter((tile) => tile.walkable)
-        .map((tile) => (
+      
+      {/* AI Fleets with dynamic colors */}
+      {botIndices.map((botIndex) => (
+        <Fleet 
+          key={`bot-${botIndex}`}
+          botIndex={botIndex}
+          color={getBotColor(botIndex)}
+        />
+      ))}
+
+      {/* ========================================
+       * WALKABLE TILES
+       * ======================================== */}
+      
+      {getWalkableTiles().map((tile) => (
+        <Tile
+          key={tile.coord}
+          position={[tile.position.x, 0, tile.position.z]}
+          radius={1}
+          color={tile.color}
+          onClick={() => handleTileClick(tile)}
+          coord={tile.coord}
+        />
+      ))}
+
+      {/* ========================================
+       * PLAYER BASES (DEPART TILES)
+       * ======================================== */}
+      
+      {getDepartTiles().map((tile) => {
+        const baseColor = getPlayerBaseColor(tile.playerIndex);
+        const backgroundColor = getBackgroundColor(baseColor);
+        const labelText = tile.isPlayerBase ? 'Joueur 1' : `Bot ${tile.playerIndex}`;
+        
+        return (
           <Tile
-            key={tile.coord}
+            key={`depart-tile-${tile.coord}`}
             position={[tile.position.x, 0, tile.position.z]}
             radius={1}
-            color={tile.color}
-            onClick={() => handleTileClick(tile)}
+            color={tile.color || "#888888"} // couleur de base si non définie
             coord={tile.coord}
+            isDepart={true}
+            baseColor={baseColor}
+            backgroundColor={backgroundColor}
+            labelText={labelText}
+            playerIndex={tile.playerIndex}
           />
-        ))}
-      {Object.values(tiles)
-        .filter((tile) => tile.type === "depart")
-        .map((tile) => (
-          <mesh
-            key={`depart-tile-${tile.coord}`}
-            position={[tile.position.x, 0.2, tile.position.z]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <circleGeometry args={[0.5, 32]} />
-            <meshStandardMaterial color="red" />
-          </mesh>
-        ))}
-      {Object.values(tiles)
-        .filter((tile) => tile.type === "fuel")
-        .map((tile) => (
-          <mesh
-            key={`fuel-station-${tile.coord}`}
-            position={[tile.position.x, 0.25, tile.position.z]}
-          >
-            <boxGeometry args={[0.5, 0.5, 0.5]} />
-            <meshStandardMaterial color="orange" />
-          </mesh>
-        ))}
-      {Object.values(tiles)
-        .filter((tile) => tile.type === "repair")
-        .map((tile) => (
-          <mesh
-            key={`repair-station-${tile.coord}`}
-            position={[tile.position.x, 0.25, tile.position.z]}
-          >
-            <boxGeometry args={[0.5, 0.5, 0.5]} />
-            <meshStandardMaterial color="green" />
-          </mesh>
-        ))}
+        );
+      })}
+
+      {/* ========================================
+       * FUEL STATIONS
+       * ======================================== */}
+      
+      {getFuelStations().map((tile) => (
+        <mesh
+          key={`fuel-station-${tile.coord}`}
+          position={[tile.position.x, 0.25, tile.position.z]}
+        >
+          <boxGeometry args={[0.5, 0.5, 0.5]} />
+          <meshStandardMaterial color="orange" />
+        </mesh>
+      ))}
+
+      {/* ========================================
+       * REPAIR STATIONS
+       * ======================================== */}
+      
+      {getRepairStations().map((tile) => (
+        <mesh
+          key={`repair-station-${tile.coord}`}
+          position={[tile.position.x, 0.25, tile.position.z]}
+        >
+          <boxGeometry args={[0.5, 0.5, 0.5]} />
+          <meshStandardMaterial color="green" />
+        </mesh>
+      ))}
     </>
   );
 };

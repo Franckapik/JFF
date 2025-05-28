@@ -2,8 +2,16 @@
 // Conditions centralisées qui déclenchent des transitions d'état dans la FSM
 
 import { BOT_STATES, PRIORITY, IDLE_EVALUATION } from '../../constants/botConstants';
-import { BOT_PLAYER_ID, getBotMainVehicleId } from '../../constants/playerConstants';
-import usePlayerStore from '../../../stores/playerStore';
+import { 
+  getBotId,
+  getMainShipId, 
+  getDroneId,
+  VEHICLE_TYPES
+} from '../../constants/playerConstants';
+import usePlayerStore from '../../../stores/usePlayerStore';
+import useGameStore from '../../../stores/useGameStore/';
+import useBotStore from '../../../stores/useBotStore/';
+import useDroneState, { DRONE_STATES } from '../../../hooks/useDroneState';
 
 /**
  * Registre des conditions du bot - SYSTÈME CENTRALISÉ
@@ -11,6 +19,13 @@ import usePlayerStore from '../../../stores/playerStore';
  * sont maintenant gérées ici pour éviter la duplication de logique
  */
 export const BotConditions = {
+  // Récupère l'ID du bot actif en fonction du store useBotStore
+  getCurrentBotId: () => {
+    // On utilise le currentBotId du store useBotStore au lieu d'une valeur fixe
+    const botStore = useBotStore.getState();
+    return botStore.currentBotId || getBotId(0); // Fallback sur bot-0 si non défini
+  },
+
   // === CONDITIONS DE SÉCURITÉ (PRIORITÉ LA PLUS HAUTE) ===
   
   /**
@@ -84,7 +99,9 @@ export const BotConditions = {
       
       // Réinitialiser le flag directement
       const playerStore = usePlayerStore.getState();
-      playerStore.updateVehicle('player2', 'ship', { isAtCapacity: false });
+      const botId = BotConditions.getCurrentBotId(); // Utiliser la fonction pour obtenir l'ID du bot actuel
+      const shipId = getMainShipId(botId);
+      playerStore.updateVehicle(botId, shipId, { isAtCapacity: false });
       
       console.log('[BotCondition] Réinitialisation du flag isAtCapacity car le bot est à la base sans ressources');
       isAtCapacity = false;
@@ -106,7 +123,8 @@ export const BotConditions = {
    */
   hasEnoughKnownResources: (minResources = 3) => {
     const playerState = usePlayerStore.getState();
-    const botMemory = playerState.players?.[BOT_PLAYER_ID]?.memory;
+    const botId = BotConditions.getCurrentBotId(); // ✅ Correct
+    const botMemory = playerState.players?.[botId]?.memory;
     
     const hasEnoughResources = botMemory?.knownResources && 
                                botMemory.knownResources.length >= minResources;
@@ -124,7 +142,8 @@ export const BotConditions = {
    */
   hasDiscoveredResources: (currentState) => {
     const playerState = usePlayerStore.getState();
-    const botMemory = playerState.players?.[BOT_PLAYER_ID]?.memory;
+    const botId = BotConditions.getCurrentBotId(); // ✅ Correct
+    const botMemory = playerState.players?.[botId]?.memory;
     
     // Vérifier s'il y a au moins 3 ressources connues
     const hasEnoughResources = botMemory && 
@@ -134,18 +153,19 @@ export const BotConditions = {
     // Vérifier s'il y a une nouvelle découverte de ressource
     const hasNewDiscovery = botMemory?.hasNewResourceDiscovery === true;
     
-    // Vérifier si le drone est revenu au vaisseau après une exploration
-    const droneReturnedToShip = botMemory?.droneReturnedToShip === true;
+    // Use drone state machine to check if drone has returned
+    const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
+    const droneState = useDroneState.getState();
+    const isDroneDocked = droneState.isDroneDocked(botDroneId);
     
     // On doit avoir assez de ressources ET soit une nouvelle découverte, soit le drone de retour
-    const shouldCollect = hasEnoughResources && (hasNewDiscovery || droneReturnedToShip);
+    const shouldCollect = hasEnoughResources && (hasNewDiscovery || isDroneDocked);
     
     // Si la condition est remplie, réinitialiser les flags dans la mémoire
     if (shouldCollect) {
-      // Réinitialiser les flags dans la mémoire
-      usePlayerStore.getState().updatePlayerMemory(BOT_PLAYER_ID, {
-        hasNewResourceDiscovery: false,
-        droneReturnedToShip: false
+      // Only reset discovery flag, drone state is managed by the state machine
+      usePlayerStore.getState().updatePlayerMemory(botId, {
+        hasNewResourceDiscovery: false
       });
       
       // Si nous sommes dans un état actif (non-IDLE), retourner à IDLE pour réévaluation
@@ -179,7 +199,8 @@ export const BotConditions = {
    */
   allKnownResourcesCollected: () => {
     const playerState = usePlayerStore.getState();
-    const botMemory = playerState.players?.[BOT_PLAYER_ID]?.memory;
+    const botId = BotConditions.getCurrentBotId(); // ✅ Correct
+    const botMemory = playerState.players?.[botId]?.memory;
     
     // Si le bot n'a pas de mémoire ou pas de ressources connues
     const noResourcesToCollect = !botMemory || 
@@ -205,56 +226,105 @@ export const BotConditions = {
     if (!botVehicle) return { result: false };
     
     const isAtBase = botVehicle.coord === botVehicle.startCoord;
+    // Ne déclencher le ravitaillement que si le carburant n'est pas déjà plein
+    const needsRefuel = isAtBase && botVehicle.fuel < 100;
+    
     return {
       result: isAtBase,
       priority: IDLE_EVALUATION.SAFETY,
-      action: isAtBase ? { type: 'refuel', priority: PRIORITY.MEDIUM } : null
+      // Remove automatic refuel action to prevent refueling loop
+      action: null
     };
   },
   
   /**
+   * Vérifie si des ressources sont disponibles dans la mémoire du bot
+   * @returns {Object} - Résultat avec ressources trouvées
+   */
+  hasResourcesInMemory: () => {
+    const playerState = usePlayerStore.getState();
+    const botId = BotConditions.getCurrentBotId();
+    const botMemory = playerState.players?.[botId]?.memory;
+    
+    const hasResources = botMemory?.knownResources && botMemory.knownResources.length > 0;
+    
+    return {
+      result: hasResources,
+      priority: IDLE_EVALUATION.EFFICIENCY
+    };
+  },
+  
+  /**
+   * Vérifie si des dangers sont connus dans la mémoire du bot
+   * @returns {Object} - Résultat avec dangers trouvés
+   */
+  hasKnownDangers: () => {
+    const playerState = usePlayerStore.getState();
+    const botId = BotConditions.getCurrentBotId();
+    const botMemory = playerState.players?.[botId]?.memory;
+    
+    const hasDangers = botMemory?.knownHazards && botMemory.knownHazards.length > 0;
+    
+    return {
+      result: hasDangers,
+      priority: IDLE_EVALUATION.DANGER
+    };
+  },
+
+  /**
+   * Marque une ressource comme collectée dans la mémoire du bot
+   * @param {string} resourceId - Identifiant de la ressource
+   */
+  markResourceAsCollected: (resourceId) => {
+    const botId = BotConditions.getCurrentBotId();
+    usePlayerStore.getState().updatePlayerMemory(botId, {
+      collectedResources: [...(usePlayerStore.getState().players[botId]?.memory?.collectedResources || []), resourceId],
+    });
+  },
+
+  /**
+   * Vérifie si une tuile a déjà été explorée
+   * @param {string} tileId - Identifiant de la tuile
+   * @returns {Object} - Résultat avec tuile déjà explorée ou non
+   */
+  isTileExplored: (tileId) => {
+    const playerState = usePlayerStore.getState();
+    const botId = BotConditions.getCurrentBotId();
+    const botMemory = playerState.players?.[botId]?.memory;
+    
+    const isExplored = botMemory?.exploredTiles && botMemory.exploredTiles.includes(tileId);
+    
+    return {
+      result: isExplored
+    };
+  },
+
+  /**
    * Vérifie si le drone est au même endroit que le vaisseau
-   * @param {Object} playerStore - Le store du joueur pour obtenir les véhicules
    * @returns {Object} - Résultat avec drone et vaisseau au même endroit
    */
   isDroneAtShip: () => {
-    const playerState = usePlayerStore.getState();
-    const botVehicleId = getBotMainVehicleId();
-    const botVehicle = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
+    const botId = BotConditions.getCurrentBotId();
+    const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
+    const droneState = useDroneState.getState();
     
-    // Calculer l'ID du premier drone du bot basé sur le player ID
-    const playerNum = BOT_PLAYER_ID.slice(-1); // Extraire le numéro du joueur ('player2' -> '2')
-    const droneStartIdx = (parseInt(playerNum) - 1) * 2 + 1; // Calcule l'index de départ des drones
-    const botDroneId = `drone${droneStartIdx}`;
-    
-    const botDrone = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botDroneId];
-    
-    if (!botVehicle || !botDrone) return { result: false };
-    
-    const droneAtShip = botDrone.coord === botVehicle.coord;
     return {
-      result: droneAtShip
+      result: droneState.isDroneDocked(botDroneId)
     };
   },
   
   /**
    * Vérifie si le drone est en mouvement
-   * @returns {Object} - Résultat de l'évaluation de la condition
+   * @returns {Object} - Résultat avec état de mouvement du drone
    */
   isDroneMoving: () => {
-    const playerState = usePlayerStore.getState();
-    
-    // Calculer l'ID du premier drone du bot basé sur le player ID
-    const playerNum = BOT_PLAYER_ID.slice(-1); // Extraire le numéro du joueur ('player2' -> '2')
-    const droneStartIdx = (parseInt(playerNum) - 1) * 2 + 1; // Calcule l'index de départ des drones
-    const botDroneId = `drone${droneStartIdx}`;
-    
-    const botDrone = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botDroneId];
-    
-    if (!botDrone) return { result: false };
+    const botId = BotConditions.getCurrentBotId();
+    const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
+    const droneState = useDroneState.getState();
     
     return {
-      result: botDrone.isMoving === true
+      result: droneState.isDroneInState(botDroneId, DRONE_STATES.MOVING_TO_TARGET) ||
+              droneState.isDroneInState(botDroneId, DRONE_STATES.RETURNING_TO_SHIP)
     };
   },
   
@@ -264,8 +334,9 @@ export const BotConditions = {
    */
   isShipMoving: () => {
     const playerState = usePlayerStore.getState();
-    const botVehicleId = getBotMainVehicleId();
-    const botVehicle = playerState.players?.[BOT_PLAYER_ID]?.vehicles?.[botVehicleId];
+    const botId = BotConditions.getCurrentBotId();
+    const botVehicleId = getMainShipId(botId);
+    const botVehicle = playerState.players?.[botId]?.vehicles?.[botVehicleId];
     
     if (!botVehicle) return { result: false };
     
@@ -363,15 +434,27 @@ export const BotConditions = {
       }
     }
     
-    // 2. Si déjà à la base, priorité au ravitaillement
+    // 2. Si déjà à la base, priorité au ravitaillement si nécessaire
     const atBase = BotConditions.isAtBase(botVehicle);
+    const fullyRefueled = BotConditions.isFullyRefueled(botVehicle);
+    
     if (atBase.result) {
-      if (!BotConditions.isFullyRefueled(botVehicle).result) {
+      // Si besoin de ravitaillement (seulement si le carburant n'est pas plein)
+      if (!fullyRefueled.result && botVehicle.fuel < 100) {
         return {
           result: true,
           state: BOT_STATES.IDLE,
           action: { type: 'refuel', priority: PRIORITY.HIGH },
           reason: "refueling"
+        };
+      } 
+      // Si plein de carburant et à la base, on peut passer à l'exploration
+      else if (currentState === BOT_STATES.IDLE) {
+        return {
+          result: true,
+          state: BOT_STATES.EXPLORING,
+          action: { type: 'exploreDrone', priority: PRIORITY.MEDIUM },
+          reason: "starting_exploration"
         };
       }
     }
@@ -430,7 +513,8 @@ export const BotConditions = {
         // Vérifier si l'exploration est terminée (drone de retour)
         const droneAtShip = BotConditions.isDroneAtShip();
         const playerState = usePlayerStore.getState();
-        const hasExplored = playerState.players?.[BOT_PLAYER_ID]?.memory?.explorationCount > 0;
+        const botId = BotConditions.getCurrentBotId();
+        const hasExplored = playerState.players?.[botId]?.memory?.explorationCount > 0;
         
         if (droneAtShip.result && hasExplored) {
           return {
@@ -471,6 +555,111 @@ export const BotConditions = {
     }
     
     // Aucune transition à effectuer
+    return { result: false };
+  },
+
+  /**
+   * Évalue les conditions depuis l'état IDLE
+   * @returns {Object} - Résultat de l'évaluation avec l'état cible et l'action à effectuer
+   */
+  evaluateFromIdle: () => {
+    const playerState = usePlayerStore.getState();
+    const botId = BotConditions.getCurrentBotId();
+    const botVehicleId = getMainShipId(botId);
+    const botVehicle = playerState.players?.[botId]?.vehicles?.[botVehicleId];
+    
+    if (!botVehicle) return { result: false };
+    
+    // Récupérer l'état du bot
+    const canProceed = () => {
+      // Vérifier s'il y a des ressources à collecter
+      const resourcesToCollect = playerState.players[botId]?.memory?.knownResources || [];
+      const hasResources = resourcesToCollect.length > 0;
+      
+      // Vérifier si le drone a terminé son exploration et est revenu
+      const droneState = useDroneState.getState();
+      const botDroneId = getDroneId(botId, VEHICLE_TYPES.EXPLORER_DRONE);
+      const droneReturned = droneState.isDroneDocked(botDroneId);
+      
+      // On peut procéder si on a des ressources à collecter OU si le drone est revenu
+      return hasResources || droneReturned;
+    };
+    
+    // Si le drone est en mouvement, on attend
+    const droneMoving = BotConditions.isDroneMoving();
+    if (droneMoving.result) {
+      return { result: false };
+    }
+    
+    // Si le vaisseau est en mouvement, on attend
+    const shipMoving = BotConditions.isShipMoving();
+    if (shipMoving.result) {
+      return { result: false };
+    }
+    
+    // Vérifier si le bot est à la base
+    const atBase = BotConditions.isAtBase(botVehicle);
+    
+    // Si on n'est pas à la base, vérifier si on doit retourner
+    if (!atBase.result) {
+      const returnToBase = BotConditions.shouldReturnToBase(botVehicle);
+      if (returnToBase.result) {
+        return {
+          result: true,
+          state: BOT_STATES.RETURNING,
+          action: { type: 'returnToBase', priority: PRIORITY.HIGH },
+          reason: "return_to_base"
+        };
+      }
+    }
+    
+    // Si on est à la base et qu'on a besoin de ravitaillement (fuel < 100)
+    if (atBase.result && botVehicle.fuel < 100) {
+      return {
+        result: true,
+        action: { type: 'refuel', priority: PRIORITY.HIGH },
+        reason: "need_refuel"
+      };
+    }
+    
+    // Si on est à la base et le carburant est plein, vérifier si on a des ressources
+    // connues à collecter
+    const hasEnoughResources = BotConditions.hasEnoughKnownResources();
+    const fullyRefueled = botVehicle.fuel >= 100;
+    
+    if (atBase.result && fullyRefueled) {
+      // Si on a des ressources connues, on passe à la collecte
+      if (hasEnoughResources.result) {
+        return {
+          result: true,
+          state: BOT_STATES.COLLECTING,
+          action: { type: 'moveToResource', priority: PRIORITY.HIGH },
+          reason: "collect_known_resources"
+        };
+      }
+      // Sinon on explore pour trouver des ressources
+      else {
+        return {
+          result: true,
+          state: BOT_STATES.EXPLORING,
+          action: { type: 'exploreDrone', priority: PRIORITY.MEDIUM },
+          reason: "start_exploring"
+        };
+      }
+    }
+    
+    // Si aucune condition n'est satisfaite mais que nous sommes à la base avec carburant plein,
+    // démarrer l'exploration par défaut pour éviter de rester bloqué
+    if (atBase.result && botVehicle.fuel >= 100) {
+      return {
+        result: true,
+        state: BOT_STATES.EXPLORING,
+        action: { type: 'exploreDrone', priority: PRIORITY.MEDIUM },
+        reason: "default_exploration"
+      };
+    }
+    
+    // Aucune action nécessaire pour l'instant
     return { result: false };
   }
 };

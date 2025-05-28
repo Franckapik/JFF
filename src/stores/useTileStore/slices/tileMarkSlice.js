@@ -1,0 +1,62 @@
+/**
+ * =========================================================================
+ * TILE MARK SLICE
+ * =========================================================================
+ * 
+ * Ce slice gère le marquage et le suivi de l'état d'exploration des tuiles :
+ * - Marquage des tuiles comme explorées
+ * - Suivi du statut d'exploration pour la logique de jeu
+ * - Gestion des états de visite et de découverte
+ * - Support pour la logique d'exploration des bots et joueurs
+ * 
+ * États de marquage gérés :
+ * - explored : indique si une tuile a été visitée/explorée
+ * - Extensible pour d'autres types de marquage (visited, scanned, etc.)
+ * 
+ * Utilisé par :
+ * - Logique d'exploration automatique des bots
+ * - Système de brouillard de guerre
+ * - Calculs de territoire et de contrôle
+ */
+
+// =========================================================================
+// SLICE PRINCIPAL
+// =========================================================================
+
+const createTileMarkSlice = (set, get) => {
+  return {
+
+    // =====================================================================
+    // ACTIONS PUBLIQUES - MARQUAGE D'EXPLORATION
+    // =====================================================================
+
+    /**
+     * Marque une tuile comme explorée
+     * 
+     * Cette fonction :
+     * 1. Vérifie que la tuile existe dans l'état global
+     * 2. Met à jour la propriété 'explored' à true
+     * 3. Préserve toutes les autres propriétés de la tuile
+     * 
+     * Utilisé principalement par :
+     * - Les systèmes de mouvement des véhicules
+     * - La logique d'exploration automatique des bots
+     * - Les mécaniques de découverte de territoire
+     * 
+     * @param {string} coord - Coordonnée de la tuile à marquer comme explorée (format "x,y")
+     */
+    markTileAsExplored: (coord) => {
+      set((state) => ({
+        tiles: {
+          ...state.tiles,
+          [coord]: {
+            ...state.tiles[coord],
+            explored: true,
+          },
+        },
+      }));
+    },
+  };
+};
+
+export default createTileMarkSlice;

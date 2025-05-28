@@ -4,8 +4,9 @@ import { useTileStore } from "../store/useTileStore"; // Import Zustand store
 import { Vector3, Euler } from "three";
 import useMessageManager from "../hooks/useMessageManager"; // Import the custom hook
 import fsmLogger from "../utils/fsmLogger"; // Import the fsmLogger
+import { getHumanPlayerId } from "../ai/constants/playerConstants"; // Import player constants
 
-const RandomMovement = ({ initialPosition, children }) => {
+const RandomMovement = ({ initialPosition, children, playerId = getHumanPlayerId(1) }) => {
   const currentPosition = useRef(new Vector3(initialPosition.x, initialPosition.y, initialPosition.z));
   const targetPosition = useRef(new Vector3(initialPosition.x, initialPosition.y, initialPosition.z));
   const previousTileCoord = useRef(null); // Track the previous tile's coord
@@ -37,7 +38,7 @@ const RandomMovement = ({ initialPosition, children }) => {
       // Set the first tile position if not already set
       if (!firstTilePosition) {
         setFirstTilePosition(currentTile.position);
-        fsmLogger.mouvement("[RandomMovement] Setting first tile position:", currentTile.position);
+        fsmLogger.mouvement("[RandomMovement] Setting first tile position:", currentTile.position, playerId);
       }
 
       // Update the start marker to the current tile's position
@@ -54,7 +55,7 @@ const RandomMovement = ({ initialPosition, children }) => {
         previousTileCoord.current = currentTile.coord; // Update the previous tile's coord
         targetPosition.current.set(randomNeighbor.position.x, randomNeighbor.position.y, randomNeighbor.position.z);
         
-        fsmLogger.mouvement("[RandomMovement] Moving to new target:", randomNeighbor.coord);
+        fsmLogger.mouvement("[RandomMovement] Moving to new target:", randomNeighbor.coord, playerId);
 
         // Update the end marker to the target tile's position
         setEndMarker(randomNeighbor.position);
@@ -80,10 +81,10 @@ const RandomMovement = ({ initialPosition, children }) => {
             break;
         } */
       } else {
-        fsmLogger.mouvement("[RandomMovement] No available neighbors to move to");
+        fsmLogger.mouvement("[RandomMovement] No available neighbors to move to", null, playerId);
       }
     } else {
-      fsmLogger.mouvement("[RandomMovement] Unable to find current tile position");
+      fsmLogger.mouvement("[RandomMovement] Unable to find current tile position", null, playerId);
     }
   };
 
