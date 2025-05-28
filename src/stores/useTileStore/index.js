@@ -1,24 +1,72 @@
 /**
- * Store principal pour la gestion des tuiles
- * Combinaison de tous les slices avec leurs responsabilités séparées
+ * =========================================================================
+ * TILE STORE - Store principal pour la gestion des tuiles
+ * =========================================================================
+ * 
+ * Ce store combine tous les slices spécialisés pour la gestion complète des tuiles :
+ * - tileBaseSlice : initialisation, CRUD de base, gestion du hover
+ * - tileResourceSlice : collecte, déduction et analyse des ressources
+ * - tileCalculationSlice : calculs de distance et pathfinding
+ * - tileMarkSlice : marquage d'exploration et statuts
+ * - tileFilterSlice : filtrage, recherche et sélection avancée
+ * 
+ * Architecture modulaire permettant :
+ * - Séparation claire des responsabilités
+ * - Composition flexible des fonctionnalités
+ * - Maintenabilité et extensibilité optimales
+ * - Performance et réutilisabilité du code
+ * 
+ * Utilisation :
+ * ```javascript
+ * import { useTileStore } from './stores/useTileStore';
+ * 
+ * const { tiles, initializeTiles, calculateDistance, markTileAsExplored } = useTileStore();
+ * ```
  */
+
+// =========================================================================
+// IMPORTS
+// =========================================================================
 import { create } from 'zustand';
 
-// Import des slices
+// Import des slices spécialisés
 import createTileBaseSlice from './slices/tileBaseSlice';
-import createTileSearchSlice from './slices/tileSearchSlice';
 import createTileResourceSlice from './slices/tileResourceSlice';
-import createTileExplorationSlice from './slices/tileExplorationSlice';
 import createTileCalculationSlice from './slices/tileCalculationSlice';
+import createTileMarkSlice from './slices/tileMarkSlice';
+import createTileFilterSlice from './slices/tileFilterSlice';
+
+// =========================================================================
+// STORE PRINCIPAL
+// =========================================================================
 
 /**
- * Crée un store Zustand en combinant tous les slices
+ * Store Zustand combinant tous les slices de tuiles
+ * 
+ * Composition des slices dans l'ordre logique :
+ * 1. Base : fondations et opérations CRUD
+ * 2. Resources : gestion des ressources et collecte
+ * 3. Calculation : calculs spatiaux et pathfinding
+ * 4. Mark : marquage et exploration
+ * 5. Filter : filtrage et recherche avancée
  */
 export const useTileStore = create((set, get) => ({
-  // Combine tous les slices pour former le store complet
+  // =========================================================================
+  // COMPOSITION DES SLICES
+  // =========================================================================
+  
+  // Slice de base : gestion fondamentale des tuiles
   ...createTileBaseSlice(set, get),
-  ...createTileSearchSlice(set, get),
+  
+  // Slice des ressources : collecte et analyse
   ...createTileResourceSlice(set, get),
-  ...createTileExplorationSlice(set, get),
+  
+  // Slice des calculs : distances et pathfinding
   ...createTileCalculationSlice(set, get),
+  
+  // Slice de marquage : exploration et statuts
+  ...createTileMarkSlice(set, get),
+  
+  // Slice de filtrage : recherche et sélection
+  ...createTileFilterSlice(set, get),
 }));

@@ -1,13 +1,26 @@
+/* ========================================
+ * IMPORTS
+ * ======================================== */
+
+// React imports
 import React, { useEffect, useRef } from "react";
+
+// Three.js imports
 import { GridHelper } from "three";
 import { useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
+
+// Components
 import Tile from "./Tile";
 import Bot from "./Bot";
+
+// Stores
 import { useTileStore } from "../stores/useTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
 import useBotStore from "../stores/useBotStore/";
 import useGameStore from "../stores/useGameStore";
+
+// Utils
 import fsmLogger from "../utils/fsmLogger";
 import { 
   getHumanPlayerId, 
@@ -16,65 +29,105 @@ import {
   isMainShipId,
 } from "../ai/constants/playerConstants";
 
+/* ========================================
+ * MAIN COMPONENT
+ * ======================================== */
+
 const Scene = () => {
+  
+  /* ========================================
+   * STORES & STATE
+   * ======================================== */
+  
+  // Tile management
   const initializeTiles = useTileStore((state) => state.initializeTiles);
-  const tiles = useTileStore((state) => state.tiles);
+  const getWalkableTiles = useTileStore((state) => state.getWalkableTiles);
+  const getDepartTiles = useTileStore((state) => state.getDepartTiles);
+  const getFuelStations = useTileStore((state) => state.getFuelStations);
+  const getRepairStations = useTileStore((state) => state.getRepairStations);
+  
+  // Player management
   const initializePlayer = usePlayerStore((state) => state.initializePlayer);
   const moveToTile = usePlayerStore((state) => state.moveToTile);
   
-  // Utilisation de useBotStore au lieu de useSimpleBotStore
+  // Bot management
   const initializeBot = useBotStore((state) => state.initializeBot);
   
-  // Récupérer le nombre de bots depuis useGameStore
+  // Game configuration
   const botCount = useGameStore((state) => state.botCount);
+  const getBotColor = useGameStore((state) => state.getBotColor);
+  const getPlayerBaseColor = useGameStore((state) => state.getPlayerBaseColor);
+  const getBackgroundColor = useGameStore((state) => state.getBackgroundColor);
   
-  // Définir un tableau des indices de bots dynamiquement en fonction de botCount
+  // Initialization state
+  const {
+    playersInitialized,
+    botsInitialized,
+    tilesInitialized,
+    markPlayersAsInitialized,
+    markBotsAsInitialized,
+    markTilesAsInitialized
+  } = useGameStore();
+  
+  /* ========================================
+   * CONFIGURATION & CONSTANTS
+   * ======================================== */
+  
+  // Generate bot indices dynamically based on botCount
   const botIndices = Array.from({ length: botCount }, (_, index) => index);
-  
-  // Définir un tableau de couleurs pour les différents bots
-  const botColors = ["red", "orange", "green", "purple", "teal", "brown", "magenta", "cyan"];
-  
-  const botInitialized = useRef(false);
-  const playersInitialized = useRef(false);
 
-  // Initialize tiles
-  useEffect(() => {
-    fsmLogger.info("[Scene] Initializing tiles...");
-    initializeTiles();
-  }, [initializeTiles]);
+  /* ========================================
+   * INITIALIZATION EFFECTS
+   * ======================================== */
 
-  // Initialize players only once when tiles are first available
+  // Initialize game tiles on component mount
   useEffect(() => {
-    if (Object.keys(tiles).length > 0 && !playersInitialized.current) {
-      fsmLogger.info("[Scene] Initializing players with tiles:", tiles);
-      initializePlayer(tiles);
-      playersInitialized.current = true;
-      
-      // Initialize bots after players are set up
-      if (!botInitialized.current) {
-        fsmLogger.info("[Scene] Initializing bots...");
-        
-        // Initialiser tous les bots dynamiquement en fonction de botCount
-        for (let i = 0; i < botCount; i++) {
-          const botId = getBotId(i); // Utiliser la nouvelle nomenclature
-          fsmLogger.info(`[Scene] Initializing Bot ${i} (${botId})`, null, botId);
-          initializeBot(i);
-        }
-        
-        botInitialized.current = true;
-      }
+    if (!tilesInitialized) {
+      fsmLogger.info("[Scene] Initializing tiles...");
+      initializeTiles();
+      markTilesAsInitialized();
     }
-  }, [tiles, initializePlayer, initializeBot, botCount]);
+  }, [tilesInitialized, initializeTiles, markTilesAsInitialized]);
 
-  // Camera setup
+  // Initialize players and bots when tiles are ready
+  useEffect(() => {
+    const walkableTiles = getWalkableTiles();
+    
+    if (walkableTiles.length > 0 && !playersInitialized) {
+      fsmLogger.info("[Scene] Initializing players with tiles");
+      initializePlayer({ tiles: walkableTiles });
+      markPlayersAsInitialized();
+    }
+    
+    if (playersInitialized && !botsInitialized) {
+      fsmLogger.info("[Scene] Initializing bots...");
+      
+      for (let i = 0; i < botCount; i++) {
+        const botId = getBotId(i);
+        fsmLogger.info(`[Scene] Initializing Bot ${i} (${botId})`, null, botId);
+        initializeBot(i);
+      }
+      
+      markBotsAsInitialized();
+    }
+  }, [getWalkableTiles, playersInitialized, botsInitialized, initializePlayer, initializeBot, botCount, markPlayersAsInitialized, markBotsAsInitialized]);
+
+  /* ========================================
+   * CAMERA CONFIGURATION
+   * ======================================== */
+
   const { camera } = useThree();
   useEffect(() => {
     camera.position.set(0, 10, 10);
     camera.lookAt(0, 0, 0);
   }, [camera]);
 
+  /* ========================================
+   * EVENT HANDLERS
+   * ======================================== */
+
   const handleTileClick = (tile) => {
-    // Use the main ship ID directly for movement
+    // Move main ship to clicked tile
     const mainShipId = getMainShipId(getHumanPlayerId(1));
     moveToTile(getHumanPlayerId(1), mainShipId, {
       coord: tile.coord,
@@ -82,14 +135,27 @@ const Scene = () => {
     });
   };
 
+  /* ========================================
+   * RENDER
+   * ======================================== */
+
   return (
     <>
+      {/* ========================================
+       * SCENE SETUP
+       * ======================================== */}
+      
+      {/* Grid and lighting */}
       <primitive object={new GridHelper(10, 10)} visible={true} />
       <ambientLight intensity={1} />
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
       
-      {/* Joueur humain utilisant le composant Bot */}
+      {/* ========================================
+       * PLAYERS & BOTS
+       * ======================================== */}
+      
+      {/* Human player (rendered as Bot component) */}
       {Object.keys(tiles).length > 0 && (
         <Bot 
           isHuman={true}
@@ -97,122 +163,102 @@ const Scene = () => {
         />
       )}
       
-      {/* Rendu des bots en utilisant le composant réutilisable et une boucle */}
-      {botIndices.map((botIndex) => {        
-        // Utiliser la couleur correspondant à l'index du bot (avec modulo pour gérer plus de bots que de couleurs)
-        const colorIndex = botIndex % botColors.length;
+      {/* AI Bots with dynamic colors */}
+      {botIndices.map((botIndex) => (
+        <Bot 
+          key={`bot-${botIndex}`}
+          botIndex={botIndex}
+          color={getBotColor(botIndex)}
+        />
+      ))}
+
+      {/* ========================================
+       * WALKABLE TILES
+       * ======================================== */}
+      
+      {getWalkableTiles().map((tile) => (
+        <Tile
+          key={tile.coord}
+          position={[tile.position.x, 0, tile.position.z]}
+          radius={1}
+          color={tile.color}
+          onClick={() => handleTileClick(tile)}
+          coord={tile.coord}
+        />
+      ))}
+
+      {/* ========================================
+       * PLAYER BASES (DEPART TILES)
+       * ======================================== */}
+      
+      {getDepartTiles().map((tile) => {
+        const baseColor = getPlayerBaseColor(tile.playerIndex);
         
         return (
-          <Bot 
-            key={`bot-${botIndex}`}
-            botIndex={botIndex}
-            color={botColors[colorIndex]}
-          />
+          <React.Fragment key={`depart-tile-${tile.coord}`}>
+            {/* Base platform */}
+            <mesh
+              position={[tile.position.x, 0.2, tile.position.z]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <circleGeometry args={[0.5, 32]} />
+              <meshStandardMaterial color={baseColor} />
+            </mesh>
+            
+            {/* Player identifier label */}
+            <Html
+              position={[tile.position.x, 0.5, tile.position.z]}
+              center
+              distanceFactor={15}
+            >
+              <div style={{
+                background: getBackgroundColor(baseColor),
+                color: 'white',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                userSelect: 'none',
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap',
+                textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+              }}>
+                {tile.isPlayerBase ? 'Joueur 1' : `Bot ${tile.playerIndex}`}
+              </div>
+            </Html>
+          </React.Fragment>
         );
       })}
 
-      {/* Commentaire à garder pour future référence */}
-      {/* Pour l'instant nous ne rendons que les drones d'exploration 
-          Les autres drones seront ajoutés quand ils seront activés */}
+      {/* ========================================
+       * FUEL STATIONS
+       * ======================================== */}
       
-      {Object.values(tiles)
-        .filter((tile) => tile.walkable)
-        .map((tile) => (
-          <Tile
-            key={tile.coord}
-            position={[tile.position.x, 0, tile.position.z]}
-            radius={1}
-            color={tile.color}
-            onClick={() => handleTileClick(tile)}
-            coord={tile.coord}
-          />
-        ))}
-      {Object.values(tiles)
-        .filter((tile) => tile.type === "depart")
-        .map((tile, index) => {
-          // Déterminer à quel joueur appartient cette base
-          // Les bases sont attribuées selon leur index dans le tableau des tuiles "depart"
-          const playerId = index === 0 ? getHumanPlayerId(1) : getBotId(index - 1);
-          const isPlayerBase = playerId === getHumanPlayerId(1);
-          
-          // Utiliser la même couleur que les bots pour les bases
-          const baseColor = isPlayerBase ? "blue" : 
-            botColors[(index - 1) % botColors.length];
-          
-          return (
-            <React.Fragment key={`depart-tile-${tile.coord}`}>
-              <mesh
-                position={[tile.position.x, 0.2, tile.position.z]}
-                rotation={[-Math.PI / 2, 0, 0]}
-              >
-                <circleGeometry args={[0.5, 32]} />
-                <meshStandardMaterial color={baseColor} />
-              </mesh>
-              
-              {/* Identifiant du joueur au-dessus de sa base */}
-              <Html
-                position={[tile.position.x, 0.5, tile.position.z]}
-                center
-                distanceFactor={15}
-              >
-                <div style={{
-                  background: isPlayerBase ? 'rgba(0,50,200,0.8)' : getBackgroundColor(baseColor),
-                  color: 'white',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  userSelect: 'none',
-                  pointerEvents: 'none',
-                  whiteSpace: 'nowrap',
-                  textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
-                }}>
-                  {isPlayerBase ? 'Joueur 1' : `Bot ${index}`}
-                </div>
-              </Html>
-            </React.Fragment>
-          );
-        })}
-      {Object.values(tiles)
-        .filter((tile) => tile.type === "fuel")
-        .map((tile) => (
-          <mesh
-            key={`fuel-station-${tile.coord}`}
-            position={[tile.position.x, 0.25, tile.position.z]}
-          >
-            <boxGeometry args={[0.5, 0.5, 0.5]} />
-            <meshStandardMaterial color="orange" />
-          </mesh>
-        ))}
-      {Object.values(tiles)
-        .filter((tile) => tile.type === "repair")
-        .map((tile) => (
-          <mesh
-            key={`repair-station-${tile.coord}`}
-            position={[tile.position.x, 0.25, tile.position.z]}
-          >
-            <boxGeometry args={[0.5, 0.5, 0.5]} />
-            <meshStandardMaterial color="green" />
-          </mesh>
-        ))}
+      {getFuelStations().map((tile) => (
+        <mesh
+          key={`fuel-station-${tile.coord}`}
+          position={[tile.position.x, 0.25, tile.position.z]}
+        >
+          <boxGeometry args={[0.5, 0.5, 0.5]} />
+          <meshStandardMaterial color="orange" />
+        </mesh>
+      ))}
+
+      {/* ========================================
+       * REPAIR STATIONS
+       * ======================================== */}
+      
+      {getRepairStations().map((tile) => (
+        <mesh
+          key={`repair-station-${tile.coord}`}
+          position={[tile.position.x, 0.25, tile.position.z]}
+        >
+          <boxGeometry args={[0.5, 0.5, 0.5]} />
+          <meshStandardMaterial color="green" />
+        </mesh>
+      ))}
     </>
   );
-};
-
-// Fonction utilitaire pour convertir une couleur en arrière-plan RGBA
-const getBackgroundColor = (color) => {
-  const colorMap = {
-    'red': 'rgba(200,50,0,0.8)',
-    'orange': 'rgba(255,140,0,0.8)',
-    'green': 'rgba(0,150,50,0.8)',
-    'purple': 'rgba(100,0,150,0.8)',
-    'teal': 'rgba(0,128,128,0.8)',
-    'brown': 'rgba(139,69,19,0.8)',
-    'magenta': 'rgba(255,0,255,0.8)',
-    'cyan': 'rgba(0,180,180,0.8)'
-  };
-  
-  return colorMap[color] || 'rgba(100,100,100,0.8)';
 };
 
 export default Scene;

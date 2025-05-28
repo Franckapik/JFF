@@ -1,9 +1,10 @@
 /**
- * Slice pour la configuration des joueurs
+ * Slice pour la configuration du nombre de joueurs
  * Gère le nombre de joueurs humains et de bots
  */
+import fsmLogger from '../../../utils/fsmLogger';
 
-const createPlayerConfigSlice = (set) => ({
+const createPlayerCountSlice = (set) => ({
   // Configuration des joueurs
   playerCount: 1, // Nombre de joueurs humains
   botCount: 1,    // Nombre de bots
@@ -12,6 +13,12 @@ const createPlayerConfigSlice = (set) => ({
   setPlayerCount: (count) => {
     // Assurer que le nombre de joueurs est valide (minimum 1)
     const validCount = Math.max(1, count);
+    
+    fsmLogger.game(`Player count updated`, { 
+      requested: count, 
+      actual: validCount,
+      type: 'human_players'
+    });
     
     set({ 
       playerCount: validCount,
@@ -26,8 +33,14 @@ const createPlayerConfigSlice = (set) => ({
     // Assurer que le nombre de bots est valide (minimum 0)
     const validCount = Math.max(0, count);
     
+    fsmLogger.game(`Bot count updated`, { 
+      requested: count, 
+      actual: validCount,
+      type: 'bot_players'
+    });
+    
     set({ botCount: validCount });
   },
 });
 
-export default createPlayerConfigSlice;
+export default createPlayerCountSlice;
