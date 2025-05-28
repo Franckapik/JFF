@@ -4,6 +4,7 @@
 import React from "react";
 import { useVehicleMovement } from "../hooks/useVehicleMovement";
 import { useFloatingAnimation } from "../animations/useFloatingAnimation";
+import usePlayerStore from "../stores/usePlayerStore";
 
 // ============================
 // DRONE MOVEMENT COMPONENT
@@ -20,9 +21,12 @@ import { useFloatingAnimation } from "../animations/useFloatingAnimation";
 const DroneMovement = React.memo(({ 
   playerId = "player1", 
   droneId = "drone1", 
-  initialPosition = [0, 1.0, 0],
   children 
 }) => {
+  // ============================
+  // STORES
+  // ============================
+  const vehicle = usePlayerStore((state) => state.players[playerId]?.vehicles[droneId]);
 
   // ============================
   // MOVEMENT & ANIMATION HOOKS
@@ -42,8 +46,13 @@ const DroneMovement = React.memo(({
   // RENDER
   // ============================
   
+  // Si le véhicule n'existe pas ou n'a pas de position, ne rien rendre
+  if (!vehicle?.position) {
+    return null;
+  }
+
   return (
-    <group ref={groupRef} position={initialPosition}>
+    <group ref={groupRef} position={[vehicle.position.x, vehicle.position.y, vehicle.position.z]}>
       {children}
     </group>
   );

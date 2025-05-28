@@ -99,9 +99,9 @@ const Bot = React.memo(({
 
       {/**
        * DRONE D'EXPLORATION
-       * Toujours visible par défaut, sauf si explicitement désactivé
+       * Affiché seulement si actif ET si une position existe dans le store
        */}
-      {(!vehicles || vehicles[getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE)]?.isActive !== false) && (
+      {vehicles && vehicles[getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE)]?.isActive && vehicles[getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE)]?.position && (
         <DroneMovement 
           playerId={playerId} 
           droneId={getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE)}
@@ -122,9 +122,9 @@ const Bot = React.memo(({
 
       {/**
        * DRONE DE COMBAT
-       * N'est affiché que s'il est actif dans les véhicules du joueur
+       * Affiché seulement s'il est actif ET si une position existe dans le store
        */}
-      {vehicles && vehicles[getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE)]?.isActive && (
+      {vehicles && vehicles[getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE)]?.isActive && vehicles[getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE)]?.position && (
         <DroneMovement
           playerId={playerId}
           droneId={getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE)}
@@ -166,9 +166,9 @@ const Bot = React.memo(({
 
       {/**
        * DRONE SPÉCIAL
-       * Unité avancée avec des capacités spéciales, n'est affichée que si elle est active
+       * Affiché seulement s'il est actif ET si une position existe dans le store
        */}
-      {vehicles && vehicles[getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)]?.isActive && (
+      {vehicles && vehicles[getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)]?.isActive && vehicles[getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)]?.position && (
         <DroneMovement
           playerId={playerId}
           droneId={getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)}
