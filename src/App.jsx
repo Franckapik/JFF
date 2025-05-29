@@ -6,6 +6,7 @@ import "./styles/App.css";
 import Clock from "./components/HUD/Clock";
 import BotDebugger from "./components/HUD/BotDebugger";
 import MultiBotManager from "./components/MultiBotManager";
+import MyFSMComponent from "./components/MyFSMComponent"; // Added import
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
@@ -42,6 +43,9 @@ const App = () => {
 
       {/* MultiBotManager - gère automatiquement les bots */}
       <MultiBotManager />
+
+      {/* MyFSMComponent - for quick FSM implementation */}
+      <MyFSMComponent />
     </div>
   );
 };

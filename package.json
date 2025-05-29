@@ -20,6 +20,8 @@
     "@react-three/fiber": "8.17.10",
     "react": "18.3.1",
     "react-dom": "18.3.1",
+    "react-robot": "^1.2.0",
+    "robot3": "^1.1.1",
     "three": "0.170.0",
     "zustand": "^5.0.3"
   },
