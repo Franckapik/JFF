@@ -12,6 +12,7 @@
 
 // Import des actions core
 import movementCore from './movement.js';
+import explorationCore from './exploration.js';
 import fuelCore from './fuel.js';
 import resourceCore from './resources.js';
 // vehicleCore retiré - fonctionnalités consolidées dans movement.js
@@ -48,12 +49,21 @@ export {
 } from './movement.js';
 export { fuelActions, fuelSelectors, fuelGuards, fuelEvents } from './fuel.js';
 export { resourceActions, resourceSelectors, resourceGuards, resourceEvents } from './resource.js';
+export { 
+  explorationActions, 
+  explorationSelectors, 
+  explorationGuards, 
+  explorationEvents,
+  EXPLORATION_STATES,
+  DISCOVERY_TYPES 
+} from './exploration.js';
 
 // ============================================================================
 // EXPORT GROUPÉ PAR DOMAINE
 // ============================================================================
 
 export const movement = movementCore;
+export const exploration = explorationCore;
 export const fuel = fuelCore;
 export const resource = resourceCore;
 // vehicle consolidé dans movement - plus besoin d'export séparé
@@ -67,6 +77,7 @@ export const resource = resourceCore;
  */
 export const coreActions = {
   movement: movementCore.actions,
+  exploration: explorationCore.actions,
   fuel: fuelCore.actions,
   resource: resourceCore.actions
   // vehicle consolidé dans movement
@@ -77,6 +88,7 @@ export const coreActions = {
  */
 export const coreSelectors = {
   movement: movementCore.selectors,
+  exploration: explorationCore.selectors,
   fuel: fuelCore.selectors,
   resource: resourceCore.selectors
   // vehicle consolidé dans movement
@@ -87,6 +99,7 @@ export const coreSelectors = {
  */
 export const coreGuards = {
   movement: movementCore.guards,
+  exploration: explorationCore.guards,
   fuel: fuelCore.guards,
   resource: resourceCore.guards
   // vehicle consolidé dans movement
