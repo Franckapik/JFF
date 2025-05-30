@@ -13,6 +13,7 @@
 import { state, transition, reduce } from 'robot3';
 import { BOT_STATES } from './index.js';
 import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/index.js';
+import { contextReducers } from '../reducers/context.js';
 
 /**
  * État EVALUATING - Point de décision central
@@ -30,14 +31,21 @@ export const evaluatingState = state(
              efficiencyGuards.shouldReturnForEfficiency(context, event);
     },
     // Action : préparer le retour d'urgence
-    reduce((context, event) => ({
-      ...context,
-      currentAction: 'returning_emergency',
-      lastDecision: 'safety_return',
-      emergencyReason: safetyGuards.isCriticalFuel(context, event) 
-        ? 'low_fuel' : 'full_capacity',
-      lastStateChange: Date.now()
-    }))
+    reduce((context, event) => {
+      // Utiliser le reducer centralisé pour préparer le retour
+      const emergencyReason = safetyGuards.isCriticalFuel(context, event) 
+        ? 'low_fuel' : 'full_capacity';
+      
+      // Créer un événement enrichi avec la raison d'urgence
+      const enrichedEvent = {
+        ...event,
+        reason: 'safety_return',
+        emergencyReason
+      };
+      
+      // Utiliser le reducer pour préparer le retour
+      return contextReducers.state.prepareReturning(context, enrichedEvent);
+    })
   ),
 
   // === TRANSITIONS NORMALES ===
@@ -46,12 +54,10 @@ export const evaluatingState = state(
   transition('ASSESSMENT_COMPLETE',
     BOT_STATES.EXPLORING,
     (context, event) => discoveryGuards.hasUnexploredAreas(context, event),
-    reduce((context) => ({
-      ...context,
-      currentAction: 'exploring',
-      lastDecision: 'start_exploration',
-      lastStateChange: Date.now()
-    }))
+    reduce((context, event) => {
+      // Utiliser le reducer centralisé pour préparer l'exploration
+      return contextReducers.state.prepareExploring(context, event);
+    })
   ),
 
   // Si nouvelles ressources découvertes → COLLECTING
@@ -62,13 +68,15 @@ export const evaluatingState = state(
              context.hasNewResourceDiscovery && 
              context.knownResources?.length > 0;
     },
-    reduce((context) => ({
-      ...context,
-      currentAction: 'collecting',
-      lastDecision: 'collect_resources',
-      targetResource: context.knownResources[0], // Prendre la première ressource
-      lastStateChange: Date.now()
-    }))
+    reduce((context, event) => {
+      // Utiliser le reducer centralisé pour préparer la collecte
+      // avec la première ressource connue comme cible
+      const resourceEvent = {
+        ...event,
+        resource: context.knownResources[0] // Prendre la première ressource
+      };
+      return contextReducers.state.prepareCollecting(context, resourceEvent);
+    })
   ),
 
   // Si drone pas à la base → RETURNING (pour récupérer le drone)
