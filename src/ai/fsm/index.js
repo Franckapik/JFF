@@ -1,24 +1,55 @@
 /**
  * ============================================================================
- * FSM - Point d'entrée principal
+ * FSM AI - Point d'entrée principal
  * ============================================================================
  * 
- * Export principal pour la machine FSM optimisée avec React-Robot
+ * Export centralisé de tous les composants FSM pour Phase 2.
+ * Compatible avec l'ancien système + nouveau système unifié.
  * 
- * @author FSM Migration
- * @version 1.0.0
+ * @author Migration FSM Phase 2
+ * @version 2.0.0
  */
 
-// Machine principale
+// ============================================================================
+// NOUVEAU SYSTÈME FSM (Phase 2)
+// ============================================================================
+
+// Contexte et machine
+export { 
+  createEntityContext, 
+  ENTITY_TYPES, 
+  FSM_STATES,
+  isAutonomous,
+  canManualControl,
+  getMainVehicle,
+  isMoving,
+  updateStateHistory
+} from './machine/context/initialContext.js';
+
+export { 
+  default as botMachine,
+  fsmGuards,
+  fsmActions
+} from './machine/botMachine.js';
+
+// Hook principal Phase 2
+export { 
+  useBotMachine
+} from './hooks/useBotMachine.js';
+
+// ============================================================================
+// ANCIEN SYSTÈME FSM (Rétrocompatibilité)
+// ============================================================================
+
+// Machine principale (ancien)
 export { createBotMachine } from './machine/botMachine.js';
 
-// Hooks
-export { useBotMachine } from './hooks/useBotMachine.js';
-export { useBotActions } from './hooks/useBotActions.js';
-export { useBotEvents } from './hooks/useBotEvents.js';
+// Hooks anciens (si ils existent)
+// export { useBotActions } from './hooks/useBotActions.js';
+// export { useBotEvents } from './hooks/useBotEvents.js';
 
-// États et constantes
-export { BOT_STATES } from './machine/states/index.js';
+// États et constantes (ancien)
+// export { BOT_STATES } from './machine/states/index.js';
 
 // Guards et actions (pour debug/tests)
 export { guards } from './machine/guards/index.js';
