@@ -11,7 +11,6 @@
 // Composants principaux
 export { default as MultiBotManagerFSM } from './MultiBotManagerFSM';
 export { default as FSMDebugPanel } from './FSMDebugPanel';
-export { default as SystemToggle } from './SystemToggle';
 export { default as FSMStateIndicator, MultiFSMStateIndicator } from './FSMStateIndicator';
 
 // Re-exports des composants Bot

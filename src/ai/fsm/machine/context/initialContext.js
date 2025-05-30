@@ -53,20 +53,6 @@ const DEFAULT_VEHICLE_CONFIG = {
     fuel: 50,
     damage: 0,
     maxCapacity: DEFAULT_CAPACITIES[VEHICLE_TYPES.DRONE]
-  },
-  [VEHICLE_TYPES.SCOUT]: {
-    isActive: false,
-    fuel: 40,
-    damage: 0,
-    explorationBonus: 1.5,
-    maxCapacity: DEFAULT_CAPACITIES[VEHICLE_TYPES.SCOUT]
-  },
-  [VEHICLE_TYPES.HARVESTER]: {
-    isActive: false,
-    fuel: 60,
-    damage: 0,
-    harvestingBonus: 2.0,
-    maxCapacity: DEFAULT_CAPACITIES[VEHICLE_TYPES.HARVESTER]
   }
 };
 
