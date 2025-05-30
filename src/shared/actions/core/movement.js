@@ -28,12 +28,22 @@ const validateTargetTile = (tile) => {
     throw new Error('Target tile is required');
   }
   
-  if (!tile.position || !tile.coord) {
+  if (!tile.position || tile.coord === undefined || tile.coord === null) {
     throw new Error('Invalid target tile: missing position or coord');
   }
   
-  // Validation basique du format de coordonnée
-  if (typeof tile.coord !== 'string' || !tile.coord.includes(',')) {
+  // Validation spécifique du format de coordonnée
+  if (typeof tile.coord !== 'string') {
+    throw new Error('Invalid coordinate format: expected "x,y" string');
+  }
+  
+  if (!tile.coord.includes(',')) {
+    throw new Error('Invalid coordinate format: expected "x,y" string');
+  }
+  
+  // Validation plus poussée du format x,y
+  const coords = tile.coord.split(',');
+  if (coords.length !== 2 || isNaN(Number(coords[0])) || isNaN(Number(coords[1]))) {
     throw new Error('Invalid coordinate format: expected "x,y" string');
   }
   
@@ -68,6 +78,67 @@ const calculateDistance = (coord1, coord2) => {
 };
 
 // ============================================================================
+// VALIDATORS ET GUARDS
+// ============================================================================
+
+/**
+ * Guards pour valider les conditions de mouvement
+ */
+export const movementGuards = {
+  
+  /**
+   * Vérifie si un mouvement est possible
+   * @param {Object} context - Contexte actuel
+   * @param {Object} event - Événement de mouvement
+   * @returns {boolean} - True si mouvement possible
+   */
+  canMoveTo: (context, event) => {
+    const vehicle = context.vehicle;
+    if (!vehicle) return false;
+    
+    // Vérifier si pas déjà en mouvement
+    if (vehicle.isMoving) return false;
+    
+    // Vérifier la validité de la tuile cible
+    try {
+      validateTargetTile(event.targetTile);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  /**
+   * Vérifie si un véhicule a assez de carburant pour un mouvement
+   * @param {Object} context - Contexte actuel
+   * @param {Object} event - Événement avec targetTile
+   * @returns {boolean} - True si assez de carburant
+   */
+  hasEnoughFuel: (context, event) => {
+    const vehicle = context.vehicle;
+    if (!vehicle?.fuel || !vehicle?.coord || !event?.targetTile?.coord) {
+      return false;
+    }
+    
+    const distance = calculateDistance(vehicle.coord, event.targetTile.coord);
+    const fuelRequired = distance * 2; // Facteur de consommation par défaut
+    
+    return vehicle.fuel >= fuelRequired;
+  },
+
+  /**
+   * Vérifie si le mouvement est terminé
+   * @param {Object} context - Contexte actuel
+   * @returns {boolean} - True si mouvement terminé
+   */
+  isMovementComplete: (context) => {
+    const vehicle = context.vehicle;
+    return vehicle?.progress >= 100 || 
+           (vehicle?.coord === vehicle?.targetTile?.coord);
+  }
+};
+
+// ============================================================================
 // ACTIONS PRINCIPALES
 // ============================================================================
 
@@ -84,7 +155,25 @@ export const movementActions = {
    */
   moveToTile: (context, event) => {
     try {
+      // Validation de la tuile cible
       const validatedTile = validateTargetTile(event.targetTile);
+      
+      // Vérifications avec les guards
+      if (!movementGuards.canMoveTo(context, event)) {
+        return {
+          ...context,
+          error: 'Cannot move: vehicle is already moving or invalid target',
+          lastAction: 'moveToTile_failed'
+        };
+      }
+      
+      if (!movementGuards.hasEnoughFuel(context, event)) {
+        return {
+          ...context,
+          error: 'Cannot move: insufficient fuel',
+          lastAction: 'moveToTile_failed'
+        };
+      }
       
       return {
         ...context,
@@ -132,7 +221,12 @@ export const movementActions = {
    * @returns {Object} - Nouveau contexte avec progression mise à jour
    */
   updateProgress: (context, event) => {
-    const progress = clamp(event.progress || 0, 0, 100);
+    // Valider et normaliser la progression
+    let progress = event.progress;
+    if (typeof progress !== 'number' || isNaN(progress)) {
+      progress = 0;
+    }
+    progress = clamp(progress, 0, 100);
     
     return {
       ...context,
@@ -244,66 +338,7 @@ export const movementSelectors = {
   }
 };
 
-// ============================================================================
-// VALIDATORS ET GUARDS
-// ============================================================================
-
-/**
- * Guards pour valider les conditions de mouvement
- */
-export const movementGuards = {
-  
-  /**
-   * Vérifie si un mouvement est possible
-   * @param {Object} context - Contexte actuel
-   * @param {Object} event - Événement de mouvement
-   * @returns {boolean} - True si mouvement possible
-   */
-  canMoveTo: (context, event) => {
-    const vehicle = context.vehicle;
-    if (!vehicle) return false;
-    
-    // Vérifier si pas déjà en mouvement
-    if (movementSelectors.isMoving(vehicle)) return false;
-    
-    // Vérifier la validité de la tuile cible
-    try {
-      validateTargetTile(event.targetTile);
-      return true;
-    } catch {
-      return false;
-    }
-  },
-
-  /**
-   * Vérifie si un véhicule a assez de carburant pour un mouvement
-   * @param {Object} context - Contexte actuel
-   * @param {Object} event - Événement avec targetTile
-   * @returns {boolean} - True si assez de carburant
-   */
-  hasEnoughFuel: (context, event) => {
-    const vehicle = context.vehicle;
-    if (!vehicle?.fuel || !vehicle?.coord || !event?.targetTile?.coord) {
-      return false;
-    }
-    
-    const distance = calculateDistance(vehicle.coord, event.targetTile.coord);
-    const fuelRequired = distance * 2; // Facteur de consommation par défaut
-    
-    return vehicle.fuel >= fuelRequired;
-  },
-
-  /**
-   * Vérifie si le mouvement est terminé
-   * @param {Object} context - Contexte actuel
-   * @returns {boolean} - True si mouvement terminé
-   */
-  isMovementComplete: (context) => {
-    const vehicle = context.vehicle;
-    return vehicle?.progress >= 100 || 
-           (vehicle?.coord === vehicle?.targetTile?.coord);
-  }
-};
+// Les guards sont déjà définis plus haut
 
 // ============================================================================
 // EVENTS ET TRANSFORMATIONS
