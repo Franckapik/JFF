@@ -42,7 +42,7 @@ export {
 // ============================================================================
 
 // Machine principale (ancien)
-export { createBotMachine } from './machine/botMachine.js';
+export { createBotMachine } from './machine/machineFactory.js';
 
 // Hooks anciens (si ils existent)
 // export { useBotActions } from './hooks/useBotActions.js';
@@ -61,4 +61,4 @@ export { machineHelpers } from './utils/machineHelpers.js';
 export { debugFSM } from './utils/debugging.js';
 
 // Contexte initial
-export { createInitialContext } from './machine/context/initialContext.js';
+export { createEntityContext } from './machine/context/initialContext.js';

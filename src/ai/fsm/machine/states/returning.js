@@ -1,0 +1,167 @@
+/**
+ * ============================================================================
+ * État RETURNING - Retour à la base
+ * ============================================================================
+ * 
+ * État de retour à la base pour diverses raisons :
+ * - Carburant faible
+ * - Inventaire plein
+ * - Récupération de drone
+ * - Urgences
+ * 
+ * @author FSM Migration
+ * @version 1.0.0
+ */
+
+import { state, transition, reduce } from 'robot3';
+import { BOT_STATES } from './index.js';
+import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/index.js';
+
+/**
+ * État RETURNING - Retour à la base
+ */
+export const returningState = state(
+  // === ÉVÉNEMENTS DE PROGRESSION ===
+  
+  // Arrivé à la base
+  transition('BASE_REACHED',
+    BOT_STATES.IDLE_AT_BASE,
+    (context, event) => baseGuards.isAtBase(context, event),
+    reduce((context, event) => ({
+      ...context,
+      position: event.coord,
+      arrivalTime: event.timestamp || Date.now(),
+      currentAction: 'at_base',
+      // Récupérer le drone s'il n'est pas à la base
+      isDroneAtShip: true,
+      lastStateChange: Date.now()
+    }))
+  ),
+
+  // Mouvement en cours vers la base
+  transition('MOVEMENT_STARTED',
+    BOT_STATES.RETURNING, // Reste en returning
+    () => true,
+    reduce((context, event) => ({
+      ...context,
+      movementStatus: 'en_route',
+      targetCoord: event.targetCoord,
+      movementStartTime: Date.now(),
+      currentAction: 'moving_to_base'
+    }))
+  ),
+
+  // Progression du mouvement
+  transition('MOVEMENT_PROGRESS',
+    BOT_STATES.RETURNING, // Reste en returning
+    () => true,
+    reduce((context, event) => ({
+      ...context,
+      position: event.currentPosition,
+      movementProgress: event.progress,
+      estimatedArrival: event.estimatedArrival
+    }))
+  ),
+
+  // === GESTION DES URGENCES ===
+  
+  // Urgence résolue pendant le retour
+  transition('EMERGENCY_RESOLVED',
+    BOT_STATES.EVALUATING,
+    () => true,
+    reduce((context, event) => ({
+      ...context,
+      emergencyFlag: false,
+      emergencyReason: null,
+      resolvedCondition: event.condition,
+      resolutionTime: Date.now(),
+      currentAction: 'emergency_resolved',
+      lastStateChange: Date.now()
+    }))
+  ),
+
+  // === TIMEOUTS ET ÉCHECS ===
+  
+  // Timeout de navigation (45s)
+  transition('NAVIGATION_TIMEOUT',
+    BOT_STATES.EVALUATING,
+    () => true,
+    reduce((context) => ({
+      ...context,
+      navigationStatus: 'timeout',
+      currentAction: 'navigation_timeout',
+      // En cas de timeout, considérer qu'on est arrivé à la base
+      isDroneAtShip: true,
+      emergencyFlag: false,
+      lastStateChange: Date.now()
+    }))
+  ),
+
+  // Échec de navigation
+  transition('NAVIGATION_FAILED',
+    BOT_STATES.EVALUATING,
+    () => true,
+    reduce((context, event) => ({
+      ...context,
+      navigationStatus: 'failed',
+      errorReason: event.reason,
+      currentAction: 'navigation_failed',
+      // En cas d'échec, reset l'état d'urgence
+      emergencyFlag: false,
+      lastStateChange: Date.now()
+    }))
+  ),
+
+  // === VÉRIFICATIONS CRITIQUES ===
+  
+  // Carburant critique pendant le retour
+  transition('CRITICAL_FUEL',
+    BOT_STATES.IDLE_AT_BASE,
+    () => true,
+    reduce((context) => ({
+      ...context,
+      fuelStatus: 'critical',
+      emergencyLanding: true,
+      currentAction: 'emergency_landing',
+      // Forcer l'arrivée à la base
+      isDroneAtShip: true,
+      lastStateChange: Date.now()
+    }))
+  ),
+
+  // === TRANSITIONS D'URGENCE ===
+  
+  // Override manuel
+  transition('MANUAL_OVERRIDE',
+    BOT_STATES.EVALUATING,
+    () => true,
+    reduce((context, event) => ({
+      ...context,
+      manualCommand: event.command,
+      manualParams: event.params,
+      lastDecision: 'manual_override',
+      // Reset l'urgence si override manuel
+      emergencyFlag: false,
+      lastStateChange: Date.now()
+    }))
+  ),
+
+  // Nouvelle urgence détectée
+  transition('EMERGENCY_DETECTED',
+    BOT_STATES.RETURNING, // Reste en returning mais update le contexte
+    () => true,
+    reduce((context, event) => ({
+      ...context,
+      emergencyFlag: true,
+      emergencyReason: event.reason || 'unknown',
+      emergencyStack: [
+        ...(context.emergencyStack || []),
+        {
+          reason: event.reason,
+          timestamp: Date.now()
+        }
+      ],
+      currentAction: 'multiple_emergencies'
+    }))
+  )
+);

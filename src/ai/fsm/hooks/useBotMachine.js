@@ -12,8 +12,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useMachine } from 'react-robot';
-import { createEntityContext, ENTITY_TYPES, isAutonomous, canManualControl, getMainVehicle, isMoving } from '../machine/context/initialContext.js';
-import botMachine, { FSM_STATES } from '../machine/botMachine.js';
+import { createEntityContext, ENTITY_TYPES, FSM_STATES, isAutonomous, canManualControl, getMainVehicle, isMoving } from '../machine/context/initialContext.js';
+import { createBotMachine } from '../machine/machineFactory.js';
 import { movementActions } from '../../../shared/actions/core/movement.js';
 
 // ============================================================================
@@ -36,8 +36,11 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.AUTO) => {
   // Créer le contexte initial
   const initialContext = createEntityContext(botId, entityType);
   
+  // Créer la machine pour ce bot
+  const machine = createBotMachine(botId, initialContext);
+  
   // Utiliser le hook Robot3 useMachine avec le contexte initial
-  const [current, send] = useMachine(botMachine, initialContext);
+  const [current, send] = useMachine(machine, initialContext);
   
   // Référence pour les intervalles auto
   const autoIntervalRef = useRef(null);
@@ -259,7 +262,7 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.AUTO) => {
     machine: {
       current,
       send,
-      botMachine
+      machine
     },
     
     // Gestion des événements auto
