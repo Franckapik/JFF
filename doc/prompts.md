@@ -216,10 +216,10 @@ Refactorise BotDebugger pour :
 - [x] ~~Events formatés~~ **✅ FAIT** (movementEvents + vehicleEvents)
 
 ### Phase 2 : Machine FSM Bot
-- [ ] **Context FSM initial manquant** (createEntityContext)
-- [ ] **Machine FSM botMachine.js manquante** (États IDLE, EXPLORING, COLLECTING, RETURNING)
-- [ ] **Hook useBotMachine manquant**
-- [ ] Intégration avec actions movement.js existantes
+- [x] ✅ **Context FSM initial** (createEntityContext) ✅ FAIT
+- [x] ✅ **Machine FSM botMachine.js** (États IDLE, EXPLORING, COLLECTING, RETURNING) ✅ FAIT  
+- [x] ✅ **Hook useBotMachine** ✅ FAIT
+- [x] ✅ **Intégration avec actions movement.js existantes** ✅ FAIT
 
 ### Phase 3 : Composants Bot
 - [ ] **BotController.jsx manquant** (utilise useBotMachine)

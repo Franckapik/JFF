@@ -2,7 +2,6 @@ import React from 'react';
 import VehicleList from './VehicleList';
 import ShipResources from './ShipResources';
 import ResourceBar from './ResourceBar';
-import { getHumanPlayerId } from '../../../ai/constants/playerConstants';
 
 /**
  * Composant pour l'affichage du score total du joueur
@@ -126,7 +125,7 @@ const PlayerTab = ({ playerVehicle, playerData, isVehicleActive }) => {
       </div>
 
       <VehicleList 
-        playerId={getHumanPlayerId(1)} 
+        playerId="player-1" 
         isVehicleActive={isVehicleActive} 
       />
 

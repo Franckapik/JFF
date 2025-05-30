@@ -24,7 +24,6 @@
 // =========================================================================
 // IMPORTS
 // =========================================================================
-import { getHumanPlayerId, getBotId } from '../../../ai/constants/playerConstants';
 
 // =========================================================================
 // SLICE PRINCIPAL
@@ -171,7 +170,7 @@ const createTileFilterSlice = (set, get) => {
         .filter(tile => tile.type === "depart")
         .map((tile, index) => ({
           ...tile,
-          playerId: index === 0 ? getHumanPlayerId(1) : getBotId(index - 1),
+          playerId: index === 0 ? "player-1" : "bot-0",
           isPlayerBase: index === 0,
           playerIndex: index
         }));

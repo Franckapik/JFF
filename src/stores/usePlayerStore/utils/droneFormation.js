@@ -7,7 +7,6 @@
  * autour des vaisseaux principaux.
  */
 
-import { getDroneId, VEHICLE_TYPES } from '../../../ai/constants/playerConstants';
 import fsmLogger from '../../../utils/fsmLogger';
 
 /**
@@ -23,10 +22,7 @@ const DRONE_FORMATION_OFFSETS = [
 /**
  * Types de drones dans l'ordre de positionnement
  */
-const DRONE_TYPES_ORDER = [
-  VEHICLE_TYPES.EXPLORER_DRONE,
-  VEHICLE_TYPES.COMBAT_DRONE, 
-  VEHICLE_TYPES.SPECIAL_DRONE
+const DRONE_TYPES_ORDER = [0
 ];
 
 /**
@@ -48,7 +44,7 @@ export const positionDronesAroundShip = (vehicles, playerId, shipPosition, shipC
   });
 
   DRONE_TYPES_ORDER.forEach((droneType, droneIndex) => {
-    const droneId = getDroneId(playerId, droneType);
+    const droneId = "drone-1";
     
     if (updatedVehicles[droneId]) {
       const offset = DRONE_FORMATION_OFFSETS[droneIndex];

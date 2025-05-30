@@ -4,14 +4,17 @@ import Scene from "./components/Scene";
 import "./styles/App.css";
 // import VehicleSelector from "./components/HUD/VehicleSelector"; // Commenté car non utile pour l'instant
 import Clock from "./components/HUD/Clock";
-import BotDebugger from "./components/HUD/BotDebugger";
-import MultiBotManager from "./components/MultiBotManager";
-import MyFSMComponent from "./components/MyFSMComponent"; // Added import
+
+
+// ============= COMPOSANTS FSM =============
+import MultiBotManagerFSM from "./components/FSM/MultiBotManagerFSM";
+import FSMDebugPanel from "./components/FSM/FSMDebugPanel";
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   
-  // La gestion des bots est maintenant déléguée au MultiBotManager
+  // Liste des bots pour FSM
+  const botIds = ['bot-0', 'bot-1'];
   
   return (
     <div className="app-container">
@@ -27,7 +30,7 @@ const App = () => {
       {/* Main content area */}
       <div className="main-content">
         <div className="canvas-container">
-          <Canvas camera={{ fov: 70, position: [5, 5, 5] }}>
+          <Canvas>
             <Scene />
           </Canvas>
         </div>
@@ -38,14 +41,16 @@ const App = () => {
         </div>
       </div>
 
-      {/* Bot Debugger - positionné à gauche de l'écran */}
-      <BotDebugger />
-
-      {/* MultiBotManager - gère automatiquement les bots */}
-      <MultiBotManager />
-
-      {/* MyFSMComponent - for quick FSM implementation */}
-      <MyFSMComponent />
+      {/* ============= SYSTÈME FSM ============= */}
+      {/* MultiBotManager FSM - gestionnaire principal */}
+      <MultiBotManagerFSM />
+      
+      {/* FSM Debug Panel - panneau de debug */}
+      <FSMDebugPanel 
+        botIds={botIds}
+        position="bottom-left"
+        minimizable={true}
+      />
     </div>
   );
 };

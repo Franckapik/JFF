@@ -1,10 +1,10 @@
 // src/stores/useBotStore/slices/stateTransitionSlice.js
-import { BOT_STATES } from '../../../ai/constants/botConstants';
-import { BotStateConfig } from '../../../ai/fsm/states/botStates';
-import { BotConditions } from '../../../ai/fsm/conditions/botConditions';
+import { BOT_STATES } from '../../../oldfsm/constants/botConstants';
+import { BotStateConfig } from '../../../oldfsm/states/botStates';
+import { BotConditions } from '../../../oldfsm/conditions/botConditions';
 import usePlayerStore from '../../usePlayerStore';
 import fsmLogger from '../../../utils/fsmLogger';
-import { getMainShipId } from '../../../ai/constants/playerConstants';
+import { getMainShipId } from '../../../shared/constants/playerConstants';
 
 export const createStateTransitionSlice = (set, get) => ({
   // Getter pour accéder à l'état du bot actif

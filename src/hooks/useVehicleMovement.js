@@ -4,7 +4,7 @@ import { Vector3, Euler } from 'three';
 import usePlayerStore from '../stores/usePlayerStore';
 import useBotStore from '../stores/useBotStore/';
 import { useTileStore } from '../stores/useTileStore';
-import { isBotPlayerId, getMainShipId, VEHICLE_TYPES } from '../ai/constants/playerConstants';
+import { isBotPlayerId, getMainShipId, VEHICLE_TYPES } from '../oldfsm/constants/playerConstants';
 import fsmLogger from '../utils/fsmLogger';
 import { calculatePath } from '../utils/utils';
 

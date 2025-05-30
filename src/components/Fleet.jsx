@@ -3,15 +3,6 @@ import { Cone, Html } from "@react-three/drei";
 import ShipMovement from "../Mouvement/ShipMovement";
 import DroneMovement from "../Mouvement/DroneMovement";
 import usePlayerStore from "../stores/usePlayerStore";
-import useBotStore from "../stores/useBotStore/";
-import { 
-  getBotId, 
-  getMainShipId, 
-  getDroneId, 
-  isMainShipId,
-  VEHICLE_TYPES,
-  getHumanPlayerId
-} from "../ai/constants/playerConstants";
 
 /**
  * =================================================================
@@ -36,12 +27,8 @@ const Fleet = React.memo(({
    * -----------------------------------------------------------------
    */
   
-  // Déterminer l'ID du joueur (humain ou bot)
-  const playerId = isHuman ? getHumanPlayerId(1) : getBotId(botIndex);
-  
-  // Récupérer le bot actif depuis le store (seulement pertinent pour les bots, pas pour le joueur humain)
-  const currentBotIndex = useBotStore(state => state.currentBotIndex);
-  const isActiveBot = !isHuman && currentBotIndex === botIndex;
+  // Déterminer l'ID du joueur (humain ou bot) - version simplifiée pour FSM
+  const playerId = isHuman ? "player-1" : `bot-${botIndex}`;
   
   // Sélecteur pour les véhicules du bot ou du joueur
   const vehicles = usePlayerStore((state) => state.players[playerId]?.vehicles);
@@ -67,19 +54,9 @@ const Fleet = React.memo(({
           <boxGeometry args={[0.5, 0.5, 0.5]} />
           <meshStandardMaterial
             color={color}
-            emissive={isActiveBot ? "gold" : "black"}
-            emissiveIntensity={isActiveBot ? 0.3 : 0}
           />
         </mesh>
         
-        {/* Indicateur visuel du bot actif */}
-        {isActiveBot && (
-          <mesh position={[0, 0.5, 0]}>
-            <sphereGeometry args={[0.15, 8, 8]} />
-            <meshStandardMaterial color="gold" emissive="gold" emissiveIntensity={0.5} />
-          </mesh>
-        )}
-
         {/* Étiquette indiquant le joueur ou le numéro du bot */}
         <Html position={[0, 0.7, 0]} center>
           <div style={{
@@ -99,12 +76,12 @@ const Fleet = React.memo(({
 
       {/**
        * DRONE D'EXPLORATION
-       * Affiché seulement si actif ET si une position existe dans le store
+       * Simplifié pour la démonstration FSM
        */}
-      {vehicles && vehicles[getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE)]?.isActive && vehicles[getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE)]?.position && (
+      {vehicles && vehicles[`${playerId}-explorer-drone`]?.isActive && vehicles[`${playerId}-explorer-drone`]?.position && (
         <DroneMovement 
           playerId={playerId} 
-          droneId={getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE)}
+          droneId={`${playerId}-explorer-drone`}
         >
           <Cone 
             args={[0.15, 0.4, 8]} 
@@ -122,12 +99,12 @@ const Fleet = React.memo(({
 
       {/**
        * DRONE DE COMBAT
-       * Affiché seulement s'il est actif ET si une position existe dans le store
+       * Simplifié pour la démonstration FSM
        */}
-      {vehicles && vehicles[getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE)]?.isActive && vehicles[getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE)]?.position && (
+      {vehicles && vehicles[`${playerId}-combat-drone`]?.isActive && vehicles[`${playerId}-combat-drone`]?.position && (
         <DroneMovement
           playerId={playerId}
-          droneId={getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE)}
+          droneId={`${playerId}-combat-drone`}
         >
           <group>
             {/* Corps du drone */}
@@ -166,12 +143,12 @@ const Fleet = React.memo(({
 
       {/**
        * DRONE SPÉCIAL
-       * Affiché seulement s'il est actif ET si une position existe dans le store
+       * Simplifié pour la démonstration FSM
        */}
-      {vehicles && vehicles[getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)]?.isActive && vehicles[getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)]?.position && (
+      {vehicles && vehicles[`${playerId}-special-drone`]?.isActive && vehicles[`${playerId}-special-drone`]?.position && (
         <DroneMovement
           playerId={playerId}
-          droneId={getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)}
+          droneId={`${playerId}-special-drone`}
         >
           <group>
             {/* Corps du drone spécial */}

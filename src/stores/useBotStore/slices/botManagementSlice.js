@@ -1,7 +1,7 @@
 // src/stores/useBotStore/slices/botManagementSlice.js
-import { BOT_STATES, PRIORITY } from '../../../ai/constants/botConstants';
-import { BotStateConfig } from '../../../ai/fsm/states/botStates';
-import { getBotId } from '../../../ai/constants/playerConstants';
+import { BOT_STATES, PRIORITY } from '../../../oldfsm/constants/botConstants';
+import { BotStateConfig } from '../../../oldfsm/states/botStates';
+import { getBotId } from '../../../shared/constants/playerConstants';
 import usePlayerStore from '../../usePlayerStore';
 import fsmLogger from '../../../utils/fsmLogger';
 

@@ -12,22 +12,15 @@ import { Html } from "@react-three/drei";
 
 // Components
 import Tile from "./Tile";
-import Fleet from "./Fleet";
+import { FSMStateIndicator } from "./FSM";
 
 // Stores
 import { useTileStore } from "../stores/useTileStore";
 import usePlayerStore from "../stores/usePlayerStore";
-import useBotStore from "../stores/useBotStore/";
 import useGameStore from "../stores/useGameStore";
 
 // Utils
 import fsmLogger from "../utils/fsmLogger";
-import { 
-  getHumanPlayerId, 
-  getBotId, 
-  getMainShipId, 
-  isMainShipId,
-} from "../ai/constants/playerConstants";
 
 /* ========================================
  * MAIN COMPONENT
@@ -48,11 +41,7 @@ const Scene = () => {
   const getRepairStations = useTileStore((state) => state.getRepairStations);
   
   // Player management
-  const initializePlayer = usePlayerStore((state) => state.initializePlayer);
   const moveToTile = usePlayerStore((state) => state.moveToTile);
-  
-  // Bot management
-  const initializeBot = useBotStore((state) => state.initializeBot);
   
   // Game configuration
   const botCount = useGameStore((state) => state.botCount);
@@ -90,28 +79,6 @@ const Scene = () => {
     }
   }, [tilesInitialized, initializeTiles, markTilesAsInitialized]);
 
-  // Initialize players and bots when tiles are ready
-  useEffect(() => {
-    const walkableTiles = getWalkableTiles();
-    
-    if (walkableTiles.length > 0 && !playersInitialized) {
-      fsmLogger.info("[Scene] Initializing players with tiles");
-      initializePlayer(walkableTiles);
-      markPlayersAsInitialized();
-    }
-    
-    if (playersInitialized && !botsInitialized) {
-      fsmLogger.info("[Scene] Initializing bots...");
-      
-      for (let i = 0; i < botCount; i++) {
-        const botId = getBotId(i);
-        fsmLogger.info(`[Scene] Initializing Bot ${i} (${botId})`, null, botId);
-        initializeBot(i);
-      }
-      
-      markBotsAsInitialized();
-    }
-  }, [getWalkableTiles, playersInitialized, botsInitialized, initializePlayer, initializeBot, botCount, markPlayersAsInitialized, markBotsAsInitialized]);
 
   /* ========================================
    * CAMERA CONFIGURATION
@@ -128,9 +95,10 @@ const Scene = () => {
    * ======================================== */
 
   const handleTileClick = (tile) => {
-    // Move main ship to clicked tile
-    const mainShipId = getMainShipId(getHumanPlayerId(1));
-    moveToTile(getHumanPlayerId(1), mainShipId, {
+    // Move main ship to clicked tile (simplified for FSM demo)
+    const humanPlayerId = "player-1";
+    const mainShipId = `${humanPlayerId}-ship`;
+    moveToTile(humanPlayerId, mainShipId, {
       coord: tile.coord,
       position: tile.position,
     });
@@ -157,19 +125,35 @@ const Scene = () => {
        * ======================================== */}
       
       {/* Human player (rendered as Bot component) */}
-      {Object.keys(tiles).length > 0 && (
+      {/* Temporairement désactivé - Fleet component */}
+      {/* {Object.keys(tiles).length > 0 && (
         <Fleet 
           isHuman={true}
           color="blue"
         />
-      )}
+      )} */}
       
       {/* AI Fleets with dynamic colors */}
-      {botIndices.map((botIndex) => (
+      {/* Temporairement désactivé - Fleet components */}
+      {/* {botIndices.map((botIndex) => (
         <Fleet 
           key={`bot-${botIndex}`}
           botIndex={botIndex}
           color={getBotColor(botIndex)}
+        />
+      ))} */}
+
+      {/* ========================================
+       * FSM STATE INDICATORS (NEW)
+       * ======================================== */}
+      
+      {/* FSM State indicators for bots */}
+      {botIndices.map((botIndex) => (
+        <FSMStateIndicator
+          key={`fsm-indicator-${botIndex}`}
+          botId={`bot-${botIndex}`}
+          position={[botIndex * 2, 1.5, 0]}
+          showDetails={false}
         />
       ))}
 

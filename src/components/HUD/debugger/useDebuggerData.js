@@ -8,7 +8,7 @@ import {
   getMainShipId,
   getDroneId,
   VEHICLE_TYPES
-} from '../../../ai/constants/playerConstants';
+} from '../../../oldfsm/constants/playerConstants';
 
 /**
  * Hook personnalisé pour gérer les données du debugger

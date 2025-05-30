@@ -16,7 +16,6 @@
  * @version 2.0.0
  */
 
-import { isMainShipId } from '../../../ai/constants/playerConstants';
 import fsmLogger from '../../../utils/fsmLogger';
 import { createUpdatedVehicleState } from '../utils';
 

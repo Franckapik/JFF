@@ -1,10 +1,4 @@
-import { createVehicle } from './vehicleFactory';
-import { 
-  getMainShipId, 
-  getAllDroneIds, 
-  VEHICLE_TYPES,
-  getDroneId
-} from '../../../ai/constants/playerConstants';
+
 
 /**
  * Crée un nouveau joueur avec ses propriétés initiales
@@ -12,23 +6,7 @@ import {
  * @returns {Object} - Objet joueur
  */
 export const createPlayer = (playerId) => {
-  const vehicles = {
-    [getMainShipId(playerId)]: createVehicle(getMainShipId(playerId), VEHICLE_TYPES.SHIP),
-  };
-
-  // Ajouter les drones avec leurs types spécifiques
-  vehicles[getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE)] = createVehicle(
-    getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE),
-    VEHICLE_TYPES.EXPLORER_DRONE
-  );
-  vehicles[getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE)] = createVehicle(
-    getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE),
-    VEHICLE_TYPES.COMBAT_DRONE
-  );
-  vehicles[getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)] = createVehicle(
-    getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE),
-    VEHICLE_TYPES.SPECIAL_DRONE
-  );
+  const vehicles = 0
   
   return {
     id: playerId,

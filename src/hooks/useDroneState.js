@@ -1,6 +1,5 @@
 // Drone state machine hook
 import { create } from 'zustand';
-import { VEHICLE_TYPES } from '../ai/constants/playerConstants';
 import fsmLogger from '../utils/fsmLogger';
 
 // Fonction utilitaire pour extraire le playerId à partir d'un droneId

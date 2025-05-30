@@ -10,7 +10,7 @@
  * @version 1.0.0
  */
 
-import { createMachine } from 'robot3';
+import { createMachine, state, transition, reduce } from 'robot3';
 import { FSM_STATES, updateStateHistory } from './context/initialContext.js';
 import { movementActions, movementGuards } from '../../../shared/actions/core/movement.js';
 
@@ -240,129 +240,121 @@ const fsmActions = {
 /**
  * Machine d'état pour les bots autonomes
  */
-export const botMachine = createMachine({
-  // État initial
-  [FSM_STATES.IDLE]: {
-    // Transitions depuis IDLE
-    AUTO: (context) => {
-      // Auto-transition basée sur les conditions
-      if (!fsmGuards.canOperate(context)) {
-        return FSM_STATES.IDLE; // Rester en IDLE si pas opérationnel
-      }
-      
-      if (!fsmGuards.hasEnoughFuel(context)) {
-        return FSM_STATES.RETURNING; // Retourner à la base pour le carburant
-      }
-      
-      if (fsmGuards.isNearCapacity(context)) {
-        return FSM_STATES.RETURNING; // Retourner à la base pour déposer
-      }
-      
-      if (fsmGuards.hasExplorationTarget(context)) {
-        return FSM_STATES.EXPLORING; // Commencer l'exploration
-      }
-      
-      return FSM_STATES.IDLE; // Rester en IDLE
-    },
-    
-    // Événements manuels pour debug/contrôle
-    START_EXPLORING: FSM_STATES.EXPLORING,
-    START_COLLECTING: FSM_STATES.COLLECTING,
-    RETURN_TO_BASE: FSM_STATES.RETURNING,
-    
-    // Actions d'entrée
-    ENTER: fsmActions.enterIdle
-  },
-
-  // ========================================================================
-  
-  [FSM_STATES.EXPLORING]: {
-    // Transitions depuis EXPLORING
-    AUTO: (context) => {
-      if (!fsmGuards.canOperate(context)) {
+export const botMachine = createMachine(
+  FSM_STATES.IDLE, // État initial
+  {
+    [FSM_STATES.IDLE]: state(
+      // Transitions manuelles
+      transition('START_EXPLORING', FSM_STATES.EXPLORING),
+      transition('START_COLLECTING', FSM_STATES.COLLECTING),
+      transition('RETURN_TO_BASE', FSM_STATES.RETURNING),
+      transition('MOVE_TO', FSM_STATES.IDLE, {
+        reduce: (context, event) => fsmActions.moveToTarget(context, event)
+      }),
+      transition('STOP', FSM_STATES.IDLE, {
+        reduce: (context, event) => fsmActions.stopMovement(context)
+      }),
+      // Transition automatique basée sur les conditions
+      transition('AUTO', (context) => {
+        if (!fsmGuards.canOperate(context)) {
+          return FSM_STATES.IDLE;
+        }
+        if (!fsmGuards.hasEnoughFuel(context)) {
+          return FSM_STATES.RETURNING;
+        }
+        if (fsmGuards.isNearCapacity(context)) {
+          return FSM_STATES.RETURNING;
+        }
+        if (fsmGuards.hasExplorationTarget(context)) {
+          return FSM_STATES.EXPLORING;
+        }
         return FSM_STATES.IDLE;
-      }
-      
-      if (!fsmGuards.hasEnoughFuel(context) || fsmGuards.isNearCapacity(context)) {
-        return FSM_STATES.RETURNING;
-      }
-      
-      // Si des ressources ont été trouvées, passer à la collecte
-      if (fsmGuards.hasResources(context)) {
-        return FSM_STATES.COLLECTING;
-      }
-      
-      return FSM_STATES.EXPLORING; // Continuer l'exploration
-    },
-    
-    // Événements manuels
-    COLLECT_RESOURCES: FSM_STATES.COLLECTING,
-    RETURN_TO_BASE: FSM_STATES.RETURNING,
-    STOP: FSM_STATES.IDLE,
-    
-    // Actions
-    ENTER: fsmActions.enterExploring,
-    MOVE_TO: fsmActions.moveToTarget
-  },
+      }),
+      // Action d'entrée
+      transition('ENTER', FSM_STATES.IDLE, {
+        reduce: (context) => fsmActions.enterIdle(context)
+      })
+    ),
 
-  // ========================================================================
-  
-  [FSM_STATES.COLLECTING]: {
-    // Transitions depuis COLLECTING
-    AUTO: (context) => {
-      if (!fsmGuards.canOperate(context)) {
-        return FSM_STATES.IDLE;
-      }
-      
-      if (!fsmGuards.hasEnoughFuel(context) || fsmGuards.isNearCapacity(context)) {
-        return FSM_STATES.RETURNING;
-      }
-      
-      // Si plus de ressources à collecter, retourner à l'exploration
-      if (!fsmGuards.hasExplorationTarget(context)) {
+    [FSM_STATES.EXPLORING]: state(
+      // Transitions manuelles
+      transition('COLLECT_RESOURCES', FSM_STATES.COLLECTING),
+      transition('RETURN_TO_BASE', FSM_STATES.RETURNING),
+      transition('STOP', FSM_STATES.IDLE),
+      transition('MOVE_TO', FSM_STATES.EXPLORING, {
+        reduce: (context, event) => fsmActions.moveToTarget(context, event)
+      }),
+      // Transition automatique
+      transition('AUTO', (context) => {
+        if (!fsmGuards.canOperate(context)) {
+          return FSM_STATES.IDLE;
+        }
+        if (!fsmGuards.hasEnoughFuel(context) || fsmGuards.isNearCapacity(context)) {
+          return FSM_STATES.RETURNING;
+        }
+        if (fsmGuards.hasResources(context)) {
+          return FSM_STATES.COLLECTING;
+        }
         return FSM_STATES.EXPLORING;
-      }
-      
-      return FSM_STATES.COLLECTING; // Continuer la collecte
-    },
-    
-    // Événements manuels
-    EXPLORE: FSM_STATES.EXPLORING,
-    RETURN_TO_BASE: FSM_STATES.RETURNING,
-    STOP: FSM_STATES.IDLE,
-    
-    // Actions
-    ENTER: fsmActions.enterCollecting,
-    MOVE_TO: fsmActions.moveToTarget
-  },
+      }),
+      // Action d'entrée
+      transition('ENTER', FSM_STATES.EXPLORING, {
+        reduce: (context) => fsmActions.enterExploring(context)
+      })
+    ),
 
-  // ========================================================================
-  
-  [FSM_STATES.RETURNING]: {
-    // Transitions depuis RETURNING
-    AUTO: (context) => {
-      if (!fsmGuards.canOperate(context)) {
-        return FSM_STATES.IDLE;
-      }
-      
-      // Si arrivé à la base, retourner à IDLE
-      if (fsmGuards.isAtBase(context)) {
-        return FSM_STATES.IDLE;
-      }
-      
-      return FSM_STATES.RETURNING; // Continuer le retour
-    },
-    
-    // Événements manuels
-    EXPLORE: FSM_STATES.EXPLORING,
-    COLLECT_RESOURCES: FSM_STATES.COLLECTING,
-    STOP: FSM_STATES.IDLE,
-    
-    // Actions
-    ENTER: fsmActions.enterReturning,
-    MOVE_TO: fsmActions.moveToTarget
+    [FSM_STATES.COLLECTING]: state(
+      // Transitions manuelles
+      transition('EXPLORE', FSM_STATES.EXPLORING),
+      transition('RETURN_TO_BASE', FSM_STATES.RETURNING),
+      transition('STOP', FSM_STATES.IDLE),
+      transition('MOVE_TO', FSM_STATES.COLLECTING, {
+        reduce: (context, event) => fsmActions.moveToTarget(context, event)
+      }),
+      // Transition automatique
+      transition('AUTO', (context) => {
+        if (!fsmGuards.canOperate(context)) {
+          return FSM_STATES.IDLE;
+        }
+        if (!fsmGuards.hasEnoughFuel(context) || fsmGuards.isNearCapacity(context)) {
+          return FSM_STATES.RETURNING;
+        }
+        if (!fsmGuards.hasExplorationTarget(context)) {
+          return FSM_STATES.EXPLORING;
+        }
+        return FSM_STATES.COLLECTING;
+      }),
+      // Action d'entrée
+      transition('ENTER', FSM_STATES.COLLECTING, {
+        reduce: (context) => fsmActions.enterCollecting(context)
+      })
+    ),
+
+    [FSM_STATES.RETURNING]: state(
+      // Transitions manuelles
+      transition('EXPLORE', FSM_STATES.EXPLORING),
+      transition('COLLECT_RESOURCES', FSM_STATES.COLLECTING),
+      transition('STOP', FSM_STATES.IDLE),
+      transition('MOVE_TO', FSM_STATES.RETURNING, {
+        reduce: (context, event) => fsmActions.moveToTarget(context, event)
+      }),
+      // Transition automatique
+      transition('AUTO', (context) => {
+        if (!fsmGuards.canOperate(context)) {
+          return FSM_STATES.IDLE;
+        }
+        if (fsmGuards.isAtBase(context)) {
+          return FSM_STATES.IDLE;
+        }
+        return FSM_STATES.RETURNING;
+      }),
+      // Action d'entrée
+      transition('ENTER', FSM_STATES.RETURNING, {
+        reduce: (context) => fsmActions.enterReturning(context)
+      })
+    )
   }
-}, FSM_STATES.IDLE); // État initial
+);
 
 // ============================================================================
 // EXPORT

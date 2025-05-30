@@ -12,7 +12,6 @@
  * @version 1.0.0
  */
 
-import { getMainShipId } from '../../../ai/constants/playerConstants';
 import fsmLogger from '../../../utils/fsmLogger';
 
 // ============================================================================
@@ -59,7 +58,7 @@ const createFuelSlice = (set, get) => {
      */
     refuelVehicle: (playerId) => {
       const { updateVehicle } = get();
-      const shipId = getMainShipId(playerId);
+      const shipId = "player-1-ship";
       updateVehicle(playerId, shipId, { fuel: 100 });
     },
 

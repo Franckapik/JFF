@@ -12,7 +12,6 @@
  * @version 1.0.0
  */
 
-import { isMainShipId } from '../../../ai/constants/playerConstants';
 
 // ============================================================================
 // CALCULS DE RESSOURCES
@@ -57,7 +56,7 @@ export const calculateUpdatedResources = (currentResources, resourcesToAdd) => {
  * @returns {boolean} True si le dépôt est possible
  */
 export const canDepositResources = (vehicle, vehicleId) => {
-  return isMainShipId(vehicleId) && 
+  return 
          vehicle.coord &&
          vehicle.coord === vehicle.startCoord &&
          !vehicle.isMoving;

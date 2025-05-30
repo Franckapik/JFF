@@ -9,10 +9,6 @@
 
 import useGameStore from '../../useGameStore/';
 import { createPlayer } from './playerFactory';
-import { 
-  getHumanPlayerId, 
-  getBotId
-} from '../../../ai/constants/playerConstants';
 import fsmLogger from '../../../utils/fsmLogger';
 
 /**
@@ -29,12 +25,11 @@ export const generateInitialPlayers = () => {
   });
 
   // Créer le joueur humain principal
-  players[getHumanPlayerId(1)] = createPlayer(getHumanPlayerId(1));
-  fsmLogger.player(`Created human player: ${getHumanPlayerId(1)}`);
+  players["player-1"] = createPlayer("player-1");
 
   // Créer les bots
   for (let i = 0; i < botCount; i++) {
-    const botId = getBotId(i);
+    const botId = "bot-1";
     players[botId] = createPlayer(botId);
     fsmLogger.player(`Created bot player: ${botId}`);
   }

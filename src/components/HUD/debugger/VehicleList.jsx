@@ -1,33 +1,28 @@
 import React from 'react';
-import {
-  getMainShipId,
-  getDroneId,
-  VEHICLE_TYPES
-} from '../../../ai/constants/playerConstants';
 
 /**
- * Composant pour l'affichage des véhicules d'un joueur
+ * Composant pour l'affichage des véhicules d'un joueur (version simplifiée FSM)
  */
 const VehicleList = React.memo(({ playerId, isVehicleActive }) => {
   const vehicles = React.useMemo(() => [
     {
       name: 'Vaisseau principal',
-      id: getMainShipId(playerId),
+      id: `${playerId}-ship`,
       type: 'main'
     },
     {
       name: 'Drone explorateur',
-      id: getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE),
+      id: `${playerId}-explorer-drone`,
       type: 'drone'
     },
     {
       name: 'Drone de combat',
-      id: getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE),
+      id: `${playerId}-combat-drone`,
       type: 'drone'
     },
     {
       name: 'Drone spécial',
-      id: getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE),
+      id: `${playerId}-special-drone`,
       type: 'drone'
     }
   ], [playerId]);

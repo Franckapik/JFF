@@ -1,6 +1,5 @@
 import React from 'react';
 import usePlayerStore from '../../../stores/usePlayerStore';
-import useBotStore from '../../../stores/useBotStore/';
 import { useTileStore } from '../../../stores/useTileStore';
 import useGameStore from '../../../stores/useGameStore/';
 
@@ -156,7 +155,6 @@ const StoresTab = React.memo(() => {
   
   // Récupération des données des stores
   const playerStore = usePlayerStore();
-  const botStore = useBotStore();
   const tileStore = useTileStore();
   const gameStore = useGameStore();
 
@@ -172,7 +170,6 @@ const StoresTab = React.memo(() => {
   };
 
   const playerData = getStoreData(playerStore);
-  const botData = getStoreData(botStore);
   const tileData = getStoreData(tileStore);
   const gameData = getStoreData(gameStore);
 
@@ -180,7 +177,6 @@ const StoresTab = React.memo(() => {
   const handleCopyAll = async () => {
     const allStores = {
       GameStore: gameData,
-      BotStore: botData,
       PlayerStore: playerData,
       TileStore: {
         ...tileData,
@@ -216,16 +212,21 @@ const StoresTab = React.memo(() => {
               <span className="debugger-value">{Object.keys(playerData).length} propriétés</span>
             </div>
             <div className="debugger-summary-item">
-              <span className="debugger-label">BotStore:</span>
-              <span className="debugger-value">{Object.keys(botData).length} propriétés</span>
-            </div>
-            <div className="debugger-summary-item">
               <span className="debugger-label">TileStore:</span>
               <span className="debugger-value">{Object.keys(tileData).length} propriétés</span>
             </div>
             <div className="debugger-summary-item">
               <span className="debugger-label">GameStore:</span>
               <span className="debugger-value">{Object.keys(gameData).length} propriétés</span>
+            </div>
+            <div style={{
+              padding: '8px',
+              backgroundColor: '#f0f0f0',
+              borderRadius: '4px',
+              fontSize: '12px',
+              color: '#666'
+            }}>
+              BotStore remplacé par le système FSM
             </div>
           </div>
         </div>
@@ -235,12 +236,6 @@ const StoresTab = React.memo(() => {
         title="GameStore" 
         data={gameData} 
         color="#4CAF50" 
-      />
-      
-      <StoreSection 
-        title="BotStore" 
-        data={botData} 
-        color="#FF9800" 
       />
       
       <StoreSection 

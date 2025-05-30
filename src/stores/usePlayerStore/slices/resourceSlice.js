@@ -12,7 +12,6 @@
  * @version 1.0.0
  */
 
-import { isMainShipId } from '../../../ai/constants/playerConstants';
 import fsmLogger from '../../../utils/fsmLogger';
 import { 
   checkVehicleCapacity, 

@@ -19,13 +19,11 @@
 // IMPORTS
 // =========================================================================
 import useGameStore from '../../useGameStore/';
-import { getMainShipId, VEHICLE_TYPES } from '../../../ai/constants/playerConstants';
 import fsmLogger from '../../../utils/fsmLogger';
 
 // Utilitaires refactorisés
 import { generateInitialPlayers } from '../utils/playerInitialization';
 import { validateStartingTiles, getStartingTiles } from '../utils/tileValidation';
-import { positionDronesAroundShip } from '../utils/droneFormation';
 
 // =========================================================================
 // CONSTANTES DE CONFIGURATION
@@ -36,7 +34,7 @@ import { positionDronesAroundShip } from '../utils/droneFormation';
  * Ces valeurs peuvent être ajustées pour équilibrer le gameplay
  */
 const MOVEMENT_SPEEDS = {
-  [VEHICLE_TYPES.SHIP]: {
+  ["ship"]: {
     speed: 2,
     rotationSpeed: 2.0
   },
@@ -110,7 +108,7 @@ const createPlayerSlice = (set, get) => {
         // Positionner chaque joueur sur une tuile de départ
         Object.keys(updatedPlayers).forEach((playerId, index) => {
           if (index < startingTiles.length) {
-            const shipId = getMainShipId(playerId);
+            const shipId = "player-1-ship";
             const shipPosition = startingTiles[index].position;
             const shipCoord = startingTiles[index].coord;
             
@@ -133,13 +131,13 @@ const createPlayerSlice = (set, get) => {
               },
             };
             
-            // Positionner les drones en formation autour du vaisseau
+/*             // Positionner les drones en formation autour du vaisseau
             const vehiclesWithDrones = positionDronesAroundShip(
               updatedVehicles, 
               playerId, 
               shipPosition, 
               shipCoord
-            );
+            ); */
             
             // Mettre à jour le joueur avec ses véhicules positionnés
             updatedPlayers[playerId] = {
