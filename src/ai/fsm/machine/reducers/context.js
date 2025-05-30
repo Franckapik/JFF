@@ -410,6 +410,74 @@ export const manualControlReducers = {
   }
 };
 
+/**
+ * Réducteurs pour les opérations à la base
+ */
+export const baseReducers = {
+  /**
+   * Démarre le processus de ravitaillement
+   * @param {Object} context - Contexte FSM actuel
+   * @param {Object} event - Événement de ravitaillement
+   * @returns {Object} - Contexte avec ravitaillement démarré
+   */
+  startRefueling: (context, event) => {
+    return {
+      ...context,
+      currentAction: 'refueling',
+      refuelStartTime: Date.now(),
+      refuelStatus: 'in_progress'
+    };
+  },
+  
+  /**
+   * Démarre le déchargement des ressources
+   * @param {Object} context - Contexte FSM actuel
+   * @param {Object} event - Événement de déchargement
+   * @returns {Object} - Contexte avec déchargement démarré
+   */
+  startUnloading: (context, event) => {
+    return {
+      ...context,
+      currentAction: 'unloading',
+      unloadStartTime: Date.now(),
+      unloadStatus: 'in_progress'
+    };
+  },
+  
+  /**
+   * Démarre le processus de réparation
+   * @param {Object} context - Contexte FSM actuel
+   * @param {Object} event - Événement de réparation
+   * @returns {Object} - Contexte avec réparation démarrée
+   */
+  startRepairing: (context, event) => {
+    return {
+      ...context,
+      currentAction: 'repairing',
+      repairStartTime: Date.now(),
+      repairStatus: 'in_progress'
+    };
+  },
+  
+  /**
+   * Termine et nettoie les opérations de maintenance
+   * @param {Object} context - Contexte FSM actuel
+   * @returns {Object} - Contexte avec maintenance terminée
+   */
+  completeAllMaintenance: (context) => {
+    return {
+      ...context,
+      maintenanceStatus: 'complete',
+      lastMaintenanceTime: Date.now(),
+      currentAction: 'maintenance_complete',
+      // Reset tous les statuts
+      emergencyFlag: false,
+      emergencyReason: null,
+      capacityWarning: false
+    };
+  }
+};
+
 // ============================================================================
 // EXPORT
 // ============================================================================
@@ -423,6 +491,7 @@ export const contextReducers = {
   exploration: explorationReducers,
   emergency: emergencyReducers,
   manual: manualControlReducers,
+  base: baseReducers,
   
   // Réducteur d'état (fonction principale)
   updateState: updateStateReducer

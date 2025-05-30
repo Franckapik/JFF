@@ -16,6 +16,7 @@
 import { state, transition, reduce } from 'robot3';
 import { BOT_STATES } from './index.js';
 import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/index.js';
+import { contextReducers } from '../reducers/context.js';
 
 /**
  * État RETURNING - Retour à la base
@@ -27,28 +28,41 @@ export const returningState = state(
   transition('BASE_REACHED',
     BOT_STATES.IDLE_AT_BASE,
     (context, event) => baseGuards.isAtBase(context, event),
-    reduce((context, event) => ({
-      ...context,
-      position: event.coord,
-      arrivalTime: event.timestamp || Date.now(),
-      currentAction: 'at_base',
-      // Récupérer le drone s'il n'est pas à la base
-      isDroneAtShip: true,
-      lastStateChange: Date.now()
-    }))
+    reduce((context, event) => {
+      // Mettre à jour la position et récupérer le drone
+      const updatedContext = {
+        ...context,
+        position: event.coord,
+        arrivalTime: event.timestamp || Date.now(),
+        isDroneAtShip: true
+      };
+      
+      // Préparer l'état idle à la base
+      return contextReducers.state.prepareIdleAtBase(updatedContext, {
+        reason: 'at_base'
+      });
+    })
   ),
 
   // Mouvement en cours vers la base
   transition('MOVEMENT_STARTED',
     BOT_STATES.RETURNING, // Reste en returning
     () => true,
-    reduce((context, event) => ({
-      ...context,
-      movementStatus: 'en_route',
-      targetCoord: event.targetCoord,
-      movementStartTime: Date.now(),
-      currentAction: 'moving_to_base'
-    }))
+    reduce((context, event) => {
+      // Utiliser le reducer de mouvement
+      const movementContext = contextReducers.movement.startMovement(context, {
+        targetTile: {
+          coord: event.targetCoord
+        }
+      });
+      
+      // Mettre à jour le statut du contexte
+      return {
+        ...movementContext,
+        movementStatus: 'en_route',
+        currentAction: 'moving_to_base'
+      };
+    })
   ),
 
   // Progression du mouvement

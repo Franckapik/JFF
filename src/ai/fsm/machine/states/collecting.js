@@ -13,6 +13,7 @@
 import { state, transition, reduce } from 'robot3';
 import { BOT_STATES } from './index.js';
 import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/index.js';
+import { contextReducers } from '../reducers/context.js';
 
 /**
  * État COLLECTING - Collecte de ressources connues
@@ -24,29 +25,44 @@ export const collectingState = state(
   transition('RESOURCE_COLLECTED',
     BOT_STATES.EVALUATING,
     (context, event) => efficiencyGuards.shouldCollectMore(context, event),
-    reduce((context, event) => ({
-      ...context,
-      vehicle: {
-        ...context.vehicle,
-        inventory: event.newInventory
-      },
-      lastCollectedResource: event.resource,
-      collectionTime: Date.now(),
-      hasNewResourceDiscovery: false, // Reset le flag
-      currentAction: 'resource_collected'
-    }))
+    reduce((context, event) => {
+      // Ajouter la ressource à l'inventaire
+      let updatedContext = contextReducers.resource.addResource(context, {
+        resource: event.resource,
+        amount: event.amount || 1
+      });
+      
+      // Mettre à jour le contexte avec les informations supplémentaires
+      updatedContext = {
+        ...updatedContext,
+        lastCollectedResource: event.resource,
+        collectionTime: Date.now(),
+        hasNewResourceDiscovery: false // Reset le flag
+      };
+      
+      // Préparer l'évaluation pour décider de la prochaine action
+      return contextReducers.state.prepareEvaluating(updatedContext, {
+        reason: 'resource_collected'
+      });
+    })
   ),
 
   // Inventaire plein pendant la collecte
   transition('INVENTORY_FULL',
     BOT_STATES.RETURNING,
     (context, event) => efficiencyGuards.isAtMaxCapacity(context, event),
-    reduce((context) => ({
-      ...context,
-      inventoryStatus: 'full',
-      currentAction: 'returning_full_inventory',
-      lastStateChange: Date.now()
-    }))
+    reduce((context, event) => {
+      // Marquer l'inventaire comme plein
+      const updatedContext = {
+        ...context,
+        inventoryStatus: 'full'
+      };
+      
+      // Préparer le retour à la base
+      return contextReducers.state.prepareReturning(updatedContext, {
+        reason: 'returning_full_inventory'
+      });
+    })
   ),
 
   // Ressource épuisée ou non accessible

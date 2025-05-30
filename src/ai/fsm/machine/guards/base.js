@@ -74,6 +74,12 @@ export const baseGuards = {
   isBaseReturnUrgent: (context, event) => {
     return fuelGuards.isCriticalFuel(context, event) ||
            movementGuards.isVehicleCritical(context, event);
+  },
+  
+  // Check if vehicle needs refueling
+  needsRefueling: (context, event) => {
+    const fuel = context.vehicle?.fuel || 0;
+    return fuel < 100 && baseGuards.isAtBase(context, event);
   }
 };
 
