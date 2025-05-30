@@ -1,61 +1,80 @@
 import { useState, useCallback } from 'react';
-import usePlayerStore from "../../../stores/usePlayerStore";
-import useBotStore from "../../../stores/useBotStore/";
 import { useTileStore } from "../../../stores/useTileStore";
-import {
-  getHumanPlayerId,
-  getBotId,
-  getMainShipId,
-  getDroneId,
-  VEHICLE_TYPES
-} from '../../../oldfsm/constants/playerConstants';
+import { useBotMachine } from "../../../ai/fsm/hooks/useBotMachine";
 
 /**
- * Hook personnalisé pour gérer les données du debugger
+ * Hook personnalisé pour gérer les données du debugger (FSM-only)
  */
 export const useDebuggerData = () => {
-  // États pour le débogueur
+  // États pour le débogueur (bot-only approach)
   const [activeTab, setActiveTab] = useState('actions');
-  const [activeSubTab, setActiveSubTab] = useState('resources');
-  const [activeBotId, setActiveBotId] = useState(getBotId(0));
+  const [activeSubTab, setActiveSubTab] = useState('stores');
+  const [currentBotIndex, setCurrentBotIndex] = useState(0);
   
-  // Récupération de l'état du bot
+  // Liste des bots disponibles (simplifiée pour maintenant)
+  const botIds = ['bot-0', 'bot-1', 'bot-2'];
+  const activeBotId = botIds[currentBotIndex];
+  
+  // Hook FSM pour le bot actuel
   const {
-    botState,
-    isRunning,
-    actionQueue,
-    actionHistory: storeActionHistory,
-    BOT_STATES,
-    ACTION_STATUS,
-    currentBotIndex,
-    switchActiveBot
-  } = useBotStore();
+    entity,
+    vehicle: botVehicle,
+    state: botState,
+    context,
+    actions,
+    isAutonomous,
+    canManualControl,
+    isMoving
+  } = useBotMachine(activeBotId);
+
+  // Simulation des données pour l'onglet Actions (à remplacer par les vraies données FSM)
+  const actionQueue = [
+    { id: 1, type: 'MOVE_TO', status: 'pending', target: '5,3' },
+    { id: 2, type: 'EXPLORE', status: 'running', area: 'sector-A' }
+  ];
   
-  // Récupération des données des joueurs
-  const botVehicle = usePlayerStore(state => state.players?.[activeBotId]?.vehicles?.[getMainShipId()]);
-  const botMemory = usePlayerStore(state => state.players?.[activeBotId]?.memory);
+  const storeActionHistory = [
+    { id: 1, type: 'MOVE_TO', status: 'completed', timestamp: Date.now() - 10000 },
+    { id: 2, type: 'COLLECT', status: 'failed', timestamp: Date.now() - 5000 }
+  ];
+
+  // Constants FSM
+  const BOT_STATES = {
+    IDLE: 'IDLE',
+    EXPLORING: 'EXPLORING', 
+    COLLECTING: 'COLLECTING',
+    RETURNING: 'RETURNING',
+    MANUAL_CONTROL: 'MANUAL_CONTROL'
+  };
   
-  // Données du joueur humain
-  const playerVehicle = usePlayerStore(state => state.players?.[getHumanPlayerId(1)]?.vehicles?.[getMainShipId()]);
-  const playerData = usePlayerStore(state => state.players?.[getHumanPlayerId(1)]);
+  const ACTION_STATUS = {
+    PENDING: 'pending',
+    RUNNING: 'running',
+    COMPLETED: 'completed',
+    FAILED: 'failed'
+  };
   
-  // Récupérer la fonction calculateDistance du TileStore
+  // Simulation d'un véhicule bot basé sur l'entité FSM
+  const botMemory = entity ? {
+    exploredTiles: [],
+    knownResources: [],
+    lastTarget: entity.target
+  } : null;
+  
+  // Récupérer les données du TileStore
   const calculateDistance = useTileStore((state) => state.calculateDistance);
-  
-  // Récupération des données des tuiles pour l'onglet Tile
   const hoveredTileCoord = useTileStore((state) => state.hoveredTile);
   const tiles = useTileStore((state) => state.tiles);
   const hoveredTile = hoveredTileCoord ? tiles[hoveredTileCoord] : null;
   
-  // Nombre de bots dans le jeu
-  const botCount = usePlayerStore(state => 
-    Object.keys(state.players || {}).filter(id => id !== getHumanPlayerId(1)).length
-  );
-
+  // Nombre de bots disponibles
+  const botCount = botIds.length;
+  
   // Changer le bot actif
   const handleBotChange = (index) => {
-    switchActiveBot(index);
-    setActiveBotId(getBotId(index));
+    if (index >= 0 && index < botIds.length) {
+      setCurrentBotIndex(index);
+    }
   };
 
   return {
@@ -66,9 +85,9 @@ export const useDebuggerData = () => {
     setActiveSubTab,
     activeBotId,
     
-    // Données bot
+    // Données bot FSM
     botState,
-    isRunning,
+    isRunning: isAutonomous, // Le bot est "running" s'il est en mode autonome
     actionQueue,
     storeActionHistory,
     BOT_STATES,
@@ -76,10 +95,6 @@ export const useDebuggerData = () => {
     currentBotIndex,
     botVehicle,
     botMemory,
-    
-    // Données joueur
-    playerVehicle,
-    playerData,
     
     // Données tuiles
     hoveredTile,
@@ -91,5 +106,12 @@ export const useDebuggerData = () => {
     
     // Actions
     handleBotChange,
+    
+    // Nouvelles données FSM
+    entity,
+    context,
+    isAutonomous,
+    canManualControl,
+    isMoving
   };
 };

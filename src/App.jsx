@@ -9,6 +9,7 @@ import Clock from "./components/HUD/Clock";
 // ============= COMPOSANTS FSM =============
 import MultiBotManagerFSM from "./components/FSM/MultiBotManagerFSM";
 import FSMDebugPanel from "./components/FSM/FSMDebugPanel";
+import BotDebuggerNew from "./components/HUD/BotDebugger";
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
@@ -24,6 +25,9 @@ const App = () => {
         <VehicleSelector />
       </div>
       */}
+
+            {/* Bot Debugger - positionné à gauche de l'écran */}
+      <BotDebuggerNew />
 
 
 

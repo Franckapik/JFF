@@ -222,11 +222,11 @@ Refactorise BotDebugger pour :
 - [x] ✅ **Intégration avec actions movement.js existantes** ✅ FAIT
 
 ### Phase 3 : Composants Bot
-- [ ] **BotController.jsx manquant** (utilise useBotMachine)
-- [ ] **MultiBotManager.jsx manquant** (gestion multi-bots)
-- [ ] **Debug panel FSM avancé manquant** (amélioration BotDebugger.jsx)
-- [ ] Interface de contrôle manuel/autonome
-- [ ] Indicateurs visuels FSM (états, transitions, contexte)
+- [x] ✅ **BotController.jsx** (utilise useBotMachine) ✅ FAIT
+- [x] ✅ **MultiBotManagerFSM.jsx** (gestion multi-bots) ✅ FAIT 
+- [x] ✅ **FSMDebugPanel.jsx avancé** (amélioration debug FSM) ✅ FAIT
+- [x] ✅ **Interface de contrôle manuel/autonome** ✅ FAIT
+- [x] ✅ **Indicateurs visuels FSM** (états, transitions, contexte) ✅ FAIT
 
 ### Phase 4 : Migration Bot
 - [ ] **Système parallèle ancien/nouveau manquant**

@@ -31,12 +31,13 @@ export const useDebuggerUtils = () => {
   }, []); 
 
   // Obtenir la couleur pour un statut d'action
-  const getActionStatusColor = useCallback((status, ACTION_STATUS) => {
+  const getActionStatusColor = useCallback((status) => {
     switch(status) {
-      case ACTION_STATUS.PENDING: return "#f9a825"; // Orange
-      case ACTION_STATUS.IN_PROGRESS: return "#2196F3"; // Bleu
-      case ACTION_STATUS.COMPLETED: return "#4CAF50"; // Vert
-      case ACTION_STATUS.FAILED: return "#f44336"; // Rouge
+      case 'pending': return "#f9a825"; // Orange
+      case 'in_progress': return "#2196F3"; // Bleu
+      case 'running': return "#2196F3"; // Bleu (alias pour in_progress)
+      case 'completed': return "#4CAF50"; // Vert
+      case 'failed': return "#f44336"; // Rouge
       default: return "#aaaaaa"; // Gris
     }
   }, []);
