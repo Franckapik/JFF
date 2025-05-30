@@ -1,27 +1,59 @@
 /**
  * ============================================================================
- * MOVEMENT ACTIONS CORE - Actions de mouvement pures et partagées
+ * MOVEMENT & VEHICLE ACTIONS CORE - Actions pures et partagées
  * ============================================================================
  * 
- * Actions de mouvement pures, réutilisables par Bot et Player.
+ * Actions de mouvement et véhicule pures, réutilisables par Bot et Player.
  * Ces fonctions sont sans effets de bord et retournent des transformations
  * d'état plutôt que de muter directement les données.
  * 
- * Inspiré du pattern présenté dans actions-comparison.md
+ * Consolidation de movement.js et vehicle.js
  * 
  * @author Migration FSM
  * @version 1.0.0
  */
 
 // ============================================================================
-// CONSTANTS ET HELPERS
+// CONSTANTS ET TYPES - VÉHICULES
+// ============================================================================
+
+/**
+ * Types de véhicules supportés
+ */
+export const VEHICLE_TYPES = {
+  MAIN_SHIP: 'main-ship',
+  DRONE: 'drone',
+  SCOUT: 'scout',
+  HARVESTER: 'harvester'
+};
+
+/**
+ * États de véhicule par défaut
+ */
+export const DEFAULT_VEHICLE_STATE = {
+  isMoving: false,
+  speed: 1,
+  health: 100,
+  shield: 0,
+  active: true
+};
+
+/**
+ * Configuration par défaut des capacités
+ */
+export const DEFAULT_CAPACITIES = {
+  [VEHICLE_TYPES.MAIN_SHIP]: { food: 100, debris: 1000, special: 2 },
+  [VEHICLE_TYPES.DRONE]: { food: 20, debris: 50, special: 1 },
+  [VEHICLE_TYPES.SCOUT]: { food: 10, debris: 20, special: 0 },
+  [VEHICLE_TYPES.HARVESTER]: { food: 50, debris: 500, special: 1 }
+};
+
+// ============================================================================
+// CONSTANTS ET HELPERS - MOUVEMENT
 // ============================================================================
 
 /**
  * Validation et normalisation d'une tuile cible
- * @param {Object} tile - Tuile à valider
- * @returns {Object} - Tuile validée
- * @throws {Error} - Si la tuile est invalide
  */
 const validateTargetTile = (tile) => {
   if (!tile) {
@@ -75,6 +107,64 @@ const calculateDistance = (coord1, coord2) => {
   const [x2, y2] = coord2.split(',').map(Number);
   
   return Math.abs(x2 - x1) + Math.abs(y2 - y1);
+};
+
+/**
+ * Validation et normalisation des propriétés d'un véhicule
+ */
+const validateVehicle = (vehicle) => {
+  if (!vehicle || typeof vehicle !== 'object') {
+    throw new Error('Vehicle must be a valid object');
+  }
+
+  if (!vehicle.id) {
+    throw new Error('Vehicle must have an id');
+  }
+
+  if (!vehicle.type || !Object.values(VEHICLE_TYPES).includes(vehicle.type)) {
+    throw new Error(`Invalid vehicle type. Must be one of: ${Object.values(VEHICLE_TYPES).join(', ')}`);
+  }
+
+  return {
+    ...DEFAULT_VEHICLE_STATE,
+    ...vehicle,
+    health: Math.max(0, Math.min(100, Number(vehicle.health) || 100)),
+    shield: Math.max(0, Number(vehicle.shield) || 0),
+    speed: Math.max(0.1, Number(vehicle.speed) || 1)
+  };
+};
+
+/**
+ * Validation et normalisation des mises à jour de propriétés
+ */
+const validateUpdates = (updates) => {
+  if (!updates || typeof updates !== 'object') {
+    return {};
+  }
+
+  const validated = { ...updates };
+
+  if (validated.health !== undefined) {
+    validated.health = Math.max(0, Math.min(100, Number(validated.health)));
+  }
+  
+  if (validated.shield !== undefined) {
+    validated.shield = Math.max(0, Number(validated.shield));
+  }
+  
+  if (validated.speed !== undefined) {
+    validated.speed = Math.max(0.1, Number(validated.speed));
+  }
+
+  if (validated.isMoving !== undefined) {
+    validated.isMoving = Boolean(validated.isMoving);
+  }
+  
+  if (validated.active !== undefined) {
+    validated.active = Boolean(validated.active);
+  }
+
+  return validated;
 };
 
 // ============================================================================
@@ -135,6 +225,67 @@ export const movementGuards = {
     const vehicle = context.vehicle;
     return vehicle?.progress >= 100 || 
            (vehicle?.coord === vehicle?.targetTile?.coord);
+  },
+
+  // ============================================================================
+  // GUARDS VÉHICULE - Ajoutés lors de la consolidation avec vehicle.js
+  // ============================================================================
+
+  /**
+   * Vérifie si un véhicule est actif
+   * @param {Object} context - Contexte à vérifier
+   * @returns {boolean} - True si le véhicule est actif
+   */
+  isVehicleActive: (context) => {
+    return Boolean(context.vehicle?.active);
+  },
+
+  /**
+   * Vérifie si un véhicule est opérationnel
+   * @param {Object} context - Contexte à vérifier
+   * @returns {boolean} - True si le véhicule est opérationnel
+   */
+  isVehicleOperational: (context) => {
+    const vehicle = context.vehicle;
+    return movementGuards.isVehicleActive(context) && (vehicle?.health || 0) > 0;
+  },
+
+  /**
+   * Vérifie si un véhicule est endommagé
+   * @param {Object} context - Contexte à vérifier
+   * @returns {boolean} - True si le véhicule est endommagé
+   */
+  isVehicleDamaged: (context) => {
+    return (context.vehicle?.health || 100) < 100;
+  },
+
+  /**
+   * Vérifie si un véhicule est en état critique
+   * @param {Object} context - Contexte à vérifier
+   * @param {number} threshold - Seuil critique (défaut: 20)
+   * @returns {boolean} - True si le véhicule est en état critique
+   */
+  isVehicleCritical: (context, threshold = 20) => {
+    return (context.vehicle?.health || 100) <= threshold;
+  },
+
+  /**
+   * Vérifie si un véhicule peut être utilisé
+   * @param {Object} context - Contexte à vérifier
+   * @returns {boolean} - True si le véhicule peut être utilisé
+   */
+  canUseVehicle: (context) => {
+    return movementGuards.isVehicleOperational(context) && 
+           !movementGuards.isVehicleCritical(context);
+  },
+
+  /**
+   * Vérifie si un véhicule a un bouclier
+   * @param {Object} context - Contexte à vérifier
+   * @returns {boolean} - True si le véhicule a un bouclier
+   */
+  hasShield: (context) => {
+    return (context.vehicle?.shield || 0) > 0;
   }
 };
 
@@ -143,7 +294,7 @@ export const movementGuards = {
 // ============================================================================
 
 /**
- * Actions de mouvement pures - Compatible Bot et Player
+ * Actions de mouvement et véhicule pures - Compatible Bot et Player
  */
 export const movementActions = {
   
@@ -277,16 +428,35 @@ export const movementActions = {
       movementStartTime: null,
       lastMovementTime: Date.now()
     }
-  })
+  }),
+
+  /**
+   * Crée un véhicule avec capacités par défaut selon son type
+   * @param {Object} context - Contexte actuel
+   * @param {Object} event - Événement avec vehicleData
+   * @returns {Object} - Nouveau contexte avec véhicule créé
+   */
+  createVehicleWithCapacities: (context, event) => {
+    const vehicle = validateVehicle(event.vehicleData);
+    const defaultCapacity = DEFAULT_CAPACITIES[vehicle.type] || DEFAULT_CAPACITIES[VEHICLE_TYPES.DRONE];
+    
+    const vehicleWithCapacities = {
+      ...vehicle,
+      maxCapacity: vehicle.maxCapacity || defaultCapacity,
+      resources: vehicle.resources || { food: 0, debris: 0, special: 0 }
+    };
+
+    return {
+      ...context,
+      vehicle: vehicleWithCapacities
+    };
+  }
 };
 
 // ============================================================================
 // SELECTORS ET UTILITAIRES
 // ============================================================================
 
-/**
- * Sélecteurs pour extraire des informations de mouvement
- */
 export const movementSelectors = {
   
   /**
@@ -335,18 +505,78 @@ export const movementSelectors = {
   getDistanceToTarget: (vehicle) => {
     if (!vehicle?.coord || !vehicle?.targetTile?.coord) return 0;
     return calculateDistance(vehicle.coord, vehicle.targetTile.coord);
+  },
+
+  /**
+   * Récupère l'état complet d'un véhicule
+   * @param {Object} vehicle - Véhicule source
+   * @returns {Object} - État complet du véhicule
+   */
+  getVehicleStatus: (vehicle) => {
+    return {
+      id: vehicle?.id,
+      type: vehicle?.type,
+      active: Boolean(vehicle?.active),
+      operational: Boolean(vehicle?.active && (vehicle?.health || 0) > 0),
+      moving: Boolean(vehicle?.isMoving),
+      damaged: (vehicle?.health || 100) < 100,
+      critical: (vehicle?.health || 100) <= 20,
+      health: vehicle?.health || 100,
+      shield: vehicle?.shield || 0,
+      speed: vehicle?.speed || 1
+    };
+  },
+
+  /**
+   * Calcule le pourcentage de santé d'un véhicule
+   * @param {Object} vehicle - Véhicule source
+   * @returns {number} - Pourcentage de santé (0-100)
+   */
+  getHealthPercentage: (vehicle) => {
+    return Math.max(0, Math.min(100, vehicle?.health || 100));
+  },
+
+  /**
+   * Récupère les informations essentielles d'un véhicule
+   * @param {Object} vehicle - Véhicule source
+   * @returns {Object} - Informations essentielles
+   */
+  getVehicleEssentials: (vehicle) => {
+    return {
+      id: vehicle?.id,
+      type: vehicle?.type,
+      coord: vehicle?.coord,
+      position: vehicle?.position,
+      isMoving: Boolean(vehicle?.isMoving),
+      active: Boolean(vehicle?.active),
+      health: Math.max(0, Math.min(100, vehicle?.health || 100))
+    };
+  },
+
+  /**
+   * Vérifie si un véhicule a un bouclier actif
+   * @param {Object} vehicle - Véhicule à vérifier
+   * @returns {boolean} - True si le véhicule a un bouclier
+   */
+  hasActiveShield: (vehicle) => {
+    return (vehicle?.shield || 0) > 0;
+  },
+
+  /**
+   * Récupère les capacités d'un véhicule
+   * @param {Object} vehicle - Véhicule source
+   * @returns {Object} - Capacités du véhicule
+   */
+  getVehicleCapacities: (vehicle) => {
+    const defaultCapacity = DEFAULT_CAPACITIES[vehicle?.type] || DEFAULT_CAPACITIES[VEHICLE_TYPES.DRONE];
+    return vehicle?.maxCapacity || defaultCapacity;
   }
 };
-
-// Les guards sont déjà définis plus haut
 
 // ============================================================================
 // EVENTS ET TRANSFORMATIONS
 // ============================================================================
 
-/**
- * Générateurs d'événements pour le système de mouvement
- */
 export const movementEvents = {
   
   /**
@@ -383,7 +613,137 @@ export const movementEvents = {
    */
   completeMovement: () => ({
     type: 'COMPLETE_MOVEMENT'
+  }),
+
+  /**
+   * Crée un événement de création de véhicule avec capacités
+   * @param {Object} vehicleData - Données du véhicule
+   * @returns {Object} - Événement formaté
+   */
+  createVehicleWithCapacities: (vehicleData) => ({
+    type: 'CREATE_VEHICLE_WITH_CAPACITIES',
+    vehicleData
+  }),
+
+  /**
+   * Événement de mise à jour de véhicule
+   * @param {Object} vehicle - Véhicule mis à jour
+   * @param {Object} changes - Changements appliqués
+   * @returns {Object} - Événement
+   */
+  vehicleUpdatedEvent: (vehicle, changes) => ({
+    type: 'VEHICLE_UPDATED',
+    payload: {
+      vehicleId: vehicle.id,
+      changes,
+      timestamp: Date.now()
+    }
+  }),
+
+  /**
+   * Événement d'activation/désactivation de véhicule
+   * @param {Object} vehicle - Véhicule concerné
+   * @param {boolean} active - Nouvel état d'activation
+   * @returns {Object} - Événement
+   */
+  vehicleStateChangedEvent: (vehicle, active) => ({
+    type: 'VEHICLE_STATE_CHANGED',
+    payload: {
+      vehicleId: vehicle.id,
+      active,
+      timestamp: Date.now()
+    }
+  }),
+
+  /**
+   * Événement de dégâts sur véhicule
+   * @param {Object} vehicle - Véhicule endommagé
+   * @param {number} damage - Dégâts subis
+   * @param {number} newHealth - Nouvelle santé
+   * @returns {Object} - Événement
+   */
+  vehicleDamagedEvent: (vehicle, damage, newHealth) => ({
+    type: 'VEHICLE_DAMAGED',
+    payload: {
+      vehicleId: vehicle.id,
+      damage,
+      oldHealth: vehicle.health || 100,
+      newHealth,
+      critical: newHealth <= 20,
+      timestamp: Date.now()
+    }
+  }),
+
+  /**
+   * Événement de réparation de véhicule
+   * @param {Object} vehicle - Véhicule réparé
+   * @param {number} amount - Quantité réparée
+   * @param {number} newHealth - Nouvelle santé
+   * @returns {Object} - Événement
+   */
+  vehicleRepairedEvent: (vehicle, amount, newHealth) => ({
+    type: 'VEHICLE_REPAIRED',
+    payload: {
+      vehicleId: vehicle.id,
+      repairAmount: amount,
+      oldHealth: vehicle.health || 100,
+      newHealth,
+      fullyRepaired: newHealth >= 100,
+      timestamp: Date.now()
+    }
   })
+};
+
+// ============================================================================
+// UTILITAIRES
+// ============================================================================
+
+/**
+ * Combine plusieurs mises à jour de véhicule
+ * @param {...Object} updates - Mises à jour à combiner
+ * @returns {Object} - Mises à jour combinées
+ */
+export const combineVehicleUpdates = (...updates) => {
+  return updates.reduce((combined, update) => ({
+    ...combined,
+    ...validateUpdates(update)
+  }), {});
+};
+
+/**
+ * Filtre les véhicules par état
+ * @param {Object} vehicles - Dictionnaire des véhicules
+ * @param {Function} predicate - Fonction de filtrage
+ * @returns {Object} - Véhicules filtrés
+ */
+export const filterVehicles = (vehicles, predicate) => {
+  return Object.entries(vehicles)
+    .filter(([_, vehicle]) => predicate(vehicle))
+    .reduce((filtered, [id, vehicle]) => {
+      filtered[id] = vehicle;
+      return filtered;
+    }, {});
+};
+
+/**
+ * Valide l'intégrité d'un véhicule
+ * @param {Object} vehicle - Véhicule à valider
+ * @returns {Object} - Résultat de validation
+ */
+export const validateVehicleIntegrity = (vehicle) => {
+  const errors = [];
+  const warnings = [];
+
+  if (!vehicle?.id) errors.push('Missing vehicle ID');
+  if (!vehicle?.type) errors.push('Missing vehicle type');
+  if ((vehicle?.health || 0) < 0 || (vehicle?.health || 0) > 100) warnings.push('Health out of range');
+  if ((vehicle?.speed || 0) <= 0) warnings.push('Invalid speed value');
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
 };
 
 // ============================================================================
@@ -398,6 +758,44 @@ export default {
   utils: {
     validateTargetTile,
     calculateDistance,
-    clamp
+    clamp,
+    combineVehicleUpdates,
+    filterVehicles,
+    validateVehicleIntegrity,
+    validateVehicle,
+    validateUpdates
   }
 };
+
+// ============================================================================
+// EXPORTS NOMMÉS POUR COMPATIBILITÉ
+// ============================================================================
+
+// Exports pour les actions véhicule
+export const {
+  updateVehicleProperties,
+  activateVehicle,
+  deactivateVehicle,
+  damageVehicle,
+  repairVehicle,
+  setVehicleShield,
+  setVehicleSpeed,
+  createVehicleWithCapacities
+} = movementActions;
+
+// Exports pour les selectors véhicule
+export const {
+  getVehicleStatus,
+  getHealthPercentage,
+  getVehicleEssentials,
+  hasActiveShield,
+  getVehicleCapacities
+} = movementSelectors;
+
+// Exports pour les événements véhicule
+export const {
+  vehicleUpdatedEvent,
+  vehicleStateChangedEvent,
+  vehicleDamagedEvent,
+  vehicleRepairedEvent
+} = movementEvents;

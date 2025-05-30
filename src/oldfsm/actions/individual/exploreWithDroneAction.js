@@ -14,9 +14,9 @@ import {
   getDroneId,
   VEHICLE_TYPES
 } from '../../../constants/playerConstants';
-import useDroneState, { DRONE_STATES } from '../../../../hooks/useDroneState';
-import { BotConditions } from '../../conditions/botConditions';
-import fsmLogger from '../../../../utils/fsmLogger';
+import useDroneState, { DRONE_STATES } from '../../../hooks/useDroneState';
+import { BotConditions } from '../../../ai/fsm/conditions/botConditions';
+import fsmLogger from '../../../utils/fsmLogger';
 
 /**
  * Envoie le drone explorer une tuile non découverte à proximité

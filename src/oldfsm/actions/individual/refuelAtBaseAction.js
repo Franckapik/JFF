@@ -9,8 +9,8 @@
  */
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
 import { getBotId, getMainShipId } from '../../../constants/playerConstants';
-import { BotConditions } from '../../conditions/botConditions';
-import fsmLogger from '../../../../utils/fsmLogger';
+import { BotConditions } from '../../../ai/fsm/conditions/botConditions';
+import fsmLogger from '../../../utils/fsmLogger';
 
 /**
  * Fait le plein de carburant à la base

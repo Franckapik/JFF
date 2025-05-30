@@ -8,10 +8,10 @@
  * Cette action utilise BotConditions.evaluateStateTransition qui centralise la logique de transition.
  */
 
-import { BotConditions } from '../../conditions/botConditions';
+import { BotConditions } from '../../../ai/fsm/conditions/botConditions';
 import { BOT_STATES, PRIORITY } from '../../../constants/botConstants';
 import { getMainShipId } from '../../../constants/playerConstants';
-import fsmLogger from '../../../../utils/fsmLogger';
+import fsmLogger from '../../../utils/fsmLogger';
 
 // Throttling constants to prevent infinite loops
 const EVALUATE_IDLE_THROTTLE_MS = 2000; // Minimum 2 seconds between evaluateIdle actions

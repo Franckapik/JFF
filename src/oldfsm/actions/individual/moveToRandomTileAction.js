@@ -8,8 +8,8 @@
  * Le seul changement d'état autorisé est vers IDLE avec evaluateIdle.
  */
 import { BOT_STATES } from '../../../constants/botConstants';
-import fsmLogger from '../../../../utils/fsmLogger';
-import { BotConditions } from '../../conditions/botConditions';
+import fsmLogger from '../../../utils/fsmLogger';
+import { BotConditions } from '../../../ai/fsm/conditions/botConditions';
 import { getMainShipId } from '../../../constants/playerConstants';
 
 /**
