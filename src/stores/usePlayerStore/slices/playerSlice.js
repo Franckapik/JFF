@@ -1,17 +1,17 @@
 /**
  * =========================================================================
- * PLAYER SLICE
+ * PLAYER SLICE (BOT-ONLY SYSTEM)
  * =========================================================================
  * 
- * Ce slice gère la logique de base des joueurs dans le jeu :
- * - Création dynamique des joueurs (humains et bots)
+ * Ce slice gère la logique de base des bots dans le jeu :
+ * - Création dynamique des bots uniquement (système bot-only)
  * - Configuration des vitesses de déplacement par type de véhicule
  * - Initialisation des positions de départ sur les tuiles appropriées
  * - Positionnement automatique des drones autour des vaisseaux principaux
  * 
  * Dépendances :
- * - useGameStore : pour récupérer la configuration du nombre de joueurs/bots
- * - playerFactory : pour créer les instances de joueurs
+ * - useGameStore : pour récupérer la configuration du nombre de bots
+ * - playerFactory : pour créer les instances de bots
  * - playerConstants : pour les identifiants et types de véhicules
  */
 
@@ -19,13 +19,11 @@
 // IMPORTS
 // =========================================================================
 import useGameStore from '../../useGameStore/';
-import { getMainShipId, VEHICLE_TYPES } from '../../../ai/constants/playerConstants';
-import fsmLogger from '../../../utils/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger';
 
 // Utilitaires refactorisés
 import { generateInitialPlayers } from '../utils/playerInitialization';
 import { validateStartingTiles, getStartingTiles } from '../utils/tileValidation';
-import { positionDronesAroundShip } from '../utils/droneFormation';
 
 // =========================================================================
 // CONSTANTES DE CONFIGURATION
@@ -36,7 +34,7 @@ import { positionDronesAroundShip } from '../utils/droneFormation';
  * Ces valeurs peuvent être ajustées pour équilibrer le gameplay
  */
 const MOVEMENT_SPEEDS = {
-  [VEHICLE_TYPES.SHIP]: {
+  ["ship"]: {
     speed: 2,
     rotationSpeed: 2.0
   },
@@ -73,7 +71,7 @@ const createPlayerSlice = (set, get) => {
     // =====================================================================
     
     /**
-     * Initialise les positions des joueurs sur les tuiles de départ
+     * Initialise les positions des bots sur les tuiles de départ (système bot-only)
      * 
      * Cette fonction :
      * 1. Valide qu'il y a suffisamment de tuiles de départ
@@ -84,12 +82,11 @@ const createPlayerSlice = (set, get) => {
      * @throws {Error} Si pas assez de tuiles de départ disponibles
      */
     initializePlayer: (tiles) => {
-      const { playerCount, botCount } = useGameStore.getState();
+      const { botCount } = useGameStore.getState();
       const currentPlayers = get().players;
       const numberOfPlayers = Object.keys(currentPlayers).length;
       
-      fsmLogger.player(`Starting player initialization`, {
-        playerCount,
+      fsmLogger.player(`Starting bot initialization`, {
         botCount,
         numberOfPlayers,
         totalTiles: Object.keys(tiles).length
@@ -99,22 +96,22 @@ const createPlayerSlice = (set, get) => {
       const startingTiles = getStartingTiles(tiles);
       
       // Validation des tuiles de départ
-      validateStartingTiles(startingTiles, playerCount, botCount, numberOfPlayers);
+      validateStartingTiles(startingTiles, 0, botCount, numberOfPlayers);
 
       // Mise à jour de l'état avec les nouvelles positions
       set((state) => {
         const updatedPlayers = { ...state.players };
         
-        fsmLogger.player(`Beginning player positioning on starting tiles`);
+        fsmLogger.player(`Beginning bot positioning on starting tiles`);
         
-        // Positionner chaque joueur sur une tuile de départ
+        // Positionner chaque bot sur une tuile de départ
         Object.keys(updatedPlayers).forEach((playerId, index) => {
           if (index < startingTiles.length) {
-            const shipId = getMainShipId(playerId);
+            const shipId = `${playerId}-ship`;
             const shipPosition = startingTiles[index].position;
             const shipCoord = startingTiles[index].coord;
             
-            fsmLogger.player(`Positioning player ${playerId} on starting tile ${shipCoord}`, {
+            fsmLogger.player(`Positioning bot ${playerId} on starting tile ${shipCoord}`, {
               playerId,
               shipId,
               shipCoord,
@@ -133,13 +130,13 @@ const createPlayerSlice = (set, get) => {
               },
             };
             
-            // Positionner les drones en formation autour du vaisseau
+/*             // Positionner les drones en formation autour du vaisseau
             const vehiclesWithDrones = positionDronesAroundShip(
               updatedVehicles, 
               playerId, 
               shipPosition, 
               shipCoord
-            );
+            ); */
             
             // Mettre à jour le joueur avec ses véhicules positionnés
             updatedPlayers[playerId] = {
@@ -147,13 +144,13 @@ const createPlayerSlice = (set, get) => {
               vehicles: vehiclesWithDrones
             };
 
-            fsmLogger.player(`Successfully positioned player ${playerId} with ${Object.keys(vehiclesWithDrones).length} vehicles`, {
+            fsmLogger.player(`Successfully positioned bot ${playerId} with ${Object.keys(vehiclesWithDrones).length} vehicles`, {
               playerId,
               vehicleCount: Object.keys(vehiclesWithDrones).length,
               vehicleIds: Object.keys(vehiclesWithDrones)
             });
           } else {
-            fsmLogger.player(`Warning: No starting tile available for player ${playerId} (index ${index})`, {
+            fsmLogger.player(`Warning: No starting tile available for bot ${playerId} (index ${index})`, {
               playerId,
               index,
               availableTiles: startingTiles.length
@@ -161,8 +158,8 @@ const createPlayerSlice = (set, get) => {
           }
         });
         
-        fsmLogger.player(`Player initialization completed successfully`, {
-          totalPlayersPositioned: Object.keys(updatedPlayers).length,
+        fsmLogger.player(`Bot initialization completed successfully`, {
+          totalBotsPositioned: Object.keys(updatedPlayers).length,
           playerIds: Object.keys(updatedPlayers)
         });
         

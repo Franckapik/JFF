@@ -1,13 +1,14 @@
 import React from 'react';
 
 /**
- * Composant pour la navigation par onglets du debugger
+ * Composant pour la navigation par onglets du debugger (Bot-only)
  */
 const DebuggerTabs = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: 'actions', label: 'Actions' },
-    { id: 'state', label: 'État' },
-    { id: 'resources', label: 'Ressources' }
+    { id: 'state', label: 'États FSM' },
+    { id: 'stores', label: 'Stores' },
+    { id: 'tile', label: 'Tuile' }
   ];
 
   return (

@@ -2,7 +2,7 @@
  * Utilitaires pour la création et la gestion des véhicules
  */
 
-import { VEHICLE_TYPES, isDroneActiveByDefault, isDroneId } from '../../../ai/constants/playerConstants';
+import { VEHICLE_TYPES, isDroneActiveByDefault, isDroneId } from '../../../shared/constants/playerConstants';
 
 /**
  * Crée un nouveau véhicule avec les propriétés de base

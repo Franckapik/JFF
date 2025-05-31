@@ -22,7 +22,7 @@
 // =========================================================================
 // IMPORTS
 // =========================================================================
-import { generateHexPositions } from '../../../utils/utils';
+// Import removed - generateHexPositions is now accessed via get() from the same store
 
 // =========================================================================
 // SLICE PRINCIPAL
@@ -139,20 +139,13 @@ const createTileBaseSlice = (set, get) => {
      * 
      * @param {number} radius - Rayon de génération des tuiles (défaut: 3)
      * @param {number} spacing - Espacement entre les tuiles (défaut: 0.1)
+     * @param {number} initialPlayerCount - Nombre initial de joueurs (défaut: 1)
      */
-    initializeTiles: (radius = 3, spacing = 0.1) => {
-      const hexPositions = generateHexPositions(radius, spacing);
+    initializeTiles: (radius = 3, spacing = 0.1, initialPlayerCount = 1) => {
+      const { initializeGameGrid } = get();
+      const hexPositions = initializeGameGrid(radius, spacing, initialPlayerCount);
       const tiles = hexPositions.reduce((acc, tile) => {
-        // Initialiser la tuile avec les propriétés de base
-        const tileWithOriginal = { 
-          ...tile, 
-          collected: false,
-          // Initialiser le pourcentage de ressources à 100% (toutes présentes)
-          resourcePercentage: 100,
-          // Stocker les ressources originales pour référence future
-          originalResources: tile.resources ? { ...tile.resources } : { food: 0, debris: 0, special: 0 }
-        };
-        return { ...acc, [tile.coord]: tileWithOriginal };
+        return { ...acc, [tile.coord]: tile };
       }, {});
       
       set({ tiles });

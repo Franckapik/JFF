@@ -15,7 +15,7 @@
  * @version 1.0.0
  */
 
-import fsmLogger from '../../../utils/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger';
 import { 
   isResourceAlreadyKnown, 
   isDangerAlreadyKnown,
@@ -41,9 +41,9 @@ const createMemorySlice = (set) => {
      * de la mémoire d'un joueur. Utilise un merge shallow pour préserver
      * les données existantes non modifiées.
      * 
-     * @param {string} playerId - ID unique du joueur (ex: 'player-1', 'player-2')
+     * @param {string} playerId - ID unique du bot (ex: 'bot-0', 'bot-1')
      * @param {Object} updates - Objet contenant les propriétés à mettre à jour
-     * @example updatePlayerMemory('player-1', { lastVisitedArea: 'forest' })
+     * @example updatePlayerMemory('bot-0', { lastVisitedArea: 'forest' })
      */
     updatePlayerMemory: (playerId, updates) => {
       set((state) => {
@@ -82,7 +82,7 @@ const createMemorySlice = (set) => {
      * @param {string} playerId - ID unique du joueur
      * @param {Object} resource - Objet ressource avec au minimum une propriété 'coord'
      * @param {string} resource.coord - Coordonnées de la ressource (format: "x,y")
-     * @example addKnownResource('player-1', { coord: '10,5', type: 'wood', amount: 50 })
+     * @example addKnownResource('bot-0', { coord: '10,5', type: 'wood', amount: 50 })
      */
     addKnownResource: (playerId, resource) => {
       set((state) => {
@@ -126,7 +126,7 @@ const createMemorySlice = (set) => {
      * @param {string} playerId - ID unique du joueur
      * @param {Object} danger - Objet danger avec au minimum une propriété 'coord'
      * @param {string} danger.coord - Coordonnées du danger (format: "x,y")
-     * @example addKnownDanger('player-1', { coord: '15,8', type: 'trap', severity: 'high' })
+     * @example addKnownDanger('bot-0', { coord: '15,8', type: 'trap', severity: 'high' })
      */
     addKnownDanger: (playerId, danger) => {
       set((state) => {
@@ -167,7 +167,7 @@ const createMemorySlice = (set) => {
      * Utilisé pour le suivi des performances et la progression du joueur.
      * 
      * @param {string} playerId - ID unique du joueur
-     * @example incrementExplorationCount('player-1') // explorationCount: 42 -> 43
+     * @example incrementExplorationCount('bot-0') // explorationCount: 42 -> 43
      */
     incrementExplorationCount: (playerId) => {
       set((state) => {

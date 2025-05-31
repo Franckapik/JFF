@@ -21,7 +21,7 @@
 // =========================================================================
 // IMPORTS
 // =========================================================================
-import { findPath } from '../../../utils/utils';
+// Import removed - findPath is now accessed via get() from the same store
 
 // =========================================================================
 // SLICE PRINCIPAL
@@ -62,6 +62,7 @@ const createTileCalculationSlice = (set, get) => {
         // Mode pathfinding : calcul de la distance réelle via algorithme de recherche
         if (usePathfinding) {
           const tiles = get().tiles;
+          const { findPath } = get();
           
           // Utilise la fonction findPath pour trouver le chemin le plus court
           const path = findPath(coord1, coord2, tiles);

@@ -2,14 +2,14 @@ import React, { useEffect } from "react";
 import usePlayerStore from "../stores/usePlayerStore";
 import useGameStore from "../stores/useGameStore/";
 import { useTileStore } from "../stores/useTileStore";
-import { isBotPlayerId, getMainShipId, VEHICLE_TYPES } from "../ai/constants/playerConstants";
-import { calculatePath } from "../utils/utils";
-import fsmLogger from "../utils/fsmLogger";
+import { isBotPlayerId, getMainShipId, VEHICLE_TYPES } from "../oldfsm/constants/playerConstants";
+import fsmLogger from "../logger/fsmLogger";
 import { useVehicleMovement } from "../hooks/useVehicleMovement";
 
 const ShipMovement = React.memo(({ playerId, children }) => {
   // === Sélecteurs des stores avec sélecteurs optimisés ===
   const tiles = useTileStore((state) => state.tiles);
+  const calculatePath = useTileStore((state) => state.calculatePath);
   const playerVehicles = usePlayerStore((state) => state.players[playerId]?.vehicles);
   
   // CORRECTION: Utiliser le playerId pour obtenir l'ID correct du vaisseau

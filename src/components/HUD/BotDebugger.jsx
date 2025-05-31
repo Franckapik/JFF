@@ -11,14 +11,12 @@ import DebuggerTabs from './debugger/DebuggerTabs';
 // Composants des onglets
 import ActionsTab from './debugger/ActionsTab';
 import StateTab from './debugger/StateTab';
-import ResourcesTab from './debugger/ResourcesTab';
-import PlayerTab from './debugger/PlayerTab';
 import TileTab from './debugger/TileTab';
 import StoresTab from './debugger/StoresTab';
 
 /**
- * Version refactorisée du BotDebugger
- * Affiche toutes les informations des bots de façon organisée
+ * BotDebugger refactorisé pour une approche bot-only
+ * Affiche les informations FSM des bots de façon organisée
  */
 const BotDebuggerNew = () => {
   // Récupération des données via le hook personnalisé
@@ -37,8 +35,6 @@ const BotDebuggerNew = () => {
     currentBotIndex,
     botVehicle,
     botMemory,
-    playerVehicle,
-    playerData,
     hoveredTile,
     hoveredTileCoord,
     calculateDistance,
@@ -49,9 +45,9 @@ const BotDebuggerNew = () => {
   // Récupération des utilitaires via le hook personnalisé
   const {
     formatStateName,
-    getActionStatusColor,
     getTileResourceBarStyle,
     isVehicleActive,
+    getActionStatusColor,
   } = useDebuggerUtils();
   // Rendu du contenu selon l'onglet actif
   const renderTabContent = () => {
@@ -61,36 +57,14 @@ const BotDebuggerNew = () => {
           <ActionsTab
             actionQueue={actionQueue}
             storeActionHistory={storeActionHistory}
-            ACTION_STATUS={ACTION_STATUS}
             getActionStatusColor={getActionStatusColor}
           />
         );
       case 'state':
         return (
           <StateTab
-            botState={botState}
-            isRunning={isRunning}
-            BOT_STATES={BOT_STATES}
             activeBotId={activeBotId}
             formatStateName={formatStateName}
-            isVehicleActive={isVehicleActive}
-          />
-        );
-      case 'resources':
-        return (
-          <ResourcesTab
-            botVehicle={botVehicle}
-            botMemory={botMemory}
-            activeSubTab={activeSubTab}
-            setActiveSubTab={setActiveSubTab}
-            calculateDistance={calculateDistance}
-          />
-        );
-      case 'player':
-        return (
-          <PlayerTab
-            playerVehicle={playerVehicle}
-            playerData={playerData}
             isVehicleActive={isVehicleActive}
           />
         );
@@ -99,7 +73,6 @@ const BotDebuggerNew = () => {
           <TileTab
             hoveredTile={hoveredTile}
             hoveredTileCoord={hoveredTileCoord}
-            playerVehicle={playerVehicle}
             botVehicle={botVehicle}
             calculateDistance={calculateDistance}
             currentBotIndex={currentBotIndex}

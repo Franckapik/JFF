@@ -1,7 +1,7 @@
 // src/stores/useBotStore/slices/queueSlice.js
-import { BOT_STATES, PRIORITY } from '../../../ai/constants/botConstants';
-import { BotActions } from '../../../ai/fsm/actions/botActions';
-import fsmLogger from '../../../utils/fsmLogger';
+import { BOT_STATES, PRIORITY } from '../../../oldfsm/constants/botConstants';
+import { BotActions } from '../../../oldfsm/actions/botActions';
+import fsmLogger from '../../../logger/fsmLogger';
 
 // Statuts d'action
 const ACTION_STATUS = {

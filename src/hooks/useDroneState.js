@@ -1,10 +1,9 @@
 // Drone state machine hook
 import { create } from 'zustand';
-import { VEHICLE_TYPES } from '../ai/constants/playerConstants';
-import fsmLogger from '../utils/fsmLogger';
+import fsmLogger from '../logger/fsmLogger';
 
 // Fonction utilitaire pour extraire le playerId à partir d'un droneId
-// Format attendu: player-1-drone-explorer
+// Format attendu: bot-0-drone-explorer
 const extractPlayerId = (droneId) => {
   if (!droneId) return null;
   const parts = droneId.split('-');

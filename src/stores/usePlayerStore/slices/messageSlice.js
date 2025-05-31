@@ -16,7 +16,7 @@
  * @version 1.0.0
  */
 
-import fsmLogger from '../../../utils/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger';
 import { markAllMessagesAsRead } from '../utils';
 
 // ============================================================================
@@ -46,7 +46,7 @@ const createMessageSlice = (set) => {
      * @param {boolean} [message.isRead] - État de lecture (défaut: false)
      * 
      * @example 
-     * addPlayerMessage('player-1', {
+     * addPlayerMessage('bot-0', {
      *   content: 'Ressource découverte!',
      *   timestamp: Date.now(),
      *   type: 'success',
@@ -90,7 +90,7 @@ const createMessageSlice = (set) => {
      * 
      * @param {string} playerId - ID unique du joueur
      * 
-     * @example markMessagesAsRead('player-1') // Tous les messages deviennent lus
+     * @example markMessagesAsRead('bot-0') // Tous les messages deviennent lus
      */
     markMessagesAsRead: (playerId) => {
       set((state) => {

@@ -19,12 +19,14 @@
  * Dépendances :
  * - playerConstants : pour l'attribution des bases aux joueurs
  * - calculateDistance : pour les calculs de proximité (via get())
+ * - useFSMStore : pour synchroniser avec les bots actifs
  */
+
+import useFSMStore from '../../useFSMStore/index.js';
 
 // =========================================================================
 // IMPORTS
 // =========================================================================
-import { getHumanPlayerId, getBotId } from '../../../ai/constants/playerConstants';
 
 // =========================================================================
 // SLICE PRINCIPAL
@@ -154,27 +156,39 @@ const createTileFilterSlice = (set, get) => {
     },
     
     /**
-     * Récupère toutes les tuiles de départ avec attribution automatique aux joueurs
+     * Récupère toutes les tuiles de départ existantes (render-safe)
      * 
-     * Cette fonction :
-     * 1. Filtre les tuiles de type "depart"
-     * 2. Attribue automatiquement les joueurs selon l'ordre :
-     *    - Index 0 : joueur humain principal
-     *    - Index 1+ : bots numérotés
-     * 3. Ajoute des métadonnées pour l'identification des bases
+     * Cette fonction est entièrement render-safe et ne fait que lire l'état actuel.
+     * Aucune synchronisation ou accès à d'autres stores pendant le rendu.
+     * Le filtrage par bots actifs est fait au niveau du composant si nécessaire.
      * 
-     * @returns {Array} Liste des tuiles de départ avec métadonnées de joueurs
+     * @returns {Array} Liste des tuiles de départ existantes
      */
     getDepartTiles: () => {
       const { tiles } = get();
-      return Object.values(tiles)
-        .filter(tile => tile.type === "depart")
-        .map((tile, index) => ({
-          ...tile,
-          playerId: index === 0 ? getHumanPlayerId(1) : getBotId(index - 1),
-          isPlayerBase: index === 0,
-          playerIndex: index
-        }));
+      
+      // Récupérer uniquement les tuiles de départ existantes (lecture seule)
+      const departTiles = Object.values(tiles).filter(tile => tile.type === "depart");
+      
+      // Retourner toutes les tuiles de départ avec leurs assignements actuels
+      return departTiles;
+    },
+
+    /**
+     * Force la synchronisation des tuiles de départ avec les bots actifs
+     * Cette fonction DOIT être appelée depuis un effet ou une action, pas pendant le rendu
+     * 
+     * @returns {void}
+     */
+    syncDepartTilesWithActiveBots: () => {
+      const { syncStartingTilesWithFSMBots } = get();
+      
+      // Récupérer les bots actifs depuis le FSMStore
+      const activeBots = useFSMStore.getState().activeBots;
+      const activeBotIds = activeBots;
+      
+      // Synchroniser les tuiles de départ avec les bots actifs
+      syncStartingTilesWithFSMBots(activeBotIds);
     },
     
     /**

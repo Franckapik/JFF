@@ -3,32 +3,21 @@ import { Cone, Html } from "@react-three/drei";
 import ShipMovement from "../Mouvement/ShipMovement";
 import DroneMovement from "../Mouvement/DroneMovement";
 import usePlayerStore from "../stores/usePlayerStore";
-import useBotStore from "../stores/useBotStore/";
-import { 
-  getBotId, 
-  getMainShipId, 
-  getDroneId, 
-  isMainShipId,
-  VEHICLE_TYPES,
-  getHumanPlayerId
-} from "../ai/constants/playerConstants";
 
 /**
  * =================================================================
- * Composant Fleet
+ * Composant Fleet (Bot-Only)
  * =================================================================
  * Un composant réutilisable qui encapsule la logique de rendu 
- * d'une flotte et ses drones. Peut également être utilisé pour le joueur humain.
+ * d'une flotte de bots et leurs drones. Système bot-only uniquement.
  * 
  * @param {Object} props
- * @param {number|null} props.botIndex - Index du bot (0 pour Bot 1, 1 pour Bot 2, etc.), null pour le joueur humain
+ * @param {number} props.botIndex - Index du bot (0 pour Bot 1, 1 pour Bot 2, etc.)
  * @param {string} props.color - Couleur unique pour le bot et ses drones
- * @param {boolean} props.isHuman - Indique si c'est le joueur humain
  */
 const Fleet = React.memo(({ 
-  botIndex = null, 
-  color = "red",
-  isHuman = false
+  botIndex, 
+  color = "red"
 }) => {
   /**
    * -----------------------------------------------------------------
@@ -36,17 +25,13 @@ const Fleet = React.memo(({
    * -----------------------------------------------------------------
    */
   
-  // Déterminer l'ID du joueur (humain ou bot)
-  const playerId = isHuman ? getHumanPlayerId(1) : getBotId(botIndex);
+  // Déterminer l'ID du bot - système bot-only
+  const playerId = `bot-${botIndex}`;
   
-  // Récupérer le bot actif depuis le store (seulement pertinent pour les bots, pas pour le joueur humain)
-  const currentBotIndex = useBotStore(state => state.currentBotIndex);
-  const isActiveBot = !isHuman && currentBotIndex === botIndex;
-  
-  // Sélecteur pour les véhicules du bot ou du joueur
+  // Sélecteur pour les véhicules du bot
   const vehicles = usePlayerStore((state) => state.players[playerId]?.vehicles);
   
-  // Si le joueur/bot n'a pas été initialisé, ne rien rendre
+  // Si le bot n'a pas été initialisé, ne rien rendre
   if (!vehicles) {
     return null;
   }
@@ -67,20 +52,10 @@ const Fleet = React.memo(({
           <boxGeometry args={[0.5, 0.5, 0.5]} />
           <meshStandardMaterial
             color={color}
-            emissive={isActiveBot ? "gold" : "black"}
-            emissiveIntensity={isActiveBot ? 0.3 : 0}
           />
         </mesh>
         
-        {/* Indicateur visuel du bot actif */}
-        {isActiveBot && (
-          <mesh position={[0, 0.5, 0]}>
-            <sphereGeometry args={[0.15, 8, 8]} />
-            <meshStandardMaterial color="gold" emissive="gold" emissiveIntensity={0.5} />
-          </mesh>
-        )}
-
-        {/* Étiquette indiquant le joueur ou le numéro du bot */}
+        {/* Étiquette indiquant le numéro du bot */}
         <Html position={[0, 0.7, 0]} center>
           <div style={{
             background: 'rgba(0, 0, 0, 0.8)',
@@ -92,19 +67,19 @@ const Fleet = React.memo(({
             whiteSpace: 'nowrap',
             pointerEvents: 'none'
           }}>
-            {isHuman ? 'Joueur 1' : `Bot ${botIndex}`}
+            {`Bot ${botIndex}`}
           </div>
         </Html>
       </ShipMovement>
 
       {/**
        * DRONE D'EXPLORATION
-       * Affiché seulement si actif ET si une position existe dans le store
+       * Simplifié pour la démonstration FSM
        */}
-      {vehicles && vehicles[getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE)]?.isActive && vehicles[getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE)]?.position && (
+      {vehicles && vehicles[`${playerId}-explorer-drone`]?.isActive && vehicles[`${playerId}-explorer-drone`]?.position && (
         <DroneMovement 
           playerId={playerId} 
-          droneId={getDroneId(playerId, VEHICLE_TYPES.EXPLORER_DRONE)}
+          droneId={`${playerId}-explorer-drone`}
         >
           <Cone 
             args={[0.15, 0.4, 8]} 
@@ -122,12 +97,12 @@ const Fleet = React.memo(({
 
       {/**
        * DRONE DE COMBAT
-       * Affiché seulement s'il est actif ET si une position existe dans le store
+       * Simplifié pour la démonstration FSM
        */}
-      {vehicles && vehicles[getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE)]?.isActive && vehicles[getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE)]?.position && (
+      {vehicles && vehicles[`${playerId}-combat-drone`]?.isActive && vehicles[`${playerId}-combat-drone`]?.position && (
         <DroneMovement
           playerId={playerId}
-          droneId={getDroneId(playerId, VEHICLE_TYPES.COMBAT_DRONE)}
+          droneId={`${playerId}-combat-drone`}
         >
           <group>
             {/* Corps du drone */}
@@ -166,12 +141,12 @@ const Fleet = React.memo(({
 
       {/**
        * DRONE SPÉCIAL
-       * Affiché seulement s'il est actif ET si une position existe dans le store
+       * Simplifié pour la démonstration FSM
        */}
-      {vehicles && vehicles[getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)]?.isActive && vehicles[getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)]?.position && (
+      {vehicles && vehicles[`${playerId}-special-drone`]?.isActive && vehicles[`${playerId}-special-drone`]?.position && (
         <DroneMovement
           playerId={playerId}
-          droneId={getDroneId(playerId, VEHICLE_TYPES.SPECIAL_DRONE)}
+          droneId={`${playerId}-special-drone`}
         >
           <group>
             {/* Corps du drone spécial */}
@@ -212,8 +187,7 @@ const Fleet = React.memo(({
 (prevProps, nextProps) => {
   return (
     prevProps.botIndex === nextProps.botIndex &&
-    prevProps.color === nextProps.color &&
-    prevProps.isHuman === nextProps.isHuman
+    prevProps.color === nextProps.color
   );
 });
 

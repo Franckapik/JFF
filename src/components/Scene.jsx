@@ -3,31 +3,22 @@
  * ======================================== */
 
 // React imports
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 
 // Three.js imports
 import { GridHelper } from "three";
 import { useThree } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
 
 // Components
 import Tile from "./Tile";
-import Fleet from "./Fleet";
 
 // Stores
 import { useTileStore } from "../stores/useTileStore";
-import usePlayerStore from "../stores/usePlayerStore";
-import useBotStore from "../stores/useBotStore/";
 import useGameStore from "../stores/useGameStore";
+import useFSMStore from "../stores/useFSMStore";
 
 // Utils
-import fsmLogger from "../utils/fsmLogger";
-import { 
-  getHumanPlayerId, 
-  getBotId, 
-  getMainShipId, 
-  isMainShipId,
-} from "../ai/constants/playerConstants";
+import fsmLogger from "../logger/fsmLogger";
 
 /* ========================================
  * MAIN COMPONENT
@@ -46,19 +37,16 @@ const Scene = () => {
   const getDepartTiles = useTileStore((state) => state.getDepartTiles);
   const getFuelStations = useTileStore((state) => state.getFuelStations);
   const getRepairStations = useTileStore((state) => state.getRepairStations);
+  const syncStartingTilesWithFSMBots = useTileStore((state) => state.syncStartingTilesWithFSMBots);
   
-  // Player management
-  const initializePlayer = usePlayerStore((state) => state.initializePlayer);
-  const moveToTile = usePlayerStore((state) => state.moveToTile);
-  
-  // Bot management
-  const initializeBot = useBotStore((state) => state.initializeBot);
-  
+ 
   // Game configuration
-  const botCount = useGameStore((state) => state.botCount);
   const getBotColor = useGameStore((state) => state.getBotColor);
   const getPlayerBaseColor = useGameStore((state) => state.getPlayerBaseColor);
   const getBackgroundColor = useGameStore((state) => state.getBackgroundColor);
+  
+  // FSM Store - source de vérité pour les bots actifs
+  const activeBots = useFSMStore((state) => state.activeBots);
   
   // Initialization state
   const {
@@ -73,9 +61,19 @@ const Scene = () => {
   /* ========================================
    * CONFIGURATION & CONSTANTS
    * ======================================== */
-  
-  // Generate bot indices dynamically based on botCount
-  const botIndices = Array.from({ length: botCount }, (_, index) => index);
+   // Generate bot indices dynamically based on activeBots from FSMStore
+  const botIndices = activeBots.map((_, index) => index);
+
+  // Synchroniser les tuiles de départ avec les bots FSM actifs
+  useEffect(() => {
+    if (tilesInitialized) {
+      syncStartingTilesWithFSMBots(activeBots);
+      fsmLogger.info("[Scene] Synchronized starting tiles with FSM bots", { 
+        activeBots: activeBots.length,
+        botIds: activeBots 
+      });
+    }
+  }, [activeBots, tilesInitialized, syncStartingTilesWithFSMBots]);
 
   /* ========================================
    * INITIALIZATION EFFECTS
@@ -90,28 +88,6 @@ const Scene = () => {
     }
   }, [tilesInitialized, initializeTiles, markTilesAsInitialized]);
 
-  // Initialize players and bots when tiles are ready
-  useEffect(() => {
-    const walkableTiles = getWalkableTiles();
-    
-    if (walkableTiles.length > 0 && !playersInitialized) {
-      fsmLogger.info("[Scene] Initializing players with tiles");
-      initializePlayer(walkableTiles);
-      markPlayersAsInitialized();
-    }
-    
-    if (playersInitialized && !botsInitialized) {
-      fsmLogger.info("[Scene] Initializing bots...");
-      
-      for (let i = 0; i < botCount; i++) {
-        const botId = getBotId(i);
-        fsmLogger.info(`[Scene] Initializing Bot ${i} (${botId})`, null, botId);
-        initializeBot(i);
-      }
-      
-      markBotsAsInitialized();
-    }
-  }, [getWalkableTiles, playersInitialized, botsInitialized, initializePlayer, initializeBot, botCount, markPlayersAsInitialized, markBotsAsInitialized]);
 
   /* ========================================
    * CAMERA CONFIGURATION
@@ -123,18 +99,6 @@ const Scene = () => {
     camera.lookAt(0, 0, 0);
   }, [camera]);
 
-  /* ========================================
-   * EVENT HANDLERS
-   * ======================================== */
-
-  const handleTileClick = (tile) => {
-    // Move main ship to clicked tile
-    const mainShipId = getMainShipId(getHumanPlayerId(1));
-    moveToTile(getHumanPlayerId(1), mainShipId, {
-      coord: tile.coord,
-      position: tile.position,
-    });
-  };
 
   /* ========================================
    * RENDER
@@ -157,21 +121,27 @@ const Scene = () => {
        * ======================================== */}
       
       {/* Human player (rendered as Bot component) */}
-      {Object.keys(tiles).length > 0 && (
+      {/* Temporairement désactivé - Fleet component */}
+      {/* {Object.keys(tiles).length > 0 && (
         <Fleet 
           isHuman={true}
           color="blue"
         />
-      )}
+      )} */}
       
       {/* AI Fleets with dynamic colors */}
-      {botIndices.map((botIndex) => (
+      {/* Temporairement désactivé - Fleet components */}
+      {/* {botIndices.map((botIndex) => (
         <Fleet 
           key={`bot-${botIndex}`}
           botIndex={botIndex}
           color={getBotColor(botIndex)}
         />
-      ))}
+      ))} */}
+
+      {/* Note: Les FSM State indicators sont maintenant automatiquement intégrés
+       * dans les tuiles de départ (Tile component avec isDepart=true)
+       */}
 
       {/* ========================================
        * WALKABLE TILES
@@ -183,7 +153,6 @@ const Scene = () => {
           position={[tile.position.x, 0, tile.position.z]}
           radius={1}
           color={tile.color}
-          onClick={() => handleTileClick(tile)}
           coord={tile.coord}
         />
       ))}
@@ -192,26 +161,29 @@ const Scene = () => {
        * PLAYER BASES (DEPART TILES)
        * ======================================== */}
       
-      {getDepartTiles().map((tile) => {
-        const baseColor = getPlayerBaseColor(tile.playerIndex);
-        const backgroundColor = getBackgroundColor(baseColor);
-        const labelText = tile.isPlayerBase ? 'Joueur 1' : `Bot ${tile.playerIndex}`;
-        
-        return (
-          <Tile
-            key={`depart-tile-${tile.coord}`}
-            position={[tile.position.x, 0, tile.position.z]}
-            radius={1}
-            color={tile.color || "#888888"} // couleur de base si non définie
-            coord={tile.coord}
-            isDepart={true}
-            baseColor={baseColor}
-            backgroundColor={backgroundColor}
-            labelText={labelText}
-            playerIndex={tile.playerIndex}
-          />
-        );
-      })}
+      {getDepartTiles()
+        .filter(tile => tile.playerId && activeBots.includes(tile.playerId))
+        .map((tile) => {
+          const baseColor = getPlayerBaseColor(tile.playerIndex);
+          const backgroundColor = getBackgroundColor(baseColor);
+          const labelText = tile.playerId;
+          
+          return (
+            <Tile
+              key={`depart-tile-${tile.coord}`}
+              position={[tile.position.x, 0, tile.position.z]}
+              radius={1}
+              color={tile.color || "#888888"} // couleur de base si non définie
+              coord={tile.coord}
+              isDepart={true}
+              baseColor={baseColor}
+              backgroundColor={backgroundColor}
+              labelText={labelText}
+              playerIndex={tile.playerIndex}
+              showFSMIndicator={true} // Afficher l'indicateur FSM dans la tuile
+            />
+          );
+        })}
 
       {/* ========================================
        * FUEL STATIONS

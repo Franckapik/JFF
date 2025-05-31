@@ -12,8 +12,7 @@
  * @version 1.0.0
  */
 
-import { getMainShipId } from '../../../ai/constants/playerConstants';
-import fsmLogger from '../../../utils/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger';
 
 // ============================================================================
 // CREATION DU SLICE
@@ -54,12 +53,12 @@ const createFuelSlice = (set, get) => {
     },
     
     /**
-     * Ravitaille complètement un véhicule principal
-     * @param {string} playerId - ID unique du joueur
+     * Ravitaille complètement un véhicule principal (système bot-only)
+     * @param {string} playerId - ID unique du bot
      */
     refuelVehicle: (playerId) => {
       const { updateVehicle } = get();
-      const shipId = getMainShipId(playerId);
+      const shipId = `${playerId}-ship`;
       updateVehicle(playerId, shipId, { fuel: 100 });
     },
 

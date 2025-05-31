@@ -1,105 +1,118 @@
-import React, { useMemo } from 'react';
-import useBotStore from '../../../stores/useBotStore';
+
+import React from 'react';
 
 /**
- * Composant pour l'onglet Actions du debugger
+ * Composant pour l'onglet Actions du debugger (FSM)
+ * Affiche la queue d'actions et l'historique des actions FSM
  */
-const ActionsTab = React.memo(() => {
-  try {
-    // Utiliser useMemo pour éviter les re-calculs inutiles
-    const currentBotIndex = useBotStore((state) => state.currentBotIndex);
-    const botStates = useBotStore((state) => state.botStates);
-    const actionHistory = useBotStore((state) => state.actionHistory);
-    
-    // Mettre en cache le résultat de getActionQueue pour éviter la boucle infinie
-    const actionQueue = useMemo(() => {
-      try {
-        return useBotStore.getState().getActionQueue?.() || [];
-      } catch (error) {
-        console.warn('Error getting action queue:', error);
-        return [];
-      }
-    }, [currentBotIndex, botStates]); // Dépendances pour recalculer si nécessaire
+const ActionsTab = React.memo(({ 
+  actionQueue = [], 
+  storeActionHistory = [], 
+  getActionStatusColor 
+}) => {
+  
+  // Fonction par défaut pour les couleurs si non fournie
+  const defaultGetActionStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return '#FFA726';
+      case 'running': return '#42A5F5';
+      case 'completed': return '#66BB6A';
+      case 'failed': return '#EF5350';
+      default: return '#9E9E9E';
+    }
+  };
 
-    const currentBotState = useMemo(() => {
-      return botStates?.[currentBotIndex] || {};
-    }, [botStates, currentBotIndex]);
+  const statusColorFn = getActionStatusColor || defaultGetActionStatusColor;
 
-    return (
-      <div className="actions-tab">
-        <div className="section">
-          <h4>Queue d'Actions ({actionQueue?.length || 0})</h4>
-          <div className="action-list">
-            {actionQueue && actionQueue.length > 0 ? (
-              actionQueue.map((action, index) => (
-                <div key={index} className={`action-item ${action.status}`}>
-                  <div className="action-header">
-                    <span className="action-type">{action.type}</span>
-                    <span className="action-priority">P{action.priority}</span>
-                    <span className="action-status">{action.status}</span>
-                  </div>
-                  {action.params && Object.keys(action.params).length > 0 && (
-                    <div className="action-params">
-                      {Object.entries(action.params).map(([key, value]) => (
-                        <span key={key} className="param">
-                          {key}: {JSON.stringify(value)}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {action.result && (
-                    <div className="action-result">
-                      Résultat: {JSON.stringify(action.result)}
-                    </div>
-                  )}
+  return (
+    <div className="debugger-tab-content">
+      {/* Queue d'actions */}
+      <div className="debugger-section">
+        <h3 className="debugger-section-title">File d'attente des actions</h3>
+        {actionQueue.length > 0 ? (
+          <div className="debugger-actions-queue">
+            {actionQueue.map((action, index) => (
+              <div key={action.id || index} className="debugger-action-item">
+                <div className="debugger-action-header">
+                  <span className="debugger-action-type">{action.type}</span>
+                  <span 
+                    className="debugger-action-status"
+                    style={{ color: statusColorFn(action.status) }}
+                  >
+                    {action.status}
+                  </span>
                 </div>
-              ))
-            ) : (
-              <div className="no-actions">Aucune action en queue</div>
-            )}
-          </div>
-        </div>
-
-        <div className="section">
-          <h4>État du Bot</h4>
-          <div className="bot-state-info">
-            <div>Bot Index: {currentBotIndex}</div>
-            <div>Bot État: {currentBotState.botState || 'inconnu'}</div>
-            <div>Actions en queue: {actionQueue?.length || 0}</div>
-          </div>
-        </div>
-
-        <div className="section">
-          <h4>Historique d'Actions ({actionHistory?.length || 0})</h4>
-          <div className="action-list history">
-            {actionHistory && actionHistory.length > 0 ? (
-              actionHistory.slice(-10).reverse().map((action, index) => (
-                <div key={index} className={`action-item history ${action.status}`}>
-                  <div className="action-header">
-                    <span className="action-type">{action.type}</span>
-                    <span className="action-status">{action.status}</span>
-                    <span className="action-time">
-                      {new Date(action.timestamp).toLocaleTimeString()}
+                <div className="debugger-action-details">
+                  {action.target && (
+                    <span className="debugger-action-target">
+                      Cible: {action.target}
                     </span>
-                  </div>
-                  {action.result && (
-                    <div className="action-result">
-                      {JSON.stringify(action.result)}
-                    </div>
+                  )}
+                  {action.area && (
+                    <span className="debugger-action-area">
+                      Zone: {action.area}
+                    </span>
                   )}
                 </div>
-              ))
-            ) : (
-              <div className="no-actions">Aucun historique</div>
-            )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="debugger-empty-message">
+            Aucune action en cours
+          </div>
+        )}
+      </div>
+
+      {/* Historique des actions */}
+      <div className="debugger-section">
+        <h3 className="debugger-section-title">Historique des actions</h3>
+        {storeActionHistory.length > 0 ? (
+          <div className="debugger-actions-history">
+            {storeActionHistory.slice(-10).reverse().map((action, index) => (
+              <div key={action.id || index} className="debugger-action-item debugger-action-history-item">
+                <div className="debugger-action-header">
+                  <span className="debugger-action-type">{action.type}</span>
+                  <span 
+                    className="debugger-action-status"
+                    style={{ color: statusColorFn(action.status) }}
+                  >
+                    {action.status}
+                  </span>
+                </div>
+                <div className="debugger-action-timestamp">
+                  {action.timestamp ? new Date(action.timestamp).toLocaleTimeString() : 'N/A'}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="debugger-empty-message">
+            Aucun historique disponible
+          </div>
+        )}
+      </div>
+
+      {/* Informations système FSM */}
+      <div className="debugger-section">
+        <h3 className="debugger-section-title">Système FSM</h3>
+        <div className="debugger-fsm-info">
+          <div className="debugger-data-item">
+            <span className="debugger-label">Actions en queue:</span>
+            <span className="debugger-value">{actionQueue.length}</span>
+          </div>
+          <div className="debugger-data-item">
+            <span className="debugger-label">Actions dans l'historique:</span>
+            <span className="debugger-value">{storeActionHistory.length}</span>
+          </div>
+          <div className="debugger-system-status">
+            <span className="debugger-label">État système:</span>
+            <span className="debugger-value debugger-value-active">FSM Actif</span>
           </div>
         </div>
       </div>
-    );
-  } catch (error) {
-    console.warn('BotStore not ready:', error);
-    return <div>Chargement du debugger...</div>;
-  }
+    </div>
+  );
 });
 
 ActionsTab.displayName = 'ActionsTab';

@@ -1,6 +1,5 @@
 import React from 'react';
 import ResourceBar from './ResourceBar';
-import { getHumanPlayerId } from '../../../ai/constants/playerConstants';
 
 /**
  * Composant pour les informations de base d'une tuile
@@ -142,10 +141,9 @@ const TileSpecialProperties = ({ hoveredTile }) => {
 };
 
 /**
- * Composant pour les distances depuis la tuile
+ * Composant pour les distances depuis la tuile (Bot-only)
  */
 const TileDistances = ({ 
-  playerVehicle, 
   botVehicle, 
   hoveredTileCoord, 
   hoveredTile, 
@@ -156,15 +154,6 @@ const TileDistances = ({
     <div className="debugger-section">
       <h3 className="debugger-section-title">Distances</h3>
       
-      {playerVehicle?.coord && hoveredTileCoord && (
-        <div className="debugger-data-item">
-          <span className="debugger-label">Distance joueur:</span>
-          <span className="debugger-value">
-            {calculateDistance(playerVehicle.coord, hoveredTileCoord, true, true)} tuiles
-          </span>
-        </div>
-      )}
-      
       {botVehicle?.coord && hoveredTileCoord && (
         <div className="debugger-data-item">
           <span className="debugger-label">Distance Bot {currentBotIndex + 1}:</span>
@@ -174,13 +163,25 @@ const TileDistances = ({
         </div>
       )}
       
+      {botVehicle?.position && hoveredTile?.position && (
+        <div className="debugger-data-item">
+          <span className="debugger-label">Distance euclidienne:</span>
+          <span className="debugger-value">
+            {Math.sqrt(
+              Math.pow(botVehicle.position.x - hoveredTile.position.x, 2) + 
+              Math.pow(botVehicle.position.z - hoveredTile.position.z, 2)
+            ).toFixed(2)} unités
+          </span>
+        </div>
+      )}
+      
       {hoveredTile.explored && hoveredTile.exploredBy && (
         <div className="debugger-data-item">
           <span className="debugger-label">Explorée par:</span>
           <span className="debugger-value">
-            {hoveredTile.exploredBy === getHumanPlayerId(1) 
-              ? "Joueur" 
-              : `Bot ${parseInt(hoveredTile.exploredBy?.replace("bot", "")) + 1}`}
+            {hoveredTile.exploredBy === "player-1" 
+              ? "Joueur (Legacy)" 
+              : `Bot ${parseInt(hoveredTile.exploredBy?.replace("bot-", "")) + 1}`}
           </span>
         </div>
       )}
@@ -189,12 +190,11 @@ const TileDistances = ({
 };
 
 /**
- * Composant principal pour l'onglet Tuile
+ * Composant principal pour l'onglet Tuile (Bot-only)
  */
 const TileTab = ({ 
   hoveredTile, 
   hoveredTileCoord, 
-  playerVehicle, 
   botVehicle, 
   calculateDistance, 
   currentBotIndex, 
@@ -224,7 +224,6 @@ const TileTab = ({
       <TileSpecialProperties hoveredTile={hoveredTile} />
 
       <TileDistances 
-        playerVehicle={playerVehicle}
         botVehicle={botVehicle}
         hoveredTileCoord={hoveredTileCoord}
         hoveredTile={hoveredTile}

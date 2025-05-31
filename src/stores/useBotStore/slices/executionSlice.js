@@ -1,11 +1,11 @@
 // src/stores/useBotStore/slices/executionSlice.js
-import { BotActions } from '../../../ai/fsm/actions/botActions';
-import { BotStateConfig } from '../../../ai/fsm/states/botStates';
+import { BotActions } from '../../../oldfsm/actions/botActions';
+import { BotStateConfig } from '../../../oldfsm/states/botStates';
 import usePlayerStore from '../../usePlayerStore';
 import { useTileStore } from '../../useTileStore';
 import useGameStore from '../../useGameStore/';
-import { getBotId } from '../../../ai/constants/playerConstants';
-import fsmLogger from '../../../utils/fsmLogger';
+import { getBotId } from '../../../shared/constants/playerConstants';
+import fsmLogger from '../../../logger/fsmLogger';
 
 const ACTION_STATUS = {
   PENDING: 'pending',
