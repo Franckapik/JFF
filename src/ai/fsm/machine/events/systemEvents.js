@@ -225,6 +225,21 @@ const createAutoUnloadCheckEvent = () => ({
   timestamp: Date.now()
 });
 
+/**
+ * Événement automatique périodique
+ * Déclenché à intervalles réguliers pour les actions autonomes
+ */
+const AUTO = 'AUTO';
+
+/**
+ * Créateur d'événement: AUTO
+ * @returns {object} Event payload
+ */
+const createAutoEvent = () => ({
+  type: AUTO,
+  timestamp: Date.now()
+});
+
 // Export des types d'événements (constants)
 export const SYSTEM_EVENT_TYPES = {
   ASSESSMENT_COMPLETE,
@@ -238,7 +253,8 @@ export const SYSTEM_EVENT_TYPES = {
   REFUEL_TIMEOUT,
   COLLECTION_TIMEOUT,
   AUTO_REFUEL_CHECK,
-  AUTO_UNLOAD_CHECK
+  AUTO_UNLOAD_CHECK,
+  AUTO
 };
 
 // Export des créateurs d'événements
@@ -254,5 +270,6 @@ export const systemEvents = {
   createRefuelTimeoutEvent,
   createCollectionTimeoutEvent,
   createAutoRefuelCheckEvent,
-  createAutoUnloadCheckEvent
+  createAutoUnloadCheckEvent,
+  createAutoEvent
 };

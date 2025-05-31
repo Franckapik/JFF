@@ -106,6 +106,21 @@ export const evaluatingState = state(
     }))
   ),
 
+  // === ÉVÉNEMENT AUTONOME ===
+  
+  // Déclenchement automatique vers l'exploration
+  transition(SYSTEM_EVENT_TYPES.AUTO,
+    BOT_STATES.EXPLORING, // Passer directement à l'exploration
+    () => true,
+    reduce((context) => {
+      // Préparer l'état d'exploration
+      return contextReducers.state.prepareExploring(context, {
+        reason: 'auto_exploration',
+        timestamp: Date.now()
+      });
+    })
+  ),
+
   // === TRANSITIONS D'URGENCE (DEPUIS N'IMPORTE QUEL ÉTAT) ===
   
   // Override manuel

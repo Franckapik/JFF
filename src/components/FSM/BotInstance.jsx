@@ -8,24 +8,21 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
     vehicle,
     state,
     actions,
-    helpers,
-    autoEvents
+    autoEvents,
+    isMoving
   } = useBotMachineFixed(botId);
 
   // Mémoriser les valeurs qui changent souvent
-  const isAutonomous = helpers.isAutonomous();
-  const isMoving = helpers.isMoving();
   const fuel = vehicle?.fuel || 0;
   const resources = vehicle?.resources || { food: 0, debris: 0, special: 0 };
 
   // Mémoriser l'objet de données du bot pour éviter les re-renders inutiles
   const botData = useMemo(() => ({
     state,
-    isAutonomous,
     isMoving,
     fuel,
     resources
-  }), [state, isAutonomous, isMoving, fuel, resources?.food, resources?.debris, resources?.special]);
+  }), [state, isMoving, fuel, resources?.food, resources?.debris, resources?.special]);
 
   // Notifier le manager des changements d'état (avec dépendances stables)
   useEffect(() => {
@@ -34,7 +31,7 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
 
   // Démarrer/arrêter selon l'état du manager
   useEffect(() => {
-    if (isManagerRunning && isAutonomous) {
+    if (isManagerRunning) {
       autoEvents.start();
       // Démarrer l'exploration après 2 secondes
       const timer = setTimeout(() => {
@@ -47,7 +44,7 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
     } else {
       autoEvents.stop();
     }
-  }, [isManagerRunning, isAutonomous, state, botId]); // Dépendances simplifiées
+  }, [isManagerRunning, state, botId]);
 
   const instanceStyle = {
     marginBottom: '8px',
