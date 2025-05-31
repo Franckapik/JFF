@@ -177,95 +177,6 @@ const createTileGenerationSlice = (set, get) => ({
   },
 
   /**
-   * Ajoute une position de départ pour un nouveau joueur
-   * Utilise les constantes pour les ressources de départ
-   */
-  addPlayerStartingPosition: (playerId, playerType = 'human') => {
-    const state = get();
-    const { isValidGridCoord } = get(); // Utilisation du coordinateSlice
-    
-    const availableTiles = Object.values(state.tiles).filter(
-      tile => tile.walkable && !tile.outer && 
-      tile.type === 'resource' && !tile.playerId &&
-      isValidGridCoord(tile.coord) // Validation avec coordinateSlice
-    );
-    
-    if (availableTiles.length === 0) {
-      console.warn('No available tiles for new player starting position');
-      return false;
-    }
-
-    const startTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
-    
-    set(state => ({
-      tiles: {
-        ...state.tiles,
-        [startTile.coord]: {
-          ...startTile,
-          type: "depart",
-          playerId,
-          walkable: true,
-          resources: { ...tileConstants.startResources } // Utilisation des constantes
-        }
-      }
-    }));
-    
-    return startTile.coord;
-  },
-
-  /**
-   * Place les stations (fuel/repair) sur la grille
-   * Utilise les constantes de configuration pour déterminer le nombre de stations
-   */
-  placeGameStations: (hexPositions, radius) => {
-    const stationCandidates = hexPositions.filter(
-      tile => tile.walkable && tile.type === "resource"
-    );
-    
-    // Utilisation des constantes pour déterminer le nombre de stations
-    const numFuelStations = tileConstants.stationsConfig.fuel[radius] ?? 
-                           tileConstants.stationsConfig.fuel.default;
-    const numRepairStations = tileConstants.stationsConfig.repair[radius] ?? 
-                             tileConstants.stationsConfig.repair.default;
-    
-    // Place fuel stations
-    for (let i = 0; i < numFuelStations && stationCandidates.length > 0; i++) {
-      const index = Math.floor(Math.random() * stationCandidates.length);
-      stationCandidates[index].type = "fuel";
-      stationCandidates.splice(index, 1);
-    }
-    
-    // Place repair stations
-    for (let i = 0; i < numRepairStations && stationCandidates.length > 0; i++) {
-      const index = Math.floor(Math.random() * stationCandidates.length);
-      stationCandidates[index].type = "repair";
-      stationCandidates.splice(index, 1);
-    }
-  },
-
-  /**
-   * Place les tuiles de danger sur la grille
-   * Utilise les constantes de configuration pour déterminer le pourcentage de danger
-   */
-  placeDangerTiles: (hexPositions, radius) => {
-    const dangerTiles = hexPositions.filter(
-      tile => tile.walkable && tile.type === "resource"
-    );
-    
-    // Utilisation des constantes pour déterminer le pourcentage de danger
-    const dangerPercentage = tileConstants.dangerConfig[radius] ?? 
-                            tileConstants.dangerConfig.default;
-    const numDangerTiles = Math.floor(dangerTiles.length * dangerPercentage);
-    
-    if (dangerTiles.length > numDangerTiles + 1) {
-      dangerTiles.slice(0, numDangerTiles).forEach(tile => {
-        tile.type = "danger";
-        tile.resources = null;
-      });
-    }
-  },
-
-  /**
    * Version simplifiée de generateHexPositions - génération minimale
    * Version "bot only" - pas de position de départ initiale
    */
@@ -281,26 +192,8 @@ const createTileGenerationSlice = (set, get) => ({
     // 3. Placer les tuiles de danger
     get().placeDangerTiles(hexPositions, radius);
     
-    // 4. Optionnel : Ajouter des positions de départ initiales pour les bots si spécifié
-    if (initialBotCount > 0) {
-      const availableTiles = hexPositions.filter(
-        tile => tile.walkable && !tile.outer && 
-        tile.type === "resource" &&
-        isValidWorldPosition(tile.position) // Validation avec coordinateSlice
-      );
-      
-      for (let i = 0; i < initialBotCount && i < availableTiles.length; i++) {
-        const startTile = availableTiles[i];
-        const botId = `fsm-bot-initial-${i}`;
-        
-        startTile.type = "depart";
-        startTile.playerId = botId;
-        startTile.isPlayerBase = false;
-        startTile.playerIndex = i;
-        startTile.resources = { ...tileConstants.startResources }; // Utilisation des constantes
-        startTile.owner = botId;
-      }
-    }
+    // Note: Les tuiles de départ sont maintenant gérées exclusivement 
+    // par syncStartingTilesWithFSMBots() pour éviter la redondance
     
     return hexPositions;
   },
@@ -435,8 +328,26 @@ const createTileGenerationSlice = (set, get) => ({
   },
 
   /**
-   * Synchronise complètement les tuiles de départ avec les bots FSM actifs
-   * Version "bot only" - pas de distinction joueur humain/bot
+   * FONCTION CENTRALE : Synchronise les tuiles de départ avec les bots FSM actifs
+   * 
+   * Cette fonction est la SEULE responsable de la gestion des tuiles de départ.
+   * Elle remplace et consolide toute la logique précédemment dispersée dans :
+   * - addPlayerStartingPosition (supprimée - redondante)
+   * - ensureStartingTilesForActiveBots (supprimée - redondante)
+   * 
+   * Responsabilités unifiées :
+   * 1. Création de nouvelles tuiles de départ (conversion resource → depart)
+   * 2. Suppression d'excès de tuiles de départ (conversion depart → resource)
+   * 3. Assignation stable des bots aux tuiles existantes
+   * 4. Préservation des assignements existants lors d'ajouts de nouveaux bots
+   * 
+   * Avantages de cette approche unifiée :
+   * - Source unique de vérité pour les tuiles de départ
+   * - Pas de duplication de logique
+   * - Gestion stable des assignements (évite la réassignation systématique)
+   * - Cohérence garantie entre bots actifs et tuiles disponibles
+   * 
+   * @param {Array} activeBotIds - Liste des IDs des bots actifs (ex: ['bot-0', 'bot-1'])
    */
   syncStartingTilesWithFSMBots: (activeBotIds = []) => {
     const state = get();
@@ -580,34 +491,61 @@ const createTileGenerationSlice = (set, get) => ({
   },
 
   /**
-   * S'assure qu'il y a suffisamment de tuiles de départ pour les bots actifs
-   * Version "bot only" - cette fonction est appelée par getDepartTiles
+   * Place les stations (fuel/repair) sur la grille
+   * Utilise les constantes de configuration pour déterminer le nombre de stations
    */
-  ensureStartingTilesForActiveBots: (activeBotCount = 0) => {
-    const state = get();
-    const currentDepartTiles = Object.values(state.tiles).filter(tile => tile.type === "depart");
+  placeGameStations: (hexPositions, radius) => {
+    const stationCandidates = hexPositions.filter(
+      tile => tile.walkable && tile.type === "resource"
+    );
     
-    // Calculer le nombre total de bots nécessaires (seulement les bots actifs)
-    const totalBotsNeeded = activeBotCount;
+    // Utilisation des constantes pour déterminer le nombre de stations
+    const numFuelStations = tileConstants.stationsConfig.fuel[radius] ?? 
+                           tileConstants.stationsConfig.fuel.default;
+    const numRepairStations = tileConstants.stationsConfig.repair[radius] ?? 
+                             tileConstants.stationsConfig.repair.default;
     
-    // Si nous avons déjà suffisamment de tuiles de départ, ne rien faire
-    if (currentDepartTiles.length >= totalBotsNeeded) {
-      return;
+    // Place fuel stations
+    for (let i = 0; i < numFuelStations && stationCandidates.length > 0; i++) {
+      const index = Math.floor(Math.random() * stationCandidates.length);
+      stationCandidates[index].type = "fuel";
+      stationCandidates.splice(index, 1);
     }
     
-    // Créer les tuiles de départ manquantes
-    const tilesToCreate = totalBotsNeeded - currentDepartTiles.length;
-    
-    for (let i = 0; i < tilesToCreate; i++) {
-      const botId = `fsm-bot-${Date.now()}-${currentDepartTiles.length + i}`;
-      const newTileCoord = get().addPlayerStartingPosition(botId, 'bot');
-      if (newTileCoord) {
-        console.log(`[TileStore] Created starting tile for active bot ${botId} at ${newTileCoord}`);
-      } else {
-        console.warn(`[TileStore] Failed to create starting tile for bot ${botId}`);
-      }
+    // Place repair stations
+    for (let i = 0; i < numRepairStations && stationCandidates.length > 0; i++) {
+      const index = Math.floor(Math.random() * stationCandidates.length);
+      stationCandidates[index].type = "repair";
+      stationCandidates.splice(index, 1);
     }
-  }
+  },
+
+  /**
+   * Place les tuiles de danger sur la grille
+   * Utilise les constantes de configuration pour déterminer le pourcentage de danger
+   */
+  placeDangerTiles: (hexPositions, radius) => {
+    const dangerTiles = hexPositions.filter(
+      tile => tile.walkable && tile.type === "resource"
+    );
+    
+    // Utilisation des constantes pour déterminer le pourcentage de danger
+    const dangerPercentage = tileConstants.dangerConfig[radius] ?? 
+                            tileConstants.dangerConfig.default;
+    const numDangerTiles = Math.floor(dangerTiles.length * dangerPercentage);
+    
+    if (dangerTiles.length > numDangerTiles + 1) {
+      dangerTiles.slice(0, numDangerTiles).forEach(tile => {
+        tile.type = "danger";
+        tile.resources = null;
+      });
+    }
+  },
+
+
+  // =========================================================================
+  // PATHFINDING FUNCTIONS
+  // =========================================================================
 });
 
 export default createTileGenerationSlice;
