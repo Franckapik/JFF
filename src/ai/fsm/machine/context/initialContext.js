@@ -11,6 +11,7 @@
  */
 
 import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES } from '../../../../shared/actions/core/movement.js';
+import { BOT_STATES } from '../states/index.js';
 
 // ============================================================================
 // CONSTANTES DE CONFIGURATION
@@ -23,16 +24,6 @@ export const ENTITY_TYPES = {
   AUTO: 'auto',        // Bot autonome
   MANUAL: 'manual',    // Bot contrôlé manuellement (debug)
   HUMAN: 'human'       // Player humain (Phase 6)
-};
-
-/**
- * États FSM possibles
- */
-export const FSM_STATES = {
-  IDLE: 'IDLE',
-  EXPLORING: 'EXPLORING',
-  COLLECTING: 'COLLECTING',
-  RETURNING: 'RETURNING'
 };
 
 /**
@@ -129,7 +120,7 @@ export const createEntityContext = (entityId, entityType = ENTITY_TYPES.AUTO) =>
     // ========================================================================
     
     // État FSM actuel
-    currentState: FSM_STATES.IDLE,
+    currentState: BOT_STATES.EVALUATING,
     
     // Cible actuelle (compatible avec BotStore)
     currentTarget: null,
@@ -165,8 +156,8 @@ export const createEntityContext = (entityId, entityType = ENTITY_TYPES.AUTO) =>
       knownDangers: [],
       explorationCount: 0,
       collectedResources: [],
-      // FSM-specific memory
-      stateHistory: [FSM_STATES.IDLE],
+      // Utiliser BOT_STATES
+      stateHistory: [BOT_STATES.EVALUATING],
       transitionHistory: []
     },
     
@@ -274,7 +265,6 @@ export const updateStateHistory = (context, newState) => {
 export default {
   createEntityContext,
   ENTITY_TYPES,
-  FSM_STATES,
   isAutonomous,
   canManualControl,
   getMainVehicle,

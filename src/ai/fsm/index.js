@@ -18,7 +18,6 @@
 export { 
   createEntityContext, 
   ENTITY_TYPES, 
-  FSM_STATES,
   isAutonomous,
   canManualControl,
   getMainVehicle,
@@ -62,3 +61,12 @@ export { debugFSM } from './utils/debugging.js';
 
 // Contexte initial
 export { createEntityContext } from './machine/context/initialContext.js';
+
+// Exporter les états comme source unique de vérité
+export { 
+  evaluatingState,
+  exploringState,
+  collectingState,
+  returningState,
+  idleAtBaseState 
+} from './machine/states/index.js';
