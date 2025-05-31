@@ -14,7 +14,7 @@
  * @version 1.0.0
  */
 
-import { FSM_STATES } from '../context/initialContext.js';
+import { BOT_STATES } from '../states/index.js';
 import { movementActions } from '../../../../shared/actions/core/movement.js';
 import { fuelActions } from '../../../../shared/actions/core/fuel.js';
 import { resourceActions } from '../../../../shared/actions/core/resources.js';
@@ -32,6 +32,12 @@ import { explorationActions } from '../../../../shared/actions/core/exploration.
  */
 export const updateStateReducer = (context, newState) => {
   const maxHistoryLength = 10;
+  
+  // Vérifier que le nouvel état est valide
+  if (!Object.values(BOT_STATES).includes(newState)) {
+    console.warn(`Invalid state transition attempted: ${newState}`);
+    return context;
+  }
   
   return {
     ...context,
@@ -74,6 +80,7 @@ export const stateTransitionReducers = {
    */
   prepareExploring: (context, event) => ({
     ...context,
+    currentState: BOT_STATES.EXPLORING,
     currentAction: 'exploring',
     lastDecision: 'start_exploration',
     hasExplored: false,
@@ -89,6 +96,7 @@ export const stateTransitionReducers = {
    */
   prepareCollecting: (context, event) => ({
     ...context,
+    currentState: BOT_STATES.COLLECTING,
     currentAction: 'collecting',
     lastDecision: 'collect_resources',
     targetResource: event.resource || context.knownResources?.[0] || null,
@@ -103,6 +111,7 @@ export const stateTransitionReducers = {
    */
   prepareReturning: (context, event) => ({
     ...context,
+    currentState: BOT_STATES.RETURNING,
     currentAction: 'returning',
     lastDecision: event.reason || 'returning_to_base',
     emergencyReason: event.emergencyReason || null,
@@ -118,6 +127,7 @@ export const stateTransitionReducers = {
    */
   prepareIdleAtBase: (context, event) => ({
     ...context,
+    currentState: BOT_STATES.IDLE_AT_BASE,
     currentAction: 'idling',
     lastDecision: 'at_base',
     emergencyFlag: false,
@@ -133,6 +143,7 @@ export const stateTransitionReducers = {
    */
   prepareEvaluating: (context, event) => ({
     ...context,
+    currentState: BOT_STATES.EVALUATING,
     currentAction: 'evaluating',
     lastDecision: event.reason || 'decision_needed',
     lastStateChange: Date.now()
