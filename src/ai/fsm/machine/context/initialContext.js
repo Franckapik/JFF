@@ -11,7 +11,7 @@
  */
 
 import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES } from '../../../../shared/actions/core/movement.js';
-import { BOT_STATES } from '../states/index.js';
+import { BOT_STATES } from '../constants.js';
 
 // ============================================================================
 // CONSTANTES DE CONFIGURATION

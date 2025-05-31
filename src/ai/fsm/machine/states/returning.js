@@ -14,7 +14,7 @@
  */
 
 import { state, transition, reduce } from 'robot3';
-import { BOT_STATES } from './index.js';
+import { BOT_STATES } from '../constants.js';
 import { contextReducers } from '../reducers/context.js';
 import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
 import { USER_EVENT_TYPES } from '../events/userEvents.js';

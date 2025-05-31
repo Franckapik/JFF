@@ -19,8 +19,9 @@
  */
 
 import { useEffect, useCallback, useRef } from 'react';
-import { useMachine } from 'react-robot'; // React binding pour la bibliothèque FSM robot3
-import { createEntityContext, ENTITY_TYPES, FSM_STATES, isAutonomous, canManualControl, getMainVehicle, isMoving } from '../machine/context/initialContext.js';
+import { useMachine } from 'react-robot';
+import { createEntityContext, ENTITY_TYPES, isAutonomous, canManualControl, getMainVehicle, isMoving } from '../machine/context/initialContext.js';
+import { BOT_STATES } from '../machine/constants.js';
 import { createBotMachine } from '../machine/machineFactory.js';
 
 // ============================================================================
@@ -157,7 +158,7 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.AUTO) => {
    */
   const forceState = useCallback((newState) => {
     // Vérifier que l'état demandé existe bien
-    if (Object.values(FSM_STATES).includes(newState)) {
+    if (Object.values(BOT_STATES).includes(newState)) {
       send(newState);
     }
   }, [send]);

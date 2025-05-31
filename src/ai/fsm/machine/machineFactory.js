@@ -11,7 +11,8 @@
  */
 
 import { createMachine } from 'robot3';
-import { BOT_STATES, evaluatingState, exploringState, collectingState, returningState, idleAtBaseState } from './states/index.js';
+import { BOT_STATES } from './constants.js';
+import { evaluatingState, exploringState, collectingState, returningState, idleAtBaseState } from './states/index.js';
 import { createEntityContext } from './context/initialContext.js';
 
 // ============================================================================

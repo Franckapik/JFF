@@ -14,7 +14,7 @@
  * @version 1.0.0
  */
 
-import { BOT_STATES } from '../states/index.js';
+import { BOT_STATES } from '../constants.js';
 import { movementActions } from '../../../../shared/actions/core/movement.js';
 import { fuelActions } from '../../../../shared/actions/core/fuel.js';
 import { resourceActions } from '../../../../shared/actions/core/resources.js';

@@ -14,9 +14,13 @@
  */
 
 import { state, transition, reduce } from 'robot3';
-import { BOT_STATES } from './index.js';
+import { BOT_STATES } from '../constants.js';
 import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/index.js';
 import { contextReducers } from '../reducers/context.js';
+import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
+import { USER_EVENT_TYPES } from '../events/userEvents.js';
+import { RESOURCE_EVENT_TYPES } from '../events/resourceEvents.js';
+import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
 
 /**
  * État IDLE_AT_BASE - Maintenance et attente à la base
@@ -25,7 +29,7 @@ export const idleAtBaseState = state(
   // === OPÉRATIONS DE MAINTENANCE ===
   
   // Ravitaillement terminé
-  transition('REFUEL_COMPLETE',
+  transition(SYSTEM_EVENT_TYPES.REFUEL_COMPLETE,
     BOT_STATES.EVALUATING,
     (context, event) => efficiencyGuards.isFullTank(context, event),
     reduce((context, event) => {
@@ -49,7 +53,7 @@ export const idleAtBaseState = state(
   ),
 
   // Déchargement des ressources terminé
-  transition('UNLOAD_COMPLETE',
+  transition(SYSTEM_EVENT_TYPES.UNLOAD_COMPLETE,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => {
@@ -71,12 +75,10 @@ export const idleAtBaseState = state(
   ),
 
   // Réparations terminées
-  transition('REPAIR_COMPLETE',
+  transition(SYSTEM_EVENT_TYPES.REPAIR_COMPLETE,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => {
-      // Nous n'avons pas encore de reducer spécifique pour les réparations
-      // Alors nous gérons directement la mise à jour du véhicule
       const updatedContext = {
         ...context,
         vehicle: {
@@ -98,7 +100,7 @@ export const idleAtBaseState = state(
   // === DÉCLENCHEMENT AUTOMATIQUE ===
   
   // Auto-déclencher le ravitaillement si nécessaire
-  transition('AUTO_REFUEL_CHECK',
+  transition(SYSTEM_EVENT_TYPES.AUTO_REFUEL_CHECK,
     BOT_STATES.IDLE_AT_BASE, // Reste à la base
     (context, event) => baseGuards.needsRefueling(context, event),
     reduce((context, event) => {
@@ -108,7 +110,7 @@ export const idleAtBaseState = state(
   ),
 
   // Auto-déclencher le déchargement si inventaire non vide
-  transition('AUTO_UNLOAD_CHECK',
+  transition(SYSTEM_EVENT_TYPES.AUTO_UNLOAD_CHECK,
     BOT_STATES.IDLE_AT_BASE, // Reste à la base
     (context, event) => baseGuards.canDepositAtCurrentLocation(context, event),
     reduce((context, event) => {
@@ -120,7 +122,7 @@ export const idleAtBaseState = state(
   // === TIMEOUTS ===
   
   // Timeout d'inactivité (5s) - déclencher une réévaluation
-  transition('IDLE_TIMEOUT',
+  transition(SYSTEM_EVENT_TYPES.IDLE_TIMEOUT,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context) => {
@@ -138,7 +140,7 @@ export const idleAtBaseState = state(
   ),
 
   // Timeout de ravitaillement
-  transition('REFUEL_TIMEOUT',
+  transition(SYSTEM_EVENT_TYPES.REFUEL_TIMEOUT,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context) => {
@@ -164,7 +166,7 @@ export const idleAtBaseState = state(
   // === ÉVÉNEMENTS EXTERNES ===
   
   // Nouvelles ressources détectées
-  transition('NEW_RESOURCES_DETECTED',
+  transition(RESOURCE_EVENT_TYPES.NEW_RESOURCES_DETECTED,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => {
@@ -184,8 +186,8 @@ export const idleAtBaseState = state(
     })
   ),
 
-  // Demande d'exploration manuelle
-  transition('EXPLORATION_REQUESTED',
+  // Demande d'exploration
+  transition(USER_EVENT_TYPES.EXPLORATION_REQUESTED,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context) => {
@@ -207,7 +209,7 @@ export const idleAtBaseState = state(
   // === TRANSITIONS D'URGENCE ===
   
   // Override manuel
-  transition('MANUAL_OVERRIDE',
+  transition(USER_EVENT_TYPES.MANUAL_OVERRIDE,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => {
@@ -222,7 +224,7 @@ export const idleAtBaseState = state(
   ),
 
   // Urgence détectée
-  transition('EMERGENCY_DETECTED',
+  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED,
     BOT_STATES.RETURNING,
     () => true,
     reduce((context, event) => {
@@ -239,7 +241,7 @@ export const idleAtBaseState = state(
   // === MAINTENANCE AVANCÉE ===
   
   // Début de réparations
-  transition('REPAIR_STARTED',
+  transition(SYSTEM_EVENT_TYPES.REPAIR_STARTED,
     BOT_STATES.IDLE_AT_BASE, // Reste à la base
     () => true,
     reduce((context, event) => {
@@ -249,7 +251,7 @@ export const idleAtBaseState = state(
   ),
 
   // Maintenance complète terminée
-  transition('MAINTENANCE_COMPLETE',
+  transition(SYSTEM_EVENT_TYPES.MAINTENANCE_COMPLETE,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context) => {
