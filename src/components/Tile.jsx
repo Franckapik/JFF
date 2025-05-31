@@ -2,6 +2,7 @@ import React from "react";
 import { useTileAnimation } from "../animations/useTileAnimation";
 import { useTileStore } from "../stores/useTileStore";
 import { Html } from "@react-three/drei";
+import { FSMStateIndicator } from "./FSM";
 
 /**
  * =================================================================
@@ -22,6 +23,7 @@ import { Html } from "@react-three/drei";
  * @param {string} props.backgroundColor - Couleur de fond du label (pour les tuiles de départ)
  * @param {string} props.labelText - Texte du label (pour les tuiles de départ)
  * @param {number} props.playerIndex - Indice du joueur (pour les tuiles de départ)
+ * @param {boolean} props.showFSMIndicator - Affiche un indicateur FSM au-dessus de la tuile de départ
  */
 const Tile = React.memo(({ 
   position, 
@@ -34,7 +36,8 @@ const Tile = React.memo(({
   baseColor,
   backgroundColor,
   labelText,
-  playerIndex
+  playerIndex,
+  showFSMIndicator = false
 }) => {
   /**
    * -----------------------------------------------------------------
@@ -132,6 +135,15 @@ const Tile = React.memo(({
             <meshStandardMaterial color={baseColor} />
           </mesh>
           
+          {/* Optionnellement afficher l'indicateur FSM pour cette tuile */}
+          {showFSMIndicator && labelText && (
+            <FSMStateIndicator
+              botId={labelText}
+              position={[position[0], 1.0, position[2]]}
+              showDetails={false}
+            />
+          )}
+          
           {/* Player identifier label */}
           <Html
             position={[position[0], 0.5, position[2]]}
@@ -176,7 +188,8 @@ const Tile = React.memo(({
     prevProps.baseColor === nextProps.baseColor &&
     prevProps.backgroundColor === nextProps.backgroundColor &&
     prevProps.labelText === nextProps.labelText &&
-    prevProps.playerIndex === nextProps.playerIndex
+    prevProps.playerIndex === nextProps.playerIndex &&
+    prevProps.showFSMIndicator === nextProps.showFSMIndicator
     // We don't compare onClick as it's a callback and should be memoized by the parent
   );
 });

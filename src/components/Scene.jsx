@@ -8,11 +8,9 @@ import React, { useEffect, useRef, useMemo } from "react";
 // Three.js imports
 import { GridHelper } from "three";
 import { useThree } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
 
 // Components
 import Tile from "./Tile";
-import { FSMStateIndicator } from "./FSM";
 
 // Stores
 import { useTileStore } from "../stores/useTileStore";
@@ -141,19 +139,9 @@ const Scene = () => {
         />
       ))} */}
 
-      {/* ========================================
-       * FSM STATE INDICATORS (NEW)
-       * ======================================== */}
-      
-      {/* FSM State indicators for bots */}
-      {botIndices.map((botIndex) => (
-        <FSMStateIndicator
-          key={`fsm-indicator-${botIndex}`}
-          botId={`bot-${botIndex}`}
-          position={[botIndex * 2, 1.5, 0]}
-          showDetails={false}
-        />
-      ))}
+      {/* Note: Les FSM State indicators sont maintenant automatiquement intégrés
+       * dans les tuiles de départ (Tile component avec isDepart=true)
+       */}
 
       {/* ========================================
        * WALKABLE TILES
@@ -192,6 +180,7 @@ const Scene = () => {
               backgroundColor={backgroundColor}
               labelText={labelText}
               playerIndex={tile.playerIndex}
+              showFSMIndicator={true} // Afficher l'indicateur FSM dans la tuile
             />
           );
         })}
