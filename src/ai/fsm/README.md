@@ -5,13 +5,21 @@
 ```
 src/ai/fsm/machine/
 ├── botMachine.js           # ✅ Machine principale simplifiée
-└── states/
-    ├── index.js            # ✅ Export des constantes et états
-    ├── evaluating.js       # ✅ État d'évaluation et décision
-    ├── exploring.js        # ✅ État d'exploration
-    ├── collecting.js       # ✅ État de collecte de ressources
-    ├── returning.js        # ✅ État de retour à la base
-    └── idleAtBase.js       # ✅ État d'attente et maintenance
+├── states/
+│   ├── index.js            # ✅ Export des constantes et états
+│   ├── evaluating.js       # ✅ État d'évaluation et décision
+│   ├── exploring.js        # ✅ État d'exploration
+│   ├── collecting.js       # ✅ État de collecte de ressources
+│   ├── returning.js        # ✅ État de retour à la base
+│   └── idleAtBase.js       # ✅ État d'attente et maintenance
+└── events/                 # ✅ Système d'événements centralisé
+    ├── index.js            # ✅ Point d'entrée principal
+    ├── systemEvents.js     # ✅ Événements générés par le système
+    ├── userEvents.js       # ✅ Événements initiés par l'utilisateur
+    ├── emergencyEvents.js  # ✅ Événements d'urgence
+    ├── movementEvents.js   # ✅ Événements de mouvement
+    ├── resourceEvents.js   # ✅ Événements de ressources
+    └── fuelEvents.js       # ✅ Événements de carburant
 ```
 
 ## 🎯 Utilisation Simple
@@ -44,11 +52,32 @@ const machine = createBotMachine('bot-001', {
 ### 3. Événements Principaux
 
 ```javascript
-// Événements de progression
-machine.send('ASSESSMENT_COMPLETE');    // EVALUATING → autre état
-machine.send('AREA_EXPLORED');          // EXPLORING → EVALUATING
-machine.send('RESOURCE_COLLECTED');     // COLLECTING → EVALUATING
-machine.send('BASE_REACHED');           // RETURNING → IDLE_AT_BASE
+import { events } from './src/ai/fsm/machine/events';
+
+// Utilisation avec les créateurs d'événements
+const evalEvent = events.system.createAssessmentCompleteEvent('EXPLORING', 'need_resources');
+machine.send(evalEvent.type, evalEvent);
+
+const exploreEvent = events.resources.createAreaExploredEvent(['A1', 'A2'], [{type: 'mineral', amount: 10}]);
+machine.send(exploreEvent.type, exploreEvent);
+
+const collectEvent = events.resources.createResourceCollectedEvent({type: 'mineral'}, {resources: ['mineral']});
+machine.send(collectEvent.type, collectEvent);
+
+const baseEvent = events.movement.createBaseReachedEvent({coord: 'A1'});
+machine.send(baseEvent.type, baseEvent);
+```
+
+### 4. Catégories d'Événements
+
+| Catégorie | Description | Exemples |
+|-----------|-------------|----------|
+| **System** | Événements système automatiques | `ASSESSMENT_COMPLETE`, `REFUEL_COMPLETE` |
+| **User** | Actions initiées par l'utilisateur | `MANUAL_OVERRIDE`, `MOVE_TO` |
+| **Emergency** | Situations critiques | `EMERGENCY_DETECTED`, `LOW_FUEL_DETECTED` |
+| **Movement** | Déplacements | `MOVEMENT_STARTED`, `BASE_REACHED` |
+| **Resources** | Gestion des ressources | `RESOURCES_DISCOVERED`, `RESOURCE_COLLECTED` |
+| **Fuel** | Gestion du carburant | `FUEL_CONSUMED`, `FUEL_ADDED` |
 machine.send('REFUEL_COMPLETE');        // IDLE_AT_BASE → EVALUATING
 
 // Événements d'urgence (depuis n'importe quel état)

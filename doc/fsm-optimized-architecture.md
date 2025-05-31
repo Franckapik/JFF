@@ -256,6 +256,12 @@ export const evaluatingState = state(
     reduce: actions.prepareForBase
   })
 );
+
+transition('EVENT',
+  TARGET_STATE,
+  (context, event) => safetyGuards.needsEmergencyReturn(context, event),
+  reduce(...)
+)
 ```
 
 ### 4. Guards Composables (`src/ai/fsm/machine/guards/safety.js`)

@@ -1,20 +1,27 @@
 /**
  * ============================================================================
- * HOOK USEBOTMACHINE - Interface React pour la machine FSM Bot
+ * HOOK USEBOTMACHINE - Interface React simplifiée pour la machine FSM Bot
  * ============================================================================
  * 
- * Hook principal qui encapsule la machine FSM avec Robot3.
- * Interface publique unifiée pour contrôler les bots autonomes.
+ * Ce hook fournit une interface simplifiée pour interagir avec un bot contrôlé
+ * par une machine à états finis (FSM). Il encapsule la complexité du système FSM
+ * et expose des méthodes faciles à comprendre pour contrôler le bot.
+ * 
+ * CONCEPTS CLÉS:
+ * 1. Machine à états (FSM) - Système qui définit des comportements structurés
+ * 2. État - La situation actuelle du bot (ex: exploration, collecte)
+ * 3. Transitions - Comment le bot passe d'un état à un autre
+ * 4. Événements - Déclencheurs qui peuvent causer des transitions
+ * 5. Contexte - Données qui représentent l'état complet du bot
  * 
  * @author Migration FSM Phase 2
- * @version 1.0.0
+ * @version 2.0.0 - Version pédagogique simplifiée
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useMachine } from 'react-robot';
+import { useEffect, useCallback, useRef } from 'react';
+import { useMachine } from 'react-robot'; // React binding pour la bibliothèque FSM robot3
 import { createEntityContext, ENTITY_TYPES, FSM_STATES, isAutonomous, canManualControl, getMainVehicle, isMoving } from '../machine/context/initialContext.js';
 import { createBotMachine } from '../machine/machineFactory.js';
-import { movementActions } from '../../../shared/actions/core/movement.js';
 
 // ============================================================================
 // HOOK PRINCIPAL
@@ -25,147 +32,190 @@ import { movementActions } from '../../../shared/actions/core/movement.js';
  * 
  * @param {string} botId - ID unique du bot (ex: 'bot-0')
  * @param {string} entityType - Type d'entité (auto, manual, human)
- * @returns {Object} - Interface complète du bot
+ * @returns {Object} - Interface simplifiée pour contrôler le bot
  */
 export const useBotMachine = (botId, entityType = ENTITY_TYPES.AUTO) => {
   
   // ========================================================================
-  // INITIALISATION MACHINE FSM
+  // ÉTAPE 1: INITIALISATION DE LA MACHINE À ÉTATS (FSM)
   // ========================================================================
   
-  // Créer le contexte initial
+  // Créer le contexte initial (les données de base du bot)
   const initialContext = createEntityContext(botId, entityType);
   
-  // Créer la machine pour ce bot
+  // Créer la machine FSM pour ce bot spécifique
   const machine = createBotMachine(botId, initialContext);
   
-  // Utiliser le hook Robot3 useMachine avec le contexte initial
+  // Activer la machine FSM dans ce composant React avec useMachine
+  // - current: contient l'état actuel et le contexte de la machine
+  // - send: fonction pour envoyer des événements à la machine
   const [current, send] = useMachine(machine, initialContext);
   
-  // Référence pour les intervalles auto
+  // Référence pour gérer l'intervalle du mode autonome
   const autoIntervalRef = useRef(null);
   
   // ========================================================================
-  // ÉTAT DÉRIVÉ
+  // ÉTAPE 2: EXTRACTION DES DONNÉES PRINCIPALES
   // ========================================================================
   
-  const entity = current.context;
-  const vehicle = getMainVehicle(entity);
-  const state = current.context.currentState;
+  // Extraire les données importantes du contexte actuel
+  const entity = current.context;        // Toutes les données du bot
+  const vehicle = getMainVehicle(entity); // Le véhicule principal du bot
+  const state = current.context.currentState; // L'état FSM actuel (ex: "exploring")
   
   // ========================================================================
-  // ACTIONS PUBLIQUES
+  // ÉTAPE 3: ACTIONS DISPONIBLES POUR CONTRÔLER LE BOT
   // ========================================================================
   
   /**
-   * Déplace le bot vers une coordonnée
+   * ACTIONS DE DÉPLACEMENT
+   * 
+   * Comment ça fonctionne: L'événement 'MOVE_TO' est envoyé à la FSM
+   * qui décidera, selon l'état actuel du bot, si un mouvement est possible
+   * et comment le réaliser.
    */
   const moveTo = useCallback((coord, position = null) => {
-    const targetTile = {
-      coord,
-      position
-    };
+    // Créer l'objet représentant la cible
+    const targetTile = { coord, position };
     
+    // Envoyer l'événement MOVE_TO à la machine FSM
     send('MOVE_TO', { targetTile });
   }, [send]);
 
   /**
-   * Arrête le mouvement du bot
+   * Arrête immédiatement le mouvement du bot
    */
   const stopMovement = useCallback(() => {
+    // L'événement STOP sera géré différemment selon l'état actuel
     send('STOP');
   }, [send]);
 
   /**
-   * Lance l'exploration autonome
+   * ACTIONS DE COMPORTEMENT
+   * 
+   * Ces actions déclenchent des comportements complexes
+   * qui impliquent potentiellement plusieurs états et transitions
+   */
+   
+  /**
+   * Lance l'exploration autonome de la carte
    */
   const startExploration = useCallback(() => {
+    // Cet événement fera généralement passer le bot à l'état EXPLORING
     send('START_EXPLORING');
   }, [send]);
 
   /**
-   * Lance la collecte de ressources
+   * Lance la collecte de ressources connues
    */
   const startCollecting = useCallback(() => {
+    // Cet événement fera généralement passer le bot à l'état COLLECTING
     send('START_COLLECTING');
   }, [send]);
 
   /**
-   * Retourne à la base
+   * Ordonne au bot de retourner à sa base
    */
   const returnToBase = useCallback(() => {
+    // Cet événement fera généralement passer le bot à l'état RETURNING
     send('RETURN_TO_BASE');
   }, [send]);
 
   /**
-   * Toggle entre mode autonome et manuel
+   * ACTIONS DE CONTRÔLE
+   */
+   
+  /**
+   * Bascule entre mode autonome et manuel
+   * 
+   * En mode autonome: Le bot prend ses propres décisions
+   * En mode manuel: Le bot attend les ordres de l'utilisateur
    */
   const toggleAutonomous = useCallback(() => {
+    // Vérifier si le contrôle manuel est autorisé pour cette entité
     if (!canManualControl(entity)) return;
     
-    // Créer un nouveau contexte avec autonomousMode inversé
+    // Créer un nouveau contexte avec le mode inversé
     const newContext = {
       ...entity,
       autonomousMode: !entity.autonomousMode
     };
     
-    // Envoyer un événement de mise à jour du contexte
+    // Mettre à jour le contexte de la machine FSM
     send('UPDATE_CONTEXT', { context: newContext });
   }, [entity, send]);
 
   /**
-   * Met à jour la progression du mouvement
+   * Met à jour la progression du mouvement pendant un déplacement
    */
   const updateProgress = useCallback((progress) => {
     send('UPDATE_PROGRESS', { progress });
   }, [send]);
 
   /**
-   * Force une transition d'état (pour debug)
+   * Force une transition vers un état spécifique (pour debug)
    */
   const forceState = useCallback((newState) => {
+    // Vérifier que l'état demandé existe bien
     if (Object.values(FSM_STATES).includes(newState)) {
       send(newState);
     }
   }, [send]);
 
   // ========================================================================
-  // HELPERS PUBLIQUES
+  // ÉTAPE 4: FONCTIONS UTILITAIRES POUR VÉRIFIER L'ÉTAT DU BOT
   // ========================================================================
   
   /**
-   * Vérifie si le bot est en mode autonome
+   * Vérifie si le bot fonctionne en mode autonome
+   * 
+   * En mode autonome, le bot prend ses propres décisions basées sur la FSM
+   * sans intervention de l'utilisateur.
    */
   const isAutonomousMode = useCallback(() => {
     return isAutonomous(entity);
   }, [entity]);
 
   /**
-   * Vérifie si le contrôle manuel est possible
+   * Vérifie si ce bot peut être contrôlé manuellement
+   * 
+   * Certaines entités sont réservées au mode autonome uniquement.
    */
   const canManualControlMode = useCallback(() => {
     return canManualControl(entity);
   }, [entity]);
 
   /**
-   * Vérifie si le bot est en mouvement
+   * Vérifie si le bot est actuellement en mouvement
    */
   const isMovingState = useCallback(() => {
     return isMoving(entity);
   }, [entity]);
 
   /**
-   * Récupère les métriques du bot
+   * Récupère un résumé des métriques importantes du bot
+   * 
+   * Cette fonction extrait les données clés du contexte FSM complexe
+   * et les présente dans un format simplifié plus facile à utiliser.
    */
   const getMetrics = useCallback(() => {
     return {
+      // État FSM actuel
       state: state,
+      
+      // Ressources et santé
       fuel: vehicle?.fuel || 0,
       health: vehicle?.health || 100,
       resources: vehicle?.resources || { food: 0, debris: 0, special: 0 },
+      
+      // Position et mouvement
       position: vehicle?.coord || null,
       isMoving: isMoving(entity),
+      
+      // Mode de contrôle
       isAutonomous: isAutonomous(entity),
+      
+      // Informations de debug
       lastAction: entity.lastAction,
       error: entity.error,
       stateHistory: entity.memory?.stateHistory || [],
@@ -174,29 +224,43 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.AUTO) => {
   }, [state, vehicle, entity]);
 
   // ========================================================================
-  // GESTION DES ÉVÉNEMENTS AUTOMATIQUES
+  // ÉTAPE 5: SYSTÈME D'ÉVÉNEMENTS AUTONOMES
   // ========================================================================
   
   /**
-   * Démarre les événements automatiques pour les bots autonomes
+   * EXPLICATION:
+   * En mode autonome, le bot doit régulièrement "réfléchir" et prendre des décisions.
+   * Cette fonction configure un intervalle qui envoie périodiquement l'événement 'AUTO'
+   * à la machine FSM, permettant des transitions automatiques basées sur l'état actuel.
+   */
+  
+  /**
+   * Active le système de prise de décision autonome
+   * 
+   * Démarre un intervalle qui envoie régulièrement l'événement 'AUTO'
+   * à la machine FSM pour déclencher des transitions automatiques.
    */
   const startAutoEvents = useCallback(() => {
+    // Ne rien faire si le bot n'est pas en mode autonome
     if (!isAutonomous(entity)) return;
     
+    // Nettoyer tout intervalle existant
     if (autoIntervalRef.current) {
       clearInterval(autoIntervalRef.current);
     }
     
+    // Fréquence de prise de décision (configurable)
     const interval = entity.config?.explorationInterval || 3000;
     
+    // Configurer l'intervalle de "réflexion" du bot
     autoIntervalRef.current = setInterval(() => {
-      // Envoyer l'événement AUTO pour déclencher les transitions
+      // L'événement 'AUTO' est interprété différemment selon l'état actuel
       send('AUTO');
     }, interval);
   }, [entity, send]);
 
   /**
-   * Arrête les événements automatiques
+   * Désactive le système de prise de décision autonome
    */
   const stopAutoEvents = useCallback(() => {
     if (autoIntervalRef.current) {
@@ -206,70 +270,107 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.AUTO) => {
   }, []);
 
   // ========================================================================
-  // EFFETS
+  // ÉTAPE 6: GESTION DES EFFETS REACT
   // ========================================================================
   
-  // Démarrer/arrêter les événements auto selon le mode
+  /**
+   * Effet qui gère automatiquement le mode autonome
+   * 
+   * Démarre ou arrête le système de décision autonome
+   * quand le mode autonome change.
+   */
   useEffect(() => {
+    // Si le bot est en mode autonome, activer les événements auto
     if (isAutonomous(entity)) {
       startAutoEvents();
     } else {
+      // Sinon, arrêter les événements auto
       stopAutoEvents();
     }
     
+    // Nettoyage en cas de changement de dépendances
     return stopAutoEvents;
   }, [entity.autonomousMode, startAutoEvents, stopAutoEvents]);
   
-  // Cleanup au démontage
+  /**
+   * Effet de nettoyage quand le composant est démonté
+   */
   useEffect(() => {
+    // Assure que les intervalles sont nettoyés à la destruction
     return () => {
       stopAutoEvents();
     };
   }, [stopAutoEvents]);
 
   // ========================================================================
-  // INTERFACE PUBLIQUE
+  // ÉTAPE 7: INTERFACE PUBLIQUE DU HOOK
   // ========================================================================
   
+  /**
+   * Retourne une interface simplifiée pour interagir avec le bot
+   */
   return {
-    // Données principales
+    // ----------------------------------------
+    // DONNÉES PRINCIPALES
+    // ----------------------------------------
+    
+    // Données brutes du bot
     entity,
+    
+    // Informations sur le véhicule principal
     vehicle,
+    
+    // État actuel du FSM (ex: "exploring", "collecting")
     state,
-    context: entity, // Alias pour compatibilité
     
-    // Actions de contrôle
+    // Alias pour compatibilité avec l'ancien système
+    context: entity, 
+    
+    // ----------------------------------------
+    // ACTIONS DE CONTRÔLE
+    // ----------------------------------------
     actions: {
-      moveTo,
-      stopMovement,
-      startExploration,
-      startCollecting,
-      returnToBase,
-      toggleAutonomous,
-      updateProgress,
-      forceState
+      // Actions de déplacement
+      moveTo,           // Déplacer le bot vers une position
+      stopMovement,     // Arrêter le mouvement
+      
+      // Actions de comportement
+      startExploration, // Commencer l'exploration
+      startCollecting,  // Collecter des ressources
+      returnToBase,     // Retourner à la base
+      
+      // Contrôle du bot
+      toggleAutonomous, // Basculer entre modes autonome/manuel
+      updateProgress,   // Mettre à jour la progression du mouvement
+      forceState        // Forcer un changement d'état (debug)
     },
     
-    // Helpers d'état
+    // ----------------------------------------
+    // FONCTIONS UTILITAIRES
+    // ----------------------------------------
     helpers: {
-      isAutonomous: isAutonomousMode,
-      canManualControl: canManualControlMode,
-      isMoving: isMovingState,
-      getMetrics
+      isAutonomous: isAutonomousMode,       // Le bot est-il autonome?
+      canManualControl: canManualControlMode, // Le bot peut-il être contrôlé manuellement?
+      isMoving: isMovingState,              // Le bot est-il en mouvement?
+      getMetrics                            // Récupérer les statistiques du bot
     },
     
-    // Machine FSM brute (pour debug avancé)
+    // ----------------------------------------
+    // POUR LE DEBUG AVANCÉ
+    // ----------------------------------------
     machine: {
-      current,
-      send,
-      machine
+      current,  // État actuel de la machine FSM
+      send,     // Fonction pour envoyer des événements manuellement
+      machine   // Définition de la machine FSM
     },
     
-    // Gestion des événements auto
+    // ----------------------------------------
+    // GESTION DU MODE AUTONOME
+    // ----------------------------------------
     autoEvents: {
-      start: startAutoEvents,
-      stop: stopAutoEvents,
-      isActive: autoIntervalRef.current !== null
+      start: startAutoEvents,              // Démarrer le mode autonome
+      stop: stopAutoEvents,                // Arrêter le mode autonome
+      isActive: autoIntervalRef.current !== null  // Est-ce que le mode autonome est actif?
     }
   };
 };
@@ -278,4 +379,21 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.AUTO) => {
 // EXPORT
 // ============================================================================
 
+/**
+ * RÉSUMÉ:
+ * 
+ * Ce hook `useBotMachine` fournit une interface React pour contrôler un bot
+ * basé sur une machine à états finis (FSM). Il permet:
+ * 
+ * 1. De contrôler les déplacements et comportements du bot
+ * 2. De basculer entre modes autonome et manuel
+ * 3. D'accéder à l'état actuel et aux métriques importantes
+ * 4. De déboguer la machine FSM si nécessaire
+ * 
+ * Utilisation simple:
+ *    const { actions, state, helpers } = useBotMachine('bot-1');
+ *    // Pour déplacer le bot: actions.moveTo(coord);
+ *    // Pour connaître l'état: state;
+ *    // Pour les statistiques: helpers.getMetrics();
+ */
 export default useBotMachine;
