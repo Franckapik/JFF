@@ -127,24 +127,9 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.AUTO) => {
    */
    
   /**
-   * Bascule entre mode autonome et manuel
-   * 
-   * En mode autonome: Le bot prend ses propres décisions
-   * En mode manuel: Le bot attend les ordres de l'utilisateur
+   * [Retiré] Le basculement autonome/manuel n'est plus disponible
+   * Les bots sont toujours autonomes
    */
-  const toggleAutonomous = useCallback(() => {
-    // Vérifier si le contrôle manuel est autorisé pour cette entité
-    if (!canManualControl(entity)) return;
-    
-    // Créer un nouveau contexte avec le mode inversé
-    const newContext = {
-      ...entity,
-      autonomousMode: !entity.autonomousMode
-    };
-    
-    // Mettre à jour le contexte de la machine FSM
-    send('UPDATE_CONTEXT', { context: newContext });
-  }, [entity, send]);
 
   /**
    * Met à jour la progression du mouvement pendant un déplacement
@@ -340,8 +325,6 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.AUTO) => {
       startCollecting,  // Collecter des ressources
       returnToBase,     // Retourner à la base
       
-      // Contrôle du bot
-      toggleAutonomous, // Basculer entre modes autonome/manuel
       updateProgress,   // Mettre à jour la progression du mouvement
       forceState        // Forcer un changement d'état (debug)
     },

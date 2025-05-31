@@ -91,8 +91,6 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
     color: '#fff'
   };
 
-  const statusColor = isAutonomous ? '#4CAF50' : '#FF5722';
-
   return (
     <div style={instanceStyle}>
       <div style={{ 
@@ -101,7 +99,7 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
         alignItems: 'center',
         marginBottom: '5px'
       }}>
-        <strong style={{ color: statusColor }}>
+        <strong style={{ color: '#4CAF50' }}>
           🤖 {botId}
         </strong>
         <span style={{ 
@@ -121,7 +119,6 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
       <div style={{ fontSize: '10px', opacity: 0.8 }}>
         <div>⚡ Fuel: {vehicle?.fuel || 100}%</div>
         <div>📦 Resources: {Object.values(vehicle?.resources || {}).reduce((a, b) => a + b, 0)}</div>
-        <div>🔄 Auto: {isAutonomous ? 'ON' : 'OFF'}</div>
         <div>🎯 Target: {entity?.currentTarget || 'None'}</div>
       </div>
 
@@ -140,7 +137,7 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
         </div>
       )}
 
-      {/* Contrôles manuels */}
+      {/* Contrôle d'exploration */}
       <div style={{ 
         display: 'flex', 
         gap: '4px', 
@@ -158,18 +155,6 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
           disabled={!isManagerRunning}
         >
           🔍 Explore
-        </button>
-        <button 
-          style={{ 
-            ...buttonStyle,
-            backgroundColor: helpers.isAutonomous() ? '#FF5722' : '#4CAF50'
-          }}
-          onClick={() => {
-            fsmLogger.info(`[BotInstance] Toggling autonomy for ${botId}`);
-            actions.toggleAutonomous();
-          }}
-        >
-          {helpers.isAutonomous() ? '🔒 Manual' : '🔓 Auto'}
         </button>
       </div>
     </div>
@@ -197,7 +182,6 @@ const MultiBotManagerFSM = () => {
   // Calculer les statistiques globales
   const globalStats = {
     total: activeBotCount,
-    autonomous: Object.values(botStates).filter(bot => bot?.isAutonomous).length,
     exploring: Object.values(botStates).filter(bot => bot?.state === 'EXPLORING').length,
     collecting: Object.values(botStates).filter(bot => bot?.state === 'COLLECTING').length,
     returning: Object.values(botStates).filter(bot => bot?.state === 'RETURNING').length,
@@ -355,10 +339,7 @@ const MultiBotManagerFSM = () => {
           <span style={{ color: '#2196F3' }}> 🏠 Returning: {globalStats.returning}</span> | 
           <span style={{ color: '#666' }}> ⏸️ Idle: {globalStats.idle}</span>
         </div>
-        <div style={{ fontSize: '9px', opacity: 0.7, marginTop: '2px' }}>
-          Autonomous: {globalStats.autonomous}/{globalStats.total}
         </div>
-      </div>
 
       {/* Liste des BotInstances RÉELS utilisant useBotMachine */}
       {botIds.map(botId => (

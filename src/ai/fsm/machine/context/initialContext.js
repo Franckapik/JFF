@@ -106,9 +106,9 @@ export const createEntityContext = (entityId, entityType = ENTITY_TYPES.AUTO) =>
     entityType,
     
     // ========================================================================
-    // MODE AUTONOME (différencie Bot autonome vs Player humain)
+    // MODE AUTONOME (tous les bots sont autonomes)
     // ========================================================================
-    autonomousMode: entityType === ENTITY_TYPES.AUTO,
+    autonomousMode: true, // Toujours en mode autonome
     
     // ========================================================================
     // VÉHICULE PRINCIPAL (structure identique à PlayerStore)
@@ -199,11 +199,10 @@ export const isAutonomous = (context) => {
 /**
  * Vérifie si une entité peut être contrôlée manuellement
  * @param {Object} context - Contexte FSM
- * @returns {boolean} - True si contrôle manuel possible
+ * @returns {boolean} - Toujours false car les bots sont toujours autonomes
  */
 export const canManualControl = (context) => {
-  return context.entityType === ENTITY_TYPES.MANUAL || 
-         context.entityType === ENTITY_TYPES.HUMAN;
+  return false;
 };
 
 /**
