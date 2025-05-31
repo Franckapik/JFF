@@ -17,7 +17,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useBotMachine } from '../../ai/fsm/hooks/useBotMachine';
+import { useBotMachineFixed } from '../../ai/fsm/hooks/useBotMachineFixed';
 import fsmLogger from '../../logger/fsmLogger.js';
 import useFSMStore from '../../stores/useFSMStore/index.js';
 import BotInstance from './BotInstance';

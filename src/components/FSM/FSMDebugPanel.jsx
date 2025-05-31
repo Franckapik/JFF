@@ -10,7 +10,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useBotMachine } from "../../ai/fsm/hooks/useBotMachine.js";
+import { useBotMachineFixed } from "../../ai/fsm/hooks/useBotMachineFixed.js";
 import { useFSMBots } from "../../stores/useFSMStore/useFSMBots.js";
 
 /**
@@ -27,7 +27,7 @@ const FSMVisualization = ({ botId, expanded = false }) => {
     isAutonomous,
     canManualControl,
     isMoving
-  } = useBotMachine(botId);
+  } = useBotMachineFixed(botId);
 
   // États disponibles (pour simulation)
   const availableStates = ['IDLE', 'EXPLORING', 'COLLECTING', 'RETURNING'];

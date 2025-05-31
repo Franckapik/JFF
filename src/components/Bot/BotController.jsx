@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { useBotMachine } from "../../ai/fsm/hooks/useBotMachine.js";
+import { useBotMachineFixed } from "../../ai/fsm/hooks/useBotMachineFixed.js";
 
 /**
  * Contrôleur principal pour un bot autonome
@@ -36,7 +36,7 @@ const BotController = ({
     isAutonomous,
     canManualControl,
     isMoving
-  } = useBotMachine(botId);
+  } = useBotMachineFixed(botId);
 
   // Handlers pour les contrôles manuels
   const handleMoveTo = () => {

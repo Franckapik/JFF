@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { Html } from '@react-three/drei';
-import { useBotMachine } from "../../ai/fsm/hooks/useBotMachine.js";
+import { useBotMachineFixed } from "../../ai/fsm/hooks/useBotMachineFixed.js";
 
 /**
  * Indicateur d'état FSM affiché au-dessus d'un bot
@@ -25,7 +25,7 @@ const FSMStateIndicator = ({
     state,
     isAutonomous,
     isMoving
-  } = useBotMachine(botId);
+  } = useBotMachineFixed(botId);
 
   // Couleurs selon l'état
   const getStateColor = (stateName) => {

@@ -6,19 +6,19 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useBotMachine } from '../useBotMachine.js';
+import { useBotMachineFixed } from '../useBotMachineFixed.js';
 
 /**
  * Interface simple pour contrôler un bot
  */
 const SimpleBotController = ({ botId }) => {
-  // Utilisation du hook useBotMachine
+  // Utilisation du hook useBotMachineFixed
   const { 
     actions, 
     state, 
     helpers, 
     vehicle 
-  } = useBotMachine(botId);
+  } = useBotMachineFixed(botId);
   
   // État pour gérer les coordonnées de destination
   const [targetX, setTargetX] = useState(0);

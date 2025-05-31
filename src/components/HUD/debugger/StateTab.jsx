@@ -1,5 +1,5 @@
 import React from 'react';
-import { useBotMachine } from '../../../ai/fsm/hooks/useBotMachine';
+import { useBotMachineFixed } from '../../../ai/fsm/hooks/useBotMachineFixed';
 import VehicleList from './VehicleList';
 
 /**
@@ -21,7 +21,7 @@ const StateTab = React.memo(({
     isAutonomous,
     canManualControl,
     isMoving
-  } = useBotMachine(activeBotId);
+  } = useBotMachineFixed(activeBotId);
 
   // États FSM disponibles
   const fsmStates = ['IDLE', 'EXPLORING', 'COLLECTING', 'RETURNING', 'MANUAL_CONTROL'];

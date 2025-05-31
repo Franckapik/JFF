@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { useBotMachine } from '../../ai/fsm/hooks/useBotMachine';
+import { useBotMachineFixed } from '../../ai/fsm/hooks/useBotMachineFixed';
 import fsmLogger from '../../logger/fsmLogger.js';
 
 const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) => {
@@ -10,7 +10,7 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
     actions,
     helpers,
     autoEvents
-  } = useBotMachine(botId);
+  } = useBotMachineFixed(botId);
 
   // Mémoriser les valeurs qui changent souvent
   const isAutonomous = helpers.isAutonomous();
