@@ -14,7 +14,16 @@ export const useBotMachineFixed = (botId, entityType) => {
   // Données principales
   const entity = useMemo(() => current.context, [current.context]);
   const vehicle = useMemo(() => getMainVehicle(entity), [entity]);
-  const state = useMemo(() => current.context.currentState, [current.context.currentState]);
+  
+  // DEBUG: Afficher les valeurs de current
+  console.log("✅ DEBUG useBotMachineFixed - current:", {
+    name: current.name, 
+    context_state: current.context?.currentState,
+    keys: Object.keys(current)
+  });
+  
+  // Utiliser current.name pour l'état (valeur réelle de la machine Robot3)
+  const state = useMemo(() => current.name, [current.name]);
   
   // Actions de base
   const moveTo = useCallback((coord, position = null) => {
@@ -57,7 +66,13 @@ export const useBotMachineFixed = (botId, entityType) => {
     
     const interval = entity.config?.explorationInterval || 5000;
     autoIntervalRef.current = setInterval(() => {
-      send(SYSTEM_EVENT_TYPES.AUTO);
+      console.log('\n🔥 SENDING ASSESSMENT_COMPLETE EVENT');
+      console.log('  - Current state name:', current.name);
+      console.log('  - Current state context.currentState:', current.context?.currentState);
+      console.log('  - Interval:', interval);
+      console.log('  - Full current object keys:', Object.keys(current));
+      send(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE);
+      console.log('  - Event sent!');
     }, interval);
   }, [entity.config?.explorationInterval, send]);
 
@@ -79,6 +94,7 @@ export const useBotMachineFixed = (botId, entityType) => {
     entity,
     vehicle,
     state,
+    context: current.context, // Ajouter le contexte complet pour le debug
     
     // Actions
     moveTo,

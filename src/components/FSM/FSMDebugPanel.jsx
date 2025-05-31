@@ -22,12 +22,12 @@ const FSMVisualization = ({ botId, expanded = false }) => {
     vehicle,
     state,
     context,
-    actions,
     send,
-    isAutonomous,
-    canManualControl,
-    isMoving
+    isMoving,
+    current,
+    autoEvents
   } = useBotMachineFixed(botId);
+
 
   // États disponibles (pour simulation)
   const availableStates = ['IDLE', 'EXPLORING', 'COLLECTING', 'RETURNING'];
@@ -118,8 +118,8 @@ const FSMVisualization = ({ botId, expanded = false }) => {
             {state}
           </span>
         </div>
-        <div style={{ fontSize: '10px' }}>
-          {isAutonomous ? '🔄 AUTO' : '🎮 MANUEL'}
+        <div>
+          {autoEvents?.isActive ? '🔄 AUTO' : '🎮 MANUEL'}
         </div>
       </div>
 
@@ -148,13 +148,13 @@ const FSMVisualization = ({ botId, expanded = false }) => {
             <div style={{ marginTop: '5px' }}>
               <button 
                 style={eventButtonStyle}
-                onClick={() => actions.toggleAutonomous()}
+                onClick={() => autoEvents?.isActive ? autoEvents.stop() : autoEvents?.start()}
               >
-                {isAutonomous ? 'Mode Manuel' : 'Mode Auto'}
+                {autoEvents?.isActive ? 'Arrêter Auto' : 'Démarrer Auto'}
               </button>
               <button 
                 style={eventButtonStyle}
-                onClick={() => actions.stopMovement()}
+                onClick={() => send('STOP')}
               >
                 Stop
               </button>
@@ -192,7 +192,7 @@ const FSMVisualization = ({ botId, expanded = false }) => {
               overflow: 'auto',
               maxHeight: '100px'
             }}>
-              {JSON.stringify(context, null, 2)}
+              {context ? JSON.stringify(context, null, 2) : 'Contexte non disponible'}
             </pre>
           </details>
         </div>

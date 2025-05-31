@@ -13,6 +13,9 @@ import BotDebuggerNew from "./components/HUD/BotDebugger";
 import useFSMStore from "./stores/useFSMStore/index.js";
 import { FSMProvider } from "./ai/fsm/contexts/FSMContext.jsx";
 
+// ============= DIAGNOSTIC TEMPORAIRE =============
+import DiagnosticGuards from "./ai/fsm/test/DiagnosticGuards.jsx";
+
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
@@ -65,6 +68,9 @@ const App = () => {
           position="bottom-left"
           minimizable={true}
         />
+        
+        {/* ============= DIAGNOSTIC TEMPORAIRE ============= */}
+        <DiagnosticGuards botId="fsm-bot-0" />
 
       </div>
     </FSMProvider>

@@ -174,6 +174,22 @@ export const explorationGuards = {
    */
   isExplorationComplete: (context) => {
     return context.explorationState?.status === EXPLORATION_STATES.COMPLETED;
+  },
+
+  /**
+   * Vérifie si une exploration est nécessaire
+   * @param {Object} context - Contexte actuel
+   * @param {Object} event - Événement optionnel
+   * @returns {boolean} - True si exploration nécessaire
+   */
+  needsExploration: (context, event) => {
+    // Toujours vrai pour le moment - le bot doit explorer au démarrage
+    // TODO: Implémenter une logique plus sophistiquée basée sur :
+    // - Nombre de tuiles explorées
+    // - Découvertes récentes
+    // - Zones non explorées
+    console.log('🔍 needsExploration called - returning true for now');
+    return true;
   }
 };
 

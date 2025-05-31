@@ -80,7 +80,6 @@ export const stateTransitionReducers = {
    */
   prepareExploring: (context, event) => ({
     ...context,
-    currentState: BOT_STATES.EXPLORING,
     currentAction: 'exploring',
     lastDecision: 'start_exploration',
     hasExplored: false,
@@ -96,7 +95,6 @@ export const stateTransitionReducers = {
    */
   prepareCollecting: (context, event) => ({
     ...context,
-    currentState: BOT_STATES.COLLECTING,
     currentAction: 'collecting',
     lastDecision: 'collect_resources',
     targetResource: event.resource || context.knownResources?.[0] || null,
@@ -111,7 +109,6 @@ export const stateTransitionReducers = {
    */
   prepareReturning: (context, event) => ({
     ...context,
-    currentState: BOT_STATES.RETURNING,
     currentAction: 'returning',
     lastDecision: event.reason || 'returning_to_base',
     emergencyReason: event.emergencyReason || null,
@@ -127,7 +124,6 @@ export const stateTransitionReducers = {
    */
   prepareIdleAtBase: (context, event) => ({
     ...context,
-    currentState: BOT_STATES.IDLE_AT_BASE,
     currentAction: 'idling',
     lastDecision: 'at_base',
     emergencyFlag: false,
@@ -143,7 +139,6 @@ export const stateTransitionReducers = {
    */
   prepareEvaluating: (context, event) => ({
     ...context,
-    currentState: BOT_STATES.EVALUATING,
     currentAction: 'evaluating',
     lastDecision: event.reason || 'decision_needed',
     lastStateChange: Date.now()

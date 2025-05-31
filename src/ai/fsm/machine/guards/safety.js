@@ -24,8 +24,22 @@ export const safetyGuards = {
 
   // Emergency conditions
   needsEmergencyReturn: (context, event) => {
-    return fuelGuards.isCriticalFuel(context, event) || 
-           movementGuards.isVehicleCritical(context, event);
+    console.log('🚨 needsEmergencyReturn called with:', {
+      hasVehicle: !!context.vehicle,
+      fuel: context.vehicle?.fuel,
+      contextKeys: Object.keys(context)
+    });
+    
+    const isCritical = fuelGuards.isCriticalFuel(context, event);
+    const isVehicleCritical = movementGuards.isVehicleCritical(context, event);
+    
+    console.log('  - fuelGuards.isCriticalFuel:', isCritical);
+    console.log('  - movementGuards.isVehicleCritical:', isVehicleCritical);
+    
+    const result = isCritical || isVehicleCritical;
+    console.log('  - Final needsEmergencyReturn result:', result);
+    
+    return result;
   },
 
   // Safety checks for operations
