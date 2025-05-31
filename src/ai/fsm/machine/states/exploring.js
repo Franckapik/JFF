@@ -12,8 +12,14 @@
 
 import { state, transition, reduce } from 'robot3';
 import { BOT_STATES } from './index.js';
-import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/index.js';
 import { contextReducers } from '../reducers/context.js';
+import { RESOURCE_EVENT_TYPES } from '../events/resourceEvents.js';
+import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
+import { USER_EVENT_TYPES } from '../events/userEvents.js';
+import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
+import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
+import { safetyGuards } from '../guards/index.js';
+import { discoveryGuards } from '../guards/index.js';
 
 /**
  * État EXPLORING - Exploration et découverte de ressources
@@ -22,7 +28,7 @@ export const exploringState = state(
   // === ÉVÉNEMENTS DE PROGRESSION ===
   
   // Drone déployé avec succès
-  transition('DRONE_DEPLOYED',
+  transition(MOVEMENT_EVENT_TYPES.DRONE_DEPLOYED,
     BOT_STATES.EXPLORING, // Reste en exploration
     () => true,
     reduce((context, event) => {
@@ -38,23 +44,8 @@ export const exploringState = state(
     })
   ),
 
-  // Zone explorée avec succès
-  transition('AREA_EXPLORED',
-    BOT_STATES.EVALUATING,
-    (context, event) => discoveryGuards.isExplorationComplete(context, event),
-    reduce((context, event) => {
-      // Utiliser le reducer d'exploration
-      const updatedContext = contextReducers.exploration.markAreaExplored(context, event);
-      
-      // Préparer l'évaluation après exploration
-      return contextReducers.state.prepareEvaluating(updatedContext, {
-        reason: 'exploration_complete'
-      });
-    })
-  ),
-
   // Ressources découvertes pendant l'exploration
-  transition('RESOURCES_DISCOVERED',
+  transition(RESOURCE_EVENT_TYPES.RESOURCES_DISCOVERED,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => {
@@ -76,10 +67,25 @@ export const exploringState = state(
     })
   ),
 
+  // Zone explorée avec succès
+  transition(RESOURCE_EVENT_TYPES.AREA_EXPLORED,
+    BOT_STATES.EVALUATING,
+    (context, event) => discoveryGuards.isExplorationComplete(context, event),
+    reduce((context, event) => {
+      // Utiliser le reducer d'exploration
+      const updatedContext = contextReducers.exploration.markAreaExplored(context, event);
+      
+      // Préparer l'évaluation après exploration
+      return contextReducers.state.prepareEvaluating(updatedContext, {
+        reason: 'exploration_complete'
+      });
+    })
+  ),
+
   // === TIMEOUTS ET ÉCHECS ===
   
   // Timeout d'exploration (30s)
-  transition('EXPLORATION_TIMEOUT',
+  transition(SYSTEM_EVENT_TYPES.EXPLORATION_TIMEOUT,
     BOT_STATES.EVALUATING,
     (context, event) => discoveryGuards.isExplorationExpired(context, event),
     reduce((context, event) => {
@@ -98,7 +104,7 @@ export const exploringState = state(
   ),
 
   // Échec de déploiement du drone
-  transition('DRONE_DEPLOYMENT_FAILED',
+  transition(EMERGENCY_EVENT_TYPES.DRONE_DEPLOYMENT_FAILED,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => ({
@@ -111,10 +117,8 @@ export const exploringState = state(
     }))
   ),
 
-  // === TRANSITIONS D'URGENCE ===
-  
   // Carburant faible détecté pendant l'exploration
-  transition('LOW_FUEL_DETECTED',
+  transition(EMERGENCY_EVENT_TYPES.LOW_FUEL_DETECTED,
     BOT_STATES.RETURNING,
     (context, event) => safetyGuards.isLowFuel(context, event),
     reduce((context, event) => {
@@ -132,7 +136,7 @@ export const exploringState = state(
   ),
 
   // Override manuel
-  transition('MANUAL_OVERRIDE',
+  transition(USER_EVENT_TYPES.MANUAL_OVERRIDE,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => {
@@ -147,7 +151,7 @@ export const exploringState = state(
   ),
 
   // Urgence générale
-  transition('EMERGENCY_DETECTED',
+  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED,
     BOT_STATES.RETURNING,
     () => true,
     reduce((context, event) => {

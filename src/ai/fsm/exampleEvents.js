@@ -102,11 +102,6 @@ function useFSMEventsExample(send) {
 
 // Exemple d'utilisation dans un fichier d'état FSM
 function createExampleState() {
-  import { state, transition, reduce } from 'robot3';
-  import { BOT_STATES } from './states/index.js';
-  import { MOVEMENT_EVENT_TYPES } from './events/movementEvents.js';
-  import { RESOURCE_EVENT_TYPES } from './events/resourceEvents.js';
-  import { EMERGENCY_EVENT_TYPES } from './events/emergencyEvents.js';
   
   const exampleState = state(
     // Transition lors de la découverte de ressources

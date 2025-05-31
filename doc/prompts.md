@@ -228,12 +228,20 @@ Refactorise BotDebugger pour :
 - [x] ✅ **Interface de contrôle manuel/autonome** ✅ FAIT
 - [x] ✅ **Indicateurs visuels FSM** (états, transitions, contexte) ✅ FAIT
 
-### Phase 4 : Migration Bot
-- [ ] **Système parallèle ancien/nouveau manquant**
-- [ ] MultiBotManager avec prop enableNewFSM 
-- [ ] Tests comparatifs ancien vs nouveau système
-- [ ] Toggle UI pour tester les deux modes
-- [ ] Métriques de performance comparatives
+Recommandations
+Standardiser l'utilisation des types d'événements : Utiliser systématiquement les imports de constantes (RESOURCE_EVENT_TYPES, etc.) au lieu de chaînes littérales.
+
+Unifier les définitions d'états : Choisir entre FSM_STATES et BOT_STATES et utiliser une seule source de vérité.
+
+Vérifier les transitions manquantes : S'assurer que tous les événements utilisés dans les transitions des états sont correctement définis dans les fichiers d'événements.
+
+Standardiser l'utilisation des reducers : Éviter les mises à jour manuelles du contexte et utiliser systématiquement les reducers centralisés.
+
+Standardiser la structure des guards : Choisir soit l'utilisation directe de guards spécifiques, soit l'utilisation des guards regroupés par catégorie, mais pas les deux approches mélangées.
+
+Documenter les événements temporels : Assurez-vous que tous les événements liés aux timeouts (EXPLORATION_TIMEOUT, etc.) sont correctement définis et documentés.
+
+Implémenter des vérifications automatisées : Créer des tests qui vérifient que tous les événements utilisés dans les transitions sont bien définis dans les fichiers d'événements correspondants.
 
 ### Phase 5 : Actions Complètes
 - [x] ~~Actions vehicle.js~~ **✅ FAIT** (intégrées dans movement.js)

@@ -14,6 +14,10 @@ import { state, transition, reduce } from 'robot3';
 import { BOT_STATES } from './index.js';
 import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/index.js';
 import { contextReducers } from '../reducers/context.js';
+import { RESOURCE_EVENT_TYPES } from '../events/resourceEvents.js';
+import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
+import { USER_EVENT_TYPES } from '../events/userEvents.js';
+import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
 
 /**
  * État COLLECTING - Collecte de ressources connues
@@ -22,7 +26,7 @@ export const collectingState = state(
   // === ÉVÉNEMENTS DE PROGRESSION ===
   
   // Ressource collectée avec succès
-  transition('RESOURCE_COLLECTED',
+  transition(RESOURCE_EVENT_TYPES.RESOURCE_COLLECTED,
     BOT_STATES.EVALUATING,
     (context, event) => efficiencyGuards.shouldCollectMore(context, event),
     reduce((context, event) => {
@@ -48,7 +52,7 @@ export const collectingState = state(
   ),
 
   // Inventaire plein pendant la collecte
-  transition('INVENTORY_FULL',
+  transition(RESOURCE_EVENT_TYPES.INVENTORY_FULL,
     BOT_STATES.RETURNING,
     (context, event) => efficiencyGuards.isAtMaxCapacity(context, event),
     reduce((context, event) => {
@@ -66,7 +70,7 @@ export const collectingState = state(
   ),
 
   // Ressource épuisée ou non accessible
-  transition('RESOURCE_UNAVAILABLE',
+  transition(RESOURCE_EVENT_TYPES.RESOURCE_UNAVAILABLE,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => ({
@@ -91,7 +95,7 @@ export const collectingState = state(
   // === TIMEOUTS ET ÉCHECS ===
   
   // Timeout de collecte (10s)
-  transition('COLLECTION_TIMEOUT',
+  transition(SYSTEM_EVENT_TYPES.COLLECTION_TIMEOUT,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context) => ({
@@ -103,7 +107,7 @@ export const collectingState = state(
   ),
 
   // Échec de récolte
-  transition('HARVEST_FAILED',
+  transition(RESOURCE_EVENT_TYPES.HARVEST_FAILED,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => ({
@@ -118,7 +122,7 @@ export const collectingState = state(
   // === VÉRIFICATIONS PÉRIODIQUES ===
   
   // Vérification de la capacité pendant la collecte
-  transition('CAPACITY_CHECK',
+  transition(RESOURCE_EVENT_TYPES.CAPACITY_CHECK,
     BOT_STATES.RETURNING,
     (context) => {
       const capacity = context.vehicle?.inventory?.capacity || 0;
@@ -136,7 +140,7 @@ export const collectingState = state(
   // === TRANSITIONS D'URGENCE ===
   
   // Carburant faible pendant la collecte
-  transition('LOW_FUEL_DETECTED',
+  transition(EMERGENCY_EVENT_TYPES.LOW_FUEL_DETECTED,
     BOT_STATES.RETURNING,
     () => true,
     reduce((context) => ({
@@ -149,7 +153,7 @@ export const collectingState = state(
   ),
 
   // Override manuel
-  transition('MANUAL_OVERRIDE',
+  transition(USER_EVENT_TYPES.MANUAL_OVERRIDE,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => ({
@@ -162,7 +166,7 @@ export const collectingState = state(
   ),
 
   // Urgence générale
-  transition('EMERGENCY_DETECTED',
+  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED,
     BOT_STATES.RETURNING,
     () => true,
     reduce((context, event) => ({

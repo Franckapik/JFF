@@ -73,6 +73,26 @@ const createBaseReachedEvent = (coord) => ({
   timestamp: Date.now()
 });
 
+/**
+ * Événement de progression de navigation
+ */
+const NAVIGATION_PROGRESS = 'NAVIGATION_PROGRESS';
+
+/**
+ * Créateur d'événement: NAVIGATION_PROGRESS
+ * @param {object} currentPosition - Position actuelle
+ * @param {object} targetPosition - Position cible
+ * @param {number} progress - Progression (0-1)
+ * @returns {object} Event payload
+ */
+const createNavigationProgressEvent = (currentPosition, targetPosition, progress) => ({
+  type: NAVIGATION_PROGRESS,
+  currentPosition,
+  targetPosition,
+  progress,
+  timestamp: Date.now()
+});
+
 // ============================================================================
 // ÉVÉNEMENTS DE DRONE
 // ============================================================================
@@ -96,12 +116,31 @@ const createDroneDeployedEvent = (targetArea, range = 5) => ({
   timestamp: Date.now()
 });
 
+/**
+ * Événement d'annulation de mouvement
+ * Déclenché lorsqu'un mouvement est annulé
+ */
+const MOVEMENT_CANCELLED = 'MOVEMENT_CANCELLED';
+
+/**
+ * Créateur d'événement: MOVEMENT_CANCELLED
+ * @param {object} currentCoord - Coordonnée actuelle au moment de l'annulation
+ * @returns {object} Event payload
+ */
+const createMovementCancelledEvent = (currentCoord) => ({
+  type: MOVEMENT_CANCELLED,
+  currentCoord,
+  timestamp: Date.now()
+});
+
 // Export des types d'événements (constants)
 export const MOVEMENT_EVENT_TYPES = {
   MOVEMENT_STARTED,
   MOVEMENT_PROGRESS,
   BASE_REACHED,
-  DRONE_DEPLOYED
+  NAVIGATION_PROGRESS,
+  DRONE_DEPLOYED,
+  MOVEMENT_CANCELLED,
 };
 
 // Export des créateurs d'événements
@@ -109,5 +148,7 @@ export const movementEvents = {
   createMovementStartedEvent,
   createMovementProgressEvent,
   createBaseReachedEvent,
-  createDroneDeployedEvent
+  createDroneDeployedEvent,
+  createNavigationProgressEvent,
+  createMovementCancelledEvent
 };

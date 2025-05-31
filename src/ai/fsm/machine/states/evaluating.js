@@ -14,6 +14,9 @@ import { state, transition, reduce } from 'robot3';
 import { BOT_STATES } from './index.js';
 import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/index.js';
 import { contextReducers } from '../reducers/context.js';
+import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
+import { USER_EVENT_TYPES } from '../events/userEvents.js';
+import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
 
 /**
  * État EVALUATING - Point de décision central
@@ -23,7 +26,7 @@ export const evaluatingState = state(
   // === TRANSITIONS DE SÉCURITÉ (PRIORITÉ MAX) ===
   
   // Si carburant critique ou capacité pleine → RETURNING
-  transition('ASSESSMENT_COMPLETE',
+  transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE,
     BOT_STATES.RETURNING,
     // Guards de sécurité - utilise les guards modulaires
     (context, event) => {
@@ -51,7 +54,7 @@ export const evaluatingState = state(
   // === TRANSITIONS NORMALES ===
   
   // Si pas encore exploré → EXPLORING
-  transition('ASSESSMENT_COMPLETE',
+  transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE,
     BOT_STATES.EXPLORING,
     (context, event) => discoveryGuards.hasUnexploredAreas(context, event),
     reduce((context, event) => {
@@ -61,7 +64,7 @@ export const evaluatingState = state(
   ),
 
   // Si nouvelles ressources découvertes → COLLECTING
-  transition('ASSESSMENT_COMPLETE',
+  transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE,
     BOT_STATES.COLLECTING,
     (context, event) => {
       return efficiencyGuards.isCollectionEfficient(context, event) && 
@@ -80,7 +83,7 @@ export const evaluatingState = state(
   ),
 
   // Si drone pas à la base → RETURNING (pour récupérer le drone)
-  transition('ASSESSMENT_COMPLETE',
+  transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE,
     BOT_STATES.RETURNING,
     (context, event) => !baseGuards.isAtBase(context, event),
     reduce((context) => ({
@@ -92,7 +95,7 @@ export const evaluatingState = state(
   ),
 
   // Sinon → IDLE_AT_BASE (rien à faire)
-  transition('ASSESSMENT_COMPLETE',
+  transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE,
     BOT_STATES.IDLE_AT_BASE,
     () => true, // Transition par défaut
     reduce((context) => ({
@@ -106,7 +109,7 @@ export const evaluatingState = state(
   // === TRANSITIONS D'URGENCE (DEPUIS N'IMPORTE QUEL ÉTAT) ===
   
   // Override manuel
-  transition('MANUAL_OVERRIDE',
+  transition(USER_EVENT_TYPES.MANUAL_OVERRIDE,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => ({
@@ -119,7 +122,7 @@ export const evaluatingState = state(
   ),
 
   // Urgence détectée
-  transition('EMERGENCY_DETECTED',
+  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED,
     BOT_STATES.RETURNING,
     () => true,
     reduce((context, event) => ({

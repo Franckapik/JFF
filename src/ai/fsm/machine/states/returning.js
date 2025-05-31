@@ -15,8 +15,10 @@
 
 import { state, transition, reduce } from 'robot3';
 import { BOT_STATES } from './index.js';
-import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/index.js';
 import { contextReducers } from '../reducers/context.js';
+import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
+import { USER_EVENT_TYPES } from '../events/userEvents.js';
+import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
 
 /**
  * État RETURNING - Retour à la base
@@ -25,7 +27,7 @@ export const returningState = state(
   // === ÉVÉNEMENTS DE PROGRESSION ===
   
   // Arrivé à la base
-  transition('BASE_REACHED',
+  transition(MOVEMENT_EVENT_TYPES.BASE_REACHED,
     BOT_STATES.IDLE_AT_BASE,
     (context, event) => baseGuards.isAtBase(context, event),
     reduce((context, event) => {
@@ -97,7 +99,7 @@ export const returningState = state(
   // === TIMEOUTS ET ÉCHECS ===
   
   // Timeout de navigation (45s)
-  transition('NAVIGATION_TIMEOUT',
+  transition(SYSTEM_EVENT_TYPES.NAVIGATION_TIMEOUT,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context) => ({
@@ -146,7 +148,7 @@ export const returningState = state(
   // === TRANSITIONS D'URGENCE ===
   
   // Override manuel
-  transition('MANUAL_OVERRIDE',
+  transition(USER_EVENT_TYPES.MANUAL_OVERRIDE,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => ({
@@ -176,6 +178,18 @@ export const returningState = state(
         }
       ],
       currentAction: 'multiple_emergencies'
+    }))
+  ),
+
+  // Stop demandé
+  transition(USER_EVENT_TYPES.STOP,
+    BOT_STATES.EVALUATING,
+    () => true,
+    reduce((context) => ({
+      ...context,
+      stopFlag: true,
+      currentAction: 'stop_requested',
+      lastStateChange: Date.now()
     }))
   )
 );

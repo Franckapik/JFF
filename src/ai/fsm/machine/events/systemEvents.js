@@ -175,6 +175,22 @@ const createRefuelTimeoutEvent = (duration) => ({
   timestamp: Date.now()
 });
 
+/**
+ * Événement de timeout de collecte
+ * Déclenché lorsque le temps maximum de collecte est écoulé
+ */
+const COLLECTION_TIMEOUT = 'COLLECTION_TIMEOUT';
+
+/**
+ * Créateur d'événement: COLLECTION_TIMEOUT
+ * @param {number} duration - Durée écoulée
+ */
+const createCollectionTimeoutEvent = (duration) => ({
+  type: COLLECTION_TIMEOUT,
+  duration,
+  timestamp: Date.now()
+});
+
 // ============================================================================
 // ÉVÉNEMENTS DE VÉRIFICATION AUTOMATIQUE
 // ============================================================================
@@ -220,6 +236,7 @@ export const SYSTEM_EVENT_TYPES = {
   NAVIGATION_TIMEOUT,
   IDLE_TIMEOUT,
   REFUEL_TIMEOUT,
+  COLLECTION_TIMEOUT,
   AUTO_REFUEL_CHECK,
   AUTO_UNLOAD_CHECK
 };
@@ -235,6 +252,7 @@ export const systemEvents = {
   createNavigationTimeoutEvent,
   createIdleTimeoutEvent,
   createRefuelTimeoutEvent,
+  createCollectionTimeoutEvent,
   createAutoRefuelCheckEvent,
   createAutoUnloadCheckEvent
 };

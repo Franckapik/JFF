@@ -153,15 +153,35 @@ const createResourceUnavailableEvent = (resourceId, reason) => ({
   timestamp: Date.now()
 });
 
+/**
+ * Événement d'échec système
+ * Déclenché lorsqu'un échec système se produit
+ */
+const SYSTEM_FAILURE = 'SYSTEM_FAILURE';
+
+/**
+ * Créateur d'événement: SYSTEM_FAILURE
+ * @param {string} reason - Raison de l'échec système
+ * @param {object} details - Détails supplémentaires sur l'échec
+ * @returns {object} Event payload
+ */
+const createSystemFailureEvent = (reason, details = {}) => ({
+  type: SYSTEM_FAILURE,
+  reason,
+  details,
+  timestamp: Date.now()
+});
+
 // Export des types d'événements (constants)
 export const EMERGENCY_EVENT_TYPES = {
   EMERGENCY_DETECTED,
   EMERGENCY_RESOLVED,
   LOW_FUEL_DETECTED,
   CRITICAL_FUEL,
-  DRONE_DEPLOYMENT_FAILED,
+  DRONE_DEPLOYMENT_FAILED: 'DRONE_DEPLOYMENT_FAILED',
   NAVIGATION_FAILED,
-  RESOURCE_UNAVAILABLE
+  RESOURCE_UNAVAILABLE,
+  SYSTEM_FAILURE
 };
 
 // Export des créateurs d'événements
@@ -172,5 +192,6 @@ export const emergencyEvents = {
   createCriticalFuelEvent,
   createDroneDeploymentFailedEvent,
   createNavigationFailedEvent,
-  createResourceUnavailableEvent
+  createResourceUnavailableEvent,
+  createSystemFailureEvent
 };

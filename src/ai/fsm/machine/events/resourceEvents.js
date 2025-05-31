@@ -130,6 +130,42 @@ const createCapacityReachedEvent = (resources, maxCapacity) => ({
   timestamp: Date.now()
 });
 
+/**
+ * Événement d'échec de récolte
+ * Déclenché lorsque la récolte d'une ressource échoue
+ */
+const HARVEST_FAILED = 'HARVEST_FAILED';
+
+/**
+ * Créateur d'événement: HARVEST_FAILED
+ * @param {string} reason - Raison de l'échec
+ * @returns {object} Event payload
+ */
+const createHarvestFailedEvent = (reason) => ({
+  type: HARVEST_FAILED,
+  reason,
+  timestamp: Date.now()
+});
+
+/**
+ * Événement de vérification de capacité
+ * Déclenché pour vérifier la capacité de stockage
+ */
+const CAPACITY_CHECK = 'CAPACITY_CHECK';
+
+/**
+ * Créateur d'événement: CAPACITY_CHECK
+ * @param {number} currentCapacity - Capacité actuelle
+ * @param {number} maxCapacity - Capacité maximale
+ * @returns {object} Event payload
+ */
+const createCapacityCheckEvent = (currentCapacity, maxCapacity) => ({
+  type: CAPACITY_CHECK,
+  currentCapacity,
+  maxCapacity,
+  timestamp: Date.now()
+});
+
 // Export des types d'événements (constants)
 export const RESOURCE_EVENT_TYPES = {
   RESOURCES_DISCOVERED,
@@ -137,7 +173,9 @@ export const RESOURCE_EVENT_TYPES = {
   NEW_RESOURCES_DETECTED,
   RESOURCE_COLLECTED,
   INVENTORY_FULL,
-  CAPACITY_REACHED
+  CAPACITY_REACHED,
+  HARVEST_FAILED,
+  CAPACITY_CHECK
 };
 
 // Export des créateurs d'événements
@@ -147,5 +185,7 @@ export const resourceEvents = {
   createNewResourcesDetectedEvent,
   createResourceCollectedEvent,
   createInventoryFullEvent,
-  createCapacityReachedEvent
+  createCapacityReachedEvent,
+  createHarvestFailedEvent,
+  createCapacityCheckEvent
 };
