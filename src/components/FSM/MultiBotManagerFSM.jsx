@@ -184,6 +184,19 @@ const MultiBotManagerFSM = () => {
   const [showDebug, setShowDebug] = useState(false);
   const [botStates, setBotStates] = useState({});
 
+  // Callback pour mettre à jour l'état d'un bot spécifique
+  const updateBotState = useCallback((botId, botData) => {
+    setBotStates(prev => ({
+      ...prev,
+      [botId]: botData
+    }));
+  }, []);
+
+  // Effet pour synchroniser les états des bots avec le store FSM
+  useEffect(() => {
+    updateBotStatesSnapshot(botStates);
+  }, [botStates, updateBotStatesSnapshot]);
+
   // ========================================================================
   // HANDLERS SIMPLIFIÉS - Déléguer au store
   // ========================================================================
@@ -208,18 +221,11 @@ const MultiBotManagerFSM = () => {
 
   // Callback pour recevoir les mises à jour d'état des bots
   const handleBotStateChange = useCallback((botId, botData) => {
-    setBotStates(prev => {
-      const newStates = {
-        ...prev,
-        [botId]: botData
-      };
-      
-      // Mettre à jour le store avec les états des bots
-      updateBotStatesSnapshot(newStates);
-      
-      return newStates;
-    });
-  }, [updateBotStatesSnapshot]);
+    setBotStates(prev => ({
+      ...prev,
+      [botId]: botData
+    }));
+  }, []);
 
   // Calculer les statistiques globales
   const globalStats = {

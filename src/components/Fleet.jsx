@@ -6,20 +6,18 @@ import usePlayerStore from "../stores/usePlayerStore";
 
 /**
  * =================================================================
- * Composant Fleet
+ * Composant Fleet (Bot-Only)
  * =================================================================
  * Un composant réutilisable qui encapsule la logique de rendu 
- * d'une flotte et ses drones. Peut également être utilisé pour le joueur humain.
+ * d'une flotte de bots et leurs drones. Système bot-only uniquement.
  * 
  * @param {Object} props
- * @param {number|null} props.botIndex - Index du bot (0 pour Bot 1, 1 pour Bot 2, etc.), null pour le joueur humain
+ * @param {number} props.botIndex - Index du bot (0 pour Bot 1, 1 pour Bot 2, etc.)
  * @param {string} props.color - Couleur unique pour le bot et ses drones
- * @param {boolean} props.isHuman - Indique si c'est le joueur humain
  */
 const Fleet = React.memo(({ 
-  botIndex = null, 
-  color = "red",
-  isHuman = false
+  botIndex, 
+  color = "red"
 }) => {
   /**
    * -----------------------------------------------------------------
@@ -27,13 +25,13 @@ const Fleet = React.memo(({
    * -----------------------------------------------------------------
    */
   
-  // Déterminer l'ID du joueur (humain ou bot) - version simplifiée pour FSM
-  const playerId = isHuman ? "player-1" : `bot-${botIndex}`;
+  // Déterminer l'ID du bot - système bot-only
+  const playerId = `bot-${botIndex}`;
   
-  // Sélecteur pour les véhicules du bot ou du joueur
+  // Sélecteur pour les véhicules du bot
   const vehicles = usePlayerStore((state) => state.players[playerId]?.vehicles);
   
-  // Si le joueur/bot n'a pas été initialisé, ne rien rendre
+  // Si le bot n'a pas été initialisé, ne rien rendre
   if (!vehicles) {
     return null;
   }
@@ -57,7 +55,7 @@ const Fleet = React.memo(({
           />
         </mesh>
         
-        {/* Étiquette indiquant le joueur ou le numéro du bot */}
+        {/* Étiquette indiquant le numéro du bot */}
         <Html position={[0, 0.7, 0]} center>
           <div style={{
             background: 'rgba(0, 0, 0, 0.8)',
@@ -69,7 +67,7 @@ const Fleet = React.memo(({
             whiteSpace: 'nowrap',
             pointerEvents: 'none'
           }}>
-            {isHuman ? 'Joueur 1' : `Bot ${botIndex}`}
+            {`Bot ${botIndex}`}
           </div>
         </Html>
       </ShipMovement>
@@ -189,8 +187,7 @@ const Fleet = React.memo(({
 (prevProps, nextProps) => {
   return (
     prevProps.botIndex === nextProps.botIndex &&
-    prevProps.color === nextProps.color &&
-    prevProps.isHuman === nextProps.isHuman
+    prevProps.color === nextProps.color
   );
 });
 

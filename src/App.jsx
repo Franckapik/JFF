@@ -36,7 +36,7 @@ const App = () => {
       */}
 
             {/* Bot Debugger - positionné à gauche de l'écran */}
-      <BotDebuggerNew />
+{/*       <BotDebuggerNew /> */}
 
 
 

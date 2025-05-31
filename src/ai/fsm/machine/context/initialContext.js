@@ -90,7 +90,7 @@ const createFSMVehicle = (vehicleId, vehicleType) => {
  * Crée le contexte FSM initial pour une entité (bot ou futur player)
  * Structure inspirée du PlayerStore pour compatibilité maximale
  * 
- * @param {string} entityId - ID unique de l'entité (ex: 'bot-0', 'player-1')
+ * @param {string} entityId - ID unique de l'entité (ex: 'bot-0', 'bot-1')
  * @param {string} entityType - Type d'entité (auto, manual, human)
  * @returns {Object} - Contexte FSM initial
  */

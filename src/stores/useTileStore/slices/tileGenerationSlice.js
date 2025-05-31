@@ -267,9 +267,9 @@ const createTileGenerationSlice = (set, get) => ({
 
   /**
    * Version simplifiée de generateHexPositions - génération minimale
-   * Utilise les constantes et les fonctions du coordinateSlice
+   * Version "bot only" - pas de position de départ initiale
    */
-  initializeGameGrid: (radius, spacing, initialPlayerCount = 1) => {
+  initializeGameGrid: (radius, spacing, initialBotCount = 0) => {
     const { isValidWorldPosition } = get(); // Utilisation du coordinateSlice
     
     // 1. Générer la grille de base
@@ -281,18 +281,25 @@ const createTileGenerationSlice = (set, get) => ({
     // 3. Placer les tuiles de danger
     get().placeDangerTiles(hexPositions, radius);
     
-    // 4. Ajouter une seule position de départ initiale
-    const availableTiles = hexPositions.filter(
-      tile => tile.walkable && !tile.outer && 
-      tile.type === "resource" &&
-      isValidWorldPosition(tile.position) // Validation avec coordinateSlice
-    );
-    
-    if (availableTiles.length > 0 && initialPlayerCount > 0) {
-      const startTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
-      startTile.type = "depart";
-      startTile.playerId = "player-1";
-      startTile.resources = { ...tileConstants.startResources }; // Utilisation des constantes
+    // 4. Optionnel : Ajouter des positions de départ initiales pour les bots si spécifié
+    if (initialBotCount > 0) {
+      const availableTiles = hexPositions.filter(
+        tile => tile.walkable && !tile.outer && 
+        tile.type === "resource" &&
+        isValidWorldPosition(tile.position) // Validation avec coordinateSlice
+      );
+      
+      for (let i = 0; i < initialBotCount && i < availableTiles.length; i++) {
+        const startTile = availableTiles[i];
+        const botId = `fsm-bot-initial-${i}`;
+        
+        startTile.type = "depart";
+        startTile.playerId = botId;
+        startTile.isPlayerBase = false;
+        startTile.playerIndex = i;
+        startTile.resources = { ...tileConstants.startResources }; // Utilisation des constantes
+        startTile.owner = botId;
+      }
     }
     
     return hexPositions;
@@ -425,6 +432,181 @@ const createTileGenerationSlice = (set, get) => ({
     const totalDistance = calculatePathDistance(path, tiles);
     
     return { path, totalDistance };
+  },
+
+  /**
+   * Synchronise complètement les tuiles de départ avec les bots FSM actifs
+   * Version "bot only" - pas de distinction joueur humain/bot
+   */
+  syncStartingTilesWithFSMBots: (activeBotIds = []) => {
+    const state = get();
+    
+    // Éviter les boucles infinies en vérifiant s'il y a du travail à faire
+    if (!activeBotIds || activeBotIds.length === 0) {
+      console.log('[TileStore] No active bots to sync, skipping synchronization');
+      return;
+    }
+    
+    const currentDepartTiles = Object.values(state.tiles).filter(tile => tile.type === "depart");
+    const totalBotsNeeded = activeBotIds.length;
+    
+    // Vérification rapide si synchronisation est nécessaire
+    const currentlyAssignedBots = currentDepartTiles
+      .map(tile => tile.playerId)
+      .filter(id => activeBotIds.includes(id));
+    
+    if (currentlyAssignedBots.length === totalBotsNeeded && currentDepartTiles.length === totalBotsNeeded) {
+      // Déjà synchronisé, pas besoin de changements
+      return;
+    }
+    
+    const newTiles = { ...state.tiles };
+
+    // Si nous avons trop de tuiles de départ, convertir les excès en tuiles resource
+    if (currentDepartTiles.length > totalBotsNeeded) {
+      const tilesToRevert = currentDepartTiles.slice(totalBotsNeeded);
+      tilesToRevert.forEach(tile => {
+        newTiles[tile.coord] = {
+          ...tile,
+          type: "resource",
+          playerId: undefined,
+          isPlayerBase: false,
+          playerIndex: undefined,
+          color: generateRandomColor(),
+          resources: {
+            food: Math.floor(Math.random() * (tileConstants.foodMax + 1)),
+            debris: Math.floor(Math.random() * (tileConstants.debrisMax + 1)),
+            special: Math.floor(Math.random() * (tileConstants.specialMax + 1)),
+          }
+        };
+      });
+    }
+    
+    // Si nous avons besoin de plus de tuiles de départ
+    if (currentDepartTiles.length < totalBotsNeeded) {
+      const availableResourceTiles = Object.values(newTiles).filter(
+        tile => tile.type === "resource" && tile.walkable && !tile.outer
+      );
+      
+      const tilesToCreate = totalBotsNeeded - currentDepartTiles.length;
+      
+      // Identifier quels bots n'ont pas encore de tuile assignée
+      const existingBotIds = currentDepartTiles
+        .map(tile => tile.playerId)
+        .filter(Boolean);
+      
+      const unassignedBotIds = activeBotIds.filter(botId => !existingBotIds.includes(botId));
+      
+      // Convertir des tuiles resource en tuiles depart pour les nouveaux bots
+      for (let i = 0; i < tilesToCreate && availableResourceTiles.length > 0; i++) {
+        const randomIndex = Math.floor(Math.random() * availableResourceTiles.length);
+        const selectedTile = availableResourceTiles[randomIndex];
+        const playerIndex = currentDepartTiles.length + i;
+        
+        // Assigner le bot correspondant de la liste des non-assignés
+        const botId = unassignedBotIds[i] || `fsm-bot-${Date.now()}-${i}`;
+        
+        newTiles[selectedTile.coord] = {
+          ...selectedTile,
+          type: "depart",
+          playerId: botId,
+          isPlayerBase: false,
+          playerIndex,
+          color: "#2196F3", // Bleu pour tous les bots
+          resources: { ...tileConstants.startResources },
+          owner: botId
+        };
+        
+        // Retirer la tuile de la liste des disponibles
+        availableResourceTiles.splice(randomIndex, 1);
+      }
+    }
+    
+    // Approche stable : préserver les assignements existants pour les bots actifs
+    const allDepartTiles = Object.values(newTiles).filter(tile => tile.type === "depart");
+    
+    // Créer un mapping stable : botId -> tuile assignée
+    const existingAssignments = new Map();
+    allDepartTiles.forEach(tile => {
+      if (tile.playerId && activeBotIds.includes(tile.playerId)) {
+        existingAssignments.set(tile.playerId, tile);
+      }
+    });
+    
+    // Identifier les tuiles libres (bots inactifs ou non assignées)
+    const freeTiles = allDepartTiles.filter(tile => 
+      !tile.playerId || !activeBotIds.includes(tile.playerId)
+    );
+    
+    // Identifier les bots qui ont besoin d'une tuile
+    const unassignedBots = activeBotIds.filter(botId => !existingAssignments.has(botId));
+    
+    // Assigner les bots non-assignés aux tuiles libres
+    unassignedBots.forEach((botId, index) => {
+      if (index < freeTiles.length) {
+        const freeTile = freeTiles[index];
+        newTiles[freeTile.coord] = {
+          ...freeTile,
+          playerId: botId,
+          playerIndex: index,
+          isPlayerBase: false,
+          owner: botId,
+          color: "#2196F3"
+        };
+      }
+    });
+    
+    // Réindexer toutes les tuiles assignées pour maintenir la cohérence
+    const finalDepartTiles = Object.values(newTiles).filter(tile => 
+      tile.type === "depart" && activeBotIds.includes(tile.playerId)
+    );
+    
+    finalDepartTiles.forEach((tile, index) => {
+      newTiles[tile.coord] = {
+        ...tile,
+        playerIndex: index
+      };
+    });
+
+    // Mettre à jour l'état avec les nouvelles tuiles
+    set({ tiles: newTiles });
+    
+    // Log uniquement si des changements ont été effectués
+    console.log(`[TileStore] Synchronized starting tiles with FSM bots:`, {
+      totalBots: totalBotsNeeded,
+      activeBots: activeBotIds.length,
+      departTiles: Object.keys(newTiles).filter(coord => newTiles[coord].type === "depart").length
+    });
+  },
+
+  /**
+   * S'assure qu'il y a suffisamment de tuiles de départ pour les bots actifs
+   * Version "bot only" - cette fonction est appelée par getDepartTiles
+   */
+  ensureStartingTilesForActiveBots: (activeBotCount = 0) => {
+    const state = get();
+    const currentDepartTiles = Object.values(state.tiles).filter(tile => tile.type === "depart");
+    
+    // Calculer le nombre total de bots nécessaires (seulement les bots actifs)
+    const totalBotsNeeded = activeBotCount;
+    
+    // Si nous avons déjà suffisamment de tuiles de départ, ne rien faire
+    if (currentDepartTiles.length >= totalBotsNeeded) {
+      return;
+    }
+    
+    // Créer les tuiles de départ manquantes
+    const tilesToCreate = totalBotsNeeded - currentDepartTiles.length;
+    
+    for (let i = 0; i < tilesToCreate; i++) {
+      const botId = `fsm-bot-${Date.now()}-${currentDepartTiles.length + i}`;
+      const newTileCoord = get().addPlayerStartingPosition(botId, 'bot');
+      if (newTileCoord) {
+        console.log(`[TileStore] Created starting tile for active bot ${botId} at ${newTileCoord}`);
+      } else {
+        console.warn(`[TileStore] Failed to create starting tile for bot ${botId}`);
+      }
+    }
   }
 });
 

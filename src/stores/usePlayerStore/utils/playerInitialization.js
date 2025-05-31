@@ -16,25 +16,21 @@ import fsmLogger from '../../../logger/fsmLogger';
  * @returns {Object} Dictionnaire des joueurs indexés par leur ID
  */
 export const generateInitialPlayers = () => {
-  const { playerCount, botCount } = useGameStore.getState();
+  const { botCount } = useGameStore.getState();
   const players = {};
 
-  fsmLogger.player(`Starting player generation: ${playerCount} human players, ${botCount} bots`, {
-    playerCount,
+  fsmLogger.player(`Starting bot-only player generation: ${botCount} bots`, {
     botCount
   });
 
-  // Créer le joueur humain principal
-  players["player-1"] = createPlayer("player-1");
-
-  // Créer les bots
+  // Créer uniquement des bots (système bot-only)
   for (let i = 0; i < botCount; i++) {
-    const botId = "bot-1";
+    const botId = `bot-${i}`;
     players[botId] = createPlayer(botId);
     fsmLogger.player(`Created bot player: ${botId}`);
   }
 
-  fsmLogger.player(`Player generation completed. Total players: ${Object.keys(players).length}`, {
+  fsmLogger.player(`Bot-only player generation completed. Total bots: ${Object.keys(players).length}`, {
     playerIds: Object.keys(players)
   });
 

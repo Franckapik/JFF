@@ -1,9 +1,9 @@
 
 
 /**
- * Crée un nouveau joueur avec ses propriétés initiales
- * @param {string} playerId - Identifiant du joueur (ex: 'player-1')
- * @returns {Object} - Objet joueur
+ * Crée un nouveau bot avec ses propriétés initiales (système bot-only)
+ * @param {string} playerId - Identifiant du bot (ex: 'bot-0', 'bot-1')
+ * @returns {Object} - Objet bot
  */
 export const createPlayer = (playerId) => {
   const vehicles = 0

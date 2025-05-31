@@ -53,12 +53,12 @@ const createFuelSlice = (set, get) => {
     },
     
     /**
-     * Ravitaille complètement un véhicule principal
-     * @param {string} playerId - ID unique du joueur
+     * Ravitaille complètement un véhicule principal (système bot-only)
+     * @param {string} playerId - ID unique du bot
      */
     refuelVehicle: (playerId) => {
       const { updateVehicle } = get();
-      const shipId = "player-1-ship";
+      const shipId = `${playerId}-ship`;
       updateVehicle(playerId, shipId, { fuel: 100 });
     },
 
