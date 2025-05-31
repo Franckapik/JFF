@@ -14,16 +14,7 @@ export const useBotMachineFixed = (botId, entityType) => {
   // Données principales
   const entity = useMemo(() => current.context, [current.context]);
   const vehicle = useMemo(() => getMainVehicle(entity), [entity]);
-  
-  // DEBUG: Afficher les valeurs de current
-  console.log("✅ DEBUG useBotMachineFixed - current:", {
-    name: current.name, 
-    context_state: current.context?.currentState,
-    keys: Object.keys(current)
-  });
-  
-  // Utiliser current.name pour l'état (valeur réelle de la machine Robot3)
-  const state = useMemo(() => current.name, [current.name]);
+  const state = useMemo(() => current.name, [current.name]); // ✅ CORRIGÉ: Lire l'état de Robot3 directement
   
   // Actions de base
   const moveTo = useCallback((coord, position = null) => {

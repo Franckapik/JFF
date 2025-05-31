@@ -22,8 +22,8 @@ import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
  * État EVALUATING - Point de décision central
  * Évalue la situation et détermine la prochaine action
  */
-// Log d'initialisation à l'importation du module
-console.log('🏗️ EVALUATING STATE: Module importé et transitions configurées');
+// Log pour debug uniquement
+console.log('🏗️ EVALUATING STATE: Construction de l\'état avec transitions');
 
 export const evaluatingState = state(
   // === TRANSITIONS DE SÉCURITÉ (PRIORITÉ MAX) ===
