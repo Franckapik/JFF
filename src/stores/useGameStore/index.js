@@ -3,7 +3,7 @@
  * Combinaison de tous les slices avec leurs responsabilités séparées
  */
 import { create } from 'zustand';
-import fsmLogger from '../../utils/fsmLogger';
+import fsmLogger from '../../logger/fsmLogger';
 
 // Import des slices
 import createClockSlice from './slices/clockSlice';

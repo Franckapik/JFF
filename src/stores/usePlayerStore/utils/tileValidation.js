@@ -7,7 +7,7 @@
  * et autres validations liées aux tuiles.
  */
 
-import fsmLogger from '../../../utils/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger';
 
 /**
  * Valide qu'il y a suffisamment de tuiles de départ pour tous les joueurs

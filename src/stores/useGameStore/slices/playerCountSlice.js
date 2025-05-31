@@ -2,7 +2,7 @@
  * Slice pour la configuration du nombre de joueurs
  * Gère le nombre de joueurs humains et de bots
  */
-import fsmLogger from '../../../utils/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger';
 
 const createPlayerCountSlice = (set) => ({
   // Configuration des joueurs

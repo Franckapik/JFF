@@ -19,7 +19,7 @@
 // IMPORTS
 // =========================================================================
 import useGameStore from '../../useGameStore/';
-import fsmLogger from '../../../utils/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger';
 
 // Utilitaires refactorisés
 import { generateInitialPlayers } from '../utils/playerInitialization';

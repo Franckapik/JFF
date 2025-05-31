@@ -9,18 +9,29 @@
  * - tileCalculationSlice : calculs de distance et pathfinding
  * - tileMarkSlice : marquage d'exploration et statuts
  * - tileFilterSlice : filtrage, recherche et sélection avancée
+ * - tileCoordinateSlice : système de coordonnées et transformations (migré depuis utils/coordinateSystem)
+ * - tileGenerationSlice : génération hexagonale et pathfinding (migré depuis utils/utils)
  * 
  * Architecture modulaire permettant :
  * - Séparation claire des responsabilités
  * - Composition flexible des fonctionnalités
  * - Maintenabilité et extensibilité optimales
  * - Performance et réutilisabilité du code
+ * - Migration progressive depuis le dossier utils
  * 
  * Utilisation :
  * ```javascript
  * import { useTileStore } from './stores/useTileStore';
  * 
- * const { tiles, initializeTiles, calculateDistance, markTileAsExplored } = useTileStore();
+ * const { 
+ *   tiles, 
+ *   initializeTiles, 
+ *   calculateDistance, 
+ *   markTileAsExplored, 
+ *   gridToWorld,
+ *   initializeGameGrid,
+ *   addPlayerStartingPosition 
+ * } = useTileStore();
  * ```
  */
 
@@ -36,6 +47,10 @@ import createTileCalculationSlice from './slices/tileCalculationSlice';
 import createTileMarkSlice from './slices/tileMarkSlice';
 import createTileFilterSlice from './slices/tileFilterSlice';
 
+// Import des nouveaux slices migrés depuis utils
+import createTileCoordinateSlice from './slices/tileCoordinateSlice';
+import createTileGenerationSlice from './slices/tileGenerationSlice';
+
 // =========================================================================
 // STORE PRINCIPAL
 // =========================================================================
@@ -49,6 +64,8 @@ import createTileFilterSlice from './slices/tileFilterSlice';
  * 3. Calculation : calculs spatiaux et pathfinding
  * 4. Mark : marquage et exploration
  * 5. Filter : filtrage et recherche avancée
+ * 6. Coordinate : système de coordonnées (migré depuis utils/coordinateSystem)
+ * 7. Generation : génération hexagonale et pathfinding (migré depuis utils/utils)
  */
 export const useTileStore = create((set, get) => ({
   // =========================================================================
@@ -67,6 +84,13 @@ export const useTileStore = create((set, get) => ({
   // Slice de marquage : exploration et statuts
   ...createTileMarkSlice(set, get),
   
-  // Slice de filtrage : recherche et sélection
+  // Slice de filtrage : recherche et sélection avancée
   ...createTileFilterSlice(set, get),
+  
+  // Nouveaux slices migrés depuis utils
+  // Slice des coordonnées : transformations et validations
+  ...createTileCoordinateSlice(set, get),
+  
+  // Slice de génération : création des grilles hexagonales et pathfinding
+  ...createTileGenerationSlice(set, get),
 }));

@@ -5,8 +5,7 @@ import usePlayerStore from '../stores/usePlayerStore';
 import useBotStore from '../stores/useBotStore/';
 import { useTileStore } from '../stores/useTileStore';
 import { isBotPlayerId, getMainShipId, VEHICLE_TYPES } from '../oldfsm/constants/playerConstants';
-import fsmLogger from '../utils/fsmLogger';
-import { calculatePath } from '../utils/utils';
+import fsmLogger from '../logger/fsmLogger';
 
 /**
  * Hook partagé pour la gestion du mouvement des véhicules (drones et vaisseaux)
@@ -35,6 +34,7 @@ export const useVehicleMovement = ({
 
   // === Stores ===
   const tiles = useTileStore((state) => state.tiles);
+  const calculatePath = useTileStore((state) => state.calculatePath);
   const updateVehicle = usePlayerStore((state) => state.updateVehicle);
   const consumeFuel = usePlayerStore(state => state.consumeFuel);
   const botStore = useBotStore();

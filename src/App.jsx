@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
 import "./styles/App.css";
@@ -10,12 +10,21 @@ import Clock from "./components/HUD/Clock";
 import MultiBotManagerFSM from "./components/FSM/MultiBotManagerFSM";
 import FSMDebugPanel from "./components/FSM/FSMDebugPanel";
 import BotDebuggerNew from "./components/HUD/BotDebugger";
+import useFSMStore from "./stores/useFSMStore/index.js";
+
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   
-  // Liste des bots pour FSM
-  const botIds = ['bot-0', 'bot-1'];
+  // Initialiser le store FSM avec des bots par défaut
+  const { setBots, getBotCount } = useFSMStore();
+  
+  useEffect(() => {
+    // Initialiser avec 2 bots par défaut si aucun bot n'est présent
+    if (getBotCount() === 0) {
+      setBots(['fsm-bot-0', 'fsm-bot-1']);
+    }
+  }, [setBots, getBotCount]);
   
   return (
     <div className="app-container">
@@ -51,10 +60,10 @@ const App = () => {
       
       {/* FSM Debug Panel - panneau de debug */}
       <FSMDebugPanel 
-        botIds={botIds}
         position="bottom-left"
         minimizable={true}
       />
+
     </div>
   );
 };

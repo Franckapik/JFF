@@ -1,6 +1,6 @@
 // Drone state machine hook
 import { create } from 'zustand';
-import fsmLogger from '../utils/fsmLogger';
+import fsmLogger from '../logger/fsmLogger';
 
 // Fonction utilitaire pour extraire le playerId à partir d'un droneId
 // Format attendu: player-1-drone-explorer

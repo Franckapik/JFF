@@ -5,7 +5,7 @@ import usePlayerStore from '../../usePlayerStore';
 import { useTileStore } from '../../useTileStore';
 import useGameStore from '../../useGameStore/';
 import { getBotId } from '../../../shared/constants/playerConstants';
-import fsmLogger from '../../../utils/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger';
 
 const ACTION_STATUS = {
   PENDING: 'pending',

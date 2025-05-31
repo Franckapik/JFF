@@ -15,7 +15,7 @@
  * @version 1.0.0
  */
 
-import fsmLogger from '../../../utils/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger';
 import { 
   isResourceAlreadyKnown, 
   isDangerAlreadyKnown,

@@ -18,7 +18,8 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useBotMachine } from '../../ai/fsm/hooks/useBotMachine';
-import fsmLogger from '../../utils/fsmLogger';
+import fsmLogger from '../../logger/fsmLogger.js';
+import useFSMStore from '../../stores/useFSMStore/index.js';
 
 /**
  * Composant de gestion individuelle d'un bot avec useBotMachine
@@ -162,26 +163,67 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
 };
 
 const MultiBotManagerFSM = () => {
-  // État local pour la gestion des bots
-  const [isRunning, setIsRunning] = useState(false);
-  const [activeBotCount, setActiveBotCount] = useState(1);
+  // ========================================================================
+  // REMPLACEMENT: Utiliser le store Zustand au lieu de l'état local
+  // ========================================================================
+  
+  // Récupérer l'état et les actions du store FSM
+  const {
+    activeBots: botIds,
+    isSystemRunning: isRunning,
+    addBot: addBotToStore,
+    removeBot: removeBotFromStore,
+    startSystem,
+    stopSystem,
+    toggleSystem,
+    getBotCount,
+    updateBotStatesSnapshot
+  } = useFSMStore();
+
+  // État local uniquement pour l'affichage du debug et les statistiques des bots
   const [showDebug, setShowDebug] = useState(false);
   const [botStates, setBotStates] = useState({});
+
+  // ========================================================================
+  // HANDLERS SIMPLIFIÉS - Déléguer au store
+  // ========================================================================
   
-  // Générer la liste des IDs de bots actifs
-  const botIds = Array.from({ length: activeBotCount }, (_, i) => `fsm-bot-${i}`);
+  const handleToggleRunning = useCallback(() => {
+    toggleSystem();
+  }, [toggleSystem]);
+
+  const handleAddBot = useCallback(() => {
+    addBotToStore();
+  }, [addBotToStore]);
+
+  const handleRemoveBot = useCallback(() => {
+    removeBotFromStore();
+  }, [removeBotFromStore]);
+
+  const handleStartAllExploration = useCallback(() => {
+    // Cette fonction peut rester locale car elle agit sur les bots individuels
+    fsmLogger.info('Démarrage de l\'exploration pour tous les bots', { botIds });
+    // TODO: Implémenter le démarrage d'exploration pour tous les bots
+  }, [botIds]);
 
   // Callback pour recevoir les mises à jour d'état des bots
   const handleBotStateChange = useCallback((botId, botData) => {
-    setBotStates(prev => ({
-      ...prev,
-      [botId]: botData
-    }));
-  }, []);
+    setBotStates(prev => {
+      const newStates = {
+        ...prev,
+        [botId]: botData
+      };
+      
+      // Mettre à jour le store avec les états des bots
+      updateBotStatesSnapshot(newStates);
+      
+      return newStates;
+    });
+  }, [updateBotStatesSnapshot]);
 
   // Calculer les statistiques globales
   const globalStats = {
-    total: activeBotCount,
+    total: getBotCount(),
     exploring: Object.values(botStates).filter(bot => bot?.state === 'EXPLORING').length,
     collecting: Object.values(botStates).filter(bot => bot?.state === 'COLLECTING').length,
     returning: Object.values(botStates).filter(bot => bot?.state === 'RETURNING').length,
@@ -191,8 +233,8 @@ const MultiBotManagerFSM = () => {
   // Démarrage automatique
   useEffect(() => {
     fsmLogger.info("[MultiBotManagerFSM] FSM Bot Manager initialized with REAL bots using useBotMachine");
-    setIsRunning(true);
-  }, []);
+    startSystem();
+  }, [startSystem]);
 
   // Style du conteneur principal
   const containerStyle = {
@@ -243,38 +285,6 @@ const MultiBotManagerFSM = () => {
     backgroundColor: '#0a7c0a'
   };
 
-  const handleToggleRunning = () => {
-    setIsRunning(!isRunning);
-    fsmLogger.info(`[MultiBotManagerFSM] Bots ${!isRunning ? 'started' : 'stopped'}`);
-  };
-
-  const handleAddBot = () => {
-    if (activeBotCount < 4) {
-      const newCount = activeBotCount + 1;
-      setActiveBotCount(newCount);
-      fsmLogger.info(`[MultiBotManagerFSM] Added bot, total: ${newCount}`);
-    }
-  };
-
-  const handleRemoveBot = () => {
-    if (activeBotCount > 1) {
-      const newCount = activeBotCount - 1;
-      setActiveBotCount(newCount);
-      // Nettoyer l'état du bot supprimé
-      setBotStates(prev => {
-        const newStates = { ...prev };
-        delete newStates[`fsm-bot-${activeBotCount - 1}`];
-        return newStates;
-      });
-      fsmLogger.info(`[MultiBotManagerFSM] Removed bot, total: ${newCount}`);
-    }
-  };
-
-  const handleStartAllExploration = () => {
-    fsmLogger.info("[MultiBotManagerFSM] Starting exploration for all bots");
-    // Les bots individuels gèreront cette action via leurs useEffect
-  };
-
   return (
     <div style={containerStyle}>
       {/* Header */}
@@ -298,14 +308,14 @@ const MultiBotManagerFSM = () => {
         <button 
           style={buttonStyle}
           onClick={handleAddBot}
-          disabled={activeBotCount >= 4}
+          disabled={getBotCount() >= 4}
         >
           ➕ Bot
         </button>
         <button 
           style={buttonStyle}
           onClick={handleRemoveBot}
-          disabled={activeBotCount <= 1}
+          disabled={getBotCount() <= 1}
         >
           ➖ Bot
         </button>
@@ -332,7 +342,7 @@ const MultiBotManagerFSM = () => {
         borderRadius: '3px' 
       }}>
         <div><strong>Status:</strong> {isRunning ? '🟢 RUNNING' : '🔴 STOPPED'}</div>
-        <div><strong>Bots actifs:</strong> {activeBotCount}</div>
+        <div><strong>Bots actifs:</strong> {getBotCount()}</div>
         <div style={{ fontSize: '10px', marginTop: '3px' }}>
           <span style={{ color: '#4CAF50' }}>🔍 Exploring: {globalStats.exploring}</span> | 
           <span style={{ color: '#FF9800' }}> 📦 Collecting: {globalStats.collecting}</span> | 

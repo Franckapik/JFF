@@ -3,7 +3,7 @@ import { BOT_STATES, PRIORITY } from '../../../oldfsm/constants/botConstants';
 import { BotStateConfig } from '../../../oldfsm/states/botStates';
 import { getBotId } from '../../../shared/constants/playerConstants';
 import usePlayerStore from '../../usePlayerStore';
-import fsmLogger from '../../../utils/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger';
 
 export const createBotManagementSlice = (set, get) => ({
   // État initial du bot

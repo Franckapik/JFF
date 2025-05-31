@@ -11,6 +11,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useBotMachine } from "../../ai/fsm/hooks/useBotMachine.js";
+import { useFSMBots } from "../../stores/useFSMStore/useFSMBots.js";
 
 /**
  * Composant de visualisation d'une machine d'état individuelle
@@ -204,10 +205,12 @@ const FSMVisualization = ({ botId, expanded = false }) => {
  * Panneau principal de debug FSM
  */
 const FSMDebugPanel = ({ 
-  botIds = ['bot-0'],
   position = 'bottom-left',
   minimizable = true 
 }) => {
+  // Utiliser le store Zustand pour récupérer les IDs des bots
+  const { botIds, botCount, isSystemRunning } = useFSMBots();
+  
   const [isMinimized, setIsMinimized] = useState(false);
   const [expandedBot, setExpandedBot] = useState(null);
   const [globalStats, setGlobalStats] = useState({});
@@ -216,13 +219,14 @@ const FSMDebugPanel = ({
   useEffect(() => {
     const timer = setInterval(() => {
       setGlobalStats({
-        activeCount: botIds.length,
+        activeCount: botCount,
+        systemRunning: isSystemRunning,
         timestamp: new Date().toLocaleTimeString()
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [botIds]);
+  }, [botCount, isSystemRunning]);
 
   // Styles du panneau principal
   const getContainerStyle = () => {
@@ -311,6 +315,7 @@ const FSMDebugPanel = ({
             fontSize: '11px'
           }}>
             <div><strong>Bots FSM actifs:</strong> {globalStats.activeCount}</div>
+            <div><strong>Système:</strong> {globalStats.systemRunning ? '🟢 ACTIF' : '🔴 ARRÊTÉ'}</div>
             <div><strong>Dernière MAJ:</strong> {globalStats.timestamp}</div>
           </div>
 

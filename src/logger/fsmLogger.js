@@ -1,4 +1,3 @@
-// src/utils/fsmLogger.js
 // Module de journalisation avancé pour la FSM
 
 /**
@@ -307,8 +306,8 @@ const fsmLogger = {
 };
 
 // Configurer pour n'afficher que les mouvements
-fsmLogger.configure({
+/* fsmLogger.configure({
   visibleTypes: ['PLAYER', 'GAME']
-});
+}); */
 
 export default fsmLogger;

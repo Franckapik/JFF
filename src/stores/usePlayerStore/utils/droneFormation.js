@@ -7,7 +7,7 @@
  * autour des vaisseaux principaux.
  */
 
-import fsmLogger from '../../../utils/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger';
 
 /**
  * Positions relatives des drones autour du vaisseau principal

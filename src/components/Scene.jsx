@@ -20,7 +20,7 @@ import usePlayerStore from "../stores/usePlayerStore";
 import useGameStore from "../stores/useGameStore";
 
 // Utils
-import fsmLogger from "../utils/fsmLogger";
+import fsmLogger from "../logger/fsmLogger";
 
 /* ========================================
  * MAIN COMPONENT

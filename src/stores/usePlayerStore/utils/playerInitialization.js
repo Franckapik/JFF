@@ -9,7 +9,7 @@
 
 import useGameStore from '../../useGameStore/';
 import { createPlayer } from './playerFactory';
-import fsmLogger from '../../../utils/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger';
 
 /**
  * Génère la liste initiale des joueurs (humains et bots)

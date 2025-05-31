@@ -3,7 +3,7 @@ import { BOT_STATES } from '../../../oldfsm/constants/botConstants';
 import { BotStateConfig } from '../../../oldfsm/states/botStates';
 import { BotConditions } from '../../../oldfsm/conditions/botConditions';
 import usePlayerStore from '../../usePlayerStore';
-import fsmLogger from '../../../utils/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger';
 import { getMainShipId } from '../../../shared/constants/playerConstants';
 
 export const createStateTransitionSlice = (set, get) => ({
