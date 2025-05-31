@@ -9,22 +9,6 @@ import { safetyGuards, efficiencyGuards, baseGuards, discoveryGuards } from '../
 const DiagnosticGuards = ({ botId = 'bot-test' }) => {
   const { context, entity, vehicle, state, current, send } = useBotMachineFixed(botId);
 
-  // Fonction pour tester manuellement la transition
-  const testTransition = () => {
-    console.log('\n🧪 MANUAL TRANSITION TEST');
-    console.log('  - Current state before send:', state);
-    console.log('  - Current.name before send:', current?.name);
-    console.log('  - Sending ASSESSMENT_COMPLETE...');
-    send(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE);
-    console.log('  - Event sent!');
-    
-    // Petite pause pour voir le résultat
-    setTimeout(() => {
-      console.log('  - Current state after send:', current?.context?.currentState);
-      console.log('  - Current.name after send:', current?.name);
-    }, 100);
-  };
-
   useEffect(() => {
     if (context) {
       console.log('\n=== DIAGNOSTIC GUARDS ===');
@@ -129,22 +113,6 @@ const DiagnosticGuards = ({ botId = 'bot-test' }) => {
         }}
       >
         🚀 Force Assessment
-      </button>
-      <button 
-        onClick={testTransition}
-        style={{
-          marginTop: '5px',
-          marginLeft: '5px',
-          padding: '5px 10px',
-          background: '#FF5722',
-          color: 'white',
-          border: 'none',
-          borderRadius: '3px',
-          cursor: 'pointer',
-          fontSize: '10px'
-        }}
-      >
-        🧪 Test Transition
       </button>
       <div style={{ marginTop: '10px', fontSize: '10px' }}>
         Vérifiez la console pour les détails complets

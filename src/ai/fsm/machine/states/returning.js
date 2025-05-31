@@ -13,7 +13,7 @@
  * @version 1.0.0
  */
 
-import { state, transition, reduce } from 'robot3';
+import { state, transition, reduce, guard } from 'robot3';
 import { BOT_STATES } from '../constants.js';
 import { contextReducers } from '../reducers/context.js';
 import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';

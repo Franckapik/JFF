@@ -10,7 +10,7 @@
  * @version 1.0.0
  */
 
-import { state, transition, reduce } from 'robot3';
+import { state, transition, reduce, guard } from 'robot3';
 import { BOT_STATES } from '../constants.js';
 import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/index.js';
 import { contextReducers } from '../reducers/context.js';
@@ -28,7 +28,7 @@ export const collectingState = state(
   // Ressource collectée avec succès
   transition(RESOURCE_EVENT_TYPES.RESOURCE_COLLECTED,
     BOT_STATES.EVALUATING,
-    (context, event) => efficiencyGuards.shouldCollectMore(context, event),
+    guard((context, event) => efficiencyGuards.shouldCollectMore(context, event)),
     reduce((context, event) => {
       // Ajouter la ressource à l'inventaire
       let updatedContext = contextReducers.resource.addResource(context, {
@@ -54,7 +54,7 @@ export const collectingState = state(
   // Inventaire plein pendant la collecte
   transition(RESOURCE_EVENT_TYPES.INVENTORY_FULL,
     BOT_STATES.RETURNING,
-    (context, event) => efficiencyGuards.isAtMaxCapacity(context, event),
+    guard((context, event) => efficiencyGuards.isAtMaxCapacity(context, event)),
     reduce((context, event) => {
       // Marquer l'inventaire comme plein
       const updatedContext = {
@@ -72,7 +72,7 @@ export const collectingState = state(
   // Ressource épuisée ou non accessible
   transition(RESOURCE_EVENT_TYPES.RESOURCE_UNAVAILABLE,
     BOT_STATES.EVALUATING,
-    () => true,
+    guard(() => true),
     reduce((context, event) => ({
       ...context,
       // Retirer la ressource de la liste des ressources connues
@@ -124,11 +124,11 @@ export const collectingState = state(
   // Vérification de la capacité pendant la collecte
   transition(RESOURCE_EVENT_TYPES.CAPACITY_CHECK,
     BOT_STATES.RETURNING,
-    (context) => {
+    guard((context) => {
       const capacity = context.vehicle?.inventory?.capacity || 0;
       const maxCapacity = context.vehicle?.inventory?.maxCapacity || 100;
       return capacity >= maxCapacity * 0.9; // 90% plein
-    },
+    }),
     reduce((context) => ({
       ...context,
       currentAction: 'returning_near_full',
