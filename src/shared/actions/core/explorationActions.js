@@ -188,7 +188,6 @@ export const explorationGuards = {
     // - Nombre de tuiles explorées
     // - Découvertes récentes
     // - Zones non explorées
-    console.log('🔍 needsExploration called - returning true for now');
     return true;
   }
 };

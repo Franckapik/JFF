@@ -10,9 +10,6 @@
  * @version 1.0.0
  */
 
-// DEBUG UNIQUEMENT: Vérification du chargement
-console.log('📂 EVALUATING MODULE LOADED');
-
 import { state, transition, reduce, guard } from 'robot3';
 import { BOT_STATES } from '../constants.js';
 import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/index.js';
@@ -25,8 +22,6 @@ import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
  * État EVALUATING - Point de décision central
  * Évalue la situation et détermine la prochaine action
  */
-// Log pour debug uniquement
-console.log('🏗️ EVALUATING STATE: Construction de l\'état avec transitions');
 
 export const evaluatingState = state(
   // === TRANSITIONS DE SÉCURITÉ (PRIORITÉ MAX) ===
@@ -35,27 +30,10 @@ export const evaluatingState = state(
   transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE, BOT_STATES.RETURNING, 
     // Guard d'urgence
     guard((context, event) => {
-      // 🔍 DEBUG: Logs pour comprendre le problème
-      console.log('\n🎯 [GUARD 1] ASSESSMENT_COMPLETE → RETURNING');
-      console.log('Event type:', event?.type || 'no event type');
-      console.log('Context:', { 
-        entityId: context.entityId,
-        vehicle: !!context.vehicle,
-        vehicleFuel: context.vehicle?.fuel,
-        vehicleResources: context.vehicle?.resources
-      });
-      
       const needsEmergency = safetyGuards.needsEmergencyReturn(context, event);
       const shouldReturnEff = efficiencyGuards.shouldReturnForEfficiency(context, event);
       
-      console.log('Safety guards:');
-      console.log('  - needsEmergencyReturn:', needsEmergency);
-      console.log('  - shouldReturnForEfficiency:', shouldReturnEff);
-      
-      const result = needsEmergency || shouldReturnEff;
-      console.log('Final result (FIRST TRANSITION - goes to RETURNING):', result);
-      
-      return result;
+      return needsEmergency || shouldReturnEff;
     }),
     // Reducer d'urgence
     reduce((context, event) => {
@@ -81,15 +59,11 @@ export const evaluatingState = state(
   transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE, BOT_STATES.EXPLORING, 
     // Guard d'exploration
     guard((context, event) => {
-      console.log('\n🔍 [GUARD 2] ASSESSMENT_COMPLETE → EXPLORING');
       const hasUnexplored = discoveryGuards.hasUnexploredAreas(context, event);
-      console.log('  - hasUnexploredAreas result:', hasUnexplored);
-      console.log('  - SECOND TRANSITION - would go to EXPLORING:', hasUnexplored);
       return hasUnexplored;
     }),
     // Reducer d'exploration
     reduce((context, event) => {
-      console.log('🎯 EXPLORING REDUCER called - transitioning to EXPLORING');
       // Utiliser le reducer centralisé pour préparer l'exploration
       return contextReducers.state.prepareExploring(context, event);
     })
@@ -99,15 +73,9 @@ export const evaluatingState = state(
   transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE, BOT_STATES.COLLECTING, 
     // Guard pour collection
     guard((context, event) => {
-      console.log('\n🎯 EVALUATING GUARD: ASSESSMENT_COMPLETE → COLLECTING');
       const isEfficient = efficiencyGuards.isCollectionEfficient(context, event);
       const hasNewResources = context.hasNewResourceDiscovery;
       const hasKnownResources = context.knownResources?.length > 0;
-      
-      console.log('Collection guard evaluation:');
-      console.log('  - isCollectionEfficient:', isEfficient);
-      console.log('  - hasNewResourceDiscovery:', hasNewResources);
-      console.log('  - hasKnownResources:', hasKnownResources);
       
       return isEfficient && 
              hasNewResources && 
@@ -129,10 +97,7 @@ export const evaluatingState = state(
   transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE, BOT_STATES.RETURNING, 
     // Guard pour drone pas à la base
     guard((context, event) => {
-      console.log('\n🏠 [GUARD 4] ASSESSMENT_COMPLETE → RETURNING (not at base)');
       const notAtBase = !baseGuards.isAtBase(context, event);
-      console.log('  - !isAtBase result:', notAtBase);
-      console.log('  - FOURTH TRANSITION - would go to RETURNING:', notAtBase);
       return notAtBase;
     }),
     // Reducer pour récupération du drone
@@ -148,8 +113,6 @@ export const evaluatingState = state(
   transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE, BOT_STATES.IDLE_AT_BASE, 
     // Guard par défaut
     guard(() => {
-      console.log('\n💤 [GUARD 5] ASSESSMENT_COMPLETE → IDLE_AT_BASE (default)');
-      console.log('  - DEFAULT TRANSITION - goes to IDLE_AT_BASE: true');
       return true;
     }),
     // Reducer par défaut

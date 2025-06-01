@@ -1,194 +1,154 @@
-import React from "react";
+import React, { useRef, useMemo } from "react";
 import { Cone, Html } from "@react-three/drei";
-import ShipMovement from "../Mouvement/ShipMovement";
-import DroneMovement from "../Mouvement/DroneMovement";
-import usePlayerStore from "../stores/usePlayerStore";
+import { useFrame } from "@react-three/fiber";
+import { useFSMDroneState } from "../hooks/useFSMDroneState.js";
 
 /**
  * =================================================================
- * Composant Fleet (Bot-Only)
+ * Composant Fleet - Lien FSM → Animation Drone (Version Minimale)
  * =================================================================
- * Un composant réutilisable qui encapsule la logique de rendu 
- * d'une flotte de bots et leurs drones. Système bot-only uniquement.
+ * Démontre le pipeline : FSM State → Position → Animation Three.js
  * 
  * @param {Object} props
- * @param {number} props.botIndex - Index du bot (0 pour Bot 1, 1 pour Bot 2, etc.)
- * @param {string} props.color - Couleur unique pour le bot et ses drones
+ * @param {string} props.botId - ID du bot FSM (ex: 'fsm-bot-0')  
+ * @param {string} props.shipPosition - Position du vaisseau {x,y,z}
+ * @param {string} props.color - Couleur des drones
  */
 const Fleet = React.memo(({ 
-  botIndex, 
+  botId, 
+  shipPosition = { x: 0, y: 0, z: 0 },
   color = "red"
 }) => {
-  /**
-   * -----------------------------------------------------------------
-   * LOGIQUE DU COMPOSANT
-   * -----------------------------------------------------------------
-   */
+  // ===================================================================
+  // RÉFÉRENCES POUR L'ANIMATION
+  // ===================================================================
   
-  // Déterminer l'ID du bot - système bot-only
-  const playerId = `bot-${botIndex}`;
-  
-  // Sélecteur pour les véhicules du bot
-  const vehicles = usePlayerStore((state) => state.players[playerId]?.vehicles);
-  
-  // Si le bot n'a pas été initialisé, ne rien rendre
-  if (!vehicles) {
-    return null;
-  }
+  const explorerDroneRef = useRef();
 
-  /**
-   * -----------------------------------------------------------------
-   * RENDU DU COMPOSANT
-   * -----------------------------------------------------------------
-   */
+  // ===================================================================
+  // PIPELINE FSM → ANIMATION
+  // ===================================================================
+  
+  // 1. Récupérer l'état FSM des drones
+  const {
+    drones,
+    calculateDronePositions,
+    getDroneVisualState,
+    isDroneMoving
+  } = useFSMDroneState(botId);
+  
+  // 2. Calculer les positions basées sur l'état FSM
+  const dronePositions = useMemo(() => {
+    return calculateDronePositions(shipPosition);
+  }, [shipPosition, calculateDronePositions]);
+  
+  // 3. Position finale du drone explorateur
+  const explorerPosition = dronePositions.explorer || shipPosition;
+
+  // ===================================================================
+  // ANIMATION BASÉE SUR L'ÉTAT FSM
+  // ===================================================================
+  
+  useFrame(() => {
+    if (!explorerDroneRef.current) return;
+    
+    const droneState = getDroneVisualState('explorer');
+    const time = Date.now() * 0.001;
+    
+    // Animation différente selon l'état FSM
+    switch (droneState) {
+      case 'docked':
+        // Rotation lente en formation
+        explorerDroneRef.current.rotation.y = time * 0.5;
+        break;
+        
+      case 'exploring':
+        // Oscillation plus rapide en exploration
+        explorerDroneRef.current.rotation.y = time * 2;
+        explorerDroneRef.current.position.y = explorerPosition.y + Math.sin(time * 3) * 0.2;
+        break;
+        
+      case 'returning':
+        // Mouvement de retour
+        explorerDroneRef.current.rotation.y = time * -1;
+        break;
+    }
+  });
+
+  // ===================================================================
+  // VISUEL SIMPLE - UN DRONE POUR DÉMONSTRATION
+  // ===================================================================
+  
   return (
     <>
-      {/**
-       * VAISSEAU PRINCIPAL
-       * Représente le vaisseau principal du joueur ou du bot
-       */}
-      <ShipMovement playerId={playerId}>
-        <mesh castShadow>
-          <boxGeometry args={[0.5, 0.5, 0.5]} />
-          <meshStandardMaterial
+      {/* VAISSEAU PRINCIPAL */}
+      <mesh position={[shipPosition.x, shipPosition.y, shipPosition.z]} castShadow>
+        <boxGeometry args={[0.5, 0.5, 0.5]} />
+        <meshStandardMaterial color={color} />
+      </mesh>
+
+      {/* DRONE EXPLORATEUR - Exemple du pipeline FSM → Animation */}
+      <group 
+        ref={explorerDroneRef}
+        position={[explorerPosition.x, explorerPosition.y, explorerPosition.z]}
+      >
+        <Cone 
+          args={[0.15, 0.4, 8]} 
+          rotation={[Math.PI, 0, 0]}
+          castShadow
+        >
+          <meshStandardMaterial 
             color={color}
+            // État FSM → Couleur émissive
+            emissive={getDroneVisualState('explorer') === 'exploring' ? color : "black"}
+            emissiveIntensity={getDroneVisualState('explorer') === 'exploring' ? 0.8 : 0.2}
           />
-        </mesh>
+        </Cone>
         
-        {/* Étiquette indiquant le numéro du bot */}
-        <Html position={[0, 0.7, 0]} center>
-          <div style={{
-            background: 'rgba(0, 0, 0, 0.8)',
-            color: 'white',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            whiteSpace: 'nowrap',
-            pointerEvents: 'none'
-          }}>
-            {`Bot ${botIndex}`}
-          </div>
-        </Html>
-      </ShipMovement>
-
-      {/**
-       * DRONE D'EXPLORATION
-       * Simplifié pour la démonstration FSM
-       */}
-      {vehicles && vehicles[`${playerId}-explorer-drone`]?.isActive && vehicles[`${playerId}-explorer-drone`]?.position && (
-        <DroneMovement 
-          playerId={playerId} 
-          droneId={`${playerId}-explorer-drone`}
-        >
-          <Cone 
-            args={[0.15, 0.4, 8]} 
-            rotation={[Math.PI, 0, 0]}
-            castShadow
-          >
-            <meshStandardMaterial 
-              color={color} 
-              metalness={0.5} 
-              roughness={0.3}
-            />
-          </Cone>
-        </DroneMovement>
-      )}
-
-      {/**
-       * DRONE DE COMBAT
-       * Simplifié pour la démonstration FSM
-       */}
-      {vehicles && vehicles[`${playerId}-combat-drone`]?.isActive && vehicles[`${playerId}-combat-drone`]?.position && (
-        <DroneMovement
-          playerId={playerId}
-          droneId={`${playerId}-combat-drone`}
-        >
-          <group>
-            {/* Corps du drone */}
-            <Cone 
-              args={[0.2, 0.3, 6]} 
-              rotation={[Math.PI, 0, 0]}
-              castShadow
-            >
-              <meshStandardMaterial 
-                color={color} 
-                metalness={0.7} 
-                roughness={0.2} 
-              />
-            </Cone>
-            {/* Arme droite */}
-            <mesh position={[0.15, 0, 0]} rotation={[0, 0, Math.PI/4]}>
-              <boxGeometry args={[0.2, 0.05, 0.05]} />
-              <meshStandardMaterial 
-                color={color === "red" ? "darkred" : color === "blue" ? "darkblue" : color === "green" ? "darkgreen" : "darkorange"} 
-                metalness={0.7} 
-                roughness={0.2} 
-              />
-            </mesh>
-            {/* Arme gauche */}
-            <mesh position={[-0.15, 0, 0]} rotation={[0, 0, -Math.PI/4]}>
-              <boxGeometry args={[0.2, 0.05, 0.05]} />
-              <meshStandardMaterial 
-                color={color === "red" ? "darkred" : color === "blue" ? "darkblue" : color === "green" ? "darkgreen" : "darkorange"} 
-                metalness={0.7} 
-                roughness={0.2} 
-              />
-            </mesh>
-          </group>
-        </DroneMovement>
-      )}
-
-      {/**
-       * DRONE SPÉCIAL
-       * Simplifié pour la démonstration FSM
-       */}
-      {vehicles && vehicles[`${playerId}-special-drone`]?.isActive && vehicles[`${playerId}-special-drone`]?.position && (
-        <DroneMovement
-          playerId={playerId}
-          droneId={`${playerId}-special-drone`}
-        >
-          <group>
-            {/* Corps du drone spécial */}
-            <Cone 
-              args={[0.12, 0.35, 8]} 
-              rotation={[Math.PI, 0, 0]}
-              castShadow
-            >
-              <meshStandardMaterial 
-                color={color} 
-                metalness={0.6} 
-                roughness={0.3} 
-                emissive={color} 
-                emissiveIntensity={0.3} 
-              />
-            </Cone>
-            {/* Anneau technologique */}
-            <mesh position={[0, -0.1, 0]} rotation={[Math.PI/2, 0, 0]}>
-              <torusGeometry args={[0.15, 0.025, 8, 16]} />
-              <meshStandardMaterial 
-                color={color === "red" ? "darkred" : color === "blue" ? "darkblue" : color === "green" ? "darkgreen" : "darkorange"} 
-                metalness={0.6} 
-                roughness={0.3} 
-                emissive={color} 
-                emissiveIntensity={0.5} 
-              />
-            </mesh>
-          </group>
-        </DroneMovement>
-      )}
+        {/* DEBUG: État FSM en temps réel - DÉMONSTRATION PÉDAGOGIQUE */}
+        {drones.explorer && (
+          <Html position={[0, 0.8, 0]} center>
+            <div style={{ 
+              color: 'white', 
+              fontSize: '16px', 
+              background: 'rgba(0,0,0,0.9)', 
+              padding: '8px 12px', 
+              borderRadius: '8px',
+              fontFamily: 'monospace',
+              fontWeight: 'bold',
+              border: '2px solid ' + color,
+              textAlign: 'center',
+              minWidth: '120px'
+            }}>
+              <div style={{ fontSize: '20px', marginBottom: '4px' }}>
+                {getDroneVisualState('explorer') === 'exploring' ? '🔍' : 
+                 getDroneVisualState('explorer') === 'returning' ? '🏠' : '🛡️'}
+              </div>
+              <div style={{ fontSize: '14px' }}>
+                FSM: {getDroneVisualState('explorer')}
+              </div>
+              {isDroneMoving('explorer') && (
+                <div style={{ fontSize: '12px', color: '#00ff00' }}>
+                  ✈️ MOVING
+                </div>
+              )}
+            </div>
+          </Html>
+        )}
+      </group>
     </>
   );
-}, 
-/**
- * Fonction de comparaison pour memoization
- * Empêche les re-rendus inutiles si les props n'ont pas changé
- */
-(prevProps, nextProps) => {
+}, (prevProps, nextProps) => {
+  // Optimisation mémoire simple
   return (
-    prevProps.botIndex === nextProps.botIndex &&
-    prevProps.color === nextProps.color
+    prevProps.botId === nextProps.botId &&
+    prevProps.color === nextProps.color &&
+    prevProps.shipPosition?.x === nextProps.shipPosition?.x &&
+    prevProps.shipPosition?.y === nextProps.shipPosition?.y &&
+    prevProps.shipPosition?.z === nextProps.shipPosition?.z
   );
 });
+
+Fleet.displayName = 'Fleet';
 
 export default Fleet;

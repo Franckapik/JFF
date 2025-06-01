@@ -9,7 +9,8 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
     state,
     actions,
     autoEvents,
-    isMoving
+    isMoving,
+    context  // Add the full FSM context
   } = useBotMachineFixed(botId);
 
   // Mémoriser les valeurs qui changent souvent
@@ -17,12 +18,16 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
   const resources = vehicle?.resources || { food: 0, debris: 0, special: 0 };
 
   // Mémoriser l'objet de données du bot pour éviter les re-renders inutiles
+  // Include both UI data and full context for FSM hooks
   const botData = useMemo(() => ({
+    // UI display data
     state,
     isMoving,
     fuel,
-    resources
-  }), [state, isMoving, fuel, resources?.food, resources?.debris, resources?.special]);
+    resources,
+    // Full FSM context for hooks like useFSMDroneState
+    context
+  }), [state, isMoving, fuel, resources?.food, resources?.debris, resources?.special, context]);
 
   // Notifier le manager des changements d'état (avec dépendances stables)
   useEffect(() => {

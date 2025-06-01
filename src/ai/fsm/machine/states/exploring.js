@@ -20,6 +20,8 @@ import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
 import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
 import { safetyGuards } from '../guards/index.js';
 import { discoveryGuards } from '../guards/index.js';
+import { droneDeploymentActions, droneDeploymentGuards } from '../../../../shared/actions/core/droneActions.js';
+import { selectExplorationTarget } from '../../utils/explorationTargetSelector.js';
 
 /**
  * État EXPLORING - Exploration et découverte de ressources
@@ -27,12 +29,42 @@ import { discoveryGuards } from '../guards/index.js';
 export const exploringState = state(
   // === ÉVÉNEMENTS DE PROGRESSION ===
   
-  // Drone déployé avec succès
+  // NOUVEAU: Entrée dans l'état exploring → déployer drone automatiquement (FSM pur)
+  transition('onEntry', BOT_STATES.EXPLORING,
+    guard((context) => !context.droneFleet?.drones?.explorer?.isActive),
+    reduce((context, event) => {
+      // Sélectionner automatiquement une zone d'exploration
+      const explorationTarget = selectExplorationTarget(context);
+      
+      if (!explorationTarget) {
+        fsmLogger.warning('[Exploring] No suitable exploration target found');
+        return {
+          ...context,
+          hasExplored: true,
+          explorationStatus: 'no_target_found',
+          currentAction: 'exploration_skipped'
+        };
+      }
+
+      // Utiliser le reducer de flotte FSM (sans Player Store)
+      const deploymentResult = contextReducers.droneFleet.deployDrone(context, {
+        targetArea: explorationTarget,
+        droneType: 'explorer'
+      });
+      
+      fsmLogger.info(`[Exploring] FSM drone deployed to target: ${explorationTarget}`, {
+        droneState: deploymentResult.droneFleet?.drones?.explorer
+      });
+      
+      return deploymentResult;
+    })
+  ),
+
+  // Drone déployé avec succès (événement existant, maintenant connecté)
   transition(MOVEMENT_EVENT_TYPES.DRONE_DEPLOYED, BOT_STATES.EXPLORING, 
     guard(() => true),
     reduce((context, event) => {
-      // Ce reducer spécifique n'a pas d'équivalent direct dans contextReducers
-      // alors nous créons une mise à jour personnalisée
+      // Maintenir la compatibilité existante
       return {
         ...context,
         isDroneAtShip: false,

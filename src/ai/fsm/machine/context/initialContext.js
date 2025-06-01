@@ -12,6 +12,7 @@
 
 import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES } from '../../../../shared/actions/core/movement.js';
 import { BOT_STATES } from '../constants.js';
+import { DRONE_DEPLOYMENT_STATES, DRONE_TYPES } from '../../../../shared/actions/core/droneActions.js';
 
 // ============================================================================
 // CONSTANTES DE CONFIGURATION
@@ -45,6 +46,26 @@ const DEFAULT_VEHICLE_CONFIG = {
     damage: 0,
     maxCapacity: DEFAULT_CAPACITIES[VEHICLE_TYPES.DRONE]
   }
+};
+
+/**
+ * Configuration par défaut des formations de drones
+ */
+const DRONE_FORMATION_OFFSETS = {
+  [DRONE_TYPES.EXPLORER]: { x: 0.5, z: 0.5, y: 0.3 },
+  [DRONE_TYPES.COMBAT]: { x: -0.5, z: 0.5, y: 0.3 },
+  [DRONE_TYPES.SPECIAL]: { x: 0, z: -0.7, y: 0.3 }
+};
+
+/**
+ * États visuels des drones pour l'animation
+ */
+export const DRONE_VISUAL_STATES = {
+  DOCKED: 'docked',           // En formation autour du vaisseau
+  DEPLOYING: 'deploying',     // En mouvement vers la cible
+  EXPLORING: 'exploring',     // À la cible, en exploration
+  RETURNING: 'returning',     // En retour vers le vaisseau
+  FAILED: 'failed'           // En erreur
 };
 
 // ============================================================================
@@ -179,7 +200,60 @@ export const createEntityContext = (entityId, entityType = ENTITY_TYPES.AUTO) =>
       // Debugging
       enableLogging: true,
       logLevel: 'info'
-    }
+    },
+    
+    // ========================================================================
+    // SYSTÈME DE DRONES INTÉGRÉ
+    // ========================================================================
+    
+    // État de déploiement des drones (remplace droneDeployment)
+    droneFleet: {
+      // État global de la flotte
+      status: 'docked', // 'docked', 'deploying', 'active', 'returning'
+      
+      // Drones individuels avec leurs positions et états
+      drones: {
+        [DRONE_TYPES.EXPLORER]: {
+          id: `${entityId}-drone-${DRONE_TYPES.EXPLORER}`,
+          type: DRONE_TYPES.EXPLORER,
+          state: DRONE_VISUAL_STATES.DOCKED,
+          position: null, // Sera calculée dynamiquement
+          targetPosition: null,
+          missionTarget: null,
+          isActive: false,
+          lastUpdate: Date.now()
+        },
+        [DRONE_TYPES.COMBAT]: {
+          id: `${entityId}-drone-${DRONE_TYPES.COMBAT}`,
+          type: DRONE_TYPES.COMBAT,
+          state: DRONE_VISUAL_STATES.DOCKED,
+          position: null,
+          targetPosition: null,
+          missionTarget: null,
+          isActive: false,
+          lastUpdate: Date.now()
+        },
+        [DRONE_TYPES.SPECIAL]: {
+          id: `${entityId}-drone-${DRONE_TYPES.SPECIAL}`,
+          type: DRONE_TYPES.SPECIAL,
+          state: DRONE_VISUAL_STATES.DOCKED,
+          position: null,
+          targetPosition: null,
+          missionTarget: null,
+          isActive: false,
+          lastUpdate: Date.now()
+        }
+      },
+      
+      // Configuration de formation
+      formationOffsets: DRONE_FORMATION_OFFSETS,
+      
+      // Mission en cours
+      currentMission: null,
+      missionStartTime: null
+    },
+
+    // ...existing code...
   };
 };
 

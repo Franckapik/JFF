@@ -11,11 +11,11 @@
  */
 
 // Import des actions core
-import movementCore from './movement.js';
-import explorationCore from './exploration.js';
-import fuelCore from './fuel.js';
-import resourceCore from './resources.js';
-// vehicleCore retiré - fonctionnalités consolidées dans movement.js
+import movementCore from './movementActions.js';
+import explorationCore from './explorationActions.js';
+import fuelCore from './fuelActions.js';
+import resourceCore from './resourcesActions.js';
+// vehicleCore retiré - fonctionnalités consolidées dans movementActions.js
 
 // ============================================================================
 // EXPORTS INDIVIDUELS
@@ -34,21 +34,21 @@ export {
   repairVehicle,
   setVehicleShield,
   setVehicleSpeed,
-  // Guards véhicule consolidés depuis movement.js
+  // Guards véhicule consolidés depuis movementActions.js
   isVehicleActive,
   isVehicleOperational,
   isVehicleDamaged,
   isVehicleCritical,
   canUseVehicle,
   hasShield,
-  // Selectors véhicule consolidés depuis movement.js
+  // Selectors véhicule consolidés depuis movementActions.js
   getVehicleStatus,
   getHealthPercentage,
   getVehicleEssentials,
   hasActiveShield
-} from './movement.js';
-export { fuelActions, fuelSelectors, fuelGuards, fuelEvents } from './fuel.js';
-export { resourceActions, resourceSelectors, resourceGuards, resourceEvents } from './resource.js';
+} from './movementActions.js';
+export { fuelActions, fuelSelectors, fuelGuards, fuelEvents } from './fuelActions.js';
+export { resourceActions, resourceSelectors, resourceGuards, resourceEvents } from './resourcesActions.js';
 export { 
   explorationActions, 
   explorationSelectors, 
@@ -56,7 +56,7 @@ export {
   explorationEvents,
   EXPLORATION_STATES,
   DISCOVERY_TYPES 
-} from './exploration.js';
+} from './explorationActions.js';
 
 // ============================================================================
 // EXPORT GROUPÉ PAR DOMAINE
@@ -66,7 +66,7 @@ export const movement = movementCore;
 export const exploration = explorationCore;
 export const fuel = fuelCore;
 export const resource = resourceCore;
-// vehicle consolidé dans movement - plus besoin d'export séparé
+// vehicle consolidé dans movementActions - plus besoin d'export séparé
 
 // ============================================================================
 // EXPORTS COLLECTIONS - Par type d'interface
@@ -80,7 +80,7 @@ export const coreActions = {
   exploration: explorationCore.actions,
   fuel: fuelCore.actions,
   resource: resourceCore.actions
-  // vehicle consolidé dans movement
+  // vehicle consolidé dans movementActions
 };
 
 /**
@@ -91,7 +91,7 @@ export const coreSelectors = {
   exploration: explorationCore.selectors,
   fuel: fuelCore.selectors,
   resource: resourceCore.selectors
-  // vehicle consolidé dans movement
+  // vehicle consolidé dans movementActions
 };
 
 /**
@@ -102,7 +102,7 @@ export const coreGuards = {
   exploration: explorationCore.guards,
   fuel: fuelCore.guards,
   resource: resourceCore.guards
-  // vehicle consolidé dans movement
+  // vehicle consolidé dans movementActions
 };
 
 /**
@@ -112,7 +112,7 @@ export const coreEvents = {
   movement: movementCore.events,
   fuel: fuelCore.events,
   resource: resourceCore.events
-  // vehicle consolidé dans movement
+  // vehicle consolidé dans movementActions
 };
 
 // ============================================================================
@@ -123,7 +123,7 @@ export default {
   movement: movementCore,
   fuel: fuelCore,
   resource: resourceCore,
-  // vehicle consolidé dans movement - plus besoin d'export séparé
+  // vehicle consolidé dans movementActions - plus besoin d'export séparé
   
   // Collections pour usage global
   actions: coreActions,

@@ -39,22 +39,10 @@ export const efficiencyGuards = {
 
   // Check if vehicle should return to base for efficiency
   shouldReturnForEfficiency: (context, event) => {
-    console.log('⚡ shouldReturnForEfficiency called with:', {
-      hasVehicle: !!context.vehicle,
-      hasResources: !!context.vehicle?.resources,
-      resources: context.vehicle?.resources
-    });
-    
     const atMaxCapacity = resourceGuards.isAtMaxCapacity(context, event);
     const isLowFuel = fuelGuards.isLowFuel(context, event);
     
-    console.log('  - resourceGuards.isAtMaxCapacity:', atMaxCapacity);
-    console.log('  - fuelGuards.isLowFuel:', isLowFuel);
-    
-    const result = atMaxCapacity || isLowFuel;
-    console.log('  - Final shouldReturnForEfficiency result:', result);
-    
-    return result;
+    return atMaxCapacity || isLowFuel;
   },
 
   // Check if refueling is needed for efficiency

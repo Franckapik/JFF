@@ -15,10 +15,11 @@
  */
 
 import { BOT_STATES } from '../constants.js';
-import { movementActions } from '../../../../shared/actions/core/movement.js';
-import { fuelActions } from '../../../../shared/actions/core/fuel.js';
-import { resourceActions } from '../../../../shared/actions/core/resources.js';
-import { explorationActions } from '../../../../shared/actions/core/exploration.js';
+import { movementActions } from '../../../../shared/actions/core/movementActions.js';
+import { fuelActions } from '../../../../shared/actions/core/fuelActions.js';
+import { resourceActions } from '../../../../shared/actions/core/resourcesActions.js';
+import { explorationActions } from '../../../../shared/actions/core/explorationActions.js';
+import { droneDeploymentActions, fsmDroneFleetActions } from '../../../../shared/actions/core/droneActions.js';
 
 // ============================================================================
 // RÉDUCTEURS D'ÉTAT - Mises à jour du contexte lors des transitions d'état
@@ -484,6 +485,72 @@ export const baseReducers = {
   }
 };
 
+/**
+ * Réducteurs pour le déploiement et contrôle des drones
+ */
+export const droneDeploymentReducers = {
+  /**
+   * Déploie un drone vers une zone cible
+   */
+  deployDrone: (context, event) => {
+    return droneDeploymentActions.deployDrone(context, event);
+  },
+
+  /**
+   * Rappelle le drone au vaisseau
+   */
+  recallDrone: (context, event) => {
+    return droneDeploymentActions.recallDrone(context, event);
+  },
+
+  /**
+   * Finalise le retour du drone (ancrage)
+   */
+  dockDrone: (context, event) => {
+    return droneDeploymentActions.dockDrone(context, event);
+  },
+
+  /**
+   * Met à jour la position du drone en temps réel
+   */
+  updateDronePosition: (context, event) => {
+    return droneDeploymentActions.updateDronePosition(context, event);
+  }
+};
+
+/**
+ * Réducteurs pour la flotte de drones FSM (sans Player Store)
+ */
+export const droneFleetReducers = {
+  /**
+   * Déploie un drone avec calcul de position automatique
+   */
+  deployDrone: (context, event) => {
+    return fsmDroneFleetActions.deployDroneWithPosition(context, event);
+  },
+
+  /**
+   * Met à jour la position d'un drone
+   */
+  updatePosition: (context, event) => {
+    return fsmDroneFleetActions.updateDronePosition(context, event);
+  },
+
+  /**
+   * Rappelle un drone
+   */
+  recallDrone: (context, event) => {
+    return fsmDroneFleetActions.recallDrone(context, event);
+  },
+
+  /**
+   * Ancre un drone au vaisseau
+   */
+  dockDrone: (context, event) => {
+    return fsmDroneFleetActions.dockDrone(context, event);
+  }
+};
+
 // ============================================================================
 // EXPORT
 // ============================================================================
@@ -498,6 +565,8 @@ export const contextReducers = {
   emergency: emergencyReducers,
   manual: manualControlReducers,
   base: baseReducers,
+  droneDeployment: droneDeploymentReducers,
+  droneFleet: droneFleetReducers,
   
   // Réducteur d'état (fonction principale)
   updateState: updateStateReducer

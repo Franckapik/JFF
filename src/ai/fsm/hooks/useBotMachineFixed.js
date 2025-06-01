@@ -57,13 +57,7 @@ export const useBotMachineFixed = (botId, entityType) => {
     
     const interval = entity.config?.explorationInterval || 5000;
     autoIntervalRef.current = setInterval(() => {
-      console.log('\n🔥 SENDING ASSESSMENT_COMPLETE EVENT');
-      console.log('  - Current state name:', current.name);
-      console.log('  - Current state context.currentState:', current.context?.currentState);
-      console.log('  - Interval:', interval);
-      console.log('  - Full current object keys:', Object.keys(current));
       send(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE);
-      console.log('  - Event sent!');
     }, interval);
   }, [entity.config?.explorationInterval, send]);
 
