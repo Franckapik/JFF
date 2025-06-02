@@ -28,7 +28,13 @@ const useFSMStore = create(
       totalBotsCreated: 1,
       systemStartTime: null,
       lastActivity: Date.now(),
-      botStatesSnapshot: {}
+      botStatesSnapshot: {},
+      // Nouvel historique des événements centralisé
+      eventHistory: {
+        maxEvents: 100, // Configurable
+        events: [], // Array des événements de tous les bots
+        byBot: {} // Historique organisé par botId pour accès rapide
+      }
     },
     
     /** Configuration globale */
@@ -272,7 +278,98 @@ const useFSMStore = create(
           botStatesSnapshot: {}
         }
       });
-    }
+    },
+    
+    /**
+     * Ajoute un événement à l'historique centralisé
+     * @param {string} botId - ID du bot émetteur
+     * @param {Object} eventData - Données de l'événement
+     */
+    addEventToHistory: (botId, eventData) => {
+      const state = get();
+      const timestamp = new Date().toLocaleTimeString();
+      const event = {
+        id: Date.now() + Math.random(),
+        timestamp,
+        botId,
+        ...eventData
+      };
+
+      set(state => {
+        const { eventHistory } = state.metrics;
+        const newEvents = [event, ...eventHistory.events].slice(0, eventHistory.maxEvents);
+        
+        // Mise à jour de l'historique par bot
+        const botHistory = eventHistory.byBot[botId] || [];
+        const newBotHistory = [event, ...botHistory].slice(0, Math.floor(eventHistory.maxEvents / 4));
+
+        return {
+          metrics: {
+            ...state.metrics,
+            eventHistory: {
+              ...eventHistory,
+              events: newEvents,
+              byBot: {
+                ...eventHistory.byBot,
+                [botId]: newBotHistory
+              }
+            },
+            lastActivity: Date.now()
+          }
+        };
+      });
+
+      fsmLogger.info(`Event added to history: ${eventData.eventName} for bot ${botId}`);
+    },
+
+    /**
+     * Récupère l'historique des événements
+     * @param {string} botId - ID du bot (optionnel, si omis retourne tous les événements)
+     * @returns {Array} Liste des événements
+     */
+    getEventHistory: (botId = null) => {
+      const state = get();
+      if (botId) {
+        return state.metrics.eventHistory.byBot[botId] || [];
+      }
+      return state.metrics.eventHistory.events;
+    },
+
+    /**
+     * Vide l'historique des événements
+     * @param {string} botId - ID du bot (optionnel, si omis vide tout l'historique)
+     */
+    clearEventHistory: (botId = null) => {
+      set(state => {
+        if (botId) {
+          return {
+            metrics: {
+              ...state.metrics,
+              eventHistory: {
+                ...state.metrics.eventHistory,
+                byBot: {
+                  ...state.metrics.eventHistory.byBot,
+                  [botId]: []
+                }
+              }
+            }
+          };
+        } else {
+          return {
+            metrics: {
+              ...state.metrics,
+              eventHistory: {
+                maxEvents: state.metrics.eventHistory.maxEvents,
+                events: [],
+                byBot: {}
+              }
+            }
+          };
+        }
+      });
+      
+      fsmLogger.info(`Event history cleared ${botId ? `for bot ${botId}` : 'globally'}`);
+    },
   }))
 );
 

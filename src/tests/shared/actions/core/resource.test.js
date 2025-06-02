@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import resourceCore from '../../../../shared/actions/core/resource.js';
+import resourceCore from '../../../../shared/actions/core/resourcesActions.js';
 
 // Destructurer les exports du module
 const { actions, guards, selectors, events, utils, EMPTY_RESOURCES, DEFAULT_CAPACITY } = resourceCore;

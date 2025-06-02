@@ -10,7 +10,7 @@
  * @version 1.0.0
  */
 
-import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES } from '../../../../shared/actions/core/movement.js';
+import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES } from '../../../../shared/actions/core/movementActions.js';
 import { BOT_STATES } from '../constants.js';
 import { DRONE_DEPLOYMENT_STATES, DRONE_TYPES } from '../../../../shared/actions/core/droneActions.js';
 

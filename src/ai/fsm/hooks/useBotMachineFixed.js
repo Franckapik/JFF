@@ -1,108 +1,91 @@
-import { useEffect, useCallback, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { useBotMachineShared } from '../contexts/FSMContext.jsx';
 import { getMainVehicle, isMoving } from '../machine/context/initialContext.js';
-import { BOT_STATES } from '../machine/constants.js';
 import { SYSTEM_EVENT_TYPES } from '../machine/events/systemEvents.js';
+import { useTileStore } from '../../../stores/useTileStore/index.js';
+import fsmLogger from '../../../logger/fsmLogger.js';
 
 /**
- * Hook pour gérer un bot avec la machine FSM (version corrigée)
+ * Hook FSM simplifié - Gestion autonome avec exploration automatique
  */
 export const useBotMachineFixed = (botId, entityType) => {
   const { current, send } = useBotMachineShared(botId, entityType);
-  const autoIntervalRef = useRef(null);
+  const timeoutRef = useRef(null);
+  const hasStartedExploring = useRef(false);
+  const positionSyncRef = useRef(false);
   
-  // Données principales
+  // Accès au store de tuiles via hook Zustand
+  const tiles = useTileStore(state => state.tiles);
+  
+  // Synchronisation de position au démarrage
+  useEffect(() => {
+    if (!positionSyncRef.current && current?.context && tiles) {
+      // Vérifier si la position du véhicule est manquante
+      if (!current.context.vehicle?.position || !current.context.vehicle?.coord) {
+        fsmLogger.info(`[useBotMachineFixed] Bot ${botId} needs position synchronization`);
+        
+        // Récupérer la tuile de départ assignée à ce bot
+        const assignedTile = Object.values(tiles).find(tile => 
+          tile.type === "depart" && tile.playerId === botId
+        );
+
+        if (assignedTile) {
+          fsmLogger.info(`[useBotMachineFixed] Found starting tile for bot ${botId}:`, assignedTile.coord, assignedTile.position);
+          
+          // Utiliser l'action updatePosition mise à jour qui gère position ET coord
+          send({
+            type: 'UPDATE_POSITION',
+            position: assignedTile.position,
+            coord: assignedTile.coord,
+            newCoord: assignedTile.coord
+          });
+          
+          positionSyncRef.current = true;
+        } else {
+          fsmLogger.error(`[useBotMachineFixed] No starting tile found for bot ${botId}`);
+        }
+      } else {
+        positionSyncRef.current = true;
+        fsmLogger.info(`[useBotMachineFixed] Bot ${botId} already has position:`, current.context.vehicle.position);
+      }
+    }
+  }, [botId, current?.context, send, tiles]);
+  
+  // Données essentielles
   const entity = useMemo(() => current.context, [current.context]);
   const vehicle = useMemo(() => getMainVehicle(entity), [entity]);
-  const state = useMemo(() => current.name, [current.name]); // ✅ CORRIGÉ: Lire l'état de Robot3 directement
+  const state = useMemo(() => current.name, [current.name]);
   
-  // Actions de base
-  const moveTo = useCallback((coord, position = null) => {
-    send('MOVE_TO', { targetTile: { coord, position } });
-  }, [send]);
-
-  const stopMovement = useCallback(() => send('STOP'), [send]);
-  const startExploration = useCallback(() => send('START_EXPLORING'), [send]);
-  const startCollecting = useCallback(() => send('START_COLLECTING'), [send]);
-  const returnToBase = useCallback(() => send('RETURN_TO_BASE'), [send]);
-  const updateProgress = useCallback((progress) => send('UPDATE_PROGRESS', { progress }), [send]);
-  
-  const forceState = useCallback((newState) => {
-    if (Object.values(BOT_STATES).includes(newState)) {
-      send(newState);
-    }
-  }, [send]);
-
-  // Utilitaires
-  const isMovingState = useMemo(() => isMoving(entity), [entity]);
-
-  const getMetrics = useCallback(() => ({
-    state,
-    fuel: vehicle?.fuel || 0,
-    health: vehicle?.health || 100,
-    resources: vehicle?.resources || { food: 0, debris: 0, special: 0 },
-    position: vehicle?.coord || null,
-    isMoving: isMoving(entity),
-    lastAction: entity.lastAction,
-    error: entity.error,
-    stateHistory: entity.memory?.stateHistory || [],
-    uptime: Date.now() - (entity.timestamps?.stateChange || Date.now())
-  }), [state, vehicle, entity]);
-
-  // Gestion des événements autonomes
-  const startAutoEvents = useCallback(() => {
-    if (autoIntervalRef.current) {
-      clearInterval(autoIntervalRef.current);
+  // Démarrage automatique après 5 secondes (une seule fois)
+  useEffect(() => {
+    if (!hasStartedExploring.current && state === 'evaluating') {
+      timeoutRef.current = setTimeout(() => {
+        console.log(`[useBotMachineFixed] Sending ASSESSMENT_COMPLETE for bot ${botId}`);
+        send(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE);
+        hasStartedExploring.current = true;
+      }, 5000);
     }
     
-    const interval = entity.config?.explorationInterval || 5000;
-    autoIntervalRef.current = setInterval(() => {
-      send(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE);
-    }, interval);
-  }, [entity.config?.explorationInterval, send]);
-
-  const stopAutoEvents = useCallback(() => {
-    if (autoIntervalRef.current) {
-      clearInterval(autoIntervalRef.current);
-      autoIntervalRef.current = null;
-    }
-  }, []);
-
-  // Effets - Démarrage automatique des événements
-  useEffect(() => {
-    startAutoEvents();
-    return stopAutoEvents;
-  }, [startAutoEvents, stopAutoEvents]);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, [state === 'evaluating' && !hasStartedExploring.current, send, botId]);
 
   return {
-    // Données
     entity,
     vehicle,
     state,
-    context: current.context, // Ajouter le contexte complet pour le debug
-    
-    // Actions
-    moveTo,
-    stopMovement,
-    startExploration,
-    startCollecting,
-    returnToBase,
-    updateProgress,
-    forceState,
-    
-    // Utilitaires
-    isMoving: isMovingState,
-    getMetrics,
-    
-    // Machine
+    context: current.context,
+    isMoving: isMoving(entity),
     current,
     send,
-    
-    // Auto events - Structure corrigée
     autoEvents: {
-      start: startAutoEvents,
-      stop: stopAutoEvents,
-      isActive: autoIntervalRef.current !== null
+      start: () => {},
+      stop: () => {},
+      isActive: !hasStartedExploring.current
     }
   };
 };

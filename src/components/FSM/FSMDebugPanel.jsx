@@ -9,24 +9,29 @@
  * @version 1.0.0
  */
 
-import React, { useState, useEffect } from 'react';
-import { useBotMachineFixed } from "../../ai/fsm/hooks/useBotMachineFixed.js";
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useCentralizedEventHistory } from "../../ai/fsm/hooks/useCentralizedEventHistory.js";
 import { useFSMBots } from "../../stores/useFSMStore/useFSMBots.js";
 
 /**
  * Composant de visualisation d'une machine d'état individuelle
  */
 const FSMVisualization = ({ botId, expanded = false }) => {
-  const {
-    entity,
-    vehicle,
-    state,
-    context,
-    send,
-    isMoving,
-    current,
-    autoEvents
-  } = useBotMachineFixed(botId);
+  // Utiliser le nouveau hook centralisé pour l'historique des événements
+  const { 
+    send, 
+    current, 
+    eventHistory, 
+    clearHistory 
+  } = useCentralizedEventHistory(botId);
+
+  // Extraire les données du contexte actuel
+  const entity = current?.context?.entity;
+  const vehicle = current?.context?.vehicle;
+  const state = current?.name;
+  const context = current?.context;
+  const isMoving = current?.context?.isMoving;
+  const autoEvents = current?.context?.autoEvents;
 
 
   // États disponibles (pour simulation)
@@ -101,6 +106,24 @@ const FSMVisualization = ({ botId, expanded = false }) => {
       'RETURNING': '#ffa500'
     };
     return colors[stateName] || '#ddd';
+  }
+
+  function getEventTypeColor(type) {
+    const colors = {
+      'SENT': '#4CAF50',        // Vert pour les événements envoyés
+      'TRANSITION': '#2196F3',   // Bleu pour les transitions d'état
+      'CONTEXT_UPDATE': '#FF9800' // Orange pour les updates de contexte
+    };
+    return colors[type] || '#ddd';
+  }
+
+  function getEventTypeIcon(type) {
+    const icons = {
+      'SENT': '📤',
+      'TRANSITION': '🔄', 
+      'CONTEXT_UPDATE': '📝'
+    };
+    return icons[type] || '❓';
   }
 
   const handleEventSend = (eventName) => {
@@ -194,6 +217,90 @@ const FSMVisualization = ({ botId, expanded = false }) => {
             }}>
               {context ? JSON.stringify(context, null, 2) : 'Contexte non disponible'}
             </pre>
+          </details>
+
+          {/* Historique des événements */}
+          <details style={{ marginTop: '10px', fontSize: '9px' }}>
+            <summary style={{ cursor: 'pointer', fontSize: '10px' }}>
+              <strong>📊 Historique des événements ({eventHistory.length})</strong>
+              {eventHistory.length > 0 && (
+                <button
+                  style={{
+                    ...eventButtonStyle,
+                    marginLeft: '10px',
+                    fontSize: '8px',
+                    backgroundColor: '#ff6b6b'
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    clearHistory();
+                  }}
+                >
+                  🗑️ Vider
+                </button>
+              )}
+            </summary>
+            <div style={{ 
+              backgroundColor: '#1a1a1a', 
+              padding: '5px', 
+              borderRadius: '3px',
+              maxHeight: '200px',
+              overflow: 'auto',
+              fontSize: '8px'
+            }}>
+              {eventHistory.length === 0 ? (
+                <div style={{ color: '#888', fontStyle: 'italic' }}>
+                  Aucun événement capturé
+                </div>
+              ) : (
+                eventHistory.map((event) => (
+                  <div key={event.id} style={{ 
+                    borderBottom: '1px solid #333', 
+                    paddingBottom: '3px', 
+                    marginBottom: '3px',
+                    fontSize: '8px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ 
+                          color: getEventTypeColor(event.type),
+                          fontWeight: 'bold',
+                          marginRight: '5px'
+                        }}>
+                          {getEventTypeIcon(event.type)}
+                        </span>
+                        <span style={{ 
+                          color: '#fff',
+                          fontWeight: 'bold',
+                          fontSize: '9px'
+                        }}>
+                          {event.eventName}
+                        </span>
+                      </div>
+                      <span style={{ color: '#888', fontSize: '7px' }}>
+                        {event.timestamp}
+                      </span>
+                    </div>
+                    
+                    {event.type === 'TRANSITION' && (
+                      <div style={{ fontSize: '7px', color: '#ccc', marginTop: '2px' }}>
+                        {event.eventData.from} → {event.eventData.to}
+                      </div>
+                    )}
+                    
+                    {event.type === 'SENT' && event.eventData && Object.keys(event.eventData).length > 0 && (
+                      <div style={{ fontSize: '7px', color: '#ccc', marginTop: '2px' }}>
+                        Data: {JSON.stringify(event.eventData)}
+                      </div>
+                    )}
+                    
+                    <div style={{ fontSize: '7px', color: '#666', marginTop: '1px' }}>
+                      État: {event.fromState}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </details>
         </div>
       )}

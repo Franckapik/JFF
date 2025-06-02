@@ -17,6 +17,7 @@ import { contextReducers } from '../reducers/context.js';
 import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
 import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
+import { movementActions } from '../../../../shared/actions/core/movementActions.js';
 
 /**
  * État EVALUATING - Point de décision central
@@ -163,5 +164,14 @@ export const evaluatingState = state(
       lastDecision: 'emergency',
       lastStateChange: Date.now()
     }))
+  ),
+
+  // Mise à jour de position (reste dans le même état)
+  transition('UPDATE_POSITION', BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context, event) => {
+      // Utiliser l'action updatePosition existante
+      return movementActions.updatePosition(context, event);
+    })
   )
 );

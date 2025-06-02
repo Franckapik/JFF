@@ -10,6 +10,9 @@
  * @version 1.0.0
  */
 
+// Import des constantes FSM
+import { DRONE_VISUAL_STATES } from '../../../ai/fsm/machine/context/initialContext.js';
+
 // ============================================================================
 // CONSTANTS ET TYPES
 // ============================================================================

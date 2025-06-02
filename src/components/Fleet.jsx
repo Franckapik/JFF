@@ -1,7 +1,11 @@
-import React, { useRef, useMemo } from "react";
+import React, { useRef, useMemo, useEffect } from "react";
 import { Cone, Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import { useFSMDroneState } from "../hooks/useFSMDroneState.js";
+import { movementEvents } from "../ai/fsm/machine/events/movementEvents.js";
+import { useBotMachineFixed } from "../ai/fsm/hooks/useBotMachineFixed.js";
+import fsmLogger from "../logger/fsmLogger.js";
 
 /**
  * =================================================================
@@ -11,14 +15,25 @@ import { useFSMDroneState } from "../hooks/useFSMDroneState.js";
  * 
  * @param {Object} props
  * @param {string} props.botId - ID du bot FSM (ex: 'fsm-bot-0')  
- * @param {string} props.shipPosition - Position du vaisseau {x,y,z}
+ * @param {number} props.botIndex - Index du bot pour la compatibilité
+ * @param {Object} props.shipPosition - Position du vaisseau {x,y,z}
  * @param {string} props.color - Couleur des drones
+ * @param {string} props.tileCoord - Coordonnée de la tuile de départ
  */
 const Fleet = React.memo(({ 
   botId, 
+  botIndex,
   shipPosition = { x: 0, y: 0, z: 0 },
-  color = "red"
+  color = "red",
+  tileCoord
 }) => {
+  // ===================================================================
+  // FSM INTEGRATION - Hook autonome sans logique React
+  // ===================================================================
+  
+  // Le hook gère autonomiquement la synchronisation de position
+  const { current, send: fsmSend, context, vehicle, state } = useBotMachineFixed(botId, 'bot');
+
   // ===================================================================
   // RÉFÉRENCES POUR L'ANIMATION
   // ===================================================================
@@ -42,36 +57,59 @@ const Fleet = React.memo(({
     return calculateDronePositions(shipPosition);
   }, [shipPosition, calculateDronePositions]);
   
-  // 3. Position finale du drone explorateur
+  // 3. États et positions du drone explorateur
+  const explorerState = getDroneVisualState('explorer');
+  const isExplorerMoving = isDroneMoving('explorer');
   const explorerPosition = dronePositions.explorer || shipPosition;
 
   // ===================================================================
-  // ANIMATION BASÉE SUR L'ÉTAT FSM
+  // ANIMATION FLUIDE BASÉE SUR L'ÉTAT FSM
   // ===================================================================
   
-  useFrame(() => {
+  // Animation automatique basée sur les changements de contexte
+  useFrame((state, delta) => {
     if (!explorerDroneRef.current) return;
     
-    const droneState = getDroneVisualState('explorer');
-    const time = Date.now() * 0.001;
+    // Position cible depuis le contexte FSM (mise à jour via DRONE_POSITION_UPDATE)
+    const targetPosition = explorerPosition;
+    const currentPosition = explorerDroneRef.current.position;
     
-    // Animation différente selon l'état FSM
-    switch (droneState) {
-      case 'docked':
-        // Rotation lente en formation
-        explorerDroneRef.current.rotation.y = time * 0.5;
-        break;
+    // Animation fluide vers la nouvelle position
+    if (isExplorerMoving) {
+      const speed = delta * 3; // Vitesse d'interpolation
+      currentPosition.x = THREE.MathUtils.lerp(currentPosition.x, targetPosition.x, speed);
+      currentPosition.y = THREE.MathUtils.lerp(currentPosition.y, targetPosition.y, speed);
+      currentPosition.z = THREE.MathUtils.lerp(currentPosition.z, targetPosition.z, speed);
+      
+      // Rotation continue pendant le mouvement
+      explorerDroneRef.current.rotation.y += delta * 2;
+    }
+    
+    // Animation idle quand le drone est en attente
+    if (explorerState === 'docked') {
+      explorerDroneRef.current.rotation.y += delta * 0.5;
+      explorerDroneRef.current.position.y = shipPosition.y + Math.sin(state.clock.elapsedTime * 2) * 0.1;
+    }
+    
+    // Animation d'exploration active
+    if (explorerState === 'exploring') {
+      // Oscillation légère pour simuler le mouvement de recherche
+      explorerDroneRef.current.position.y = targetPosition.y + Math.sin(state.clock.elapsedTime * 3) * 0.2;
+      explorerDroneRef.current.rotation.y += delta * 1.5;
+      
+      // Exemple de déclenchement automatique de mise à jour de position
+      if (fsmSend && Math.random() < 0.005) { // 0.5% de chance par frame
+        // Générer une nouvelle position d'exploration
+        const newPosition = {
+          x: shipPosition.x + (Math.random() - 0.5) * 20,
+          y: shipPosition.y + 1 + Math.random() * 3,
+          z: shipPosition.z + (Math.random() - 0.5) * 20
+        };
         
-      case 'exploring':
-        // Oscillation plus rapide en exploration
-        explorerDroneRef.current.rotation.y = time * 2;
-        explorerDroneRef.current.position.y = explorerPosition.y + Math.sin(time * 3) * 0.2;
-        break;
-        
-      case 'returning':
-        // Mouvement de retour
-        explorerDroneRef.current.rotation.y = time * -1;
-        break;
+        // Déclencher la mise à jour via FSM
+        const positionEvent = movementEvents.createDronePositionUpdateEvent(newPosition, 'explorer', 'exploring');
+        fsmSend(positionEvent); // ← Utilise le send du hook FSM
+      }
     }
   });
 
@@ -100,8 +138,8 @@ const Fleet = React.memo(({
           <meshStandardMaterial 
             color={color}
             // État FSM → Couleur émissive
-            emissive={getDroneVisualState('explorer') === 'exploring' ? color : "black"}
-            emissiveIntensity={getDroneVisualState('explorer') === 'exploring' ? 0.8 : 0.2}
+            emissive={explorerState === 'exploring' ? color : "black"}
+            emissiveIntensity={explorerState === 'exploring' ? 0.8 : 0.2}
           />
         </Cone>
         
@@ -121,17 +159,14 @@ const Fleet = React.memo(({
               minWidth: '120px'
             }}>
               <div style={{ fontSize: '20px', marginBottom: '4px' }}>
-                {getDroneVisualState('explorer') === 'exploring' ? '🔍' : 
-                 getDroneVisualState('explorer') === 'returning' ? '🏠' : '🛡️'}
+                {explorerState === 'exploring' ? '🔍' : 
+                 explorerState === 'returning' ? '🏠' : '🛡️'}
               </div>
               <div style={{ fontSize: '14px' }}>
-                FSM: {getDroneVisualState('explorer')}
+                🚁 {explorerState.toUpperCase()}
+                <br />
+                {isExplorerMoving ? '📍 Moving' : '⚡ Idle'}
               </div>
-              {isDroneMoving('explorer') && (
-                <div style={{ fontSize: '12px', color: '#00ff00' }}>
-                  ✈️ MOVING
-                </div>
-              )}
             </div>
           </Html>
         )}

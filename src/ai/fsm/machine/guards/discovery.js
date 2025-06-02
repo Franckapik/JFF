@@ -4,8 +4,8 @@
  * Reuses existing guards from shared/actions/core/
  */
 
-import { explorationGuards } from '../../../../shared/actions/core/exploration.js';
-import { movementGuards } from '../../../../shared/actions/core/movement.js';
+import { explorationGuards } from '../../../../shared/actions/core/explorationActions.js';
+import { movementGuards } from '../../../../shared/actions/core/movementActions.js';
 
 /**
  * Discovery guards - Exploration and discovery logic

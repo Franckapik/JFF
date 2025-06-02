@@ -391,21 +391,32 @@ export const movementActions = {
   /**
    * Met à jour la position actuelle du véhicule
    * @param {Object} context - Contexte actuel
-   * @param {Object} event - Événement avec newCoord
+   * @param {Object} event - Événement avec position, coord, newCoord
    * @returns {Object} - Nouveau contexte avec position mise à jour
    */
   updatePosition: (context, event) => {
-    if (!event.newCoord) {
+    if (!event.newCoord && !event.coord && !event.position) {
       return context;
+    }
+
+    const updatedVehicle = {
+      ...context.vehicle,
+      lastUpdate: Date.now()
+    };
+
+    // Mettre à jour la coordonnée
+    if (event.newCoord || event.coord) {
+      updatedVehicle.coord = event.newCoord || event.coord;
+    }
+
+    // Mettre à jour la position 3D
+    if (event.position) {
+      updatedVehicle.position = event.position;
     }
 
     return {
       ...context,
-      vehicle: {
-        ...context.vehicle,
-        coord: event.newCoord,
-        lastUpdate: Date.now()
-      }
+      vehicle: updatedVehicle
     };
   },
 

@@ -179,8 +179,15 @@ const Scene = () => {
               {/* Render the fleet at the same position with slight Y offset */}
               <group position={[tile.position.x, 0.5, tile.position.z]}>
                 <Fleet
+                  botId={tile.playerId}
                   botIndex={tile.playerIndex}
                   color={getBotColor(tile.playerIndex)}
+                  shipPosition={{
+                    x: tile.position.x,
+                    y: 0.5,
+                    z: tile.position.z
+                  }}
+                  tileCoord={tile.coord}
                 />
               </group>
             </group>

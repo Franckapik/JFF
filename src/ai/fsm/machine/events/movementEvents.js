@@ -117,6 +117,27 @@ const createDroneDeployedEvent = (targetArea, range = 5) => ({
 });
 
 /**
+ * Événement de mise à jour de position de drone
+ * Déclenché lorsqu'un drone change de position en temps réel
+ */
+const DRONE_POSITION_UPDATE = 'DRONE_POSITION_UPDATE';
+
+/**
+ * Créateur d'événement: DRONE_POSITION_UPDATE
+ * @param {object} position - Nouvelle position du drone {x, y, z}
+ * @param {string} droneType - Type de drone ('explorer', 'combat', 'special')
+ * @param {string} state - État du drone ('exploring', 'returning', 'docked')
+ * @returns {object} Event payload
+ */
+const createDronePositionUpdateEvent = (position, droneType = 'explorer', state = 'exploring') => ({
+  type: DRONE_POSITION_UPDATE,
+  position,
+  droneType,
+  state,
+  timestamp: Date.now()
+});
+
+/**
  * Événement d'annulation de mouvement
  * Déclenché lorsqu'un mouvement est annulé
  */
@@ -140,6 +161,7 @@ export const MOVEMENT_EVENT_TYPES = {
   BASE_REACHED,
   NAVIGATION_PROGRESS,
   DRONE_DEPLOYED,
+  DRONE_POSITION_UPDATE,
   MOVEMENT_CANCELLED,
 };
 
@@ -149,6 +171,7 @@ export const movementEvents = {
   createMovementProgressEvent,
   createBaseReachedEvent,
   createDroneDeployedEvent,
+  createDronePositionUpdateEvent,
   createNavigationProgressEvent,
   createMovementCancelledEvent
 };

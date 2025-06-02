@@ -64,6 +64,10 @@ export const useFSMBots = () => {
     hasBotId: store.hasBotId,
     generateBotId: store.generateBotId,
     
+    // Accès à l'historique centralisé
+    getEventHistory: useFSMStore(state => state.getEventHistory),
+    clearEventHistory: useFSMStore(state => state.clearEventHistory),
+    
     // Accès direct au store pour les cas avancés
     store
   };

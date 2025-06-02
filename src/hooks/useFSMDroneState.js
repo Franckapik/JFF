@@ -43,7 +43,7 @@ export const useFSMDroneState = (botId) => {
       setDroneFleet(newDroneFleet);
       setLastUpdate(Date.now());
       
-      fsmLogger.debug(`[useFSMDroneState] Updated drone fleet for ${botId}`, {
+      fsmLogger.info(`[useFSMDroneState] Updated drone fleet for ${botId}`, {
         droneCount: Object.keys(newDroneFleet.drones || {}).length,
         status: newDroneFleet.status
       });
@@ -96,7 +96,7 @@ export const useFSMDroneState = (botId) => {
    */
   const isDroneMoving = (droneType) => {
     const drone = droneFleet?.drones[droneType];
-    return drone?.state === 'deploying' || drone?.state === 'returning';
+    return drone?.state === 'deploying' || drone?.state === 'exploring' || drone?.state === 'returning';
   };
 
   /**
@@ -172,4 +172,3 @@ export const useFSMDrone = (botId, droneType) => {
 // ============================================================================
 
 export default useFSMDroneState;
-export { useFSMDrone };

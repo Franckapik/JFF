@@ -22,7 +22,7 @@ import movementCore, {
   combineVehicleUpdates,
   filterVehicles,
   validateVehicleIntegrity
-} from '../../../../shared/actions/core/movement.js';
+} from '../../../../shared/actions/core/movementActions.js';
 
 // Destructurer les exports du module
 const { actions, guards, selectors, events, utils } = movementCore;

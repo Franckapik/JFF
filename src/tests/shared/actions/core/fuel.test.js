@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import fuelCore from '../../../../shared/actions/core/fuel.js';
+import fuelCore from '../../../../shared/actions/core/fuelActions.js';
 
 // Destructurer les exports du module
 const { actions, guards, selectors, events, utils, FUEL_THRESHOLDS, DEFAULT_FUEL_CAPACITY } = fuelCore;

@@ -4,7 +4,6 @@ import Scene from "./components/Scene";
 import "./styles/App.css";
 // import VehicleSelector from "./components/HUD/VehicleSelector"; // Commenté car non utile pour l'instant
 import Clock from "./components/HUD/Clock";
-import FleetExample from "./components/FleetExample";
 
 
 // ============= COMPOSANTS FSM =============
@@ -57,10 +56,6 @@ const App = () => {
           </button>
         </div>
 
-        {/* Affichage conditionnel */}
-        {showFleetExample ? (
-          <FleetExample />
-        ) : (
           <>
             {/* Selector container for VehicleSelector - retiré car non utile pour l'instant */}
             {/* 
@@ -88,7 +83,7 @@ const App = () => {
               </div>
             </div>
           </>
-        )}
+   
 
         {/* ============= SYSTÈME FSM ============= */}
         {/* MultiBotManager FSM - gestionnaire principal */}

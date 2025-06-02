@@ -117,12 +117,72 @@ transition(MOVEMENT_EVENT_TYPES.DRONE_POSITION_UPDATE, BOT_STATES.EXPLORING,
   // REDUCE: Mettre à jour la position dans le contexte (pur)
   reduce((context, event) => {
     return contextReducers.droneFleet.updatePosition(context, {
-      droneType: 'explorer',
+      droneType: event.droneType || 'explorer',
       position: event.position,
-      state: event.state
+      state: event.state || 'exploring'
     });
   })
 ),
+```
+
+**Événement de position avec créateur :**
+```javascript
+// Dans /src/ai/fsm/machine/events/movementEvents.js
+export const createDronePositionUpdateEvent = (position, droneType = 'explorer', state = 'exploring') => ({
+  type: 'DRONE_POSITION_UPDATE',
+  position,
+  droneType,
+  state,
+  timestamp: Date.now()
+});
+
+// Utilisation dans le code :
+const positionEvent = createDronePositionUpdateEvent(
+  { x: 10, y: 2, z: 15 }, 
+  'explorer', 
+  'exploring'
+);
+send(positionEvent);
+```
+
+**Mise à jour fluide de position dans Fleet.jsx :**
+```javascript
+// Dans le composant Fleet, utilisation de useFrame pour animation fluide
+useFrame((state, delta) => {
+  if (!explorerDroneRef.current || !isExplorerMoving) return;
+  
+  // Position cible depuis le contexte FSM (mise à jour via DRONE_POSITION_UPDATE)
+  const targetPosition = explorerPosition;
+  const currentPosition = explorerDroneRef.current.position;
+  
+  // Animation fluide vers la nouvelle position
+  const speed = delta * 3; // Vitesse d'interpolation
+  currentPosition.x = THREE.MathUtils.lerp(currentPosition.x, targetPosition.x, speed);
+  currentPosition.y = THREE.MathUtils.lerp(currentPosition.y, targetPosition.y, speed);
+  currentPosition.z = THREE.MathUtils.lerp(currentPosition.z, targetPosition.z, speed);
+  
+  // Rotation continue pendant le mouvement
+  explorerDroneRef.current.rotation.y += delta * 2;
+});
+```
+
+**Exemple de déclenchement automatique depuis useFrame :**
+```javascript
+// Dans Fleet.jsx - Simulation d'une exploration qui bouge
+useFrame((state, delta) => {
+  if (explorerState === 'exploring' && Math.random() < 0.01) { // 1% de chance par frame
+    // Générer une nouvelle position d'exploration
+    const newPosition = {
+      x: shipPosition.x + (Math.random() - 0.5) * 20,
+      y: shipPosition.y + 1 + Math.random() * 3,
+      z: shipPosition.z + (Math.random() - 0.5) * 20
+    };
+    
+    // Déclencher la mise à jour via FSM
+    const positionEvent = createDronePositionUpdateEvent(newPosition, 'explorer', 'exploring');
+    send(positionEvent); // ← Déclenche la transition DRONE_POSITION_UPDATE
+  }
+});
 ```
 
 ### Fichier: `/src/shared/actions/core/droneActions.js` (renommé)

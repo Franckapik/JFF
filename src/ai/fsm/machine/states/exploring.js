@@ -10,7 +10,7 @@
  * @version 1.0.0
  */
 
-import { state, transition, reduce, guard } from 'robot3';
+import { state, transition, reduce, guard, immediate } from 'robot3';
 import { BOT_STATES } from '../constants.js';
 import { contextReducers } from '../reducers/context.js';
 import { RESOURCE_EVENT_TYPES } from '../events/resourceEvents.js';
@@ -19,9 +19,11 @@ import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
 import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
 import { safetyGuards } from '../guards/index.js';
+import { movementActions } from '../../../../shared/actions/core/movementActions.js';
 import { discoveryGuards } from '../guards/index.js';
 import { droneDeploymentActions, droneDeploymentGuards } from '../../../../shared/actions/core/droneActions.js';
 import { selectExplorationTarget } from '../../utils/explorationTargetSelector.js';
+import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**
  * État EXPLORING - Exploration et découverte de ressources
@@ -30,14 +32,15 @@ export const exploringState = state(
   // === ÉVÉNEMENTS DE PROGRESSION ===
   
   // NOUVEAU: Entrée dans l'état exploring → déployer drone automatiquement (FSM pur)
-  transition('onEntry', BOT_STATES.EXPLORING,
+  // Utilisation d'immediate pour déclencher une action à l'entrée de l'état
+  immediate(BOT_STATES.EXPLORING,
     guard((context) => !context.droneFleet?.drones?.explorer?.isActive),
     reduce((context, event) => {
       // Sélectionner automatiquement une zone d'exploration
       const explorationTarget = selectExplorationTarget(context);
       
       if (!explorationTarget) {
-        fsmLogger.warning('[Exploring] No suitable exploration target found');
+        console.warn('[Exploring] No suitable exploration target found');
         return {
           ...context,
           hasExplored: true,
@@ -72,6 +75,20 @@ export const exploringState = state(
         deploymentTime: Date.now(),
         currentAction: 'drone_exploring'
       };
+    })
+  ),
+
+  // Mise à jour position drone en temps réel
+  transition(MOVEMENT_EVENT_TYPES.DRONE_POSITION_UPDATE, BOT_STATES.EXPLORING,
+    guard((context, event) => context.droneFleet?.drones?.explorer?.isActive),
+    
+    // REDUCE: Mettre à jour la position dans le contexte (pur)
+    reduce((context, event) => {
+      return contextReducers.droneFleet.updatePosition(context, {
+        droneType: event.droneType || 'explorer',
+        position: event.position,
+        state: event.state || 'exploring'
+      });
     })
   ),
 
@@ -187,6 +204,15 @@ export const exploringState = state(
         reason: 'emergency_return',
         emergencyReason: event.reason || 'unknown'
       });
+    })
+  ),
+
+  // Mise à jour de position (reste dans le même état)
+  transition('UPDATE_POSITION', BOT_STATES.EXPLORING,
+    guard(() => true),
+    reduce((context, event) => {
+      // Utiliser l'action updatePosition existante
+      return movementActions.updatePosition(context, event);
     })
   )
 );
