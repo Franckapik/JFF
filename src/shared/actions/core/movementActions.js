@@ -389,7 +389,7 @@ export const movementActions = {
   },
 
   /**
-   * Met à jour la position actuelle du véhicule
+   * Met à jour la position actuelle du véhicule ET synchronise les drones ancrés
    * @param {Object} context - Contexte actuel
    * @param {Object} event - Événement avec position, coord, newCoord
    * @returns {Object} - Nouveau contexte avec position mise à jour
@@ -414,10 +414,33 @@ export const movementActions = {
       updatedVehicle.position = event.position;
     }
 
-    return {
+    let updatedContext = {
       ...context,
       vehicle: updatedVehicle
     };
+
+    // IMPORTANT: Synchroniser automatiquement les drones ancrés
+    if (event.position && context.droneFleet?.drones) {
+      const updatedDrones = {};
+      Object.entries(context.droneFleet.drones).forEach(([type, drone]) => {
+        if (drone.state === 'docked' || !drone.isActive) {
+          updatedDrones[type] = {
+            ...drone,
+            position: event.position // Les drones ancrés suivent le vaisseau
+          };
+        } else {
+          updatedDrones[type] = drone; // Les drones actifs gardent leur position
+        }
+      });
+
+      updatedContext.droneFleet = {
+        ...context.droneFleet,
+        basePosition: event.position,
+        drones: updatedDrones
+      };
+    }
+
+    return updatedContext;
   },
 
   /**

@@ -34,6 +34,17 @@ const Fleet = React.memo(({
   // Le hook gère autonomiquement la synchronisation de position
   const { current, send: fsmSend, context, vehicle, state } = useBotMachineFixed(botId, 'bot');
 
+  // DEBUG: Afficher les données FSM reçues
+  useEffect(() => {
+    if (context) {
+      console.log(`[Fleet] Debug for bot ${botId}:`, {
+        vehiclePosition: context.vehicle?.position,
+        droneFleet: context.droneFleet,
+        explorerDrone: context.droneFleet?.drones?.explorer
+      });
+    }
+  }, [botId, context]);
+
   // ===================================================================
   // RÉFÉRENCES POUR L'ANIMATION
   // ===================================================================
@@ -60,7 +71,22 @@ const Fleet = React.memo(({
   // 3. États et positions du drone explorateur
   const explorerState = getDroneVisualState('explorer');
   const isExplorerMoving = isDroneMoving('explorer');
-  const explorerPosition = dronePositions.explorer || shipPosition;
+  
+  // Position du drone : utiliser la position FSM, sinon fallback sur shipPosition
+  const explorerPosition = useMemo(() => {
+    if (context?.droneFleet?.drones?.explorer?.position) {
+      return context.droneFleet.drones.explorer.position;
+    }
+    if (dronePositions.explorer) {
+      return dronePositions.explorer;
+    }
+    // Fallback : position du vaisseau avec un petit offset pour voir le drone
+    return {
+      x: shipPosition.x + 0.5,
+      y: shipPosition.y + 0.3,
+      z: shipPosition.z + 0.5
+    };
+  }, [context?.droneFleet?.drones?.explorer?.position, dronePositions.explorer, shipPosition]);
 
   // ===================================================================
   // ANIMATION FLUIDE BASÉE SUR L'ÉTAT FSM
@@ -143,33 +169,35 @@ const Fleet = React.memo(({
           />
         </Cone>
         
-        {/* DEBUG: État FSM en temps réel - DÉMONSTRATION PÉDAGOGIQUE */}
-        {drones.explorer && (
-          <Html position={[0, 0.8, 0]} center>
-            <div style={{ 
-              color: 'white', 
-              fontSize: '16px', 
-              background: 'rgba(0,0,0,0.9)', 
-              padding: '8px 12px', 
-              borderRadius: '8px',
-              fontFamily: 'monospace',
-              fontWeight: 'bold',
-              border: '2px solid ' + color,
-              textAlign: 'center',
-              minWidth: '120px'
-            }}>
-              <div style={{ fontSize: '20px', marginBottom: '4px' }}>
-                {explorerState === 'exploring' ? '🔍' : 
-                 explorerState === 'returning' ? '🏠' : '🛡️'}
-              </div>
-              <div style={{ fontSize: '14px' }}>
-                🚁 {explorerState.toUpperCase()}
-                <br />
-                {isExplorerMoving ? '📍 Moving' : '⚡ Idle'}
-              </div>
+        {/* DEBUG: État FSM en temps réel - TOUJOURS AFFICHÉ POUR DEBUG */}
+        <Html position={[0, 0.8, 0]} center>
+          <div style={{ 
+            color: 'white', 
+            fontSize: '16px', 
+            background: 'rgba(0,0,0,0.9)', 
+            padding: '8px 12px', 
+            borderRadius: '8px',
+            fontFamily: 'monospace',
+            fontWeight: 'bold',
+            border: '2px solid ' + color,
+            textAlign: 'center',
+            minWidth: '120px'
+          }}>
+            <div style={{ fontSize: '20px', marginBottom: '4px' }}>
+              {explorerState === 'exploring' ? '🔍' : 
+               explorerState === 'returning' ? '🏠' : '🛡️'}
             </div>
-          </Html>
-        )}
+            <div style={{ fontSize: '14px' }}>
+              🚁 {explorerState?.toUpperCase() || 'UNKNOWN'}
+              <br />
+              {isExplorerMoving ? '📍 Moving' : '⚡ Idle'}
+              <br />
+              <span style={{ fontSize: '12px' }}>
+                Pos: {explorerPosition.x?.toFixed(1)},{explorerPosition.z?.toFixed(1)}
+              </span>
+            </div>
+          </div>
+        </Html>
       </group>
     </>
   );

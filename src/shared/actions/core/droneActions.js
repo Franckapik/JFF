@@ -382,7 +382,7 @@ export const fsmDroneFleetActions = {
           [droneType]: {
             ...context.droneFleet.drones[droneType],
             state: DRONE_VISUAL_STATES.DOCKED,
-            position: null, // Position relative au vaisseau
+            position: context.vehicle.position, // Position du vaisseau (pas null)
             targetPosition: null,
             missionTarget: null,
             isActive: false,

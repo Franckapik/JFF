@@ -217,7 +217,7 @@ export const createEntityContext = (entityId, entityType = ENTITY_TYPES.AUTO) =>
           id: `${entityId}-drone-${DRONE_TYPES.EXPLORER}`,
           type: DRONE_TYPES.EXPLORER,
           state: DRONE_VISUAL_STATES.DOCKED,
-          position: null, // Sera calculée dynamiquement
+          position: null, // Sera synchronisé automatiquement via updatePosition
           targetPosition: null,
           missionTarget: null,
           isActive: false,
@@ -227,7 +227,7 @@ export const createEntityContext = (entityId, entityType = ENTITY_TYPES.AUTO) =>
           id: `${entityId}-drone-${DRONE_TYPES.COMBAT}`,
           type: DRONE_TYPES.COMBAT,
           state: DRONE_VISUAL_STATES.DOCKED,
-          position: null,
+          position: null, // Sera synchronisé automatiquement via updatePosition
           targetPosition: null,
           missionTarget: null,
           isActive: false,
@@ -237,7 +237,7 @@ export const createEntityContext = (entityId, entityType = ENTITY_TYPES.AUTO) =>
           id: `${entityId}-drone-${DRONE_TYPES.SPECIAL}`,
           type: DRONE_TYPES.SPECIAL,
           state: DRONE_VISUAL_STATES.DOCKED,
-          position: null,
+          position: null, // Sera synchronisé automatiquement via updatePosition
           targetPosition: null,
           missionTarget: null,
           isActive: false,
