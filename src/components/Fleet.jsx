@@ -98,19 +98,24 @@ const Fleet = React.memo(({
   
   // Position initiale du drone (position du vaisseau par défaut)
   const initialDronePosition = useMemo(() => ({
-    x: shipPosition.x + 0.5,
-    y: shipPosition.y + 0.3,
-    z: shipPosition.z + 0.5
-  }), [shipPosition]);
+    x: 0.5,  // Offset relatif au vaisseau (maintenant à [0,0,0])
+    y: 0.3,
+    z: 0.5
+  }), []);
   
-  // Position cible : utiliser targetPosition du contexte FSM
+  // Position cible : convertir de coordonnées mondiales vers coordonnées locales du groupe
   const targetPosition = useMemo(() => {
     if (explorerDrone?.targetPosition) {
-      return explorerDrone.targetPosition;
+      // Convertir les coordonnées mondiales FSM en coordonnées locales du groupe Fleet
+      return {
+        x: explorerDrone.targetPosition.x - shipPosition.x,
+        y: explorerDrone.targetPosition.y - shipPosition.y,
+        z: explorerDrone.targetPosition.z - shipPosition.z
+      };
     }
-    // Fallback : rester à la position initiale
+    // Fallback : rester à la position initiale (offset du vaisseau)
     return initialDronePosition;
-  }, [explorerDrone?.targetPosition, initialDronePosition]);
+  }, [explorerDrone?.targetPosition, initialDronePosition, shipPosition]);
 
   // ===================================================================
   // ANIMATION SIMPLIFIEE - DEBUG DIRECT FSM → TARGET POSITION
@@ -209,7 +214,7 @@ const Fleet = React.memo(({
   return (
     <>
       {/* VAISSEAU PRINCIPAL */}
-      <mesh position={[shipPosition.x, shipPosition.y, shipPosition.z]} castShadow>
+      <mesh position={[0, 0, 0]} castShadow>
         <boxGeometry args={[0.5, 0.5, 0.5]} />
         <meshStandardMaterial color={color} />
         
