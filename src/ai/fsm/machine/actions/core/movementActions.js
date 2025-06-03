@@ -13,40 +13,7 @@
  * @version 1.0.0
  */
 
-// ============================================================================
-// CONSTANTS ET TYPES - VÉHICULES
-// ============================================================================
-
-/**
- * Types de véhicules supportés
- */
-export const VEHICLE_TYPES = {
-  MAIN_SHIP: 'main-ship',
-  DRONE: 'drone',
-  SCOUT: 'scout',
-  HARVESTER: 'harvester'
-};
-
-/**
- * États de véhicule par défaut
- */
-export const DEFAULT_VEHICLE_STATE = {
-  isMoving: false,
-  speed: 1,
-  health: 100,
-  shield: 0,
-  active: true
-};
-
-/**
- * Configuration par défaut des capacités
- */
-export const DEFAULT_CAPACITIES = {
-  [VEHICLE_TYPES.MAIN_SHIP]: { food: 100, debris: 1000, special: 2 },
-  [VEHICLE_TYPES.DRONE]: { food: 20, debris: 50, special: 1 },
-  [VEHICLE_TYPES.SCOUT]: { food: 10, debris: 20, special: 0 },
-  [VEHICLE_TYPES.HARVESTER]: { food: 50, debris: 500, special: 1 }
-};
+import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES } from '../../constants/constants.js';
 
 // ============================================================================
 // CONSTANTS ET HELPERS - MOUVEMENT

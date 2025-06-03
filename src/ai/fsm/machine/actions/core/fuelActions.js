@@ -13,21 +13,7 @@
  * @version 1.0.0
  */
 
-// ============================================================================
-// CONSTANTS ET HELPERS
-// ============================================================================
-
-/**
- * Constantes pour la gestion du carburant
- */
-const FUEL_CONSTANTS = {
-  MAX_FUEL: 100,
-  MIN_FUEL: 0,
-  DEFAULT_CONSUMPTION: 5,
-  LOW_FUEL_THRESHOLD: 20,
-  CRITICAL_FUEL_THRESHOLD: 10,
-  CONSUMPTION_PER_DISTANCE: 2
-};
+import { FUEL_CONSTANTS } from '../../constants/constants.js';
 
 /**
  * Validation et normalisation du niveau de carburant

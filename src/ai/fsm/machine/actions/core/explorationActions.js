@@ -13,40 +13,7 @@
  * @version 1.0.0
  */
 
-// ============================================================================
-// CONSTANTS ET HELPERS
-// ============================================================================
-
-/**
- * États d'exploration possibles
- */
-export const EXPLORATION_STATES = {
-  IDLE: 'idle',
-  SEARCHING_TARGET: 'searching_target',
-  EXPLORING: 'exploring',
-  RETURNING: 'returning',
-  COMPLETED: 'completed'
-};
-
-/**
- * Types de découvertes
- */
-export const DISCOVERY_TYPES = {
-  RESOURCE: 'resource',
-  EMPTY_TILE: 'empty_tile',
-  OBSTACLE: 'obstacle',
-  SPECIAL: 'special'
-};
-
-/**
- * Configuration par défaut pour l'exploration
- */
-export const EXPLORATION_CONFIG = {
-  DEFAULT_RADIUS: 3,
-  MAX_EXPLORATION_TIME: 30000, // 30 secondes
-  MIN_EXPLORATION_DISTANCE: 1,
-  MAX_EXPLORATION_DISTANCE: 10
-};
+import { EXPLORATION_STATES, DISCOVERY_TYPES, EXPLORATION_CONFIG } from '../../constants/constants.js';
 
 /**
  * Validation d'une zone d'exploration

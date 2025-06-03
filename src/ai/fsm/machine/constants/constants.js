@@ -99,3 +99,77 @@ export const DRONE_CONFIG = {
     fuelConsumption: 1.5
   }
 };
+
+/**
+ * Types de véhicules supportés
+ */
+export const VEHICLE_TYPES = {
+  MAIN_SHIP: 'main-ship',
+  DRONE: 'drone',
+  SCOUT: 'scout',
+  HARVESTER: 'harvester'
+};
+
+/**
+ * États de véhicule par défaut
+ */
+export const DEFAULT_VEHICLE_STATE = {
+  isMoving: false,
+  speed: 1,
+  health: 100,
+  shield: 0,
+  active: true
+};
+
+/**
+ * Configuration par défaut des capacités par type de véhicule
+ */
+export const DEFAULT_CAPACITIES = {
+  'main-ship': { food: 100, debris: 1000, special: 2 },
+  'drone': { food: 20, debris: 50, special: 1 },
+  'scout': { food: 10, debris: 20, special: 0 },
+  'harvester': { food: 50, debris: 500, special: 1 }
+};
+
+/**
+ * Constantes pour la gestion du carburant
+ */
+export const FUEL_CONSTANTS = {
+  MAX_FUEL: 100,
+  MIN_FUEL: 0,
+  DEFAULT_CONSUMPTION: 5,
+  LOW_FUEL_THRESHOLD: 20,
+  CRITICAL_FUEL_THRESHOLD: 10,
+  CONSUMPTION_PER_DISTANCE: 2
+};
+
+/**
+ * États d'exploration possibles
+ */
+export const EXPLORATION_STATES = {
+  IDLE: 'idle',
+  SEARCHING_TARGET: 'searching_target',
+  EXPLORING: 'exploring',
+  RETURNING: 'returning',
+  COMPLETED: 'completed'
+};
+
+/**
+ * Types de découvertes
+ */
+export const DISCOVERY_TYPES = {
+  RESOURCE: 'resource',
+  EMPTY_TILE: 'empty_tile',
+  OBSTACLE: 'obstacle',
+  SPECIAL: 'special'
+};
+
+/**
+ * Configuration par défaut pour l'exploration
+ */
+export const EXPLORATION_CONFIG = {
+  DEFAULT_RADIUS: 3,
+  MAX_EXPLORATION_TIME: 30000, // 30 secondes
+  MIN_EXPLORATION_DISTANCE: 1,
+  MAX_EXPLORATION_DISTANCE: 10
+};
