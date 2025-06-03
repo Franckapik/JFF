@@ -20,7 +20,7 @@ import fsmLogger from '../logger/fsmLogger.js';
 
 /**
  * Hook pour accéder à l'état des drones d'un bot depuis le contexte FSM
- * @param {string} botId - ID du bot (ex: 'fsm-bot-0')
+ * @param {string} botId - ID du bot (ex: 'bot-0')
  * @returns {Object} État des drones du bot
  */
 export const useFSMDroneState = (botId) => {

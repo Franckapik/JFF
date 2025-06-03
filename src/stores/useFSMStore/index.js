@@ -18,7 +18,7 @@ const useFSMStore = create(
     // ====================================================================
     
     /** Liste des IDs de bots actifs */
-    activeBots: ['fsm-bot-0'],
+    activeBots: ['bot-0'],
     
     /** État global du système FSM (running/stopped) */
     isSystemRunning: false,
@@ -41,7 +41,7 @@ const useFSMStore = create(
     config: {
       maxBots: 4,
       minBots: 1,
-      defaultBotPrefix: 'fsm-bot'
+      defaultBotPrefix: 'bot'
     },
     
     // ====================================================================
@@ -269,7 +269,7 @@ const useFSMStore = create(
     reset: () => {
       fsmLogger.info('Store FSM réinitialisé');
       set({
-        activeBots: ['fsm-bot-0'],
+        activeBots: ['bot-0'],
         isSystemRunning: false,
         metrics: {
           totalBotsCreated: 1,

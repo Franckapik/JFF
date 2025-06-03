@@ -25,7 +25,7 @@ const App = () => {
   useEffect(() => {
     // Initialiser avec 2 bots par défaut si aucun bot n'est présent
     if (getBotCount() === 0) {
-      setBots(['fsm-bot-0', 'fsm-bot-1']);
+      setBots(['bot-0', 'bot-1']);
     }
   }, [setBots, getBotCount]);
   

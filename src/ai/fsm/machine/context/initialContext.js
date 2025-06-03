@@ -12,14 +12,6 @@
 
 import { BOT_STATES, ENTITY_TYPES, DRONE_VISUAL_STATES } from '../constants/constants.js';
 
-// ============================================================================
-// TYPES D'ENTITÉS (réexportés pour compatibilité)
-// ============================================================================
-
-/**
- * États visuels des drones pour l'animation (réexportés depuis constants)
- */
-export const droneVisualStates = DRONE_VISUAL_STATES;
 
 // ============================================================================
 // CONTEXTE INITIAL DÉFACTORISÉ

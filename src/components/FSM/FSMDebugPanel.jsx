@@ -28,6 +28,7 @@ const FSMVisualization = ({ botId, expanded = false }) => {
   // Extraire les données du contexte actuel
   const entity = current?.context?.entity;
   const vehicle = current?.context?.vehicle;
+  const droneFleet = current?.context?.droneFleet;
   const state = current?.name;
   const context = current?.context;
   const isMoving = current?.context?.isMoving;
@@ -143,6 +144,11 @@ const FSMVisualization = ({ botId, expanded = false }) => {
         </div>
         <div>
           {autoEvents?.isActive ? '🔄 AUTO' : '🎮 MANUEL'}
+          {droneFleet?.status && (
+            <span style={{ marginLeft: '5px', fontSize: '10px' }}>
+              🚁 {droneFleet.status.toUpperCase()}
+            </span>
+          )}
         </div>
       </div>
 
@@ -164,6 +170,99 @@ const FSMVisualization = ({ botId, expanded = false }) => {
               )}
             </div>
           </div>
+
+          {/* États des drones en temps réel */}
+          {droneFleet && (
+            <div style={{ marginBottom: '10px' }}>
+              <strong>🚁 Flotte de drones:</strong>
+              <div style={{ 
+                fontSize: '10px', 
+                marginTop: '5px',
+                padding: '5px',
+                backgroundColor: '#333',
+                borderRadius: '3px'
+              }}>
+                <div>Status: <span style={{ fontWeight: 'bold' }}>{droneFleet.status?.toUpperCase() || 'N/A'}</span></div>
+                
+                {/* Drone explorateur */}
+                {droneFleet.drones?.explorer && (
+                  <div style={{ 
+                    marginTop: '5px', 
+                    padding: '3px', 
+                    backgroundColor: '#2a2a2a', 
+                    borderRadius: '2px',
+                    borderLeft: droneFleet.drones.explorer.state === 'exploring' ? '3px solid #4CAF50' : '3px solid #666'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>
+                        {droneFleet.drones.explorer.state === 'exploring' ? '🔍' : 
+                         droneFleet.drones.explorer.state === 'returning' ? '🏠' : '🛡️'} 
+                        Explorer
+                      </span>
+                      <span style={{ 
+                        fontSize: '9px', 
+                        color: droneFleet.drones.explorer.isActive ? '#4CAF50' : '#888' 
+                      }}>
+                        {droneFleet.drones.explorer.state?.toUpperCase() || 'DOCKED'}
+                      </span>
+                    </div>
+                    {droneFleet.drones.explorer.position && (
+                      <div style={{ fontSize: '9px', color: '#ccc', marginTop: '2px' }}>
+                        Pos: {droneFleet.drones.explorer.position.x?.toFixed(1)},{droneFleet.drones.explorer.position.z?.toFixed(1)}
+                      </div>
+                    )}
+                    {droneFleet.drones.explorer.missionTarget && (
+                      <div style={{ fontSize: '9px', color: '#ccc' }}>
+                        Target: {droneFleet.drones.explorer.missionTarget.x},{droneFleet.drones.explorer.missionTarget.z}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Drone de combat */}
+                {droneFleet.drones?.combat && (
+                  <div style={{ 
+                    marginTop: '3px', 
+                    padding: '3px', 
+                    backgroundColor: '#2a2a2a', 
+                    borderRadius: '2px',
+                    borderLeft: droneFleet.drones.combat.isActive ? '3px solid #f44336' : '3px solid #666'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>⚔️ Combat</span>
+                      <span style={{ 
+                        fontSize: '9px', 
+                        color: droneFleet.drones.combat.isActive ? '#f44336' : '#888' 
+                      }}>
+                        {droneFleet.drones.combat.state?.toUpperCase() || 'DOCKED'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Drone spécial */}
+                {droneFleet.drones?.special && (
+                  <div style={{ 
+                    marginTop: '3px', 
+                    padding: '3px', 
+                    backgroundColor: '#2a2a2a', 
+                    borderRadius: '2px',
+                    borderLeft: droneFleet.drones.special.isActive ? '3px solid #ff9800' : '3px solid #666'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>⭐ Spécial</span>
+                      <span style={{ 
+                        fontSize: '9px', 
+                        color: droneFleet.drones.special.isActive ? '#ff9800' : '#888' 
+                      }}>
+                        {droneFleet.drones.special.state?.toUpperCase() || 'DOCKED'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Actions rapides */}
           <div style={{ marginBottom: '10px' }}>

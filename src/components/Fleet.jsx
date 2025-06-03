@@ -5,7 +5,6 @@ import * as THREE from "three";
 import { useFSMDroneState } from "../hooks/useFSMDroneState.js";
 import { movementEvents } from "../ai/fsm/machine/events/movementEvents.js";
 import { useBotMachineFixed } from "../ai/fsm/hooks/useBotMachineFixed.js";
-import fsmLogger from "../logger/fsmLogger.js";
 
 /**
  * =================================================================
@@ -14,7 +13,7 @@ import fsmLogger from "../logger/fsmLogger.js";
  * Démontre le pipeline : FSM State → Position → Animation Three.js
  * 
  * @param {Object} props
- * @param {string} props.botId - ID du bot FSM (ex: 'fsm-bot-0')  
+ * @param {string} props.botId - ID du bot FSM (ex: 'bot-0')  
  * @param {number} props.botIndex - Index du bot pour la compatibilité
  * @param {Object} props.shipPosition - Position du vaisseau {x,y,z}
  * @param {string} props.color - Couleur des drones
@@ -149,6 +148,21 @@ const Fleet = React.memo(({
       <mesh position={[shipPosition.x, shipPosition.y, shipPosition.z]} castShadow>
         <boxGeometry args={[0.5, 0.5, 0.5]} />
         <meshStandardMaterial color={color} />
+        
+        {/* ID LABEL - Vaisseau principal */}
+        <Html position={[0, 0.4, 0]} center>
+          <div style={{ 
+            color: 'rgba(255,255,255,0.7)', 
+            fontSize: '10px', 
+            background: 'rgba(0,0,0,0.6)', 
+            padding: '2px 6px', 
+            borderRadius: '4px',
+            fontFamily: 'monospace',
+            textAlign: 'center'
+          }}>
+            {context?.vehicle?.id || `${botId}-ship`}
+          </div>
+        </Html>
       </mesh>
 
       {/* DRONE EXPLORATEUR - Exemple du pipeline FSM → Animation */}
@@ -169,33 +183,18 @@ const Fleet = React.memo(({
           />
         </Cone>
         
-        {/* DEBUG: État FSM en temps réel - TOUJOURS AFFICHÉ POUR DEBUG */}
-        <Html position={[0, 0.8, 0]} center>
+        {/* ID LABEL - Drone explorateur */}
+        <Html position={[0, 0.3, 0]} center>
           <div style={{ 
-            color: 'white', 
-            fontSize: '16px', 
-            background: 'rgba(0,0,0,0.9)', 
-            padding: '8px 12px', 
-            borderRadius: '8px',
+            color: 'rgba(255,255,255,0.6)', 
+            fontSize: '9px', 
+            background: 'rgba(0,0,0,0.5)', 
+            padding: '1px 4px', 
+            borderRadius: '3px',
             fontFamily: 'monospace',
-            fontWeight: 'bold',
-            border: '2px solid ' + color,
-            textAlign: 'center',
-            minWidth: '120px'
+            textAlign: 'center'
           }}>
-            <div style={{ fontSize: '20px', marginBottom: '4px' }}>
-              {explorerState === 'exploring' ? '🔍' : 
-               explorerState === 'returning' ? '🏠' : '🛡️'}
-            </div>
-            <div style={{ fontSize: '14px' }}>
-              🚁 {explorerState?.toUpperCase() || 'UNKNOWN'}
-              <br />
-              {isExplorerMoving ? '📍 Moving' : '⚡ Idle'}
-              <br />
-              <span style={{ fontSize: '12px' }}>
-                Pos: {explorerPosition.x?.toFixed(1)},{explorerPosition.z?.toFixed(1)}
-              </span>
-            </div>
+            {context?.droneFleet?.drones?.explorer?.id || `${botId}-explorer`}
           </div>
         </Html>
       </group>

@@ -415,7 +415,7 @@ const createTileGenerationSlice = (set, get) => ({
         const playerIndex = currentDepartTiles.length + i;
         
         // Assigner le bot correspondant de la liste des non-assignés
-        const botId = unassignedBotIds[i] || `fsm-bot-${Date.now()}-${i}`;
+        const botId = unassignedBotIds[i] || `bot-${Date.now()}-${i}`;
         
         newTiles[selectedTile.coord] = {
           ...selectedTile,
