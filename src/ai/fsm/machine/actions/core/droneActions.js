@@ -77,7 +77,12 @@ export const droneDeploymentGuards = {
    * @returns {boolean} - True si déploiement possible
    */
   canDeployDrone: (context, event) => {
-    // Vérifier qu'il n'y a pas déjà un drone actif
+    // NOUVEAU: Vérifier avec la structure droneFleet (recommandé)
+    if (context.droneFleet?.status === 'active') {
+      return false;
+    }
+    
+    // ANCIEN: Support de l'ancienne structure droneDeployment (déprécié)
     if (context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.active) {
       return false;
     }
@@ -97,6 +102,12 @@ export const droneDeploymentGuards = {
    * @returns {boolean} - True si drone déployé
    */
   isDroneDeployed: (context) => {
+    // NOUVEAU: Vérifier avec la structure droneFleet (recommandé)
+    if (context.droneFleet?.status === 'active') {
+      return true;
+    }
+    
+    // ANCIEN: Support de l'ancienne structure droneDeployment (déprécié)
     return context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.active;
   },
 
@@ -106,6 +117,12 @@ export const droneDeploymentGuards = {
    * @returns {boolean} - True si drone ancré
    */
   isDroneDocked: (context) => {
+    // NOUVEAU: Vérifier avec la structure droneFleet (recommandé)
+    if (context.droneFleet?.status === 'docked' || !context.droneFleet) {
+      return true;
+    }
+    
+    // ANCIEN: Support de l'ancienne structure droneDeployment (déprécié)
     return context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.docked ||
            !context.droneDeployment;
   }
@@ -137,18 +154,51 @@ export const droneDeploymentActions = {
         };
       }
       
+      const droneType = validatedDeployment.droneType;
+      
+      // NOUVEAU: Utilise la structure droneFleet compatible avec initialContext.js
+      if (!context.droneFleet || !context.droneFleet.drones[droneType]) {
+        return {
+          ...context,
+          error: `Drone type ${droneType} not found in fleet`,
+          lastAction: 'deployDrone_failed'
+        };
+      }
+
+      // Calculer la position cible du drone
+      const targetPosition = context.vehicle?.position ? {
+        x: context.vehicle.position.x + (Math.random() - 0.5) * validatedDeployment.range * 2,
+        y: context.vehicle.position.y + 0.5,
+        z: context.vehicle.position.z + (Math.random() - 0.5) * validatedDeployment.range * 2
+      } : null;
+
+      const updatedDrone = {
+        ...context.droneFleet.drones[droneType],
+        state: DRONE_VISUAL_STATES.deploying,
+        targetPosition,
+        missionTarget: validatedDeployment.targetArea,
+        isActive: true,
+        lastUpdate: Date.now()
+      };
+
       return {
         ...context,
-        droneDeployment: {
-          status: DRONE_DEPLOYMENT_STATES.active,
-          targetArea: validatedDeployment.targetArea,
-          droneType: validatedDeployment.droneType,
-          range: validatedDeployment.range,
-          deployTime: Date.now(),
-          estimatedReturn: Date.now() + (validatedDeployment.range * 2000) // 2s par unité de distance
+        droneFleet: {
+          ...context.droneFleet,
+          status: 'active',
+          currentMission: {
+            type: 'exploration',
+            target: validatedDeployment.targetArea,
+            drone: droneType,
+            startTime: Date.now(),
+            estimatedReturn: Date.now() + (validatedDeployment.range * 2000)
+          },
+          missionStartTime: Date.now(),
+          drones: {
+            ...context.droneFleet.drones,
+            [droneType]: updatedDrone
+          }
         },
-        isDroneAtShip: false,
-        currentDroneTarget: validatedDeployment.targetArea,
         lastAction: 'deployDrone_success'
       };
     } catch (error) {
@@ -163,9 +213,10 @@ export const droneDeploymentActions = {
   /**
    * Rappelle le drone au vaisseau
    * @param {Object} context - Contexte actuel
+   * @param {Object} event - Événement avec type de drone (optionnel)
    * @returns {Object} - Nouveau contexte avec drone en retour
    */
-  recallDrone: (context) => {
+  recallDrone: (context, event = {}) => {
     if (!droneDeploymentGuards.isDroneDeployed(context)) {
       return {
         ...context,
@@ -174,14 +225,32 @@ export const droneDeploymentActions = {
       };
     }
     
+    const droneType = event.droneType || DRONE_TYPES.explorer;
+    
+    // NOUVEAU: Utilise la structure droneFleet compatible avec initialContext.js
+    if (!context.droneFleet?.drones[droneType]?.isActive) {
+      return {
+        ...context,
+        error: `Drone ${droneType} is not active`,
+        lastAction: 'recallDrone_failed'
+      };
+    }
+
     return {
       ...context,
-      droneDeployment: {
-        ...context.droneDeployment,
-        status: DRONE_DEPLOYMENT_STATES.returning,
-        returnStartTime: Date.now()
+      droneFleet: {
+        ...context.droneFleet,
+        status: 'returning',
+        drones: {
+          ...context.droneFleet.drones,
+          [droneType]: {
+            ...context.droneFleet.drones[droneType],
+            state: DRONE_VISUAL_STATES.returning,
+            targetPosition: context.vehicle?.position || null,
+            lastUpdate: Date.now()
+          }
+        }
       },
-      currentDroneTarget: null,
       lastAction: 'recallDrone_success'
     };
   },
@@ -192,17 +261,38 @@ export const droneDeploymentActions = {
    * @param {Object} event - Événement avec données du retour
    * @returns {Object} - Nouveau contexte avec drone ancré
    */
-  dockDrone: (context, event) => {
+  dockDrone: (context, event = {}) => {
+    const droneType = event.droneType || DRONE_TYPES.explorer;
+    
+    // NOUVEAU: Utilise la structure droneFleet compatible avec initialContext.js
+    if (!context.droneFleet?.drones[droneType]) {
+      return {
+        ...context,
+        error: `Drone ${droneType} not found`,
+        lastAction: 'dockDrone_failed'
+      };
+    }
+
     return {
       ...context,
-      droneDeployment: {
-        status: DRONE_DEPLOYMENT_STATES.docked,
-        lastMission: context.droneDeployment,
-        dockTime: Date.now()
+      droneFleet: {
+        ...context.droneFleet,
+        status: 'docked',
+        currentMission: null,
+        missionStartTime: null,
+        drones: {
+          ...context.droneFleet.drones,
+          [droneType]: {
+            ...context.droneFleet.drones[droneType],
+            state: DRONE_VISUAL_STATES.docked,
+            position: context.vehicle?.position || null,
+            targetPosition: null,
+            missionTarget: null,
+            isActive: false,
+            lastUpdate: Date.now()
+          }
+        }
       },
-      isDroneAtShip: true,
-      currentDroneTarget: null,
-      droneReturnData: event?.returnData || null,
       lastAction: 'dockDrone_success'
     };
   },
@@ -214,16 +304,25 @@ export const droneDeploymentActions = {
    * @returns {Object} - Nouveau contexte avec position mise à jour
    */
   updateDronePosition: (context, event) => {
-    if (!droneDeploymentGuards.isDroneDeployed(context)) {
+    const { droneType = DRONE_TYPES.explorer, position, state } = event;
+    
+    if (!droneDeploymentGuards.isDroneDeployed(context) || !context.droneFleet?.drones[droneType]) {
       return context;
     }
     
     return {
       ...context,
-      droneDeployment: {
-        ...context.droneDeployment,
-        currentPosition: event.position,
-        lastPositionUpdate: Date.now()
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet.drones,
+          [droneType]: {
+            ...context.droneFleet.drones[droneType],
+            position,
+            state: state || context.droneFleet.drones[droneType].state,
+            lastUpdate: Date.now()
+          }
+        }
       },
       lastAction: 'updateDronePosition_success'
     };
@@ -279,8 +378,7 @@ export const fsmDroneFleetActions = {
           [droneType]: updatedDrone
         }
       },
-      isDroneAtShip: false,
-      currentAction: 'drone_deployed'
+      lastAction: 'deployDrone_success'
     };
   },
 
@@ -336,7 +434,7 @@ export const fsmDroneFleetActions = {
           }
         }
       },
-      currentAction: 'drone_recalled'
+      lastAction: 'recallDrone_success'
     };
   },
 
@@ -365,8 +463,7 @@ export const fsmDroneFleetActions = {
           }
         }
       },
-      isDroneAtShip: true,
-      currentAction: 'drone_docked'
+      lastAction: 'dockDrone_success'
     };
   }
 };
@@ -399,6 +496,12 @@ export const droneDeploymentSelectors = {
    * @returns {string} - État du déploiement
    */
   getCurrentDeploymentState: (context) => {
+    // NOUVEAU: Priorité à la structure droneFleet
+    if (context.droneFleet?.status) {
+      return context.droneFleet.status;
+    }
+    
+    // ANCIEN: Fallback vers droneDeployment (déprécié)
     return context.droneDeployment?.status || DRONE_DEPLOYMENT_STATES.docked;
   },
 
@@ -408,6 +511,13 @@ export const droneDeploymentSelectors = {
    * @returns {boolean} - True si drone en mission
    */
   isDroneOnMission: (context) => {
+    // NOUVEAU: Priorité à la structure droneFleet
+    if (context.droneFleet) {
+      const status = context.droneFleet.status;
+      return status === 'active' || status === 'returning';
+    }
+    
+    // ANCIEN: Fallback vers droneDeployment (déprécié)
     const status = context.droneDeployment?.status;
     return status === DRONE_DEPLOYMENT_STATES.active || 
            status === DRONE_DEPLOYMENT_STATES.returning;
@@ -419,6 +529,12 @@ export const droneDeploymentSelectors = {
    * @returns {string|null} - Coordonnée de la zone cible
    */
   getDroneTargetArea: (context) => {
+    // NOUVEAU: Priorité à la structure droneFleet
+    if (context.droneFleet?.currentMission?.target) {
+      return context.droneFleet.currentMission.target;
+    }
+    
+    // ANCIEN: Fallback vers droneDeployment (déprécié)
     return context.droneDeployment?.targetArea || context.currentDroneTarget || null;
   },
 
@@ -428,6 +544,14 @@ export const droneDeploymentSelectors = {
    * @returns {number} - Temps restant en millisecondes
    */
   getEstimatedMissionTimeRemaining: (context) => {
+    // NOUVEAU: Priorité à la structure droneFleet
+    if (context.droneFleet?.currentMission?.startTime && context.droneFleet.status === 'active') {
+      const elapsed = Date.now() - context.droneFleet.currentMission.startTime;
+      const estimatedDuration = 10000; // 10 secondes par défaut
+      return Math.max(0, estimatedDuration - elapsed);
+    }
+    
+    // ANCIEN: Fallback vers droneDeployment (déprécié)
     const deployment = context.droneDeployment;
     if (!deployment || deployment.status !== DRONE_DEPLOYMENT_STATES.active) {
       return 0;

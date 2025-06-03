@@ -1,8 +1,7 @@
-import React, { useRef, useMemo, useEffect } from "react";
+import React, { useRef, useMemo, useEffect, useCallback } from "react";
 import { Cone, Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { useFSMDroneState } from "../hooks/useFSMDroneState.js";
 import { movementEvents } from "../ai/fsm/machine/events/movementEvents.js";
 import { useBotMachineFixed } from "../ai/fsm/hooks/useBotMachineFixed.js";
 
@@ -51,90 +50,155 @@ const Fleet = React.memo(({
   const explorerDroneRef = useRef();
 
   // ===================================================================
-  // PIPELINE FSM → ANIMATION
+  // PIPELINE FSM DIRECT → ANIMATION (DEBUG SIMPLIFIE + OPTIMISE)
   // ===================================================================
   
-  // 1. Récupérer l'état FSM des drones
-  const {
-    drones,
-    calculateDronePositions,
-    getDroneVisualState,
-    isDroneMoving
-  } = useFSMDroneState(botId);
+  // 🔍 Mémorisation du drone explorer pour éviter les re-calculs
+  const explorerDrone = useMemo(() => 
+    context?.droneFleet?.drones?.explorer, 
+    [context?.droneFleet?.drones?.explorer]
+  );
   
-  // 2. Calculer les positions basées sur l'état FSM
-  const dronePositions = useMemo(() => {
-    return calculateDronePositions(shipPosition);
-  }, [shipPosition, calculateDronePositions]);
+  // États calculés et mémorisés
+  const droneState = useMemo(() => ({
+    state: explorerDrone?.state || 'docked',
+    isActive: explorerDrone?.isActive || false,
+    position: explorerDrone?.position,
+    targetPosition: explorerDrone?.targetPosition
+  }), [
+    explorerDrone?.state, 
+    explorerDrone?.isActive, 
+    explorerDrone?.position, 
+    explorerDrone?.targetPosition
+  ]);
   
-  // 3. États et positions du drone explorateur
-  const explorerState = getDroneVisualState('explorer');
-  const isExplorerMoving = isDroneMoving('explorer');
+  const isExplorerMoving = useMemo(() => 
+    droneState.state === 'deploying' || 
+    droneState.state === 'exploring' || 
+    droneState.state === 'returning',
+    [droneState.state]
+  );
   
-  // Position du drone : utiliser la position FSM, sinon fallback sur shipPosition
-  const explorerPosition = useMemo(() => {
-    if (context?.droneFleet?.drones?.explorer?.position) {
-      return context.droneFleet.drones.explorer.position;
+  // DEBUG: Log des changements de contexte drone (optimisé)
+  const debugDroneChange = useCallback((droneData) => {
+    console.log(`🚁 [Fleet-${botId}] Drone Context Change:`, droneData);
+  }, [botId]);
+  
+  useEffect(() => {
+    if (explorerDrone) {
+      debugDroneChange({
+        state: droneState.state,
+        isActive: droneState.isActive,
+        position: droneState.position,
+        targetPosition: droneState.targetPosition,
+        isMoving: isExplorerMoving
+      });
     }
-    if (dronePositions.explorer) {
-      return dronePositions.explorer;
+  }, [explorerDrone, droneState, isExplorerMoving, debugDroneChange]);
+  
+  // Position initiale du drone (position du vaisseau par défaut)
+  const initialDronePosition = useMemo(() => ({
+    x: shipPosition.x + 0.5,
+    y: shipPosition.y + 0.3,
+    z: shipPosition.z + 0.5
+  }), [shipPosition]);
+  
+  // Position cible : utiliser targetPosition du contexte FSM
+  const targetPosition = useMemo(() => {
+    if (explorerDrone?.targetPosition) {
+      return explorerDrone.targetPosition;
     }
-    // Fallback : position du vaisseau avec un petit offset pour voir le drone
-    return {
-      x: shipPosition.x + 0.5,
-      y: shipPosition.y + 0.3,
-      z: shipPosition.z + 0.5
-    };
-  }, [context?.droneFleet?.drones?.explorer?.position, dronePositions.explorer, shipPosition]);
+    // Fallback : rester à la position initiale
+    return initialDronePosition;
+  }, [explorerDrone?.targetPosition, initialDronePosition]);
 
   // ===================================================================
-  // ANIMATION FLUIDE BASÉE SUR L'ÉTAT FSM
+  // ANIMATION SIMPLIFIEE - DEBUG DIRECT FSM → TARGET POSITION
   // ===================================================================
   
-  // Animation automatique basée sur les changements de contexte
+  // Mémorisation des paramètres d'animation pour éviter les recalculs
+  const animationConfig = useMemo(() => ({
+    speed: 0.8, // Vitesse réduite pour voir l'animation
+    rotationSpeed: 2,
+    idleRotationSpeed: 0.5,
+    exploringRotationSpeed: 1.5,
+    exploringOscillation: 0.2,
+    idleOscillation: 0.1,
+    reachThreshold: 0.1
+  }), []);
+  
+  // Fonction de calcul de distance mémorisée
+  const calculateDistance = useCallback((pos1, pos2) => {
+    return Math.sqrt(
+      Math.pow(pos2.x - pos1.x, 2) +
+      Math.pow(pos2.y - pos1.y, 2) +
+      Math.pow(pos2.z - pos1.z, 2)
+    );
+  }, []);
+  
+  // État de debug pour éviter le spam de logs
+  const debugState = useRef({
+    lastReachedLog: 0,
+    lastAnimationLog: 0,
+    hasReachedTarget: false
+  });
+  
+  // Animation automatique basée sur les changements de contexte FSM
   useFrame((state, delta) => {
     if (!explorerDroneRef.current) return;
     
-    // Position cible depuis le contexte FSM (mise à jour via DRONE_POSITION_UPDATE)
-    const targetPosition = explorerPosition;
     const currentPosition = explorerDroneRef.current.position;
+    const now = state.clock.elapsedTime;
     
-    // Animation fluide vers la nouvelle position
-    if (isExplorerMoving) {
-      const speed = delta * 3; // Vitesse d'interpolation
+    // 🔍 DEBUG: Animation directe vers targetPosition (optimisée)
+    if (isExplorerMoving && targetPosition) {
+      // Log de debug réduit (seulement toutes les secondes)
+      if (now - debugState.current.lastAnimationLog > 1) {
+        const distance = calculateDistance(currentPosition, targetPosition);
+        console.log(`🎯 [Fleet-${botId}] Animating drone to:`, {
+          target: targetPosition,
+          current: {x: currentPosition.x.toFixed(2), y: currentPosition.y.toFixed(2), z: currentPosition.z.toFixed(2)},
+          distance: distance.toFixed(3)
+        });
+        debugState.current.lastAnimationLog = now;
+      }
+      
+      const speed = delta * animationConfig.speed;
       currentPosition.x = THREE.MathUtils.lerp(currentPosition.x, targetPosition.x, speed);
       currentPosition.y = THREE.MathUtils.lerp(currentPosition.y, targetPosition.y, speed);
       currentPosition.z = THREE.MathUtils.lerp(currentPosition.z, targetPosition.z, speed);
       
       // Rotation continue pendant le mouvement
-      explorerDroneRef.current.rotation.y += delta * 2;
+      explorerDroneRef.current.rotation.y += delta * animationConfig.rotationSpeed;
+      
+      // DEBUG: Distance restante (calculé de manière optimisée)
+      const distance = calculateDistance(currentPosition, targetPosition);
+      
+      // Log "reached target" seulement une fois quand on atteint la cible
+      if (distance < animationConfig.reachThreshold && !debugState.current.hasReachedTarget) {
+        console.log(`✅ [Fleet-${botId}] Drone reached target position (distance: ${distance.toFixed(3)})`);
+        debugState.current.hasReachedTarget = true;
+        debugState.current.lastReachedLog = now;
+      }
+      
+      // Reset du flag si on s'éloigne de la cible (nouvelle target)
+      if (distance > animationConfig.reachThreshold * 2) {
+        debugState.current.hasReachedTarget = false;
+      }
     }
     
-    // Animation idle quand le drone est en attente
-    if (explorerState === 'docked') {
-      explorerDroneRef.current.rotation.y += delta * 0.5;
-      explorerDroneRef.current.position.y = shipPosition.y + Math.sin(state.clock.elapsedTime * 2) * 0.1;
+    // Animation idle quand le drone est docké
+    if (droneState.state === 'docked') {
+      explorerDroneRef.current.rotation.y += delta * animationConfig.idleRotationSpeed;
+      // Petit mouvement de flottement
+      explorerDroneRef.current.position.y = targetPosition.y + Math.sin(state.clock.elapsedTime * 2) * animationConfig.idleOscillation;
     }
     
     // Animation d'exploration active
-    if (explorerState === 'exploring') {
+    if (droneState.state === 'exploring') {
       // Oscillation légère pour simuler le mouvement de recherche
-      explorerDroneRef.current.position.y = targetPosition.y + Math.sin(state.clock.elapsedTime * 3) * 0.2;
-      explorerDroneRef.current.rotation.y += delta * 1.5;
-      
-      // Exemple de déclenchement automatique de mise à jour de position
-      if (fsmSend && Math.random() < 0.005) { // 0.5% de chance par frame
-        // Générer une nouvelle position d'exploration
-        const newPosition = {
-          x: shipPosition.x + (Math.random() - 0.5) * 20,
-          y: shipPosition.y + 1 + Math.random() * 3,
-          z: shipPosition.z + (Math.random() - 0.5) * 20
-        };
-        
-        // Déclencher la mise à jour via FSM
-        const positionEvent = movementEvents.createDronePositionUpdateEvent(newPosition, 'explorer', 'exploring');
-        fsmSend(positionEvent); // ← Utilise le send du hook FSM
-      }
+      explorerDroneRef.current.position.y = targetPosition.y + Math.sin(state.clock.elapsedTime * 3) * animationConfig.exploringOscillation;
+      explorerDroneRef.current.rotation.y += delta * animationConfig.exploringRotationSpeed;
     }
   });
 
@@ -165,10 +229,10 @@ const Fleet = React.memo(({
         </Html>
       </mesh>
 
-      {/* DRONE EXPLORATEUR - Exemple du pipeline FSM → Animation */}
+      {/* DRONE EXPLORATEUR - Animation directe vers targetPosition */}
       <group 
         ref={explorerDroneRef}
-        position={[explorerPosition.x, explorerPosition.y, explorerPosition.z]}
+        position={[initialDronePosition.x, initialDronePosition.y, initialDronePosition.z]}
       >
         <Cone 
           args={[0.15, 0.4, 8]} 
@@ -178,8 +242,8 @@ const Fleet = React.memo(({
           <meshStandardMaterial 
             color={color}
             // État FSM → Couleur émissive
-            emissive={explorerState === 'exploring' ? color : "black"}
-            emissiveIntensity={explorerState === 'exploring' ? 0.8 : 0.2}
+            emissive={droneState.state === 'exploring' ? color : "black"}
+            emissiveIntensity={droneState.state === 'exploring' ? 0.8 : 0.2}
           />
         </Cone>
         
