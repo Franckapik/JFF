@@ -31,7 +31,7 @@ Je souhaite creer un nouvel hud dans le style identique de BotHUD qui donnerait 
 Recommandations
 Standardiser l'utilisation des types d'événements : Utiliser systématiquement les imports de constantes (RESOURCE_EVENT_TYPES, etc.) au lieu de chaînes littérales.
 
-Unifier les définitions d'états : Choisir entre FSM_STATES et BOT_STATES et utiliser une seule source de vérité.
+~~Unifier les définitions d'états : Choisir entre FSM_STATES et BOT_STATES et utiliser une seule source de vérité.~~ ✅ FAIT
 
 Vérifier les transitions manquantes : S'assurer que tous les événements utilisés dans les transitions des états sont correctement définis dans les fichiers d'événements.
 
@@ -49,7 +49,7 @@ Les drones doievtne etre placés selon la position definies dans le store et lor
 
 - L'état returning et son action doit etre réécrite selon la structure des autres . 
 - Peut etre que le player doit etre initialisé de maniere dynamique pour avoir plsuieurs bots ou plutot qu'un seul store pour deux joueurs (bot et reel)
-- Messagerie pour le bot 
+- Messagerie pour le bot
 
 
 

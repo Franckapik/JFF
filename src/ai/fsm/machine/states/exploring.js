@@ -11,7 +11,7 @@
  */
 
 import { state, transition, reduce, guard, immediate } from 'robot3';
-import { BOT_STATES } from '../constants.js';
+import { BOT_STATES } from '../constants/constants.js';
 import { contextReducers } from '../reducers/context.js';
 import { RESOURCE_EVENT_TYPES } from '../events/resourceEvents.js';
 import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
@@ -19,9 +19,9 @@ import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
 import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
 import { safetyGuards } from '../guards/index.js';
-import { movementActions } from '../../../../shared/actions/core/movementActions.js';
+import { movementActions } from '../actions/core/movementActions.js';
 import { discoveryGuards } from '../guards/index.js';
-import { droneDeploymentActions, droneDeploymentGuards } from '../../../../shared/actions/core/droneActions.js';
+import { droneDeploymentActions, droneDeploymentGuards } from '../actions/core/droneActions.js';
 import { selectExplorationTarget } from '../../utils/explorationTargetSelector.js';
 import fsmLogger from '../../../../logger/fsmLogger.js';
 

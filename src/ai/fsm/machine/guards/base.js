@@ -4,9 +4,9 @@
  * Reuses existing guards from shared/actions/core/
  */
 
-import { movementGuards } from '../../../../shared/actions/core/movementActions.js';
-import { fuelGuards } from '../../../../shared/actions/core/fuelActions.js';
-import { resourceGuards } from '../../../../shared/actions/core/resourcesActions.js';
+import { movementGuards } from '../actions/core/movementActions.js';
+import { fuelGuards } from '../actions/core/fuelActions.js';
+import { resourceGuards } from '../actions/core/resourcesActions.js';
 
 /**
  * Base guards - Operations related to base and docking

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { useBotMachineShared } from '../contexts/FSMContext.jsx';
-import { getMainVehicle, isMoving } from '../machine/context/initialContext.js';
 import { SYSTEM_EVENT_TYPES } from '../machine/events/systemEvents.js';
 import { useTileStore } from '../../../stores/useTileStore/index.js';
 import fsmLogger from '../../../logger/fsmLogger.js';
@@ -51,10 +50,15 @@ export const useBotMachineFixed = (botId, entityType) => {
     }
   }, [botId, current?.context, send, tiles]);
   
-  // Données essentielles
+  // Données essentielles - accès direct au contexte
   const entity = useMemo(() => current.context, [current.context]);
-  const vehicle = useMemo(() => getMainVehicle(entity), [entity]);
+  const vehicle = useMemo(() => current.context?.vehicle, [current.context?.vehicle]);
   const state = useMemo(() => current.name, [current.name]);
+  
+  // isMoving basé directement sur les propriétés du véhicule
+  const isMoving = useMemo(() => {
+    return vehicle?.isMoving || false;
+  }, [vehicle?.isMoving]);
   
   // Démarrage automatique après 5 secondes (une seule fois)
   useEffect(() => {
@@ -79,7 +83,7 @@ export const useBotMachineFixed = (botId, entityType) => {
     vehicle,
     state,
     context: current.context,
-    isMoving: isMoving(entity),
+    isMoving, // Utiliser directement la valeur calculée
     current,
     send,
     autoEvents: {

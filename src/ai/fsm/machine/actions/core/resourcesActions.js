@@ -13,27 +13,11 @@
  * @version 1.0.0
  */
 
+import { EMPTY_RESOURCES, DEFAULT_CAPACITY } from '../../constants/constants.js';
+
 // ============================================================================
 // CONSTANTS ET HELPERS
 // ============================================================================
-
-/**
- * Structure vide pour les ressources
- */
-const EMPTY_RESOURCES = {
-  food: 0,
-  debris: 0,
-  special: 0
-};
-
-/**
- * Capacités par défaut des véhicules
- */
-const DEFAULT_CAPACITY = {
-  food: 100,
-  debris: 1000,
-  special: 2
-};
 
 /**
  * Validation et normalisation des ressources

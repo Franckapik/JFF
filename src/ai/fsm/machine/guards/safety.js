@@ -4,8 +4,8 @@
  * Reuses existing guards from shared/actions/core/
  */
 
-import { fuelGuards } from '../../../../shared/actions/core/fuelActions.js';
-import { movementGuards } from '../../../../shared/actions/core/movementActions.js';
+import { fuelGuards } from '../actions/core/fuelActions.js';
+import { movementGuards } from '../actions/core/movementActions.js';
 
 /**
  * Safety guards - Critical conditions that require immediate attention

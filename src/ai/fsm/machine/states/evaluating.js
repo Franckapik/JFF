@@ -11,13 +11,13 @@
  */
 
 import { state, transition, reduce, guard } from 'robot3';
-import { BOT_STATES } from '../constants.js';
+import { BOT_STATES } from '../constants/constants.js';
 import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/index.js';
 import { contextReducers } from '../reducers/context.js';
 import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
 import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
-import { movementActions } from '../../../../shared/actions/core/movementActions.js';
+import { movementActions } from '../actions/core/movementActions.js';
 
 /**
  * État EVALUATING - Point de décision central

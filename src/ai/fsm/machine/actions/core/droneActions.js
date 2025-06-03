@@ -10,40 +10,31 @@
  * @version 1.0.0
  */
 
+import { DRONE_DEPLOYMENT_STATES, DRONE_TYPES, DRONE_VISUAL_STATES, DRONE_CONFIG } from '../../constants/constants.js';
+
 // ============================================================================
-// CONSTANTS ET TYPES
+// CONSTANTS ET TYPES (réexportés pour compatibilité)
 // ============================================================================
 
 /**
- * États de déploiement des drones
+ * États de déploiement des drones (réexportés depuis constants)
  */
-export const DRONE_DEPLOYMENT_STATES = {
-  DOCKED: 'docked',
-  DEPLOYING: 'deploying',
-  ACTIVE: 'active',
-  RETURNING: 'returning',
-  FAILED: 'failed'
-};
+export const droneDeploymentStates = DRONE_DEPLOYMENT_STATES;
 
 /**
- * Types de drones
+ * Types de drones (réexportés depuis constants)
  */
-export const DRONE_TYPES = {
-  EXPLORER: 'explorer',
-  COMBAT: 'combat', 
-  SPECIAL: 'special'
-};
+export const droneTypes = DRONE_TYPES;
 
 /**
- * États visuels des drones pour l'animation
+ * États visuels des drones pour l'animation (réexportés depuis constants)
  */
-export const DRONE_VISUAL_STATES = {
-  DOCKED: 'docked',           // En formation autour du vaisseau
-  DEPLOYING: 'deploying',     // En mouvement vers la cible
-  EXPLORING: 'exploring',     // À la cible, en exploration
-  RETURNING: 'returning',     // En retour vers le vaisseau
-  FAILED: 'failed'           // En erreur
-};
+export const droneVisualStates = DRONE_VISUAL_STATES;
+
+/**
+ * Configuration des drones par type (réexportés depuis constants)
+ */
+export const droneConfig = DRONE_CONFIG;
 
 // ============================================================================
 // VALIDATORS ET GUARDS
@@ -61,7 +52,7 @@ const validateDroneDeployment = (deployment) => {
     throw new Error('Target area must be a valid coordinate string');
   }
   
-  const droneType = deployment.droneType || DRONE_TYPES.EXPLORER;
+  const droneType = deployment.droneType || DRONE_TYPES.explorer;
   if (!Object.values(DRONE_TYPES).includes(droneType)) {
     throw new Error(`Invalid drone type. Must be one of: ${Object.values(DRONE_TYPES).join(', ')}`);
   }
@@ -87,7 +78,7 @@ export const droneDeploymentGuards = {
    */
   canDeployDrone: (context, event) => {
     // Vérifier qu'il n'y a pas déjà un drone actif
-    if (context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.ACTIVE) {
+    if (context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.active) {
       return false;
     }
     
@@ -106,7 +97,7 @@ export const droneDeploymentGuards = {
    * @returns {boolean} - True si drone déployé
    */
   isDroneDeployed: (context) => {
-    return context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.ACTIVE;
+    return context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.active;
   },
 
   /**
@@ -115,7 +106,7 @@ export const droneDeploymentGuards = {
    * @returns {boolean} - True si drone ancré
    */
   isDroneDocked: (context) => {
-    return context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.DOCKED ||
+    return context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.docked ||
            !context.droneDeployment;
   }
 };
@@ -149,7 +140,7 @@ export const droneDeploymentActions = {
       return {
         ...context,
         droneDeployment: {
-          status: DRONE_DEPLOYMENT_STATES.ACTIVE,
+          status: DRONE_DEPLOYMENT_STATES.active,
           targetArea: validatedDeployment.targetArea,
           droneType: validatedDeployment.droneType,
           range: validatedDeployment.range,
@@ -187,7 +178,7 @@ export const droneDeploymentActions = {
       ...context,
       droneDeployment: {
         ...context.droneDeployment,
-        status: DRONE_DEPLOYMENT_STATES.RETURNING,
+        status: DRONE_DEPLOYMENT_STATES.returning,
         returnStartTime: Date.now()
       },
       currentDroneTarget: null,
@@ -205,7 +196,7 @@ export const droneDeploymentActions = {
     return {
       ...context,
       droneDeployment: {
-        status: DRONE_DEPLOYMENT_STATES.DOCKED,
+        status: DRONE_DEPLOYMENT_STATES.docked,
         lastMission: context.droneDeployment,
         dockTime: Date.now()
       },
@@ -247,7 +238,7 @@ export const fsmDroneFleetActions = {
    * Déploie un drone avec position calculée
    */
   deployDroneWithPosition: (context, event) => {
-    const { targetArea, droneType = DRONE_TYPES.EXPLORER } = event;
+    const { targetArea, droneType = DRONE_TYPES.explorer } = event;
     
     if (!context.vehicle?.position) {
       return {
@@ -265,7 +256,7 @@ export const fsmDroneFleetActions = {
 
     const updatedDrone = {
       ...context.droneFleet.drones[droneType],
-      state: DRONE_VISUAL_STATES.DEPLOYING,
+      state: DRONE_VISUAL_STATES.deploying,
       targetPosition,
       missionTarget: targetArea,
       isActive: true,
@@ -324,7 +315,7 @@ export const fsmDroneFleetActions = {
    * Rappelle un drone au vaisseau
    */
   recallDrone: (context, event) => {
-    const { droneType = DRONE_TYPES.EXPLORER } = event;
+    const { droneType = DRONE_TYPES.explorer } = event;
     
     if (!context.droneFleet.drones[droneType]?.isActive) {
       return context;
@@ -339,8 +330,8 @@ export const fsmDroneFleetActions = {
           ...context.droneFleet.drones,
           [droneType]: {
             ...context.droneFleet.drones[droneType],
-            state: DRONE_VISUAL_STATES.RETURNING,
-            targetPosition: context.vehicle.position, // Retour au vaisseau
+            state: DRONE_VISUAL_STATES.returning,
+            targetPosition: context.vehicle.position,
             lastUpdate: Date.now()
           }
         }
@@ -353,7 +344,7 @@ export const fsmDroneFleetActions = {
    * Ancre un drone au vaisseau (fin de mission)
    */
   dockDrone: (context, event) => {
-    const { droneType = DRONE_TYPES.EXPLORER } = event;
+    const { droneType = DRONE_TYPES.explorer } = event;
 
     return {
       ...context,
@@ -365,8 +356,8 @@ export const fsmDroneFleetActions = {
           ...context.droneFleet.drones,
           [droneType]: {
             ...context.droneFleet.drones[droneType],
-            state: DRONE_VISUAL_STATES.DOCKED,
-            position: context.vehicle.position, // Position du vaisseau (pas null)
+            state: DRONE_VISUAL_STATES.docked,
+            position: context.vehicle.position,
             targetPosition: null,
             missionTarget: null,
             isActive: false,
@@ -408,7 +399,7 @@ export const droneDeploymentSelectors = {
    * @returns {string} - État du déploiement
    */
   getCurrentDeploymentState: (context) => {
-    return context.droneDeployment?.status || DRONE_DEPLOYMENT_STATES.DOCKED;
+    return context.droneDeployment?.status || DRONE_DEPLOYMENT_STATES.docked;
   },
 
   /**
@@ -418,8 +409,8 @@ export const droneDeploymentSelectors = {
    */
   isDroneOnMission: (context) => {
     const status = context.droneDeployment?.status;
-    return status === DRONE_DEPLOYMENT_STATES.ACTIVE || 
-           status === DRONE_DEPLOYMENT_STATES.RETURNING;
+    return status === DRONE_DEPLOYMENT_STATES.active || 
+           status === DRONE_DEPLOYMENT_STATES.returning;
   },
 
   /**
@@ -438,7 +429,7 @@ export const droneDeploymentSelectors = {
    */
   getEstimatedMissionTimeRemaining: (context) => {
     const deployment = context.droneDeployment;
-    if (!deployment || deployment.status !== DRONE_DEPLOYMENT_STATES.ACTIVE) {
+    if (!deployment || deployment.status !== DRONE_DEPLOYMENT_STATES.active) {
       return 0;
     }
     
@@ -455,7 +446,7 @@ export const droneDeploymentSelectors = {
  * Générateurs d'événements pour le déploiement de drones
  */
 export const droneDeploymentEvents = {
-  deployDrone: (targetArea, droneType = DRONE_TYPES.EXPLORER, options = {}) => ({
+  deployDrone: (targetArea, droneType = DRONE_TYPES.explorer, options = {}) => ({
     type: 'DEPLOY_DRONE',
     targetArea,
     droneType,
@@ -492,9 +483,9 @@ export default {
   guards: droneDeploymentGuards,
   events: droneDeploymentEvents,
   constants: {
-    DRONE_DEPLOYMENT_STATES,
-    DRONE_TYPES,
-    DRONE_CONFIG
+    droneDeploymentStates: DRONE_DEPLOYMENT_STATES,
+    droneTypes: DRONE_TYPES,
+    droneConfig: DRONE_CONFIG
   },
   utils: {
     validateDroneDeployment

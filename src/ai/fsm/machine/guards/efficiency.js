@@ -4,9 +4,9 @@
  * Reuses existing guards from shared/actions/core/
  */
 
-import { resourceGuards } from '../../../../shared/actions/core/resourcesActions.js';
-import { fuelGuards } from '../../../../shared/actions/core/fuelActions.js';
-import { movementGuards } from '../../../../shared/actions/core/movementActions.js';
+import { resourceGuards } from '../actions/core/resourcesActions.js';
+import { fuelGuards } from '../actions/core/fuelActions.js';
+import { movementGuards } from '../actions/core/movementActions.js';
 
 /**
  * Efficiency guards - Optimize resource collection and management

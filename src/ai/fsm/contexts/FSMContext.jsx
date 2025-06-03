@@ -11,7 +11,8 @@
 
 import React, { createContext, useContext, useRef, useCallback } from 'react';
 import { useMachine } from 'react-robot';
-import { createEntityContext, ENTITY_TYPES } from '../machine/context/initialContext.js';
+import { createEntityContext } from '../machine/context/initialContext.js';
+import { ENTITY_TYPES } from '../machine/constants/constants.js';
 import { createBotMachine } from '../machine/machineFactory.js';
 import fsmLogger from '../../../logger/fsmLogger.js';
 
@@ -30,7 +31,7 @@ export const FSMProvider = ({ children }) => {
   /**
    * Obtient ou crée une machine FSM pour un bot
    */
-  const getBotMachine = useCallback((botId, entityType = ENTITY_TYPES.AUTO) => {
+  const getBotMachine = useCallback((botId, entityType = ENTITY_TYPES.auto) => {
     // Si la machine existe déjà, la retourner
     if (machinesRef.current.has(botId)) {
       return machinesRef.current.get(botId);
@@ -95,7 +96,7 @@ export const useFSMContext = () => {
  * Hook centralisé pour les machines FSM
  * Remplace l'ancien useBotMachine en utilisant des machines partagées
  */
-export const useBotMachineShared = (botId, entityType = ENTITY_TYPES.AUTO) => {
+export const useBotMachineShared = (botId, entityType = ENTITY_TYPES.auto) => {
   const { getBotMachine } = useFSMContext();
   
   // Obtenir la machine partagée

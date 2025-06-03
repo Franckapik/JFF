@@ -14,12 +14,12 @@
  * @version 1.0.0
  */
 
-import { BOT_STATES } from '../constants.js';
-import { movementActions } from '../../../../shared/actions/core/movementActions.js';
-import { fuelActions } from '../../../../shared/actions/core/fuelActions.js';
-import { resourceActions } from '../../../../shared/actions/core/resourcesActions.js';
-import { explorationActions } from '../../../../shared/actions/core/explorationActions.js';
-import { droneDeploymentActions, fsmDroneFleetActions } from '../../../../shared/actions/core/droneActions.js';
+import { BOT_STATES } from '../constants/constants.js';
+import { movementActions } from '../actions/core/movementActions.js';
+import { fuelActions } from '../actions/core/fuelActions.js';
+import { resourceActions } from '../actions/core/resourcesActions.js';
+import { explorationActions } from '../actions/core/explorationActions.js';
+import { droneDeploymentActions, fsmDroneFleetActions } from '../actions/core/droneActions.js';
 
 // ============================================================================
 // RÉDUCTEURS D'ÉTAT - Mises à jour du contexte lors des transitions d'état
