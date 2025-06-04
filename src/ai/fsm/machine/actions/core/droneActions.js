@@ -12,6 +12,7 @@
 
 import { range } from 'three/tsl';
 import { DRONE_DEPLOYMENT_STATES, DRONE_TYPES, DRONE_VISUAL_STATES, DRONE_CONFIG } from '../../constants/constants.js';
+import { useTileStore } from '../../../../../stores/useTileStore/index.js';
 
 // ============================================================================
 // CONSTANTS ET TYPES (réexportés pour compatibilité)
@@ -141,14 +142,8 @@ export const droneDeploymentActions = {
         };
       }
 
-      // Pour l'instant, utiliser une position cible basique
-      // TODO: Intégrer avec le tileStore pour obtenir une position réelle
-      const shipPosition = context.vehicle?.position || { x: 0, y: 0, z: 0 };
-      const targetPosition = {
-        x: shipPosition.x + range,
-        y: shipPosition.y + 0.5,
-        z: shipPosition.z + range
-      };
+      // Utiliser le tileStore pour obtenir une position réelle dans un rayon de 3 tuiles
+      const targetPosition = selectTargetTileInRadius(context, range);
 
       const updatedDrone = {
         ...context.droneFleet.drones[droneType],
@@ -571,6 +566,98 @@ export const droneDeploymentEvents = {
     position,
     timestamp: Date.now()
   })
+};
+
+// ============================================================================
+// TILE SELECTION UTILITIES
+// ============================================================================
+
+/**
+ * Sélectionne une tuile cible dans un rayon donné autour du véhicule
+ * Cette fonction remplace l'appel à selectTargetTileInRadius(context, range)
+ * et évite les boucles infinies en utilisant une approche robuste
+ * 
+ * @param {Object} context - Contexte FSM contenant vehicle.position et vehicle.coord
+ * @param {number} range - Rayon de recherche (défaut: 3)
+ * @returns {Object} - Position cible {x, y, z} ou position par défaut
+ */
+const selectTargetTileInRadius = (context, range = 3) => {
+  try {
+    // Obtenir le tileStore
+    const tileStore = useTileStore.getState();
+    
+    // Vérifier que le contexte contient les informations nécessaires
+    const vehicle = context.vehicle || context.botVehicle;
+    if (!vehicle || !vehicle.coord) {
+      console.warn('[selectTargetTileInRadius] Vehicle or vehicle.coord not found in context');
+      return { x: 0, y: 0.5, z: 0 }; // Position par défaut
+    }
+
+    // Utiliser getWalkableTilesInRadius avec des paramètres sûrs
+    const walkableTiles = tileStore.getWalkableTilesInRadius(
+      vehicle.coord, // Position source (format "x,y" ou hex)
+      range,         // Rayon de recherche
+      true,          // Seulement les tuiles non explorées
+      true           // Exclure les tuiles dangereuses
+    );
+    
+    // Filtrer pour éviter la position actuelle du véhicule
+    const validTargets = walkableTiles.filter(tile => 
+      tile.coord !== vehicle.coord && 
+      tile.position && 
+      tile.distance > 0
+    );
+    
+    if (validTargets.length === 0) {
+      console.warn('[selectTargetTileInRadius] No valid tiles found, falling back to random tile');
+      
+      // Fallback: essayer une tuile walkable aléatoire
+      const randomTile = tileStore.selectRandomWalkableTile();
+      if (randomTile && randomTile.position) {
+        return {
+          x: randomTile.position.x,
+          y: randomTile.position.y + 0.5, // Élever légèrement pour le drone
+          z: randomTile.position.z
+        };
+      }
+      
+      // Dernière option: position relative au véhicule
+      const fallbackAngle = Math.random() * Math.PI * 2;
+      const fallbackDistance = Math.min(range, 2);
+      return {
+        x: vehicle.position.x + Math.cos(fallbackAngle) * fallbackDistance,
+        y: vehicle.position.y + 0.5,
+        z: vehicle.position.z + Math.sin(fallbackAngle) * fallbackDistance
+      };
+    }
+
+    // Sélectionner la tuile la plus proche (première dans la liste triée)
+    const targetTile = validTargets[0];
+    
+    return {
+      x: targetTile.position.x,
+      y: targetTile.position.y + 0.5, // Élever légèrement pour le drone
+      z: targetTile.position.z
+    };
+    
+  } catch (error) {
+    console.error('[selectTargetTileInRadius] Error selecting target tile:', error);
+    
+    // Position de secours basée sur le véhicule si disponible
+    const vehicle = context.vehicle || context.botVehicle;
+    if (vehicle && vehicle.position) {
+      const safeAngle = Math.random() * Math.PI * 2;
+      const safeDistance = Math.min(range, 2);
+      return {
+        x: vehicle.position.x + Math.cos(safeAngle) * safeDistance,
+        y: vehicle.position.y + 0.5,
+        z: vehicle.position.z + Math.sin(safeAngle) * safeDistance
+      };
+    }
+    
+    // Position absolue de secours
+    return { x: 0, y: 0.5, z: 0 };
+  }
 };
 
 // ============================================================================
