@@ -6,11 +6,11 @@
  * Ce store combine tous les slices spécialisés pour la gestion complète des tuiles :
  * - tileBaseSlice : initialisation, CRUD de base, gestion du hover
  * - tileResourceSlice : collecte, déduction et analyse des ressources
- * - tileCalculationSlice : calculs de distance et pathfinding
+ * - tilePathSlice : pathfinding, calculs de distance et analyses spatiales
  * - tileMarkSlice : marquage d'exploration et statuts
  * - tileFilterSlice : filtrage, recherche et sélection avancée
  * - tileCoordinateSlice : système de coordonnées et transformations (migré depuis utils/coordinateSystem)
- * - tileGenerationSlice : génération hexagonale et pathfinding (migré depuis utils/utils)
+ * - tileGenerationSlice : génération hexagonale (migré depuis utils/utils)
  * 
  * Architecture modulaire permettant :
  * - Séparation claire des responsabilités
@@ -27,6 +27,7 @@
  *   tiles, 
  *   initializeTiles, 
  *   calculateDistance, 
+ *   findPath,
  *   markTileAsExplored, 
  *   gridToWorld,
  *   initializeGameGrid,
@@ -43,12 +44,13 @@ import { create } from 'zustand';
 // Import des slices spécialisés
 import createTileBaseSlice from './slices/tileBaseSlice';
 import createTileResourceSlice from './slices/tileResourceSlice';
-import createTileCalculationSlice from './slices/tileCalculationSlice';
+import createTilePathSlice from './slices/tilePathSlice';
 import createTileMarkSlice from './slices/tileMarkSlice';
 import createTileFilterSlice from './slices/tileFilterSlice';
 
 // Import des nouveaux slices migrés depuis utils
 import createTileCoordinateSlice from './slices/tileCoordinateSlice';
+import createTileGenerationSlice from './slices/tileGenerationSlice';
 import createTileGenerationSlice from './slices/tileGenerationSlice';
 
 // =========================================================================
@@ -61,11 +63,11 @@ import createTileGenerationSlice from './slices/tileGenerationSlice';
  * Composition des slices dans l'ordre logique :
  * 1. Base : fondations et opérations CRUD
  * 2. Resources : gestion des ressources et collecte
- * 3. Calculation : calculs spatiaux et pathfinding
+ * 3. Path : pathfinding, calculs de distance et analyses spatiales
  * 4. Mark : marquage et exploration
  * 5. Filter : filtrage et recherche avancée
  * 6. Coordinate : système de coordonnées (migré depuis utils/coordinateSystem)
- * 7. Generation : génération hexagonale et pathfinding (migré depuis utils/utils)
+ * 7. Generation : génération hexagonale (migré depuis utils/utils)
  */
 export const useTileStore = create((set, get) => ({
   // =========================================================================
@@ -78,8 +80,8 @@ export const useTileStore = create((set, get) => ({
   // Slice des ressources : collecte et analyse
   ...createTileResourceSlice(set, get),
   
-  // Slice des calculs : distances et pathfinding
-  ...createTileCalculationSlice(set, get),
+  // Slice des chemins : pathfinding et calculs de distance
+  ...createTilePathSlice(set, get),
   
   // Slice de marquage : exploration et statuts
   ...createTileMarkSlice(set, get),
@@ -91,6 +93,6 @@ export const useTileStore = create((set, get) => ({
   // Slice des coordonnées : transformations et validations
   ...createTileCoordinateSlice(set, get),
   
-  // Slice de génération : création des grilles hexagonales et pathfinding
+  // Slice de génération : création des grilles hexagonales
   ...createTileGenerationSlice(set, get),
 }));

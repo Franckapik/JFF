@@ -1,9 +1,11 @@
 import React, { useRef, useMemo, useEffect, useCallback } from "react";
-import { Cone, Html } from "@react-three/drei";
+import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { movementEvents } from "../ai/fsm/machine/events/movementEvents.js";
 import { useBotMachineFixed } from "../ai/fsm/hooks/useBotMachineFixed.js";
+import ShipMesh from "./Vehicles/ShipMesh.jsx";
+import DroneMesh from "./Vehicles/DroneMesh.jsx";
 
 /**
  * =================================================================
@@ -79,22 +81,6 @@ const Fleet = React.memo(({
     [droneState.state]
   );
   
-  // DEBUG: Log des changements de contexte drone (optimisé)
-  const debugDroneChange = useCallback((droneData) => {
-    console.log(`🚁 [Fleet-${botId}] Drone Context Change:`, droneData);
-  }, [botId]);
-  
-  useEffect(() => {
-    if (explorerDrone) {
-      debugDroneChange({
-        state: droneState.state,
-        isActive: droneState.isActive,
-        position: droneState.position,
-        targetPosition: droneState.targetPosition,
-        isMoving: isExplorerMoving
-      });
-    }
-  }, [explorerDrone, droneState, isExplorerMoving, debugDroneChange]);
   
   // Position initiale du drone (position du vaisseau par défaut)
   const initialDronePosition = useMemo(() => ({
@@ -214,58 +200,19 @@ const Fleet = React.memo(({
   return (
     <>
       {/* VAISSEAU PRINCIPAL */}
-      <mesh position={[0, 0, 0]} castShadow>
-        <boxGeometry args={[0.5, 0.5, 0.5]} />
-        <meshStandardMaterial color={color} />
-        
-        {/* ID LABEL - Vaisseau principal */}
-        <Html position={[0, 0.4, 0]} center>
-          <div style={{ 
-            color: 'rgba(255,255,255,0.7)', 
-            fontSize: '10px', 
-            background: 'rgba(0,0,0,0.6)', 
-            padding: '2px 6px', 
-            borderRadius: '4px',
-            fontFamily: 'monospace',
-            textAlign: 'center'
-          }}>
-            {context?.vehicle?.id || `${botId}-ship`}
-          </div>
-        </Html>
-      </mesh>
+      <ShipMesh color={color} botId={botId} context={context} />
 
       {/* DRONE EXPLORATEUR - Animation directe vers targetPosition */}
       <group 
         ref={explorerDroneRef}
         position={[initialDronePosition.x, initialDronePosition.y, initialDronePosition.z]}
       >
-        <Cone 
-          args={[0.15, 0.4, 8]} 
-          rotation={[Math.PI, 0, 0]}
-          castShadow
-        >
-          <meshStandardMaterial 
-            color={color}
-            // État FSM → Couleur émissive
-            emissive={droneState.state === 'exploring' ? color : "black"}
-            emissiveIntensity={droneState.state === 'exploring' ? 0.8 : 0.2}
-          />
-        </Cone>
-        
-        {/* ID LABEL - Drone explorateur */}
-        <Html position={[0, 0.3, 0]} center>
-          <div style={{ 
-            color: 'rgba(255,255,255,0.6)', 
-            fontSize: '9px', 
-            background: 'rgba(0,0,0,0.5)', 
-            padding: '1px 4px', 
-            borderRadius: '3px',
-            fontFamily: 'monospace',
-            textAlign: 'center'
-          }}>
-            {context?.droneFleet?.drones?.explorer?.id || `${botId}-explorer`}
-          </div>
-        </Html>
+        <DroneMesh 
+          color={color} 
+          botId={botId} 
+          context={context} 
+          droneState={droneState} 
+        />
       </group>
     </>
   );
