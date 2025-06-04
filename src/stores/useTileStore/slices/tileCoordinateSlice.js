@@ -250,24 +250,6 @@ const createTileCoordinateSlice = (set, get) => ({
   // =========================================================================
 
   /**
-   * Calcule la distance entre deux positions
-   * @param {Object} pos1 - Première position
-   * @param {Object} pos2 - Deuxième position
-   * @returns {number} - Distance euclidienne
-   */
-  calculateDistance: (pos1, pos2) => {
-    const { isValidWorldPosition } = get();
-    
-    if (!isValidWorldPosition(pos1) || !isValidWorldPosition(pos2)) {
-      return Infinity;
-    }
-    
-    const dx = pos2.x - pos1.x;
-    const dz = pos2.z - pos1.z;
-    return Math.sqrt(dx * dx + dz * dz);
-  },
-
-  /**
    * Normalise une coordonnée (s'assure qu'elle est dans le bon format)
    * @param {string} coord - Coordonnée à normaliser
    * @returns {string|null} - Coordonnée normalisée

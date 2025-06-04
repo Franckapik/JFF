@@ -20,6 +20,8 @@
  * - Analyses de proximité et voisinage
  */
 
+import fsmLogger from "../../../logger/fsmLogger";
+
 // =========================================================================
 // CONSTANTES DE PATHFINDING
 // =========================================================================
@@ -192,6 +194,7 @@ const createTilePathSlice = (set, get) => ({
    * @returns {number|string} - Distance entre les deux coordonnées (nombre ou chaîne formatée)
    */
   calculateDistance: (coord1, coord2, formatted = true, usePathfinding = true) => {
+    fsmLogger.info(`Calculating distance from ${coord1} to ${coord2} (formatted: ${formatted}, usePathfinding: ${usePathfinding})`);
     // Validation des paramètres d'entrée
     if (!coord1 || !coord2 || typeof coord1 !== 'string' || typeof coord2 !== 'string') {
       return formatted ? "N/A" : 0;
@@ -213,8 +216,13 @@ const createTilePathSlice = (set, get) => ({
       } 
       // Mode euclidien : calcul de la distance en ligne droite
       else {
-        const [x1, y1] = coord1.split(',').map(Number);
-        const [x2, y2] = coord2.split(',').map(Number);
+        // Formatter les coordonnées en nombres en utilisant la fonction du coordinateSlice
+        const { hexToGridCoord } = get();
+        const [x1, y1] = hexToGridCoord(coord1).split(',').map(Number);
+        const [x2, y2] = hexToGridCoord(coord2).split(',').map(Number);
+
+        fsmLogger.info(`Calculating distance between ${coord1} and ${coord2}:`, { x1, y1, x2, y2 });
+        
         
         // Vérification de la validité des coordonnées numériques
         if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
