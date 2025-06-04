@@ -518,39 +518,6 @@ export const droneDeploymentReducers = {
   }
 };
 
-/**
- * Réducteurs pour la flotte de drones FSM (sans Player Store)
- */
-export const droneFleetReducers = {
-  /**
-   * Déploie un drone avec calcul de position automatique
-   */
-  deployDrone: (context, event) => {
-    return fsmDroneFleetActions.deployDroneWithPosition(context, event);
-  },
-
-  /**
-   * Met à jour la position d'un drone
-   */
-  updatePosition: (context, event) => {
-    return fsmDroneFleetActions.updateDronePosition(context, event);
-  },
-
-  /**
-   * Rappelle un drone
-   */
-  recallDrone: (context, event) => {
-    return fsmDroneFleetActions.recallDrone(context, event);
-  },
-
-  /**
-   * Ancre un drone au vaisseau
-   */
-  dockDrone: (context, event) => {
-    return fsmDroneFleetActions.dockDrone(context, event);
-  }
-};
-
 // ============================================================================
 // EXPORT
 // ============================================================================
@@ -565,9 +532,7 @@ export const contextReducers = {
   emergency: emergencyReducers,
   manual: manualControlReducers,
   base: baseReducers,
-  droneDeployment: droneDeploymentReducers,
-  droneFleet: droneFleetReducers,
-  
+  droneDeployment: droneDeploymentReducers,  
   // Réducteur d'état (fonction principale)
   updateState: updateStateReducer
 };

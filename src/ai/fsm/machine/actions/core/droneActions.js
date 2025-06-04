@@ -10,6 +10,7 @@
  * @version 1.0.0
  */
 
+import { range } from 'three/tsl';
 import { DRONE_DEPLOYMENT_STATES, DRONE_TYPES, DRONE_VISUAL_STATES, DRONE_CONFIG } from '../../constants/constants.js';
 
 // ============================================================================
@@ -40,31 +41,6 @@ export const droneConfig = DRONE_CONFIG;
 // VALIDATORS ET GUARDS
 // ============================================================================
 
-/**
- * Valide les paramètres de déploiement d'un drone
- */
-const validateDroneDeployment = (deployment) => {
-  if (!deployment || typeof deployment !== 'object') {
-    throw new Error('Drone deployment must be a valid object');
-  }
-  
-  if (!deployment.targetArea || typeof deployment.targetArea !== 'string') {
-    throw new Error('Target area must be a valid coordinate string');
-  }
-  
-  const droneType = deployment.droneType || DRONE_TYPES.explorer;
-  if (!Object.values(DRONE_TYPES).includes(droneType)) {
-    throw new Error(`Invalid drone type. Must be one of: ${Object.values(DRONE_TYPES).join(', ')}`);
-  }
-  
-  return {
-    targetArea: deployment.targetArea,
-    droneType,
-    range: deployment.range || DRONE_CONFIG[droneType].range,
-    priority: deployment.priority || 'normal',
-    timestamp: deployment.timestamp || Date.now()
-  };
-};
 
 /**
  * Guards pour le déploiement de drones
@@ -144,8 +120,6 @@ export const droneDeploymentActions = {
    */
   deployDrone: (context, event) => {
     try {
-      const validatedDeployment = validateDroneDeployment(event);
-      
       if (!droneDeploymentGuards.canDeployDrone(context, event)) {
         return {
           ...context,
@@ -153,30 +127,33 @@ export const droneDeploymentActions = {
           lastAction: 'deployDrone_failed'
         };
       }
+
+      // Valeurs par défaut pour l'événement
+      const droneType = event.droneType || DRONE_TYPES.explorer;
+      const range = event.range || 3;
       
-      const droneType = validatedDeployment.droneType;
-      
-      // NOUVEAU: Utilise la structure droneFleet compatible avec initialContext.js
-      if (!context.droneFleet || !context.droneFleet.drones[droneType]) {
+      // Vérifier si le drone existe dans la flotte
+      if (!context.droneFleet?.drones[droneType]) {
         return {
           ...context,
-          error: `Drone type ${droneType} not found in fleet`,
+          error: `Drone ${droneType} not found in fleet`,
           lastAction: 'deployDrone_failed'
         };
       }
 
-      // Calculer la position cible du drone
-      const targetPosition = context.vehicle?.position ? {
-        x: context.vehicle.position.x + (Math.random() - 0.5) * validatedDeployment.range * 2,
-        y: context.vehicle.position.y + 0.5,
-        z: context.vehicle.position.z + (Math.random() - 0.5) * validatedDeployment.range * 2
-      } : null;
+      // Pour l'instant, utiliser une position cible basique
+      // TODO: Intégrer avec le tileStore pour obtenir une position réelle
+      const shipPosition = context.vehicle?.position || { x: 0, y: 0, z: 0 };
+      const targetPosition = {
+        x: shipPosition.x + range,
+        y: shipPosition.y + 0.5,
+        z: shipPosition.z + range
+      };
 
       const updatedDrone = {
         ...context.droneFleet.drones[droneType],
         state: DRONE_VISUAL_STATES.deploying,
         targetPosition,
-        missionTarget: validatedDeployment.targetArea,
         isActive: true,
         lastUpdate: Date.now()
       };
@@ -188,10 +165,10 @@ export const droneDeploymentActions = {
           status: 'active',
           currentMission: {
             type: 'exploration',
-            target: validatedDeployment.targetArea,
+            target: `${range}unit-radius`, // zone de déploiement
             drone: droneType,
             startTime: Date.now(),
-            estimatedReturn: Date.now() + (validatedDeployment.range * 2000)
+            estimatedReturn: Date.now() + (range * 2000)
           },
           missionStartTime: Date.now(),
           drones: {
@@ -349,8 +326,7 @@ export const fsmDroneFleetActions = {
     // Calculer la position cible du drone
     const targetPosition = calculateExplorationTargetPosition(
       context.vehicle.position,
-      targetArea,
-      5 // range
+      event.range
     );
 
     const updatedDrone = {
@@ -610,8 +586,5 @@ export default {
     droneDeploymentStates: DRONE_DEPLOYMENT_STATES,
     droneTypes: DRONE_TYPES,
     droneConfig: DRONE_CONFIG
-  },
-  utils: {
-    validateDroneDeployment
   }
 };

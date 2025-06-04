@@ -21,8 +21,6 @@ import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
 import { safetyGuards } from '../guards/index.js';
 import { movementActions } from '../actions/core/movementActions.js';
 import { discoveryGuards } from '../guards/index.js';
-import { droneDeploymentActions, droneDeploymentGuards } from '../actions/core/droneActions.js';
-import { selectExplorationTarget } from '../../utils/explorationTargetSelector.js';
 import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**
@@ -30,50 +28,87 @@ import fsmLogger from '../../../../logger/fsmLogger.js';
  */
 export const exploringState = state(
   // === ÉVÉNEMENTS DE PROGRESSION ===
-  
-  // NOUVEAU: Entrée dans l'état exploring → déployer drone automatiquement (FSM pur)
-  // Utilisation d'immediate pour déclencher une action à l'entrée de l'état
-  immediate(BOT_STATES.EXPLORING,
-    guard((context) => !context.droneFleet?.drones?.explorer?.isActive),
-    reduce((context, event) => {
-      // Sélectionner automatiquement une zone d'exploration
-      const explorationTarget = selectExplorationTarget(context);
-      
-      if (!explorationTarget) {
-        console.warn('[Exploring] No suitable exploration target found');
-        return {
-          ...context,
-          hasExplored: true,
-          explorationStatus: 'no_target_found',
-          currentAction: 'exploration_skipped'
-        };
-      }
 
-      // Utiliser le reducer de flotte FSM (sans Player Store)
-      const deploymentResult = contextReducers.droneFleet.deployDrone(context, {
-        targetArea: explorationTarget,
+  // NOUVEAU: Entrée dans l'état exploring → déployer drone automatiquement (FSM pur)
+  // Utilisation d'immediate avec garde pour éviter la boucle infinie
+  immediate(BOT_STATES.EXPLORING,
+    guard((context) => {
+      // Ne déployer QUE si le drone n'est pas actif ET qu'aucun déploiement n'a été tenté
+      const isDroneInactive = !context.droneFleet?.drones?.explorer?.isActive;
+      const noDeploymentAttempted = !context.droneFleet?.deploymentAttempted;
+      
+      return isDroneInactive && noDeploymentAttempted;
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("🚁 [Exploring] Deploying drone for first time");
+      
+      const deploymentResult = contextReducers.droneDeployment.deployDrone(context, {
+        range: 3,
         droneType: 'explorer'
       });
-      
-      fsmLogger.info(`[Exploring] FSM drone deployed to target: ${explorationTarget}`, {
-        droneState: deploymentResult.droneFleet?.drones?.explorer
-      });
-      
-      return deploymentResult;
+
+      // Marquer qu'une tentative de déploiement a été faite
+      return {
+        ...deploymentResult,
+        droneFleet: {
+          ...deploymentResult.droneFleet,
+          deploymentAttempted: true
+        }
+      };
     })
   ),
 
   // Drone déployé avec succès (événement existant, maintenant connecté)
-  transition(MOVEMENT_EVENT_TYPES.DRONE_DEPLOYED, BOT_STATES.EXPLORING, 
+  transition(MOVEMENT_EVENT_TYPES.DRONE_DEPLOYED, BOT_STATES.EXPLORING,
     guard(() => true),
     reduce((context, event) => {
-      // Maintenir la compatibilité existante
+      fsmLogger.info("🚁 [Exploring] Drone successfully deployed");
+      
+      // Maintenir la compatibilité existante et marquer le déploiement comme réussi
       return {
         ...context,
         isDroneAtShip: false,
         droneTarget: event.targetArea,
         deploymentTime: Date.now(),
-        currentAction: 'drone_exploring'
+        currentAction: 'drone_exploring',
+        droneFleet: {
+          ...context.droneFleet,
+          deploymentCompleted: true,
+          drones: {
+            ...context.droneFleet.drones,
+            explorer: {
+              ...context.droneFleet.drones.explorer,
+              state: 'exploring', // ✅ CHANGER L'ÉTAT DU DRONE
+              lastUpdate: Date.now()
+            }
+          }
+        }
+      };
+    })
+  ),
+
+  // TRANSITION AUTOMATIQUE après déploiement réussi 
+  // Si le drone est actif et que le déploiement est marqué comme tenté, commencer l'exploration
+  immediate(BOT_STATES.EXPLORING,
+    guard((context) => {
+      const droneIsActive = context.droneFleet?.drones?.explorer?.isActive;
+      const deploymentAttempted = context.droneFleet?.deploymentAttempted;
+      const notStartedExploring = !context.droneFleet?.explorationStarted;
+      
+      return droneIsActive && deploymentAttempted && notStartedExploring;
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("🔍 [Exploring] Starting exploration phase");
+      
+      // Marquer que l'exploration a commencé et programmer un timeout
+      return {
+        ...context,
+        droneFleet: {
+          ...context.droneFleet,
+          explorationStarted: true,
+          explorationStartTime: Date.now()
+        },
+        currentAction: 'exploring_active'
       };
     })
   ),
@@ -81,10 +116,10 @@ export const exploringState = state(
   // Mise à jour position drone en temps réel
   transition(MOVEMENT_EVENT_TYPES.DRONE_POSITION_UPDATE, BOT_STATES.EXPLORING,
     guard((context, event) => context.droneFleet?.drones?.explorer?.isActive),
-    
+
     // REDUCE: Mettre à jour la position dans le contexte (pur)
     reduce((context, event) => {
-      return contextReducers.droneFleet.updatePosition(context, {
+      return contextReducers.droneDeployment.updateDronePosition(context, {
         droneType: event.droneType || 'explorer',
         position: event.position,
         state: event.state || 'exploring'
@@ -92,20 +127,54 @@ export const exploringState = state(
     })
   ),
 
+  // TIMEOUT AUTOMATIQUE - Sortir de l'exploration après 10 secondes
+  immediate(BOT_STATES.EVALUATING,
+    guard((context) => {
+      const explorationStarted = context.droneFleet?.explorationStarted;
+      const explorationStartTime = context.droneFleet?.explorationStartTime;
+      
+      if (!explorationStarted || !explorationStartTime) {
+        return false;
+      }
+      
+      // Timeout après 10 secondes (10000ms)
+      const elapsed = Date.now() - explorationStartTime;
+      return elapsed > 10000;
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("⏰ [Exploring] Exploration timeout - returning to evaluating");
+      
+      // Marquer l'exploration comme terminée et nettoyer les flags
+      return contextReducers.state.prepareEvaluating({
+        ...context,
+        hasExplored: true,
+        explorationStatus: 'timeout_completed',
+        droneFleet: {
+          ...context.droneFleet,
+          deploymentAttempted: false,
+          explorationStarted: false,
+          explorationStartTime: null
+        }
+      }, {
+        reason: 'exploration_timeout'
+      });
+    })
+  ),
+
   // Ressources découvertes pendant l'exploration
-  transition(RESOURCE_EVENT_TYPES.RESOURCES_DISCOVERED, BOT_STATES.EVALUATING, 
+  transition(RESOURCE_EVENT_TYPES.RESOURCES_DISCOVERED, BOT_STATES.EVALUATING,
     guard(() => true),
     reduce((context, event) => {
       // Enregistrer les ressources découvertes
       let updatedContext = { ...context };
-      
+
       // Ajouter chaque ressource découverte à la mémoire
       if (event.resources && Array.isArray(event.resources)) {
         event.resources.forEach(resource => {
           updatedContext = contextReducers.resource.recordDiscoveredResource(updatedContext, { resource });
         });
       }
-      
+
       // Préparer l'évaluation avec découverte de ressources
       return contextReducers.state.prepareEvaluating(updatedContext, {
         reason: 'resources_found',
@@ -115,12 +184,12 @@ export const exploringState = state(
   ),
 
   // Zone explorée avec succès
-  transition(RESOURCE_EVENT_TYPES.AREA_EXPLORED, BOT_STATES.EVALUATING, 
+  transition(RESOURCE_EVENT_TYPES.AREA_EXPLORED, BOT_STATES.EVALUATING,
     guard((context, event) => discoveryGuards.isExplorationComplete(context, event)),
     reduce((context, event) => {
       // Utiliser le reducer d'exploration
       const updatedContext = contextReducers.exploration.markAreaExplored(context, event);
-      
+
       // Préparer l'évaluation après exploration
       return contextReducers.state.prepareEvaluating(updatedContext, {
         reason: 'exploration_complete'
@@ -129,9 +198,9 @@ export const exploringState = state(
   ),
 
   // === TIMEOUTS ET ÉCHECS ===
-  
+
   // Timeout d'exploration (30s)
-  transition(SYSTEM_EVENT_TYPES.EXPLORATION_TIMEOUT, BOT_STATES.EVALUATING, 
+  transition(SYSTEM_EVENT_TYPES.EXPLORATION_TIMEOUT, BOT_STATES.EVALUATING,
     guard((context, event) => discoveryGuards.isExplorationExpired(context, event)),
     reduce((context, event) => {
       // Marquer comme exploré même si incomplet
@@ -140,7 +209,7 @@ export const exploringState = state(
         hasExplored: true,
         explorationStatus: 'timeout'
       };
-      
+
       // Utiliser le reducer pour préparer l'évaluation
       return contextReducers.state.prepareEvaluating(updatedContext, {
         reason: 'exploration_timeout'
@@ -149,7 +218,7 @@ export const exploringState = state(
   ),
 
   // Échec de déploiement du drone
-  transition(EMERGENCY_EVENT_TYPES.DRONE_DEPLOYMENT_FAILED, BOT_STATES.EVALUATING, 
+  transition(EMERGENCY_EVENT_TYPES.DRONE_DEPLOYMENT_FAILED, BOT_STATES.EVALUATING,
     guard(() => true),
     reduce((context, event) => ({
       ...context,
@@ -162,14 +231,14 @@ export const exploringState = state(
   ),
 
   // Carburant faible détecté pendant l'exploration
-  transition(EMERGENCY_EVENT_TYPES.LOW_FUEL_DETECTED, BOT_STATES.RETURNING, 
+  transition(EMERGENCY_EVENT_TYPES.LOW_FUEL_DETECTED, BOT_STATES.RETURNING,
     guard((context, event) => safetyGuards.isLowFuel(context, event)),
     reduce((context, event) => {
       // Utiliser le reducer d'urgence
       const emergencyContext = contextReducers.emergency.triggerEmergency(context, {
         reason: 'low_fuel_during_exploration'
       });
-      
+
       // Puis préparer le retour
       return contextReducers.state.prepareReturning(emergencyContext, {
         reason: 'emergency_return',
@@ -179,12 +248,12 @@ export const exploringState = state(
   ),
 
   // Override manuel
-  transition(USER_EVENT_TYPES.MANUAL_OVERRIDE, BOT_STATES.EVALUATING, 
+  transition(USER_EVENT_TYPES.MANUAL_OVERRIDE, BOT_STATES.EVALUATING,
     guard(() => true),
     reduce((context, event) => {
       // Utiliser le reducer de contrôle manuel
       const manualContext = contextReducers.manual.recordManualCommand(context, event);
-      
+
       // Puis préparer l'évaluation
       return contextReducers.state.prepareEvaluating(manualContext, {
         reason: 'manual_override'
@@ -193,12 +262,12 @@ export const exploringState = state(
   ),
 
   // Urgence générale
-  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED, BOT_STATES.RETURNING, 
+  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED, BOT_STATES.RETURNING,
     guard(() => true),
     reduce((context, event) => {
       // Utiliser le reducer d'urgence
       const emergencyContext = contextReducers.emergency.triggerEmergency(context, event);
-      
+
       // Puis préparer le retour
       return contextReducers.state.prepareReturning(emergencyContext, {
         reason: 'emergency_return',

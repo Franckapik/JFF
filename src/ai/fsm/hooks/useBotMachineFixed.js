@@ -60,38 +60,42 @@ export const useBotMachineFixed = (botId, entityType) => {
     return vehicle?.isMoving || false;
   }, [vehicle?.isMoving]);
   
-  // Démarrage automatique après 5 secondes (une seule fois)
+  // Démarrage automatique après 2 secondes (une seule fois)
   useEffect(() => {
     if (!hasStartedExploring.current && state === 'evaluating') {
       timeoutRef.current = setTimeout(() => {
         console.log(`[useBotMachineFixed] Sending ASSESSMENT_COMPLETE for bot ${botId}`);
         send(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE);
         hasStartedExploring.current = true;
-      }, 5000);
-    }
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-    };
-  }, [state === 'evaluating' && !hasStartedExploring.current, send, botId]);
-
-  return {
-    entity,
-    vehicle,
-    state,
-    context: current.context,
-    isMoving, // Utiliser directement la valeur calculée
-    current,
-    send,
-    autoEvents: {
-      start: () => {},
-      stop: () => {},
-      isActive: !hasStartedExploring.current
+      }, 2000);
+  }
+  
+  return () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
   };
+}, [state === 'evaluating' && !hasStartedExploring.current, send, botId]);
+
+// ===================================================================
+// HYBRID ARCHITECTURE - Position tracking handled by Fleet.jsx + useFSMPositionTracker
+// ===================================================================
+
+return {
+  entity,
+  vehicle,
+  state,
+  context: current.context,
+  isMoving, // Utiliser directement la valeur calculée
+  current,
+  send,
+  autoEvents: {
+    start: () => {},
+    stop: () => {},
+    isActive: !hasStartedExploring.current
+  }
+};
 };
 
 export default useBotMachineFixed;
