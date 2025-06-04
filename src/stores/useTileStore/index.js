@@ -51,7 +51,6 @@ import createTileFilterSlice from './slices/tileFilterSlice';
 // Import des nouveaux slices migrés depuis utils
 import createTileCoordinateSlice from './slices/tileCoordinateSlice';
 import createTileGenerationSlice from './slices/tileGenerationSlice';
-import createTileGenerationSlice from './slices/tileGenerationSlice';
 
 // =========================================================================
 // STORE PRINCIPAL
