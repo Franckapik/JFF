@@ -138,6 +138,46 @@ const createDronePositionUpdateEvent = (position, droneType = 'explorer', state 
 });
 
 /**
+ * Événement d'arrivée du drone à sa cible d'exploration
+ * Déclenché lorsqu'un drone atteint sa position cible et doit marquer la tuile comme explorée
+ */
+const DRONE_REACHED_TARGET = 'DRONE_REACHED_TARGET';
+
+/**
+ * Créateur d'événement: DRONE_REACHED_TARGET
+ * @param {object} position - Position atteinte {x, y, z}
+ * @param {string} tileCoord - Coordonnée de la tuile explorée (format "x,y")
+ * @param {string} droneType - Type de drone ('explorer', 'combat', 'special')
+ * @returns {object} Event payload
+ */
+const createDroneReachedTargetEvent = (position, tileCoord, droneType = 'explorer') => ({
+  type: DRONE_REACHED_TARGET,
+  position,
+  tileCoord,
+  droneType,
+  timestamp: Date.now()
+});
+
+/**
+ * Événement de retour du drone terminé
+ * Déclenché lorsqu'un drone est revenu au vaisseau et peut être ancré
+ */
+const DRONE_RETURNED = 'DRONE_RETURNED';
+
+/**
+ * Créateur d'événement: DRONE_RETURNED
+ * @param {object} position - Position du vaisseau où le drone est revenu
+ * @param {string} droneType - Type de drone ('explorer', 'combat', 'special')
+ * @returns {object} Event payload
+ */
+const createDroneReturnedEvent = (position, droneType = 'explorer') => ({
+  type: DRONE_RETURNED,
+  position,
+  droneType,
+  timestamp: Date.now()
+});
+
+/**
  * Événement d'annulation de mouvement
  * Déclenché lorsqu'un mouvement est annulé
  */
@@ -162,6 +202,8 @@ export const MOVEMENT_EVENT_TYPES = {
   NAVIGATION_PROGRESS,
   DRONE_DEPLOYED,
   DRONE_POSITION_UPDATE,
+  DRONE_REACHED_TARGET,
+  DRONE_RETURNED,
   MOVEMENT_CANCELLED,
 };
 
@@ -173,5 +215,7 @@ export const movementEvents = {
   createDroneDeployedEvent,
   createDronePositionUpdateEvent,
   createNavigationProgressEvent,
-  createMovementCancelledEvent
+  createMovementCancelledEvent,
+  createDroneReachedTargetEvent,
+  createDroneReturnedEvent
 };

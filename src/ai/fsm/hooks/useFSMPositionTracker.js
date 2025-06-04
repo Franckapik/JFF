@@ -17,6 +17,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { MOVEMENT_EVENT_TYPES } from '../machine/events/movementEvents.js';
+import { useTileStore } from '../../../stores/useTileStore/index.js';
 import fsmLogger from '../../../logger/fsmLogger.js';
 
 /**
@@ -35,8 +36,12 @@ export const useFSMPositionTracker = (context, send, botId) => {
     reachEventsSent: new Set()
   });
   
+  // Access to tile store for coordinate conversion
+  const { worldToGrid } = useTileStore();
+  
   /**
    * Logique de surveillance des positions et envoi d'événements
+   * Cette fonction est appelée par Fleet.jsx avec les positions visuelles R3F
    */
   const checkPositionAndSendEvents = useCallback((visualPosition, droneState) => {
     if (!send || !context?.droneFleet?.drones?.explorer) return;
@@ -92,17 +97,32 @@ export const useFSMPositionTracker = (context, send, botId) => {
       }
     }
     
-    // 🔍 EXPLORATION EN COURS
+    // 🔍 EXPLORATION EN COURS - Marquer la tuile et envoyer l'événement
     else if (droneState === 'exploring' && distance < reachThreshold) {
       if (!debugState.current.reachEventsSent.has('exploring')) {
-        fsmLogger.info(`🔍 [FSMPositionTracker] Drone reached exploration zone for ${botId} (visual position)`);
+        fsmLogger.info(`🔍 [FSMPositionTracker] Drone reached exploration target for ${botId} (visual position)`);
+        
+        // Convert 3D position to tile coordinates
+        const tileCoord = worldToGrid(visualPosition);
+        
+        // Mark tile as explored in the store
+        try {
+          const { markTileAsExplored } = useTileStore.getState();
+          markTileAsExplored(tileCoord);
+          fsmLogger.info(`✅ [FSMPositionTracker] Tile marked as explored: ${JSON.stringify(tileCoord)} for ${botId}`);
+        } catch (error) {
+          fsmLogger.error(`❌ [FSMPositionTracker] Failed to mark tile as explored: ${error.message}`);
+        }
+        
+        // Send DRONE_REACHED_TARGET event with tile coordinates
         send({
-          type: MOVEMENT_EVENT_TYPES.DRONE_POSITION_UPDATE,
-          droneType: 'explorer',
+          type: MOVEMENT_EVENT_TYPES.DRONE_REACHED_TARGET,
           position: visualPosition,
-          state: 'exploring',
+          tileCoord: tileCoord,
+          droneType: 'explorer',
           timestamp: now
         });
+        
         lastEventTime.current[eventKey] = now;
         debugState.current.reachEventsSent.add('exploring');
         
@@ -138,7 +158,7 @@ export const useFSMPositionTracker = (context, send, botId) => {
       debugState.current.reachEventsSent.clear();
     }
     
-  }, [context?.droneFleet?.drones?.explorer, send, botId]);
+  }, [context?.droneFleet?.drones?.explorer, send, botId, worldToGrid]);
 
   /**
    * Fonction pour que Fleet.jsx envoie ses positions visuelles
@@ -153,117 +173,6 @@ export const useFSMPositionTracker = (context, send, botId) => {
       checkPositionAndSendEvents(position, droneState);
     }
   }, [checkPositionAndSendEvents]);
-  
-  useEffect(() => {
-    if (!send || !context?.droneFleet?.drones?.explorer) return;
-    
-    const drone = context.droneFleet.drones.explorer;
-    const targetPosition = drone.targetPosition;
-    const visualPos = currentVisualPosition.current;
-    
-    // Utiliser la position visuelle de R3F si disponible, sinon FSM context
-    const currentPosition = visualPos || drone.position;
-    
-    if (!currentPosition || !targetPosition || !drone.isActive) return;
-    
-    // Calculer la distance entre position visuelle et cible FSM
-    const distance = Math.sqrt(
-      Math.pow(targetPosition.x - currentPosition.x, 2) +
-      Math.pow(targetPosition.y - currentPosition.y, 2) +
-      Math.pow(targetPosition.z - currentPosition.z, 2)
-    );
-    
-    const reachThreshold = 0.25; // Augmenter le seuil de détection
-    const now = Date.now();
-    
-    // Log de debug plus fréquent pour le débogage
-    if (now - debugState.current.lastDistanceLog > 1000) { // Chaque seconde au lieu de 2
-      fsmLogger.info(`🎯 [FSMPositionTracker] Drone ${drone.state}: distance ${distance.toFixed(3)} (seuil: ${reachThreshold}) (visual: ${!!visualPos})`, { 
-        botId, 
-        droneState: drone.state,
-        distance: distance.toFixed(3),
-        threshold: reachThreshold,
-        target: targetPosition,
-        current: currentPosition
-      });
-      debugState.current.lastDistanceLog = now;
-    }
-    
-    // Éviter les événements en double avec un système de cooldown
-    const eventKey = `${drone.state}_${botId}`;
-    const lastEvent = lastEventTime.current[eventKey] || 0;
-    const cooldown = 1000; // 1 seconde de cooldown
-    
-    if (now - lastEvent < cooldown) return;
-    
-    // 🎯 DÉPLOIEMENT TERMINÉ (utilise la position visuelle R3F)
-    if (drone.state === 'deploying' && distance < reachThreshold) {
-      if (!debugState.current.reachEventsSent.has('deploying')) {
-        fsmLogger.info(`🚀 [FSMPositionTracker] Auto-sending DRONE_DEPLOYED for ${botId} (visual position)`);
-        send({
-          type: MOVEMENT_EVENT_TYPES.DRONE_DEPLOYED,
-          targetArea: 'auto',
-          droneType: 'explorer',
-          position: currentPosition,
-          timestamp: now
-        });
-        lastEventTime.current[eventKey] = now;
-        debugState.current.reachEventsSent.add('deploying');
-        
-        // Reset après un délai pour permettre de nouveaux déploiements
-        setTimeout(() => {
-          debugState.current.reachEventsSent.delete('deploying');
-        }, 5000);
-      }
-    }
-    
-    // 🔍 ZONE D'EXPLORATION ATTEINTE
-    else if (drone.state === 'exploring' && distance < reachThreshold) {
-      if (!debugState.current.reachEventsSent.has('exploring')) {
-        fsmLogger.info(`🔍 [FSMPositionTracker] Drone reached exploration zone for ${botId} (visual position)`);
-        send({
-          type: MOVEMENT_EVENT_TYPES.DRONE_POSITION_UPDATE,
-          position: currentPosition,
-          droneType: 'explorer',
-          state: 'exploring',
-          timestamp: now
-        });
-        lastEventTime.current[eventKey] = now;
-        debugState.current.reachEventsSent.add('exploring');
-        
-        // Reset après un délai plus court pour l'exploration
-        setTimeout(() => {
-          debugState.current.reachEventsSent.delete('exploring');
-        }, 3000);
-      }
-    }
-    
-    // 🏠 RETOUR TERMINÉ
-    else if (drone.state === 'returning' && distance < reachThreshold) {
-      if (!debugState.current.reachEventsSent.has('returning')) {
-        fsmLogger.info(`🏠 [FSMPositionTracker] Auto-sending DRONE_RETURNED for ${botId} (visual position)`);
-        send({
-          type: MOVEMENT_EVENT_TYPES.DRONE_RETURNED,
-          droneType: 'explorer',
-          position: currentPosition,
-          timestamp: now
-        });
-        lastEventTime.current[eventKey] = now;
-        debugState.current.reachEventsSent.add('returning');
-        
-        // Reset après un délai
-        setTimeout(() => {
-          debugState.current.reachEventsSent.delete('returning');
-        }, 5000);
-      }
-    }
-    
-    // Nettoyer les flags si la distance augmente (nouveau mouvement)
-    if (distance > reachThreshold * 2) {
-      debugState.current.reachEventsSent.clear();
-    }
-    
-  }, [context?.droneFleet?.drones?.explorer, send, botId, currentVisualPosition.current]);
   
   // Cleanup lors du démontage
   useEffect(() => {

@@ -32,38 +32,7 @@ const createTileResourceSlice = (set, get) => {
     // ACTIONS PUBLIQUES - MARQUAGE ET COLLECTE
     // =====================================================================
 
-    /**
-     * Marque une tuile comme ayant eu ses ressources collectées
-     * 
-     * Cette fonction :
-     * 1. Vérifie que la tuile existe et n'est pas déjà collectée
-     * 2. Marque la tuile comme collectée
-     * 3. Met le pourcentage de ressources à 0%
-     * 4. Vide toutes les ressources de la tuile
-     * 
-     * @param {string} coord - Coordonnée de la tuile à marquer
-     * @returns {boolean} - true si la tuile a été marquée, false si déjà collectée
-     */
-    markTileAsCollected: (coord) => {
-      const tile = get().tiles[coord];
-      if (!tile) return false;
-      
-      // Si la tuile est déjà collectée, ne rien faire
-      if (tile.collected) return false;
-      
-      set((state) => {
-        const updatedTiles = { ...state.tiles };
-        updatedTiles[coord] = { 
-          ...updatedTiles[coord], 
-          collected: true,
-          resourcePercentage: 0, // Mettre à 0% car la tuile est complètement collectée
-          resources: { food: 0, debris: 0, special: 0 }
-        };
-        return { tiles: updatedTiles };
-      });
-      
-      return true;
-    },
+
 
     // =====================================================================
     // ACTIONS PUBLIQUES - GESTION DES RESSOURCES
