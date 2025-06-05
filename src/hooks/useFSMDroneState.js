@@ -96,7 +96,12 @@ export const useFSMDroneState = (botId) => {
    */
   const isDroneMoving = (droneType) => {
     const drone = droneFleet?.drones[droneType];
-    return drone?.state === 'deploying' || drone?.state === 'exploring' || drone?.state === 'returning';
+    const state = drone?.state;
+    return state === 'deploying' || 
+           state === 'exploring' || 
+           state === 'exploring_active' || 
+           state === 'exploring_deploying' ||
+           state === 'returning';
   };
 
   /**

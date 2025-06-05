@@ -10,20 +10,20 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useCentralizedEventHistory } from "../../ai/fsm/hooks/useCentralizedEventHistory.js";
+import { useCentralizedEventHistorySync } from "../../ai/fsm/hooks/useCentralizedEventHistorySync.js";
 import { useFSMBots } from "../../stores/useFSMStore/useFSMBots.js";
 
 /**
  * Composant de visualisation d'une machine d'état individuelle
  */
 const FSMVisualization = ({ botId, expanded = false }) => {
-  // Utiliser le nouveau hook centralisé pour l'historique des événements
+  // Utiliser le nouveau hook centralisé avec synchronisation
   const { 
     send, 
     current, 
     eventHistory, 
     clearHistory 
-  } = useCentralizedEventHistory(botId);
+  } = useCentralizedEventHistorySync(botId);
 
   // Extraire les données du contexte actuel
   const entity = current?.context?.entity;
@@ -37,18 +37,6 @@ const FSMVisualization = ({ botId, expanded = false }) => {
 
   // États disponibles (pour simulation)
   const availableStates = ['IDLE', 'EXPLORING', 'COLLECTING', 'RETURNING'];
-  
-  // Événements simulables
-  const availableEvents = [
-    { name: 'explore', label: '🔍 Explorer', condition: state === 'IDLE' },
-    { name: 'foundResource', label: '💎 Ressource trouvée', condition: state === 'EXPLORING' },
-    { name: 'collect', label: '📦 Collecter', condition: state === 'IDLE' },
-    { name: 'inventoryFull', label: '📦 Inventaire plein', condition: state === 'COLLECTING' },
-    { name: 'returnHome', label: '🏠 Retour base', condition: ['IDLE', 'COLLECTING'].includes(state) },
-    { name: 'atBase', label: '🎯 Arrivé à la base', condition: state === 'RETURNING' },
-    { name: 'explorationTimeout', label: '⏰ Timeout exploration', condition: state === 'EXPLORING' },
-    { name: 'resourceDepleted', label: '💔 Ressource épuisée', condition: state === 'COLLECTING' }
-  ];
 
   const containerStyle = {
     border: '1px solid #555',
@@ -81,24 +69,6 @@ const FSMVisualization = ({ botId, expanded = false }) => {
     color: '#000'
   };
 
-  const eventButtonStyle = {
-    padding: '2px 6px',
-    margin: '2px',
-    fontSize: '10px',
-    border: 'none',
-    borderRadius: '3px',
-    cursor: 'pointer',
-    backgroundColor: '#0a7c0a',
-    color: '#fff'
-  };
-
-  const disabledButtonStyle = {
-    ...eventButtonStyle,
-    backgroundColor: '#444',
-    cursor: 'not-allowed',
-    opacity: 0.5
-  };
-
   function getStateColor(stateName) {
     const colors = {
       'IDLE': '#ffd700',
@@ -127,10 +97,19 @@ const FSMVisualization = ({ botId, expanded = false }) => {
     return icons[type] || '❓';
   }
 
-  const handleEventSend = (eventName) => {
-    console.log(`[FSMDebugPanel] Sending event '${eventName}' to ${botId}`);
-    send(eventName);
-  };
+  // ===== DEBUG: Log de l'état du drone =====
+  useEffect(() => {
+    if (droneFleet?.drones?.explorer) {
+      console.log(`[FSMDebugPanel] Drone state for ${botId}:`, {
+        droneState: droneFleet.drones.explorer.state,
+        isActive: droneFleet.drones.explorer.isActive,
+        position: droneFleet.drones.explorer.position,
+        targetPosition: droneFleet.drones.explorer.targetPosition,
+        lastUpdate: droneFleet.drones.explorer.lastUpdate,
+        currentTime: Date.now()
+      });
+    }
+  }, [droneFleet?.drones?.explorer?.state, droneFleet?.drones?.explorer?.lastUpdate, botId]);
 
   return (
     <div style={containerStyle}>
@@ -264,143 +243,212 @@ const FSMVisualization = ({ botId, expanded = false }) => {
             </div>
           )}
 
-          {/* Actions rapides */}
+          {/* Debug Data - Contexte FSM avec copie facile */}
           <div style={{ marginBottom: '10px' }}>
-            <strong>Actions rapides:</strong>
-            <div style={{ marginTop: '5px' }}>
-              <button 
-                style={eventButtonStyle}
-                onClick={() => autoEvents?.isActive ? autoEvents.stop() : autoEvents?.start()}
-              >
-                {autoEvents?.isActive ? 'Arrêter Auto' : 'Démarrer Auto'}
-              </button>
-              <button 
-                style={eventButtonStyle}
-                onClick={() => send('STOP')}
-              >
-                Stop
-              </button>
-            </div>
-          </div>
-
-          {/* Événements FSM */}
-          <div>
-            <strong>Événements FSM:</strong>
-            <div style={{ marginTop: '5px' }}>
-              {availableEvents.map(event => (
-                <button
-                  key={event.name}
-                  style={event.condition ? eventButtonStyle : disabledButtonStyle}
-                  onClick={() => handleEventSend(event.name)}
-                  disabled={!event.condition}
-                  title={event.condition ? `Envoyer événement ${event.name}` : 'Non disponible dans cet état'}
-                >
-                  {event.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Contexte brut (collapsible) */}
-          <details style={{ marginTop: '10px', fontSize: '9px' }}>
-            <summary style={{ cursor: 'pointer', fontSize: '10px' }}>
-              <strong>Contexte complet</strong>
-            </summary>
-            <pre style={{ 
-              fontSize: '8px', 
-              backgroundColor: '#1a1a1a', 
-              padding: '5px', 
+            <strong>🔍 Debug Data - Contexte FSM:</strong>
+            <div style={{ 
+              marginTop: '5px',
+              padding: '8px',
+              backgroundColor: '#333',
               borderRadius: '3px',
-              overflow: 'auto',
-              maxHeight: '100px'
+              position: 'relative'
             }}>
-              {context ? JSON.stringify(context, null, 2) : 'Contexte non disponible'}
-            </pre>
-          </details>
+              <button
+                style={{
+                  position: 'absolute',
+                  top: '5px',
+                  right: '5px',
+                  padding: '2px 6px',
+                  fontSize: '8px',
+                  border: 'none',
+                  borderRadius: '2px',
+                  cursor: 'pointer',
+                  backgroundColor: '#4CAF50',
+                  color: '#000'
+                }}
+                onClick={() => {
+                  const contextData = {
+                    botId,
+                    timestamp: new Date().toISOString(),
+                    state,
+                    context: context || {},
+                    vehicle: vehicle || {},
+                    droneFleet: droneFleet || {}
+                  };
+                  navigator.clipboard.writeText(JSON.stringify(contextData, null, 2));
+                  console.log('[FSMDebugPanel] Contexte copié:', contextData);
+                }}
+                title="Copier le contexte complet dans le presse-papier"
+              >
+                📋 Copier
+              </button>
+              
+              <pre style={{ 
+                fontSize: '8px', 
+                backgroundColor: '#1a1a1a', 
+                padding: '8px', 
+                borderRadius: '3px',
+                overflow: 'auto',
+                maxHeight: '120px',
+                marginTop: '15px',
+                color: '#ccc',
+                lineHeight: '1.2'
+              }}>
+                {context ? JSON.stringify({
+                  botId,
+                  timestamp: new Date().toISOString(),
+                  state,
+                  isMoving,
+                  entity: entity || {},
+                  vehicle: vehicle || {},
+                  droneFleet: droneFleet || {}
+                }, null, 2) : 'Contexte non disponible'}
+              </pre>
+            </div>
+          </div>
 
-          {/* Historique des événements */}
-          <details style={{ marginTop: '10px', fontSize: '9px' }}>
-            <summary style={{ cursor: 'pointer', fontSize: '10px' }}>
-              <strong>📊 Historique des événements ({eventHistory.length})</strong>
-              {eventHistory.length > 0 && (
+          {/* Debug Data - Historique des événements avec copie facile */}
+          <div style={{ marginBottom: '10px' }}>
+            <strong>📊 Debug Data - Historique ({eventHistory.length} événements):</strong>
+            <div style={{ 
+              marginTop: '5px',
+              padding: '8px',
+              backgroundColor: '#333',
+              borderRadius: '3px',
+              position: 'relative'
+            }}>
+              <div style={{ 
+                position: 'absolute',
+                top: '5px',
+                right: '5px',
+                display: 'flex',
+                gap: '3px'
+              }}>
                 <button
                   style={{
-                    ...eventButtonStyle,
-                    marginLeft: '10px',
+                    padding: '2px 6px',
                     fontSize: '8px',
-                    backgroundColor: '#ff6b6b'
+                    border: 'none',
+                    borderRadius: '2px',
+                    cursor: 'pointer',
+                    backgroundColor: '#4CAF50',
+                    color: '#000'
                   }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    clearHistory();
+                  onClick={() => {
+                    const historyData = {
+                      botId,
+                      timestamp: new Date().toISOString(),
+                      eventCount: eventHistory.length,
+                      events: eventHistory
+                    };
+                    navigator.clipboard.writeText(JSON.stringify(historyData, null, 2));
+                    console.log('[FSMDebugPanel] Historique copié:', historyData);
                   }}
+                  title="Copier l'historique complet dans le presse-papier"
                 >
-                  🗑️ Vider
+                  📋 Copier
                 </button>
-              )}
-            </summary>
-            <div style={{ 
-              backgroundColor: '#1a1a1a', 
-              padding: '5px', 
-              borderRadius: '3px',
-              maxHeight: '200px',
-              overflow: 'auto',
-              fontSize: '8px'
-            }}>
-              {eventHistory.length === 0 ? (
-                <div style={{ color: '#888', fontStyle: 'italic' }}>
-                  Aucun événement capturé
-                </div>
-              ) : (
-                eventHistory.map((event) => (
-                  <div key={event.id} style={{ 
-                    borderBottom: '1px solid #333', 
-                    paddingBottom: '3px', 
-                    marginBottom: '3px',
-                    fontSize: '8px'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <span style={{ 
-                          color: getEventTypeColor(event.type),
-                          fontWeight: 'bold',
-                          marginRight: '5px'
-                        }}>
-                          {getEventTypeIcon(event.type)}
-                        </span>
-                        <span style={{ 
-                          color: '#fff',
-                          fontWeight: 'bold',
-                          fontSize: '9px'
-                        }}>
-                          {event.eventName}
-                        </span>
-                      </div>
-                      <span style={{ color: '#888', fontSize: '7px' }}>
-                        {event.timestamp}
-                      </span>
-                    </div>
-                    
-                    {event.type === 'TRANSITION' && (
-                      <div style={{ fontSize: '7px', color: '#ccc', marginTop: '2px' }}>
-                        {event.eventData.from} → {event.eventData.to}
-                      </div>
-                    )}
-                    
-                    {event.type === 'SENT' && event.eventData && Object.keys(event.eventData).length > 0 && (
-                      <div style={{ fontSize: '7px', color: '#ccc', marginTop: '2px' }}>
-                        Data: {JSON.stringify(event.eventData)}
-                      </div>
-                    )}
-                    
-                    <div style={{ fontSize: '7px', color: '#666', marginTop: '1px' }}>
-                      État: {event.fromState}
-                    </div>
+                {eventHistory.length > 0 && (
+                  <button
+                    style={{
+                      padding: '2px 6px',
+                      fontSize: '8px',
+                      border: 'none',
+                      borderRadius: '2px',
+                      cursor: 'pointer',
+                      backgroundColor: '#ff6b6b',
+                      color: '#000'
+                    }}
+                    onClick={() => clearHistory()}
+                    title="Vider l'historique des événements"
+                  >
+                    🗑️ Vider
+                  </button>
+                )}
+              </div>
+              
+              <div style={{ 
+                backgroundColor: '#1a1a1a', 
+                padding: '8px', 
+                borderRadius: '3px',
+                maxHeight: '180px',
+                overflow: 'auto',
+                fontSize: '8px',
+                marginTop: '15px'
+              }}>
+                {eventHistory.length === 0 ? (
+                  <div style={{ color: '#888', fontStyle: 'italic', textAlign: 'center', padding: '10px' }}>
+                    Aucun événement capturé
                   </div>
-                ))
-              )}
+                ) : (
+                  eventHistory.slice(-10).map((event) => (
+                    <div key={event.id} style={{ 
+                      borderBottom: '1px solid #333', 
+                      paddingBottom: '4px', 
+                      marginBottom: '4px',
+                      fontSize: '8px'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <span style={{ 
+                            color: getEventTypeColor(event.type),
+                            fontWeight: 'bold',
+                            marginRight: '6px'
+                          }}>
+                            {getEventTypeIcon(event.type)}
+                          </span>
+                          <span style={{ 
+                            color: '#fff',
+                            fontWeight: 'bold',
+                            fontSize: '9px'
+                          }}>
+                            {event.eventName}
+                          </span>
+                        </div>
+                        <span style={{ color: '#888', fontSize: '7px' }}>
+                          {event.timestamp}
+                        </span>
+                      </div>
+                      
+                      {event.type === 'TRANSITION' && (
+                        <div style={{ fontSize: '7px', color: '#ccc', marginTop: '2px' }}>
+                          Transition: {event.eventData?.from || 'unknown'} → {event.eventData?.to || 'unknown'}
+                        </div>
+                      )}
+                      
+                      {event.type === 'CONTEXT_UPDATE' && event.eventData?.droneStateChange && (
+                        <div style={{ fontSize: '7px', color: '#ccc', marginTop: '2px' }}>
+                          Drone: {event.eventData.droneStateChange.from || 'unknown'} → {event.eventData.droneStateChange.to || 'unknown'}
+                        </div>
+                      )}
+                      
+                      {event.type === 'SENT' && event.eventData && Object.keys(event.eventData).length > 0 && (
+                        <div style={{ fontSize: '7px', color: '#ccc', marginTop: '2px' }}>
+                          Data: {JSON.stringify(event.eventData)}
+                        </div>
+                      )}
+                      
+                      <div style={{ fontSize: '7px', color: '#666', marginTop: '1px' }}>
+                        État: {event.fromState}
+                      </div>
+                    </div>
+                  ))
+                )}
+                {eventHistory.length > 10 && (
+                  <div style={{ 
+                    textAlign: 'center', 
+                    color: '#666', 
+                    fontSize: '7px', 
+                    fontStyle: 'italic',
+                    marginTop: '5px',
+                    padding: '3px'
+                  }}>
+                    ... et {eventHistory.length - 10} événements plus anciens (utilisez "Copier" pour voir l'historique complet)
+                  </div>
+                )}
+              </div>
             </div>
-          </details>
+          </div>
         </div>
       )}
     </div>

@@ -76,6 +76,18 @@ export const useCentralizedEventHistory = (botId) => {
 
   // Capturer les changements de contexte significatifs
   useEffect(() => {
+    // DEBUG: Log de tous les appels de useEffect avec plus de détails
+    console.log(`[CentralizedEventHistory] useEffect triggered for bot ${botId}:`, {
+      hasContext: !!current?.context,
+      contextRef: current?.context ? `ref-${JSON.stringify(current.context).slice(0, 50)}...` : 'null',
+      currentDroneState: current?.context?.droneFleet?.drones?.explorer?.state,
+      currentLastUpdate: current?.context?.droneFleet?.drones?.explorer?.lastUpdate,
+      lastDroneState: lastContextRef.current?.droneFleet?.drones?.explorer?.state,
+      lastLastUpdate: lastContextRef.current?.droneFleet?.drones?.explorer?.lastUpdate,
+      refsEqual: current?.context === lastContextRef.current,
+      stringifyEqual: current?.context ? JSON.stringify(current.context) === JSON.stringify(lastContextRef.current) : 'no context'
+    });
+
     if (current?.context && JSON.stringify(current.context) !== JSON.stringify(lastContextRef.current)) {
       const eventToAdd = {
         type: 'CONTEXT_UPDATE',
@@ -85,18 +97,48 @@ export const useCentralizedEventHistory = (botId) => {
         context: JSON.stringify(current.context, null, 2)
       };
 
-      // Anti-spam : vérifier si le dernier événement était aussi un update de contexte récent
+      // Anti-spam intelligent : permettre les changements d'état de drone significatifs
       const recentEvents = getEventHistory(botId);
-      const shouldSkip = recentEvents.length > 0 && 
-        recentEvents[0].type === 'CONTEXT_UPDATE' && 
-        (Date.now() - recentEvents[0].id) < 1000;
+      const lastEvent = recentEvents[0];
+      
+      // Vérifier si c'est un changement d'état de drone significatif
+      const currentDroneState = current.context?.droneFleet?.drones?.explorer?.state;
+      const lastContextDroneState = lastContextRef.current?.droneFleet?.drones?.explorer?.state;
+      const isDroneStateChange = currentDroneState !== lastContextDroneState;
+      
+      const shouldSkip = !isDroneStateChange && 
+        recentEvents.length > 0 && 
+        lastEvent.type === 'CONTEXT_UPDATE' && 
+        (Date.now() - lastEvent.id) < 1000;
+
+      // DEBUG: Log tous les changements de contexte, même ceux filtrés
+      console.log(`[CentralizedEventHistory] Context change detected for bot ${botId}:`, {
+        shouldSkip,
+        isDroneStateChange,
+        currentDroneState,
+        lastContextDroneState,
+        droneState: current.context?.droneFleet?.drones?.explorer?.state,
+        lastUpdate: current.context?.droneFleet?.drones?.explorer?.lastUpdate,
+        recentEventsCount: recentEvents.length,
+        lastEventType: lastEvent?.type,
+        timeSinceLastEvent: recentEvents.length > 0 ? (Date.now() - lastEvent.id) : 'N/A'
+      });
 
       if (!shouldSkip) {
-        console.log(`[CentralizedEventHistory] Context update detected for bot ${botId}`);
+        console.log(`[CentralizedEventHistory] Context update ACCEPTED for bot ${botId}`);
         addEventToHistory(botId, eventToAdd);
+      } else {
+        console.log(`[CentralizedEventHistory] Context update FILTERED (anti-spam) for bot ${botId}`);
       }
       
       lastContextRef.current = current.context;
+    } else {
+      // DEBUG: Log quand aucun changement n'est détecté
+      console.log(`[CentralizedEventHistory] NO context change detected for bot ${botId}:`, {
+        hasContext: !!current?.context,
+        hasLastContext: !!lastContextRef.current,
+        stringifyMatch: current?.context ? JSON.stringify(current.context) === JSON.stringify(lastContextRef.current) : 'no current context'
+      });
     }
   }, [current?.context, current?.name, botId, addEventToHistory, getEventHistory]);
 

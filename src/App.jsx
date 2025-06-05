@@ -12,6 +12,7 @@ import FSMDebugPanel from "./components/FSM/FSMDebugPanel";
 import BotDebuggerNew from "./components/HUD/BotDebugger";
 import useFSMStore from "./stores/useFSMStore/index.js";
 import { FSMProvider } from "./ai/fsm/contexts/FSMContext.jsx";
+import { FSMSyncProvider } from "./ai/fsm/contexts/FSMSyncContext.jsx";
 
 
 
@@ -31,7 +32,8 @@ const App = () => {
   
   return (
     <FSMProvider>
-      <div className="app-container">
+      <FSMSyncProvider>
+        <div className="app-container">
         {/* Bouton pour basculer vers FleetExample */}
         <div style={{
           position: 'absolute',
@@ -97,6 +99,7 @@ const App = () => {
         
 
       </div>
+    </FSMSyncProvider>
     </FSMProvider>
   );
 };

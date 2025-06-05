@@ -30,15 +30,36 @@ import fsmLogger from '../../../../logger/fsmLogger.js';
 export const exploringState = state(
   // === ÉVÉNEMENTS DE PROGRESSION ===
 
-  // NOUVEAU: Entrée dans l'état exploring → déployer drone automatiquement (FSM pur)
-  // Utilisation d'immediate avec garde pour éviter la boucle infinie
-  immediate(BOT_STATES.EXPLORING,
-    guard((context) => {
-      // Ne déployer QUE si le drone n'est pas actif ET qu'aucun déploiement n'a été tenté
+  // ENTRÉE DANS L'ÉTAT PRINCIPAL → INIT (seulement si on vient de l'extérieur)
+  immediate(BOT_STATES.EXPLORING_INIT,
+    guard((context, event) => {
+      // Seulement si on vient de l'extérieur (pas déjà dans une sous-état exploring)
+      const isFromExternalState = !context.currentAction?.startsWith('exploring_') && 
+                                  !context.currentAction?.startsWith('drone_');
       const isDroneInactive = !context.droneFleet?.drones?.explorer?.isActive;
       const noDeploymentAttempted = !context.droneFleet?.deploymentAttempted;
       
-      return isDroneInactive && noDeploymentAttempted;
+      return isFromExternalState && isDroneInactive && noDeploymentAttempted;
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("🚁 [Exploring] Initializing exploration phase");
+      
+      return {
+        ...context,
+        currentAction: 'exploring_init',
+        lastStateChange: Date.now()
+      };
+    })
+  ),
+
+  // INIT → DEPLOYING : Déployer le drone automatiquement (seulement si on est en init)
+  immediate(BOT_STATES.EXPLORING_DEPLOYING,
+    guard((context) => {
+      const isInInitState = context.currentAction === 'exploring_init';
+      const isDroneInactive = !context.droneFleet?.drones?.explorer?.isActive;
+      const noDeploymentAttempted = !context.droneFleet?.deploymentAttempted;
+      
+      return isInInitState && isDroneInactive && noDeploymentAttempted;
     }),
     reduce((context, event) => {
       fsmLogger.info("🚁 [Exploring] Deploying drone for first time");
@@ -51,6 +72,7 @@ export const exploringState = state(
       // Marquer qu'une tentative de déploiement a été faite
       return {
         ...deploymentResult,
+        currentAction: 'drone_deploying',
         droneFleet: {
           ...deploymentResult.droneFleet,
           deploymentAttempted: true
@@ -59,55 +81,57 @@ export const exploringState = state(
     })
   ),
 
-  // Drone déployé avec succès (événement existant, maintenant connecté)
-  transition(MOVEMENT_EVENT_TYPES.DRONE_DEPLOYED, BOT_STATES.EXPLORING,
+  // DEPLOYING → ACTIVE : Drone déployé avec succès
+  transition(MOVEMENT_EVENT_TYPES.DRONE_DEPLOYED, BOT_STATES.EXPLORING_ACTIVE,
     guard(() => true),
     reduce((context, event) => {
-      fsmLogger.info("🚁 [Exploring] Drone successfully deployed, switching to exploring state");
+      fsmLogger.info("🚁 [Exploring] Drone successfully deployed, now exploring...");
       
-      // Note: Le marquage de tuile se fait dans useFSMPositionTracker.js 
-      // lors de l'événement DRONE_REACHED_TARGET (plus précis avec position R3F)
-      
-      // Marquer la tuile comme explorée dans le contexte FSM seulement
-      const markedContext = explorationActions.markTileExplored(context, {
-        position: event.position,
-        tileCoord: event.position ? {
-          x: Math.round(event.position.x),
-          z: Math.round(event.position.z)
-        } : null
-      });
-      
-      // Rappeler immédiatement le drone (pas besoin de rester en exploring)
-      const recallResult = contextReducers.droneDeployment.recallDrone(markedContext, {
-        droneType: 'explorer'
-      });
-      
-      return {
-        ...recallResult,
+      const newContext = {
+        ...context,
         isDroneAtShip: false,
         droneTarget: event.targetArea,
         deploymentTime: Date.now(),
-        currentAction: 'drone_returning_after_exploration',
+        currentAction: 'drone_exploring',
+        // Force new reference by creating completely new droneFleet object
         droneFleet: {
-          ...recallResult.droneFleet,
+          ...context.droneFleet,
           deploymentCompleted: true,
           deploymentAttempted: true,
+          explorationStarted: true,
+          explorationStartTime: Date.now(),
+          // Force new reference by creating completely new drones object
           drones: {
-            ...recallResult.droneFleet.drones,
+            ...context.droneFleet.drones,
+            // Force new reference by creating completely new explorer object
             explorer: {
-              ...recallResult.droneFleet.drones.explorer,
+              ...context.droneFleet.drones.explorer,
+              state: 'exploring', // ✅ CHANGEMENT D'ÉTAT CRUCIAL !
               lastUpdate: Date.now(),
-              lastExploredPosition: event.position,
-              lastExploredTile: markedContext.tileCoord
+              deployedPosition: event.position,
+              // Add a unique timestamp to force context update detection
+              stateChangeId: `exploring_${Date.now()}_${Math.random()}`
             }
           }
-        }
+        },
+        // Add a global context update tracker
+        lastContextUpdate: Date.now(),
+        contextUpdateId: `drone_deployed_${Date.now()}_${Math.random()}`
       };
+
+      // DEBUG: Vérifier que le changement d'état a eu lieu
+      console.log(`[Exploring] DRONE_DEPLOYED context update:`, {
+        oldState: context.droneFleet?.drones?.explorer?.state,
+        newState: newContext.droneFleet?.drones?.explorer?.state,
+        botId: context.botId
+      });
+
+      return newContext;
     })
   ),
 
-  // 🎯 DRONE REACHED TARGET - Marquer la tuile et rappeler le drone
-  transition(MOVEMENT_EVENT_TYPES.DRONE_REACHED_TARGET, BOT_STATES.EXPLORING,
+  // ACTIVE → RECALLING : Drone a atteint sa cible
+  transition(MOVEMENT_EVENT_TYPES.DRONE_REACHED_TARGET, BOT_STATES.EXPLORING_RECALLING,
     guard((context, event) => context.droneFleet?.drones?.explorer?.isActive),
     reduce((context, event) => {
       fsmLogger.info("🎯 [Exploring] Drone reached target, marking tile and recalling drone", { 
@@ -133,6 +157,7 @@ export const exploringState = state(
       // Ajouter les informations spécifiques au drone
       return {
         ...recallResult,
+        currentAction: 'drone_recalling',
         droneFleet: {
           ...recallResult.droneFleet,
           drones: {
@@ -149,11 +174,11 @@ export const exploringState = state(
     })
   ),
 
-  // 🏠 DRONE RETURNED - Finaliser le retour et ancrer le drone
-  transition(MOVEMENT_EVENT_TYPES.DRONE_RETURNED, BOT_STATES.EXPLORING,
+  // RECALLING → EVALUATING : Drone de retour, exploration terminée
+  transition(MOVEMENT_EVENT_TYPES.DRONE_RETURNED, BOT_STATES.EVALUATING,
     guard((context, event) => context.droneFleet?.drones?.explorer?.isActive),
     reduce((context, event) => {
-      fsmLogger.info("🏠 [Exploring] Drone returned to ship, docking", { 
+      fsmLogger.info("🏠 [Exploring] Drone returned to ship, exploration completed", { 
         botId: context.botId 
       });
       
@@ -167,55 +192,15 @@ export const exploringState = state(
         ...dockedContext,
         hasExplored: true,
         explorationStatus: 'completed_with_return',
+        currentAction: 'exploration_completed',
         droneFleet: {
           ...dockedContext.droneFleet,
           // Keep deploymentAttempted: true to prevent infinite loop
-          // deploymentAttempted: false, <- This was causing the infinite loop!
           explorationStarted: false,
           explorationStartTime: null
         }
       }, {
         reason: 'exploration_completed'
-      });
-    })
-  ),
-
-  // TRANSITION AUTOMATIQUE après déploiement réussi 
-  // Si le drone est actif et que le déploiement est marqué comme tenté, commencer l'exploration
-  immediate(BOT_STATES.EXPLORING,
-    guard((context) => {
-      const droneIsActive = context.droneFleet?.drones?.explorer?.isActive;
-      const deploymentAttempted = context.droneFleet?.deploymentAttempted;
-      const notStartedExploring = !context.droneFleet?.explorationStarted;
-      
-      return droneIsActive && deploymentAttempted && notStartedExploring;
-    }),
-    reduce((context, event) => {
-      fsmLogger.info("🔍 [Exploring] Starting exploration phase");
-      
-      // Marquer que l'exploration a commencé et programmer un timeout
-      return {
-        ...context,
-        droneFleet: {
-          ...context.droneFleet,
-          explorationStarted: true,
-          explorationStartTime: Date.now()
-        },
-        currentAction: 'exploring_active'
-      };
-    })
-  ),
-
-  // Mise à jour position drone en temps réel
-  transition(MOVEMENT_EVENT_TYPES.DRONE_POSITION_UPDATE, BOT_STATES.EXPLORING,
-    guard((context, event) => context.droneFleet?.drones?.explorer?.isActive),
-
-    // REDUCE: Mettre à jour la position dans le contexte (pur)
-    reduce((context, event) => {
-      return contextReducers.droneDeployment.updateDronePosition(context, {
-        droneType: event.droneType || 'explorer',
-        position: event.position,
-        state: event.state || 'exploring'
       });
     })
   ),
@@ -366,15 +351,6 @@ export const exploringState = state(
         reason: 'emergency_return',
         emergencyReason: event.reason || 'unknown'
       });
-    })
-  ),
-
-  // Mise à jour de position (reste dans le même état)
-  transition('UPDATE_POSITION', BOT_STATES.EXPLORING,
-    guard(() => true),
-    reduce((context, event) => {
-      // Utiliser l'action updatePosition existante
-      return movementActions.updatePosition(context, event);
     })
   )
 );

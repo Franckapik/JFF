@@ -118,15 +118,13 @@ export const useDroneMovement = (droneState, fsmSend, botId, shipPosition) => {
         
         // 🚀 ENVOI AUTOMATIQUE DE L'ÉVÉNEMENT FSM
         if (droneState.state === 'deploying') {
-          fsmSend({
-            type: 'DRONE_DEPLOYED',
+          fsmSend('DRONE_DEPLOYED', {
             targetArea: 'auto',
             droneType: 'explorer',
             timestamp: Date.now()
           });
         } else if (droneState.state === 'returning') {
-          fsmSend({
-            type: 'DRONE_RETURNED',
+          fsmSend('DRONE_RETURNED', {
             droneType: 'explorer',
             timestamp: Date.now()
           });

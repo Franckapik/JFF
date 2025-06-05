@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useTileStore } from "../../../stores/useTileStore";
-import { useBotMachineFixed } from "../../../ai/fsm/hooks/useBotMachineFixed";
+import { useBotMachineFixed } from "../../../ai/fsm/hooks/useBotMachineSync.js";
 
 /**
  * Hook personnalisé pour gérer les données du debugger (FSM-only)

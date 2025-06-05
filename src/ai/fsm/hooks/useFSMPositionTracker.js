@@ -76,12 +76,11 @@ export const useFSMPositionTracker = (context, send, botId) => {
       return;
     }
     
-    // 🎯 DÉPLOIEMENT TERMINÉ (utilise la position visuelle R3F)
-    if (droneState === 'deploying' && distance < reachThreshold) {
+    // 🚀 DÉPLOIEMENT DÉMARRÉ (drone quitte le vaisseau)
+    if (droneState === 'deploying' && distance > 0.1) {
       if (!debugState.current.reachEventsSent.has('deploying')) {
-        fsmLogger.info(`🚀 [FSMPositionTracker] Auto-sending DRONE_DEPLOYED for ${botId} (visual position)`);
-        send({
-          type: MOVEMENT_EVENT_TYPES.DRONE_DEPLOYED,
+        fsmLogger.info(`🚀 [FSMPositionTracker] Auto-sending DRONE_DEPLOYED for ${botId} (drone leaving ship)`);
+        send(MOVEMENT_EVENT_TYPES.DRONE_DEPLOYED, {
           targetArea: 'auto',
           droneType: 'explorer',
           position: visualPosition,
@@ -115,8 +114,7 @@ export const useFSMPositionTracker = (context, send, botId) => {
         }
         
         // Send DRONE_REACHED_TARGET event with tile coordinates
-        send({
-          type: MOVEMENT_EVENT_TYPES.DRONE_REACHED_TARGET,
+        send(MOVEMENT_EVENT_TYPES.DRONE_REACHED_TARGET, {
           position: visualPosition,
           tileCoord: tileCoord,
           droneType: 'explorer',
@@ -137,8 +135,7 @@ export const useFSMPositionTracker = (context, send, botId) => {
     else if (droneState === 'returning' && distance < reachThreshold) {
       if (!debugState.current.reachEventsSent.has('returning')) {
         fsmLogger.info(`🏠 [FSMPositionTracker] Auto-sending DRONE_RETURNED for ${botId} (visual position)`);
-        send({
-          type: MOVEMENT_EVENT_TYPES.DRONE_RETURNED,
+        send(MOVEMENT_EVENT_TYPES.DRONE_RETURNED, {
           droneType: 'explorer',
           position: visualPosition,
           timestamp: now

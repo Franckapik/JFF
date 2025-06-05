@@ -57,7 +57,7 @@ export const evaluatingState = state(
   // === TRANSITIONS NORMALES ===
   
   // Si pas encore exploré → EXPLORING
-  transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE, BOT_STATES.EXPLORING, 
+  transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE, BOT_STATES.EXPLORING_INIT, 
     // Guard d'exploration
     guard((context, event) => {
       const hasUnexplored = discoveryGuards.hasUnexploredAreas(context, event);
@@ -128,7 +128,7 @@ export const evaluatingState = state(
   // === ÉVÉNEMENT AUTONOME ===
   
   // Déclenchement automatique vers l'exploration
-  transition(SYSTEM_EVENT_TYPES.AUTO, BOT_STATES.EXPLORING, 
+  transition(SYSTEM_EVENT_TYPES.AUTO, BOT_STATES.EXPLORING_INIT, 
     guard(() => true),
     reduce((context) => {
       // Préparer l'état d'exploration

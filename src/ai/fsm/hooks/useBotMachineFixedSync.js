@@ -1,3 +1,4 @@
+// filepath: /home/fanch/Documents/jff/react-three-vite/src/ai/fsm/hooks/useBotMachineFixed.js
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useMachine } from 'react-robot';
 import { createEntityContext } from '../machine/context/initialContext.js';
@@ -50,7 +51,6 @@ export const useBotMachineFixed = (botId, entityType) => {
     return result;
   }, [send, botId, syncEvent]);
 
-  const { current: originalCurrent, send: originalSend } = { current, send: syncedSend };
   const timeoutRef = useRef(null);
   const hasStartedExploring = useRef(false);
   const positionSyncRef = useRef(false);
@@ -71,10 +71,10 @@ export const useBotMachineFixed = (botId, entityType) => {
         );
 
         if (assignedTile) {
-          fsmLogger.info(`[useBotMachineFixed] Found starting tile for bot ${botId}:`, assignedTile.coord, assignedTile.position);
+          fsmLogger.info(`[B4] [useBotMachineFixed] Found starting tile for bot ${botId}:`);
           
           // Utiliser l'action updatePosition mise à jour qui gère position ET coord
-          send('UPDATE_POSITION', {
+          syncedSend('UPDATE_POSITION', {
             position: assignedTile.position,
             coord: assignedTile.coord,
             newCoord: assignedTile.coord
@@ -89,7 +89,7 @@ export const useBotMachineFixed = (botId, entityType) => {
         fsmLogger.info(`[useBotMachineFixed] Bot ${botId} already has position:`, current.context.vehicle.position);
       }
     }
-  }, [botId, current?.context, send, tiles]);
+  }, [botId, current?.context, syncedSend, tiles]);
   
   // Données essentielles - accès direct au contexte
   const entity = useMemo(() => current.context, [current.context]);
@@ -106,37 +106,43 @@ export const useBotMachineFixed = (botId, entityType) => {
     if (!hasStartedExploring.current && state === 'evaluating') {
       timeoutRef.current = setTimeout(() => {
         console.log(`[useBotMachineFixed] Sending ASSESSMENT_COMPLETE for bot ${botId}`);
-        send(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE);
+        syncedSend(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE);
         hasStartedExploring.current = true;
       }, 2000);
-  }
-  
-  return () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
+    }
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, [state === 'evaluating' && !hasStartedExploring.current, syncedSend, botId]);
+
+  // ===================================================================
+  // HYBRID ARCHITECTURE - Position tracking handled by Fleet.jsx + useFSMPositionTracker
+  // ===================================================================
+
+  return {
+    entity,
+    vehicle,
+    state,
+    context: current.context,
+    isMoving,
+    current,
+    send: syncedSend, // Utiliser la version synchronisée
+    autoEvents: {
+      start: () => {},
+      stop: () => {},
+      isActive: !hasStartedExploring.current
+    },
+    actions: {
+      startExploration: () => {
+        hasStartedExploring.current = true;
+        syncedSend(SYSTEM_EVENT_TYPES.EXPLORE);
+      }
     }
   };
-}, [state === 'evaluating' && !hasStartedExploring.current, send, botId]);
-
-// ===================================================================
-// HYBRID ARCHITECTURE - Position tracking handled by Fleet.jsx + useFSMPositionTracker
-// ===================================================================
-
-return {
-  entity,
-  vehicle,
-  state,
-  context: current.context,
-  isMoving, // Utiliser directement la valeur calculée
-  current,
-  send,
-  autoEvents: {
-    start: () => {},
-    stop: () => {},
-    isActive: !hasStartedExploring.current
-  }
-};
 };
 
 export default useBotMachineFixed;

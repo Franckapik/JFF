@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { useBotMachineFixed } from "../../ai/fsm/hooks/useBotMachineFixed.js";
+import { useBotMachineFixed } from "../../ai/fsm/hooks/useBotMachineSync.js";
 
 /**
  * Contrôleur principal pour un bot autonome

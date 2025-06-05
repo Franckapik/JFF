@@ -9,7 +9,7 @@
  * @version 1.0.0
  */
 
-import React, { createContext, useContext, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useRef, useCallback, useState, useEffect } from 'react';
 import { useMachine } from 'react-robot';
 import { createEntityContext } from '../machine/context/initialContext.js';
 import { ENTITY_TYPES } from '../machine/constants/constants.js';
@@ -22,11 +22,13 @@ import fsmLogger from '../../../logger/fsmLogger.js';
 const FSMContext = createContext(null);
 
 /**
- * Provider pour gérer les machines FSM centralisées
+ * Provider pour gérer les machines FSM centralisées avec instances partagées
  */
 export const FSMProvider = ({ children }) => {
-  // Map pour stocker les machines par botId
+  // Map pour stocker les définitions de machines par botId
   const machinesRef = useRef(new Map());
+  // State pour stocker les instances de machines actives
+  const [activeMachines, setActiveMachines] = useState(new Map());
   
   /**
    * Obtient ou crée une machine FSM pour un bot
@@ -48,6 +50,25 @@ export const FSMProvider = ({ children }) => {
     
     return { machine, initialContext };
   }, []);
+
+  /**
+   * Enregistre une instance de machine active
+   */
+  const registerMachineInstance = useCallback((botId, current, send) => {
+    setActiveMachines(prev => {
+      const newMap = new Map(prev);
+      newMap.set(botId, { current, send });
+      fsmLogger.info(`[FSMContext] Registered machine instance for bot: ${botId}`);
+      return newMap;
+    });
+  }, []);
+
+  /**
+   * Obtient l'instance active d'une machine
+   */
+  const getMachineInstance = useCallback((botId) => {
+    return activeMachines.get(botId);
+  }, [activeMachines]);
   
   /**
    * Supprime la machine d'un bot
@@ -57,6 +78,11 @@ export const FSMProvider = ({ children }) => {
       fsmLogger.info(`[FSMContext] Removing FSM machine for bot: ${botId}`);
       machinesRef.current.delete(botId);
     }
+    setActiveMachines(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(botId);
+      return newMap;
+    });
   }, []);
   
   /**
@@ -65,10 +91,13 @@ export const FSMProvider = ({ children }) => {
   const clearAllMachines = useCallback(() => {
     fsmLogger.info(`[FSMContext] Clearing all FSM machines`);
     machinesRef.current.clear();
+    setActiveMachines(new Map());
   }, []);
   
   const value = {
     getBotMachine,
+    registerMachineInstance,
+    getMachineInstance,
     removeBotMachine,
     clearAllMachines,
     machineCount: () => machinesRef.current.size
@@ -93,17 +122,32 @@ export const useFSMContext = () => {
 };
 
 /**
- * Hook centralisé pour les machines FSM
- * Remplace l'ancien useBotMachine en utilisant des machines partagées
+ * Hook centralisé pour les machines FSM avec vraies instances partagées
  */
 export const useBotMachineShared = (botId, entityType = ENTITY_TYPES.auto) => {
-  const { getBotMachine } = useFSMContext();
+  const { getBotMachine, registerMachineInstance, getMachineInstance } = useFSMContext();
+  
+  // Vérifier s'il y a déjà une instance active pour ce bot
+  const existingInstance = getMachineInstance(botId);
   
   // Obtenir la machine partagée
   const { machine, initialContext } = getBotMachine(botId, entityType);
   
-  // Utiliser la machine partagée
+  // Créer une nouvelle instance useMachine
   const [current, send] = useMachine(machine, initialContext);
+  
+  // Enregistrer cette instance comme la référence principale si c'est la première
+  React.useEffect(() => {
+    if (!existingInstance) {
+      registerMachineInstance(botId, current, send);
+    }
+  }, [botId, existingInstance, registerMachineInstance, current, send]);
+  
+  // Si une instance existe déjà, l'utiliser, sinon utiliser la nouvelle
+  if (existingInstance) {
+    fsmLogger.info(`[FSMContext] Using existing instance for bot: ${botId}`);
+    return existingInstance;
+  }
   
   return { current, send };
 };

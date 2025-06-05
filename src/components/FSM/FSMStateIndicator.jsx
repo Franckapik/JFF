@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { Html } from '@react-three/drei';
-import { useBotMachineFixed } from "../../ai/fsm/hooks/useBotMachineFixed.js";
+import { useBotMachineFixed } from "../../ai/fsm/hooks/useBotMachineSync.js";
 
 /**
  * Indicateur d'état FSM affiché au-dessus d'un bot

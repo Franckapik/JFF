@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { useBotMachineFixed } from '../../ai/fsm/hooks/useBotMachineFixed';
+import { useBotMachineFixed } from '../../ai/fsm/hooks/useBotMachineSync.js';
 import fsmLogger from '../../logger/fsmLogger.js';
 
 const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) => {

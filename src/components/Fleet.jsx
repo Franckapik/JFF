@@ -1,7 +1,7 @@
 import React, { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { useBotMachineFixed } from "../ai/fsm/hooks/useBotMachineFixed.js";
+import { useBotMachineFixed } from "../ai/fsm/hooks/useBotMachineSync.js";
 import { useFSMPositionTracker } from "../ai/fsm/hooks/useFSMPositionTracker.js";
 import ShipMesh from "./Vehicles/ShipMesh.jsx";
 import DroneMesh from "./Vehicles/DroneMesh.jsx";
@@ -83,7 +83,7 @@ const Fleet = React.memo(({
     
     const currentPosition = droneRef.current.position;
     const now = state.clock.elapsedTime;
-    const isMoving = droneState?.state === 'deploying' || droneState?.state === 'returning';
+    const isMoving = droneState?.state === 'deploying' || droneState?.state === 'exploring' || droneState?.state === 'returning';
     
     // Debug réduit - seulement en cas de problème
     if (now - lastUpdateTime.current > 5.0 && !isMoving && droneState?.isActive) {
