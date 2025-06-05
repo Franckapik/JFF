@@ -41,12 +41,18 @@ const Fleet = React.memo(({
   const updateVisualPosition = useFSMPositionTracker(context, fsmSend, botId);
 
   // État du drone calculé depuis la FSM (LECTURE SEULE)
-  const droneState = useMemo(() => ({
-    state: context?.droneFleet?.drones?.explorer?.state || 'docked',
-    isActive: context?.droneFleet?.drones?.explorer?.isActive || false,
-    position: context?.droneFleet?.drones?.explorer?.position,
-    targetPosition: context?.droneFleet?.drones?.explorer?.targetPosition
-  }), [context?.droneFleet?.drones?.explorer]);
+  const droneState = useMemo(() => {
+    const fsmState = context?.state; // État FSM principal (exploring_deploying, exploring_recalling, etc.)
+    const droneVisualState = context?.droneFleet?.drones?.explorer?.state || 'docked'; // État visuel du drone
+    
+    return {
+      state: droneVisualState,
+      fsmState: fsmState, // État FSM pour debugging
+      isActive: context?.droneFleet?.drones?.explorer?.isActive || false,
+      position: context?.droneFleet?.drones?.explorer?.position,
+      targetPosition: context?.droneFleet?.drones?.explorer?.targetPosition
+    };
+  }, [context?.droneFleet?.drones?.explorer, context?.state]);
 
   // ===================================================================
   // ANIMATION R3F PURE (SANS AUCUNE LOGIQUE FSM)
@@ -83,7 +89,11 @@ const Fleet = React.memo(({
     
     const currentPosition = droneRef.current.position;
     const now = state.clock.elapsedTime;
-    const isMoving = droneState?.state === 'deploying' || droneState?.state === 'exploring' || droneState?.state === 'returning';
+    const isMoving = droneState?.state === 'deploying' || 
+                     droneState?.state === 'exploring' || 
+                     droneState?.state === 'returning' ||
+                     droneState?.fsmState === 'exploring_deploying' ||
+                     droneState?.fsmState === 'exploring_recalling';
     
     // Debug réduit - seulement en cas de problème
     if (now - lastUpdateTime.current > 5.0 && !isMoving && droneState?.isActive) {

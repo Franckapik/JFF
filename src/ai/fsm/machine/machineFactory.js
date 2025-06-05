@@ -35,9 +35,7 @@ export const createBotMachine = (botId, initialData = {}) => {
     {
       [BOT_STATES.EVALUATING]: evaluatingState,
       [BOT_STATES.EXPLORING]: exploringState,
-      [BOT_STATES.EXPLORING_INIT]: exploringState,
       [BOT_STATES.EXPLORING_DEPLOYING]: exploringState,
-      [BOT_STATES.EXPLORING_ACTIVE]: exploringState,
       [BOT_STATES.EXPLORING_RECALLING]: exploringState,
       [BOT_STATES.COLLECTING]: collectingState,
       [BOT_STATES.RETURNING]: returningState,

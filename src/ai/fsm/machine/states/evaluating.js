@@ -56,17 +56,47 @@ export const evaluatingState = state(
 
   // === TRANSITIONS NORMALES ===
   
-  // Si pas encore exploré → EXPLORING
-  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_INIT, 
+  // Si pas encore exploré → EXPLORING_DEPLOYING (directement)
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_DEPLOYING, 
     // Guard d'exploration
     guard((context, event) => {
       const hasUnexplored = discoveryGuards.hasUnexploredAreas(context, event);
-      return hasUnexplored;
+      const isDroneInactive = !context.droneFleet?.drones?.explorer?.isActive;
+      const canDeploy = !context.droneFleet?.deploymentAttempted;
+      
+      return hasUnexplored && isDroneInactive && canDeploy;
     }),
-    // Reducer d'exploration
+    // Reducer d'exploration - déployer directement
     reduce((context, event) => {
-      // Utiliser le reducer centralisé pour préparer l'exploration
-      return contextReducers.state.prepareExploring(context, event);
+      // Utiliser le reducer centralisé pour préparer l'exploration ET déployer
+      const preparedContext = contextReducers.state.prepareExploring(context, event);
+      
+      // Déployer immédiatement le drone
+      const deploymentResult = contextReducers.droneDeployment.deployDrone(preparedContext, {
+        range: 3,
+        droneType: 'explorer'
+      });
+
+      return {
+        ...deploymentResult,
+        currentAction: 'drone_exploring', // ✅ DIRECTEMENT EN EXPLORATION
+        droneFleet: {
+          ...deploymentResult.droneFleet,
+          deploymentAttempted: true,
+          deploymentCompleted: true,
+          explorationStarted: true,
+          explorationStartTime: Date.now(),
+          drones: {
+            ...deploymentResult.droneFleet.drones,
+            explorer: {
+              ...deploymentResult.droneFleet.drones.explorer,
+              state: 'deploying', // ✅ COMMENCER PAR DEPLOYING POUR ANIMATION
+              lastUpdate: Date.now(),
+              isActive: true
+            }
+          }
+        }
+      };
     })
   ),
 
@@ -128,14 +158,41 @@ export const evaluatingState = state(
   // === ÉVÉNEMENT AUTONOME ===
   
   // Déclenchement automatique vers l'exploration
-  transition(SYSTEM_EVENT_TYPES.AUTO, BOT_STATES.EXPLORING_INIT, 
+  transition(SYSTEM_EVENT_TYPES.AUTO, BOT_STATES.EXPLORING_DEPLOYING, 
     guard(() => true),
     reduce((context) => {
-      // Préparer l'état d'exploration
-      return contextReducers.state.prepareExploring(context, {
+      // Préparer l'état d'exploration ET déployer directement
+      const preparedContext = contextReducers.state.prepareExploring(context, {
         reason: 'auto_exploration',
         timestamp: Date.now()
       });
+      
+      // Déployer immédiatement le drone
+      const deploymentResult = contextReducers.droneDeployment.deployDrone(preparedContext, {
+        range: 3,
+        droneType: 'explorer'
+      });
+
+      return {
+        ...deploymentResult,
+        currentAction: 'drone_exploring', // ✅ DIRECTEMENT EN EXPLORATION
+        droneFleet: {
+          ...deploymentResult.droneFleet,
+          deploymentAttempted: true,
+          deploymentCompleted: true,
+          explorationStarted: true,
+          explorationStartTime: Date.now(),
+          drones: {
+            ...deploymentResult.droneFleet.drones,
+            explorer: {
+              ...deploymentResult.droneFleet.drones.explorer,
+              state: 'deploying', // ✅ COMMENCER PAR DEPLOYING POUR ANIMATION
+              lastUpdate: Date.now(),
+              isActive: true
+            }
+          }
+        }
+      };
     })
   ),
 

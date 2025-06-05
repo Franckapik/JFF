@@ -13,9 +13,7 @@
 export const BOT_STATES = {
   EVALUATING: 'evaluating',
   EXPLORING: 'exploring', 
-  EXPLORING_INIT: 'exploring_init',
   EXPLORING_DEPLOYING: 'exploring_deploying',
-  EXPLORING_ACTIVE: 'exploring_active',
   EXPLORING_RECALLING: 'exploring_recalling',
   COLLECTING: 'collecting',
   RETURNING: 'returning',
