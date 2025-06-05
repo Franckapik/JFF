@@ -72,7 +72,7 @@ machine.send(baseEvent.type, baseEvent);
 
 | Catégorie | Description | Exemples |
 |-----------|-------------|----------|
-| **System** | Événements système automatiques | `ASSESSMENT_COMPLETE`, `REFUEL_COMPLETE` |
+| **System** | Événements système automatiques | `EVALUATION_COMPLETE`, `REFUEL_COMPLETE` |
 | **User** | Actions initiées par l'utilisateur | `MANUAL_OVERRIDE`, `MOVE_TO` |
 | **Emergency** | Situations critiques | `EMERGENCY_DETECTED`, `LOW_FUEL_DETECTED` |
 | **Movement** | Déplacements | `MOVEMENT_STARTED`, `BASE_REACHED` |

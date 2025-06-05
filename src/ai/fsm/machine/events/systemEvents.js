@@ -18,16 +18,16 @@
  * Événement de fin d'évaluation de la situation
  * Déclenché lorsque l'évaluation de l'état actuel est terminée
  */
-const ASSESSMENT_COMPLETE = 'ASSESSMENT_COMPLETE';
+const EVALUATION_COMPLETE = 'EVALUATION_COMPLETE';
 
 /**
- * Créateur d'événement: ASSESSMENT_COMPLETE
+ * Créateur d'événement: EVALUATION_COMPLETE
  * @param {string} nextState - État suggéré après évaluation
  * @param {string} reason - Raison de la suggestion d'état
  * @returns {object} Event payload
  */
 const createAssessmentCompleteEvent = (nextState, reason = 'normal_assessment') => ({
-  type: ASSESSMENT_COMPLETE,
+  type: EVALUATION_COMPLETE,
   nextState,
   reason,
   timestamp: Date.now()
@@ -242,7 +242,7 @@ const createAutoEvent = () => ({
 
 // Export des types d'événements (constants)
 export const SYSTEM_EVENT_TYPES = {
-  ASSESSMENT_COMPLETE,
+  EVALUATION_COMPLETE,
   REFUEL_COMPLETE,
   UNLOAD_COMPLETE,
   REPAIR_COMPLETE,

@@ -47,7 +47,7 @@ export function exempleBot() {
 
   // 3. Démarrer le processus d'évaluation
   console.log('🚀 Starting bot evaluation...');
-  botMachine.send('ASSESSMENT_COMPLETE');
+  botMachine.send('EVALUATION_COMPLETE');
 
   return botMachine;
 }
@@ -70,7 +70,7 @@ export async function simulerSequenceBot() {
   
   // Étape 1: Évaluation initiale → Exploration
   console.log('1. Évaluation initiale...');
-  bot.send('ASSESSMENT_COMPLETE');
+  bot.send('EVALUATION_COMPLETE');
   console.log(`   État: ${bot.current} (${bot.context.currentAction})`);
   
   // Étape 2: Exploration → Découverte
@@ -86,7 +86,7 @@ export async function simulerSequenceBot() {
   
   // Étape 3: Retour à l'évaluation → Collecte
   console.log('3. Évaluation après découverte...');
-  bot.send('ASSESSMENT_COMPLETE');
+  bot.send('EVALUATION_COMPLETE');
   console.log(`   État: ${bot.current} (${bot.context.currentAction})`);
   
   // Étape 4: Collecte → Inventaire plein
@@ -126,7 +126,7 @@ export function exempleUrgence() {
   console.log('🚨 Test de gestion d\'urgence:');
   
   // Le bot est en exploration
-  bot.send('ASSESSMENT_COMPLETE'); // → EXPLORING (car hasExplored: false)
+  bot.send('EVALUATION_COMPLETE'); // → EXPLORING (car hasExplored: false)
   console.log(`1. État initial: ${bot.current}`);
   
   // Urgence carburant détectée

@@ -67,7 +67,7 @@ export const useCentralizedEventHistorySync = (botId) => {
     if (current?.name && current.name !== lastStateRef.current) {
       let eventName = 'STATE_CHANGE';
       if (lastStateRef.current === 'evaluating' && current.name === 'exploring') {
-        eventName = 'ASSESSMENT_COMPLETE';
+        eventName = 'EVALUATION_COMPLETE';
       }
       
       const eventToAdd = {

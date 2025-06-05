@@ -50,10 +50,10 @@ export const useCentralizedEventHistory = (botId) => {
   // Capturer les changements d'état (transitions automatiques)
   useEffect(() => {
     if (current?.name && current.name !== lastStateRef.current) {
-      // Si changement de 'evaluating' vers 'exploring', c'est probablement ASSESSMENT_COMPLETE
+      // Si changement de 'evaluating' vers 'exploring', c'est probablement EVALUATION_COMPLETE
       let eventName = 'STATE_CHANGE';
       if (lastStateRef.current === 'evaluating' && current.name === 'exploring') {
-        eventName = 'ASSESSMENT_COMPLETE';
+        eventName = 'EVALUATION_COMPLETE';
       }
       
       const eventToAdd = {

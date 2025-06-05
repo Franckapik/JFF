@@ -66,7 +66,7 @@ export default createBotMachine;
  *    - Analyse la situation et choisit la prochaine action
  * 
  * 2. Transitions automatiques basées sur des événements :
- *    - ASSESSMENT_COMPLETE → détermine le prochain état
+ *    - EVALUATION_COMPLETE → détermine le prochain état
  *    - AREA_EXPLORED → retour à EVALUATING
  *    - RESOURCE_COLLECTED → retour à EVALUATING
  *    - BASE_REACHED → passage à IDLE_AT_BASE

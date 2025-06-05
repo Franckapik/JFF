@@ -96,7 +96,7 @@ export const createBotMachine = (botId, initialData = {}) => {
 État central qui analyse la situation et décide de l'action suivante.
 - **Entrées**: Depuis n'importe quel autre état, ou au démarrage
 - **Sorties**: Vers EXPLORING, COLLECTING, RETURNING, ou IDLE_AT_BASE
-- **Événements clés**: `ASSESSMENT_COMPLETE`
+- **Événements clés**: `EVALUATION_COMPLETE`
 
 ### 2. EXPLORING
 État de recherche et découverte de ressources.

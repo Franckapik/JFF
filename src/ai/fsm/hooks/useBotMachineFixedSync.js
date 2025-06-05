@@ -105,8 +105,8 @@ export const useBotMachineFixed = (botId, entityType) => {
   useEffect(() => {
     if (!hasStartedExploring.current && state === 'evaluating') {
       timeoutRef.current = setTimeout(() => {
-        console.log(`[useBotMachineFixed] Sending ASSESSMENT_COMPLETE for bot ${botId}`);
-        syncedSend(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE);
+        console.log(`[useBotMachineFixed] Sending EVALUATION_COMPLETE for bot ${botId}`);
+        syncedSend(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE);
         hasStartedExploring.current = true;
       }, 2000);
     }

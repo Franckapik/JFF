@@ -28,7 +28,7 @@ export const evaluatingState = state(
   // === TRANSITIONS DE SÉCURITÉ (PRIORITÉ MAX) ===
   
   // Si carburant critique ou capacité pleine → RETURNING
-  transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE, BOT_STATES.RETURNING, 
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.RETURNING, 
     // Guard d'urgence
     guard((context, event) => {
       const needsEmergency = safetyGuards.needsEmergencyReturn(context, event);
@@ -57,7 +57,7 @@ export const evaluatingState = state(
   // === TRANSITIONS NORMALES ===
   
   // Si pas encore exploré → EXPLORING
-  transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE, BOT_STATES.EXPLORING_INIT, 
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_INIT, 
     // Guard d'exploration
     guard((context, event) => {
       const hasUnexplored = discoveryGuards.hasUnexploredAreas(context, event);
@@ -71,7 +71,7 @@ export const evaluatingState = state(
   ),
 
   // Si nouvelles ressources découvertes → COLLECTING
-  transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE, BOT_STATES.COLLECTING, 
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.COLLECTING, 
     // Guard pour collection
     guard((context, event) => {
       const isEfficient = efficiencyGuards.isCollectionEfficient(context, event);
@@ -95,7 +95,7 @@ export const evaluatingState = state(
   ),
 
   // Si drone pas à la base → RETURNING (pour récupérer le drone)
-  transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE, BOT_STATES.RETURNING, 
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.RETURNING, 
     // Guard pour drone pas à la base
     guard((context, event) => {
       const notAtBase = !baseGuards.isAtBase(context, event);
@@ -111,7 +111,7 @@ export const evaluatingState = state(
   ),
 
   // Sinon → IDLE_AT_BASE (rien à faire)
-  transition(SYSTEM_EVENT_TYPES.ASSESSMENT_COMPLETE, BOT_STATES.IDLE_AT_BASE, 
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.IDLE_AT_BASE, 
     // Guard par défaut
     guard(() => {
       return true;
