@@ -12,8 +12,16 @@ const DroneMesh = ({ color, botId, context, droneState }) => {
         <meshStandardMaterial 
           color={color}
           // État FSM → Couleur émissive
-          emissive={droneState.state === 'exploring' ? color : "black"}
-          emissiveIntensity={droneState.state === 'exploring' ? 0.8 : 0.2}
+          emissive={
+            droneState.state === 'exploring' ? color : 
+            droneState.state === 'prospecting' ? "#FFD700" : // Or pour prospection
+            "black"
+          }
+          emissiveIntensity={
+            droneState.state === 'exploring' ? 0.8 : 
+            droneState.state === 'prospecting' ? 1.0 : // Plus intense pour prospection
+            0.2
+          }
         />
       </Cone>
       

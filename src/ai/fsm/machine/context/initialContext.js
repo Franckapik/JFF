@@ -150,8 +150,8 @@ export const createEntityContext = (entityId, entityType = ENTITY_TYPES.auto) =>
     
     // État de déploiement des drones (remplace droneDeployment)
     droneFleet: {
-      // État global de la flotte
-      status: 'docked',                          // Ex: 'docked', 'deploying', 'active', 'returning'
+      // SUPPRIMÉ: status global - maintenant calculé automatiquement depuis les états individuels
+      // status: 'docked',                       // ❌ Redondant avec les états individuels
       
       // Drones individuels avec leurs positions et états
       drones: {

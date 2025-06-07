@@ -12,7 +12,12 @@
 
 import { createMachine } from 'robot3';
 import { BOT_STATES } from './constants/constants.js';
-import { evaluatingState, exploringState, collectingState, returningState, idleAtBaseState } from './states/index.js';
+import { 
+  evaluatingState,
+  exploringState,
+  collectingState,
+  idleAtBaseState
+} from './states/index.js';
 import { createEntityContext } from './context/initialContext.js';
 
 // ============================================================================
@@ -36,9 +41,9 @@ export const createBotMachine = (botId, initialData = {}) => {
       [BOT_STATES.EVALUATING]: evaluatingState,
       [BOT_STATES.EXPLORING]: exploringState,
       [BOT_STATES.EXPLORING_DEPLOYING]: exploringState,
-      [BOT_STATES.EXPLORING_RECALLING]: exploringState,
+      [BOT_STATES.EXPLORING_PROSPECTING]: exploringState,
+      [BOT_STATES.EXPLORING_RETURNING]: exploringState,
       [BOT_STATES.COLLECTING]: collectingState,
-      [BOT_STATES.RETURNING]: returningState,
       [BOT_STATES.IDLE_AT_BASE]: idleAtBaseState,
     },
     

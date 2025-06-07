@@ -14,5 +14,4 @@
 export { evaluatingState } from './evaluating.js';
 export { exploringState } from './exploring.js';
 export { collectingState } from './collecting.js';
-export { returningState } from './returning.js';
 export { idleAtBaseState } from './idleAtBase.js';

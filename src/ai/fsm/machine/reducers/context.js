@@ -108,14 +108,37 @@ export const stateTransitionReducers = {
    * @param {Object} event - Événement de transition
    * @returns {Object} - Contexte mis à jour pour retour
    */
-  prepareReturning: (context, event) => ({
-    ...context,
-    currentAction: 'returning',
-    lastDecision: event.reason || 'returning_to_base',
-    emergencyReason: event.emergencyReason || null,
-    emergencyFlag: Boolean(event.emergencyReason),
-    lastStateChange: Date.now()
-  }),
+  prepareReturning: (context, event) => {
+    // ✅ CORRECTION: Définir updatedDrone à partir du contexte existant
+    const currentDrone = context.droneFleet?.drones?.explorer || {};
+    const shipPosition = { x: 5, y: 0, z: 0 }; //CORRIGER CETTE POSITION EN FONCTION DU VRAI Vaisseau
+    //La position du vaisseau doit etre mise a jour dès le depart du jeu
+    //les autres reducers ci dessus doivent etre utilisés dans le fichier exploration.js .
+    const updatedDrone = {
+      ...currentDrone,
+      state: 'returning',  // ✅ Utiliser le bon état
+      targetPosition: shipPosition,           // Position du vaisseau pour le retour
+      isReturning: true,
+      returnStartTime: Date.now(),
+      lastUpdate: Date.now()
+    };
+    
+    return {
+      ...context,
+      currentAction: 'returning',
+      lastDecision: event.reason || 'returning_to_base',
+      emergencyReason: event.emergencyReason || null,
+      emergencyFlag: Boolean(event.emergencyReason),
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet.drones,
+          explorer: updatedDrone
+        }
+      },
+      lastStateChange: Date.now()
+    };
+  },
 
   /**
    * Prepare une transition vers l'état IDLE_AT_BASE

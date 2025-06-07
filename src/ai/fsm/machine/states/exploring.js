@@ -30,47 +30,158 @@ import fsmLogger from '../../../../logger/fsmLogger.js';
 export const exploringState = state(
   // === ÉVÉNEMENTS DE PROGRESSION ===
 
-  // DEPLOYING → RECALLING : Drone a atteint sa cible
-  transition(MOVEMENT_EVENT_TYPES.DRONE_REACHED_TARGET, BOT_STATES.EXPLORING_RECALLING,
+  // DEPLOYING → PROSPECTING : Drone a atteint sa cible, commencer la prospection
+  transition(MOVEMENT_EVENT_TYPES.DRONE_REACHED_TARGET, BOT_STATES.EXPLORING_PROSPECTING,
     guard((context, event) => context.droneFleet?.drones?.explorer?.isActive),
     reduce((context, event) => {
-      fsmLogger.info("🎯 [Exploring] Drone reached target, marking tile and recalling drone", { 
+      fsmLogger.info("🎯 [Exploring] Drone reached target, starting prospecting phase", { 
         tileCoord: event.tileCoord, 
         botId: context.botId 
       });
       
-      // Utiliser seulement l'action FSM pure (le marquage du store se fait dans useFSMPositionTracker)
+      // Marquer la tuile comme explorée
       const markedContext = explorationActions.markTileExplored(context, event);
       
-      // NOUVEAU: Rappeler automatiquement le drone après exploration
-      const recallResult = contextReducers.droneDeployment.recallDrone(markedContext, {
-        droneType: 'explorer'
-      });
-      
-      // Debug: Vérifier l'état du drone après rappel
-      fsmLogger.info("🎯 [Exploring] Drone state after recall", {
-        droneState: recallResult.droneFleet?.drones?.explorer?.state,
-        targetPosition: recallResult.droneFleet?.drones?.explorer?.targetPosition,
-        isActive: recallResult.droneFleet?.drones?.explorer?.isActive
-      });
-      
-      // Ajouter les informations spécifiques au drone
+      // Mettre à jour l'état du drone pour la prospection
       return {
-        ...recallResult,
-        currentAction: 'drone_recalling',
+        ...markedContext,
+        currentAction: 'drone_prospecting',
         droneFleet: {
-          ...recallResult.droneFleet,
+          ...markedContext.droneFleet,
           drones: {
-            ...recallResult.droneFleet.drones,
+            ...markedContext.droneFleet.drones,
             explorer: {
-              ...recallResult.droneFleet.drones.explorer,
+              ...markedContext.droneFleet.drones.explorer,
+              state: 'prospecting',
               lastUpdate: Date.now(),
-              lastExploredTile: event.tileCoord
+              lastExploredTile: event.tileCoord,
+              prospectingStartTime: Date.now() // Pour le timeout
             }
           }
         },
         lastExploredTile: event.tileCoord
       };
+    })
+  ),
+
+  // PROSPECTING → RETURNING : Prospection terminée, retour à la base avec les données
+  transition(MOVEMENT_EVENT_TYPES.PROSPECTING_COMPLETE, BOT_STATES.EXPLORING_RETURNING,
+    guard((context, event) => {
+      // Diagnostic approfondi de la structure de l'événement
+      const isActive = context.droneFleet?.drones?.explorer?.isActive;
+      
+      fsmLogger.info("🔍 [Exploring] PROSPECTING_COMPLETE - Full event structure debugging", {
+        botId: context.botId,
+        eventType: typeof event,
+        eventKeys: Object.keys(event || {}),
+        fullEvent: JSON.stringify(event, null, 2),
+        directAccess: {
+          tileCoord: event.tileCoord,
+          resourcesFound: event.resourcesFound,
+          position: event.position,
+          droneType: event.droneType,
+          timestamp: event.timestamp
+        }
+      });
+      
+      // Test différentes façons d'accéder aux données
+      const hasTileCoord = !!event.tileCoord;
+      const hasResourcesFound = event.resourcesFound !== undefined;
+      const droneState = context.droneFleet?.drones?.explorer?.state;
+      
+      fsmLogger.info("🔍 [Exploring] PROSPECTING_COMPLETE guard check", {
+        botId: context.botId,
+        isActive,
+        hasTileCoord,
+        hasResourcesFound,
+        droneState,
+        tileCoord: event.tileCoord,
+        resourcesFound: event.resourcesFound,
+        eventType: event.type
+      });
+      
+      const guardResult = isActive && hasTileCoord && hasResourcesFound;
+      
+      fsmLogger.info(`🔍 [Exploring] Guard result: ${guardResult}`, {
+        botId: context.botId,
+        guardConditions: { isActive, hasTileCoord, hasResourcesFound }
+      });
+      
+      // Vérifier que le drone est actif et que l'événement contient des données valides
+      return guardResult;
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("💎 [Exploring] Prospecting completed, returning to base with data", { 
+        tileCoord: event.tileCoord,
+        resourcesFound: event.resourcesFound,
+        botId: context.botId 
+      });
+
+      // Enregistrer les ressources découvertes dans le contexte
+      let updatedContext = { ...context };
+
+      // Si des ressources ont été trouvées, les enregistrer
+      if (event.resourcesFound && 
+          (event.resourcesFound.food > 0 || 
+           event.resourcesFound.debris > 0 || 
+           event.resourcesFound.special > 0)) {
+        
+        // Créer un objet ressource standardisé
+        const discoveredResource = {
+          coord: event.tileCoord,
+          type: 'mixed', // Type mixte car on peut avoir plusieurs types
+          quantity: {
+            food: event.resourcesFound.food || 0,
+            debris: event.resourcesFound.debris || 0,
+            special: event.resourcesFound.special || 0
+          },
+          discoveredAt: Date.now(),
+          prospected: true // Marquer comme déjà prospecté
+        };
+
+        // Utiliser le reducer pour enregistrer la ressource (si disponible)
+        if (contextReducers.resource?.recordDiscoveredResource) {
+          updatedContext = contextReducers.resource.recordDiscoveredResource(updatedContext, {
+            resource: discoveredResource
+          });
+        } else {
+          // Fallback : ajouter directement aux ressources découvertes
+          updatedContext.discoveredResources = [
+            ...(updatedContext.discoveredResources || []),
+            discoveredResource
+          ];
+        }
+
+        fsmLogger.info("📦 [Exploring] Resources discovered and recorded", {
+          resource: discoveredResource,
+          botId: context.botId
+        });
+      }
+
+      // Marquer la tuile comme prospectée
+      const prospectedContext = {
+        ...updatedContext,
+        prospectedTiles: [
+          ...(updatedContext.prospectedTiles || []),
+          {
+            coord: event.tileCoord,
+            timestamp: Date.now(),
+            resources: event.resourcesFound
+          }
+        ],
+        lastProspectedTile: event.tileCoord,
+        hasNewDiscovery: true // Marquer qu'il y a une nouvelle découverte
+      };
+
+      // ✅ CORRECTION: Utiliser le reducer corrigé
+      return contextReducers.state.prepareReturning(prospectedContext, {
+        reason: 'prospection_completed',
+        prospectionData: {
+          tileCoord: event.tileCoord,
+          resourcesFound: event.resourcesFound,
+          timestamp: Date.now()
+        }
+      });
     })
   ),
 

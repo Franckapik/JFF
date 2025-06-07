@@ -54,8 +54,9 @@ export const droneDeploymentGuards = {
    * @returns {boolean} - True si déploiement possible
    */
   canDeployDrone: (context, event) => {
-    // NOUVEAU: Vérifier avec la structure droneFleet (recommandé)
-    if (context.droneFleet?.status === 'active') {
+    // NOUVEAU: Vérifier avec les états individuels des drones (source unique de vérité)
+    const explorer = context.droneFleet?.drones?.explorer;
+    if (explorer?.isActive) {
       return false;
     }
     
@@ -79,8 +80,9 @@ export const droneDeploymentGuards = {
    * @returns {boolean} - True si drone déployé
    */
   isDroneDeployed: (context) => {
-    // NOUVEAU: Vérifier avec la structure droneFleet (recommandé)
-    if (context.droneFleet?.status === 'active') {
+    // NOUVEAU: Vérifier avec les états individuels des drones (source unique de vérité)
+    const explorer = context.droneFleet?.drones?.explorer;
+    if (explorer?.isActive) {
       return true;
     }
     
@@ -94,8 +96,9 @@ export const droneDeploymentGuards = {
    * @returns {boolean} - True si drone ancré
    */
   isDroneDocked: (context) => {
-    // NOUVEAU: Vérifier avec la structure droneFleet (recommandé)
-    if (context.droneFleet?.status === 'docked' || !context.droneFleet) {
+    // NOUVEAU: Vérifier avec les états individuels des drones (source unique de vérité)
+    const explorer = context.droneFleet?.drones?.explorer;
+    if (!explorer || (!explorer.isActive && explorer.state === 'docked')) {
       return true;
     }
     
@@ -157,7 +160,7 @@ export const droneDeploymentActions = {
         ...context,
         droneFleet: {
           ...context.droneFleet,
-          status: 'active',
+          // status: 'active', // ❌ SUPPRIMÉ : Calculé automatiquement depuis les états individuels
           currentMission: {
             type: 'exploration',
             target: `${range}unit-radius`, // zone de déploiement
@@ -212,7 +215,7 @@ export const droneDeploymentActions = {
       ...context,
       droneFleet: {
         ...context.droneFleet,
-        status: 'returning',
+        // status: 'returning', // ❌ SUPPRIMÉ : Calculé automatiquement depuis les états individuels
         drones: {
           ...context.droneFleet.drones,
           [droneType]: {
@@ -249,7 +252,7 @@ export const droneDeploymentActions = {
       ...context,
       droneFleet: {
         ...context.droneFleet,
-        status: 'docked',
+        // status: 'docked', // ❌ SUPPRIMÉ : Calculé automatiquement depuis les états individuels
         currentMission: null,
         missionStartTime: null,
         drones: {
@@ -337,7 +340,7 @@ export const fsmDroneFleetActions = {
       ...context,
       droneFleet: {
         ...context.droneFleet,
-        status: 'active',
+        // status: 'active', // ❌ SUPPRIMÉ : Calculé automatiquement depuis les états individuels
         currentMission: {
           type: 'exploration',
           target: targetArea,
@@ -394,7 +397,7 @@ export const fsmDroneFleetActions = {
       ...context,
       droneFleet: {
         ...context.droneFleet,
-        status: 'returning',
+        // status: 'returning', // ❌ SUPPRIMÉ : Calculé automatiquement depuis les états individuels
         drones: {
           ...context.droneFleet.drones,
           [droneType]: {
@@ -419,7 +422,7 @@ export const fsmDroneFleetActions = {
       ...context,
       droneFleet: {
         ...context.droneFleet,
-        status: 'docked',
+        // status: 'docked', // ❌ SUPPRIMÉ : Calculé automatiquement depuis les états individuels
         currentMission: null,
         drones: {
           ...context.droneFleet.drones,
@@ -458,40 +461,51 @@ const calculateExplorationTargetPosition = (shipPosition, targetArea, range) => 
 // ============================================================================
 
 /**
+ * Calcule le statut global de la flotte basé sur les états individuels des drones
+ * @param {Object} context - Contexte actuel
+ * @returns {string} - Status calculé ('docked', 'active', 'returning')
+ */
+export const calculateFleetStatus = (context) => {
+  const explorer = context.droneFleet?.drones?.explorer;
+  
+  if (!explorer || !explorer.isActive) {
+    return 'docked';
+  }
+  
+  if (explorer.state === 'returning') {
+    return 'returning';
+  }
+  
+  if (explorer.state === 'deploying' || explorer.state === 'exploring') {
+    return 'active';
+  }
+  
+  return 'docked';
+};
+
+/**
  * Sélecteurs pour extraire des informations sur les drones
  */
 export const droneDeploymentSelectors = {
   /**
-   * Obtient l'état actuel du déploiement
+   * Obtient l'état actuel du déploiement (calculé depuis les états individuels)
    * @param {Object} context - Contexte actuel
    * @returns {string} - État du déploiement
    */
   getCurrentDeploymentState: (context) => {
-    // NOUVEAU: Priorité à la structure droneFleet
-    if (context.droneFleet?.status) {
-      return context.droneFleet.status;
-    }
-    
-    // ANCIEN: Fallback vers droneDeployment (déprécié)
-    return context.droneDeployment?.status || DRONE_DEPLOYMENT_STATES.docked;
+    // NOUVEAU: Calcul basé sur les états individuels des drones (source unique de vérité)
+    return calculateFleetStatus(context);
   },
 
   /**
-   * Vérifie si un drone est en mission
+   * Vérifie si un drone est en mission (basé sur les états individuels)
    * @param {Object} context - Contexte actuel
    * @returns {boolean} - True si drone en mission
    */
   isDroneOnMission: (context) => {
-    // NOUVEAU: Priorité à la structure droneFleet
-    if (context.droneFleet) {
-      const status = context.droneFleet.status;
-      return status === 'active' || status === 'returning';
-    }
-    
-    // ANCIEN: Fallback vers droneDeployment (déprécié)
-    const status = context.droneDeployment?.status;
-    return status === DRONE_DEPLOYMENT_STATES.active || 
-           status === DRONE_DEPLOYMENT_STATES.returning;
+    // NOUVEAU: Calcul basé sur les états individuels des drones (source unique de vérité)
+    const fleetStatus = calculateFleetStatus(context);
+    return fleetStatus === 'active' || fleetStatus === 'returning';
   },
 
   /**
@@ -510,13 +524,14 @@ export const droneDeploymentSelectors = {
   },
 
   /**
-   * Calcule le temps restant estimé de la mission
+   * Calcule le temps restant estimé de la mission (basé sur les états individuels)
    * @param {Object} context - Contexte actuel
    * @returns {number} - Temps restant en millisecondes
    */
   getEstimatedMissionTimeRemaining: (context) => {
-    // NOUVEAU: Priorité à la structure droneFleet
-    if (context.droneFleet?.currentMission?.startTime && context.droneFleet.status === 'active') {
+    // NOUVEAU: Calcul basé sur les états individuels des drones (source unique de vérité)
+    const fleetStatus = calculateFleetStatus(context);
+    if (context.droneFleet?.currentMission?.startTime && fleetStatus === 'active') {
       const elapsed = Date.now() - context.droneFleet.currentMission.startTime;
       const estimatedDuration = 10000; // 10 secondes par défaut
       return Math.max(0, estimatedDuration - elapsed);

@@ -107,12 +107,16 @@ const DRONE_DEPLOYED = 'DRONE_DEPLOYED';
  * Créateur d'événement: DRONE_DEPLOYED
  * @param {object} targetArea - Zone cible pour le drone
  * @param {number} range - Portée du drone
+ * @param {string} droneType - Type de drone ('explorer', 'combat', 'special')
+ * @param {object} position - Position de déploiement
  * @returns {object} Event payload
  */
-const createDroneDeployedEvent = (targetArea, range = 5) => ({
+const createDroneDeployedEvent = (targetArea, range = 5, droneType = 'explorer', position = null) => ({
   type: DRONE_DEPLOYED,
   targetArea,
   range,
+  droneType,
+  position,
   timestamp: Date.now()
 });
 
@@ -194,6 +198,29 @@ const createMovementCancelledEvent = (currentCoord) => ({
   timestamp: Date.now()
 });
 
+/**
+ * Événement de prospection terminée
+ * Déclenché lorsqu'un drone termine sa phase de prospection détaillée
+ */
+const PROSPECTING_COMPLETE = 'PROSPECTING_COMPLETE';
+
+/**
+ * Créateur d'événement: PROSPECTING_COMPLETE
+ * @param {object} position - Position où la prospection a été effectuée
+ * @param {object} tileCoord - Coordonnées de la tuile prospectée
+ * @param {object} resourcesFound - Ressources découvertes lors de la prospection
+ * @param {string} droneType - Type de drone ('explorer', 'combat', 'special')
+ * @returns {object} Event payload
+ */
+const createProspectingCompleteEvent = (position, tileCoord, resourcesFound, droneType = 'explorer') => ({
+  type: PROSPECTING_COMPLETE,
+  position,
+  tileCoord,
+  resourcesFound,
+  droneType,
+  timestamp: Date.now()
+});
+
 // Export des types d'événements (constants)
 export const MOVEMENT_EVENT_TYPES = {
   MOVEMENT_STARTED,
@@ -205,6 +232,7 @@ export const MOVEMENT_EVENT_TYPES = {
   DRONE_REACHED_TARGET,
   DRONE_RETURNED,
   MOVEMENT_CANCELLED,
+  PROSPECTING_COMPLETE,
 };
 
 // Export des créateurs d'événements
@@ -217,5 +245,6 @@ export const movementEvents = {
   createNavigationProgressEvent,
   createMovementCancelledEvent,
   createDroneReachedTargetEvent,
-  createDroneReturnedEvent
+  createDroneReturnedEvent,
+  createProspectingCompleteEvent
 };

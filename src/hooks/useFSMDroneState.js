@@ -13,6 +13,7 @@
 import { useState, useEffect } from 'react';
 import useFSMStore from '../stores/useFSMStore/index.js';
 import fsmLogger from '../logger/fsmLogger.js';
+import { calculateFleetStatus } from '../ai/fsm/machine/actions/core/droneActions.js';
 
 // ============================================================================
 // HOOK PRINCIPAL
@@ -78,6 +79,7 @@ export const useFSMDroneState = (botId) => {
           
         case 'deploying':
         case 'exploring':
+        case 'prospecting': // ✅ Prospecting reste à la position cible
         case 'returning':
           // Position cible ou position actuelle du drone
           positions[droneType] = drone.targetPosition || drone.position || shipPosition;
@@ -99,6 +101,7 @@ export const useFSMDroneState = (botId) => {
     const state = drone?.state;
     return state === 'deploying' || 
            state === 'exploring' || 
+           state === 'prospecting' || // ✅ Inclure prospecting comme état actif
            state === 'exploring_deploying' ||
            state === 'returning';
   };
@@ -111,10 +114,11 @@ export const useFSMDroneState = (botId) => {
   };
 
   /**
-   * Vérifie si la flotte a une mission active
+   * Vérifie si la flotte a une mission active (basé sur les états individuels)
    */
   const hasActiveMission = () => {
-    return droneFleet?.status === 'active' && droneFleet.currentMission !== null;
+    const fleetStatus = calculateFleetStatus({ droneFleet });
+    return fleetStatus === 'active' && droneFleet?.currentMission !== null;
   };
 
   // ========================================================================
@@ -125,8 +129,8 @@ export const useFSMDroneState = (botId) => {
     // État brut de la flotte
     droneFleet,
     
-    // Statut global
-    fleetStatus: droneFleet?.status || 'docked',
+    // Statut global calculé (remplace droneFleet.status)
+    fleetStatus: calculateFleetStatus({ droneFleet }),
     currentMission: droneFleet?.currentMission,
     
     // Drones individuels

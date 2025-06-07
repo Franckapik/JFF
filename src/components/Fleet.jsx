@@ -40,20 +40,6 @@ const Fleet = React.memo(({
   // 🎯 INTERMÉDIAIRE INTELLIGENT : Surveille et déclenche les événements FSM
   const updateVisualPosition = useFSMPositionTracker(context, fsmSend, botId);
 
-  // État du drone calculé depuis la FSM (LECTURE SEULE)
-  const droneState = useMemo(() => {
-    const fsmState = context?.state; // État FSM principal (exploring_deploying, exploring_recalling, etc.)
-    const droneVisualState = context?.droneFleet?.drones?.explorer?.state || 'docked'; // État visuel du drone
-    
-    return {
-      state: droneVisualState,
-      fsmState: fsmState, // État FSM pour debugging
-      isActive: context?.droneFleet?.drones?.explorer?.isActive || false,
-      position: context?.droneFleet?.drones?.explorer?.position,
-      targetPosition: context?.droneFleet?.drones?.explorer?.targetPosition
-    };
-  }, [context?.droneFleet?.drones?.explorer, context?.state]);
-
   // ===================================================================
   // ANIMATION R3F PURE (SANS AUCUNE LOGIQUE FSM)
   // ===================================================================
@@ -67,15 +53,16 @@ const Fleet = React.memo(({
   
   // Position cible calculée (coordonnées locales)
   const targetPosition = useMemo(() => {
-    if (droneState?.targetPosition) {
+    const droneTargetPos = context?.droneFleet?.drones?.explorer?.targetPosition;
+    if (droneTargetPos) {
       return {
-        x: droneState.targetPosition.x - shipPosition.x,
-        y: droneState.targetPosition.y - shipPosition.y,
-        z: droneState.targetPosition.z - shipPosition.z
+        x: droneTargetPos.x - shipPosition.x,
+        y: droneTargetPos.y - shipPosition.y,
+        z: droneTargetPos.z - shipPosition.z
       };
     }
     return initialPosition;
-  }, [droneState?.targetPosition, initialPosition, shipPosition]);
+  }, [context?.droneFleet?.drones?.explorer?.targetPosition, initialPosition, shipPosition]);
   
   // ===================================================================
   // ANIMATION DRONE AVEC COMMUNICATION VERS LE TRACKER
@@ -89,15 +76,23 @@ const Fleet = React.memo(({
     
     const currentPosition = droneRef.current.position;
     const now = state.clock.elapsedTime;
-    const isMoving = droneState?.state === 'deploying' || 
-                     droneState?.state === 'exploring' || 
-                     droneState?.state === 'returning' ||
-                     droneState?.fsmState === 'exploring_deploying' ||
-                     droneState?.fsmState === 'exploring_recalling';
+    
+    // État du drone lu directement depuis le contexte FSM
+    const droneState = context?.droneFleet?.drones?.explorer?.state || 'docked';
+    const fsmState = context?.state;
+    const isActive = context?.droneFleet?.drones?.explorer?.isActive || false;
+    
+    const isMoving = droneState === 'deploying' || 
+                     droneState === 'exploring' || 
+                     droneState === 'prospecting' || // ✅ Inclure prospecting comme mouvement actif
+                     droneState === 'returning' ||
+                     fsmState === 'exploring_deploying' ||
+                     fsmState === 'exploring_prospecting' || // ✅ Inclure l'état FSM prospecting
+                     fsmState === 'exploring_returning';
     
     // Debug réduit - seulement en cas de problème
-    if (now - lastUpdateTime.current > 5.0 && !isMoving && droneState?.isActive) {
-      console.log(`⚠️ [Fleet] Drone ${droneState?.state} mais pas en mouvement`);
+    if (now - lastUpdateTime.current > 5.0 && !isMoving && isActive) {
+      console.log(`⚠️ [Fleet] Drone ${droneState} mais pas en mouvement`);
       lastUpdateTime.current = now;
     }
     
@@ -117,11 +112,23 @@ const Fleet = React.memo(({
       };
       
       // Envoyer la position au tracker qui gérera les événements FSM
-      updateVisualPosition(worldPosition, droneState.state);
+      updateVisualPosition(worldPosition);
+    }
+    
+    // 🔄 COMMUNICATION SPÉCIALE POUR LE RETOUR - Continuer à envoyer la position même si pas isMoving
+    if ((droneState === 'returning' || fsmState === 'exploring_returning') && targetPosition) {
+      const worldPosition = {
+        x: currentPosition.x + shipPosition.x,
+        y: currentPosition.y + shipPosition.y,
+        z: currentPosition.z + shipPosition.z
+      };
+      
+      // Envoyer la position au tracker pour détecter l'arrivée
+      updateVisualPosition(worldPosition);
     }
     
     // 🎭 ANIMATIONS PAR ÉTAT (PURE VISUEL)
-    switch (droneState?.state) {
+    switch (droneState) {
       case 'docked':
         droneRef.current.rotation.y += delta * 0.5;
         droneRef.current.position.y = targetPosition.y + Math.sin(now * 2) * 0.1;
@@ -130,6 +137,20 @@ const Fleet = React.memo(({
       case 'exploring':
         droneRef.current.position.y = targetPosition.y + Math.sin(now * 3) * 0.2;
         droneRef.current.rotation.y += delta * 1.5;
+        break;
+        
+      case 'prospecting':
+        // Animation de prospection : rotation plus lente, oscillation distinctive
+        droneRef.current.position.y = targetPosition.y + Math.sin(now * 4) * 0.15;
+        droneRef.current.rotation.y += delta * 0.8;
+        droneRef.current.rotation.z = Math.sin(now * 2) * 0.1; // Léger balancement
+        break;
+        
+      case 'returning':
+        // Animation de retour : mouvement rapide et déterminé vers le vaisseau
+        droneRef.current.position.y = targetPosition.y + Math.sin(now * 6) * 0.1;
+        droneRef.current.rotation.y += delta * 2.5; // Rotation plus rapide
+        droneRef.current.rotation.z = 0; // Pas de balancement, vol stable
         break;
     }
   });
@@ -152,7 +173,7 @@ const Fleet = React.memo(({
           color={color} 
           botId={botId} 
           context={context} 
-          droneState={droneState} 
+          droneState={{ state: context?.droneFleet?.drones?.explorer?.state || 'docked' }} 
         />
       </group>
     </>

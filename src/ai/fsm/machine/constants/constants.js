@@ -3,20 +3,27 @@
  * FSM Constants - Constantes globales pour la FSM
  * ============================================================================
  * 
- * Définition des constantes communes pour la machine FSM
+ * Définition des constantes communes pour la machine FSM.
+ * Ce fichier contient uniquement les constantes activement utilisées.
  * 
  * @author FSM Migration
- * @version 1.0.0
+ * @version 2.0.0 - Nettoyage et ajout exploring_prospecting
  */
 
-// États possibles du bot
+// ============================================================================
+// ÉTATS FSM
+// ============================================================================
+
+/**
+ * États possibles du bot FSM
+ */
 export const BOT_STATES = {
   EVALUATING: 'evaluating',
   EXPLORING: 'exploring', 
   EXPLORING_DEPLOYING: 'exploring_deploying',
-  EXPLORING_RECALLING: 'exploring_recalling',
+  EXPLORING_PROSPECTING: 'exploring_prospecting',  // Nouveau sous-état pour la prospection
+  EXPLORING_RETURNING: 'exploring_returning',
   COLLECTING: 'collecting',
-  RETURNING: 'returning',
   IDLE_AT_BASE: 'idleAtBase'
 };
 
@@ -29,16 +36,48 @@ export const ENTITY_TYPES = {
   human: 'human'       // Player humain (Phase 6)
 };
 
+// ============================================================================
+// ÉTATS VISUELS DES DRONES
+// ============================================================================
+
 /**
- * États visuels des drones pour l'animation
+ * États visuels des drones pour l'animation R3F
  */
 export const DRONE_VISUAL_STATES = {
   docked: 'docked',           // En formation autour du vaisseau
   deploying: 'deploying',     // En mouvement vers la cible
   exploring: 'exploring',     // À la cible, en exploration
+  prospecting: 'prospecting', // En phase de prospection détaillée
   returning: 'returning',     // En retour vers le vaisseau
   failed: 'failed'           // En erreur
 };
+
+// ============================================================================
+// CONFIGURATION POSITION TRACKER
+// ============================================================================
+
+/**
+ * Configuration pour le Position Tracker FSM
+ */
+export const POSITION_TRACKER_CONFIG = {
+  THRESHOLDS: {
+    TARGET_REACH: 0.25,        // Distance pour considérer la cible atteinte
+    DEPLOYMENT_START: 0.1,     // Distance pour déclencher le déploiement
+    RESET_MOVEMENT: 0.5,       // Distance pour nettoyer les flags (TARGET_REACH * 2)
+  },
+  TIMINGS: {
+    EVENT_COOLDOWN: 1000,      // Cooldown entre événements identiques
+    DEBUG_LOG_INTERVAL: 2000,  // Intervalle des logs de debug
+    DEPLOYMENT_RESET: 5000,    // Reset du flag de déploiement
+    EXPLORATION_RESET: 3000,   // Reset du flag d'exploration
+    RETURN_RESET: 5000,        // Reset du flag de retour
+    PROSPECTING_DURATION: 3000, // Durée de la phase de prospection
+  }
+};
+
+// ============================================================================
+// STRUCTURE DE DONNÉES
+// ============================================================================
 
 /**
  * Structure vide pour les ressources

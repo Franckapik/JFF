@@ -89,6 +89,43 @@ const createTileMarkSlice = (set, get) => {
       
       return true;
     },
+
+    /**
+     * Marque une tuile comme prospectée avec détection des ressources
+     * 
+     * Cette fonction :
+     * 1. Vérifie que la tuile existe dans l'état global
+     * 2. Met à jour la propriété 'prospected' à true
+     * 3. Stocke les ressources détectées lors de la prospection
+     * 4. Met à jour le timestamp de la prospection
+     * 
+     * Utilisé principalement par :
+     * - La phase de prospection détaillée des drones
+     * - L'analyse des ressources avant collecte
+     * - Le système d'intelligence artificielle d'exploration
+     * 
+     * @param {string} coord - Coordonnée de la tuile à marquer comme prospectée (format "x,y")
+     * @param {object} resourcesFound - Ressources détectées lors de la prospection
+     * @returns {boolean} - true si la tuile a été marquée, false en cas d'erreur
+     */
+    markTileAsProspected: (coord, resourcesFound = {}) => {
+      const tile = get().tiles[coord];
+      if (!tile) return false;
+      
+      set((state) => ({
+        tiles: {
+          ...state.tiles,
+          [coord]: {
+            ...state.tiles[coord],
+            prospected: true,
+            prospectionResults: resourcesFound,
+            prospectionTimestamp: Date.now(),
+          },
+        },
+      }));
+      
+      return true;
+    },
   };
 };
 

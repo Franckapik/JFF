@@ -15,10 +15,11 @@
  * - Positions R3F utilisées pour la détection d'événements
  */
 
-import { useEffect, useRef, useCallback } from 'react';
-import { MOVEMENT_EVENT_TYPES } from '../machine/events/movementEvents.js';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { MOVEMENT_EVENT_TYPES, movementEvents } from '../machine/events/movementEvents.js';
+import { POSITION_TRACKER_CONFIG } from '../machine/constants/constants.js';
 import { useTileStore } from '../../../stores/useTileStore/index.js';
-import fsmLogger from '../../../logger/fsmLogger.js';
+import { useEventDebounce } from './useEventDebounce.js';
 
 /**
  * Hook qui surveille les positions des drones et déclenche automatiquement
@@ -30,24 +31,148 @@ import fsmLogger from '../../../logger/fsmLogger.js';
  */
 export const useFSMPositionTracker = (context, send, botId) => {
   const currentVisualPosition = useRef(null); // Position visuelle R3F
-  const lastEventTime = useRef({});
-  const debugState = useRef({
-    lastDistanceLog: 0,
-    reachEventsSent: new Set()
-  });
+  
+  // Hook de debounce personnalisé pour la gestion des événements
+  const { canSendEvent, markEventSent, clearAllEvents } = useEventDebounce(
+    POSITION_TRACKER_CONFIG.TIMINGS.EVENT_COOLDOWN
+  );
   
   // Access to tile store for coordinate conversion
-  const { worldToGrid } = useTileStore();
+  const { gridToHexCoord, worldToGrid } = useTileStore();
   
   /**
-   * Logique de surveillance des positions et envoi d'événements
-   * Cette fonction est appelée par Fleet.jsx avec les positions visuelles R3F
+   * Handlers par état pour une logique plus claire et maintenable
    */
-  const checkPositionAndSendEvents = useCallback((visualPosition, droneState) => {
+  const stateHandlers = useMemo(() => ({
+    deploying: {
+      onMovementStart: (distance, visualPosition, now) => {
+        const eventKey = `deploying_start_${botId}`;
+        if (distance > POSITION_TRACKER_CONFIG.THRESHOLDS.DEPLOYMENT_START && canSendEvent(eventKey)) {
+          console.log(`🚀 [${botId}] Drone deployed - distance: ${distance.toFixed(2)}`);
+          send(movementEvents.createDroneDeployedEvent(
+            'auto', // targetArea
+            5, // range
+            'explorer', // droneType
+            visualPosition // position
+          ));
+          markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.DEPLOYMENT_RESET);
+          return true;
+        }
+        return false;
+      },
+      onTargetReached: (distance, visualPosition, now) => {
+        const eventKey = `deploying_reached_${botId}`;
+        if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
+          console.log(`🔍 [${botId}] Target reached - distance: ${distance.toFixed(2)}`);
+          
+          // Logique de marquage des tuiles (conservée comme dans le code original)
+          const gridCoord = worldToGrid(visualPosition);
+          const tileCoord = gridToHexCoord(gridCoord);
+          try {
+            const { markTileAsExplored } = useTileStore.getState();
+            markTileAsExplored(tileCoord);
+            console.log(`✅ [${botId}] Tile explored: ${JSON.stringify(tileCoord)}`);
+          } catch (error) {
+            console.error(`❌ [${botId}] Failed to mark tile: ${error.message}`);
+          }
+          
+          send(movementEvents.createDroneReachedTargetEvent(
+            visualPosition, // position
+            tileCoord, // tileCoord
+            'explorer' // droneType
+          ));
+          markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.EXPLORATION_RESET);
+          return true;
+        }
+        return false;
+      }
+    },
+    prospecting: {
+      onProspectingStart: (distance, visualPosition, now) => {
+        const eventKey = `prospecting_start_${botId}`;
+        if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
+          console.log(`🔍 [${botId}] Starting prospecting phase at target position`);
+          
+          // ⚠️ CRITICAL FIX: Capturer les valeurs nécessaires MAINTENANT pour éviter les problèmes de closure
+          const capturedPosition = { ...visualPosition }; // Copie profonde de la position
+          const capturedGridCoord = worldToGrid(visualPosition); // Convertir d'abord en coordonnées de grille
+          const capturedTileCoord = gridToHexCoord(capturedGridCoord); // Puis en coordonnées hex
+          
+          console.log(`🔍 [${botId}] Captured prospecting data:`, {
+            position: capturedPosition,
+            tileCoord: capturedTileCoord
+          });
+          
+          // Démarrer un timer pour simuler la phase de prospection
+          setTimeout(() => {
+            // Après le délai de prospection, déclencher l'événement de completion
+            const prospectingEventKey = `prospecting_complete_${botId}`;
+            if (canSendEvent(prospectingEventKey)) {
+              console.log(`💎 [${botId}] Prospecting phase completed - analyzing resources`);
+              
+              try {
+                const { getTileData, markTileAsProspected } = useTileStore.getState();
+                
+                // Simuler la découverte de ressources (à adapter selon votre logique)
+                const resourcesFound = {
+                  food: Math.random() > 0.7 ? Math.floor(Math.random() * 50) : 0,
+                  debris: Math.random() > 0.5 ? Math.floor(Math.random() * 100) : 0,
+                  special: Math.random() > 0.9 ? 1 : 0
+                };
+                
+                // Marquer la tuile comme prospectée en utilisant les valeurs capturées
+                markTileAsProspected(capturedTileCoord, resourcesFound);
+                console.log(`🔍 [${botId}] Prospecting results: ${JSON.stringify(resourcesFound)}`);
+                
+                // ✅ UTILISEZ LES VALEURS CAPTURÉES au lieu des variables de closure
+                send(movementEvents.createProspectingCompleteEvent(
+                  capturedPosition, // position
+                  capturedTileCoord, // tileCoord
+                  resourcesFound, // resourcesFound
+                  'explorer' // droneType
+                ));
+                
+                markEventSent(prospectingEventKey, POSITION_TRACKER_CONFIG.TIMINGS.EXPLORATION_RESET);
+              } catch (error) {
+                console.error(`❌ [${botId}] Failed to complete prospecting: ${error.message}`);
+              }
+            }
+          }, POSITION_TRACKER_CONFIG.TIMINGS.PROSPECTING_DURATION || 3000); // 3 secondes par défaut
+          
+          markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.EXPLORATION_RESET);
+          return true;
+        }
+        return false;
+      }
+    },
+    returning: {
+      onTargetReached: (distance, visualPosition, now) => {
+        const eventKey = `returning_reached_${botId}`;
+        if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
+          console.log(`🏠 [${botId}] Drone returned - distance: ${distance.toFixed(2)}`);
+          send(movementEvents.createDroneReturnedEvent(
+            visualPosition, // position
+            'explorer' // droneType
+          ));
+          markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.RETURN_RESET);
+          return true;
+        }
+        return false;
+      }
+    }
+  }), [botId, send, gridToHexCoord, worldToGrid, canSendEvent, markEventSent]);
+  /**
+   * Logique principale de surveillance des positions - refactorisée pour plus de clarté
+   */
+  const checkPositionAndSendEvents = useCallback((visualPosition) => {
     if (!send || !context?.droneFleet?.drones?.explorer) return;
     
     const drone = context.droneFleet.drones.explorer;
+    const droneState = drone.state;
     const targetPosition = drone.targetPosition;
+
+    console.log(droneState);
+    
     
     if (!visualPosition || !targetPosition || !drone.isActive) return;
     
@@ -58,127 +183,56 @@ export const useFSMPositionTracker = (context, send, botId) => {
       Math.pow(targetPosition.z - visualPosition.z, 2)
     );
     
-    const reachThreshold = 0.25;
     const now = Date.now();
     
-    // Log de debug réduit
-    if (now - debugState.current.lastDistanceLog > 2000) {
-      fsmLogger.info(`🎯 [FSMPositionTracker] Drone ${droneState}: distance ${distance.toFixed(3)} (seuil: ${reachThreshold}) (visual: true)`, { botId, droneState });
-      debugState.current.lastDistanceLog = now;
-    }
-    
-    // Éviter les événements en double avec un système de cooldown
-    const eventKey = `${droneState}_${botId}`;
-    const lastEvent = lastEventTime.current[eventKey] || 0;
-    const cooldown = 1000; // 1 seconde de cooldown
-    
-    if (now - lastEvent < cooldown) {
-      return;
-    }
-    
-    // 🚀 DÉPLOIEMENT DÉMARRÉ (drone quitte le vaisseau)
-    if (droneState === 'deploying' && distance > 0.1) {
-      if (!debugState.current.reachEventsSent.has('deploying')) {
-        fsmLogger.info(`🚀 [FSMPositionTracker] Auto-sending DRONE_DEPLOYED for ${botId} (drone leaving ship)`);
-        send(MOVEMENT_EVENT_TYPES.DRONE_DEPLOYED, {
-          targetArea: 'auto',
-          droneType: 'explorer',
-          position: visualPosition,
-          timestamp: now
-        });
-        lastEventTime.current[eventKey] = now;
-        debugState.current.reachEventsSent.add('deploying');
-        
-        // Reset après un délai pour permettre de nouveaux déploiements
-        setTimeout(() => {
-          debugState.current.reachEventsSent.delete('deploying');
-        }, 5000);
+    // Utiliser les handlers par état pour une logique plus claire
+    const handler = stateHandlers[droneState];
+    if (handler) {
+      let eventSent = false;
+      
+      // Vérifier le démarrage de mouvement (pour deploying)
+      if (handler.onMovementStart) {
+        eventSent = handler.onMovementStart(distance, visualPosition, now);
       }
-    }
-    
-    // 🔍 EXPLORATION EN COURS - Marquer la tuile et envoyer l'événement
-    else if (droneState === 'exploring' && distance < reachThreshold) {
-      if (!debugState.current.reachEventsSent.has('exploring')) {
-        fsmLogger.info(`🔍 [FSMPositionTracker] Drone reached exploration target for ${botId} (visual position)`);
-        
-        // Convert 3D position to tile coordinates
-        const tileCoord = worldToGrid(visualPosition);
-        
-        // Mark tile as explored in the store
-        try {
-          const { markTileAsExplored } = useTileStore.getState();
-          markTileAsExplored(tileCoord);
-          fsmLogger.info(`✅ [FSMPositionTracker] Tile marked as explored: ${JSON.stringify(tileCoord)} for ${botId}`);
-        } catch (error) {
-          fsmLogger.error(`❌ [FSMPositionTracker] Failed to mark tile as explored: ${error.message}`);
-        }
-        
-        // Send DRONE_REACHED_TARGET event with tile coordinates
-        send(MOVEMENT_EVENT_TYPES.DRONE_REACHED_TARGET, {
-          position: visualPosition,
-          tileCoord: tileCoord,
-          droneType: 'explorer',
-          timestamp: now
-        });
-        
-        lastEventTime.current[eventKey] = now;
-        debugState.current.reachEventsSent.add('exploring');
-        
-        // Reset après un délai
-        setTimeout(() => {
-          debugState.current.reachEventsSent.delete('exploring');
-        }, 3000);
+      
+      // Vérifier l'arrivée à la cible (si pas d'événement de démarrage envoyé)
+      if (!eventSent && handler.onTargetReached) {
+        eventSent = handler.onTargetReached(distance, visualPosition, now);
       }
-    }
-    
-    // 🏠 RETOUR TERMINÉ
-    else if (droneState === 'returning' && distance < reachThreshold) {
-      if (!debugState.current.reachEventsSent.has('returning')) {
-        fsmLogger.info(`🏠 [FSMPositionTracker] Auto-sending DRONE_RETURNED for ${botId} (visual position)`);
-        send(MOVEMENT_EVENT_TYPES.DRONE_RETURNED, {
-          droneType: 'explorer',
-          position: visualPosition,
-          timestamp: now
-        });
-        lastEventTime.current[eventKey] = now;
-        debugState.current.reachEventsSent.add('returning');
-        
-        // Reset après un délai
-        setTimeout(() => {
-          debugState.current.reachEventsSent.delete('returning');
-        }, 5000);
+      
+      // Vérifier le démarrage de la prospection (pour prospecting)
+      if (!eventSent && handler.onProspectingStart) {
+        eventSent = handler.onProspectingStart(distance, visualPosition, now);
       }
     }
     
     // Nettoyer les flags si la distance augmente (nouveau mouvement)
-    if (distance > reachThreshold * 2) {
-      debugState.current.reachEventsSent.clear();
+    if (distance > POSITION_TRACKER_CONFIG.THRESHOLDS.RESET_MOVEMENT) {
+      clearAllEvents();
     }
     
-  }, [context?.droneFleet?.drones?.explorer, send, botId, worldToGrid]);
+  }, [context?.droneFleet?.drones?.explorer, send, botId, stateHandlers]);
 
   /**
    * Fonction pour que Fleet.jsx envoie ses positions visuelles
    * @param {Object} position - Position actuelle du drone en coordonnées monde
-   * @param {string} droneState - État actuel du drone
    */
-  const updateVisualPosition = useCallback((position, droneState) => {
-    currentVisualPosition.current = { ...position, state: droneState };
+  const updateVisualPosition = useCallback((position) => {
+    currentVisualPosition.current = position;
     
     // Déclencher immédiatement la logique de surveillance
-    if (position && droneState) {
-      checkPositionAndSendEvents(position, droneState);
+    if (position) {
+      checkPositionAndSendEvents(position);
     }
   }, [checkPositionAndSendEvents]);
   
   // Cleanup lors du démontage
   useEffect(() => {
     return () => {
-      debugState.current.reachEventsSent.clear();
-      lastEventTime.current = {};
+      clearAllEvents();
       currentVisualPosition.current = null;
     };
-  }, []);
+  }, [clearAllEvents]);
   
   return updateVisualPosition;
 };

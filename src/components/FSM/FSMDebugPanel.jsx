@@ -118,14 +118,14 @@ const FSMVisualization = ({ botId, expanded = false }) => {
         <div>
           <strong>{botId}</strong>
           <span style={{ marginLeft: '10px', ...stateStyle }}>
-            {state}
+            {String(state || 'unknown')}
           </span>
         </div>
         <div>
           {autoEvents?.isActive ? '🔄 AUTO' : '🎮 MANUEL'}
           {droneFleet?.status && (
             <span style={{ marginLeft: '5px', fontSize: '10px' }}>
-              🚁 {droneFleet.status.toUpperCase()}
+              🚁 {String(droneFleet.status).toUpperCase()}
             </span>
           )}
         </div>
@@ -138,13 +138,13 @@ const FSMVisualization = ({ botId, expanded = false }) => {
           <div style={{ marginBottom: '10px' }}>
             <strong>Contexte:</strong>
             <div style={{ fontSize: '10px', marginTop: '5px' }}>
-              <div>Mode: {entity?.mode || 'N/A'}</div>
-              <div>Type: {entity?.type || 'N/A'}</div>
+              <div>Mode: {String(entity?.mode || 'N/A')}</div>
+              <div>Type: {String(entity?.type || 'N/A')}</div>
               <div>En mouvement: {isMoving ? 'Oui' : 'Non'}</div>
               {vehicle && (
                 <>
-                  <div>Position: {vehicle.coord || 'N/A'}</div>
-                  <div>Carburant: {vehicle.fuel || 0}/100</div>
+                  <div>Position: {String(vehicle.coord || 'N/A')}</div>
+                  <div>Carburant: {String(vehicle.fuel || 0)}/100</div>
                 </>
               )}
             </div>
@@ -161,7 +161,7 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                 backgroundColor: '#333',
                 borderRadius: '3px'
               }}>
-                <div>Status: <span style={{ fontWeight: 'bold' }}>{droneFleet.status?.toUpperCase() || 'N/A'}</span></div>
+                <div>Status: <span style={{ fontWeight: 'bold' }}>{String(droneFleet.status || '').toUpperCase() || 'N/A'}</span></div>
                 
                 {/* Drone explorateur */}
                 {droneFleet.drones?.explorer && (
@@ -182,17 +182,17 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                         fontSize: '9px', 
                         color: droneFleet.drones.explorer.isActive ? '#4CAF50' : '#888' 
                       }}>
-                        {droneFleet.drones.explorer.state?.toUpperCase() || 'DOCKED'}
+                        {String(droneFleet.drones.explorer.state || '').toUpperCase() || 'DOCKED'}
                       </span>
                     </div>
                     {droneFleet.drones.explorer.position && (
                       <div style={{ fontSize: '9px', color: '#ccc', marginTop: '2px' }}>
-                        Pos: {droneFleet.drones.explorer.position.x?.toFixed(1)},{droneFleet.drones.explorer.position.z?.toFixed(1)}
+                        Pos: {String(droneFleet.drones.explorer.position.x?.toFixed(1) || '0')},{String(droneFleet.drones.explorer.position.z?.toFixed(1) || '0')}
                       </div>
                     )}
                     {droneFleet.drones.explorer.missionTarget && (
                       <div style={{ fontSize: '9px', color: '#ccc' }}>
-                        Target: {droneFleet.drones.explorer.missionTarget.x},{droneFleet.drones.explorer.missionTarget.z}
+                        Target: {String(droneFleet.drones.explorer.missionTarget.x || '0')},{String(droneFleet.drones.explorer.missionTarget.z || '0')}
                       </div>
                     )}
                   </div>
@@ -213,7 +213,7 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                         fontSize: '9px', 
                         color: droneFleet.drones.combat.isActive ? '#f44336' : '#888' 
                       }}>
-                        {droneFleet.drones.combat.state?.toUpperCase() || 'DOCKED'}
+                        {String(droneFleet.drones.combat.state || '').toUpperCase() || 'DOCKED'}
                       </span>
                     </div>
                   </div>
@@ -234,7 +234,7 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                         fontSize: '9px', 
                         color: droneFleet.drones.special.isActive ? '#ff9800' : '#888' 
                       }}>
-                        {droneFleet.drones.special.state?.toUpperCase() || 'DOCKED'}
+                        {String(droneFleet.drones.special.state || '').toUpperCase() || 'DOCKED'}
                       </span>
                     </div>
                   </div>
@@ -396,40 +396,39 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                             marginRight: '6px'
                           }}>
                             {getEventTypeIcon(event.type)}
-                          </span>
-                          <span style={{ 
+                          </span>                            <span style={{ 
                             color: '#fff',
                             fontWeight: 'bold',
                             fontSize: '9px'
                           }}>
-                            {event.eventName}
+                            {String(event.eventName || 'unknown')}
                           </span>
                         </div>
                         <span style={{ color: '#888', fontSize: '7px' }}>
-                          {event.timestamp}
+                          {String(event.timestamp || '')}
                         </span>
                       </div>
                       
                       {event.type === 'TRANSITION' && (
                         <div style={{ fontSize: '7px', color: '#ccc', marginTop: '2px' }}>
-                          Transition: {event.eventData?.from || 'unknown'} → {event.eventData?.to || 'unknown'}
+                          Transition: {String(event.eventData?.from || 'unknown')} → {String(event.eventData?.to || 'unknown')}
                         </div>
                       )}
                       
                       {event.type === 'CONTEXT_UPDATE' && event.eventData?.droneStateChange && (
                         <div style={{ fontSize: '7px', color: '#ccc', marginTop: '2px' }}>
-                          Drone: {event.eventData.droneStateChange.from || 'unknown'} → {event.eventData.droneStateChange.to || 'unknown'}
+                          Drone: {String(event.eventData.droneStateChange.from || 'unknown')} → {String(event.eventData.droneStateChange.to || 'unknown')}
                         </div>
                       )}
                       
                       {event.type === 'SENT' && event.eventData && Object.keys(event.eventData).length > 0 && (
                         <div style={{ fontSize: '7px', color: '#ccc', marginTop: '2px' }}>
-                          Data: {JSON.stringify(event.eventData)}
+                          Data: {typeof event.eventData === 'object' ? JSON.stringify(event.eventData) : String(event.eventData)}
                         </div>
                       )}
                       
                       <div style={{ fontSize: '7px', color: '#666', marginTop: '1px' }}>
-                        État: {event.fromState}
+                        État: {String(event.fromState || 'unknown')}
                       </div>
                     </div>
                   ))
@@ -568,9 +567,9 @@ const FSMDebugPanel = ({
             borderRadius: '3px',
             fontSize: '11px'
           }}>
-            <div><strong>Bots FSM actifs:</strong> {globalStats.activeCount}</div>
+            <div><strong>Bots FSM actifs:</strong> {String(globalStats.activeCount || 0)}</div>
             <div><strong>Système:</strong> {globalStats.systemRunning ? '🟢 ACTIF' : '🔴 ARRÊTÉ'}</div>
-            <div><strong>Dernière MAJ:</strong> {globalStats.timestamp}</div>
+            <div><strong>Dernière MAJ:</strong> {String(globalStats.timestamp || 'N/A')}</div>
           </div>
 
           {/* Liste des machines d'état */}
