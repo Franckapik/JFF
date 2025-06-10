@@ -15,14 +15,15 @@
 // ============================================================================
 
 /**
- * États possibles du bot FSM
+ * États possibles du bot FSM (états principaux de la machine d'état)
+ * Ces états définissent le comportement global du bot, différents des sous-états internes
  */
 export const BOT_STATES = {
   EVALUATING: 'evaluating',
   EXPLORING: 'exploring', 
   EXPLORING_DEPLOYING: 'exploring_deploying',
   EXPLORING_PROSPECTING: 'exploring_prospecting',  // Nouveau sous-état pour la prospection
-  EXPLORING_RETURNING: 'exploring_returning',
+  EXPLORING_RETURNING: 'exploring_returning',      // État de retour après exploration
   COLLECTING: 'collecting',
   IDLE_AT_BASE: 'idleAtBase'
 };
@@ -203,13 +204,13 @@ export const FUEL_CONSTANTS = {
 };
 
 /**
- * États d'exploration possibles
+ * États d'exploration internes (sous-états pendant l'exploration)
+ * Ces états sont différents des états FSM principaux (BOT_STATES)
  */
 export const EXPLORATION_STATES = {
   IDLE: 'idle',
   SEARCHING_TARGET: 'searching_target',
   EXPLORING: 'exploring',
-  RETURNING: 'returning',
   COMPLETED: 'completed'
 };
 

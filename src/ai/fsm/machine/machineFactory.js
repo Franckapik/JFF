@@ -15,6 +15,7 @@ import { BOT_STATES } from './constants/constants.js';
 import { 
   evaluatingState,
   exploringState,
+  returningState,
   collectingState,
   idleAtBaseState
 } from './states/index.js';
@@ -42,7 +43,7 @@ export const createBotMachine = (botId, initialData = {}) => {
       [BOT_STATES.EXPLORING]: exploringState,
       [BOT_STATES.EXPLORING_DEPLOYING]: exploringState,
       [BOT_STATES.EXPLORING_PROSPECTING]: exploringState,
-      [BOT_STATES.EXPLORING_RETURNING]: exploringState,
+      [BOT_STATES.EXPLORING_RETURNING]: returningState,
       [BOT_STATES.COLLECTING]: collectingState,
       [BOT_STATES.IDLE_AT_BASE]: idleAtBaseState,
     },
@@ -75,7 +76,7 @@ export default createBotMachine;
  *    - BASE_REACHED → passage à IDLE_AT_BASE
  * 
  * 3. Transitions d'urgence (depuis n'importe quel état) :
- *    - EMERGENCY_DETECTED → RETURNING
+ *    - EMERGENCY_DETECTED → EXPLORING_RETURNING
  *    - MANUAL_OVERRIDE → EVALUATING
  * 
  * 4. Chaque état gère ses propres timeouts et conditions

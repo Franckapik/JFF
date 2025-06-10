@@ -13,5 +13,6 @@
 // Export des états
 export { evaluatingState } from './evaluating.js';
 export { exploringState } from './exploring.js';
+export { returningState } from './returning.js';
 export { collectingState } from './collecting.js';
 export { idleAtBaseState } from './idleAtBase.js';

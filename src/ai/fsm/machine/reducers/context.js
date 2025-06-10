@@ -116,7 +116,7 @@ export const stateTransitionReducers = {
     //les autres reducers ci dessus doivent etre utilisés dans le fichier exploration.js .
     const updatedDrone = {
       ...currentDrone,
-      state: 'returning',  // ✅ Utiliser le bon état
+      state: 'returning',  // ✅ État visuel du drone (DRONE_VISUAL_STATES)
       targetPosition: shipPosition,           // Position du vaisseau pour le retour
       isReturning: true,
       returnStartTime: Date.now(),

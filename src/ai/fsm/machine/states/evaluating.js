@@ -28,8 +28,8 @@ import { movementActions } from '../actions/core/movementActions.js';
 export const evaluatingState = state(
   // === TRANSITIONS DE SÉCURITÉ (PRIORITÉ MAX) ===
   
-  // Si carburant critique ou capacité pleine → RETURNING
-  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.RETURNING, 
+  // Si carburant critique ou capacité pleine → EXPLORING_RETURNING
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_RETURNING, 
     // Guard d'urgence
     guard((context, event) => {
       const needsEmergency = safetyGuards.needsEmergencyReturn(context, event);
@@ -125,8 +125,8 @@ export const evaluatingState = state(
     })
   ),
 
-  // Si drone pas à la base → RETURNING (pour récupérer le drone)
-  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.RETURNING, 
+  // Si drone pas à la base → EXPLORING_RETURNING (pour récupérer le drone)
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_RETURNING, 
     // Guard pour drone pas à la base
     guard((context, event) => {
       const notAtBase = !baseGuards.isAtBase(context, event);
@@ -212,7 +212,7 @@ export const evaluatingState = state(
   ),
 
   // Urgence détectée
-  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED, BOT_STATES.RETURNING, 
+  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED, BOT_STATES.EXPLORING_RETURNING, 
     guard(() => true),
     reduce((context, event) => ({
       ...context,

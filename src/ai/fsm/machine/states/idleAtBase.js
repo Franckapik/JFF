@@ -225,7 +225,7 @@ export const idleAtBaseState = state(
 
   // Urgence détectée
   transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED,
-    BOT_STATES.RETURNING,
+    BOT_STATES.EXPLORING_RETURNING,
     () => true,
     reduce((context, event) => {
       // Utiliser le reducer d'urgence

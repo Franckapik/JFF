@@ -49,7 +49,7 @@ export const returningState = state(
 
   // Mouvement en cours vers la base
   transition(MOVEMENT_EVENT_TYPES.MOVEMENT_STARTED,
-    BOT_STATES.RETURNING, // Reste en returning
+    BOT_STATES.EXPLORING_RETURNING, // Reste en exploring_returning
     () => true,
     reduce((context, event) => {
       // Utiliser le reducer de mouvement
@@ -70,7 +70,7 @@ export const returningState = state(
 
   // Progression du mouvement
   transition(MOVEMENT_EVENT_TYPES.MOVEMENT_PROGRESS,
-    BOT_STATES.RETURNING, // Reste en returning
+    BOT_STATES.EXPLORING_RETURNING, // Reste en exploring_returning
     () => true,
     reduce((context, event) => ({
       ...context,
@@ -165,7 +165,7 @@ export const returningState = state(
 
   // Nouvelle urgence détectée
   transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED,
-    BOT_STATES.RETURNING, // Reste en returning mais update le contexte
+    BOT_STATES.EXPLORING_RETURNING, // Reste en exploring_returning mais update le contexte
     () => true,
     reduce((context, event) => ({
       ...context,
