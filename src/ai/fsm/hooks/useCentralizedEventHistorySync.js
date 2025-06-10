@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useEffect, useRef } from 'react';
-import { useBotMachineFixed } from "./useBotMachineSync.js";
+import { useBotMachine } from "./useBotMachine.js";
 import { useFSMSync } from '../contexts/FSMSyncContext.jsx';
 import useFSMStore from '../../../stores/useFSMStore/index.js';
 
@@ -18,7 +18,7 @@ import useFSMStore from '../../../stores/useFSMStore/index.js';
  * Hook centralisé pour l'historique des événements FSM avec synchronisation
  */
 export const useCentralizedEventHistorySync = (botId) => {
-  const { send: originalSend, current } = useBotMachineFixed(botId);
+  const { send: originalSend, current } = useBotMachine(botId);
   const { registerSyncCallback } = useFSMSync();
   const addEventToHistory = useFSMStore(state => state.addEventToHistory);
   const getEventHistory = useFSMStore(state => state.getEventHistory);

@@ -1,4 +1,17 @@
-// filepath: /home/fanch/Documents/jff/react-three-vite/src/ai/fsm/hooks/useBotMachineFixed.js
+/**
+ * ============================================================================
+ * UNIFIED BOT MACHINE HOOK - Hook FSM unifié avec synchronisation
+ * ============================================================================
+ * 
+ * Hook unifié consolidant toutes les fonctionnalités FSM :
+ * - Synchronisation entre instances
+ * - Instances partagées optionnelles
+ * - Position sync automatique
+ * - Auto-exploration
+ * 
+ * @version 2.0.0
+ */
+
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useMachine } from 'react-robot';
 import { createEntityContext } from '../machine/context/initialContext.js';
@@ -9,10 +22,25 @@ import { SYSTEM_EVENT_TYPES } from '../machine/events/systemEvents.js';
 import { useTileStore } from '../../../stores/useTileStore/index.js';
 import fsmLogger from '../../../logger/fsmLogger.js';
 
+// Map globale pour les instances partagées (optionnel)
+const globalMachineInstances = new Map();
+
 /**
- * Hook FSM simplifié - Gestion autonome avec exploration automatique
+ * Hook FSM unifié avec synchronisation et options d'instance partagée
+ * @param {string} botId - ID du bot
+ * @param {string} entityType - Type d'entité
+ * @param {Object} options - Options de configuration
+ * @param {boolean} options.useSharedInstance - Utiliser une instance partagée globalement
  */
-export const useBotMachineFixed = (botId, entityType) => {
+export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {}) => {
+  const { useSharedInstance = false } = options;
+  
+  // Gestion des instances partagées
+  if (useSharedInstance && globalMachineInstances.has(botId)) {
+    fsmLogger.info(`[useBotMachine] Using existing shared instance for bot: ${botId}`);
+    return globalMachineInstances.get(botId);
+  }
+  
   // Créer une machine FSM locale
   const initialContext = useMemo(() => createEntityContext(botId, entityType), [botId, entityType]);
   const machine = useMemo(() => createBotMachine(botId, initialContext), [botId, initialContext]);
@@ -25,12 +53,9 @@ export const useBotMachineFixed = (botId, entityType) => {
   useEffect(() => {
     const cleanup = registerSyncCallback(botId, (eventName, eventData) => {
       if (eventName === 'CONTEXT_UPDATE') {
-        // Pour les mises à jour de contexte, on ne peut pas forcer directement
-        // mais on peut déclencher un événement interne pour synchroniser
-        fsmLogger.info(`[useBotMachineFixed] Received context sync for ${botId}:`, eventData);
+        fsmLogger.info(`[useBotMachine] Received context sync for ${botId}:`, eventData);
       } else {
-        // Pour les événements normaux, les transmettre
-        fsmLogger.info(`[useBotMachineFixed] Received sync event ${eventName} for ${botId}`);
+        fsmLogger.info(`[useBotMachine] Received sync event ${eventName} for ${botId}`);
         send(eventName, eventData);
       }
     });
@@ -40,12 +65,9 @@ export const useBotMachineFixed = (botId, entityType) => {
   
   // Wrapper pour send qui synchronise vers toutes les instances
   const syncedSend = useCallback((eventName, eventData = {}) => {
-    fsmLogger.info(`[useBotMachineFixed] Sending ${eventName} for bot ${botId}`);
+    fsmLogger.info(`[useBotMachine] Sending ${eventName} for bot ${botId}`);
     
-    // Envoyer localement
     const result = send(eventName, eventData);
-    
-    // Synchroniser vers les autres instances
     syncEvent(botId, eventName, eventData);
     
     return result;
@@ -55,25 +77,21 @@ export const useBotMachineFixed = (botId, entityType) => {
   const hasStartedExploring = useRef(false);
   const positionSyncRef = useRef(false);
   
-  // Accès au store de tuiles via hook Zustand
   const tiles = useTileStore(state => state.tiles);
   
   // Synchronisation de position au démarrage
   useEffect(() => {
     if (!positionSyncRef.current && current?.context && tiles) {
-      // Vérifier si la position du véhicule est manquante
       if (!current.context.vehicle?.position || !current.context.vehicle?.coord) {
-        fsmLogger.info(`[useBotMachineFixed] Bot ${botId} needs position synchronization`);
+        fsmLogger.info(`[useBotMachine] Bot ${botId} needs position synchronization`);
         
-        // Récupérer la tuile de départ assignée à ce bot
         const assignedTile = Object.values(tiles).find(tile => 
           tile.type === "depart" && tile.playerId === botId
         );
 
         if (assignedTile) {
-          fsmLogger.info(`[B4] [useBotMachineFixed] Found starting tile for bot ${botId}:`);
+          fsmLogger.info(`[useBotMachine] Found starting tile for bot ${botId}`);
           
-          // Utiliser l'action updatePosition mise à jour qui gère position ET coord
           syncedSend('UPDATE_POSITION', {
             position: assignedTile.position,
             coord: assignedTile.coord,
@@ -82,30 +100,26 @@ export const useBotMachineFixed = (botId, entityType) => {
           
           positionSyncRef.current = true;
         } else {
-          fsmLogger.error(`[useBotMachineFixed] No starting tile found for bot ${botId}`);
+          fsmLogger.error(`[useBotMachine] No starting tile found for bot ${botId}`);
         }
       } else {
         positionSyncRef.current = true;
-        fsmLogger.info(`[useBotMachineFixed] Bot ${botId} already has position:`, current.context.vehicle.position);
+        fsmLogger.info(`[useBotMachine] Bot ${botId} already has position:`, current.context.vehicle.position);
       }
     }
   }, [botId, current?.context, syncedSend, tiles]);
   
-  // Données essentielles - accès direct au contexte
+  // Données essentielles
   const entity = useMemo(() => current.context, [current.context]);
   const vehicle = useMemo(() => current.context?.vehicle, [current.context?.vehicle]);
   const state = useMemo(() => current.name, [current.name]);
+  const isMoving = useMemo(() => vehicle?.isMoving || false, [vehicle?.isMoving]);
   
-  // isMoving basé directement sur les propriétés du véhicule
-  const isMoving = useMemo(() => {
-    return vehicle?.isMoving || false;
-  }, [vehicle?.isMoving]);
-  
-  // Démarrage automatique après 2 secondes (une seule fois)
+  // Démarrage automatique
   useEffect(() => {
     if (!hasStartedExploring.current && state === 'evaluating') {
       timeoutRef.current = setTimeout(() => {
-        console.log(`[useBotMachineFixed] Sending EVALUATION_COMPLETE for bot ${botId}`);
+        console.log(`[useBotMachine] Sending EVALUATION_COMPLETE for bot ${botId}`);
         syncedSend(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE);
         hasStartedExploring.current = true;
       }, 2000);
@@ -119,18 +133,14 @@ export const useBotMachineFixed = (botId, entityType) => {
     };
   }, [state === 'evaluating' && !hasStartedExploring.current, syncedSend, botId]);
 
-  // ===================================================================
-  // HYBRID ARCHITECTURE - Position tracking handled by Fleet.jsx + useFSMPositionTracker
-  // ===================================================================
-
-  return {
+  const instance = {
     entity,
     vehicle,
     state,
     context: current.context,
     isMoving,
     current,
-    send: syncedSend, // Utiliser la version synchronisée
+    send: syncedSend,
     autoEvents: {
       start: () => {},
       stop: () => {},
@@ -143,6 +153,31 @@ export const useBotMachineFixed = (botId, entityType) => {
       }
     }
   };
+
+  // Stocker l'instance si mode partagé
+  if (useSharedInstance) {
+    globalMachineInstances.set(botId, instance);
+  }
+
+  return instance;
 };
 
-export default useBotMachineFixed;
+// Utilitaires pour les instances partagées
+export const clearBotMachineInstance = (botId) => {
+  if (globalMachineInstances.has(botId)) {
+    fsmLogger.info(`[useBotMachine] Clearing instance for bot: ${botId}`);
+    globalMachineInstances.delete(botId);
+  }
+};
+
+export const clearAllBotMachineInstances = () => {
+  fsmLogger.info(`[useBotMachine] Clearing all instances`);
+  globalMachineInstances.clear();
+};
+
+// Export par défaut et alias pour la compatibilité
+export const useBotMachineFixed = useBotMachine;
+export const useBotMachineSharedInstance = (botId, entityType) => 
+  useBotMachine(botId, entityType, { useSharedInstance: true });
+
+export default useBotMachine;

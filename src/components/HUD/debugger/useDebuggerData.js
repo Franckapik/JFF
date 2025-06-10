@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useTileStore } from "../../../stores/useTileStore";
-import { useBotMachineFixed } from "../../../ai/fsm/hooks/useBotMachineSync.js";
+import { useBotMachine } from "../../../ai/fsm/hooks/useBotMachine.js";
 
 /**
  * Hook personnalisé pour gérer les données du debugger (FSM-only)
@@ -25,7 +25,7 @@ export const useDebuggerData = () => {
     isAutonomous,
     canManualControl,
     isMoving
-  } = useBotMachineFixed(activeBotId);
+  } = useBotMachine(activeBotId);
 
   // Simulation des données pour l'onglet Actions (à remplacer par les vraies données FSM)
   const actionQueue = [

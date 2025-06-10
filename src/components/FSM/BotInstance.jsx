@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { useBotMachineFixed } from '../../ai/fsm/hooks/useBotMachineSync.js';
+import { useBotMachine } from '../../ai/fsm/hooks/useBotMachine.js';
 import fsmLogger from '../../logger/fsmLogger.js';
 
 const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) => {
@@ -11,7 +11,7 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
     autoEvents,
     isMoving,
     context  // Add the full FSM context
-  } = useBotMachineFixed(botId);
+  } = useBotMachine(botId);
 
   // Mémoriser les valeurs qui changent souvent
   const fuel = vehicle?.fuel || 0;

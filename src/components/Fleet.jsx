@@ -1,7 +1,7 @@
 import React, { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { useBotMachineFixed } from "../ai/fsm/hooks/useBotMachineSync.js";
+import { useBotMachine } from "../ai/fsm/hooks/useBotMachine.js";
 import { useFSMPositionTracker } from "../ai/fsm/hooks/useFSMPositionTracker.js";
 import ShipMesh from "./Vehicles/ShipMesh.jsx";
 import DroneMesh from "./Vehicles/DroneMesh.jsx";
@@ -35,7 +35,7 @@ const Fleet = React.memo(({
   // FSM INTEGRATION AVEC INTERMÉDIAIRE INTELLIGENT
   // ===================================================================
   
-  const { current, send: fsmSend, context, vehicle, state } = useBotMachineFixed(botId, 'bot');
+  const { current, send: fsmSend, context, vehicle, state } = useBotMachine(botId, 'bot');
 
   // 🎯 INTERMÉDIAIRE INTELLIGENT : Surveille et déclenche les événements FSM
   const updateVisualPosition = useFSMPositionTracker(context, fsmSend, botId);

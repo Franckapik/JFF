@@ -31,21 +31,21 @@ export {
   fsmActions
 } from './machine/botMachine.js';
 
-// Hook principal Phase 2
+// Hook principal Phase 2 - VERSION UNIFIÉE
 export { 
-  useBotMachine
+  useBotMachine,
+  useBotMachineFixed,
+  useBotMachineSharedInstance,
+  clearBotMachineInstance,
+  clearAllBotMachineInstances
 } from './hooks/useBotMachine.js';
 
 // ============================================================================
-// ANCIEN SYSTÈME FSM (Rétrocompatibilité)
+// ANCIEN SYSTÈME FSM (Rétrocompatibilité) - NETTOYÉ
 // ============================================================================
 
 // Machine principale (ancien)
 export { createBotMachine } from './machine/machineFactory.js';
-
-// Hooks anciens (si ils existent)
-// export { useBotActions } from './hooks/useBotActions.js';
-// export { useBotEvents } from './hooks/useBotEvents.js';
 
 // États et constantes (ancien)
 // export { BOT_STATES } from './machine/states/index.js';
