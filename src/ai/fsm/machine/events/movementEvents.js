@@ -221,6 +221,107 @@ const createProspectingCompleteEvent = (position, tileCoord, resourcesFound, dro
   timestamp: Date.now()
 });
 
+/**
+ * Événement de mise à jour de position
+ * Déclenché pour mettre à jour la position d'une entité
+ */
+const UPDATE_POSITION = 'UPDATE_POSITION';
+
+/**
+ * Créateur d'événement: UPDATE_POSITION
+ * @param {object} position - Nouvelle position de l'entité
+ * @param {string} entityType - Type d'entité ('ship', 'drone', 'bot')
+ * @returns {object} Event payload
+ */
+const createUpdatePositionEvent = (position, entityType = 'ship') => ({
+  type: UPDATE_POSITION,
+  position,
+  entityType,
+  timestamp: Date.now()
+});
+
+// ============================================================================
+// ÉVÉNEMENTS DE VAISSEAU
+// ============================================================================
+
+/**
+ * Événement de démarrage de mouvement de vaisseau
+ * Déclenché lorsqu'un vaisseau commence à se déplacer
+ */
+const SHIP_MOVEMENT_STARTED = 'SHIP_MOVEMENT_STARTED';
+
+/**
+ * Créateur d'événement: SHIP_MOVEMENT_STARTED
+ * @param {object} position - Position de départ du vaisseau
+ * @param {object} targetPosition - Position cible du vaisseau
+ * @returns {object} Event payload
+ */
+const createShipMovementStartedEvent = (position, targetPosition = null) => ({
+  type: SHIP_MOVEMENT_STARTED,
+  position,
+  targetPosition,
+  timestamp: Date.now()
+});
+
+/**
+ * Événement d'arrivée de vaisseau à une tuile
+ * Déclenché lorsqu'un vaisseau atteint sa destination
+ */
+const SHIP_ARRIVED_AT_TILE = 'SHIP_ARRIVED_AT_TILE';
+
+/**
+ * Créateur d'événement: SHIP_ARRIVED_AT_TILE
+ * @param {object} position - Position d'arrivée du vaisseau
+ * @param {object} tileCoord - Coordonnées de la tuile atteinte
+ * @returns {object} Event payload
+ */
+const createShipArrivedAtTileEvent = (position, tileCoord) => ({
+  type: SHIP_ARRIVED_AT_TILE,
+  position,
+  tileCoord,
+  timestamp: Date.now()
+});
+
+/**
+ * Événement de collecte terminée par vaisseau
+ * Déclenché lorsqu'un vaisseau termine la collecte de ressources
+ */
+const SHIP_COLLECTION_COMPLETED = 'SHIP_COLLECTION_COMPLETED';
+
+/**
+ * Créateur d'événement: SHIP_COLLECTION_COMPLETED
+ * @param {object} position - Position où la collecte a eu lieu
+ * @param {object} tileCoord - Coordonnées de la tuile collectée
+ * @param {object} collectedResources - Ressources collectées
+ * @returns {object} Event payload
+ */
+const createShipCollectionCompletedEvent = (position, tileCoord, collectedResources) => ({
+  type: SHIP_COLLECTION_COMPLETED,
+  position,
+  tileCoord,
+  collectedResources,
+  timestamp: Date.now()
+});
+
+/**
+ * Événement de ravitaillement terminé
+ * Déclenché lorsqu'un vaisseau termine son ravitaillement
+ */
+const SHIP_REFUEL_COMPLETED = 'SHIP_REFUEL_COMPLETED';
+
+/**
+ * Créateur d'événement: SHIP_REFUEL_COMPLETED
+ * @param {object} position - Position où le ravitaillement a eu lieu
+ * @param {number} fuelAdded - Quantité de carburant ajoutée
+ * @returns {object} Event payload
+ */
+const createShipRefuelCompletedEvent = (position, fuelAdded) => ({
+  type: SHIP_REFUEL_COMPLETED,
+  position,
+  fuelAdded,
+  timestamp: Date.now()
+});
+
 // Export des types d'événements (constants)
 export const MOVEMENT_EVENT_TYPES = {
   MOVEMENT_STARTED,
@@ -233,6 +334,11 @@ export const MOVEMENT_EVENT_TYPES = {
   DRONE_RETURNED,
   MOVEMENT_CANCELLED,
   PROSPECTING_COMPLETE,
+  UPDATE_POSITION,
+  SHIP_MOVEMENT_STARTED,
+  SHIP_ARRIVED_AT_TILE,
+  SHIP_COLLECTION_COMPLETED,
+  SHIP_REFUEL_COMPLETED
 };
 
 // Export des créateurs d'événements
@@ -246,5 +352,10 @@ export const movementEvents = {
   createMovementCancelledEvent,
   createDroneReachedTargetEvent,
   createDroneReturnedEvent,
-  createProspectingCompleteEvent
+  createProspectingCompleteEvent,
+  createUpdatePositionEvent,
+  createShipMovementStartedEvent,
+  createShipArrivedAtTileEvent,
+  createShipCollectionCompletedEvent,
+  createShipRefuelCompletedEvent
 };

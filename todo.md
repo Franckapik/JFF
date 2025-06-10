@@ -1,3 +1,6 @@
+Peut-on renommer useFSMPositionTracker en useFSMDroneTracker et creer un nouveau hook pour le ship (useFSLShipTracker) qui reprend exactement le meme principe et les règles de ce fichier mais pour le vaisseau (ShipMesh)? 
+
+
 Refuel et repair lents sur les bonnes stations.
 Les drones ont des limites de deplacements.
 Les tuiles peuvent regenerer de la nourriture et des cartes spéciales avec le temps. Les débris sont issus des anciennes batailles (depart) et des dégats eventuels liés au damage.

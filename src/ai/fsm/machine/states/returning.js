@@ -19,6 +19,7 @@ import { contextReducers } from '../reducers/context.js';
 import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
 import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
+import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
 
 /**
  * État RETURNING - Retour à la base
@@ -47,7 +48,7 @@ export const returningState = state(
   ),
 
   // Mouvement en cours vers la base
-  transition('MOVEMENT_STARTED',
+  transition(MOVEMENT_EVENT_TYPES.MOVEMENT_STARTED,
     BOT_STATES.RETURNING, // Reste en returning
     () => true,
     reduce((context, event) => {
@@ -68,7 +69,7 @@ export const returningState = state(
   ),
 
   // Progression du mouvement
-  transition('MOVEMENT_PROGRESS',
+  transition(MOVEMENT_EVENT_TYPES.MOVEMENT_PROGRESS,
     BOT_STATES.RETURNING, // Reste en returning
     () => true,
     reduce((context, event) => ({
@@ -82,7 +83,7 @@ export const returningState = state(
   // === GESTION DES URGENCES ===
   
   // Urgence résolue pendant le retour
-  transition('EMERGENCY_RESOLVED',
+  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_RESOLVED,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => ({
@@ -114,7 +115,7 @@ export const returningState = state(
   ),
 
   // Échec de navigation
-  transition('NAVIGATION_FAILED',
+  transition(EMERGENCY_EVENT_TYPES.NAVIGATION_FAILED,
     BOT_STATES.EVALUATING,
     () => true,
     reduce((context, event) => ({
@@ -131,7 +132,7 @@ export const returningState = state(
   // === VÉRIFICATIONS CRITIQUES ===
   
   // Carburant critique pendant le retour
-  transition('CRITICAL_FUEL',
+  transition(EMERGENCY_EVENT_TYPES.CRITICAL_FUEL,
     BOT_STATES.IDLE_AT_BASE,
     () => true,
     reduce((context) => ({
@@ -163,7 +164,7 @@ export const returningState = state(
   ),
 
   // Nouvelle urgence détectée
-  transition('EMERGENCY_DETECTED',
+  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED,
     BOT_STATES.RETURNING, // Reste en returning mais update le contexte
     () => true,
     reduce((context, event) => ({

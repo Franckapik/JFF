@@ -61,17 +61,35 @@ export const DRONE_VISUAL_STATES = {
  */
 export const POSITION_TRACKER_CONFIG = {
   THRESHOLDS: {
+    // === SEUILS COMMUNS ===
     TARGET_REACH: 0.25,        // Distance pour considérer la cible atteinte
-    DEPLOYMENT_START: 0.1,     // Distance pour déclencher le déploiement
     RESET_MOVEMENT: 0.5,       // Distance pour nettoyer les flags (TARGET_REACH * 2)
+    
+    // === SEUILS DRONES ===
+    DEPLOYMENT_START: 0.1,     // Distance pour déclencher le déploiement de drone
+    
+    // === SEUILS VAISSEAUX ===
+    SHIP_MOVEMENT_START: 0.1,  // Distance pour déclencher le mouvement du vaisseau
+    STATION_REACH: 0.3,        // Distance pour atteindre une station (fuel/repair)
   },
   TIMINGS: {
+    // === TIMINGS COMMUNS ===
     EVENT_COOLDOWN: 1000,      // Cooldown entre événements identiques
     DEBUG_LOG_INTERVAL: 2000,  // Intervalle des logs de debug
+    
+    // === TIMINGS DRONES ===
     DEPLOYMENT_RESET: 5000,    // Reset du flag de déploiement
     EXPLORATION_RESET: 3000,   // Reset du flag d'exploration
     RETURN_RESET: 5000,        // Reset du flag de retour
     PROSPECTING_DURATION: 3000, // Durée de la phase de prospection
+    
+    // === TIMINGS VAISSEAUX ===
+    SHIP_MOVEMENT_RESET: 2000, // Reset du flag de mouvement vaisseau
+    SHIP_ARRIVAL_RESET: 3000,  // Reset du flag d'arrivée vaisseau
+    COLLECTION_DURATION: 2000, // Durée de collecte des ressources
+    COLLECTION_RESET: 4000,    // Reset du flag de collecte
+    REFUEL_DURATION: 3000,     // Durée du refuel
+    REFUEL_RESET: 5000,        // Reset du flag de refuel
   }
 };
 

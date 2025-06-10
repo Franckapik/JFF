@@ -1,27 +1,49 @@
-import React, { useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
-import * as THREE from "three";
+import React, { useMemo } from "react";
 import { useBotMachine } from "../ai/fsm/hooks/useBotMachine.js";
-import { useFSMPositionTracker } from "../ai/fsm/hooks/useFSMPositionTracker.js";
+import { useFSMDroneTracker } from "../ai/fsm/hooks/useFSMDroneTracker.js";
+import { useFSMShipTracker } from "../ai/fsm/hooks/useFSMShipTracker.js";
+import { useDroneAnimation } from "../animations/useDroneAnimation.js";
+import { useShipAnimation } from "../animations/useShipAnimation.js";
 import ShipMesh from "./Vehicles/ShipMesh.jsx";
 import DroneMesh from "./Vehicles/DroneMesh.jsx";
 
 /**
  * =================================================================
- * Composant Fleet - Architecture Hybride avec Intermédiaire Intelligent
+ * Composant Fleet - Architecture Refactorisée avec Hooks Spécialisés
  * =================================================================
  * 
- * ✅ SÉPARATION OPTIMALE :
- * - Fleet.jsx calcule les positions visuelles R3F (PAS de send FSM)
- * - useFSMPositionTracker agit comme intermédiaire intelligent
- * - Le tracker surveille les positions et déclenche les événements FSM
- * - FSM réagit selon sa logique interne
+ * ✅ ARCHITECTURE FINALE (Post-Refactorisation) :
+ * 
+ * 📁 STRUCTURE DES FICHIERS :
+ * - Fleet.jsx : Coordination des véhicules et intégration FSM
+ * - /ai/fsm/hooks/useFSMDroneTracker.js : Tracking spécialisé drones
+ * - /ai/fsm/hooks/useFSMShipTracker.js : Tracking spécialisé vaisseaux
+ * - /animations/useDroneAnimation.js : Animation des drones
+ * - /animations/useShipAnimation.js : Animation des vaisseaux
+ * 
+ * 🔄 FLUX DE DONNÉES :
+ * 1. Fleet.jsx reçoit shipPosition mondiale de Scene.jsx
+ * 2. Hooks d'animation calculent positions locales (relatives au parent group)
+ * 3. Trackers reçoivent positions mondiales pour événements FSM
+ * 4. FSM met à jour le contexte selon les événements reçus
+ * 
+ * 🎯 RESPONSABILITÉS :
+ * - useFSMDroneTracker : Surveillance des distances drone → événements FSM
+ * - useFSMShipTracker : Surveillance des distances vaisseau → événements FSM  
+ * - useDroneAnimation : Interpolation visuelle + feedback états drones
+ * - useShipAnimation : Interpolation visuelle + feedback actions vaisseaux
+ * - Fleet.jsx : Coordination, positionnement relatif, rendu final
+ * 
+ * ⚡ OPTIMISATIONS :
+ * - Positionnement relatif (évite double transformation)
+ * - Hooks spécialisés par type de véhicule
+ * - Séparation animation/tracking pour clarté
  * 
  * @param {Object} props
  * @param {string} props.botId - ID du bot FSM (ex: 'bot-0')  
  * @param {number} props.botIndex - Index du bot pour la compatibilité
- * @param {Object} props.shipPosition - Position du vaisseau {x,y,z}
- * @param {string} props.color - Couleur des drones
+ * @param {Object} props.shipPosition - Position mondiale du vaisseau {x,y,z}
+ * @param {string} props.color - Couleur des véhicules
  * @param {string} props.tileCoord - Coordonnée de la tuile de départ
  */
 const Fleet = React.memo(({ 
@@ -32,154 +54,77 @@ const Fleet = React.memo(({
   tileCoord
 }) => {
   // ===================================================================
-  // FSM INTEGRATION AVEC INTERMÉDIAIRE INTELLIGENT
+  // 🚀 INTÉGRATION FSM AVEC ARCHITECTURE SPÉCIALISÉE
   // ===================================================================
   
   const { current, send: fsmSend, context, vehicle, state } = useBotMachine(botId, 'bot');
 
-  // 🎯 INTERMÉDIAIRE INTELLIGENT : Surveille et déclenche les événements FSM
-  const updateVisualPosition = useFSMPositionTracker(context, fsmSend, botId);
+  // 🎯 TRACKERS SPÉCIALISÉS : Surveillance distance → événements FSM
+  // - useFSMDroneTracker : Gère deploying, exploring, prospecting, returning
+  // - useFSMShipTracker : Gère movement, collecting, refueling
+  const updateDroneVisualPosition = useFSMDroneTracker(context, fsmSend, botId, 'explorer');
+  const updateShipVisualPosition = useFSMShipTracker(context, fsmSend, botId);
+
+  // 🎭 ANIMATIONS SPÉCIALISÉES : Interpolation visuelle + feedback d'état
+  // - useDroneAnimation : Position relative + animations par état drone
+  // - useShipAnimation : Position relative + animations par action vaisseau
+  const { droneRef, initialPosition, droneState } = useDroneAnimation(
+    context, 
+    shipPosition, // Position mondiale pour calculs de coordonnées
+    updateDroneVisualPosition, 
+    'explorer'
+  );
+  
+  const { shipRef, currentAction, isMoving } = useShipAnimation(
+    context, 
+    shipPosition, // Position mondiale pour calculs de tracking
+    updateShipVisualPosition
+  );
 
   // ===================================================================
-  // ANIMATION R3F PURE (SANS AUCUNE LOGIQUE FSM)
+  // 🎨 RENDU VISUEL - POSITIONNEMENT RELATIF OPTIMISÉ
   // ===================================================================
-  
-  const droneRef = useRef();
-
-  // Position initiale du drone (coordonnées locales au vaisseau)
-  const initialPosition = useMemo(() => ({
-    x: 0.5, y: 0.3, z: 0.5
-  }), []);
-  
-  // Position cible calculée (coordonnées locales)
-  const targetPosition = useMemo(() => {
-    const droneTargetPos = context?.droneFleet?.drones?.explorer?.targetPosition;
-    if (droneTargetPos) {
-      return {
-        x: droneTargetPos.x - shipPosition.x,
-        y: droneTargetPos.y - shipPosition.y,
-        z: droneTargetPos.z - shipPosition.z
-      };
-    }
-    return initialPosition;
-  }, [context?.droneFleet?.drones?.explorer?.targetPosition, initialPosition, shipPosition]);
-  
-  // ===================================================================
-  // ANIMATION DRONE AVEC COMMUNICATION VERS LE TRACKER
-  // ===================================================================
-  
-  // Debug tracking
-  const lastUpdateTime = useRef(0);
-
-  useFrame((state, delta) => {
-    if (!droneRef.current) return;
-    
-    const currentPosition = droneRef.current.position;
-    const now = state.clock.elapsedTime;
-    
-    // État du drone lu directement depuis le contexte FSM
-    const droneState = context?.droneFleet?.drones?.explorer?.state || 'docked';
-    const fsmState = context?.state;
-    const isActive = context?.droneFleet?.drones?.explorer?.isActive || false;
-    
-    const isMoving = droneState === 'deploying' || 
-                     droneState === 'exploring' || 
-                     droneState === 'prospecting' || // ✅ Inclure prospecting comme mouvement actif
-                     droneState === 'returning' ||
-                     fsmState === 'exploring_deploying' ||
-                     fsmState === 'exploring_prospecting' || // ✅ Inclure l'état FSM prospecting
-                     fsmState === 'exploring_returning';
-    
-    // Debug réduit - seulement en cas de problème
-    if (now - lastUpdateTime.current > 5.0 && !isMoving && isActive) {
-      console.log(`⚠️ [Fleet] Drone ${droneState} mais pas en mouvement`);
-      lastUpdateTime.current = now;
-    }
-    
-    // 🎭 MOUVEMENT FLUIDE (INTERPOLATION VISUELLE)
-    if (isMoving && targetPosition) {
-      const speed = delta * 0.8;
-      currentPosition.x = THREE.MathUtils.lerp(currentPosition.x, targetPosition.x, speed);
-      currentPosition.y = THREE.MathUtils.lerp(currentPosition.y, targetPosition.y, speed);
-      currentPosition.z = THREE.MathUtils.lerp(currentPosition.z, targetPosition.z, speed);
-      droneRef.current.rotation.y += delta * 2;
-      
-      // 🔄 COMMUNICATION VERS LE TRACKER - Version simplifiée (toutes les frames en mouvement)
-      const worldPosition = {
-        x: currentPosition.x + shipPosition.x,
-        y: currentPosition.y + shipPosition.y,
-        z: currentPosition.z + shipPosition.z
-      };
-      
-      // Envoyer la position au tracker qui gérera les événements FSM
-      updateVisualPosition(worldPosition);
-    }
-    
-    // 🔄 COMMUNICATION SPÉCIALE POUR LE RETOUR - Continuer à envoyer la position même si pas isMoving
-    if ((droneState === 'returning' || fsmState === 'exploring_returning') && targetPosition) {
-      const worldPosition = {
-        x: currentPosition.x + shipPosition.x,
-        y: currentPosition.y + shipPosition.y,
-        z: currentPosition.z + shipPosition.z
-      };
-      
-      // Envoyer la position au tracker pour détecter l'arrivée
-      updateVisualPosition(worldPosition);
-    }
-    
-    // 🎭 ANIMATIONS PAR ÉTAT (PURE VISUEL)
-    switch (droneState) {
-      case 'docked':
-        droneRef.current.rotation.y += delta * 0.5;
-        droneRef.current.position.y = targetPosition.y + Math.sin(now * 2) * 0.1;
-        break;
-        
-      case 'exploring':
-        droneRef.current.position.y = targetPosition.y + Math.sin(now * 3) * 0.2;
-        droneRef.current.rotation.y += delta * 1.5;
-        break;
-        
-      case 'prospecting':
-        // Animation de prospection : rotation plus lente, oscillation distinctive
-        droneRef.current.position.y = targetPosition.y + Math.sin(now * 4) * 0.15;
-        droneRef.current.rotation.y += delta * 0.8;
-        droneRef.current.rotation.z = Math.sin(now * 2) * 0.1; // Léger balancement
-        break;
-        
-      case 'returning':
-        // Animation de retour : mouvement rapide et déterminé vers le vaisseau
-        droneRef.current.position.y = targetPosition.y + Math.sin(now * 6) * 0.1;
-        droneRef.current.rotation.y += delta * 2.5; // Rotation plus rapide
-        droneRef.current.rotation.z = 0; // Pas de balancement, vol stable
-        break;
-    }
-  });
-
-  // ===================================================================
-  // RENDU VISUEL - SÉPARATION CLAIRE DES RESPONSABILITÉS
-  // ===================================================================
+  // 
+  // ⚡ ARCHITECTURE DE POSITIONNEMENT :
+  // - Scene.jsx place Fleet dans un <group position={[tileX, 0.5, tileZ]}>
+  // - Fleet utilise des positions relatives [0,0,0] pour éviter double transformation
+  // - Animations calculent coordonnées locales puis envoient coordonnées mondiales aux trackers
   
   return (
     <>
-      {/* VAISSEAU PRINCIPAL */}
-      <ShipMesh color={color} botId={botId} context={context} />
+      {/* 🚢 VAISSEAU PRINCIPAL - Position relative au group parent */}
+      <group ref={shipRef} position={[0, 0, 0]}>
+        <ShipMesh 
+          color={color} 
+          botId={botId} 
+          context={context}
+          currentAction={currentAction}
+          isMoving={isMoving}
+        />
+      </group>
 
-      {/* DRONE EXPLORATEUR - Animation R3F + Communication tracker */}
+      {/* 🚁 DRONE EXPLORATEUR - Position relative avec offset initial */}
       <group 
         ref={droneRef}
-        position={[initialPosition.x, initialPosition.y, initialPosition.z]}
+        position={[
+          initialPosition.x, // Offset relatif : explorer = [0.5, 0.3, 0.5]
+          initialPosition.y, 
+          initialPosition.z
+        ]}
       >
         <DroneMesh 
           color={color} 
           botId={botId} 
           context={context} 
-          droneState={{ state: context?.droneFleet?.drones?.explorer?.state || 'docked' }} 
+          droneState={{ state: droneState }}
+          droneType="explorer"
         />
       </group>
     </>
   );
 }, (prevProps, nextProps) => {
-  // Optimisation mémoire simple
+  // 🚀 OPTIMISATION MÉMOIRE - Évite les re-renders inutiles
+  // Comparaison des props critiques pour les performances
   return (
     prevProps.botId === nextProps.botId &&
     prevProps.color === nextProps.color &&

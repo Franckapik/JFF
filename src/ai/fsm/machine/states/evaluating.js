@@ -17,6 +17,7 @@ import { contextReducers } from '../reducers/context.js';
 import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
 import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
+import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
 import { movementActions } from '../actions/core/movementActions.js';
 
 /**
@@ -224,7 +225,7 @@ export const evaluatingState = state(
   ),
 
   // Mise à jour de position (reste dans le même état)
-  transition('UPDATE_POSITION', BOT_STATES.EVALUATING,
+  transition(MOVEMENT_EVENT_TYPES.UPDATE_POSITION, BOT_STATES.EVALUATING,
     guard(() => true),
     reduce((context, event) => {
       // Utiliser l'action updatePosition existante

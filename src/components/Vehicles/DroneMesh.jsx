@@ -1,7 +1,7 @@
 import React from "react";
 import { Cone, Html } from "@react-three/drei";
 
-const DroneMesh = ({ color, botId, context, droneState }) => {
+const DroneMesh = ({ color, botId, context, droneState, droneType = 'explorer' }) => {
   return (
     <>
       <Cone 
@@ -25,7 +25,7 @@ const DroneMesh = ({ color, botId, context, droneState }) => {
         />
       </Cone>
       
-      {/* ID LABEL - Drone explorateur */}
+      {/* ID LABEL - Drone avec type */}
       <Html position={[0, 0.3, 0]} center>
         <div style={{ 
           color: 'rgba(255,255,255,0.6)', 
@@ -36,7 +36,7 @@ const DroneMesh = ({ color, botId, context, droneState }) => {
           fontFamily: 'monospace',
           textAlign: 'center'
         }}>
-          {context?.droneFleet?.drones?.explorer?.id || `${botId}-explorer`}
+          {context?.droneFleet?.drones?.[droneType]?.id || `${botId}-${droneType}`}
         </div>
       </Html>
     </>

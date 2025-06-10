@@ -19,6 +19,7 @@ import { ENTITY_TYPES } from '../machine/constants/constants.js';
 import { createBotMachine } from '../machine/machineFactory.js';
 import { useFSMSync } from '../contexts/FSMSyncContext.jsx';
 import { SYSTEM_EVENT_TYPES } from '../machine/events/systemEvents.js';
+import { MOVEMENT_EVENT_TYPES, movementEvents } from '../machine/events/movementEvents.js';
 import { useTileStore } from '../../../stores/useTileStore/index.js';
 import fsmLogger from '../../../logger/fsmLogger.js';
 
@@ -92,8 +93,12 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {
         if (assignedTile) {
           fsmLogger.info(`[useBotMachine] Found starting tile for bot ${botId}`);
           
-          syncedSend('UPDATE_POSITION', {
-            position: assignedTile.position,
+          const updatePositionEvent = movementEvents.createUpdatePositionEvent(
+            assignedTile.position,
+            'ship'
+          );
+          syncedSend(updatePositionEvent.type, {
+            ...updatePositionEvent,
             coord: assignedTile.coord,
             newCoord: assignedTile.coord
           });
