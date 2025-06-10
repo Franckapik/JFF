@@ -13,6 +13,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useBotMachine } from "./useBotMachine.js";
 import { useFSMSync } from '../contexts/FSMSyncContext.jsx';
 import useFSMStore from '../../../stores/useFSMStore/index.js';
+import fsmLogger from '../../../logger/fsmLogger.js';
 
 /**
  * Hook centralisé pour l'historique des événements FSM avec synchronisation
@@ -38,7 +39,7 @@ export const useCentralizedEventHistorySync = (botId) => {
         context: current?.context ? JSON.stringify(current.context, null, 2) : 'N/A'
       };
 
-      console.log(`[CentralizedEventHistorySync] Received sync event: ${eventName} for bot ${botId}`);
+      fsmLogger.history(`Received sync event: ${eventName} for bot ${botId}`);
       addEventToHistory(botId, eventToAdd);
     });
     
@@ -55,7 +56,7 @@ export const useCentralizedEventHistorySync = (botId) => {
       context: current?.context ? JSON.stringify(current.context, null, 2) : 'N/A'
     };
 
-    console.log(`[CentralizedEventHistorySync] Capturing sent event: ${eventName} for bot ${botId}`);
+    fsmLogger.history(`Capturing sent event: ${eventName} for bot ${botId}`);
     addEventToHistory(botId, eventToAdd);
     
     // Appeler la fonction send originale (qui va synchroniser automatiquement)
@@ -82,7 +83,7 @@ export const useCentralizedEventHistorySync = (botId) => {
         context: current?.context ? JSON.stringify(current.context, null, 2) : 'N/A'
       };
 
-      console.log(`[CentralizedEventHistorySync] State transition detected: ${lastStateRef.current} → ${current.name} for bot ${botId}`);
+      fsmLogger.history(`State transition detected: ${lastStateRef.current} → ${current.name} for bot ${botId}`);
       addEventToHistory(botId, eventToAdd);
       lastStateRef.current = current.name;
     }
@@ -100,7 +101,7 @@ export const useCentralizedEventHistorySync = (botId) => {
       const lastDroneState = lastContextRef.current?.droneFleet?.drones?.explorer?.state;
       const lastLastUpdate = lastContextRef.current?.droneFleet?.drones?.explorer?.lastUpdate;
       
-      console.log(`[CentralizedEventHistorySync] Context effect triggered for bot ${botId}:`, {
+      fsmLogger.history(`Context effect triggered for bot ${botId}:`, {
         hasContext: !!current.context,
         hasLastContext: !!lastContextRef.current,
         currentDroneState,
@@ -133,14 +134,14 @@ export const useCentralizedEventHistorySync = (botId) => {
           context: currentContextString
         };
 
-        console.log(`[CentralizedEventHistorySync] Context change detected for bot ${botId}:`, {
+        fsmLogger.history(`Context change detected for bot ${botId}:`, {
           droneStateChange: currentDroneState !== lastDroneState ? `${lastDroneState} → ${currentDroneState}` : 'none',
           reason: hasSignificantChange ? 'significant change detected' : 'no change'
         });
         
         addEventToHistory(botId, eventToAdd);
       } else {
-        console.log(`[CentralizedEventHistorySync] NO context change detected for bot ${botId}`);
+        fsmLogger.history(`NO context change detected for bot ${botId}`);
       }
       
       lastContextRef.current = current.context;

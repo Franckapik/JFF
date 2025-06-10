@@ -34,7 +34,7 @@ export const FSMSyncProvider = ({ children }) => {
     
     syncCallbacksRef.current.get(botId).add(callback);
     
-    fsmLogger.info(`[FSMSync] Registered sync callback for bot: ${botId} (total: ${syncCallbacksRef.current.get(botId).size})`);
+    // fsmLogger.info(`[FSMSync] Registered sync callback for bot: ${botId} (total: ${syncCallbacksRef.current.get(botId).size})`);
     
     // Retourner une fonction de nettoyage
     return () => {
@@ -53,7 +53,7 @@ export const FSMSyncProvider = ({ children }) => {
   const syncEvent = useCallback((botId, eventName, eventData) => {
     const callbacks = syncCallbacksRef.current.get(botId);
     if (callbacks) {
-      fsmLogger.info(`[FSMSync] Syncing event ${eventName} to ${callbacks.size} instances of bot ${botId}`);
+      // fsmLogger.info(`[FSMSync] Syncing event ${eventName} to ${callbacks.size} instances of bot ${botId}`);
       callbacks.forEach(callback => {
         try {
           callback(eventName, eventData);
@@ -70,7 +70,7 @@ export const FSMSyncProvider = ({ children }) => {
   const syncContextUpdate = useCallback((botId, contextUpdate) => {
     const callbacks = syncCallbacksRef.current.get(botId);
     if (callbacks) {
-      fsmLogger.info(`[FSMSync] Syncing context update to ${callbacks.size} instances of bot ${botId}`);
+      // fsmLogger.info(`[FSMSync] Syncing context update to ${callbacks.size} instances of bot ${botId}`);
       callbacks.forEach(callback => {
         try {
           callback('CONTEXT_UPDATE', contextUpdate);

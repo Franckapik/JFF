@@ -22,6 +22,7 @@ import { safetyGuards } from '../guards/index.js';
 import { movementActions } from '../actions/core/movementActions.js';
 import { explorationActions } from '../actions/core/explorationActions.js';
 import { discoveryGuards } from '../guards/index.js';
+import { createUpdatePositionTransition } from '../utils/stateHelpers.js';
 import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**
@@ -69,36 +70,12 @@ export const exploringState = state(
     guard((context, event) => {
       // Diagnostic approfondi de la structure de l'événement
       const isActive = context.droneFleet?.drones?.explorer?.isActive;
-      
-      fsmLogger.info("🔍 [Exploring] PROSPECTING_COMPLETE - Full event structure debugging", {
-        botId: context.botId,
-        eventType: typeof event,
-        eventKeys: Object.keys(event || {}),
-        fullEvent: JSON.stringify(event, null, 2),
-        directAccess: {
-          tileCoord: event.tileCoord,
-          resourcesFound: event.resourcesFound,
-          position: event.position,
-          droneType: event.droneType,
-          timestamp: event.timestamp
-        }
-      });
-      
+            
       // Test différentes façons d'accéder aux données
       const hasTileCoord = !!event.tileCoord;
       const hasResourcesFound = event.resourcesFound !== undefined;
       const droneState = context.droneFleet?.drones?.explorer?.state;
-      
-      fsmLogger.info("🔍 [Exploring] PROSPECTING_COMPLETE guard check", {
-        botId: context.botId,
-        isActive,
-        hasTileCoord,
-        hasResourcesFound,
-        droneState,
-        tileCoord: event.tileCoord,
-        resourcesFound: event.resourcesFound,
-        eventType: event.type
-      });
+    
       
       const guardResult = isActive && hasTileCoord && hasResourcesFound;
       

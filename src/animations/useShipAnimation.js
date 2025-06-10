@@ -7,9 +7,10 @@
  * Gère les animations visuelles basées sur l'état FSM du vaisseau.
  */
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import fsmLogger from '../logger/fsmLogger';
 
 /**
  * Hook d'animation spécialisé pour les vaisseaux
@@ -21,6 +22,15 @@ import * as THREE from 'three';
 export const useShipAnimation = (context, shipWorldPosition, updateVisualPosition) => {
   const shipRef = useRef();
   const lastUpdateTime = useRef(0);
+
+  // 🆕 TRANSMISSION DE LA POSITION INITIALE
+  // Envoie la position de départ au tracker FSM dès que la position mondiale est disponible
+  useEffect(() => {
+    if (shipWorldPosition && updateVisualPosition) {
+      fsmLogger.mouvement(`🏠 [Ship] Transmitting initial position to FSM tracker:`, shipWorldPosition);
+      updateVisualPosition(shipWorldPosition);
+    }
+  }, [shipWorldPosition, updateVisualPosition]);
 
   useFrame((state, delta) => {
     if (!shipRef.current) return;
@@ -39,7 +49,7 @@ export const useShipAnimation = (context, shipWorldPosition, updateVisualPositio
     
     // Debug pour les problèmes de mouvement
     if (now - lastUpdateTime.current > 3.0 && !isMoving && targetPosition) {
-      console.log(`⚠️ [Ship] Action ${currentAction} mais pas en mouvement`);
+      fsmLogger.error(`⚠️ [Ship] Action ${currentAction} mais pas en mouvement`);
       lastUpdateTime.current = now;
     }
     

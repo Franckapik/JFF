@@ -7,9 +7,10 @@
  * Gère le mouvement, les rotations et les effets visuels par état.
  */
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import fsmLogger from '../logger/fsmLogger';
 
 /**
  * Hook d'animation spécialisé pour les drones
@@ -29,6 +30,21 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
     combat: { x: -0.5, y: 0.3, z: 0.5 },
     special: { x: 0, y: 0.3, z: -0.7 }
   }[droneType] || { x: 0.5, y: 0.3, z: 0.5 };
+
+  // 🆕 TRANSMISSION DE LA POSITION INITIALE DU DRONE
+  // Calcule et envoie la position mondiale initiale du drone au tracker FSM
+  useEffect(() => {
+    if (shipPosition && updateVisualPosition) {
+      const droneWorldPosition = {
+        x: shipPosition.x + initialPosition.x,
+        y: shipPosition.y + initialPosition.y, 
+        z: shipPosition.z + initialPosition.z
+      };
+      
+      fsmLogger.mouvement(`🛸 [${droneType}] Transmitting initial drone position to FSM tracker:`, droneWorldPosition);
+      updateVisualPosition(droneWorldPosition);
+    }
+  }, [shipPosition, updateVisualPosition, droneType, initialPosition.x, initialPosition.y, initialPosition.z]);
 
   useFrame((state, delta) => {
     if (!droneRef.current) return;
@@ -58,7 +74,7 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
     
     // Debug réduit - seulement en cas de problème
     if (now - lastUpdateTime.current > 5.0 && !isMoving && isActive) {
-      console.log(`⚠️ [Drone ${droneType}] État ${droneState} mais pas en mouvement`);
+      fsmLogger.error(`⚠️ [Drone ${droneType}] État ${droneState} mais pas en mouvement`);
       lastUpdateTime.current = now;
     }
     

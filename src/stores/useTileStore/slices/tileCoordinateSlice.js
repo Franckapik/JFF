@@ -92,7 +92,6 @@ const createTileCoordinateSlice = (set, get) => ({
    * @returns {string|null} - Coordonnée hex ou null si invalide
    */
   gridToHexCoord: (gridCoord) => {
-    console.log(gridCoord);
     
     if (gridCoord === null) return null;
     if (gridCoord === undefined) return undefined;

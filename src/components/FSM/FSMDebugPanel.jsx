@@ -97,20 +97,6 @@ const FSMVisualization = ({ botId, expanded = false }) => {
     return icons[type] || '❓';
   }
 
-  // ===== DEBUG: Log de l'état du drone =====
-  useEffect(() => {
-    if (droneFleet?.drones?.explorer) {
-      console.log(`[FSMDebugPanel] Drone state for ${botId}:`, {
-        droneState: droneFleet.drones.explorer.state,
-        isActive: droneFleet.drones.explorer.isActive,
-        position: droneFleet.drones.explorer.position,
-        targetPosition: droneFleet.drones.explorer.targetPosition,
-        lastUpdate: droneFleet.drones.explorer.lastUpdate,
-        currentTime: Date.now()
-      });
-    }
-  }, [droneFleet?.drones?.explorer?.state, droneFleet?.drones?.explorer?.lastUpdate, botId]);
-
   return (
     <div style={containerStyle}>
       {/* Header avec état principal */}
@@ -276,7 +262,6 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                     droneFleet: droneFleet || {}
                   };
                   navigator.clipboard.writeText(JSON.stringify(contextData, null, 2));
-                  console.log('[FSMDebugPanel] Contexte copié:', contextData);
                 }}
                 title="Copier le contexte complet dans le presse-papier"
               >
@@ -342,7 +327,6 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                       events: eventHistory
                     };
                     navigator.clipboard.writeText(JSON.stringify(historyData, null, 2));
-                    console.log('[FSMDebugPanel] Historique copié:', historyData);
                   }}
                   title="Copier l'historique complet dans le presse-papier"
                 >

@@ -1,4 +1,4 @@
-Peut-on renommer useFSMPositionTracker en useFSMDroneTracker et creer un nouveau hook pour le ship (useFSLShipTracker) qui reprend exactement le meme principe et les règles de ce fichier mais pour le vaisseau (ShipMesh)? 
+La syncro de position de depart doit se faire des le depart pour le vaisseau. La fonction doit etre appelée d'un endroit coherent et voir si le update poisiotn est juste. 
 
 
 Refuel et repair lents sur les bonnes stations.

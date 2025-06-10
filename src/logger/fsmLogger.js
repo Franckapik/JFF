@@ -32,6 +32,14 @@ const LOG_LEVEL = {
     prefix: '🎮 GAME',
     style: 'color: #E91E63; font-weight: bold'
   },
+  EVENT: {
+    prefix: '⚡ EVENT',
+    style: 'color: #FFC107; font-weight: bold'
+  },
+  HISTORY: {
+    prefix: '📜 HISTORY',
+    style: 'color: #8BC34A; font-weight: bold'
+  },
   ERROR: {
     prefix: '🔴 ERROR',
     style: 'color: #F44336; font-weight: bold'
@@ -202,6 +210,18 @@ const fsmLogger = {
     const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
     return log('ERROR', message, data, playerId);
   },
+  event: (...args) => {
+    const message = args[0] || '';
+    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
+    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
+    return log('EVENT', message, data, playerId);
+  },
+  history: (...args) => {
+    const message = args[0] || '';
+    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
+    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
+    return log('HISTORY', message, data, playerId);
+  },
   
   /**
    * Enregistre une transition d'état
@@ -305,9 +325,9 @@ const fsmLogger = {
   }
 };
 
-// Configurer pour n'afficher que les mouvements
-/* fsmLogger.configure({
-  visibleTypes: ['PLAYER', 'GAME']
-}); */
+// Configurer pour n'afficher que les événements spécialisés et erreurs
+fsmLogger.configure({
+  visibleTypes: ['INFO', 'ERROR', 'EVENT']
+});
 
 export default fsmLogger;

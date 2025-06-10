@@ -148,7 +148,6 @@ const useFSMStore = create(
      */
     startSystem: () => {
       const now = Date.now();
-      fsmLogger.info('Système FSM démarré');
       set(state => ({
         isSystemRunning: true,
         metrics: {
@@ -163,7 +162,6 @@ const useFSMStore = create(
      * Arrête le système FSM global
      */
     stopSystem: () => {
-      fsmLogger.info('Système FSM arrêté');
       set({ isSystemRunning: false });
     },
     
@@ -174,7 +172,6 @@ const useFSMStore = create(
       const currentState = get().isSystemRunning;
       const newState = !currentState;
       
-      fsmLogger.info(`Système FSM ${newState ? 'démarré' : 'arrêté'}`);
       set({ isSystemRunning: newState });
     },
     
@@ -319,7 +316,7 @@ const useFSMStore = create(
         };
       });
 
-      fsmLogger.info(`Event added to history: ${eventData.eventName} for bot ${botId}`);
+      // fsmLogger.info(`Event added to history: ${eventData.eventName} for bot ${botId}`);
     },
 
     /**

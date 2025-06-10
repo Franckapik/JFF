@@ -38,7 +38,7 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {
   
   // Gestion des instances partagées
   if (useSharedInstance && globalMachineInstances.has(botId)) {
-    fsmLogger.info(`[useBotMachine] Using existing shared instance for bot: ${botId}`);
+    // fsmLogger.info(`[useBotMachine] Using existing shared instance for bot: ${botId}`);
     return globalMachineInstances.get(botId);
   }
   
@@ -54,9 +54,9 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {
   useEffect(() => {
     const cleanup = registerSyncCallback(botId, (eventName, eventData) => {
       if (eventName === 'CONTEXT_UPDATE') {
-        fsmLogger.info(`[useBotMachine] Received context sync for ${botId}:`, eventData);
+        // fsmLogger.info(`[useBotMachine] Received context sync for ${botId}:`, eventData);
       } else {
-        fsmLogger.info(`[useBotMachine] Received sync event ${eventName} for ${botId}`);
+        // fsmLogger.info(`[useBotMachine] Received sync event ${eventName} for ${botId}`);
         send(eventName, eventData);
       }
     });
@@ -66,7 +66,7 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {
   
   // Wrapper pour send qui synchronise vers toutes les instances
   const syncedSend = useCallback((eventName, eventData = {}) => {
-    fsmLogger.info(`[useBotMachine] Sending ${eventName} for bot ${botId}`);
+    // fsmLogger.info(`[useBotMachine] Sending ${eventName} for bot ${botId}`);
     
     const result = send(eventName, eventData);
     syncEvent(botId, eventName, eventData);
@@ -84,14 +84,14 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {
   useEffect(() => {
     if (!positionSyncRef.current && current?.context && tiles) {
       if (!current.context.vehicle?.position || !current.context.vehicle?.coord) {
-        fsmLogger.info(`[useBotMachine] Bot ${botId} needs position synchronization`);
+        // fsmLogger.info(`[useBotMachine] Bot ${botId} needs position synchronization`);
         
         const assignedTile = Object.values(tiles).find(tile => 
           tile.type === "depart" && tile.playerId === botId
         );
 
         if (assignedTile) {
-          fsmLogger.info(`[useBotMachine] Found starting tile for bot ${botId}`);
+          // fsmLogger.info(`[useBotMachine] Found starting tile for bot ${botId}`);
           
           const updatePositionEvent = movementEvents.createUpdatePositionEvent(
             assignedTile.position,
@@ -109,7 +109,7 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {
         }
       } else {
         positionSyncRef.current = true;
-        fsmLogger.info(`[useBotMachine] Bot ${botId} already has position:`, current.context.vehicle.position);
+        // fsmLogger.info(`[useBotMachine] Bot ${botId} already has position:`, current.context.vehicle.position);
       }
     }
   }, [botId, current?.context, syncedSend, tiles]);
@@ -124,7 +124,6 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {
   useEffect(() => {
     if (!hasStartedExploring.current && state === 'evaluating') {
       timeoutRef.current = setTimeout(() => {
-        console.log(`[useBotMachine] Sending EVALUATION_COMPLETE for bot ${botId}`);
         syncedSend(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE);
         hasStartedExploring.current = true;
       }, 2000);
@@ -170,13 +169,13 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {
 // Utilitaires pour les instances partagées
 export const clearBotMachineInstance = (botId) => {
   if (globalMachineInstances.has(botId)) {
-    fsmLogger.info(`[useBotMachine] Clearing instance for bot: ${botId}`);
+    // fsmLogger.info(`[useBotMachine] Clearing instance for bot: ${botId}`);
     globalMachineInstances.delete(botId);
   }
 };
 
 export const clearAllBotMachineInstances = () => {
-  fsmLogger.info(`[useBotMachine] Clearing all instances`);
+  // fsmLogger.info(`[useBotMachine] Clearing all instances`);
   globalMachineInstances.clear();
 };
 

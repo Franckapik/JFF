@@ -22,6 +22,7 @@
 
 import { Vector3 } from "three";
 import useGameStore from "../../useGameStore/";
+import fsmLogger from "../../../logger/fsmLogger";
 
 // =========================================================================
 // CONSTANTES HEXAGONALES
@@ -239,7 +240,7 @@ const createTileGenerationSlice = (set, get) => ({
     
     // Éviter les boucles infinies en vérifiant s'il y a du travail à faire
     if (!activeBotIds || activeBotIds.length === 0) {
-      console.log('[TileStore] No active bots to sync, skipping synchronization');
+      fsmLogger.info('[TileStore] No active bots to sync, skipping synchronization');
       return;
     }
     
@@ -368,7 +369,7 @@ const createTileGenerationSlice = (set, get) => ({
     set({ tiles: newTiles });
     
     // Log uniquement si des changements ont été effectués
-    console.log(`[TileStore] Synchronized starting tiles with FSM bots:`, {
+    fsmLogger.game(`[TileStore] Synchronized starting tiles with FSM bots:`, {
       totalBots: totalBotsNeeded,
       activeBots: activeBotIds.length,
       departTiles: Object.keys(newTiles).filter(coord => newTiles[coord].type === "depart").length

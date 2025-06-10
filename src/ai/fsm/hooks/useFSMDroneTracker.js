@@ -12,6 +12,7 @@ import { MOVEMENT_EVENT_TYPES, movementEvents } from '../machine/events/movement
 import { POSITION_TRACKER_CONFIG } from '../machine/constants/constants.js';
 import { useTileStore } from '../../../stores/useTileStore/index.js';
 import { useEventDebounce } from './useEventDebounce.js';
+import fsmLogger from '../../../logger/fsmLogger.js';
 
 /**
  * Hook spécialisé pour le tracking des drones
@@ -23,6 +24,7 @@ import { useEventDebounce } from './useEventDebounce.js';
  */
 export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer') => {
   const currentVisualPosition = useRef(null);
+  const initialPositionSent = useRef(false); // 🆕 Flag pour éviter les envois multiples de position initiale
   
   // Hook de debounce personnalisé
   const { canSendEvent, markEventSent, clearAllEvents } = useEventDebounce(
@@ -33,6 +35,48 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
   const { gridToHexCoord, worldToGrid } = useTileStore();
   
   /**
+   * 🆕 Fonction pour gérer la position initiale du drone
+   * Les drones ancrés héritent de la position du vaisseau automatiquement
+   */
+  const handleDroneInitialPosition = useCallback((visualPosition) => {
+    const drone = context?.droneFleet?.drones?.[droneType];
+    
+    // Seulement pour les drones actifs qui n'ont pas encore de position
+    if (!initialPositionSent.current && 
+        visualPosition && 
+        drone?.isActive && 
+        !drone?.position) {
+      
+      fsmLogger.event(`🛸 [${botId}] Setting initial ${droneType} drone position`, {
+        position: visualPosition,
+        droneState: drone.state,
+        droneActive: drone.isActive
+      });
+      
+      // Envoyer mise à jour de position drone
+      const dronePositionEvent = movementEvents.createDronePositionUpdateEvent(
+        visualPosition,
+        droneType,
+        drone.state
+      );
+      
+      send(dronePositionEvent.type, dronePositionEvent);
+      
+      fsmLogger.event(`✅ [${botId}] Initial ${droneType} drone position sent to FSM`, {
+        eventType: dronePositionEvent.type,
+        droneType,
+        droneState: drone.state
+      });
+      
+      initialPositionSent.current = true;
+      
+      return true;
+    }
+    
+    return false;
+  }, [context?.droneFleet?.drones?.[droneType], send, botId, droneType]);
+
+  /**
    * Handlers spécialisés pour les drones par état
    */
   const droneStateHandlers = useMemo(() => ({
@@ -40,7 +84,7 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
       onMovementStart: (distance, visualPosition, now) => {
         const eventKey = `drone_deploying_start_${botId}_${droneType}`;
         if (distance > POSITION_TRACKER_CONFIG.THRESHOLDS.DEPLOYMENT_START && canSendEvent(eventKey)) {
-          console.log(`🚀 [${botId}] ${droneType} drone deployed - distance: ${distance.toFixed(2)}`);
+          fsmLogger.mouvement(`🚀 [${botId}] ${droneType} drone deployed - distance: ${distance.toFixed(2)}`);
           send(movementEvents.createDroneDeployedEvent(
             'auto',
             5,
@@ -55,7 +99,7 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
       onTargetReached: (distance, visualPosition, now) => {
         const eventKey = `drone_deploying_reached_${botId}_${droneType}`;
         if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
-          console.log(`🔍 [${botId}] ${droneType} target reached - distance: ${distance.toFixed(2)}`);
+          fsmLogger.mouvement(`🔍 [${botId}] ${droneType} target reached - distance: ${distance.toFixed(2)}`);
           
           // Logique de marquage des tuiles
           const gridCoord = worldToGrid(visualPosition);
@@ -63,7 +107,7 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
           try {
             const { markTileAsExplored } = useTileStore.getState();
             markTileAsExplored(tileCoord);
-            console.log(`✅ [${botId}] Tile explored by ${droneType}: ${JSON.stringify(tileCoord)}`);
+            fsmLogger.mouvement(`✅ [${botId}] Tile explored by ${droneType}: ${JSON.stringify(tileCoord)}`);
           } catch (error) {
             console.error(`❌ [${botId}] Failed to mark tile: ${error.message}`);
           }
@@ -83,7 +127,7 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
       onProspectingStart: (distance, visualPosition, now) => {
         const eventKey = `drone_prospecting_start_${botId}_${droneType}`;
         if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
-          console.log(`🔍 [${botId}] ${droneType} starting prospecting phase`);
+          fsmLogger.mouvement(`🔍 [${botId}] ${droneType} starting prospecting phase`);
           
           // Capturer les valeurs pour éviter les problèmes de closure
           const capturedPosition = { ...visualPosition };
@@ -94,7 +138,7 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
           setTimeout(() => {
             const prospectingEventKey = `drone_prospecting_complete_${botId}_${droneType}`;
             if (canSendEvent(prospectingEventKey)) {
-              console.log(`💎 [${botId}] ${droneType} prospecting completed`);
+              fsmLogger.mouvement(`💎 [${botId}] ${droneType} prospecting completed`);
               
               try {
                 const { markTileAsProspected } = useTileStore.getState();
@@ -107,7 +151,7 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
                 };
                 
                 markTileAsProspected(capturedTileCoord, resourcesFound);
-                console.log(`🔍 [${botId}] ${droneType} prospecting results: ${JSON.stringify(resourcesFound)}`);
+                fsmLogger.mouvement(`🔍 [${botId}] ${droneType} prospecting results: ${JSON.stringify(resourcesFound)}`);
                 
                 send(movementEvents.createProspectingCompleteEvent(
                   capturedPosition,
@@ -133,7 +177,7 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
       onTargetReached: (distance, visualPosition, now) => {
         const eventKey = `drone_returning_reached_${botId}_${droneType}`;
         if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
-          console.log(`🏠 [${botId}] ${droneType} drone returned - distance: ${distance.toFixed(2)}`);
+          fsmLogger.mouvement(`🏠 [${botId}] ${droneType} drone returned - distance: ${distance.toFixed(2)}`);
           send(movementEvents.createDroneReturnedEvent(
             visualPosition,
             droneType
@@ -199,15 +243,22 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
     currentVisualPosition.current = position;
     
     if (position) {
-      checkDronePositionAndSendEvents(position);
+      // 🆕 PRIORITÉ 1: Gérer la position initiale du drone en premier
+      const initialPositionHandled = handleDroneInitialPosition(position);
+      
+      // 🆕 PRIORITÉ 2: Ne faire le tracking normal que si nécessaire
+      if (initialPositionSent.current && !initialPositionHandled) {
+        checkDronePositionAndSendEvents(position);
+      }
     }
-  }, [checkDronePositionAndSendEvents]);
+  }, [handleDroneInitialPosition, checkDronePositionAndSendEvents]);
   
   // Cleanup lors du démontage
   useEffect(() => {
     return () => {
       clearAllEvents();
       currentVisualPosition.current = null;
+      initialPositionSent.current = false; // 🆕 Reset du flag lors du cleanup
     };
   }, [clearAllEvents]);
   
