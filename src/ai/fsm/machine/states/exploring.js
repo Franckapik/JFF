@@ -19,10 +19,8 @@ import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
 import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
 import { safetyGuards } from '../guards/index.js';
-import { movementActions } from '../actions/core/movementActions.js';
 import { explorationActions } from '../actions/core/explorationActions.js';
 import { discoveryGuards } from '../guards/index.js';
-import { createUpdatePositionTransition } from '../utils/stateHelpers.js';
 import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**

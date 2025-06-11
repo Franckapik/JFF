@@ -36,6 +36,10 @@ const LOG_LEVEL = {
     prefix: '⚡ EVENT',
     style: 'color: #FFC107; font-weight: bold'
   },
+  CONTEXT: {
+    prefix: '🔧 CONTEXT',
+    style: 'color: #607D8B; font-weight: bold'
+  },
   HISTORY: {
     prefix: '📜 HISTORY',
     style: 'color: #8BC34A; font-weight: bold'
@@ -216,6 +220,12 @@ const fsmLogger = {
     const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
     return log('EVENT', message, data, playerId);
   },
+  context: (...args) => {
+    const message = args[0] || '';
+    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
+    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
+    return log('CONTEXT', message, data, playerId);
+  },
   history: (...args) => {
     const message = args[0] || '';
     const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
@@ -325,9 +335,9 @@ const fsmLogger = {
   }
 };
 
-// Configurer pour n'afficher que les événements spécialisés et erreurs
+/* // Configurer pour n'afficher que les événements spécialisés et erreurs
 fsmLogger.configure({
-  visibleTypes: ['INFO', 'ERROR', 'EVENT']
-});
+  visibleTypes: ['INFO', 'ERROR', 'EVENT', 'CONTEXT']
+}); */
 
 export default fsmLogger;

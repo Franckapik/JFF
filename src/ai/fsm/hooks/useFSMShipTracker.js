@@ -5,6 +5,9 @@
  * 
  * Hook spécialisé pour le tracking des vaisseaux et leurs événements FSM.
  * Gère les déplacements, collecte, refuel, etc.
+ * 
+ * 🎯 UTILISE LES ÉVÉNEMENTS FSM STANDARD pour mise à jour du contexte
+ * Solution simple et compatible avec l'architecture existante.
  */
 
 import { useEffect, useRef, useCallback, useMemo } from 'react';
@@ -31,15 +34,12 @@ export const useFSMShipTracker = (context, send, botId) => {
     POSITION_TRACKER_CONFIG.TIMINGS.EVENT_COOLDOWN
   );
   
-  // 🆕 Système de synchronisation FSM pour mise à jour directe du contexte
-  const { syncContextUpdate } = useFSMSync();
-  
   // Access to tile store for coordinate conversion
   const { gridToHexCoord, worldToGrid } = useTileStore();
   
   /**
-   * 🆕 Fonction pour détecter et mettre à jour directement la position initiale dans le contexte FSM
-   * Cette fonction est appelée une seule fois lorsque Fleet reçoit sa position de départ
+   * 🆕 Fonction simple pour détecter et transmettre la position initiale
+   * Utilise les événements FSM standard au lieu d'un système complexe
    */
   const handleInitialPositionSetup = useCallback((visualPosition) => {
     // Vérifier si on doit mettre à jour la position initiale
@@ -47,33 +47,34 @@ export const useFSMShipTracker = (context, send, botId) => {
         visualPosition && 
         (!context?.vehicle?.position || context.vehicle.position === null)) {
       
-      fsmLogger.event(`🏠 [${botId}] Setting initial ship position directly in FSM context`, {
+      fsmLogger.context(`🏠 [${botId}] Setting initial ship position via FSM event`, {
         position: visualPosition,
         hasVehicle: !!context?.vehicle,
         currentPosition: context?.vehicle?.position
       });
       
-      // Convertir en coordonnées de tuile
+      // Convertir en coordonnées de tuile avec validation
       const gridCoord = worldToGrid(visualPosition);
       const tileCoord = gridToHexCoord(gridCoord);
       
-      // 🆕 Mise à jour DIRECTE du contexte via synchronisation (sans événements FSM)
-      const updatedContext = {
-        ...context,
-        vehicle: {
-          ...context.vehicle,
-          position: visualPosition,
-          coord: tileCoord
-        },
-        lastUpdate: Date.now()
-      };
+      // Si les coordonnées ne peuvent pas être calculées, utiliser une valeur par défaut
+      const safeTileCoord = tileCoord || "0,0";
       
-      // Synchroniser le contexte mis à jour vers toutes les instances FSM
-      syncContextUpdate(botId, updatedContext);
+      // Utiliser l'événement FSM standard pour mettre à jour la position
+      const initialPositionEvent = movementEvents.createUpdatePositionEvent(
+        visualPosition,
+        'ship',
+        safeTileCoord,
+        safeTileCoord
+      );
       
-      fsmLogger.event(`✅ [${botId}] Initial ship position updated directly in context`, {
-        tileCoord,
-        worldPosition: visualPosition
+      // Envoyer l'objet événement complet
+      send(initialPositionEvent);
+      
+      fsmLogger.context(`✅ [${botId}] Initial ship position sent via FSM event`, {
+        tileCoord: safeTileCoord,
+        worldPosition: visualPosition,
+        eventType: initialPositionEvent.type
       });
       
       // Marquer comme envoyé pour éviter les doublons
@@ -83,7 +84,7 @@ export const useFSMShipTracker = (context, send, botId) => {
     }
     
     return false; // Pas de position initiale mise à jour
-  }, [context?.vehicle?.position, syncContextUpdate, botId, worldToGrid, gridToHexCoord]);
+  }, [context?.vehicle?.position, send, botId, worldToGrid, gridToHexCoord]);
 
   /**
    * Handlers spécialisés pour les vaisseaux par état/action
@@ -100,7 +101,7 @@ export const useFSMShipTracker = (context, send, botId) => {
             visualPosition,
             null // targetPosition optionnel
           );
-          send(shipMovementEvent.type, shipMovementEvent);
+          send(shipMovementEvent);
           
           markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.SHIP_MOVEMENT_RESET);
           return true;
@@ -121,7 +122,7 @@ export const useFSMShipTracker = (context, send, botId) => {
             visualPosition,
             tileCoord
           );
-          send(shipArrivedEvent.type, shipArrivedEvent);
+          send(shipArrivedEvent);
           
           markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.SHIP_ARRIVAL_RESET);
           return true;
@@ -160,7 +161,7 @@ export const useFSMShipTracker = (context, send, botId) => {
                   tileCoord,
                   collectedResources
                 );
-                send(shipCollectionEvent.type, shipCollectionEvent);
+                send(shipCollectionEvent);
                 
                 markEventSent(collectionEventKey, POSITION_TRACKER_CONFIG.TIMINGS.COLLECTION_RESET);
               } catch (error) {
@@ -191,7 +192,7 @@ export const useFSMShipTracker = (context, send, botId) => {
                 visualPosition,
                 100 // Plein fait
               );
-              send(shipRefuelEvent.type, shipRefuelEvent);
+              send(shipRefuelEvent);
               
               markEventSent(refuelEventKey, POSITION_TRACKER_CONFIG.TIMINGS.REFUEL_RESET);
             }

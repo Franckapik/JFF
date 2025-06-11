@@ -95,13 +95,11 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {
           
           const updatePositionEvent = movementEvents.createUpdatePositionEvent(
             assignedTile.position,
-            'ship'
+            'ship',
+            assignedTile.coord,
+            assignedTile.coord
           );
-          syncedSend(updatePositionEvent.type, {
-            ...updatePositionEvent,
-            coord: assignedTile.coord,
-            newCoord: assignedTile.coord
-          });
+          syncedSend(updatePositionEvent);
           
           positionSyncRef.current = true;
         } else {

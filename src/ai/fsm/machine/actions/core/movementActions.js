@@ -13,6 +13,7 @@
  * @version 1.0.0
  */
 
+import fsmLogger from '../../../../../logger/fsmLogger.js';
 import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES } from '../../constants/constants.js';
 
 // ============================================================================
@@ -362,7 +363,17 @@ export const movementActions = {
    * @returns {Object} - Nouveau contexte avec position mise à jour
    */
   updatePosition: (context, event) => {
-    if (!event.newCoord && !event.coord && !event.position) {
+    const hasValidData = event.position || event.coord || event.newCoord;
+    
+    if (!hasValidData) {
+      fsmLogger.error(`❌ [updatePosition] No position data found in event:`, {
+        event,
+        checks: {
+          newCoord: event.newCoord,
+          coord: event.coord,
+          position: event.position
+        }
+      });
       return context;
     }
 
@@ -370,6 +381,7 @@ export const movementActions = {
       ...context.vehicle,
       lastUpdate: Date.now()
     };
+
 
     // Mettre à jour la coordonnée
     if (event.newCoord || event.coord) {

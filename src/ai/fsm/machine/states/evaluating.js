@@ -19,6 +19,8 @@ import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
 import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
 import { movementActions } from '../actions/core/movementActions.js';
+import { fsmDroneFleetActions } from '../actions/core/droneActions.js';
+import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**
  * État EVALUATING - Point de décision central
@@ -230,6 +232,15 @@ export const evaluatingState = state(
     reduce((context, event) => {
       // Utiliser l'action updatePosition existante
       return movementActions.updatePosition(context, event);
+    })
+  ),
+
+  // Mise à jour de position de drone (reste dans le même état)
+  transition(MOVEMENT_EVENT_TYPES.DRONE_POSITION_UPDATE, BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context, event) => {
+      // Utiliser l'action updateDronePosition pour les drones
+      return fsmDroneFleetActions.updateDronePosition(context, event);
     })
   )
 );

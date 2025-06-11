@@ -111,9 +111,9 @@ export const stateTransitionReducers = {
   prepareReturning: (context, event) => {
     // ✅ CORRECTION: Définir updatedDrone à partir du contexte existant
     const currentDrone = context.droneFleet?.drones?.explorer || {};
-    const shipPosition = { x: 5, y: 0, z: 0 }; //CORRIGER CETTE POSITION EN FONCTION DU VRAI Vaisseau
-    //La position du vaisseau doit etre mise a jour dès le depart du jeu
-    //les autres reducers ci dessus doivent etre utilisés dans le fichier exploration.js .
+    // ✅ CORRECTION: Utiliser la position réelle du vaisseau au lieu de la position codée en dur
+    const shipPosition = context.vehicle?.position || { x: 0, y: 0.5, z: 0 }; // Fallback sécurisé
+    
     const updatedDrone = {
       ...currentDrone,
       state: 'returning',  // ✅ État visuel du drone (DRONE_VISUAL_STATES)

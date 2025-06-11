@@ -231,12 +231,16 @@ const UPDATE_POSITION = 'UPDATE_POSITION';
  * Créateur d'événement: UPDATE_POSITION
  * @param {object} position - Nouvelle position de l'entité
  * @param {string} entityType - Type d'entité ('ship', 'drone', 'bot')
+ * @param {string} coord - Coordonnée de tuile (optionnel)
+ * @param {string} newCoord - Nouvelle coordonnée de tuile (optionnel)
  * @returns {object} Event payload
  */
-const createUpdatePositionEvent = (position, entityType = 'ship') => ({
+const createUpdatePositionEvent = (position, entityType = 'ship', coord = null, newCoord = null) => ({
   type: UPDATE_POSITION,
   position,
   entityType,
+  coord,
+  newCoord,
   timestamp: Date.now()
 });
 

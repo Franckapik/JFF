@@ -20,6 +20,8 @@ import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
 import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
+import { baseGuards } from '../guards/index.js';
+import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**
  * État RETURNING - Retour à la base
@@ -78,6 +80,27 @@ export const returningState = state(
       movementProgress: event.progress,
       estimatedArrival: event.estimatedArrival
     }))
+  ),
+
+  // DRONE RETURNED - Drone de retour au vaisseau
+  transition(MOVEMENT_EVENT_TYPES.DRONE_RETURNED, BOT_STATES.EVALUATING,
+    guard((context, event) => context.droneFleet?.drones?.explorer?.isActive),
+    reduce((context, event) => {
+      fsmLogger.info("🏠 [Returning] Drone returned to ship, mission completed", { 
+        botId: context.botId,
+        droneType: event.droneType
+      });
+      
+      // Ancrer le drone au vaisseau
+      const dockedContext = contextReducers.droneDeployment.dockDrone(context, {
+        droneType: event.droneType || 'explorer'
+      });
+      
+      // Préparer l'évaluation suivante
+      return contextReducers.state.prepareEvaluating(dockedContext, {
+        reason: 'drone_returned_successfully'
+      });
+    })
   ),
 
   // === GESTION DES URGENCES ===

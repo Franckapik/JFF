@@ -47,7 +47,7 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
         drone?.isActive && 
         !drone?.position) {
       
-      fsmLogger.event(`🛸 [${botId}] Setting initial ${droneType} drone position`, {
+      fsmLogger.context(`🛸 [${botId}] Setting initial ${droneType} drone position`, {
         position: visualPosition,
         droneState: drone.state,
         droneActive: drone.isActive
@@ -60,9 +60,9 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
         drone.state
       );
       
-      send(dronePositionEvent.type, dronePositionEvent);
+      send(dronePositionEvent);
       
-      fsmLogger.event(`✅ [${botId}] Initial ${droneType} drone position sent to FSM`, {
+      fsmLogger.context(`✅ [${botId}] Initial ${droneType} drone position sent to FSM`, {
         eventType: dronePositionEvent.type,
         droneType,
         droneState: drone.state
@@ -200,7 +200,9 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
     const droneState = drone.state;
     const targetPosition = drone.targetPosition;
     
-    if (!visualPosition || !targetPosition || !drone.isActive) return;
+    if (!visualPosition || !targetPosition || !drone.isActive) {
+      return;
+    }
     
     // Calculer la distance entre position visuelle et cible FSM
     const distance = Math.sqrt(
@@ -246,12 +248,15 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
       // 🆕 PRIORITÉ 1: Gérer la position initiale du drone en premier
       const initialPositionHandled = handleDroneInitialPosition(position);
       
-      // 🆕 PRIORITÉ 2: Ne faire le tracking normal que si nécessaire
-      if (initialPositionSent.current && !initialPositionHandled) {
+      // 🆕 PRIORITÉ 2: Faire le tracking dès que le drone est actif
+      const currentDrone = context?.droneFleet?.drones?.[droneType];
+      const shouldTrack = currentDrone?.isActive || (initialPositionSent.current && !initialPositionHandled);
+      
+      if (shouldTrack) {
         checkDronePositionAndSendEvents(position);
       }
     }
-  }, [handleDroneInitialPosition, checkDronePositionAndSendEvents]);
+  }, [handleDroneInitialPosition, checkDronePositionAndSendEvents, context?.droneFleet?.drones?.[droneType], botId, droneType]);
   
   // Cleanup lors du démontage
   useEffect(() => {
