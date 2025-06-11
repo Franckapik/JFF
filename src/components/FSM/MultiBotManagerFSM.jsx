@@ -92,7 +92,11 @@ const MultiBotManagerFSM = () => {
   // Calculer les statistiques globales
   const globalStats = {
     total: getBotCount(),
-    exploring: Object.values(botStates).filter(bot => bot?.state === 'EXPLORING').length,
+    exploring: Object.values(botStates).filter(bot => 
+      bot?.state === 'exploring_deploying' || 
+      bot?.state === 'exploring_prospecting' || 
+      bot?.state === 'exploring_returning'
+    ).length,
     collecting: Object.values(botStates).filter(bot => bot?.state === 'COLLECTING').length,
     returning: Object.values(botStates).filter(bot => bot?.state === 'RETURNING').length,
     idle: Object.values(botStates).filter(bot => bot?.state === 'IDLE').length

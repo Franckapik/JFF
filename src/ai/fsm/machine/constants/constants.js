@@ -20,7 +20,7 @@
  */
 export const BOT_STATES = {
   EVALUATING: 'evaluating',
-  EXPLORING: 'exploring', 
+  EXPLORING: 'exploring',                          // ⚠️ LEGACY: Use specific sub-states instead
   EXPLORING_DEPLOYING: 'exploring_deploying',
   EXPLORING_PROSPECTING: 'exploring_prospecting',  // Nouveau sous-état pour la prospection
   EXPLORING_RETURNING: 'exploring_returning',      // État de retour après exploration

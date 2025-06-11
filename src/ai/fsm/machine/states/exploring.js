@@ -6,6 +6,44 @@
  * État d'exploration pour découvrir de nouvelles ressources.
  * Déploie des drones et explore la carte.
  * 
+ * === TRANSITIONS EXISTANTES DANS CE FICHIER ===
+ * 
+ * 1. DRONE_REACHED_TARGET → EXPLORING_PROSPECTING
+ *    - Drone a atteint sa cible, commencer la prospection
+ * 
+ * 2. PROSPECTING_COMPLETE → EXPLORING_RETURNING ✅ CORRECT
+ *    - Prospection terminée, retour à la base avec les données
+ * 
+ * 3. EXPLORING_RETURNING transitions (intégrées depuis returning.js)
+ *    - BASE_REACHED → IDLE_AT_BASE
+ *    - DRONE_RETURNED → EVALUATING
+ *    - MOVEMENT_STARTED/PROGRESS → EXPLORING_RETURNING
+ *    - Emergency events → EVALUATING
+ * 
+ * 4. immediate() → EVALUATING (timeout automatique)
+ *    - Sortir de l'exploration après 10 secondes
+ * 
+ * 5. RESOURCES_DISCOVERED → EVALUATING
+ *    - Ressources découvertes pendant l'exploration
+ * 
+ * 6. AREA_EXPLORED → EVALUATING
+ *    - Zone explorée avec succès
+ * 
+ * 7. EXPLORATION_TIMEOUT → EVALUATING
+ *    - Timeout d'exploration (30s)
+ * 
+ * 8. DRONE_DEPLOYMENT_FAILED → EVALUATING
+ *    - Échec de déploiement du drone
+ * 
+ * 9. LOW_FUEL_DETECTED → RETURNING
+ *    - Carburant faible détecté pendant l'exploration
+ * 
+ * 10. MANUAL_OVERRIDE → EVALUATING
+ *     - Override manuel
+ * 
+ * 11. EMERGENCY_DETECTED → RETURNING
+ *     - Urgence générale
+ * 
  * @author FSM Migration
  * @version 1.0.0
  */
@@ -18,7 +56,7 @@ import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
 import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
 import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
-import { safetyGuards } from '../guards/index.js';
+import { safetyGuards, baseGuards } from '../guards/index.js';
 import { explorationActions } from '../actions/core/explorationActions.js';
 import { discoveryGuards } from '../guards/index.js';
 import fsmLogger from '../../../../logger/fsmLogger.js';
@@ -160,36 +198,224 @@ export const exploringState = state(
     })
   ),
 
-  // RECALLING → EVALUATING : Drone de retour, exploration terminée
-  transition(MOVEMENT_EVENT_TYPES.DRONE_RETURNED, BOT_STATES.EVALUATING,
-    guard((context, event) => context.droneFleet?.drones?.explorer?.isActive),
+  // === EXPLORING_RETURNING TRANSITIONS (depuis returning.js) ===
+  
+  // Arrivé à la base depuis EXPLORING_RETURNING
+  transition(MOVEMENT_EVENT_TYPES.BASE_REACHED, BOT_STATES.IDLE_AT_BASE,
+    guard((context, event) => baseGuards.isAtBase(context, event)),
     reduce((context, event) => {
-      fsmLogger.info("🏠 [Exploring] Drone returned to ship, exploration completed", { 
+      fsmLogger.info("🏠 [Exploring] Arrived at base, completing return phase", { 
         botId: context.botId 
+      });
+      
+      // Mettre à jour la position et récupérer le drone
+      const updatedContext = {
+        ...context,
+        position: event.coord,
+        arrivalTime: event.timestamp || Date.now(),
+        isDroneAtShip: true
+      };
+      
+      // Préparer l'état idle à la base
+      return contextReducers.state.prepareIdleAtBase(updatedContext, {
+        reason: 'at_base'
+      });
+    })
+  ),
+
+  // Mouvement en cours vers la base depuis EXPLORING_RETURNING
+  transition(MOVEMENT_EVENT_TYPES.MOVEMENT_STARTED, BOT_STATES.EXPLORING_RETURNING,
+    guard(() => true),
+    reduce((context, event) => {
+      fsmLogger.info("🚀 [Exploring] Starting movement to base", { 
+        botId: context.botId,
+        targetCoord: event.targetCoord 
+      });
+      
+      // Utiliser le reducer de mouvement
+      const movementContext = contextReducers.movement.startMovement(context, {
+        targetTile: {
+          coord: event.targetCoord
+        }
+      });
+      
+      // Mettre à jour le statut du contexte
+      return {
+        ...movementContext,
+        movementStatus: 'en_route',
+        currentAction: 'moving_to_base'
+      };
+    })
+  ),
+
+  // Progression du mouvement vers la base depuis EXPLORING_RETURNING
+  transition(MOVEMENT_EVENT_TYPES.MOVEMENT_PROGRESS, BOT_STATES.EXPLORING_RETURNING,
+    guard(() => true),
+    reduce((context, event) => ({
+      ...context,
+      position: event.currentPosition,
+      movementProgress: event.progress,
+      estimatedArrival: event.estimatedArrival
+    }))
+  ),
+
+  // DRONE RETURNED - Drone de retour au vaisseau depuis EXPLORING_RETURNING
+  transition(MOVEMENT_EVENT_TYPES.DRONE_RETURNED, BOT_STATES.EVALUATING,
+    guard((context, event) => {
+      // Le drone doit être docked ou inactif pour cette transition
+      const drone = context.droneFleet?.drones?.explorer;
+      return !drone?.isActive || drone?.state === 'docked';
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("🏠 [Exploring] Drone returned to ship, mission completed", { 
+        botId: context.botId,
+        droneType: event.droneType || 'explorer'
       });
       
       // Ancrer le drone au vaisseau
       const dockedContext = contextReducers.droneDeployment.dockDrone(context, {
-        droneType: 'explorer'
+        droneType: event.droneType || 'explorer'
       });
       
-      // Marquer l'exploration comme terminée et préparer l'évaluation
-      return contextReducers.state.prepareEvaluating({
-        ...dockedContext,
-        hasExplored: true,
-        explorationStatus: 'completed_with_return',
-        currentAction: 'exploration_completed',
-        droneFleet: {
-          ...dockedContext.droneFleet,
-          // Keep deploymentAttempted: true to prevent infinite loop
-          explorationStarted: false,
-          explorationStartTime: null
-        }
-      }, {
-        reason: 'exploration_completed'
+      // Préparer l'évaluation suivante
+      return contextReducers.state.prepareEvaluating(dockedContext, {
+        reason: 'drone_returned_successfully'
       });
     })
   ),
+
+  // === GESTION DES URGENCES depuis EXPLORING_RETURNING ===
+  
+  // Urgence résolue pendant le retour
+  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_RESOLVED, BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context, event) => {
+      fsmLogger.info("✅ [Exploring] Emergency resolved during return", { 
+        botId: context.botId,
+        condition: event.condition 
+      });
+      
+      return {
+        ...context,
+        emergencyFlag: false,
+        emergencyReason: null,
+        resolvedCondition: event.condition,
+        resolutionTime: Date.now(),
+        currentAction: 'emergency_resolved',
+        lastStateChange: Date.now()
+      };
+    })
+  ),
+
+  // === TIMEOUTS ET ÉCHECS depuis EXPLORING_RETURNING ===
+  
+  // Timeout de navigation (45s)
+  transition(SYSTEM_EVENT_TYPES.NAVIGATION_TIMEOUT, BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context) => {
+      fsmLogger.info("⏰ [Exploring] Navigation timeout during return", { 
+        botId: context.botId 
+      });
+      
+      return {
+        ...context,
+        navigationStatus: 'timeout',
+        currentAction: 'navigation_timeout',
+        // En cas de timeout, considérer qu'on est arrivé à la base
+        isDroneAtShip: true,
+        emergencyFlag: false,
+        lastStateChange: Date.now()
+      };
+    })
+  ),
+
+  // Échec de navigation
+  transition(EMERGENCY_EVENT_TYPES.NAVIGATION_FAILED, BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context, event) => {
+      fsmLogger.info("❌ [Exploring] Navigation failed during return", { 
+        botId: context.botId,
+        reason: event.reason 
+      });
+      
+      return {
+        ...context,
+        navigationStatus: 'failed',
+        errorReason: event.reason,
+        currentAction: 'navigation_failed',
+        // En cas d'échec, reset l'état d'urgence
+        emergencyFlag: false,
+        lastStateChange: Date.now()
+      };
+    })
+  ),
+
+  // === VÉRIFICATIONS CRITIQUES depuis EXPLORING_RETURNING ===
+  
+  // Carburant critique pendant le retour
+  transition(EMERGENCY_EVENT_TYPES.CRITICAL_FUEL, BOT_STATES.IDLE_AT_BASE,
+    guard(() => true),
+    reduce((context) => {
+      fsmLogger.info("🔥 [Exploring] Critical fuel during return - emergency landing", { 
+        botId: context.botId 
+      });
+      
+      return {
+        ...context,
+        fuelStatus: 'critical',
+        emergencyLanding: true,
+        currentAction: 'emergency_landing',
+        // Forcer l'arrivée à la base
+        isDroneAtShip: true,
+        lastStateChange: Date.now()
+      };
+    })
+  ),
+
+  // Nouvelle urgence détectée pendant EXPLORING_RETURNING
+  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED, BOT_STATES.EXPLORING_RETURNING,
+    guard(() => true),
+    reduce((context, event) => {
+      fsmLogger.info("🚨 [Exploring] New emergency detected during return", { 
+        botId: context.botId,
+        emergencyReason: event.reason 
+      });
+      
+      return {
+        ...context,
+        emergencyFlag: true,
+        emergencyReason: event.reason || 'unknown',
+        emergencyStack: [
+          ...(context.emergencyStack || []),
+          {
+            reason: event.reason,
+            timestamp: Date.now()
+          }
+        ],
+        currentAction: 'multiple_emergencies'
+      };
+    })
+  ),
+
+  // Stop demandé pendant EXPLORING_RETURNING
+  transition(USER_EVENT_TYPES.STOP, BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context) => {
+      fsmLogger.info("🛑 [Exploring] Stop requested during return", { 
+        botId: context.botId 
+      });
+      
+      return {
+        ...context,
+        stopFlag: true,
+        currentAction: 'stop_requested',
+        lastStateChange: Date.now()
+      };
+    })
+  ),
+
+  // RECALLING → EVALUATING : Drone de retour, exploration terminée (deprecated - use DRONE_RETURNED instead)
+  // Cette transition est maintenant gérée par DRONE_RETURNED ci-dessus
 
   // TIMEOUT AUTOMATIQUE - Sortir de l'exploration après 10 secondes
   immediate(BOT_STATES.EVALUATING,

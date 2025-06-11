@@ -67,6 +67,6 @@ export {
   evaluatingState,
   exploringState,
   collectingState,
-  returningState,
   idleAtBaseState 
+  // returningState removed - EXPLORING_RETURNING now handled by exploringState
 } from './machine/states/index.js';

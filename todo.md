@@ -1,5 +1,4 @@
-La syncro de position de depart doit se faire des le depart pour le vaisseau. La fonction doit etre appelée d'un endroit coherent et voir si le update poisiotn est juste. 
-
+COmprendre pourquoi plusieurs log sont envoyés pour les transitions et les actions. Revoir la synchronisation des bots et instances. Et essayer de finir le cycle returning vers evaluating par la suppression des fonctions .
 
 Refuel et repair lents sur les bonnes stations.
 Les drones ont des limites de deplacements.

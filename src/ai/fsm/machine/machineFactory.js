@@ -15,7 +15,6 @@ import { BOT_STATES } from './constants/constants.js';
 import { 
   evaluatingState,
   exploringState,
-  returningState,
   collectingState,
   idleAtBaseState
 } from './states/index.js';
@@ -40,10 +39,10 @@ export const createBotMachine = (botId, initialData = {}) => {
     // Mapping des états : nom → définition
     {
       [BOT_STATES.EVALUATING]: evaluatingState,
-      [BOT_STATES.EXPLORING]: exploringState,
+      // [BOT_STATES.EXPLORING]: exploringState, // ❌ REMOVED - unused generic state
       [BOT_STATES.EXPLORING_DEPLOYING]: exploringState,
       [BOT_STATES.EXPLORING_PROSPECTING]: exploringState,
-      [BOT_STATES.EXPLORING_RETURNING]: returningState,
+      [BOT_STATES.EXPLORING_RETURNING]: exploringState, // Now handled by exploringState
       [BOT_STATES.COLLECTING]: collectingState,
       [BOT_STATES.IDLE_AT_BASE]: idleAtBaseState,
     },

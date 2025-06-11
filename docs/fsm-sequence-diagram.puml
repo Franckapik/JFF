@@ -1,0 +1,79 @@
+@startuml FSM Sequence - Observed Bot Behavior
+!theme plain
+skinparam backgroundColor #FAFAFA
+
+title FSM Sequence Diagram - Observed Bot Behavior\n(Based on Log Analysis)
+
+actor "System" as SYS
+participant "FSM Machine" as FSM
+participant "Bot Context" as CTX
+participant "Drone Fleet" as DRONE
+participant "Movement System" as MOVE
+
+== System Initialization ==
+SYS -> FSM : System Start
+FSM -> CTX : Create initial context
+FSM -> FSM : Enter EVALUATING state
+
+== Auto Exploration Trigger ==
+SYS -> FSM : AUTO event (periodic)
+FSM -> FSM : Check guards:\n- hasUnexploredAreas ✅\n- isDroneInactive ✅
+FSM -> FSM : Transition: EVALUATING → EXPLORING_DEPLOYING
+FSM -> DRONE : Deploy explorer drone
+FSM -> CTX : Update context with drone deployment
+
+== Drone Deployment Phase ==
+DRONE -> FSM : DRONE_REACHED_TARGET event
+FSM -> FSM : Check guard: droneReachedTarget ✅
+FSM -> FSM : Transition: EXPLORING_DEPLOYING → EXPLORING_PROSPECTING
+FSM -> CTX : Update exploration status
+
+== Prospecting Phase ==
+DRONE -> FSM : PROSPECTING_COMPLETE event
+FSM -> FSM : Check guards:\n- explorationComplete ✅\n- needsEmergencyReturn ❌
+FSM -> FSM : Transition: EXPLORING_PROSPECTING → EXPLORING_RETURNING
+FSM -> CTX : Prepare return to base
+
+== Return Phase - PROBLEMATIC ==
+note over FSM : ⚠️ BOT GETS STUCK HERE
+FSM -> MOVE : Request movement to base
+MOVE -> FSM : MOVEMENT_STARTED event
+FSM -> FSM : Stay in EXPLORING_RETURNING\n(Update movement status)
+
+MOVE -> FSM : MOVEMENT_PROGRESS event
+FSM -> FSM : Stay in EXPLORING_RETURNING\n(Update position)
+
+' The problem: BASE_REACHED is never triggered
+note over MOVE : ❌ BASE_REACHED event\nnever gets triggered
+note over FSM : Bot remains stuck in\nEXPLORING_RETURNING state
+
+== Missing Transitions ==
+note over FSM, CTX
+**MISSING TRANSITIONS:**
+1. EXPLORING_RETURNING → IDLE_AT_BASE
+   - Event: BASE_REACHED
+   - Guard: isAtBase
+   - ❌ Never triggered
+
+2. Alternative completion paths
+   - No timeout mechanism
+   - No fallback transitions
+   - No manual recovery
+end note
+
+== Available but Unused States ==
+note over FSM
+**UNUSED STATES:**
+- COLLECTING: Available but never used
+- RETURNING: Replaced by exploring_returning
+- Manual transitions work but not used
+
+**UNUSED EVENTS:**
+- RESOURCE_COLLECTED
+- INVENTORY_FULL  
+- AREA_EXPLORED
+- REFUEL_COMPLETE
+- UNLOAD_COMPLETE
+end note
+
+@enduml

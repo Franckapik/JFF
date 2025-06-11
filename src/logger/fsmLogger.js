@@ -335,9 +335,9 @@ const fsmLogger = {
   }
 };
 
-/* // Configurer pour n'afficher que les événements spécialisés et erreurs
+// Configurer pour n'afficher que les événements spécialisés et erreurs
 fsmLogger.configure({
   visibleTypes: ['INFO', 'ERROR', 'EVENT', 'CONTEXT']
-}); */
+});
 
 export default fsmLogger;

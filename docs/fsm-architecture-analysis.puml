@@ -1,0 +1,143 @@
+@startuml FSM Architecture - Used vs Unused Components
+!theme plain
+skinparam backgroundColor #FAFAFA
+skinparam package {
+  BackgroundColor #E8F5E8
+  BorderColor #4CAF50
+}
+skinparam component {
+  BackgroundColor #E3F2FD
+  BorderColor #2196F3
+}
+skinparam component.UNUSED {
+  BackgroundColor #FFEBEE
+  BorderColor #F44336
+  FontColor #999999
+}
+skinparam component.PROBLEMATIC {
+  BackgroundColor #FFF3E0
+  BorderColor #FF9800
+}
+
+title FSM Architecture Analysis\nUsed vs Unused Components
+
+package "States (4 Active)" #E8F5E8 {
+  component "evaluating.js" as EVAL #E3F2FD
+  component "exploring.js" as EXPL #E3F2FD
+  component "idleAtBase.js" as IDLE #E3F2FD
+  component "collecting.js" as COLL #FFEBEE
+  note right of COLL : ❌ UNUSED\nNever transitioned to
+}
+
+package "Events (Mixed Usage)" #FFF3E0 {
+  component "systemEvents.js" as SYS_EV #E3F2FD
+  component "movementEvents.js" as MOV_EV #FFF3E0
+  component "resourceEvents.js" as RES_EV #FFEBEE
+  component "userEvents.js" as USER_EV #E3F2FD
+  component "emergencyEvents.js" as EMR_EV #E3F2FD
+  component "fuelEvents.js" as FUEL_EV #FFEBEE
+  
+  note right of SYS_EV : ✅ USED\n• EVALUATION_COMPLETE\n• AUTO\n• PROSPECTING_COMPLETE
+  note right of MOV_EV : ⚠️ PARTIAL\n• MOVEMENT_STARTED ✅\n• MOVEMENT_PROGRESS ✅\n• BASE_REACHED ❌
+  note right of RES_EV : ❌ UNUSED\n• RESOURCE_COLLECTED\n• INVENTORY_FULL
+  note right of USER_EV : ✅ AVAILABLE\n• MANUAL_OVERRIDE\n• EXPLORATION_REQUESTED
+  note right of EMR_EV : ✅ AVAILABLE\n• EMERGENCY_DETECTED
+  note right of FUEL_EV : ❌ UNUSED\n• REFUEL_COMPLETE\n• LOW_FUEL_DETECTED
+}
+
+package "Guards (Mixed Usage)" #FFF3E0 {
+  component "safety.js" as SAFE_G #E3F2FD
+  component "efficiency.js" as EFF_G #E3F2FD  
+  component "discovery.js" as DISC_G #E3F2FD
+  component "base.js" as BASE_G #FFF3E0
+  
+  note right of SAFE_G : ✅ USED\n• needsEmergencyReturn\n• isCriticalFuel
+  note right of EFF_G : ✅ USED\n• shouldReturnForEfficiency\n• isAtMaxCapacity
+  note right of DISC_G : ✅ USED\n• hasUnexploredAreas\n• canStartExploration
+  note right of BASE_G : ⚠️ PROBLEMATIC\n• isAtBase (not working?)\n• canRefuel\n• isReadyToLeaveBase
+}
+
+package "Reducers (Well Used)" #E8F5E8 {
+  component "context.js" as CTX_R #E3F2FD
+  note right of CTX_R : ✅ EXTENSIVELY USED\n• state.prepareEvaluating\n• state.prepareExploring\n• movement.startMovement\n• All exploration reducers
+}
+
+package "Actions (Mixed Usage)" #FFF3E0 {
+  component "explorationActions.js" as EXPL_A #E3F2FD
+  component "droneActions.js" as DRONE_A #E3F2FD
+  component "movementActions.js" as MOV_A #E3F2FD
+  component "resourcesActions.js" as RES_A #FFEBEE
+  component "fuelActions.js" as FUEL_A #FFEBEE
+  
+  note right of EXPL_A : ✅ HEAVILY USED\n• All exploration logic\n• Discovery management
+  note right of DRONE_A : ✅ HEAVILY USED\n• fsmDroneFleetActions\n• Deployment logic
+  note right of MOV_A : ✅ USED\n• Position updates\n• Movement tracking
+  note right of RES_A : ❌ MOSTLY UNUSED\n• Collection logic\n• Inventory management
+  note right of FUEL_A : ❌ MOSTLY UNUSED\n• Refuel operations\n• Fuel management
+}
+
+' === RELATIONSHIPS ===
+EVAL --> SYS_EV : Uses
+EVAL --> SAFE_G : Uses
+EVAL --> EFF_G : Uses
+EVAL --> DISC_G : Uses
+
+EXPL --> SYS_EV : Uses
+EXPL --> MOV_EV : Uses (partially)
+EXPL --> DRONE_A : Uses
+EXPL --> EXPL_A : Uses
+
+IDLE --> SYS_EV : Uses
+IDLE --> BASE_G : Uses
+IDLE --> FUEL_A : Should use
+
+COLL --> RES_EV : Would use
+COLL --> RES_A : Would use
+
+' === PROBLEM AREAS ===
+note as Problems
+**IDENTIFIED PROBLEMS:**
+
+🔴 **Missing Functionality:**
+• BASE_REACHED event not triggered
+• Resource collection flow unused
+• Fuel management inactive
+
+⚠️ **Incomplete Implementations:**
+• Movement events partially working
+• Base guards may have issues
+• No timeout mechanisms
+
+✅ **Working Well:**
+• Exploration flow (deploy→prospect→return)
+• State transitions (except return completion)
+• Emergency and manual overrides
+• Context management and reducers
+end note
+
+' === RECOMMENDATIONS ===
+note as Recommendations
+**RECOMMENDATIONS:**
+
+1. **Fix BASE_REACHED Issue:**
+   - Debug why BASE_REACHED never triggers
+   - Add fallback timeout for exploring_returning
+   - Add position-based completion check
+
+2. **Comment Out Unused Components:**
+   - Resource collection states/events
+   - Fuel management (if not needed)
+   - Unused guards and actions
+
+3. **Add Missing Features:**
+   - Timeout mechanisms for stuck states
+   - Better error handling
+   - State recovery mechanisms
+
+4. **Optimize Used Components:**
+   - Exploration flow works well
+   - Keep emergency systems
+   - Maintain manual override capability
+end note
+
+@enduml

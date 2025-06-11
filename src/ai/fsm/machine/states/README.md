@@ -79,9 +79,11 @@ export const createBotMachine = (botId, initialData = {}) => {
     {
       // Mapper les noms d'états à leur configuration
       [BOT_STATES.EVALUATING]: evaluatingState,
-      [BOT_STATES.EXPLORING]: exploringState,
+      // [BOT_STATES.EXPLORING]: exploringState, // ❌ REMOVED - use specific sub-states
+      [BOT_STATES.EXPLORING_DEPLOYING]: exploringState,
+      [BOT_STATES.EXPLORING_PROSPECTING]: exploringState,
+      [BOT_STATES.EXPLORING_RETURNING]: exploringState,
       [BOT_STATES.COLLECTING]: collectingState,
-      [BOT_STATES.RETURNING]: returningState,
       [BOT_STATES.IDLE_AT_BASE]: idleAtBaseState,
     },
     // Fonction de création du contexte initial
@@ -92,40 +94,97 @@ export const createBotMachine = (botId, initialData = {}) => {
 
 ## États Disponibles
 
-### 1. EVALUATING
+### 1. EVALUATING ✅ ACTIF
 État central qui analyse la situation et décide de l'action suivante.
 - **Entrées**: Depuis n'importe quel autre état, ou au démarrage
-- **Sorties**: Vers EXPLORING, COLLECTING, RETURNING, ou IDLE_AT_BASE
-- **Événements clés**: `EVALUATION_COMPLETE`
+- **Sorties**: Vers EXPLORING_DEPLOYING, EXPLORING_RETURNING, ou IDLE_AT_BASE
+- **Événements clés**: `EVALUATION_COMPLETE`, `AUTO`
+- **Usage**: 100% - État toujours actif, point central de décision
 
-### 2. EXPLORING
-État de recherche et découverte de ressources.
-- **Entrées**: Principalement depuis EVALUATING
-- **Sorties**: Vers EVALUATING (après exploration) ou COLLECTING (si ressources trouvées)
-- **Événements clés**: `DRONE_DEPLOYED`, `RESOURCES_DISCOVERED`, `AREA_EXPLORED`
+### 2. EXPLORING ✅ ACTIF (3 sous-états)
+État de recherche et découverte de ressources avec 3 phases distinctes.
 
-### 3. COLLECTING
+#### 2.1 EXPLORING_DEPLOYING
+- **Fonction**: Déploiement initial du drone d'exploration
+- **Entrées**: Depuis EVALUATING (quand hasUnexploredAreas = true)
+- **Sorties**: Vers EXPLORING_PROSPECTING (quand drone atteint cible)
+- **Événements clés**: `DRONE_REACHED_TARGET`
+
+#### 2.2 EXPLORING_PROSPECTING  
+- **Fonction**: Phase de prospection et analyse des ressources
+- **Entrées**: Depuis EXPLORING_DEPLOYING
+- **Sorties**: Vers EXPLORING_RETURNING (quand prospection terminée)
+- **Événements clés**: `PROSPECTING_COMPLETE`
+
+#### 2.3 EXPLORING_RETURNING
+- **Fonction**: Retour à la base avec les données d'exploration
+- **Entrées**: Depuis EXPLORING_PROSPECTING
+- **Sorties**: Vers IDLE_AT_BASE (quand base atteinte)
+- **Événements clés**: `BASE_REACHED`, `MOVEMENT_STARTED`, `MOVEMENT_PROGRESS`
+- **⚠️ PROBLÈME CONNU**: Le bot peut rester bloqué ici si BASE_REACHED ne se déclenche pas
+
+### 3. COLLECTING ❌ NON UTILISÉ
 État de collecte et d'extraction des ressources.
-- **Entrées**: Depuis EVALUATING ou EXPLORING
-- **Sorties**: Vers EVALUATING (après collecte) ou RETURNING (si inventaire plein)
-- **Événements clés**: `RESOURCE_COLLECTED`, `INVENTORY_FULL`
+- **Statut**: Disponible mais jamais utilisé en pratique
+- **Raison**: Le flux de collection de ressources n'est pas implémenté
+- **Recommandation**: Peut être commenté pour nettoyer le code
 
-### 4. RETURNING
-État de retour et navigation vers la base.
-- **Entrées**: Depuis n'importe quel état (souvent en urgence)
-- **Sorties**: Vers IDLE_AT_BASE (à l'arrivée)
-- **Événements clés**: `MOVEMENT_STARTED`, `BASE_REACHED`
+### 4. RETURNING ❌ SUPPRIMÉ
+État de retour classique - Remplacé par EXPLORING_RETURNING.
+- **Statut**: Supprimé lors de la consolidation
+- **Remplacement**: La logique est maintenant dans exploring.js (EXPLORING_RETURNING)
 
-### 5. IDLE_AT_BASE
+### 5. IDLE_AT_BASE ✅ ACTIF
 État de ravitaillement et maintenance à la base.
-- **Entrées**: Depuis RETURNING
-- **Sorties**: Vers EVALUATING (après ravitaillement)
+- **Entrées**: Depuis EXPLORING_RETURNING (quand BASE_REACHED)
+- **Sorties**: Vers EVALUATING (après maintenance)
 - **Événements clés**: `REFUEL_COMPLETE`, `UNLOAD_COMPLETE`, `MAINTENANCE_COMPLETE`
+- **Usage**: 60% - Fonctionne quand le bot arrive à la base
 
 ## Bonnes Pratiques
 
 1. **Séparation des préoccupations** - Chaque état gère un ensemble cohérent de comportements
-2. **Gardes explicites** - Utilisez des gardes clairs pour les conditions de transition
+2. **Gardes explicites** - Utilisez des gardes clairs pour les conditions de transition  
 3. **Réducteurs atomiques** - Les réducteurs doivent effectuer des transformations simples du contexte
 4. **Priorité de transitions** - Ordonnez les transitions par priorité (urgences d'abord)
 5. **Documentation** - Documentez clairement le but de chaque état et ses transitions
+
+## Flux d'Exécution Observé
+
+**Flux Normal (Fonctionne)**:
+```
+[*] → EVALUATING → EXPLORING_DEPLOYING → EXPLORING_PROSPECTING → EXPLORING_RETURNING → (BLOQUÉ)
+```
+
+**Flux Attendu (Avec correction)**:
+```
+[*] → EVALUATING → EXPLORING_DEPLOYING → EXPLORING_PROSPECTING → EXPLORING_RETURNING → IDLE_AT_BASE → EVALUATING
+```
+
+## Problèmes Identifiés
+
+### ⚠️ Bot Bloqué dans EXPLORING_RETURNING
+- **Symptôme**: Le bot reste indéfiniment dans l'état exploring_returning
+- **Cause**: L'événement BASE_REACHED ne se déclenche jamais
+- **Impact**: Cycle d'exploration incomplet
+- **Solution**: Ajouter un mécanisme de timeout (30 secondes)
+
+### ❌ États Non Utilisés
+- **COLLECTING**: Logique de collection non implémentée
+- **RETURNING**: Remplacé par EXPLORING_RETURNING
+- **Recommandation**: Commenter ces états pour nettoyer le code
+
+## Événements Principaux
+
+### ✅ Événements Utilisés
+- `EVALUATION_COMPLETE`: Fin d'évaluation → transition vers exploration
+- `AUTO`: Déclenchement automatique périodique  
+- `DRONE_REACHED_TARGET`: Drone arrivé → passage en prospection
+- `PROSPECTING_COMPLETE`: Prospection terminée → retour base
+- `MOVEMENT_STARTED/PROGRESS`: Suivi de mouvement
+
+### ❌ Événements Non Utilisés
+- `RESOURCE_COLLECTED`: Collection de ressources (non implémentée)
+- `INVENTORY_FULL`: Inventaire plein (non utilisé)
+- `BASE_REACHED`: Arrivée base (problématique - ne se déclenche pas)
+- `REFUEL_COMPLETE/UNLOAD_COMPLETE`: Maintenance base (disponible mais peu utilisé)
