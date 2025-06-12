@@ -209,6 +209,39 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
       }
     },
     returning: {
+      onApproachingShip: (distance, visualPosition, now) => {
+        // Utiliser la constante définie pour l'approche du vaisseau
+        const eventKey = `drone_returning_approaching_${botId}_${droneType}`;
+        
+        // On vérifie si le drone est dans la zone d'approche (entre TARGET_REACH et DRONE_APPROACHING_SHIP)
+        if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.DRONE_APPROACHING_SHIP && 
+            distance > POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && 
+            canSendEvent(eventKey)) {
+          fsmLogger.mouvement(`🏠 [${botId}] ${droneType} drone approaching ship - distance: ${distance.toFixed(2)}`);
+          
+          fsmLogger.context(`🔍 [DEBUG] Sending DRONE_RETURNED event with isApproaching=true`, {
+            botId,
+            droneType,
+            hookInstanceId: `${botId}-${droneType}`,
+            eventKey,
+            distance
+          });
+          
+          // Envoyer événement DRONE_RETURNED pour passer à l'état evaluating
+          const droneApproachingEvent = {
+            type: 'DRONE_RETURNED',
+            position: visualPosition,
+            droneType,
+            timestamp: Date.now(),
+            isApproaching: true // Indicateur supplémentaire pour le guard
+          };
+          send(droneApproachingEvent);
+          
+          markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.RETURN_RESET);
+          return true;
+        }
+        return false;
+      },
       onTargetReached: (distance, visualPosition, now) => {
         const eventKey = `drone_returning_reached_${botId}_${droneType}`;
         if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
@@ -261,6 +294,11 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
       
       if (handler.onMovementStart) {
         eventSent = handler.onMovementStart(distance, visualPosition, now);
+      }
+      
+      // Vérifier si le drone est en approche du vaisseau (pour le retour)
+      if (!eventSent && handler.onApproachingShip) {
+        eventSent = handler.onApproachingShip(distance, visualPosition, now);
       }
       
       if (!eventSent && handler.onTargetReached) {

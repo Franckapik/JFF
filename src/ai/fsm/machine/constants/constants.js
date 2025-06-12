@@ -63,11 +63,12 @@ export const DRONE_VISUAL_STATES = {
 export const POSITION_TRACKER_CONFIG = {
   THRESHOLDS: {
     // === SEUILS COMMUNS ===
-    TARGET_REACH: 1.5,         // Distance pour considérer la cible atteinte (était 0.25 - trop strict)
+    TARGET_REACH: 0.25,         // Distance pour considérer la cible atteinte (était 0.25 - trop strict)
     RESET_MOVEMENT: 3.0,       // Distance pour nettoyer les flags (TARGET_REACH * 2)
     
     // === SEUILS DRONES ===
     DEPLOYMENT_START: 0.5,     // Distance pour déclencher le déploiement de drone (était 0.1 - trop strict)
+    DRONE_APPROACHING_SHIP: 0.6, // Distance pour détecter que le drone s'approche du vaisseau
     
     // === SEUILS VAISSEAUX ===
     SHIP_MOVEMENT_START: 0.1,  // Distance pour déclencher le mouvement du vaisseau

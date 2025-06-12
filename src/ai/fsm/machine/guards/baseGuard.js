@@ -7,6 +7,7 @@
 import { movementGuards } from './core/movementGuard.js';
 import { fuelGuards } from './core/fuelGuard.js';
 import { resourceGuards } from './core/resourcesGuard.js';
+import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**
  * Base guards - Operations related to base and docking
@@ -30,6 +31,10 @@ export const baseGuards = {
     const { vehicle } = context;
     const basePosition = vehicle?.basePosition || { x: 0, y: 0 };
     const currentPosition = vehicle?.position || { x: 0, y: 0 };
+
+    fsmLogger.error(`Checking if at base:
+      Base Position: ${JSON.stringify(basePosition)},
+      Current Position: ${JSON.stringify(currentPosition)}`);
     
     return currentPosition.x === basePosition.x && 
            currentPosition.y === basePosition.y;

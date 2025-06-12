@@ -1,3 +1,12 @@
+Il doit y avoir une confiusion dans les basePosition entre drone et ship. Essayer de savoir que faire de idleAtBAse et revoir le guard isNotATBase. Verifier que la position du ship est bien msie a jour egalement. 
+
+
+
+
+
+
+
+
 COmprendre pourquoi plusieurs log sont envoyés pour les transitions et les actions. Revoir la synchronisation des bots et instances. Et essayer de finir le cycle returning vers evaluating par la suppression des fonctions .
 
 Refuel et repair lents sur les bonnes stations.

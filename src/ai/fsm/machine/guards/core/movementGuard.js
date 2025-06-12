@@ -78,7 +78,6 @@ const isMovementComplete = (context, event) => {
 const isVehicleCritical = (context, event) => {
   const vehicle = context?.vehicle;
   if (!vehicle) return true;
-  fsmLogger.error('isVehicleCritical', vehicle);
   
   const damage = vehicle.damage || 0;
   const fuel = vehicle.fuel || 0;
