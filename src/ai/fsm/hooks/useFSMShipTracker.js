@@ -27,7 +27,7 @@
  */
 
 import { useEffect, useRef, useCallback, useMemo } from 'react';
-import { MOVEMENT_EVENT_TYPES, movementEvents } from '../machine/events/movementEvents.js'; // ✅ CORRECTION: Retour vers movementEvents.js
+import { MOVEMENT_EVENT_TYPES, movementEvents } from '../machine/events/movementEvents.js';
 import { POSITION_TRACKER_CONFIG } from '../machine/constants/constants.js';
 import { useTileStore } from '../../../stores/useTileStore/index.js';
 import { useEventDebounce } from './useEventDebounce.js';
@@ -76,7 +76,7 @@ export const useFSMShipTracker = (context, send, botId) => {
       // Si les coordonnées ne peuvent pas être calculées, utiliser une valeur par défaut
       const safeTileCoord = tileCoord || "0,0";
       
-      // ✅ CORRECTION: Maintenant importé depuis le bon fichier
+      // Utiliser l'événement FSM spécialisé pour les vaisseaux
       const initialPositionEvent = movementEvents.createShipUpdatePositionEvent(
         visualPosition,
         'ship',
@@ -112,12 +112,11 @@ export const useFSMShipTracker = (context, send, botId) => {
         if (distance > POSITION_TRACKER_CONFIG.THRESHOLDS.SHIP_MOVEMENT_START && canSendEvent(eventKey)) {
           fsmLogger.mouvement(`🚢 [${botId}] Ship movement started - distance: ${distance.toFixed(2)}`);
           
-          // ✅ CORRECTION: Utiliser un événement simple
-          const shipMovementEvent = {
-            type: 'SHIP_MOVEMENT_STARTED',
-            position: visualPosition,
-            timestamp: Date.now()
-          };
+          // Créer un événement de démarrage de mouvement du vaisseau
+          const shipMovementEvent = movementEvents.createShipMovementStartedEvent(
+            visualPosition,
+            null // targetPosition optionnel
+          );
           send(shipMovementEvent);
           
           markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.SHIP_MOVEMENT_RESET);
@@ -128,19 +127,17 @@ export const useFSMShipTracker = (context, send, botId) => {
       onTargetReached: (distance, visualPosition, now) => {
         const eventKey = `ship_target_reached_${botId}`;
         if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
-          fsmLogger.mouvement(`🎯 [${botId}] Ship reached target - distance: ${distance.toFixed(2)}`);
+          fsmlogger.mouvement(`🎯 [${botId}] Ship reached target - distance: ${distance.toFixed(2)}`);
           
           // Convertir en coordonnées de tuile
           const gridCoord = worldToGrid(visualPosition);
           const tileCoord = gridToHexCoord(gridCoord);
           
-          // ✅ CORRECTION: Utiliser un événement simple
-          const shipArrivedEvent = {
-            type: 'SHIP_ARRIVED_AT_TILE',
-            position: visualPosition,
-            tileCoord,
-            timestamp: Date.now()
-          };
+          // Événement d'arrivée du vaisseau
+          const shipArrivedEvent = movementEvents.createShipArrivedAtTileEvent(
+            visualPosition,
+            tileCoord
+          );
           send(shipArrivedEvent);
           
           markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.SHIP_ARRIVAL_RESET);
@@ -153,7 +150,7 @@ export const useFSMShipTracker = (context, send, botId) => {
       onCollectionStart: (distance, visualPosition, now) => {
         const eventKey = `ship_collection_start_${botId}`;
         if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
-          fsmLogger.mouvement(`📦 [${botId}] Ship started collecting resources`);
+          fsmlogger.mouvement(`📦 [${botId}] Ship started collecting resources`);
           
           const gridCoord = worldToGrid(visualPosition);
           const tileCoord = gridToHexCoord(gridCoord);
@@ -162,7 +159,7 @@ export const useFSMShipTracker = (context, send, botId) => {
           setTimeout(() => {
             const collectionEventKey = `ship_collection_complete_${botId}`;
             if (canSendEvent(collectionEventKey)) {
-              fsmLogger.mouvement(`✅ [${botId}] Ship completed resource collection`);
+              fsmlogger.mouvement(`✅ [${botId}] Ship completed resource collection`);
               
               try {
                 const { getTileData } = useTileStore.getState();
@@ -175,14 +172,11 @@ export const useFSMShipTracker = (context, send, botId) => {
                   special: tileData?.resources?.special || 0
                 };
                 
-                // ✅ CORRECTION: Utiliser un événement simple
-                const shipCollectionEvent = {
-                  type: 'SHIP_COLLECTION_COMPLETED',
-                  position: visualPosition,
+                const shipCollectionEvent = movementEvents.createShipCollectionCompletedEvent(
+                  visualPosition,
                   tileCoord,
-                  collectedResources,
-                  timestamp: Date.now()
-                };
+                  collectedResources
+                );
                 send(shipCollectionEvent);
                 
                 markEventSent(collectionEventKey, POSITION_TRACKER_CONFIG.TIMINGS.COLLECTION_RESET);
@@ -202,21 +196,18 @@ export const useFSMShipTracker = (context, send, botId) => {
       onRefuelStart: (distance, visualPosition, now) => {
         const eventKey = `ship_refuel_start_${botId}`;
         if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.STATION_REACH && canSendEvent(eventKey)) {
-          fsmLogger.mouvement(`⛽ [${botId}] Ship started refueling`);
+          fsmlogger.mouvement(`⛽ [${botId}] Ship started refueling`);
           
           // Simuler le processus de refuel
           setTimeout(() => {
             const refuelEventKey = `ship_refuel_complete_${botId}`;
             if (canSendEvent(refuelEventKey)) {
-              fsmLogger.mouvement(`✅ [${botId}] Ship refueling completed`);
+              fsmlogger.mouvement(`✅ [${botId}] Ship refueling completed`);
               
-              // ✅ CORRECTION: Utiliser un événement simple
-              const shipRefuelEvent = {
-                type: 'SHIP_REFUEL_COMPLETED',
-                position: visualPosition,
-                fuelLevel: 100,
-                timestamp: Date.now()
-              };
+              const shipRefuelEvent = movementEvents.createShipRefuelCompletedEvent(
+                visualPosition,
+                100 // Plein fait
+              );
               send(shipRefuelEvent);
               
               markEventSent(refuelEventKey, POSITION_TRACKER_CONFIG.TIMINGS.REFUEL_RESET);

@@ -275,45 +275,13 @@ export const explorationActions = {
 };
 
 // ============================================================================
-// ❌ EXPORT TEMPORAIRE POUR ÉVITER ERREUR D'IMPORT
+// ✅ GUARDS & SELECTORS MOVED TO guards/core/explorationGuard.js
 // ============================================================================
 
 /**
- * Exports temporaires vides pour éviter les erreurs d'import
- * TODO: Supprimer ces exports quand les fichiers importants seront mis à jour
+ * Les guards, selectors et events d'exploration ont été déplacés vers guards/core/explorationGuard.js
+ * pour une meilleure architecture. Plus de code commenté nécessaire.
  */
-export const explorationGuards = {
-  // Guards temporaires vides - utilisez les guards centralisés à la place
-  canStartExploration: () => false,
-  isTileExplored: () => false,
-  hasUnprocessedDiscoveries: () => false,
-  isExplorationExpired: () => false,
-  isExplorationComplete: () => false,
-  needsExploration: () => false
-};
-
-export const explorationSelectors = {
-  // Selectors temporaires vides - utilisez les selectors centralisés à la place
-  getCurrentExplorationState: () => null,
-  isExploring: () => false,
-  getExploredTileCount: () => 0,
-  getDiscoveryCount: () => 0,
-  getDiscoveriesByType: () => [],
-  getExplorationDuration: () => 0,
-  getExplorationStats: () => ({}),
-  isTileExplored: () => false
-};
-
-export const explorationEvents = {
-  // Events temporaires vides - utilisez les events centralisés à la place
-  startExploration: () => ({ type: 'DEPRECATED' }),
-  markTileExplored: () => ({ type: 'DEPRECATED' }),
-  recordDiscovery: () => ({ type: 'DEPRECATED' }),
-  updateExplorationStatus: () => ({ type: 'DEPRECATED' }),
-  completeExploration: () => ({ type: 'DEPRECATED' }),
-  cancelExploration: () => ({ type: 'DEPRECATED' }),
-  markDiscoveriesProcessed: () => ({ type: 'DEPRECATED' })
-};
 
 // ============================================================================
 // EXPORT PAR DÉFAUT - SIMPLIFIÉ
@@ -322,7 +290,6 @@ export const explorationEvents = {
 export default {
   actions: explorationActions,
   // selectors: explorationSelectors, // ❌ COMMENTÉ
-  // guards: explorationGuards, // ❌ COMMENTÉ
   // events: explorationEvents, // ❌ COMMENTÉ
   constants: {
     EXPLORATION_STATES,

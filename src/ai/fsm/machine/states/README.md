@@ -27,7 +27,7 @@ import { state, transition, reduce } from 'robot3';
 import { BOT_STATES } from './index.js';
 import { RESOURCE_EVENT_TYPES } from '../events/resourceEvents.js';
 import { contextReducers } from '../reducers/context.js';
-import { discoveryGuards } from '../guards/discovery.js';
+import { discoveryGuards } from '../guards/discoveryGuard.js';
 
 /**
  * État COLLECTING - Collecte de ressources

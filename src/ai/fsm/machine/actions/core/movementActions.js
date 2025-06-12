@@ -331,6 +331,28 @@ export const movementActions = {
   }
 };
 
+// ============================================================================
+// EVENTS SPÉCIALISÉS NÉCESSAIRES
+// ============================================================================
+
+export const movementEvents = {
+  /**
+   * Crée un événement de mise à jour de position du vaisseau
+   * @param {Object} position - Position 3D du vaisseau
+   * @param {string} entityType - Type d'entité ('ship')
+   * @param {string} tileCoord - Coordonnée de tuile
+   * @param {string} newCoord - Nouvelle coordonnée
+   * @returns {Object} - Événement formaté
+   */
+  createShipUpdatePositionEvent: (position, entityType = 'ship', tileCoord, newCoord) => ({
+    type: 'SHIP_UPDATE_POSITION',
+    position,
+    entityType,
+    tileCoord,
+    newCoord,
+    timestamp: Date.now()
+  })
+};
 
 // ============================================================================
 // UTILITAIRES PUBLICS
@@ -378,38 +400,22 @@ export const validateVehicleIntegrity = (vehicle) => {
 };
 
 // ============================================================================
-// ❌ EXPORT TEMPORAIRE POUR ÉVITER ERREUR D'IMPORT
+// ✅ GUARDS MOVED TO guards/core/movementGuard.js
 // ============================================================================
 
 /**
- * Exports temporaires vides pour éviter les erreurs d'import
- * TODO: Supprimer ces exports quand les fichiers importants seront mis à jour
+ * Les guards de mouvement ont été déplacés vers guards/core/movementGuard.js
+ * pour une meilleure architecture. Plus d'exports temporaires nécessaires.
  */
-export const movementGuards = {
-  canMoveTo: () => false,
-  hasEnoughFuel: () => false,
-  isMovementComplete: () => false,
-  isVehicleActive: () => false,
-  isVehicleOperational: () => false,
-  isVehicleDamaged: () => false,
-  isVehicleCritical: () => false,
-  canUseVehicle: () => false,
-  hasShield: () => false
-};
 
-export const movementSelectors = {
-  isMoving: () => false,
-  getDestination: () => null,
-  getProgress: () => 0,
-  getMovementDuration: () => 0,
-  canStartMovement: () => false,
-  getDistanceToTarget: () => 0,
-  getVehicleStatus: () => ({}),
-  getHealthPercentage: () => 0,
-  getVehicleEssentials: () => ({}),
-  hasActiveShield: () => false,
-  getVehicleCapacities: () => ({})
-};
+// ============================================================================
+// ✅ GUARDS & SELECTORS MOVED TO guards/core/movementGuard.js  
+// ============================================================================
+
+/**
+ * Les guards et selectors de mouvement ont été déplacés vers guards/core/movementGuard.js
+ * pour une meilleure architecture. Plus d'exports temporaires nécessaires.
+ */
 
 // ============================================================================
 // EXPORT PAR DÉFAUT - SIMPLIFIÉ
@@ -418,7 +424,7 @@ export const movementSelectors = {
 export default {
   actions: movementActions,
   // selectors: movementSelectors, // ❌ COMMENTÉ
-  // guards: movementGuards, // ❌ COMMENTÉ
+  events: movementEvents, // Seulement createShipUpdatePositionEvent
   utils: {
     validateTargetTile,
     calculateDistance,

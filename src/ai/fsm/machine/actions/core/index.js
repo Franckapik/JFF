@@ -11,38 +11,23 @@
  * 
  * 🚀 MOVEMENT & VEHICLE (movementActions.js):
  * - Actions: moveToTile, stopMovement, updateProgress, updatePosition, etc.
- * - Selectors: isMoving, getDestination, getVehicleStatus, etc.
- * - Guards: canMoveTo, hasEnoughFuel, isVehicleOperational, etc.
- * - Events: moveToTile, vehicleUpdatedEvent, vehicleDamagedEvent, etc.
  * 
  * ⛽ FUEL (fuelActions.js):
  * - Actions: consumeFuel, refuelVehicle, addFuel, setFuelLevel, etc.
- * - Selectors: getCurrentFuel, getFuelStatus, getEstimatedRange, etc.
- * - Guards: canConsumeFuel, isCriticalFuel, isLowFuel, canRefuel, etc.
- * - Events: consumeFuel, refuelVehicle, consumeFuelForDistance, etc.
  * 
  * 📦 RESOURCES (resourcesActions.js):
  * - Actions: collectResources, depositResources, addResources, etc.
- * - Selectors: getCurrentResources, getCapacityInfo, hasResources, etc.
- * - Guards: canCollectResource, hasCapacityFor, isAtMaxCapacity, etc.
- * - Events: collectResources, depositResources, updateResources, etc.
  * 
  * 🔍 EXPLORATION (explorationActions.js):
  * - Actions: startExploration, markTileExplored, recordDiscovery, etc.
- * - Selectors: isExploring, getExplorationStats, getDiscoveryCount, etc.
- * - Guards: canStartExploration, needsExploration, isExplorationComplete, etc.
- * - Events: startExploration, completeExploration, recordDiscovery, etc.
  * 
  * 🤖 DRONES (droneActions.js):
  * - Actions: deployDrone, recallDrone, dockDrone, updateDronePosition, etc.
- * - Selectors: getCurrentDeploymentState, isDroneOnMission, etc.
- * - Guards: canDeployDrone, isDroneDeployed, isDroneDocked, etc.
- * - Events: deployDrone, recallDrone, dronePositionUpdate, etc.
  * 
  * 📊 EXPORTS ORGANISÉS:
- * - Exports individuels par fonction
- * - Exports groupés par domaine (movement, fuel, resource, exploration)
- * - Collections par type (coreActions, coreSelectors, coreGuards, coreEvents)
+ * - Exports individuels par action
+ * - Exports groupés par domaine (movement, fuel, resource, exploration, drone)
+ * - Collection globale des actions (coreActions)
  * 
  * @author Migration FSM
  * @version 1.0.0
@@ -53,61 +38,30 @@ import movementCore from './movementActions.js';
 import explorationCore from './explorationActions.js';
 import fuelCore from './fuelActions.js';
 import resourceCore from './resourcesActions.js';
-// vehicleCore retiré - fonctionnalités consolidées dans movementActions.js
+import droneCore from './droneActions.js'; // ✅ AJOUTÉ: Import manquant
 
 // ============================================================================
-// EXPORTS INDIVIDUELS
+// EXPORTS INDIVIDUELS - SIMPLIFIÉS (SEULEMENT ACTIONS + UTILS)
 // ============================================================================
 
-export { 
-  movementActions, 
-  movementSelectors, 
-  movementGuards, 
-  movementEvents,
-  // Actions véhicule consolidées depuis movement.js
-  updateVehicleProperties,
-  activateVehicle,
-  deactivateVehicle,
-  damageVehicle,
-  repairVehicle,
-  setVehicleShield,
-  setVehicleSpeed,
-  // Guards véhicule consolidés depuis movementActions.js
-  isVehicleActive,
-  isVehicleOperational,
-  isVehicleDamaged,
-  isVehicleCritical,
-  canUseVehicle,
-  hasShield,
-  // Selectors véhicule consolidés depuis movementActions.js
-  getVehicleStatus,
-  getHealthPercentage,
-  getVehicleEssentials,
-  hasActiveShield
-} from './movementActions.js';
-export { fuelActions, fuelSelectors, fuelGuards, fuelEvents } from './fuelActions.js';
-export { resourceActions, resourceSelectors, resourceGuards, resourceEvents } from './resourcesActions.js';
-export { 
-  explorationActions, 
-  explorationSelectors, 
-  explorationGuards, 
-  explorationEvents
-  // ❌ SUPPRIMÉ: EXPLORATION_STATES, DISCOVERY_TYPES 
-  // Ces constantes sont importées depuis constants.js, pas depuis explorationActions.js
-} from './explorationActions.js';
+export { movementActions } from './movementActions.js';
+export { fuelActions } from './fuelActions.js';
+export { resourceActions } from './resourcesActions.js';
+export { explorationActions } from './explorationActions.js';
+export { droneDeploymentActions } from './droneActions.js';
 
 // ============================================================================
-// EXPORT GROUPÉ PAR DOMAINE
+// EXPORT GROUPÉ PAR DOMAINE - SIMPLIFIÉ
 // ============================================================================
 
 export const movement = movementCore;
 export const exploration = explorationCore;
 export const fuel = fuelCore;
 export const resource = resourceCore;
-// vehicle consolidé dans movementActions - plus besoin d'export séparé
+export const drone = droneCore; // ✅ AJOUTÉ: Export manquant
 
 // ============================================================================
-// EXPORTS COLLECTIONS - Par type d'interface
+// EXPORTS COLLECTIONS - SEULEMENT ACTIONS
 // ============================================================================
 
 /**
@@ -117,55 +71,21 @@ export const coreActions = {
   movement: movementCore.actions,
   exploration: explorationCore.actions,
   fuel: fuelCore.actions,
-  resource: resourceCore.actions
-  // vehicle consolidé dans movementActions
-};
-
-/**
- * Tous les selectors regroupés par domaine
- */
-export const coreSelectors = {
-  movement: movementCore.selectors,
-  exploration: explorationCore.selectors,
-  fuel: fuelCore.selectors,
-  resource: resourceCore.selectors
-  // vehicle consolidé dans movementActions
-};
-
-/**
- * Tous les guards regroupés par domaine
- */
-export const coreGuards = {
-  movement: movementCore.guards,
-  exploration: explorationCore.guards,
-  fuel: fuelCore.guards,
-  resource: resourceCore.guards
-  // vehicle consolidé dans movementActions
-};
-
-/**
- * Tous les events regroupés par domaine
- */
-export const coreEvents = {
-  movement: movementCore.events,
-  fuel: fuelCore.events,
-  resource: resourceCore.events
-  // vehicle consolidé dans movementActions
+  resource: resourceCore.actions,
+  drone: droneCore.actions
 };
 
 // ============================================================================
-// EXPORT PAR DÉFAUT - TOUTES LES ACTIONS
+// EXPORT PAR DÉFAUT - SIMPLIFIÉ
 // ============================================================================
 
 export default {
   movement: movementCore,
   fuel: fuelCore,
   resource: resourceCore,
-  // vehicle consolidé dans movementActions - plus besoin d'export séparé
+  exploration: explorationCore,
+  drone: droneCore,
   
-  // Collections pour usage global
-  actions: coreActions,
-  selectors: coreSelectors,
-  guards: coreGuards,
-  events: coreEvents
+  // Collection globale des actions
+  actions: coreActions
 };

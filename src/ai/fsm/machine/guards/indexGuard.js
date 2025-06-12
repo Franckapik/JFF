@@ -9,16 +9,16 @@
  * - base.js: Base operations, docking, refueling
  */
 
-import { safetyGuards } from './safety.js';
-import { efficiencyGuards } from './efficiency.js';
-import { discoveryGuards } from './discovery.js';
-import { baseGuards } from './base.js';
+import { safetyGuards } from './safetyGuard.js';
+import { efficiencyGuards } from './efficiencyGuard.js';
+import { discoveryGuards } from './discoveryGuard.js';
+import { baseGuards } from './baseGuard.js';
 
 // Export individual guard categories
-export { safetyGuards } from './safety.js';
-export { efficiencyGuards } from './efficiency.js';
-export { discoveryGuards } from './discovery.js';
-export { baseGuards } from './base.js';
+export { safetyGuards } from './safetyGuard.js';
+export { efficiencyGuards } from './efficiencyGuard.js';
+export { discoveryGuards } from './discoveryGuard.js';
+export { baseGuards } from './baseGuard.js';
 
 /**
  * Combined guards object for easy access

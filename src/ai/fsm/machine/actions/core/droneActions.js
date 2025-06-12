@@ -352,49 +352,16 @@ const selectTargetTileInRadius = (context, range = 3) => {
 // ❌ SUPPRIMÉ: fsmDroneFleetActions
 // Ces actions dupliquent droneDeploymentActions et créent de la confusion.
 // La logique de déploiement doit être centralisée dans droneDeploymentActions.
-
-export const fsmDroneFleetActions = {
-  deployDroneWithPosition: (context, event) => { ... },
-  updateDronePosition: (context, event) => { ... },
-  recallDrone: (context, event) => { ... },
-  dockDrone: (context, event) => { ... }
-};
 */
 
-/*
 // ============================================================================
-// GUARDS - COMMENTÉS (ÉVITER CONFLITS AVEC GUARDS CENTRALISÉS)
+// ✅ GUARDS MOVED TO guards/core/
 // ============================================================================
 
-export const droneDeploymentGuards = {
-  canDeployDrone: (context, event) => {
-    const explorer = context.droneFleet?.drones?.explorer;
-    if (explorer?.isActive) return false;
-    
-    if (context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.active) return false;
-    
-    const vehicle = context.vehicle || context.botVehicle;
-    if (!vehicle || vehicle.fuel < 20) return false;
-    
-    return true;
-  },
-
-  isDroneDeployed: (context) => {
-    const explorer = context.droneFleet?.drones?.explorer;
-    if (explorer?.isActive) return true;
-    
-    return context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.active;
-  },
-
-  isDroneDocked: (context) => {
-    const explorer = context.droneFleet?.drones?.explorer;
-    if (!explorer || (!explorer.isActive && explorer.state === 'docked')) return true;
-    
-    return context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.docked ||
-           !context.droneDeployment;
-  }
-};
-*/
+/**
+ * Les guards de drones ont été déplacés vers guards/core/ pour une meilleure architecture.
+ * Utilisez les guards centralisés depuis guards/core/ au lieu des actions.
+ */
 
 /*
 // ============================================================================
@@ -479,7 +446,6 @@ export const droneDeploymentEvents = {
 export default {
   actions: droneDeploymentActions,
   // selectors: droneDeploymentSelectors, // ❌ COMMENTÉ
-  // guards: droneDeploymentGuards, // ❌ COMMENTÉ
   // events: droneDeploymentEvents, // ❌ COMMENTÉ
   constants: {
     droneDeploymentStates: DRONE_DEPLOYMENT_STATES,
@@ -492,40 +458,10 @@ export default {
 };
 
 // ============================================================================
-// ❌ EXPORT TEMPORAIRE POUR ÉVITER ERREUR D'IMPORT
+// ✅ GUARDS & EXPORTS CLEANED
 // ============================================================================
 
 /**
- * Export temporaire vide pour éviter l'erreur d'import dans context.js
- * TODO: Supprimer cet export quand context.js sera mis à jour
+ * Les guards et exports temporaires ont été supprimés.
+ * Architecture maintenant clean et centralisée dans guards/core/
  */
-export const fsmDroneFleetActions = {
-  // Actions temporaires vides - utilisez droneDeploymentActions à la place
-  deployDroneWithPosition: () => ({ error: 'Use droneDeploymentActions.deployDrone instead' }),
-  updateDronePosition: () => ({ error: 'Use droneDeploymentActions.updateDronePosition instead' }),
-  recallDrone: () => ({ error: 'Use droneDeploymentActions.recallDrone instead' }),
-  dockDrone: () => ({ error: 'Use droneDeploymentActions.dockDrone instead' })
-};
-
-export const droneDeploymentGuards = {
-  // Guards temporaires vides - utilisez les guards centralisés à la place
-  canDeployDrone: () => false,
-  isDroneDeployed: () => false,
-  isDroneDocked: () => true
-};
-
-export const droneDeploymentSelectors = {
-  // Selectors temporaires vides - utilisez les selectors centralisés à la place
-  getCurrentDeploymentState: () => 'docked',
-  isDroneOnMission: () => false,
-  getDroneTargetArea: () => null,
-  getEstimatedMissionTimeRemaining: () => 0
-};
-
-export const droneDeploymentEvents = {
-  // Events temporaires vides - utilisez les events centralisés à la place
-  deployDrone: () => ({ type: 'DEPRECATED' }),
-  recallDrone: () => ({ type: 'DEPRECATED' }),
-  droneDocked: () => ({ type: 'DEPRECATED' }),
-  dronePositionUpdate: () => ({ type: 'DEPRECATED' })
-};

@@ -224,39 +224,10 @@ export const fuelActions = {
 // ============================================================================
 
 /**
- * Export temporaire vide pour éviter l'erreur d'import dans safety.js
- * TODO: Supprimer cet export quand safety.js sera mis à jour
+ * ✅ GUARDS MOVED TO guards/core/fuelGuard.js
+ * Les guards de carburant ont été déplacés vers guards/core/fuelGuard.js
+ * pour une meilleure architecture. Plus d'exports temporaires nécessaires.
  */
-export const fuelGuards = {
-  // Guards temporaires vides - utilisez les guards centralisés à la place
-  canConsumeFuel: () => false,
-  hasEnoughFuelForDistance: () => false,
-  isCriticalFuel: () => false,
-  isLowFuel: () => false,
-  canRefuel: () => false,
-  isFullTank: () => false
-};
-
-export const fuelSelectors = {
-  // Selectors temporaires vides - utilisez les selectors centralisés à la place
-  getCurrentFuel: () => 0,
-  getFuelPercentage: () => 0,
-  getFuelNeeded: () => 0,
-  getEstimatedRange: () => 0,
-  getFuelStatus: () => 'empty',
-  getFuelRequiredForDistance: () => 0,
-  getFuelInfo: () => ({})
-};
-
-export const fuelEvents = {
-  // Events temporaires vides - utilisez les events centralisés à la place
-  consumeFuel: () => ({ type: 'DEPRECATED' }),
-  refuelVehicle: () => ({ type: 'DEPRECATED' }),
-  addFuel: () => ({ type: 'DEPRECATED' }),
-  setFuelLevel: () => ({ type: 'DEPRECATED' }),
-  emptyTank: () => ({ type: 'DEPRECATED' }),
-  consumeFuelForDistance: () => ({ type: 'DEPRECATED' })
-};
 
 // ============================================================================
 // EXPORT PAR DÉFAUT - SIMPLIFIÉ
@@ -265,7 +236,6 @@ export const fuelEvents = {
 export default {
   actions: fuelActions,
   // selectors: fuelSelectors, // ❌ COMMENTÉ
-  // guards: fuelGuards, // ❌ COMMENTÉ
   // events: fuelEvents, // ❌ COMMENTÉ
   constants: {
     FUEL_CONSTANTS

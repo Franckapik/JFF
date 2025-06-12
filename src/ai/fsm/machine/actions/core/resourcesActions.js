@@ -235,40 +235,17 @@ export const resourceActions = {
 };
 
 // ============================================================================
-// ❌ EXPORT TEMPORAIRE POUR ÉVITER ERREUR D'IMPORT
+// ❌ FONCTIONNALITÉS COMMENTÉES POUR ÉVITER CONFUSION/CONFLITS
+// ============================================================================
+
+// ============================================================================
+// ✅ GUARDS & SELECTORS MOVED TO guards/core/resourcesGuard.js
 // ============================================================================
 
 /**
- * Exports temporaires vides pour éviter les erreurs d'import
- * TODO: Supprimer ces exports quand les fichiers importants seront mis à jour
+ * Les guards, selectors et events de ressources ont été déplacés vers guards/core/resourcesGuard.js
+ * pour une meilleure architecture. Plus de code commenté nécessaire.
  */
-export const resourceGuards = {
-  // Guards temporaires vides - utilisez les guards centralisés à la place
-  canCollectResource: () => false,
-  hasCapacityFor: () => false,
-  isAtMaxCapacity: () => false,
-  canDepositResources: () => false
-};
-
-export const resourceSelectors = {
-  // Selectors temporaires vides - utilisez les selectors centralisés à la place
-  getCurrentResources: () => ({ food: 0, debris: 0, special: 0 }),
-  getMaxCapacity: () => ({ food: 0, debris: 0, special: 0 }),
-  getRemainingCapacity: () => ({ food: 0, debris: 0, special: 0 }),
-  getCapacityPercentage: () => ({ food: 0, debris: 0, special: 0 }),
-  getTotalResources: () => 0,
-  hasResources: () => false,
-  getCapacityInfo: () => ({})
-};
-
-export const resourceEvents = {
-  // Events temporaires vides - utilisez les events centralisés à la place
-  collectResources: () => ({ type: 'DEPRECATED' }),
-  depositResources: () => ({ type: 'DEPRECATED' }),
-  addResources: () => ({ type: 'DEPRECATED' }),
-  clearResources: () => ({ type: 'DEPRECATED' }),
-  updateResources: () => ({ type: 'DEPRECATED' })
-};
 
 // ============================================================================
 // EXPORT PAR DÉFAUT - SIMPLIFIÉ
@@ -277,7 +254,6 @@ export const resourceEvents = {
 export default {
   actions: resourceActions,
   // selectors: resourceSelectors, // ❌ COMMENTÉ
-  // guards: resourceGuards, // ❌ COMMENTÉ
   // events: resourceEvents, // ❌ COMMENTÉ
   constants: {
     EMPTY_RESOURCES,

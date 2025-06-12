@@ -40,9 +40,9 @@ import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
 import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
 import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
-import { safetyGuards, baseGuards } from '../guards/index.js';
+import { safetyGuards, baseGuards } from '../guards/indexGuard.js';
 import { explorationActions } from '../actions/core/explorationActions.js';
-import { discoveryGuards } from '../guards/index.js';
+import { discoveryGuards } from '../guards/indexGuard.js';
 import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**

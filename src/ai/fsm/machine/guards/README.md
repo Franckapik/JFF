@@ -2,7 +2,30 @@
 
 This directory contains modular guard functions for the FSM system, organized by functional category.
 
-**Status**: Documentation updated based on real usage analysis and identified issues.
+**Status**: ✅ **REFACTORED** - Guards primitifs extraits des actions vers guards/core/
+
+## 🏗️ **NOUVELLE ARCHITECTURE CLEAN**
+
+```
+guards/
+├── core/                           # 🆕 Guards primitifs (logique métier)
+│   ├── fuel.js                     # Guards carburant (extraits des actions)
+│   ├── movement.js                 # Guards mouvement (extraits des actions)
+│   ├── resources.js                # Guards ressources (extraits des actions)
+│   ├── exploration.js              # Guards exploration (extraits des actions)
+│   └── index.js                    # Export consolidé
+├── safety.js                       # Guards FSM composés (importe core/)
+├── efficiency.js                   # Guards FSM composés (importe core/)
+├── discovery.js                    # Guards FSM composés (importe core/)
+├── base.js                         # Guards FSM composés (importe core/)
+└── index.js                        # Export FSM final
+```
+
+**🎯 Avantages de la nouvelle structure:**
+- ✅ **Séparation claire**: Guards primitifs (core/) vs Guards composés FSM
+- ✅ **Plus d'imports depuis actions/**: Architecture clean
+- ✅ **Réutilisabilité**: Guards primitifs utilisables ailleurs
+- ✅ **Imports locaux**: `./core/fuel.js` au lieu de `../actions/core/fuelActions.js`
 
 ## Structure and Usage Status
 
@@ -16,7 +39,7 @@ This directory contains modular guard functions for the FSM system, organized by
 
 ### ✅ Heavily Used Guards (Keep)
 
-#### Safety Guards (safety.js)
+#### Safety Guards (safetyGuard.js)
 ```javascript
 // ✅ Critical for emergency transitions
 needsEmergencyReturn: () => // Used in EVALUATING → EXPLORING_RETURNING
@@ -24,7 +47,7 @@ isCriticalFuel: () => // Emergency fuel detection
 needsToReturnToBase: () => // Safety return logic
 ```
 
-#### Discovery Guards (discovery.js)  
+#### Discovery Guards (discoveryGuard.js)  
 ```javascript
 // ✅ Core exploration functionality
 hasUnexploredAreas: () => // Main exploration trigger
@@ -32,7 +55,7 @@ canStartExploration: () => // Exploration validation
 isExplorationComplete: () => // Completion detection
 ```
 
-#### Efficiency Guards (efficiency.js)
+#### Efficiency Guards (efficiencyGuard.js)
 ```javascript
 // ✅ Resource management optimization
 shouldReturnForEfficiency: () => // Return optimization
@@ -67,7 +90,7 @@ needsRefueling: () => // Refuel requirement check
 ### ✅ Working Guard Usage
 
 ```javascript
-import { safetyGuards, discoveryGuards } from '../guards/index.js';
+import { safetyGuards, discoveryGuards } from '../guards/indexGuard.js';
 
 // ✅ This works - heavily used in practice
 transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_DEPLOYING,
@@ -82,7 +105,7 @@ transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_DEPLOYIN
 ### ⚠️ Problematic Guard Usage
 
 ```javascript
-import { baseGuards } from '../guards/index.js';
+import { baseGuards } from '../guards/indexGuard.js';
 
 // ⚠️ This transition never succeeds - bot gets stuck
 transition(MOVEMENT_EVENT_TYPES.BASE_REACHED, BOT_STATES.IDLE_AT_BASE,
@@ -95,7 +118,7 @@ transition(MOVEMENT_EVENT_TYPES.BASE_REACHED, BOT_STATES.IDLE_AT_BASE,
 
 ```javascript
 // ❌ Don't use - resource collection not implemented
-import { efficiencyGuards } from '../guards/index.js';
+import { efficiencyGuards } from '../guards/indexGuard.js';
 
 transition(RESOURCE_EVENT_TYPES.RESOURCE_COLLECTED, BOT_STATES.EVALUATING,
   guard((context, event) => efficiencyGuards.canCollectResource(context, event)), // Never called
