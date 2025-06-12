@@ -4,6 +4,7 @@
  * 🔄 REFACTORED: Now imports from ./core/ instead of ../actions/
  */
 
+import fsmLogger from '../../../../logger/fsmLogger.js';
 import { fuelGuards } from './core/fuelGuard.js';
 import { movementGuards } from './core/movementGuard.js';
 
@@ -26,7 +27,7 @@ export const safetyGuards = {
   needsEmergencyReturn: (context, event) => {
     const isCritical = fuelGuards.isCriticalFuel(context, event);
     const isVehicleCritical = movementGuards.isVehicleCritical(context, event);
-    
+
     return isCritical || isVehicleCritical;
   },
 

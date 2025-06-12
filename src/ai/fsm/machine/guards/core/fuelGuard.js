@@ -11,16 +11,7 @@
  * 🎯 Réutilisables par les guards FSM composés
  */
 
-// ============================================================================
-// CONSTANTES CARBURANT
-// ============================================================================
-
-export const FUEL_THRESHOLDS = {
-  CRITICAL: 10,     // Niveau critique (urgence)
-  LOW: 20,          // Niveau bas (attention)
-  NORMAL: 50,       // Niveau normal
-  FULL: 100         // Réservoir plein
-};
+import { FUEL_THRESHOLDS } from '../../constants/constants.js';
 
 // ============================================================================
 // GUARDS PRIMITIFS CARBURANT

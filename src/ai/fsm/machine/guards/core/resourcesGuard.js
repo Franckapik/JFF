@@ -11,20 +11,7 @@
  * 🎯 Réutilisables par les guards FSM composés
  */
 
-// ============================================================================
-// CONSTANTES RESSOURCES
-// ============================================================================
-
-export const RESOURCE_CONSTANTS = {
-  DEFAULT_CAPACITY: 100,    // Capacité par défaut
-  MIN_COLLECTION: 1,        // Collecte minimale
-  RESOURCE_TYPES: {
-    FOOD: 'food',
-    DEBRIS: 'debris', 
-    SPECIAL: 'special',
-    ENERGY: 'energy'
-  }
-};
+import { RESOURCE_CONSTANTS, MOVEMENT_CONSTANTS } from '../../constants/constants.js';
 
 // ============================================================================
 // UTILITAIRES RESSOURCES
@@ -108,8 +95,8 @@ const canCollectResource = (context, event, resourceType = null) => {
   if (isAtMaxCapacity(context, event)) return false;
   
   // Vérifie si le véhicule est opérationnel (importé depuis movement si nécessaire)
-  const health = vehicle.health || 0;
-  if (health < 10) return false;
+  const damage = vehicle.damage || 0;
+  if (damage >= MOVEMENT_CONSTANTS.MAX_DAMAGE) return false;
   
   return true;
 };

@@ -16,10 +16,14 @@
 // IMPORTS DES GUARDS PRIMITIFS
 // ============================================================================
 
-export { fuelGuards, FUEL_THRESHOLDS } from './fuelGuard.js';
-export { movementGuards, MOVEMENT_CONSTANTS } from './movementGuard.js';
-export { resourceGuards, resourceUtils, RESOURCE_CONSTANTS } from './resourcesGuard.js';
-export { explorationGuards, explorationUtils, EXPLORATION_CONSTANTS } from './explorationGuard.js';
+export { fuelGuards } from './fuelGuard.js';
+export { FUEL_THRESHOLDS } from '../../constants/constants.js';
+export { movementGuards } from './movementGuard.js';
+export { MOVEMENT_CONSTANTS } from '../../constants/constants.js';
+export { resourceGuards, resourceUtils } from './resourcesGuard.js';
+export { RESOURCE_CONSTANTS } from '../../constants/constants.js';
+export { explorationGuards, explorationUtils } from './explorationGuard.js';
+export { EXPLORATION_CONSTANTS } from '../../constants/constants.js';
 
 // ============================================================================
 // EXPORT CONSOLIDÉ - ALL GUARDS

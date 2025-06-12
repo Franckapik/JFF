@@ -42,6 +42,7 @@ export const efficiencyGuards = {
     const atMaxCapacity = resourceGuards.isAtMaxCapacity(context, event);
     const isLowFuel = fuelGuards.isLowFuel(context, event);
     
+    
     return atMaxCapacity || isLowFuel;
   },
 

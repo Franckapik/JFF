@@ -11,17 +11,7 @@
  * 🎯 Réutilisables par les guards FSM composés
  */
 
-// ============================================================================
-// CONSTANTES EXPLORATION
-// ============================================================================
-
-export const EXPLORATION_CONSTANTS = {
-  EXPLORATION_TIMEOUT: 300000,      // 5 minutes d'expiration
-  MAX_EXPLORED_TILES: 100,          // Maximum de tuiles explorées
-  MIN_EXPLORATION_DISTANCE: 2,      // Distance minimale pour explorer
-  DISCOVERY_COOLDOWN: 30000,        // 30 secondes entre découvertes
-  EXPLORATION_RADIUS: 5             // Rayon d'exploration
-};
+import { EXPLORATION_CONSTANTS, MOVEMENT_CONSTANTS } from '../../constants/constants.js';
 
 // ============================================================================
 // UTILITAIRES EXPLORATION
@@ -71,9 +61,9 @@ const canStartExploration = (context, event) => {
   const vehicle = context?.vehicle;
   if (!vehicle) return false;
   
-  // Vérifie la santé du véhicule
-  const health = vehicle.health || 0;
-  if (health < 20) return false;
+  // Vérifie l'état du véhicule (dommages)
+  const damage = vehicle.damage || 0;
+  if (damage > MOVEMENT_CONSTANTS.HIGH_DAMAGE) return false;
   
   // Vérifie le carburant
   const fuel = vehicle.fuel || 0;

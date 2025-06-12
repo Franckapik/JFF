@@ -204,6 +204,52 @@ export const FUEL_CONSTANTS = {
 };
 
 /**
+ * Seuils de carburant (déplacé de fuelGuard.js)
+ */
+export const FUEL_THRESHOLDS = {
+  CRITICAL: 10,     // Niveau critique (urgence)
+  LOW: 20,          // Niveau bas (attention)
+  NORMAL: 50,       // Niveau normal
+  FULL: 100         // Réservoir plein
+};
+
+/**
+ * Constantes de ressources (déplacé de resourcesGuard.js)
+ */
+export const RESOURCE_CONSTANTS = {
+  DEFAULT_CAPACITY: 100,    // Capacité par défaut
+  MIN_COLLECTION: 1,        // Collecte minimale
+  RESOURCE_TYPES: {
+    FOOD: 'food',
+    DEBRIS: 'debris', 
+    SPECIAL: 'special',
+  }
+};
+
+/**
+ * Constantes de mouvement (déplacé de movementGuard.js)
+ */
+export const MOVEMENT_CONSTANTS = {
+  MAX_DAMAGE: 100,          // Dommage maximal (véhicule détruit)
+  CRITICAL_DAMAGE: 75,      // Niveau de dommage critique
+  HIGH_DAMAGE: 50,          // Niveau de dommage élevé
+  SAFE_DAMAGE: 25,          // Niveau de dommage acceptable
+  MIN_SPEED: 0.1,           // Vitesse minimale
+  TARGET_TOLERANCE: 0.5     // Tolérance pour atteindre une cible
+};
+
+/**
+ * Constantes d'exploration (déplacé de explorationGuard.js)
+ */
+export const EXPLORATION_CONSTANTS = {
+  EXPLORATION_TIMEOUT: 300000,      // 5 minutes d'expiration
+  MAX_EXPLORED_TILES: 100,          // Maximum de tuiles explorées
+  MIN_EXPLORATION_DISTANCE: 2,      // Distance minimale pour explorer
+  DISCOVERY_COOLDOWN: 30000,        // 30 secondes entre découvertes
+  EXPLORATION_RADIUS: 5             // Rayon d'exploration
+};
+
+/**
  * États d'exploration internes (sous-états pendant l'exploration)
  * Ces états sont différents des états FSM principaux (BOT_STATES)
  */

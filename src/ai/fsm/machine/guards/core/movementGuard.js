@@ -11,18 +11,8 @@
  * 🎯 Réutilisables par les guards FSM composés
  */
 
-// ============================================================================
-// CONSTANTES MOUVEMENT
-// ============================================================================
-
-export const MOVEMENT_CONSTANTS = {
-  MIN_HEALTH: 10,           // Santé minimale pour opérer
-  CRITICAL_HEALTH: 25,      // Santé critique
-  NORMAL_HEALTH: 50,        // Santé normale
-  MAX_HEALTH: 100,          // Santé maximale
-  MIN_SPEED: 0.1,           // Vitesse minimale
-  TARGET_TOLERANCE: 0.5     // Tolérance pour atteindre une cible
-};
+import fsmLogger from '../../../../../logger/fsmLogger.js';
+import { MOVEMENT_CONSTANTS } from '../../constants/constants.js';
 
 // ============================================================================
 // GUARDS PRIMITIFS MOUVEMENT
@@ -88,11 +78,12 @@ const isMovementComplete = (context, event) => {
 const isVehicleCritical = (context, event) => {
   const vehicle = context?.vehicle;
   if (!vehicle) return true;
+  fsmLogger.error('isVehicleCritical', vehicle);
   
-  const health = vehicle.health || 0;
+  const damage = vehicle.damage || 0;
   const fuel = vehicle.fuel || 0;
   
-  return health <= MOVEMENT_CONSTANTS.CRITICAL_HEALTH || fuel <= 5;
+  return damage >= MOVEMENT_CONSTANTS.CRITICAL_DAMAGE || fuel <= 5;
 };
 
 /**
@@ -105,10 +96,10 @@ const isVehicleOperational = (context, event) => {
   const vehicle = context?.vehicle;
   if (!vehicle) return false;
   
-  const health = vehicle.health || 0;
+  const damage = vehicle.damage || 0;
   const speed = vehicle.speed || 0;
   
-  return health >= MOVEMENT_CONSTANTS.MIN_HEALTH && 
+  return damage < MOVEMENT_CONSTANTS.MAX_DAMAGE && 
          speed >= MOVEMENT_CONSTANTS.MIN_SPEED;
 };
 
@@ -141,8 +132,8 @@ const isVehicleActive = (context, event) => {
  * @returns {boolean} True si véhicule endommagé
  */
 const isVehicleDamaged = (context, event) => {
-  const health = context?.vehicle?.health || 0;
-  return health < MOVEMENT_CONSTANTS.NORMAL_HEALTH;
+  const damage = context?.vehicle?.damage || 0;
+  return damage > MOVEMENT_CONSTANTS.HIGH_DAMAGE;
 };
 
 /**
