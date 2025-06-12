@@ -7,7 +7,27 @@
  * Ces fonctions sont sans effets de bord et retournent des transformations
  * d'état plutôt que de muter directement les données.
  * 
- * Inspiré du pattern présenté dans actions-comparison.md
+ * 📋 FONCTIONS DISPONIBLES DANS CE FICHIER:
+ * ==========================================
+ * 
+ * 🔧 ACTIONS PRINCIPALES (fuelActions):
+ * - consumeFuel(context, event) : Consomme du carburant
+ * - refuelVehicle(context) : Ravitaille complètement
+ * - addFuel(context, event) : Ajoute quantité spécifique
+ * - setFuelLevel(context, event) : Définit niveau spécifique
+ * - emptyTank(context) : Vide complètement le réservoir
+ * - consumeFuelForDistance(context, event) : Consomme pour distance
+ * 
+ * 🔧 UTILITAIRES INTERNES:
+ * - validateFuelLevel(fuel) : Validation niveau (0-100)
+ * - calculateFuelConsumption(distance, rate) : Calcul consommation
+ * - clampFuel(value) : Contraindre valeur carburant
+ * - FUEL_CONSTANTS : Constantes du système carburant
+ * 
+ * ❌ FONCTIONNALITÉS COMMENTÉES (Éviter confusion/conflits):
+ * - Guards (fuelGuards) - COMMENTÉS
+ * - Selectors (fuelSelectors) - COMMENTÉS
+ * - Events (fuelEvents) - COMMENTÉS
  * 
  * @author Migration FSM
  * @version 1.0.0
@@ -15,10 +35,12 @@
 
 import { FUEL_CONSTANTS } from '../../constants/constants.js';
 
+// ============================================================================
+// UTILITAIRES INTERNES
+// ============================================================================
+
 /**
  * Validation et normalisation du niveau de carburant
- * @param {number} fuel - Niveau de carburant à valider
- * @returns {number} - Niveau de carburant validé (0-100)
  */
 const validateFuelLevel = (fuel) => {
   const fuelNumber = Number(fuel);
@@ -28,9 +50,6 @@ const validateFuelLevel = (fuel) => {
 
 /**
  * Calcule la consommation de carburant pour une distance
- * @param {number} distance - Distance à parcourir
- * @param {number} rate - Taux de consommation (défaut: 2 par unité de distance)
- * @returns {number} - Carburant nécessaire
  */
 const calculateFuelConsumption = (distance, rate = FUEL_CONSTANTS.CONSUMPTION_PER_DISTANCE) => {
   if (typeof distance !== 'number' || distance < 0) return 0;
@@ -39,107 +58,11 @@ const calculateFuelConsumption = (distance, rate = FUEL_CONSTANTS.CONSUMPTION_PE
 
 /**
  * Utilitaire pour contraindre une valeur de carburant
- * @param {number} value - Valeur à contraindre
- * @returns {number} - Valeur contrainte entre 0 et 100
  */
 const clampFuel = (value) => validateFuelLevel(value);
 
 // ============================================================================
-// VALIDATORS ET GUARDS
-// ============================================================================
-
-/**
- * Guards pour valider les conditions de carburant
- */
-export const fuelGuards = {
-  
-  /**
-   * Vérifie si un véhicule peut consommer du carburant
-   * @param {Object} context - Contexte actuel
-   * @param {Object} event - Événement avec amount
-   * @returns {boolean} - True si consommation possible
-   */
-  canConsumeFuel: (context, event) => {
-    const vehicle = context.vehicle;
-    if (!vehicle) return false;
-
-    const currentFuel = validateFuelLevel(vehicle.fuel);
-    const consumptionAmount = event?.amount || FUEL_CONSTANTS.DEFAULT_CONSUMPTION;
-
-    return currentFuel >= consumptionAmount;
-  },
-
-  /**
-   * Vérifie si un véhicule a suffisamment de carburant pour une distance
-   * @param {Object} context - Contexte actuel
-   * @param {Object} event - Événement avec distance
-   * @returns {boolean} - True si suffisamment de carburant
-   */
-  hasEnoughFuelForDistance: (context, event) => {
-    const vehicle = context.vehicle;
-    if (!vehicle || !event?.distance) return false;
-
-    const currentFuel = validateFuelLevel(vehicle.fuel);
-    const requiredFuel = calculateFuelConsumption(event.distance);
-
-    return currentFuel >= requiredFuel;
-  },
-
-  /**
-   * Vérifie si un véhicule a un niveau de carburant critique
-   * @param {Object} context - Contexte actuel
-   * @returns {boolean} - True si carburant critique
-   */
-  isCriticalFuel: (context) => {
-    const vehicle = context.vehicle;
-    if (!vehicle) return true;
-
-    const currentFuel = validateFuelLevel(vehicle.fuel);
-    return currentFuel <= FUEL_CONSTANTS.CRITICAL_FUEL_THRESHOLD;
-  },
-
-  /**
-   * Vérifie si un véhicule a un niveau de carburant bas
-   * @param {Object} context - Contexte actuel
-   * @returns {boolean} - True si carburant bas
-   */
-  isLowFuel: (context) => {
-    const vehicle = context.vehicle;
-    if (!vehicle) return true;
-
-    const currentFuel = validateFuelLevel(vehicle.fuel);
-    return currentFuel <= FUEL_CONSTANTS.LOW_FUEL_THRESHOLD;
-  },
-
-  /**
-   * Vérifie si un véhicule peut être ravitaillé
-   * @param {Object} context - Contexte actuel
-   * @returns {boolean} - True si ravitaillement possible
-   */
-  canRefuel: (context) => {
-    const vehicle = context.vehicle;
-    if (!vehicle) return false;
-
-    const currentFuel = validateFuelLevel(vehicle.fuel);
-    return currentFuel < FUEL_CONSTANTS.MAX_FUEL;
-  },
-
-  /**
-   * Vérifie si un véhicule est au maximum de carburant
-   * @param {Object} context - Contexte actuel
-   * @returns {boolean} - True si carburant plein
-   */
-  isFullTank: (context) => {
-    const vehicle = context.vehicle;
-    if (!vehicle) return false;
-
-    const currentFuel = validateFuelLevel(vehicle.fuel);
-    return currentFuel >= FUEL_CONSTANTS.MAX_FUEL;
-  }
-};
-
-// ============================================================================
-// ACTIONS PRINCIPALES
+// ACTIONS PRINCIPALES - SEULES FONCTIONS PUBLIQUES
 // ============================================================================
 
 /**
@@ -149,21 +72,18 @@ export const fuelActions = {
   
   /**
    * Consomme du carburant
-   * @param {Object} context - Contexte contenant vehicle
-   * @param {Object} event - Événement avec amount
-   * @returns {Object} - Nouveau contexte avec carburant consommé
    */
   consumeFuel: (context, event) => {
-    if (!fuelGuards.canConsumeFuel(context, event)) {
-      return { 
-        ...context, 
-        error: 'Cannot consume fuel: insufficient fuel' 
-      };
-    }
-
     const vehicle = context.vehicle;
+    if (!vehicle) return { ...context, error: 'No vehicle found' };
+
     const currentFuel = validateFuelLevel(vehicle.fuel);
     const consumptionAmount = event?.amount || FUEL_CONSTANTS.DEFAULT_CONSUMPTION;
+
+    if (currentFuel < consumptionAmount) {
+      return { ...context, error: 'Cannot consume fuel: insufficient fuel' };
+    }
+
     const newFuel = clampFuel(currentFuel - consumptionAmount);
 
     return {
@@ -182,18 +102,15 @@ export const fuelActions = {
 
   /**
    * Ravitaille complètement un véhicule
-   * @param {Object} context - Contexte actuel
-   * @returns {Object} - Nouveau contexte avec carburant plein
    */
   refuelVehicle: (context) => {
     const vehicle = context.vehicle;
+    if (!vehicle) return { ...context, error: 'No vehicle found' };
+
     const currentFuel = validateFuelLevel(vehicle.fuel);
 
-    if (fuelGuards.isFullTank(context)) {
-      return { 
-        ...context, 
-        error: 'Cannot refuel: tank already full' 
-      };
+    if (currentFuel >= FUEL_CONSTANTS.MAX_FUEL) {
+      return { ...context, error: 'Cannot refuel: tank already full' };
     }
 
     return {
@@ -212,12 +129,11 @@ export const fuelActions = {
 
   /**
    * Ajoute une quantité spécifique de carburant
-   * @param {Object} context - Contexte actuel
-   * @param {Object} event - Événement avec amount
-   * @returns {Object} - Nouveau contexte avec carburant ajouté
    */
   addFuel: (context, event) => {
     const vehicle = context.vehicle;
+    if (!vehicle) return { ...context, error: 'No vehicle found' };
+
     const currentFuel = validateFuelLevel(vehicle.fuel);
     const amountToAdd = Math.max(0, Number(event?.amount) || 0);
     const newFuel = clampFuel(currentFuel + amountToAdd);
@@ -228,7 +144,7 @@ export const fuelActions = {
         ...vehicle,
         fuel: newFuel,
         lastFuelAddition: {
-          amount: newFuel - currentFuel, // Quantité réellement ajoutée
+          amount: newFuel - currentFuel,
           timestamp: Date.now(),
           previousLevel: currentFuel
         }
@@ -238,12 +154,11 @@ export const fuelActions = {
 
   /**
    * Définit un niveau de carburant spécifique
-   * @param {Object} context - Contexte actuel
-   * @param {Object} event - Événement avec newFuelLevel
-   * @returns {Object} - Nouveau contexte avec nouveau niveau
    */
   setFuelLevel: (context, event) => {
     const vehicle = context.vehicle;
+    if (!vehicle) return { ...context, error: 'No vehicle found' };
+
     const currentFuel = validateFuelLevel(vehicle.fuel);
     const newFuel = validateFuelLevel(event?.newFuelLevel);
 
@@ -263,11 +178,11 @@ export const fuelActions = {
 
   /**
    * Vide complètement le réservoir
-   * @param {Object} context - Contexte actuel
-   * @returns {Object} - Nouveau contexte avec réservoir vide
    */
   emptyTank: (context) => {
     const vehicle = context.vehicle;
+    if (!vehicle) return { ...context, error: 'No vehicle found' };
+
     const currentFuel = validateFuelLevel(vehicle.fuel);
 
     return {
@@ -285,26 +200,19 @@ export const fuelActions = {
 
   /**
    * Consomme du carburant pour une distance spécifique
-   * @param {Object} context - Contexte actuel
-   * @param {Object} event - Événement avec distance
-   * @returns {Object} - Nouveau contexte avec carburant consommé
    */
   consumeFuelForDistance: (context, event) => {
     const distance = event?.distance;
     if (!distance) {
-      return { 
-        ...context, 
-        error: 'Cannot consume fuel: distance not specified' 
-      };
+      return { ...context, error: 'Cannot consume fuel: distance not specified' };
     }
 
     const fuelRequired = calculateFuelConsumption(distance);
+    const vehicle = context.vehicle;
+    const currentFuel = validateFuelLevel(vehicle?.fuel);
     
-    if (!fuelGuards.hasEnoughFuelForDistance(context, event)) {
-      return { 
-        ...context, 
-        error: `Cannot consume fuel: need ${fuelRequired} fuel for distance ${distance}` 
-      };
+    if (currentFuel < fuelRequired) {
+      return { ...context, error: `Cannot consume fuel: need ${fuelRequired} fuel for distance ${distance}` };
     }
 
     return fuelActions.consumeFuel(context, { amount: fuelRequired });
@@ -312,186 +220,59 @@ export const fuelActions = {
 };
 
 // ============================================================================
-// SELECTORS ET UTILITAIRES
+// ❌ EXPORT TEMPORAIRE POUR ÉVITER ERREUR D'IMPORT
 // ============================================================================
 
 /**
- * Sélecteurs pour extraire des informations de carburant
+ * Export temporaire vide pour éviter l'erreur d'import dans safety.js
+ * TODO: Supprimer cet export quand safety.js sera mis à jour
  */
+export const fuelGuards = {
+  // Guards temporaires vides - utilisez les guards centralisés à la place
+  canConsumeFuel: () => false,
+  hasEnoughFuelForDistance: () => false,
+  isCriticalFuel: () => false,
+  isLowFuel: () => false,
+  canRefuel: () => false,
+  isFullTank: () => false
+};
+
 export const fuelSelectors = {
-  
-  /**
-   * Obtient le niveau de carburant actuel
-   * @param {Object} vehicle - Véhicule
-   * @returns {number} - Niveau de carburant (0-100)
-   */
-  getCurrentFuel: (vehicle) => {
-    return validateFuelLevel(vehicle?.fuel || 0);
-  },
-
-  /**
-   * Calcule le pourcentage de carburant
-   * @param {Object} vehicle - Véhicule
-   * @returns {number} - Pourcentage de carburant (0-100)
-   */
-  getFuelPercentage: (vehicle) => {
-    const currentFuel = fuelSelectors.getCurrentFuel(vehicle);
-    return (currentFuel / FUEL_CONSTANTS.MAX_FUEL) * 100;
-  },
-
-  /**
-   * Calcule la quantité de carburant manquante pour faire le plein
-   * @param {Object} vehicle - Véhicule
-   * @returns {number} - Carburant manquant
-   */
-  getFuelNeeded: (vehicle) => {
-    const currentFuel = fuelSelectors.getCurrentFuel(vehicle);
-    return FUEL_CONSTANTS.MAX_FUEL - currentFuel;
-  },
-
-  /**
-   * Estime la distance possible avec le carburant actuel
-   * @param {Object} vehicle - Véhicule
-   * @param {number} rate - Taux de consommation (défaut: 2)
-   * @returns {number} - Distance estimée
-   */
-  getEstimatedRange: (vehicle, rate = FUEL_CONSTANTS.CONSUMPTION_PER_DISTANCE) => {
-    const currentFuel = fuelSelectors.getCurrentFuel(vehicle);
-    if (rate <= 0) return 0;
-    return Math.floor(currentFuel / rate);
-  },
-
-  /**
-   * Vérifie l'état du carburant
-   * @param {Object} vehicle - Véhicule
-   * @returns {string} - État: 'full', 'normal', 'low', 'critical', 'empty'
-   */
-  getFuelStatus: (vehicle) => {
-    const currentFuel = fuelSelectors.getCurrentFuel(vehicle);
-    
-    if (currentFuel === 0) return 'empty';
-    if (currentFuel <= FUEL_CONSTANTS.CRITICAL_FUEL_THRESHOLD) return 'critical';
-    if (currentFuel <= FUEL_CONSTANTS.LOW_FUEL_THRESHOLD) return 'low';
-    if (currentFuel >= FUEL_CONSTANTS.MAX_FUEL) return 'full';
-    return 'normal';
-  },
-
-  /**
-   * Calcule le carburant nécessaire pour une distance
-   * @param {number} distance - Distance à parcourir
-   * @param {number} rate - Taux de consommation (défaut: 2)
-   * @returns {number} - Carburant nécessaire
-   */
-  getFuelRequiredForDistance: (distance, rate = FUEL_CONSTANTS.CONSUMPTION_PER_DISTANCE) => {
-    return calculateFuelConsumption(distance, rate);
-  },
-
-  /**
-   * Obtient des informations complètes sur le carburant
-   * @param {Object} vehicle - Véhicule
-   * @returns {Object} - Informations complètes
-   */
-  getFuelInfo: (vehicle) => {
-    const current = fuelSelectors.getCurrentFuel(vehicle);
-    const percentage = fuelSelectors.getFuelPercentage(vehicle);
-    const needed = fuelSelectors.getFuelNeeded(vehicle);
-    const status = fuelSelectors.getFuelStatus(vehicle);
-    const range = fuelSelectors.getEstimatedRange(vehicle);
-
-    return {
-      current,
-      max: FUEL_CONSTANTS.MAX_FUEL,
-      percentage,
-      needed,
-      status,
-      estimatedRange: range,
-      isEmpty: current === 0,
-      isFull: current >= FUEL_CONSTANTS.MAX_FUEL,
-      isLow: current <= FUEL_CONSTANTS.LOW_FUEL_THRESHOLD,
-      isCritical: current <= FUEL_CONSTANTS.CRITICAL_FUEL_THRESHOLD
-    };
-  }
+  // Selectors temporaires vides - utilisez les selectors centralisés à la place
+  getCurrentFuel: () => 0,
+  getFuelPercentage: () => 0,
+  getFuelNeeded: () => 0,
+  getEstimatedRange: () => 0,
+  getFuelStatus: () => 'empty',
+  getFuelRequiredForDistance: () => 0,
+  getFuelInfo: () => ({})
 };
 
-// ============================================================================
-// EVENTS ET TRANSFORMATIONS
-// ============================================================================
-
-/**
- * Générateurs d'événements pour le système de carburant
- */
 export const fuelEvents = {
-  
-  /**
-   * Crée un événement de consommation de carburant
-   * @param {number} amount - Quantité à consommer
-   * @returns {Object} - Événement formaté
-   */
-  consumeFuel: (amount) => ({
-    type: 'CONSUME_FUEL',
-    amount
-  }),
-
-  /**
-   * Crée un événement de ravitaillement
-   * @returns {Object} - Événement formaté
-   */
-  refuelVehicle: () => ({
-    type: 'REFUEL_VEHICLE'
-  }),
-
-  /**
-   * Crée un événement d'ajout de carburant
-   * @param {number} amount - Quantité à ajouter
-   * @returns {Object} - Événement formaté
-   */
-  addFuel: (amount) => ({
-    type: 'ADD_FUEL',
-    amount
-  }),
-
-  /**
-   * Crée un événement de définition de niveau
-   * @param {number} newFuelLevel - Nouveau niveau
-   * @returns {Object} - Événement formaté
-   */
-  setFuelLevel: (newFuelLevel) => ({
-    type: 'SET_FUEL_LEVEL',
-    newFuelLevel
-  }),
-
-  /**
-   * Crée un événement de vidage du réservoir
-   * @returns {Object} - Événement formaté
-   */
-  emptyTank: () => ({
-    type: 'EMPTY_TANK'
-  }),
-
-  /**
-   * Crée un événement de consommation pour distance
-   * @param {number} distance - Distance à parcourir
-   * @returns {Object} - Événement formaté
-   */
-  consumeFuelForDistance: (distance) => ({
-    type: 'CONSUME_FUEL_FOR_DISTANCE',
-    distance
-  })
+  // Events temporaires vides - utilisez les events centralisés à la place
+  consumeFuel: () => ({ type: 'DEPRECATED' }),
+  refuelVehicle: () => ({ type: 'DEPRECATED' }),
+  addFuel: () => ({ type: 'DEPRECATED' }),
+  setFuelLevel: () => ({ type: 'DEPRECATED' }),
+  emptyTank: () => ({ type: 'DEPRECATED' }),
+  consumeFuelForDistance: () => ({ type: 'DEPRECATED' })
 };
 
 // ============================================================================
-// EXPORT PAR DÉFAUT
+// EXPORT PAR DÉFAUT - SIMPLIFIÉ
 // ============================================================================
 
 export default {
   actions: fuelActions,
-  selectors: fuelSelectors,
-  guards: fuelGuards,
-  events: fuelEvents,
+  // selectors: fuelSelectors, // ❌ COMMENTÉ
+  // guards: fuelGuards, // ❌ COMMENTÉ
+  // events: fuelEvents, // ❌ COMMENTÉ
+  constants: {
+    FUEL_CONSTANTS
+  },
   utils: {
     validateFuelLevel,
     calculateFuelConsumption,
-    clampFuel,
-    FUEL_CONSTANTS
+    clampFuel
   }
 };

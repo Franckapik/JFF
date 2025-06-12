@@ -9,6 +9,32 @@
  * - Réparations
  * - Attente de nouvelles instructions
  * 
+ * 📋 TRANSITIONS DISPONIBLES DANS CET ÉTAT:
+ * ==========================================
+ * 
+ * 🔧 OPÉRATIONS DE MAINTENANCE:
+ * - REFUEL_COMPLETE → EVALUATING (ravitaillement terminé)
+ * - UNLOAD_COMPLETE → EVALUATING (déchargement terminé)
+ * - REPAIR_COMPLETE → EVALUATING (réparations terminées)
+ * - MAINTENANCE_COMPLETE → EVALUATING (maintenance complète)
+ * 
+ * 🔄 DÉCLENCHEMENT AUTOMATIQUE:
+ * - AUTO_REFUEL_CHECK → IDLE_AT_BASE (reste à la base, démarre refuel)
+ * - AUTO_UNLOAD_CHECK → IDLE_AT_BASE (reste à la base, démarre déchargement)
+ * - REPAIR_STARTED → IDLE_AT_BASE (reste à la base, démarre réparations)
+ * 
+ * ⏰ TIMEOUTS:
+ * - IDLE_TIMEOUT → EVALUATING (5s d'inactivité)
+ * - REFUEL_TIMEOUT → EVALUATING (timeout ravitaillement)
+ * 
+ * 📡 ÉVÉNEMENTS EXTERNES:
+ * - NEW_RESOURCES_DETECTED → EVALUATING (nouvelles ressources)
+ * - EXPLORATION_REQUESTED → EVALUATING (demande d'exploration)
+ * 
+ * 🚨 TRANSITIONS D'URGENCE:
+ * - MANUAL_OVERRIDE → EVALUATING (contrôle manuel)
+ * - EMERGENCY_DETECTED → EXPLORING_RETURNING (urgence détectée)
+ * 
  * @author FSM Migration
  * @version 1.0.0
  */

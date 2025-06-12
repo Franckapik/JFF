@@ -19,7 +19,7 @@ import { movementActions } from '../actions/core/movementActions.js';
 import { fuelActions } from '../actions/core/fuelActions.js';
 import { resourceActions } from '../actions/core/resourcesActions.js';
 import { explorationActions } from '../actions/core/explorationActions.js';
-import { droneDeploymentActions, fsmDroneFleetActions } from '../actions/core/droneActions.js';
+import { droneDeploymentActions } from '../actions/core/droneActions.js';
 
 // ============================================================================
 // RÉDUCTEURS D'ÉTAT - Mises à jour du contexte lors des transitions d'état

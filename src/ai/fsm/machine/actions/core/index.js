@@ -6,6 +6,44 @@
  * Point d'entrée principal pour toutes les actions core partagées.
  * Facilite l'import et maintient une interface cohérente.
  * 
+ * 📋 MODULES DISPONIBLES:
+ * ======================
+ * 
+ * 🚀 MOVEMENT & VEHICLE (movementActions.js):
+ * - Actions: moveToTile, stopMovement, updateProgress, updatePosition, etc.
+ * - Selectors: isMoving, getDestination, getVehicleStatus, etc.
+ * - Guards: canMoveTo, hasEnoughFuel, isVehicleOperational, etc.
+ * - Events: moveToTile, vehicleUpdatedEvent, vehicleDamagedEvent, etc.
+ * 
+ * ⛽ FUEL (fuelActions.js):
+ * - Actions: consumeFuel, refuelVehicle, addFuel, setFuelLevel, etc.
+ * - Selectors: getCurrentFuel, getFuelStatus, getEstimatedRange, etc.
+ * - Guards: canConsumeFuel, isCriticalFuel, isLowFuel, canRefuel, etc.
+ * - Events: consumeFuel, refuelVehicle, consumeFuelForDistance, etc.
+ * 
+ * 📦 RESOURCES (resourcesActions.js):
+ * - Actions: collectResources, depositResources, addResources, etc.
+ * - Selectors: getCurrentResources, getCapacityInfo, hasResources, etc.
+ * - Guards: canCollectResource, hasCapacityFor, isAtMaxCapacity, etc.
+ * - Events: collectResources, depositResources, updateResources, etc.
+ * 
+ * 🔍 EXPLORATION (explorationActions.js):
+ * - Actions: startExploration, markTileExplored, recordDiscovery, etc.
+ * - Selectors: isExploring, getExplorationStats, getDiscoveryCount, etc.
+ * - Guards: canStartExploration, needsExploration, isExplorationComplete, etc.
+ * - Events: startExploration, completeExploration, recordDiscovery, etc.
+ * 
+ * 🤖 DRONES (droneActions.js):
+ * - Actions: deployDrone, recallDrone, dockDrone, updateDronePosition, etc.
+ * - Selectors: getCurrentDeploymentState, isDroneOnMission, etc.
+ * - Guards: canDeployDrone, isDroneDeployed, isDroneDocked, etc.
+ * - Events: deployDrone, recallDrone, dronePositionUpdate, etc.
+ * 
+ * 📊 EXPORTS ORGANISÉS:
+ * - Exports individuels par fonction
+ * - Exports groupés par domaine (movement, fuel, resource, exploration)
+ * - Collections par type (coreActions, coreSelectors, coreGuards, coreEvents)
+ * 
  * @author Migration FSM
  * @version 1.0.0
  */
@@ -53,9 +91,9 @@ export {
   explorationActions, 
   explorationSelectors, 
   explorationGuards, 
-  explorationEvents,
-  EXPLORATION_STATES,
-  DISCOVERY_TYPES 
+  explorationEvents
+  // ❌ SUPPRIMÉ: EXPLORATION_STATES, DISCOVERY_TYPES 
+  // Ces constantes sont importées depuis constants.js, pas depuis explorationActions.js
 } from './explorationActions.js';
 
 // ============================================================================

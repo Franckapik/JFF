@@ -5,10 +5,29 @@
  * 
  * Hook spécialisé pour le tracking des drones et leurs événements FSM.
  * Refactorisé depuis useFSMPositionTracker pour une séparation claire.
+ * 
+ * 📡 ÉVÉNEMENTS FSM ENVOYÉS DEPUIS CE HOOK:
+ * ==========================================
+ * 
+ * 🛸 INITIALISATION:
+ * - movementEvents.createDronePositionUpdateEvent() → 'DRONE_POSITION_UPDATE'
+ * 
+ * 🚀 DÉPLOIEMENT (deploying):
+ * - movementEvents.createDroneDeployedEvent() → 'DRONE_DEPLOYED'
+ * - movementEvents.createDroneReachedTargetEvent() → 'DRONE_REACHED_TARGET'
+ * 
+ * 🔍 PROSPECTION (prospecting):
+ * - movementEvents.createProspectingCompleteEvent() → 'PROSPECTING_COMPLETE'
+ * 
+ * 🏠 RETOUR (returning):
+ * - movementEvents.createDroneReturnedEvent() → 'DRONE_RETURNED'
+ * 
+ * 🎯 EXPLORATION (tous états):
+ * - Marquage automatique des tuiles comme explorées/prospectées via useTileStore
  */
 
 import { useEffect, useRef, useCallback, useMemo } from 'react';
-import { MOVEMENT_EVENT_TYPES, movementEvents } from '../machine/events/movementEvents.js';
+import { MOVEMENT_EVENT_TYPES } from '../machine/events/movementEvents.js';
 import { POSITION_TRACKER_CONFIG } from '../machine/constants/constants.js';
 import { useTileStore } from '../../../stores/useTileStore/index.js';
 import { useEventDebounce } from './useEventDebounce.js';
@@ -53,13 +72,14 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
         droneActive: drone.isActive
       });
       
-      // Envoyer mise à jour de position drone
-      const dronePositionEvent = movementEvents.createDronePositionUpdateEvent(
-        visualPosition,
+      // ✅ CORRECTION: Utiliser l'événement simple qui existe
+      const dronePositionEvent = {
+        type: 'DRONE_POSITION_UPDATE',
+        position: visualPosition,
         droneType,
-        drone.state
-      );
-      
+        state: drone.state,
+        timestamp: Date.now()
+      };
       send(dronePositionEvent);
       
       fsmLogger.context(`✅ [${botId}] Initial ${droneType} drone position sent to FSM`, {
@@ -85,12 +105,18 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
         const eventKey = `drone_deploying_start_${botId}_${droneType}`;
         if (distance > POSITION_TRACKER_CONFIG.THRESHOLDS.DEPLOYMENT_START && canSendEvent(eventKey)) {
           fsmLogger.mouvement(`🚀 [${botId}] ${droneType} drone deployed - distance: ${distance.toFixed(2)}`);
-          send(movementEvents.createDroneDeployedEvent(
-            'auto',
-            5,
+          
+          // ✅ CORRECTION: Utiliser un événement simple
+          const droneDeployedEvent = {
+            type: 'DRONE_DEPLOYED',
+            targetArea: 'auto',
+            range: 5,
             droneType,
-            visualPosition
-          ));
+            position: visualPosition,
+            timestamp: Date.now()
+          };
+          send(droneDeployedEvent);
+          
           markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.DEPLOYMENT_RESET);
           return true;
         }
@@ -112,11 +138,16 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
             console.error(`❌ [${botId}] Failed to mark tile: ${error.message}`);
           }
           
-          send(movementEvents.createDroneReachedTargetEvent(
-            visualPosition,
+          // ✅ CORRECTION: Utiliser l'événement simple qui existe
+          const droneReachedEvent = {
+            type: 'DRONE_REACHED_TARGET',
+            position: visualPosition,
             tileCoord,
-            droneType
-          ));
+            droneType,
+            timestamp: Date.now()
+          };
+          send(droneReachedEvent);
+          
           markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.EXPLORATION_RESET);
           return true;
         }
@@ -153,12 +184,16 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
                 markTileAsProspected(capturedTileCoord, resourcesFound);
                 fsmLogger.mouvement(`🔍 [${botId}] ${droneType} prospecting results: ${JSON.stringify(resourcesFound)}`);
                 
-                send(movementEvents.createProspectingCompleteEvent(
-                  capturedPosition,
-                  capturedTileCoord,
+                // ✅ CORRECTION: Utiliser l'événement simple qui existe
+                const prospectingCompleteEvent = {
+                  type: 'PROSPECTING_COMPLETE',
+                  position: capturedPosition,
+                  tileCoord: capturedTileCoord,
                   resourcesFound,
-                  droneType
-                ));
+                  droneType,
+                  timestamp: Date.now()
+                };
+                send(prospectingCompleteEvent);
                 
                 markEventSent(prospectingEventKey, POSITION_TRACKER_CONFIG.TIMINGS.EXPLORATION_RESET);
               } catch (error) {
@@ -178,10 +213,16 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
         const eventKey = `drone_returning_reached_${botId}_${droneType}`;
         if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
           fsmLogger.mouvement(`🏠 [${botId}] ${droneType} drone returned - distance: ${distance.toFixed(2)}`);
-          send(movementEvents.createDroneReturnedEvent(
-            visualPosition,
-            droneType
-          ));
+          
+          // ✅ CORRECTION: Utiliser l'événement simple qui existe
+          const droneReturnedEvent = {
+            type: 'DRONE_RETURNED',
+            position: visualPosition,
+            droneType,
+            timestamp: Date.now()
+          };
+          send(droneReturnedEvent);
+          
           markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.RETURN_RESET);
           return true;
         }

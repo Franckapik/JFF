@@ -6,6 +6,26 @@
  * État de collecte pour récolter les ressources connues.
  * Gère l'inventaire et la capacité de stockage.
  * 
+ * 📋 TRANSITIONS DISPONIBLES DANS CET ÉTAT:
+ * ==========================================
+ * 
+ * 📦 ÉVÉNEMENTS DE PROGRESSION:
+ * - RESOURCE_COLLECTED → EVALUATING (ressource collectée avec succès)
+ * - INVENTORY_FULL → RETURNING (inventaire plein)
+ * - RESOURCE_UNAVAILABLE → EVALUATING (ressource épuisée/inaccessible)
+ * 
+ * ⏰ TIMEOUTS ET ÉCHECS:
+ * - COLLECTION_TIMEOUT → EVALUATING (10s)
+ * - HARVEST_FAILED → EVALUATING (échec de récolte)
+ * 
+ * 🔍 VÉRIFICATIONS PÉRIODIQUES:
+ * - CAPACITY_CHECK → RETURNING (si 90% plein)
+ * 
+ * 🚨 TRANSITIONS D'URGENCE:
+ * - LOW_FUEL_DETECTED → RETURNING (carburant faible)
+ * - MANUAL_OVERRIDE → EVALUATING (contrôle manuel)
+ * - EMERGENCY_DETECTED → RETURNING (urgence générale)
+ * 
  * @author FSM Migration
  * @version 1.0.0
  */

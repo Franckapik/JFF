@@ -6,6 +6,25 @@
  * État central d'évaluation qui détermine la prochaine action à entreprendre.
  * Toutes les transitions d'urgence mènent à cet état.
  * 
+ * 📋 TRANSITIONS DISPONIBLES DANS CET ÉTAT:
+ * ==========================================
+ * 
+ * 🚨 PRIORITÉ SÉCURITÉ:
+ * - EVALUATION_COMPLETE → EXPLORING_RETURNING (si carburant critique ou capacité pleine)
+ * 
+ * 🎯 TRANSITIONS NORMALES:
+ * - EVALUATION_COMPLETE → EXPLORING_DEPLOYING (si zones non explorées + drone inactif)
+ * - EVALUATION_COMPLETE → COLLECTING (si nouvelles ressources découvertes)
+ * - EVALUATION_COMPLETE → EXPLORING_RETURNING (si drone pas à la base)
+ * - EVALUATION_COMPLETE → IDLE_AT_BASE (par défaut, rien à faire)
+ * 
+ * 📍 MISES À JOUR POSITION:
+ * - SHIP_UPDATE_POSITION → EVALUATING (reste dans l'état)
+ * - DRONE_POSITION_UPDATE → EVALUATING (reste dans l'état)
+ * 
+ * 🤖 ÉVÉNEMENT AUTONOME: [COMMENTÉ]
+ * 🆘 TRANSITIONS D'URGENCE: [COMMENTÉES]
+ * 
  * @author FSM Migration
  * @version 1.0.0
  */
@@ -158,8 +177,32 @@ export const evaluatingState = state(
     }))
   ),
 
-  // === ÉVÉNEMENT AUTONOME ===
+  // === MISES À JOUR POSITION ===
   
+  // Mise à jour de position du vaisseau (reste dans le même état)
+  transition(MOVEMENT_EVENT_TYPES.SHIP_UPDATE_POSITION, BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context, event) => {
+      // Utiliser l'action updatePosition existante
+      return movementActions.updatePosition(context, event);
+    })
+  ),
+
+  // Mise à jour de position de drone (reste dans le même état)
+  transition(MOVEMENT_EVENT_TYPES.DRONE_POSITION_UPDATE, BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context, event) => {
+      // Utiliser l'action updateDronePosition pour les drones
+      return fsmDroneFleetActions.updateDronePosition(context, event);
+    })
+  )
+
+  // ============================================================================
+  // ❌ TRANSITIONS COMMENTÉES - Non essentielles pour le flux principal
+  // ============================================================================
+
+  // === ÉVÉNEMENT AUTONOME ===
+  /*
   // Déclenchement automatique vers l'exploration
   transition(SYSTEM_EVENT_TYPES.AUTO, BOT_STATES.EXPLORING_DEPLOYING, 
     guard(() => true),
@@ -198,9 +241,10 @@ export const evaluatingState = state(
       };
     })
   ),
+  */
 
   // === TRANSITIONS D'URGENCE (DEPUIS N'IMPORTE QUEL ÉTAT) ===
-  
+  /*
   // Override manuel
   transition(USER_EVENT_TYPES.MANUAL_OVERRIDE, BOT_STATES.EVALUATING, 
     guard(() => true),
@@ -225,22 +269,5 @@ export const evaluatingState = state(
       lastStateChange: Date.now()
     }))
   ),
-
-  // Mise à jour de position (reste dans le même état)
-  transition(MOVEMENT_EVENT_TYPES.UPDATE_POSITION, BOT_STATES.EVALUATING,
-    guard(() => true),
-    reduce((context, event) => {
-      // Utiliser l'action updatePosition existante
-      return movementActions.updatePosition(context, event);
-    })
-  ),
-
-  // Mise à jour de position de drone (reste dans le même état)
-  transition(MOVEMENT_EVENT_TYPES.DRONE_POSITION_UPDATE, BOT_STATES.EVALUATING,
-    guard(() => true),
-    reduce((context, event) => {
-      // Utiliser l'action updateDronePosition pour les drones
-      return fsmDroneFleetActions.updateDronePosition(context, event);
-    })
-  )
+  */
 );

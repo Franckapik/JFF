@@ -6,43 +6,27 @@
  * État d'exploration pour découvrir de nouvelles ressources.
  * Déploie des drones et explore la carte.
  * 
- * === TRANSITIONS EXISTANTES DANS CE FICHIER ===
+ * 📋 TRANSITIONS DISPONIBLES DANS CET ÉTAT:
+ * ==========================================
  * 
- * 1. DRONE_REACHED_TARGET → EXPLORING_PROSPECTING
- *    - Drone a atteint sa cible, commencer la prospection
+ * 🎯 PROGRESSION EXPLORATION:
+ * - DRONE_REACHED_TARGET → EXPLORING_PROSPECTING (drone atteint cible)
+ * - PROSPECTING_COMPLETE → EXPLORING_RETURNING (prospection terminée)
  * 
- * 2. PROSPECTING_COMPLETE → EXPLORING_RETURNING ✅ CORRECT
- *    - Prospection terminée, retour à la base avec les données
+ * 🏠 RETOUR À LA BASE (EXPLORING_RETURNING):
+ * - MOVEMENT_STARTED → EXPLORING_RETURNING (mouvement vers base)
+ * - MOVEMENT_PROGRESS → EXPLORING_RETURNING (progression mouvement)
+ * - DRONE_RETURNED → EVALUATING (drone revenu au vaisseau)
  * 
- * 3. EXPLORING_RETURNING transitions (intégrées depuis returning.js)
- *    - BASE_REACHED → IDLE_AT_BASE
- *    - DRONE_RETURNED → EVALUATING
- *    - MOVEMENT_STARTED/PROGRESS → EXPLORING_RETURNING
- *    - Emergency events → EVALUATING
+ * 🚨 GESTION URGENCES:
+ * - EMERGENCY_RESOLVED → EVALUATING
+ * - EMERGENCY_DETECTED → EXPLORING_RETURNING (nouvelle urgence)
+ * - CRITICAL_FUEL → IDLE_AT_BASE (atterrissage d'urgence)
  * 
- * 4. immediate() → EVALUATING (timeout automatique)
- *    - Sortir de l'exploration après 10 secondes
- * 
- * 5. RESOURCES_DISCOVERED → EVALUATING
- *    - Ressources découvertes pendant l'exploration
- * 
- * 6. AREA_EXPLORED → EVALUATING
- *    - Zone explorée avec succès
- * 
- * 7. EXPLORATION_TIMEOUT → EVALUATING
- *    - Timeout d'exploration (30s)
- * 
- * 8. DRONE_DEPLOYMENT_FAILED → EVALUATING
- *    - Échec de déploiement du drone
- * 
- * 9. LOW_FUEL_DETECTED → RETURNING
- *    - Carburant faible détecté pendant l'exploration
- * 
- * 10. MANUAL_OVERRIDE → EVALUATING
- *     - Override manuel
- * 
- * 11. EMERGENCY_DETECTED → RETURNING
- *     - Urgence générale
+ * ⏰ TIMEOUTS ET ÉCHECS: [COMMENTÉS]
+ * 🛑 CONTRÔLES UTILISATEUR: [COMMENTÉS]
+ * 📦 DÉCOUVERTES: [COMMENTÉS]
+ * ❌ ÉCHECS: [COMMENTÉS]
  * 
  * @author FSM Migration
  * @version 1.0.0
@@ -200,29 +184,6 @@ export const exploringState = state(
 
   // === EXPLORING_RETURNING TRANSITIONS (depuis returning.js) ===
   
-  // Arrivé à la base depuis EXPLORING_RETURNING
-  transition(MOVEMENT_EVENT_TYPES.BASE_REACHED, BOT_STATES.IDLE_AT_BASE,
-    guard((context, event) => baseGuards.isAtBase(context, event)),
-    reduce((context, event) => {
-      fsmLogger.info("🏠 [Exploring] Arrived at base, completing return phase", { 
-        botId: context.botId 
-      });
-      
-      // Mettre à jour la position et récupérer le drone
-      const updatedContext = {
-        ...context,
-        position: event.coord,
-        arrivalTime: event.timestamp || Date.now(),
-        isDroneAtShip: true
-      };
-      
-      // Préparer l'état idle à la base
-      return contextReducers.state.prepareIdleAtBase(updatedContext, {
-        reason: 'at_base'
-      });
-    })
-  ),
-
   // Mouvement en cours vers la base depuis EXPLORING_RETURNING
   transition(MOVEMENT_EVENT_TYPES.MOVEMENT_STARTED, BOT_STATES.EXPLORING_RETURNING,
     guard(() => true),
@@ -307,51 +268,6 @@ export const exploringState = state(
     })
   ),
 
-  // === TIMEOUTS ET ÉCHECS depuis EXPLORING_RETURNING ===
-  
-  // Timeout de navigation (45s)
-  transition(SYSTEM_EVENT_TYPES.NAVIGATION_TIMEOUT, BOT_STATES.EVALUATING,
-    guard(() => true),
-    reduce((context) => {
-      fsmLogger.info("⏰ [Exploring] Navigation timeout during return", { 
-        botId: context.botId 
-      });
-      
-      return {
-        ...context,
-        navigationStatus: 'timeout',
-        currentAction: 'navigation_timeout',
-        // En cas de timeout, considérer qu'on est arrivé à la base
-        isDroneAtShip: true,
-        emergencyFlag: false,
-        lastStateChange: Date.now()
-      };
-    })
-  ),
-
-  // Échec de navigation
-  transition(EMERGENCY_EVENT_TYPES.NAVIGATION_FAILED, BOT_STATES.EVALUATING,
-    guard(() => true),
-    reduce((context, event) => {
-      fsmLogger.info("❌ [Exploring] Navigation failed during return", { 
-        botId: context.botId,
-        reason: event.reason 
-      });
-      
-      return {
-        ...context,
-        navigationStatus: 'failed',
-        errorReason: event.reason,
-        currentAction: 'navigation_failed',
-        // En cas d'échec, reset l'état d'urgence
-        emergencyFlag: false,
-        lastStateChange: Date.now()
-      };
-    })
-  ),
-
-  // === VÉRIFICATIONS CRITIQUES depuis EXPLORING_RETURNING ===
-  
   // Carburant critique pendant le retour
   transition(EMERGENCY_EVENT_TYPES.CRITICAL_FUEL, BOT_STATES.IDLE_AT_BASE,
     guard(() => true),
@@ -395,27 +311,54 @@ export const exploringState = state(
         currentAction: 'multiple_emergencies'
       };
     })
-  ),
+  )
 
-  // Stop demandé pendant EXPLORING_RETURNING
-  transition(USER_EVENT_TYPES.STOP, BOT_STATES.EVALUATING,
+  // ============================================================================
+  // ❌ TRANSITIONS COMMENTÉES - Non essentielles pour le flux principal
+  // ============================================================================
+
+  // === TIMEOUTS ET ÉCHECS ===
+  /*
+  // Timeout de navigation (45s)
+  transition(SYSTEM_EVENT_TYPES.NAVIGATION_TIMEOUT, BOT_STATES.EVALUATING,
     guard(() => true),
     reduce((context) => {
-      fsmLogger.info("🛑 [Exploring] Stop requested during return", { 
+      fsmLogger.info("⏰ [Exploring] Navigation timeout during return", { 
         botId: context.botId 
       });
       
       return {
         ...context,
-        stopFlag: true,
-        currentAction: 'stop_requested',
+        navigationStatus: 'timeout',
+        currentAction: 'navigation_timeout',
+        // En cas de timeout, considérer qu'on est arrivé à la base
+        isDroneAtShip: true,
+        emergencyFlag: false,
         lastStateChange: Date.now()
       };
     })
   ),
 
-  // RECALLING → EVALUATING : Drone de retour, exploration terminée (deprecated - use DRONE_RETURNED instead)
-  // Cette transition est maintenant gérée par DRONE_RETURNED ci-dessus
+  // Échec de navigation
+  transition(EMERGENCY_EVENT_TYPES.NAVIGATION_FAILED, BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context, event) => {
+      fsmLogger.info("❌ [Exploring] Navigation failed during return", { 
+        botId: context.botId,
+        reason: event.reason 
+      });
+      
+      return {
+        ...context,
+        navigationStatus: 'failed',
+        errorReason: event.reason,
+        currentAction: 'navigation_failed',
+        // En cas d'échec, reset l'état d'urgence
+        emergencyFlag: false,
+        lastStateChange: Date.now()
+      };
+    })
+  ),
 
   // TIMEOUT AUTOMATIQUE - Sortir de l'exploration après 10 secondes
   immediate(BOT_STATES.EVALUATING,
@@ -451,6 +394,61 @@ export const exploringState = state(
     })
   ),
 
+  // Timeout d'exploration (30s)
+  transition(SYSTEM_EVENT_TYPES.EXPLORATION_TIMEOUT, BOT_STATES.EVALUATING,
+    guard((context, event) => discoveryGuards.isExplorationExpired(context, event)),
+    reduce((context, event) => {
+      // Marquer comme exploré même si incomplet
+      const updatedContext = {
+        ...context,
+        hasExplored: true,
+        explorationStatus: 'timeout'
+      };
+
+      // Utiliser le reducer pour préparer l'évaluation
+      return contextReducers.state.prepareEvaluating(updatedContext, {
+        reason: 'exploration_timeout'
+      });
+    })
+  ),
+  */
+
+  // === CONTRÔLES UTILISATEUR ===
+  /*
+  // Stop demandé pendant EXPLORING_RETURNING
+  transition(USER_EVENT_TYPES.STOP, BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context) => {
+      fsmLogger.info("🛑 [Exploring] Stop requested during return", { 
+        botId: context.botId 
+      });
+      
+      return {
+        ...context,
+        stopFlag: true,
+        currentAction: 'stop_requested',
+        lastStateChange: Date.now()
+      };
+    })
+  ),
+
+  // Override manuel
+  transition(USER_EVENT_TYPES.MANUAL_OVERRIDE, BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context, event) => {
+      // Utiliser le reducer de contrôle manuel
+      const manualContext = contextReducers.manual.recordManualCommand(context, event);
+
+      // Puis préparer l'évaluation
+      return contextReducers.state.prepareEvaluating(manualContext, {
+        reason: 'manual_override'
+      });
+    })
+  ),
+  */
+
+  // === DÉCOUVERTES ===
+  /*
   // Ressources découvertes pendant l'exploration
   transition(RESOURCE_EVENT_TYPES.RESOURCES_DISCOVERED, BOT_STATES.EVALUATING,
     guard(() => true),
@@ -486,27 +484,10 @@ export const exploringState = state(
       });
     })
   ),
+  */
 
-  // === TIMEOUTS ET ÉCHECS ===
-
-  // Timeout d'exploration (30s)
-  transition(SYSTEM_EVENT_TYPES.EXPLORATION_TIMEOUT, BOT_STATES.EVALUATING,
-    guard((context, event) => discoveryGuards.isExplorationExpired(context, event)),
-    reduce((context, event) => {
-      // Marquer comme exploré même si incomplet
-      const updatedContext = {
-        ...context,
-        hasExplored: true,
-        explorationStatus: 'timeout'
-      };
-
-      // Utiliser le reducer pour préparer l'évaluation
-      return contextReducers.state.prepareEvaluating(updatedContext, {
-        reason: 'exploration_timeout'
-      });
-    })
-  ),
-
+  // === ÉCHECS ===
+  /*
   // Échec de déploiement du drone
   transition(EMERGENCY_EVENT_TYPES.DRONE_DEPLOYMENT_FAILED, BOT_STATES.EVALUATING,
     guard(() => true),
@@ -537,20 +518,6 @@ export const exploringState = state(
     })
   ),
 
-  // Override manuel
-  transition(USER_EVENT_TYPES.MANUAL_OVERRIDE, BOT_STATES.EVALUATING,
-    guard(() => true),
-    reduce((context, event) => {
-      // Utiliser le reducer de contrôle manuel
-      const manualContext = contextReducers.manual.recordManualCommand(context, event);
-
-      // Puis préparer l'évaluation
-      return contextReducers.state.prepareEvaluating(manualContext, {
-        reason: 'manual_override'
-      });
-    })
-  ),
-
   // Urgence générale
   transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED, BOT_STATES.RETURNING,
     guard(() => true),
@@ -565,4 +532,5 @@ export const exploringState = state(
       });
     })
   )
+  */
 );

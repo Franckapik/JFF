@@ -6,11 +6,38 @@
  * Actions pures pour le déploiement et le contrôle des drones d'exploration.
  * Ces fonctions sont réutilisables par Bot et Player.
  * 
+ * 📋 FONCTIONS DISPONIBLES DANS CE FICHIER:
+ * ==========================================
+ * 
+ * 🔧 ACTIONS PRINCIPALES (droneDeploymentActions):
+ * - deployDrone(context, event) : Déploie drone vers zone cible
+ * - recallDrone(context, event) : Rappelle drone au vaisseau
+ * - dockDrone(context, event) : Finalise retour drone (ancré)
+ * - updateDronePosition(context, event) : Met à jour position drone
+ * 
+ * 🔧 UTILITAIRES INTERNES:
+ * - calculateFleetStatus(context) : Calcule statut flotte depuis états individuels
+ * - selectTargetTileInRadius(context, range) : Sélectionne tuile cible
+ * - droneDeploymentStates : États déploiement (DRONE_DEPLOYMENT_STATES)
+ * - droneTypes : Types drones (DRONE_TYPES)
+ * - droneVisualStates : États visuels (DRONE_VISUAL_STATES)
+ * - droneConfig : Configuration drones (DRONE_CONFIG)
+ * 
+ * 🔄 COMPATIBILITÉ:
+ * - Support structure droneFleet (NOUVEAU - source unique vérité)
+ * - Support structure droneDeployment (ANCIEN - déprécié)
+ * - Calcul automatique statut flotte depuis états individuels
+ * 
+ * ❌ FONCTIONNALITÉS COMMENTÉES (Éviter confusion/conflits):
+ * - Actions FSM spécialisées (fsmDroneFleetActions) - SUPPRIMÉES
+ * - Guards (droneDeploymentGuards) - COMMENTÉS
+ * - Events (droneDeploymentEvents) - COMMENTÉS  
+ * - Selectors (droneDeploymentSelectors) - COMMENTÉS
+ * 
  * @author FSM Migration
  * @version 1.0.0
  */
 
-import { range } from 'three/tsl';
 import { DRONE_DEPLOYMENT_STATES, DRONE_TYPES, DRONE_VISUAL_STATES, DRONE_CONFIG } from '../../constants/constants.js';
 import { useTileStore } from '../../../../../stores/useTileStore/index.js';
 
@@ -39,77 +66,7 @@ export const droneVisualStates = DRONE_VISUAL_STATES;
 export const droneConfig = DRONE_CONFIG;
 
 // ============================================================================
-// VALIDATORS ET GUARDS
-// ============================================================================
-
-
-/**
- * Guards pour le déploiement de drones
- */
-export const droneDeploymentGuards = {
-  /**
-   * Vérifie si un drone peut être déployé
-   * @param {Object} context - Contexte actuel
-   * @param {Object} event - Événement de déploiement
-   * @returns {boolean} - True si déploiement possible
-   */
-  canDeployDrone: (context, event) => {
-    // NOUVEAU: Vérifier avec les états individuels des drones (source unique de vérité)
-    const explorer = context.droneFleet?.drones?.explorer;
-    if (explorer?.isActive) {
-      return false;
-    }
-    
-    // ANCIEN: Support de l'ancienne structure droneDeployment (déprécié)
-    if (context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.active) {
-      return false;
-    }
-    
-    // Vérifier qu'il y a assez de carburant pour le déploiement
-    const vehicle = context.vehicle || context.botVehicle;
-    if (!vehicle || vehicle.fuel < 20) {
-      return false;
-    }
-    
-    return true;
-  },
-
-  /**
-   * Vérifie si un drone est actuellement déployé
-   * @param {Object} context - Contexte actuel
-   * @returns {boolean} - True si drone déployé
-   */
-  isDroneDeployed: (context) => {
-    // NOUVEAU: Vérifier avec les états individuels des drones (source unique de vérité)
-    const explorer = context.droneFleet?.drones?.explorer;
-    if (explorer?.isActive) {
-      return true;
-    }
-    
-    // ANCIEN: Support de l'ancienne structure droneDeployment (déprécié)
-    return context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.active;
-  },
-
-  /**
-   * Vérifie si un drone est ancré au vaisseau
-   * @param {Object} context - Contexte actuel
-   * @returns {boolean} - True si drone ancré
-   */
-  isDroneDocked: (context) => {
-    // NOUVEAU: Vérifier avec les états individuels des drones (source unique de vérité)
-    const explorer = context.droneFleet?.drones?.explorer;
-    if (!explorer || (!explorer.isActive && explorer.state === 'docked')) {
-      return true;
-    }
-    
-    // ANCIEN: Support de l'ancienne structure droneDeployment (déprécié)
-    return context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.docked ||
-           !context.droneDeployment;
-  }
-};
-
-// ============================================================================
-// ACTIONS PRINCIPALES
+// ACTIONS PRINCIPALES - SEULES FONCTIONS PUBLIQUES
 // ============================================================================
 
 /**
@@ -124,15 +81,7 @@ export const droneDeploymentActions = {
    */
   deployDrone: (context, event) => {
     try {
-      if (!droneDeploymentGuards.canDeployDrone(context, event)) {
-        return {
-          ...context,
-          error: 'Cannot deploy drone: conditions not met',
-          lastAction: 'deployDrone_failed'
-        };
-      }
-
-      // Valeurs par défaut pour l'événement
+      // Validation simple interne
       const droneType = event.droneType || DRONE_TYPES.explorer;
       const range = event.range || 3;
       
@@ -160,10 +109,9 @@ export const droneDeploymentActions = {
         ...context,
         droneFleet: {
           ...context.droneFleet,
-          // status: 'active', // ❌ SUPPRIMÉ : Calculé automatiquement depuis les états individuels
           currentMission: {
             type: 'exploration',
-            target: `${range}unit-radius`, // zone de déploiement
+            target: `${range}unit-radius`,
             drone: droneType,
             startTime: Date.now(),
             estimatedReturn: Date.now() + (range * 2000)
@@ -192,17 +140,8 @@ export const droneDeploymentActions = {
    * @returns {Object} - Nouveau contexte avec drone en retour
    */
   recallDrone: (context, event = {}) => {
-    if (!droneDeploymentGuards.isDroneDeployed(context)) {
-      return {
-        ...context,
-        error: 'No drone to recall',
-        lastAction: 'recallDrone_failed'
-      };
-    }
-    
     const droneType = event.droneType || DRONE_TYPES.explorer;
     
-    // NOUVEAU: Utilise la structure droneFleet compatible avec initialContext.js
     if (!context.droneFleet?.drones[droneType]?.isActive) {
       return {
         ...context,
@@ -215,7 +154,6 @@ export const droneDeploymentActions = {
       ...context,
       droneFleet: {
         ...context.droneFleet,
-        // status: 'returning', // ❌ SUPPRIMÉ : Calculé automatiquement depuis les états individuels
         drones: {
           ...context.droneFleet.drones,
           [droneType]: {
@@ -239,7 +177,6 @@ export const droneDeploymentActions = {
   dockDrone: (context, event = {}) => {
     const droneType = event.droneType || DRONE_TYPES.explorer;
     
-    // NOUVEAU: Utilise la structure droneFleet compatible avec initialContext.js
     if (!context.droneFleet?.drones[droneType]) {
       return {
         ...context,
@@ -252,7 +189,6 @@ export const droneDeploymentActions = {
       ...context,
       droneFleet: {
         ...context.droneFleet,
-        // status: 'docked', // ❌ SUPPRIMÉ : Calculé automatiquement depuis les états individuels
         currentMission: null,
         missionStartTime: null,
         drones: {
@@ -281,7 +217,7 @@ export const droneDeploymentActions = {
   updateDronePosition: (context, event) => {
     const { droneType = DRONE_TYPES.explorer, position, state } = event;
     
-    if (!droneDeploymentGuards.isDroneDeployed(context) || !context.droneFleet?.drones[droneType]) {
+    if (!context.droneFleet?.drones[droneType]) {
       return context;
     }
     
@@ -304,160 +240,8 @@ export const droneDeploymentActions = {
   }
 };
 
-/**
- * Actions FSM pures pour la gestion de la flotte de drones
- */
-export const fsmDroneFleetActions = {
-  /**
-   * Déploie un drone avec position calculée
-   */
-  deployDroneWithPosition: (context, event) => {
-    const { targetArea, droneType = DRONE_TYPES.explorer } = event;
-    
-    if (!context.vehicle?.position) {
-      return {
-        ...context,
-        error: 'Ship position required for drone deployment'
-      };
-    }
-
-    // Calculer la position cible du drone
-    const targetPosition = calculateExplorationTargetPosition(
-      context.vehicle.position,
-      event.range
-    );
-
-    const updatedDrone = {
-      ...context.droneFleet.drones[droneType],
-      state: DRONE_VISUAL_STATES.deploying,
-      targetPosition,
-      missionTarget: targetArea,
-      isActive: true,
-      lastUpdate: Date.now()
-    };
-
-    return {
-      ...context,
-      droneFleet: {
-        ...context.droneFleet,
-        // status: 'active', // ❌ SUPPRIMÉ : Calculé automatiquement depuis les états individuels
-        currentMission: {
-          type: 'exploration',
-          target: targetArea,
-          drone: droneType,
-          startTime: Date.now()
-        },
-        drones: {
-          ...context.droneFleet.drones,
-          [droneType]: updatedDrone
-        }
-      },
-      lastAction: 'deployDrone_success'
-    };
-  },
-
-  /**
-   * Met à jour la position d'un drone en temps réel
-   */
-  updateDronePosition: (context, event) => {
-    const { droneType, position, state } = event;
-    
-    if (!context.droneFleet.drones[droneType]) {
-      return context;
-    }
-
-    return {
-      ...context,
-      droneFleet: {
-        ...context.droneFleet,
-        drones: {
-          ...context.droneFleet.drones,
-          [droneType]: {
-            ...context.droneFleet.drones[droneType],
-            position,
-            state: state || context.droneFleet.drones[droneType].state,
-            lastUpdate: Date.now()
-          }
-        }
-      }
-    };
-  },
-
-  /**
-   * Rappelle un drone au vaisseau
-   */
-  recallDrone: (context, event) => {
-    const { droneType = DRONE_TYPES.explorer } = event;
-    
-    if (!context.droneFleet.drones[droneType]?.isActive) {
-      return context;
-    }
-
-    return {
-      ...context,
-      droneFleet: {
-        ...context.droneFleet,
-        // status: 'returning', // ❌ SUPPRIMÉ : Calculé automatiquement depuis les états individuels
-        drones: {
-          ...context.droneFleet.drones,
-          [droneType]: {
-            ...context.droneFleet.drones[droneType],
-            state: DRONE_VISUAL_STATES.returning,
-            targetPosition: context.vehicle.position,
-            lastUpdate: Date.now()
-          }
-        }
-      },
-      lastAction: 'recallDrone_success'
-    };
-  },
-
-  /**
-   * Ancre un drone au vaisseau (fin de mission)
-   */
-  dockDrone: (context, event) => {
-    const { droneType = DRONE_TYPES.explorer } = event;
-
-    return {
-      ...context,
-      droneFleet: {
-        ...context.droneFleet,
-        // status: 'docked', // ❌ SUPPRIMÉ : Calculé automatiquement depuis les états individuels
-        currentMission: null,
-        drones: {
-          ...context.droneFleet.drones,
-          [droneType]: {
-            ...context.droneFleet.drones[droneType],
-            state: DRONE_VISUAL_STATES.docked,
-            position: context.vehicle.position,
-            targetPosition: null,
-            missionTarget: null,
-            isActive: false,
-            lastUpdate: Date.now()
-          }
-        }
-      },
-      lastAction: 'dockDrone_success'
-    };
-  }
-};
-
-/**
- * Calcule la position cible pour l'exploration
- */
-const calculateExplorationTargetPosition = (shipPosition, targetArea, range) => {
-  // Logique simple pour calculer une position d'exploration
-  const angle = targetArea === 'auto' ? Math.random() * Math.PI * 2 : 0;
-  
-  return {
-    x: shipPosition.x + Math.cos(angle) * range,
-    y: shipPosition.y + 0.5,
-    z: shipPosition.z + Math.sin(angle) * range
-  };
-};
-
 // ============================================================================
-// SELECTORS ET UTILITAIRES
+// UTILITAIRES INTERNES
 // ============================================================================
 
 /**
@@ -484,60 +268,165 @@ export const calculateFleetStatus = (context) => {
 };
 
 /**
- * Sélecteurs pour extraire des informations sur les drones
+ * Sélectionne une tuile cible dans un rayon donné autour du véhicule
  */
+const selectTargetTileInRadius = (context, range = 3) => {
+  try {
+    const tileStore = useTileStore.getState();
+    const vehicle = context.vehicle || context.botVehicle;
+    
+    if (!vehicle || !vehicle.coord) {
+      console.warn('[selectTargetTileInRadius] Vehicle or vehicle.coord not found in context');
+      return { x: 0, y: 0.5, z: 0 };
+    }
+
+    const walkableTiles = tileStore.getWalkableTilesInRadius(
+      vehicle.coord,
+      range,
+      true, // Seulement les tuiles non explorées
+      true  // Exclure les tuiles dangereuses
+    );
+    
+    const validTargets = walkableTiles.filter(tile => 
+      tile.coord !== vehicle.coord && 
+      tile.position && 
+      tile.distance > 0
+    );
+    
+    if (validTargets.length === 0) {
+      console.warn('[selectTargetTileInRadius] No valid tiles found, falling back to random tile');
+      
+      const randomTile = tileStore.selectRandomWalkableTile();
+      if (randomTile && randomTile.position) {
+        return {
+          x: randomTile.position.x,
+          y: randomTile.position.y + 0.5,
+          z: randomTile.position.z
+        };
+      }
+      
+      const fallbackAngle = Math.random() * Math.PI * 2;
+      const fallbackDistance = Math.min(range, 2);
+      return {
+        x: vehicle.position.x + Math.cos(fallbackAngle) * fallbackDistance,
+        y: vehicle.position.y + 0.5,
+        z: vehicle.position.z + Math.sin(fallbackAngle) * fallbackDistance
+      };
+    }
+
+    const targetTile = validTargets[0];
+    
+    return {
+      x: targetTile.position.x,
+      y: targetTile.position.y + 0.5,
+      z: targetTile.position.z
+    };
+    
+  } catch (error) {
+    console.error('[selectTargetTileInRadius] Error selecting target tile:', error);
+    
+    const vehicle = context.vehicle || context.botVehicle;
+    if (vehicle && vehicle.position) {
+      const safeAngle = Math.random() * Math.PI * 2;
+      const safeDistance = Math.min(range, 2);
+      return {
+        x: vehicle.position.x + Math.cos(safeAngle) * safeDistance,
+        y: vehicle.position.y + 0.5,
+        z: vehicle.position.z + Math.sin(safeAngle) * safeDistance
+      };
+    }
+    
+    return { x: 0, y: 0.5, z: 0 };
+  }
+};
+
+// ============================================================================
+// ❌ FONCTIONNALITÉS COMMENTÉES POUR ÉVITER CONFUSION/CONFLITS
+// ============================================================================
+
+/*
+// ============================================================================
+// ACTIONS FSM SPÉCIALISÉES - SUPPRIMÉES (CAUSES CONFUSION)
+// ============================================================================
+
+// ❌ SUPPRIMÉ: fsmDroneFleetActions
+// Ces actions dupliquent droneDeploymentActions et créent de la confusion.
+// La logique de déploiement doit être centralisée dans droneDeploymentActions.
+
+export const fsmDroneFleetActions = {
+  deployDroneWithPosition: (context, event) => { ... },
+  updateDronePosition: (context, event) => { ... },
+  recallDrone: (context, event) => { ... },
+  dockDrone: (context, event) => { ... }
+};
+*/
+
+/*
+// ============================================================================
+// GUARDS - COMMENTÉS (ÉVITER CONFLITS AVEC GUARDS CENTRALISÉS)
+// ============================================================================
+
+export const droneDeploymentGuards = {
+  canDeployDrone: (context, event) => {
+    const explorer = context.droneFleet?.drones?.explorer;
+    if (explorer?.isActive) return false;
+    
+    if (context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.active) return false;
+    
+    const vehicle = context.vehicle || context.botVehicle;
+    if (!vehicle || vehicle.fuel < 20) return false;
+    
+    return true;
+  },
+
+  isDroneDeployed: (context) => {
+    const explorer = context.droneFleet?.drones?.explorer;
+    if (explorer?.isActive) return true;
+    
+    return context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.active;
+  },
+
+  isDroneDocked: (context) => {
+    const explorer = context.droneFleet?.drones?.explorer;
+    if (!explorer || (!explorer.isActive && explorer.state === 'docked')) return true;
+    
+    return context.droneDeployment?.status === DRONE_DEPLOYMENT_STATES.docked ||
+           !context.droneDeployment;
+  }
+};
+*/
+
+/*
+// ============================================================================
+// SELECTORS - COMMENTÉS (ÉVITER CONFLITS AVEC SELECTORS CENTRALISÉS)
+// ============================================================================
+
 export const droneDeploymentSelectors = {
-  /**
-   * Obtient l'état actuel du déploiement (calculé depuis les états individuels)
-   * @param {Object} context - Contexte actuel
-   * @returns {string} - État du déploiement
-   */
   getCurrentDeploymentState: (context) => {
-    // NOUVEAU: Calcul basé sur les états individuels des drones (source unique de vérité)
     return calculateFleetStatus(context);
   },
 
-  /**
-   * Vérifie si un drone est en mission (basé sur les états individuels)
-   * @param {Object} context - Contexte actuel
-   * @returns {boolean} - True si drone en mission
-   */
   isDroneOnMission: (context) => {
-    // NOUVEAU: Calcul basé sur les états individuels des drones (source unique de vérité)
     const fleetStatus = calculateFleetStatus(context);
     return fleetStatus === 'active' || fleetStatus === 'returning';
   },
 
-  /**
-   * Obtient la zone cible actuelle du drone
-   * @param {Object} context - Contexte actuel
-   * @returns {string|null} - Coordonnée de la zone cible
-   */
   getDroneTargetArea: (context) => {
-    // NOUVEAU: Priorité à la structure droneFleet
     if (context.droneFleet?.currentMission?.target) {
       return context.droneFleet.currentMission.target;
     }
     
-    // ANCIEN: Fallback vers droneDeployment (déprécié)
     return context.droneDeployment?.targetArea || context.currentDroneTarget || null;
   },
 
-  /**
-   * Calcule le temps restant estimé de la mission (basé sur les états individuels)
-   * @param {Object} context - Contexte actuel
-   * @returns {number} - Temps restant en millisecondes
-   */
   getEstimatedMissionTimeRemaining: (context) => {
-    // NOUVEAU: Calcul basé sur les états individuels des drones (source unique de vérité)
     const fleetStatus = calculateFleetStatus(context);
     if (context.droneFleet?.currentMission?.startTime && fleetStatus === 'active') {
       const elapsed = Date.now() - context.droneFleet.currentMission.startTime;
-      const estimatedDuration = 10000; // 10 secondes par défaut
+      const estimatedDuration = 10000;
       return Math.max(0, estimatedDuration - elapsed);
     }
     
-    // ANCIEN: Fallback vers droneDeployment (déprécié)
     const deployment = context.droneDeployment;
     if (!deployment || deployment.status !== DRONE_DEPLOYMENT_STATES.active) {
       return 0;
@@ -547,14 +436,13 @@ export const droneDeploymentSelectors = {
     return Math.max(0, remaining);
   }
 };
+*/
 
+/*
 // ============================================================================
-// EVENTS ET TRANSFORMATIONS
+// EVENTS - COMMENTÉS (UTILISER LES EVENTS CENTRALISÉS DANS movementEvents.js)
 // ============================================================================
 
-/**
- * Générateurs d'événements pour le déploiement de drones
- */
 export const droneDeploymentEvents = {
   deployDrone: (targetArea, droneType = DRONE_TYPES.explorer, options = {}) => ({
     type: 'DEPLOY_DRONE',
@@ -582,111 +470,62 @@ export const droneDeploymentEvents = {
     timestamp: Date.now()
   })
 };
+*/
 
 // ============================================================================
-// TILE SELECTION UTILITIES
-// ============================================================================
-
-/**
- * Sélectionne une tuile cible dans un rayon donné autour du véhicule
- * Cette fonction remplace l'appel à selectTargetTileInRadius(context, range)
- * et évite les boucles infinies en utilisant une approche robuste
- * 
- * @param {Object} context - Contexte FSM contenant vehicle.position et vehicle.coord
- * @param {number} range - Rayon de recherche (défaut: 3)
- * @returns {Object} - Position cible {x, y, z} ou position par défaut
- */
-const selectTargetTileInRadius = (context, range = 3) => {
-  try {
-    // Obtenir le tileStore
-    const tileStore = useTileStore.getState();
-    
-    // Vérifier que le contexte contient les informations nécessaires
-    const vehicle = context.vehicle || context.botVehicle;
-    if (!vehicle || !vehicle.coord) {
-      console.warn('[selectTargetTileInRadius] Vehicle or vehicle.coord not found in context');
-      return { x: 0, y: 0.5, z: 0 }; // Position par défaut
-    }
-
-    // Utiliser getWalkableTilesInRadius avec des paramètres sûrs
-    const walkableTiles = tileStore.getWalkableTilesInRadius(
-      vehicle.coord, // Position source (format "x,y" ou hex)
-      range,         // Rayon de recherche
-      true,          // Seulement les tuiles non explorées
-      true           // Exclure les tuiles dangereuses
-    );
-    
-    // Filtrer pour éviter la position actuelle du véhicule
-    const validTargets = walkableTiles.filter(tile => 
-      tile.coord !== vehicle.coord && 
-      tile.position && 
-      tile.distance > 0
-    );
-    
-    if (validTargets.length === 0) {
-      console.warn('[selectTargetTileInRadius] No valid tiles found, falling back to random tile');
-      
-      // Fallback: essayer une tuile walkable aléatoire
-      const randomTile = tileStore.selectRandomWalkableTile();
-      if (randomTile && randomTile.position) {
-        return {
-          x: randomTile.position.x,
-          y: randomTile.position.y + 0.5, // Élever légèrement pour le drone
-          z: randomTile.position.z
-        };
-      }
-      
-      // Dernière option: position relative au véhicule
-      const fallbackAngle = Math.random() * Math.PI * 2;
-      const fallbackDistance = Math.min(range, 2);
-      return {
-        x: vehicle.position.x + Math.cos(fallbackAngle) * fallbackDistance,
-        y: vehicle.position.y + 0.5,
-        z: vehicle.position.z + Math.sin(fallbackAngle) * fallbackDistance
-      };
-    }
-
-    // Sélectionner la tuile la plus proche (première dans la liste triée)
-    const targetTile = validTargets[0];
-    
-    return {
-      x: targetTile.position.x,
-      y: targetTile.position.y + 0.5, // Élever légèrement pour le drone
-      z: targetTile.position.z
-    };
-    
-  } catch (error) {
-    console.error('[selectTargetTileInRadius] Error selecting target tile:', error);
-    
-    // Position de secours basée sur le véhicule si disponible
-    const vehicle = context.vehicle || context.botVehicle;
-    if (vehicle && vehicle.position) {
-      const safeAngle = Math.random() * Math.PI * 2;
-      const safeDistance = Math.min(range, 2);
-      return {
-        x: vehicle.position.x + Math.cos(safeAngle) * safeDistance,
-        y: vehicle.position.y + 0.5,
-        z: vehicle.position.z + Math.sin(safeAngle) * safeDistance
-      };
-    }
-    
-    // Position absolue de secours
-    return { x: 0, y: 0.5, z: 0 };
-  }
-};
-
-// ============================================================================
-// EXPORT PAR DÉFAUT
+// EXPORT PAR DÉFAUT - SIMPLIFIÉ
 // ============================================================================
 
 export default {
   actions: droneDeploymentActions,
-  selectors: droneDeploymentSelectors,
-  guards: droneDeploymentGuards,
-  events: droneDeploymentEvents,
+  // selectors: droneDeploymentSelectors, // ❌ COMMENTÉ
+  // guards: droneDeploymentGuards, // ❌ COMMENTÉ
+  // events: droneDeploymentEvents, // ❌ COMMENTÉ
   constants: {
     droneDeploymentStates: DRONE_DEPLOYMENT_STATES,
     droneTypes: DRONE_TYPES,
     droneConfig: DRONE_CONFIG
+  },
+  utils: {
+    calculateFleetStatus
   }
+};
+
+// ============================================================================
+// ❌ EXPORT TEMPORAIRE POUR ÉVITER ERREUR D'IMPORT
+// ============================================================================
+
+/**
+ * Export temporaire vide pour éviter l'erreur d'import dans context.js
+ * TODO: Supprimer cet export quand context.js sera mis à jour
+ */
+export const fsmDroneFleetActions = {
+  // Actions temporaires vides - utilisez droneDeploymentActions à la place
+  deployDroneWithPosition: () => ({ error: 'Use droneDeploymentActions.deployDrone instead' }),
+  updateDronePosition: () => ({ error: 'Use droneDeploymentActions.updateDronePosition instead' }),
+  recallDrone: () => ({ error: 'Use droneDeploymentActions.recallDrone instead' }),
+  dockDrone: () => ({ error: 'Use droneDeploymentActions.dockDrone instead' })
+};
+
+export const droneDeploymentGuards = {
+  // Guards temporaires vides - utilisez les guards centralisés à la place
+  canDeployDrone: () => false,
+  isDroneDeployed: () => false,
+  isDroneDocked: () => true
+};
+
+export const droneDeploymentSelectors = {
+  // Selectors temporaires vides - utilisez les selectors centralisés à la place
+  getCurrentDeploymentState: () => 'docked',
+  isDroneOnMission: () => false,
+  getDroneTargetArea: () => null,
+  getEstimatedMissionTimeRemaining: () => 0
+};
+
+export const droneDeploymentEvents = {
+  // Events temporaires vides - utilisez les events centralisés à la place
+  deployDrone: () => ({ type: 'DEPRECATED' }),
+  recallDrone: () => ({ type: 'DEPRECATED' }),
+  droneDocked: () => ({ type: 'DEPRECATED' }),
+  dronePositionUpdate: () => ({ type: 'DEPRECATED' })
 };

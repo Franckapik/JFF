@@ -326,6 +326,23 @@ const createShipRefuelCompletedEvent = (position, fuelAdded) => ({
   timestamp: Date.now()
 });
 
+/**
+ * Crée un événement de mise à jour de position du vaisseau
+ * @param {Object} position - Position 3D du vaisseau
+ * @param {string} entityType - Type d'entité ('ship')
+ * @param {string} tileCoord - Coordonnée de tuile
+ * @param {string} newCoord - Nouvelle coordonnée
+ * @returns {Object} - Événement formaté
+ */
+export const createShipUpdatePositionEvent = (position, entityType = 'ship', tileCoord, newCoord) => ({
+  type: 'SHIP_UPDATE_POSITION',
+  position,
+  entityType,
+  tileCoord,
+  newCoord,
+  timestamp: Date.now()
+});
+
 // Export des types d'événements (constants)
 export const MOVEMENT_EVENT_TYPES = {
   MOVEMENT_STARTED,
@@ -361,5 +378,6 @@ export const movementEvents = {
   createShipMovementStartedEvent,
   createShipArrivedAtTileEvent,
   createShipCollectionCompletedEvent,
-  createShipRefuelCompletedEvent
+  createShipRefuelCompletedEvent,
+  createShipUpdatePositionEvent
 };

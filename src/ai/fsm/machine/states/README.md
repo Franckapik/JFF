@@ -9,11 +9,11 @@ Les états définissent les comportements possibles du bot et les transitions en
 
 Les états sont organisés selon les comportements principaux du bot :
 
-1. **État d'Évaluation** (`evaluating.js`) - État central pour l'analyse de situation et la prise de décision
-2. **État d'Exploration** (`exploring.js`) - Recherche de nouvelles ressources dans l'environnement
-3. **État de Collecte** (`collecting.js`) - Collecte des ressources découvertes
-4. **État de Retour** (`returning.js`) - Retour à la base pour ravitaillement/déchargement
-5. **État d'Inactivité à la Base** (`idleAtBase.js`) - Maintenance et attente à la base
+1. **État d'Évaluation** (`evaluatingState.js`) - État central pour l'analyse de situation et la prise de décision
+2. **État d'Exploration** (`exploringState.js`) - Recherche de nouvelles ressources dans l'environnement
+3. **État de Collecte** (`collectingState.js`) - Collecte des ressources découvertes
+4. **État de Retour** (`returningState.js`) - Retour à la base pour ravitaillement/déchargement
+5. **État d'Inactivité à la Base** (`idleAtBaseState.js`) - Maintenance et attente à la base
 6. **Index** (`index.js`) - Exports centralisés et constantes
 
 ## Comment Utiliser les États

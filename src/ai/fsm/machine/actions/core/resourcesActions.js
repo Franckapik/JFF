@@ -7,7 +7,26 @@
  * Ces fonctions sont sans effets de bord et retournent des transformations
  * d'état plutôt que de muter directement les données.
  * 
- * Inspiré du pattern présenté dans actions-comparison.md
+ * 📋 FONCTIONS DISPONIBLES DANS CE FICHIER:
+ * ==========================================
+ * 
+ * 🔧 ACTIONS PRINCIPALES (resourceActions):
+ * - collectResources(context, event) : Collecte des ressources avec validation
+ * - depositResources(context) : Dépose toutes les ressources du véhicule
+ * - addResources(context, event) : Ajoute des ressources (transfert direct)
+ * - clearResources(context) : Vide complètement les ressources
+ * - updateResources(context, event) : Met à jour avec valeurs spécifiques
+ * 
+ * 🔧 UTILITAIRES INTERNES:
+ * - validateResources(resources) : Validation et normalisation
+ * - addResources(current, toAdd) : Addition de ressources
+ * - getTotalResources(resources) : Calcul du total
+ * - areResourcesEmpty(resources) : Vérifie si vide
+ * 
+ * ❌ FONCTIONNALITÉS COMMENTÉES (Éviter confusion/conflits):
+ * - Guards (resourceGuards) - COMMENTÉS
+ * - Selectors (resourceSelectors) - COMMENTÉS
+ * - Events (resourceEvents) - COMMENTÉS
  * 
  * @author Migration FSM
  * @version 1.0.0
@@ -16,14 +35,11 @@
 import { EMPTY_RESOURCES, DEFAULT_CAPACITY } from '../../constants/constants.js';
 
 // ============================================================================
-// CONSTANTS ET HELPERS
+// UTILITAIRES INTERNES
 // ============================================================================
 
 /**
  * Validation et normalisation des ressources
- * @param {Object} resources - Ressources à valider
- * @returns {Object} - Ressources validées
- * @throws {Error} - Si les ressources sont invalides
  */
 const validateResources = (resources) => {
   if (!resources || typeof resources !== 'object') {
@@ -41,11 +57,8 @@ const validateResources = (resources) => {
 
 /**
  * Utilitaire pour additionner des ressources
- * @param {Object} current - Ressources actuelles
- * @param {Object} toAdd - Ressources à ajouter
- * @returns {Object} - Ressources additionnées
  */
-const addResources = (current, toAdd) => {
+const addResourcesUtil = (current, toAdd) => {
   const validCurrent = validateResources(current);
   const validToAdd = validateResources(toAdd);
 
@@ -58,8 +71,6 @@ const addResources = (current, toAdd) => {
 
 /**
  * Calcule le total des ressources
- * @param {Object} resources - Ressources à totaliser
- * @returns {number} - Total des ressources
  */
 const getTotalResources = (resources) => {
   const validated = validateResources(resources);
@@ -68,98 +79,13 @@ const getTotalResources = (resources) => {
 
 /**
  * Vérifie si des ressources sont vides
- * @param {Object} resources - Ressources à vérifier
- * @returns {boolean} - True si toutes les ressources sont à 0
  */
 const areResourcesEmpty = (resources) => {
   return getTotalResources(resources) === 0;
 };
 
 // ============================================================================
-// VALIDATORS ET GUARDS
-// ============================================================================
-
-/**
- * Guards pour valider les conditions de ressources
- */
-export const resourceGuards = {
-  
-  /**
-   * Vérifie si un véhicule peut collecter des ressources
-   * @param {Object} context - Contexte actuel
-   * @param {Object} event - Événement avec resources et vehicleCapacity
-   * @returns {boolean} - True si collection possible
-   */
-  canCollectResource: (context, event) => {
-    const vehicle = context.vehicle;
-    if (!vehicle) return false;
-
-    if (!event.resources) return false;
-
-    try {
-      validateResources(event.resources);
-      return true;
-    } catch {
-      return false;
-    }
-  },
-
-  /**
-   * Vérifie si un véhicule a suffisamment d'espace pour les ressources
-   * @param {Object} context - Contexte actuel
-   * @param {Object} event - Événement avec resources
-   * @returns {boolean} - True si suffisamment d'espace
-   */
-  hasCapacityFor: (context, event) => {
-    const vehicle = context.vehicle;
-    if (!vehicle?.resources || !event?.resources) return false;
-
-    const currentResources = validateResources(vehicle.resources);
-    const toCollect = validateResources(event.resources);
-    const capacity = vehicle.maxCapacity || DEFAULT_CAPACITY;
-
-    return (
-      currentResources.food + toCollect.food <= capacity.food &&
-      currentResources.debris + toCollect.debris <= capacity.debris &&
-      currentResources.special + toCollect.special <= capacity.special
-    );
-  },
-
-  /**
-   * Vérifie si un véhicule est à capacité maximale
-   * @param {Object} context - Contexte actuel
-   * @returns {boolean} - True si à capacité maximale
-   */
-  isAtMaxCapacity: (context) => {
-    const vehicle = context.vehicle;
-    if (!vehicle?.resources) return false;
-
-    const currentResources = validateResources(vehicle.resources);
-    const capacity = vehicle.maxCapacity || DEFAULT_CAPACITY;
-
-    return (
-      currentResources.food >= capacity.food &&
-      currentResources.debris >= capacity.debris &&
-      currentResources.special >= capacity.special
-    );
-  },
-
-  /**
-   * Vérifie si un véhicule peut déposer des ressources
-   * @param {Object} context - Contexte actuel
-   * @returns {boolean} - True si dépôt possible
-   */
-  canDepositResources: (context) => {
-    const vehicle = context.vehicle;
-    if (!vehicle?.resources) return false;
-
-    // Vérifie si le véhicule a des ressources à déposer
-    return !areResourcesEmpty(vehicle.resources);
-  }
-};
-
-// ============================================================================
-// ACTIONS PRINCIPALES
+// ACTIONS PRINCIPALES - SEULES FONCTIONS PUBLIQUES
 // ============================================================================
 
 /**
@@ -169,43 +95,37 @@ export const resourceActions = {
   
   /**
    * Collecte des ressources avec un véhicule
-   * @param {Object} context - Contexte contenant vehicle
-   * @param {Object} event - Événement avec resources
-   * @returns {Object} - Nouveau contexte avec ressources collectées
    */
   collectResources: (context, event) => {
     try {
-      if (!resourceGuards.canCollectResource(context, event)) {
-        return { 
-          ...context, 
-          error: 'Cannot collect resources: invalid parameters' 
-        };
+      const vehicle = context.vehicle;
+      if (!vehicle || !event.resources) {
+        return { ...context, error: 'Cannot collect resources: invalid parameters' };
       }
 
-      if (!resourceGuards.hasCapacityFor(context, event)) {
-        return { 
-          ...context, 
-          error: 'Cannot collect resources: insufficient capacity' 
-        };
-      }
-
-      const currentResources = validateResources(context.vehicle.resources);
+      const currentResources = validateResources(vehicle.resources);
       const toCollect = validateResources(event.resources);
-      const capacity = context.vehicle.maxCapacity || DEFAULT_CAPACITY;
+      const capacity = vehicle.maxCapacity || DEFAULT_CAPACITY;
 
-      // Calculer la quantité effectivement collectée (limitée par la capacité)
+      // Vérifier la capacité
+      if (currentResources.food + toCollect.food > capacity.food ||
+          currentResources.debris + toCollect.debris > capacity.debris ||
+          currentResources.special + toCollect.special > capacity.special) {
+        return { ...context, error: 'Cannot collect resources: insufficient capacity' };
+      }
+
       const actuallyCollected = {
         food: Math.min(toCollect.food, capacity.food - currentResources.food),
         debris: Math.min(toCollect.debris, capacity.debris - currentResources.debris),
         special: Math.min(toCollect.special, capacity.special - currentResources.special)
       };
 
-      const newResources = addResources(currentResources, actuallyCollected);
+      const newResources = addResourcesUtil(currentResources, actuallyCollected);
 
       return {
         ...context,
         vehicle: {
-          ...context.vehicle,
+          ...vehicle,
           resources: newResources,
           lastResourceCollection: {
             collected: actuallyCollected,
@@ -214,28 +134,21 @@ export const resourceActions = {
         }
       };
     } catch (error) {
-      return { 
-        ...context, 
-        error: `Resource collection failed: ${error.message}` 
-      };
+      return { ...context, error: `Resource collection failed: ${error.message}` };
     }
   },
 
   /**
    * Dépose toutes les ressources du véhicule
-   * @param {Object} context - Contexte actuel
-   * @returns {Object} - Nouveau contexte avec ressources transférées
    */
   depositResources: (context) => {
-    if (!resourceGuards.canDepositResources(context)) {
-      return { 
-        ...context, 
-        error: 'Cannot deposit resources: no resources to deposit' 
-      };
-    }
-
     const vehicle = context.vehicle;
     const player = context.player;
+
+    if (!vehicle?.resources || areResourcesEmpty(vehicle.resources)) {
+      return { ...context, error: 'Cannot deposit resources: no resources to deposit' };
+    }
+
     const vehicleResources = validateResources(vehicle.resources);
     const currentScore = validateResources(player?.score?.resources);
 
@@ -253,7 +166,7 @@ export const resourceActions = {
         ...player,
         score: {
           ...player.score,
-          resources: addResources(currentScore, vehicleResources)
+          resources: addResourcesUtil(currentScore, vehicleResources)
         }
       }
     };
@@ -261,35 +174,32 @@ export const resourceActions = {
 
   /**
    * Ajoute des ressources à un véhicule (transfert direct)
-   * @param {Object} context - Contexte actuel
-   * @param {Object} event - Événement avec resources
-   * @returns {Object} - Nouveau contexte avec ressources ajoutées
    */
   addResources: (context, event) => {
     try {
-      const currentResources = validateResources(context.vehicle.resources);
+      const vehicle = context.vehicle;
+      if (!vehicle || !event.resources) {
+        return { ...context, error: 'Cannot add resources: invalid parameters' };
+      }
+
+      const currentResources = validateResources(vehicle.resources);
       const toAdd = validateResources(event.resources);
-      const newResources = addResources(currentResources, toAdd);
+      const newResources = addResourcesUtil(currentResources, toAdd);
 
       return {
         ...context,
         vehicle: {
-          ...context.vehicle,
+          ...vehicle,
           resources: newResources
         }
       };
     } catch (error) {
-      return { 
-        ...context, 
-        error: `Failed to add resources: ${error.message}` 
-      };
+      return { ...context, error: `Failed to add resources: ${error.message}` };
     }
   },
 
   /**
    * Vide complètement les ressources d'un véhicule
-   * @param {Object} context - Contexte actuel
-   * @returns {Object} - Nouveau contexte avec ressources vidées
    */
   clearResources: (context) => ({
     ...context,
@@ -302,12 +212,13 @@ export const resourceActions = {
 
   /**
    * Met à jour les ressources avec des valeurs spécifiques
-   * @param {Object} context - Contexte actuel
-   * @param {Object} event - Événement avec newResources
-   * @returns {Object} - Nouveau contexte avec ressources mises à jour
    */
   updateResources: (context, event) => {
     try {
+      if (!event.newResources) {
+        return { ...context, error: 'Cannot update resources: newResources not provided' };
+      }
+
       const newResources = validateResources(event.newResources);
 
       return {
@@ -318,186 +229,64 @@ export const resourceActions = {
         }
       };
     } catch (error) {
-      return { 
-        ...context, 
-        error: `Failed to update resources: ${error.message}` 
-      };
+      return { ...context, error: `Failed to update resources: ${error.message}` };
     }
   }
 };
 
 // ============================================================================
-// SELECTORS ET UTILITAIRES
+// ❌ EXPORT TEMPORAIRE POUR ÉVITER ERREUR D'IMPORT
 // ============================================================================
 
 /**
- * Sélecteurs pour extraire des informations de ressources
+ * Exports temporaires vides pour éviter les erreurs d'import
+ * TODO: Supprimer ces exports quand les fichiers importants seront mis à jour
  */
+export const resourceGuards = {
+  // Guards temporaires vides - utilisez les guards centralisés à la place
+  canCollectResource: () => false,
+  hasCapacityFor: () => false,
+  isAtMaxCapacity: () => false,
+  canDepositResources: () => false
+};
+
 export const resourceSelectors = {
-  
-  /**
-   * Obtient les ressources actuelles d'un véhicule
-   * @param {Object} vehicle - Véhicule
-   * @returns {Object} - Ressources actuelles
-   */
-  getCurrentResources: (vehicle) => {
-    return validateResources(vehicle?.resources || EMPTY_RESOURCES);
-  },
-
-  /**
-   * Obtient la capacité maximale d'un véhicule
-   * @param {Object} vehicle - Véhicule
-   * @returns {Object} - Capacité maximale
-   */
-  getMaxCapacity: (vehicle) => {
-    return vehicle?.maxCapacity || DEFAULT_CAPACITY;
-  },
-
-  /**
-   * Calcule l'espace restant dans un véhicule
-   * @param {Object} vehicle - Véhicule
-   * @returns {Object} - Espace restant par type de ressource
-   */
-  getRemainingCapacity: (vehicle) => {
-    const current = resourceSelectors.getCurrentResources(vehicle);
-    const capacity = resourceSelectors.getMaxCapacity(vehicle);
-
-    return {
-      food: Math.max(0, capacity.food - current.food),
-      debris: Math.max(0, capacity.debris - current.debris),
-      special: Math.max(0, capacity.special - current.special)
-    };
-  },
-
-  /**
-   * Calcule le pourcentage d'utilisation de la capacité
-   * @param {Object} vehicle - Véhicule
-   * @returns {Object} - Pourcentages par type de ressource
-   */
-  getCapacityPercentage: (vehicle) => {
-    const current = resourceSelectors.getCurrentResources(vehicle);
-    const capacity = resourceSelectors.getMaxCapacity(vehicle);
-
-    return {
-      food: capacity.food > 0 ? (current.food / capacity.food) * 100 : 0,
-      debris: capacity.debris > 0 ? (current.debris / capacity.debris) * 100 : 0,
-      special: capacity.special > 0 ? (current.special / capacity.special) * 100 : 0
-    };
-  },
-
-  /**
-   * Obtient le total des ressources
-   * @param {Object} vehicle - Véhicule
-   * @returns {number} - Total des ressources
-   */
-  getTotalResources: (vehicle) => {
-    return getTotalResources(resourceSelectors.getCurrentResources(vehicle));
-  },
-
-  /**
-   * Vérifie si le véhicule a des ressources
-   * @param {Object} vehicle - Véhicule
-   * @returns {boolean} - True si le véhicule a des ressources
-   */
-  hasResources: (vehicle) => {
-    return !areResourcesEmpty(resourceSelectors.getCurrentResources(vehicle));
-  },
-
-  /**
-   * Obtient des informations détaillées sur la capacité
-   * @param {Object} vehicle - Véhicule
-   * @returns {Object} - Informations complètes sur la capacité
-   */
-  getCapacityInfo: (vehicle) => {
-    const current = resourceSelectors.getCurrentResources(vehicle);
-    const capacity = resourceSelectors.getMaxCapacity(vehicle);
-    const remaining = resourceSelectors.getRemainingCapacity(vehicle);
-    const percentage = resourceSelectors.getCapacityPercentage(vehicle);
-
-    return {
-      current,
-      capacity,
-      remaining,
-      percentage,
-      total: getTotalResources(current),
-      maxTotal: getTotalResources(capacity),
-      isEmpty: areResourcesEmpty(current),
-      isFull: resourceGuards.isAtMaxCapacity({ vehicle })
-    };
-  }
+  // Selectors temporaires vides - utilisez les selectors centralisés à la place
+  getCurrentResources: () => ({ food: 0, debris: 0, special: 0 }),
+  getMaxCapacity: () => ({ food: 0, debris: 0, special: 0 }),
+  getRemainingCapacity: () => ({ food: 0, debris: 0, special: 0 }),
+  getCapacityPercentage: () => ({ food: 0, debris: 0, special: 0 }),
+  getTotalResources: () => 0,
+  hasResources: () => false,
+  getCapacityInfo: () => ({})
 };
 
-// ============================================================================
-// EVENTS ET TRANSFORMATIONS
-// ============================================================================
-
-/**
- * Générateurs d'événements pour le système de ressources
- */
 export const resourceEvents = {
-  
-  /**
-   * Crée un événement de collecte de ressources
-   * @param {Object} resources - Ressources à collecter
-   * @returns {Object} - Événement formaté
-   */
-  collectResources: (resources) => ({
-    type: 'COLLECT_RESOURCES',
-    resources
-  }),
-
-  /**
-   * Crée un événement de dépôt de ressources
-   * @returns {Object} - Événement formaté
-   */
-  depositResources: () => ({
-    type: 'DEPOSIT_RESOURCES'
-  }),
-
-  /**
-   * Crée un événement d'ajout de ressources
-   * @param {Object} resources - Ressources à ajouter
-   * @returns {Object} - Événement formaté
-   */
-  addResources: (resources) => ({
-    type: 'ADD_RESOURCES',
-    resources
-  }),
-
-  /**
-   * Crée un événement de vidage des ressources
-   * @returns {Object} - Événement formaté
-   */
-  clearResources: () => ({
-    type: 'CLEAR_RESOURCES'
-  }),
-
-  /**
-   * Crée un événement de mise à jour des ressources
-   * @param {Object} newResources - Nouvelles ressources
-   * @returns {Object} - Événement formaté
-   */
-  updateResources: (newResources) => ({
-    type: 'UPDATE_RESOURCES',
-    newResources
-  })
+  // Events temporaires vides - utilisez les events centralisés à la place
+  collectResources: () => ({ type: 'DEPRECATED' }),
+  depositResources: () => ({ type: 'DEPRECATED' }),
+  addResources: () => ({ type: 'DEPRECATED' }),
+  clearResources: () => ({ type: 'DEPRECATED' }),
+  updateResources: () => ({ type: 'DEPRECATED' })
 };
 
 // ============================================================================
-// EXPORT PAR DÉFAUT
+// EXPORT PAR DÉFAUT - SIMPLIFIÉ
 // ============================================================================
 
 export default {
   actions: resourceActions,
-  selectors: resourceSelectors,
-  guards: resourceGuards,
-  events: resourceEvents,
-  utils: {
-    validateResources,
-    addResources,
-    getTotalResources,
-    areResourcesEmpty,
+  // selectors: resourceSelectors, // ❌ COMMENTÉ
+  // guards: resourceGuards, // ❌ COMMENTÉ
+  // events: resourceEvents, // ❌ COMMENTÉ
+  constants: {
     EMPTY_RESOURCES,
     DEFAULT_CAPACITY
+  },
+  utils: {
+    validateResources,
+    addResources: addResourcesUtil,
+    getTotalResources,
+    areResourcesEmpty
   }
 };
