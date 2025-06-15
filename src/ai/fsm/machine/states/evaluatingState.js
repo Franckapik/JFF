@@ -37,8 +37,8 @@ import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
 import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
 import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
-import { movementActions } from '../actions/core/movementActions.js';
-import { droneDeploymentActions } from '../actions/core/droneActions.js';
+import { shipCollectingActions } from '../actions/core/shipCollectingActions.js'; // NOUVEAU - Remplace movementActions
+import { droneExploringActions } from '../actions/core/droneExploringActions.js'; // NOUVEAU - Remplace droneDeploymentActions
 import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**
@@ -183,8 +183,8 @@ export const evaluatingState = state(
   transition(MOVEMENT_EVENT_TYPES.SHIP_UPDATE_POSITION, BOT_STATES.EVALUATING,
     guard(() => true),
     reduce((context, event) => {
-      // Utiliser l'action updatePosition existante
-      return movementActions.updatePosition(context, event);
+      // Utiliser la nouvelle action shipUpdatePosition
+      return shipCollectingActions.shipUpdatePosition(context, event);
     })
   ),
 
@@ -192,8 +192,8 @@ export const evaluatingState = state(
   transition(MOVEMENT_EVENT_TYPES.DRONE_POSITION_UPDATE, BOT_STATES.EVALUATING,
     guard(() => true),
     reduce((context, event) => {
-      // Utiliser l'action updateDronePosition pour les drones
-      return droneDeploymentActions.updateDronePosition(context, event);
+      // Utiliser la nouvelle action droneUpdatePosition
+      return droneExploringActions.droneUpdatePosition(context, event);
     })
   )
 

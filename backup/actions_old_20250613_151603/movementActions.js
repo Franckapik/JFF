@@ -10,13 +10,21 @@
  * 📋 FONCTIONS DISPONIBLES DANS CE FICHIER:
  * ==========================================
  * 
- * 🔧 ACTIONS PRINCIPALES (movementActions):
- * - moveToTile(context, event) : Initie mouvement vers tuile cible
- * - stopMovement(context) : Arrête le mouvement en cours
- * - updateProgress(context, event) : Met à jour progression (0-100)
- * - updatePosition(context, event) : Met à jour position + sync drones
- * - completeMovement(context) : Finalise un mouvement
- * - createVehicleWithCapacities(context, event) : Crée véhicule avec capacités
+ * 🚢 ACTIONS SHIP (shipMovementActions):
+ * - moveShipToTile(context, event) : Initie mouvement ship vers tuile cible
+ * - stopShipMovement(context) : Arrête le mouvement ship en cours
+ * - updateShipProgress(context, event) : Met à jour progression ship (0-100)
+ * - updateShipPosition(context, event) : Met à jour position ship + sync drones
+ * - completeShipMovement(context) : Finalise un mouvement ship
+ * - createShipWithCapacities(context, event) : Crée ship avec capacités
+ * 
+ * 🔧 ACTIONS ENTITY (entityMovementActions):
+ * - moveEntityToTile(context, event) : Initie mouvement entity vers tuile cible
+ * - stopEntityMovement(context) : Arrête le mouvement entity en cours
+ * - updateEntityProgress(context, event) : Met à jour progression entity (0-100)
+ * - updateEntityPosition(context, event) : Met à jour position entity
+ * - completeEntityMovement(context) : Finalise un mouvement entity
+ * - createEntityWithCapacities(context, event) : Crée entity avec capacités
  * 
  * 🔧 UTILITAIRES INTERNES:
  * - validateTargetTile(tile) : Validation tuile cible
@@ -36,7 +44,7 @@
  * Consolidation de movement.js et vehicle.js
  * 
  * @author Migration FSM
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import fsmLogger from '../../../../../logger/fsmLogger.js';
@@ -155,28 +163,28 @@ const validateUpdates = (updates) => {
 };
 
 // ============================================================================
-// ACTIONS PRINCIPALES - SEULES FONCTIONS PUBLIQUES
+// 🚢 SHIP MOVEMENT ACTIONS - Actions spécialisées pour ships
 // ============================================================================
 
 /**
- * Actions de mouvement et véhicule pures - Compatible Bot et Player
+ * Actions de mouvement spécialisées pour ships avec synchronisation automatique des drones
  */
-export const movementActions = {
+export const shipMovementActions = {
   
   /**
-   * Initie le mouvement vers une tuile cible
+   * Initie le mouvement du ship vers une tuile cible
    */
-  moveToTile: (context, event) => {
+  moveShipToTile: (context, event) => {
     try {
       const validatedTile = validateTargetTile(event.targetTile);
       
       const vehicle = context.vehicle;
       if (!vehicle) {
-        return { ...context, error: 'Cannot move: no vehicle found' };
+        return { ...context, error: 'Cannot move ship: no vehicle found' };
       }
       
       if (vehicle.isMoving) {
-        return { ...context, error: 'Cannot move: vehicle is already moving' };
+        return { ...context, error: 'Cannot move ship: vehicle is already moving' };
       }
       
       return {
@@ -190,14 +198,14 @@ export const movementActions = {
         }
       };
     } catch (error) {
-      return { ...context, error: error.message, lastAction: 'moveToTile_failed' };
+      return { ...context, error: error.message, lastAction: 'moveShipToTile_failed' };
     }
   },
 
   /**
-   * Arrête le mouvement en cours
+   * Arrête le mouvement du ship en cours
    */
-  stopMovement: (context) => ({
+  stopShipMovement: (context) => ({
     ...context,
     vehicle: {
       ...context.vehicle,
@@ -212,9 +220,9 @@ export const movementActions = {
   }),
 
   /**
-   * Met à jour la progression du mouvement
+   * Met à jour la progression du mouvement du ship
    */
-  updateProgress: (context, event) => {
+  updateShipProgress: (context, event) => {
     let progress = event.progress;
     if (typeof progress !== 'number' || isNaN(progress)) {
       progress = 0;
@@ -231,13 +239,13 @@ export const movementActions = {
   },
 
   /**
-   * Met à jour la position actuelle du véhicule ET synchronise les drones ancrés
+   * Met à jour la position actuelle du ship ET synchronise les drones ancrés
    */
-  updatePosition: (context, event) => {
+  updateShipPosition: (context, event) => {
     const hasValidData = event.position || event.coord || event.newCoord;
     
     if (!hasValidData) {
-      fsmLogger.error(`❌ [updatePosition] No position data found in event:`, {
+      fsmLogger.error(`❌ [updateShipPosition] No position data found in event:`, {
         event,
         checks: {
           newCoord: event.newCoord,
@@ -293,9 +301,163 @@ export const movementActions = {
   },
 
   /**
+   * Finalise un mouvement du ship (position atteinte)
+   */
+  completeShipMovement: (context) => ({
+    ...context,
+    vehicle: {
+      ...context.vehicle,
+      isMoving: false,
+      progress: 100,
+      coord: context.vehicle.targetTile?.coord || context.vehicle.coord,
+      targetTile: {
+        position: null,
+        coord: null
+      },
+      movementStartTime: null,
+      lastMovementTime: Date.now()
+    }
+  }),
+
+  /**
+   * Crée un ship avec capacités par défaut selon son type
+   */
+  createShipWithCapacities: (context, event) => {
+    const vehicle = validateVehicle(event.vehicleData);
+    const defaultCapacity = DEFAULT_CAPACITIES[vehicle.type] || DEFAULT_CAPACITIES[VEHICLE_TYPES.SHIP];
+    
+    const vehicleWithCapacities = {
+      ...vehicle,
+      maxCapacity: vehicle.maxCapacity || defaultCapacity,
+      resources: vehicle.resources || { food: 0, debris: 0, special: 0 }
+    };
+
+    return {
+      ...context,
+      vehicle: vehicleWithCapacities
+    };
+  }
+};
+
+// ============================================================================
+// 🔧 ENTITY MOVEMENT ACTIONS - Actions génériques pour toute entité
+// ============================================================================
+
+/**
+ * Actions de mouvement génériques compatibles Bot et Player
+ */
+export const entityMovementActions = {
+  
+  /**
+   * Initie le mouvement vers une tuile cible
+   */
+  moveEntityToTile: (context, event) => {
+    try {
+      const validatedTile = validateTargetTile(event.targetTile);
+      
+      const vehicle = context.vehicle;
+      if (!vehicle) {
+        return { ...context, error: 'Cannot move: no vehicle found' };
+      }
+      
+      if (vehicle.isMoving) {
+        return { ...context, error: 'Cannot move: vehicle is already moving' };
+      }
+      
+      return {
+        ...context,
+        vehicle: {
+          ...vehicle,
+          targetTile: validatedTile,
+          isMoving: true,
+          movementStartTime: Date.now(),
+          progress: 0
+        }
+      };
+    } catch (error) {
+      return { ...context, error: error.message, lastAction: 'moveEntityToTile_failed' };
+    }
+  },
+
+  /**
+   * Arrête le mouvement en cours
+   */
+  stopEntityMovement: (context) => ({
+    ...context,
+    vehicle: {
+      ...context.vehicle,
+      isMoving: false,
+      targetTile: {
+        position: null,
+        coord: null
+      },
+      progress: 0,
+      movementStartTime: null
+    }
+  }),
+
+  /**
+   * Met à jour la progression du mouvement
+   */
+  updateEntityProgress: (context, event) => {
+    let progress = event.progress;
+    if (typeof progress !== 'number' || isNaN(progress)) {
+      progress = 0;
+    }
+    progress = clamp(progress, 0, 100);
+    
+    return {
+      ...context,
+      vehicle: {
+        ...context.vehicle,
+        progress
+      }
+    };
+  },
+
+  /**
+   * Met à jour la position actuelle du véhicule
+   */
+  updateEntityPosition: (context, event) => {
+    const hasValidData = event.position || event.coord || event.newCoord;
+    
+    if (!hasValidData) {
+      fsmLogger.error(`❌ [updateEntityPosition] No position data found in event:`, {
+        event,
+        checks: {
+          newCoord: event.newCoord,
+          coord: event.coord,
+          position: event.position
+        }
+      });
+      return context;
+    }
+
+    const updatedVehicle = {
+      ...context.vehicle,
+      lastUpdate: Date.now()
+    };
+
+    // Mettre à jour la coordonnée
+    if (event.newCoord || event.coord) {
+      updatedVehicle.coord = event.newCoord || event.coord;
+    }
+
+    // Mettre à jour la position 3D
+    if (event.position) {
+      updatedVehicle.position = event.position;
+    }
+
+    return {
+      ...context,
+      vehicle: updatedVehicle
+    };
+  },
+
+  /**
    * Finalise un mouvement (position atteinte)
    */
-  completeMovement: (context) => ({
+  completeEntityMovement: (context) => ({
     ...context,
     vehicle: {
       ...context.vehicle,
@@ -314,7 +476,7 @@ export const movementActions = {
   /**
    * Crée un véhicule avec capacités par défaut selon son type
    */
-  createVehicleWithCapacities: (context, event) => {
+  createEntityWithCapacities: (context, event) => {
     const vehicle = validateVehicle(event.vehicleData);
     const defaultCapacity = DEFAULT_CAPACITIES[vehicle.type] || DEFAULT_CAPACITIES[VEHICLE_TYPES.DRONE];
     
@@ -329,6 +491,53 @@ export const movementActions = {
       vehicle: vehicleWithCapacities
     };
   }
+};
+
+// ============================================================================
+// 🔄 RÉTROCOMPATIBILITÉ - Actions héritées (utilise shipMovementActions)
+// ============================================================================
+
+/**
+ * Actions de mouvement et véhicule pures - Compatible Bot et Player
+ * @deprecated Utilisez shipMovementActions ou entityMovementActions selon le contexte
+ */
+export const movementActions = {
+  
+  /**
+   * Initie le mouvement vers une tuile cible
+   * @deprecated Utilisez shipMovementActions.moveShipToTile ou entityMovementActions.moveEntityToTile
+   */
+  moveToTile: (context, event) => shipMovementActions.moveShipToTile(context, event),
+
+  /**
+   * Arrête le mouvement en cours
+   * @deprecated Utilisez shipMovementActions.stopShipMovement ou entityMovementActions.stopEntityMovement
+   */
+  stopMovement: (context) => shipMovementActions.stopShipMovement(context),
+
+  /**
+   * Met à jour la progression du mouvement
+   * @deprecated Utilisez shipMovementActions.updateShipProgress ou entityMovementActions.updateEntityProgress
+   */
+  updateProgress: (context, event) => shipMovementActions.updateShipProgress(context, event),
+
+  /**
+   * Met à jour la position actuelle du véhicule ET synchronise les drones ancrés
+   * @deprecated Utilisez shipMovementActions.updateShipPosition ou entityMovementActions.updateEntityPosition
+   */
+  updatePosition: (context, event) => shipMovementActions.updateShipPosition(context, event),
+
+  /**
+   * Finalise un mouvement (position atteinte)
+   * @deprecated Utilisez shipMovementActions.completeShipMovement ou entityMovementActions.completeEntityMovement
+   */
+  completeMovement: (context) => shipMovementActions.completeShipMovement(context),
+
+  /**
+   * Crée un véhicule avec capacités par défaut selon son type
+   * @deprecated Utilisez shipMovementActions.createShipWithCapacities ou entityMovementActions.createEntityWithCapacities
+   */
+  createVehicleWithCapacities: (context, event) => shipMovementActions.createShipWithCapacities(context, event)
 };
 
 // ============================================================================
@@ -422,9 +631,15 @@ export const validateVehicleIntegrity = (vehicle) => {
 // ============================================================================
 
 export default {
+  // Actions principales
   actions: movementActions,
-  // selectors: movementSelectors, // ❌ COMMENTÉ
+  shipActions: shipMovementActions,
+  entityActions: entityMovementActions,
+  
+  // Events spécialisés
   events: movementEvents, // Seulement createShipUpdatePositionEvent
+  
+  // Utilitaires
   utils: {
     validateTargetTile,
     calculateDistance,

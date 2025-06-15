@@ -20,7 +20,8 @@
  * - movementEvents.createProspectingCompleteEvent() → 'PROSPECTING_COMPLETE'
  * 
  * 🏠 RETOUR (returning):
- * - movementEvents.createDroneReturnedEvent() → 'DRONE_RETURNED'
+ * - movementEvents.createDroneApproachingShipEvent() → 'DRONE_APPROACHING_SHIP'
+ * - movementEvents.createDroneReachedShipEvent() → 'DRONE_REACHED_SHIP'
  * 
  * 🎯 EXPLORATION (tous états):
  * - Marquage automatique des tuiles comme explorées/prospectées via useTileStore
@@ -219,7 +220,7 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
             canSendEvent(eventKey)) {
           fsmLogger.mouvement(`🏠 [${botId}] ${droneType} drone approaching ship - distance: ${distance.toFixed(2)}`);
           
-          fsmLogger.context(`🔍 [DEBUG] Sending DRONE_RETURNED event with isApproaching=true`, {
+          fsmLogger.context(`🔍 [DEBUG] Sending DRONE_APPROACHING_SHIP event`, {
             botId,
             droneType,
             hookInstanceId: `${botId}-${droneType}`,
@@ -227,13 +228,13 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
             distance
           });
           
-          // Envoyer événement DRONE_RETURNED pour passer à l'état evaluating
+          // Envoyer événement DRONE_APPROACHING_SHIP pour la transition anticipée
           const droneApproachingEvent = {
-            type: 'DRONE_RETURNED',
+            type: 'DRONE_APPROACHING_SHIP',
             position: visualPosition,
+            distance,
             droneType,
-            timestamp: Date.now(),
-            isApproaching: true // Indicateur supplémentaire pour le guard
+            timestamp: Date.now()
           };
           send(droneApproachingEvent);
           
@@ -245,16 +246,16 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
       onTargetReached: (distance, visualPosition, now) => {
         const eventKey = `drone_returning_reached_${botId}_${droneType}`;
         if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
-          fsmLogger.mouvement(`🏠 [${botId}] ${droneType} drone returned - distance: ${distance.toFixed(2)}`);
+          fsmLogger.mouvement(`🏠 [${botId}] ${droneType} drone reached ship - distance: ${distance.toFixed(2)}`);
           
-          // ✅ CORRECTION: Utiliser l'événement simple qui existe
-          const droneReturnedEvent = {
-            type: 'DRONE_RETURNED',
+          // Utiliser l'événement renommé
+          const droneReachedShipEvent = {
+            type: 'DRONE_REACHED_SHIP',
             position: visualPosition,
             droneType,
             timestamp: Date.now()
           };
-          send(droneReturnedEvent);
+          send(droneReachedShipEvent);
           
           markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.RETURN_RESET);
           return true;

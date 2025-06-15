@@ -1,4 +1,4 @@
-Il doit y avoir une confiusion dans les basePosition entre drone et ship. Essayer de savoir que faire de idleAtBAse et revoir le guard isNotATBase. Verifier que la position du ship est bien msie a jour egalement. 
+Il doit y avoir une confiusion dans les basePosition entre drone et ship. Essayer de savoir que faire de idleAtBAse et revoir le guard isNotATBase. Verifier que la position du ship est bien msie a jour egalement. Le tout est d'éviter l'état returning d'urgence.
 
 
 

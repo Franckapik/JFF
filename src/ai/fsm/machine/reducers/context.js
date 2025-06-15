@@ -15,11 +15,10 @@
  */
 
 import { BOT_STATES } from '../constants/constants.js';
-import { movementActions } from '../actions/core/movementActions.js';
+import { shipCollectingActions } from '../actions/core/shipCollectingActions.js'; // NOUVEAU - Remplace movementActions
+import { droneExploringActions } from '../actions/core/droneExploringActions.js'; // NOUVEAU - Remplace explorationActions et droneDeploymentActions
 import { fuelActions } from '../actions/core/fuelActions.js';
 import { resourceActions } from '../actions/core/resourcesActions.js';
-import { explorationActions } from '../actions/core/explorationActions.js';
-import { droneDeploymentActions } from '../actions/core/droneActions.js';
 
 // ============================================================================
 // RÉDUCTEURS D'ÉTAT - Mises à jour du contexte lors des transitions d'état
@@ -516,14 +515,14 @@ export const droneDeploymentReducers = {
    * Déploie un drone vers une zone cible
    */
   deployDrone: (context, event) => {
-    return droneDeploymentActions.deployDrone(context, event);
+    return droneExploringActions.droneDeployForExploration(context, event);
   },
 
   /**
    * Rappelle le drone au vaisseau
    */
   recallDrone: (context, event) => {
-    return droneDeploymentActions.recallDrone(context, event);
+    return droneExploringActions.droneRecallToShip(context, event);
   },
 
   /**

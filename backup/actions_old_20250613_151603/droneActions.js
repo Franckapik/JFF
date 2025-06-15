@@ -9,15 +9,21 @@
  * 📋 FONCTIONS DISPONIBLES DANS CE FICHIER:
  * ==========================================
  * 
- * 🔧 ACTIONS PRINCIPALES (droneDeploymentActions):
+ * 🔧 ACTIONS PRINCIPALES (droneFleetActions):
+ * - deployDroneForExploration(context, event) : Déploie drone vers zone cible
+ * - recallDroneToShip(context, event) : Rappelle drone au vaisseau
+ * - dockDroneToShip(context, event) : Finalise retour drone (ancré)
+ * - updateDroneFleetPosition(context, event) : Met à jour position drone
+ * 
+ * 🔄 RÉTROCOMPATIBILITÉ (droneDeploymentActions):
  * - deployDrone(context, event) : Déploie drone vers zone cible
  * - recallDrone(context, event) : Rappelle drone au vaisseau
  * - dockDrone(context, event) : Finalise retour drone (ancré)
  * - updateDronePosition(context, event) : Met à jour position drone
  * 
  * 🔧 UTILITAIRES INTERNES:
- * - calculateFleetStatus(context) : Calcule statut flotte depuis états individuels
- * - selectTargetTileInRadius(context, range) : Sélectionne tuile cible
+ * - calculateDroneFleetStatus(context) : Calcule statut flotte depuis états individuels
+ * - selectTargetTileInRadiusForDrone(context, range) : Sélectionne tuile cible
  * - droneDeploymentStates : États déploiement (DRONE_DEPLOYMENT_STATES)
  * - droneTypes : Types drones (DRONE_TYPES)
  * - droneVisualStates : États visuels (DRONE_VISUAL_STATES)
@@ -35,7 +41,7 @@
  * - Selectors (droneDeploymentSelectors) - COMMENTÉS
  * 
  * @author FSM Migration
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import { DRONE_DEPLOYMENT_STATES, DRONE_TYPES, DRONE_VISUAL_STATES, DRONE_CONFIG } from '../../constants/constants.js';
@@ -66,20 +72,20 @@ export const droneVisualStates = DRONE_VISUAL_STATES;
 export const droneConfig = DRONE_CONFIG;
 
 // ============================================================================
-// ACTIONS PRINCIPALES - SEULES FONCTIONS PUBLIQUES
+// 🤖 DRONE FLEET ACTIONS - Actions avec suffixes pour la clarté
 // ============================================================================
 
 /**
- * Actions de déploiement de drones pures
+ * Actions de déploiement de drones avec nommage explicite
  */
-export const droneDeploymentActions = {
+export const droneFleetActions = {
   /**
-   * Déploie un drone vers une zone cible
+   * Déploie un drone vers une zone cible pour exploration
    * @param {Object} context - Contexte actuel
    * @param {Object} event - Événement avec paramètres de déploiement
    * @returns {Object} - Nouveau contexte avec drone déployé
    */
-  deployDrone: (context, event) => {
+  deployDroneForExploration: (context, event) => {
     try {
       // Validation simple interne
       const droneType = event.droneType || DRONE_TYPES.explorer;
@@ -90,12 +96,12 @@ export const droneDeploymentActions = {
         return {
           ...context,
           error: `Drone ${droneType} not found in fleet`,
-          lastAction: 'deployDrone_failed'
+          lastAction: 'deployDroneForExploration_failed'
         };
       }
 
       // Utiliser le tileStore pour obtenir une position réelle dans un rayon de 3 tuiles
-      const targetPosition = selectTargetTileInRadius(context, range);
+      const targetPosition = selectTargetTileInRadiusForDrone(context, range);
 
       const updatedDrone = {
         ...context.droneFleet.drones[droneType],
@@ -122,13 +128,13 @@ export const droneDeploymentActions = {
             [droneType]: updatedDrone
           }
         },
-        lastAction: 'deployDrone_success'
+        lastAction: 'deployDroneForExploration_success'
       };
     } catch (error) {
       return {
         ...context,
         error: error.message,
-        lastAction: 'deployDrone_failed'
+        lastAction: 'deployDroneForExploration_failed'
       };
     }
   },
@@ -139,14 +145,14 @@ export const droneDeploymentActions = {
    * @param {Object} event - Événement avec type de drone (optionnel)
    * @returns {Object} - Nouveau contexte avec drone en retour
    */
-  recallDrone: (context, event = {}) => {
+  recallDroneToShip: (context, event = {}) => {
     const droneType = event.droneType || DRONE_TYPES.explorer;
     
     if (!context.droneFleet?.drones[droneType]?.isActive) {
       return {
         ...context,
         error: `Drone ${droneType} is not active`,
-        lastAction: 'recallDrone_failed'
+        lastAction: 'recallDroneToShip_failed'
       };
     }
 
@@ -164,24 +170,24 @@ export const droneDeploymentActions = {
           }
         }
       },
-      lastAction: 'recallDrone_success'
+      lastAction: 'recallDroneToShip_success'
     };
   },
 
   /**
-   * Finalise le retour du drone (drone ancré)
+   * Finalise le retour du drone (drone ancré au ship)
    * @param {Object} context - Contexte actuel
    * @param {Object} event - Événement avec données du retour
    * @returns {Object} - Nouveau contexte avec drone ancré
    */
-  dockDrone: (context, event = {}) => {
+  dockDroneToShip: (context, event = {}) => {
     const droneType = event.droneType || DRONE_TYPES.explorer;
     
     if (!context.droneFleet?.drones[droneType]) {
       return {
         ...context,
         error: `Drone ${droneType} not found`,
-        lastAction: 'dockDrone_failed'
+        lastAction: 'dockDroneToShip_failed'
       };
     }
 
@@ -204,17 +210,17 @@ export const droneDeploymentActions = {
           }
         }
       },
-      lastAction: 'dockDrone_success'
+      lastAction: 'dockDroneToShip_success'
     };
   },
 
   /**
-   * Met à jour la position du drone
+   * Met à jour la position du drone dans la flotte
    * @param {Object} context - Contexte actuel
    * @param {Object} event - Événement avec nouvelle position
    * @returns {Object} - Nouveau contexte avec position mise à jour
    */
-  updateDronePosition: (context, event) => {
+  updateDroneFleetPosition: (context, event) => {
     const { droneType = DRONE_TYPES.explorer, position, state } = event;
     
     if (!context.droneFleet?.drones[droneType]) {
@@ -235,9 +241,43 @@ export const droneDeploymentActions = {
           }
         }
       },
-      lastAction: 'updateDronePosition_success'
+      lastAction: 'updateDroneFleetPosition_success'
     };
   }
+};
+
+// ============================================================================
+// 🔄 RÉTROCOMPATIBILITÉ - Actions héritées (utilise droneFleetActions)
+// ============================================================================
+
+/**
+ * Actions de déploiement de drones pures
+ * @deprecated Utilisez droneFleetActions avec des noms plus explicites
+ */
+export const droneDeploymentActions = {
+  /**
+   * Déploie un drone vers une zone cible
+   * @deprecated Utilisez droneFleetActions.deployDroneForExploration
+   */
+  deployDrone: (context, event) => droneFleetActions.deployDroneForExploration(context, event),
+
+  /**
+   * Rappelle le drone au vaisseau
+   * @deprecated Utilisez droneFleetActions.recallDroneToShip
+   */
+  recallDrone: (context, event = {}) => droneFleetActions.recallDroneToShip(context, event),
+
+  /**
+   * Finalise le retour du drone (drone ancré)
+   * @deprecated Utilisez droneFleetActions.dockDroneToShip
+   */
+  dockDrone: (context, event = {}) => droneFleetActions.dockDroneToShip(context, event),
+
+  /**
+   * Met à jour la position du drone
+   * @deprecated Utilisez droneFleetActions.updateDroneFleetPosition
+   */
+  updateDronePosition: (context, event) => droneFleetActions.updateDroneFleetPosition(context, event)
 };
 
 // ============================================================================
@@ -249,7 +289,7 @@ export const droneDeploymentActions = {
  * @param {Object} context - Contexte actuel
  * @returns {string} - Status calculé ('docked', 'active', 'returning')
  */
-export const calculateFleetStatus = (context) => {
+export const calculateDroneFleetStatus = (context) => {
   const explorer = context.droneFleet?.drones?.explorer;
   
   if (!explorer || !explorer.isActive) {
@@ -268,15 +308,15 @@ export const calculateFleetStatus = (context) => {
 };
 
 /**
- * Sélectionne une tuile cible dans un rayon donné autour du véhicule
+ * Sélectionne une tuile cible dans un rayon donné autour du véhicule (pour drones)
  */
-const selectTargetTileInRadius = (context, range = 3) => {
+const selectTargetTileInRadiusForDrone = (context, range = 3) => {
   try {
     const tileStore = useTileStore.getState();
     const vehicle = context.vehicle || context.botVehicle;
     
     if (!vehicle || !vehicle.coord) {
-      console.warn('[selectTargetTileInRadius] Vehicle or vehicle.coord not found in context');
+      console.warn('[selectTargetTileInRadiusForDrone] Vehicle or vehicle.coord not found in context');
       return { x: 0, y: 0.5, z: 0 };
     }
 
@@ -294,7 +334,7 @@ const selectTargetTileInRadius = (context, range = 3) => {
     );
     
     if (validTargets.length === 0) {
-      console.warn('[selectTargetTileInRadius] No valid tiles found, falling back to random tile');
+      console.warn('[selectTargetTileInRadiusForDrone] No valid tiles found, falling back to random tile');
       
       const randomTile = tileStore.selectRandomWalkableTile();
       if (randomTile && randomTile.position) {
@@ -323,7 +363,7 @@ const selectTargetTileInRadius = (context, range = 3) => {
     };
     
   } catch (error) {
-    console.error('[selectTargetTileInRadius] Error selecting target tile:', error);
+    console.error('[selectTargetTileInRadiusForDrone] Error selecting target tile:', error);
     
     const vehicle = context.vehicle || context.botVehicle;
     if (vehicle && vehicle.position) {
@@ -339,6 +379,15 @@ const selectTargetTileInRadius = (context, range = 3) => {
     return { x: 0, y: 0.5, z: 0 };
   }
 };
+
+// ============================================================================
+// 🔄 RÉTROCOMPATIBILITÉ - Utilitaires héritées
+// ============================================================================
+
+/**
+ * @deprecated Utilisez calculateDroneFleetStatus
+ */
+export const calculateFleetStatus = (context) => calculateDroneFleetStatus(context);
 
 // ============================================================================
 // ❌ FONCTIONNALITÉS COMMENTÉES POUR ÉVITER CONFUSION/CONFLITS
@@ -444,16 +493,21 @@ export const droneDeploymentEvents = {
 // ============================================================================
 
 export default {
-  actions: droneDeploymentActions,
-  // selectors: droneDeploymentSelectors, // ❌ COMMENTÉ
-  // events: droneDeploymentEvents, // ❌ COMMENTÉ
+  // Actions principales
+  actions: droneDeploymentActions, // Rétrocompatibilité
+  fleetActions: droneFleetActions, // Nouvelles actions avec suffixes
+  
+  // Constants
   constants: {
     droneDeploymentStates: DRONE_DEPLOYMENT_STATES,
     droneTypes: DRONE_TYPES,
     droneConfig: DRONE_CONFIG
   },
+  
+  // Utilitaires
   utils: {
-    calculateFleetStatus
+    calculateDroneFleetStatus,
+    calculateFleetStatus // Rétrocompatibilité
   }
 };
 

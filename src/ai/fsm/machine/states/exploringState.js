@@ -16,7 +16,8 @@
  * 🏠 RETOUR À LA BASE (EXPLORING_RETURNING):
  * - MOVEMENT_STARTED → EXPLORING_RETURNING (mouvement vers base)
  * - MOVEMENT_PROGRESS → EXPLORING_RETURNING (progression mouvement)
- * - DRONE_RETURNED → EVALUATING (drone revenu au vaisseau)
+ * - DRONE_APPROACHING_SHIP → EVALUATING (drone s'approche du vaisseau)
+ * - DRONE_REACHED_SHIP → EVALUATING (drone arrivé au vaisseau)
  * 
  * 🚨 GESTION URGENCES:
  * - EMERGENCY_RESOLVED → EVALUATING
@@ -41,7 +42,7 @@ import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
 import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
 import { safetyGuards, baseGuards } from '../guards/indexGuard.js';
-import { explorationActions } from '../actions/core/explorationActions.js';
+import { droneExploringActions } from '../actions/core/droneExploringActions.js'; // NOUVEAU - Remplace explorationActions
 import { discoveryGuards } from '../guards/indexGuard.js';
 import fsmLogger from '../../../../logger/fsmLogger.js';
 
@@ -61,7 +62,7 @@ export const exploringState = state(
       });
       
       // Marquer la tuile comme explorée
-      const markedContext = explorationActions.markTileExplored(context, event);
+      const markedContext = droneExploringActions.droneMarkTileExplored(context, event);
       
       // Mettre à jour l'état du drone pour la prospection
       return {
@@ -220,26 +221,25 @@ export const exploringState = state(
     }))
   ),
 
-  // DRONE RETURNED - Drone de retour au vaisseau depuis EXPLORING_RETURNING
-  transition(MOVEMENT_EVENT_TYPES.DRONE_RETURNED, BOT_STATES.EVALUATING,
+  // DRONE_REACHED_SHIP ou DRONE_APPROACHING_SHIP - Drone de retour au vaisseau depuis EXPLORING_RETURNING
+  transition(MOVEMENT_EVENT_TYPES.DRONE_REACHED_SHIP, BOT_STATES.EVALUATING,
     guard((context, event) => {
-      // Le drone doit être docked, inactif ou approche du vaisseau
+      // Vérifier si le drone est inactif ou en état "docked"
       const drone = context.droneFleet?.drones?.explorer;
-      const isApproachingOrDocked = !drone?.isActive || drone?.state === 'docked' || (event.isApproaching === true && drone?.state === 'returning');
+      const isDockable = !drone?.isActive || drone?.state === 'docked';
       
-      fsmLogger.info("🏠 [Exploring] DRONE_RETURNED guard check", { 
+      fsmLogger.info("🏠 [Exploring] DRONE_REACHED_SHIP guard check", { 
         botId: context.botId,
         currentState: context.currentState,
         droneState: drone?.state,
         isActive: drone?.isActive,
-        isApproaching: event.isApproaching,
-        shouldTransition: isApproachingOrDocked
+        shouldTransition: isDockable
       });
       
-      return isApproachingOrDocked;
+      return isDockable;
     }),
     reduce((context, event) => {
-      fsmLogger.info("🏠 [Exploring] Drone returned to ship, mission completed", { 
+      fsmLogger.info("🏠 [Exploring] Drone reached ship, docking complete", { 
         botId: context.botId,
         droneType: event.droneType || 'explorer'
       });
@@ -251,7 +251,82 @@ export const exploringState = state(
       
       // Préparer l'évaluation suivante
       return contextReducers.state.prepareEvaluating(dockedContext, {
-        reason: 'drone_returned_successfully'
+        reason: 'drone_reached_ship_successfully'
+      });
+    })
+  ),
+  
+  // DRONE_APPROACHING_SHIP - Drone qui s'approche du vaisseau pendant le retour
+  transition(MOVEMENT_EVENT_TYPES.DRONE_APPROACHING_SHIP, BOT_STATES.EVALUATING,
+    guard((context, event) => {
+      // Vérifier si le drone est actif et en état "returning"
+      const drone = context.droneFleet?.drones?.explorer;
+      const isApproaching = drone?.isActive && drone?.state === 'returning';
+      
+      fsmLogger.info("🏠 [Exploring] DRONE_APPROACHING_SHIP guard check", { 
+        botId: context.botId,
+        currentState: context.currentState,
+        droneState: drone?.state,
+        isActive: drone?.isActive,
+        distance: event.distance,
+        shouldTransition: isApproaching
+      });
+      
+      return isApproaching;
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("🏠 [Exploring] Drone approaching ship, preparing evaluation", { 
+        botId: context.botId,
+        droneType: event.droneType || 'explorer',
+        distance: event.distance
+      });
+      
+      // Préparer l'évaluation anticipée
+      return contextReducers.state.prepareEvaluating(context, {
+        reason: 'drone_approaching_ship'
+      });
+    })
+  ),
+  
+  // Maintenir la compatibilité avec l'ancien nom d'événement DRONE_RETURNED
+  transition(MOVEMENT_EVENT_TYPES.DRONE_RETURNED, BOT_STATES.EVALUATING,
+    guard((context, event) => {
+      // Vérifier la compatibilité avec l'ancien format
+      const drone = context.droneFleet?.drones?.explorer;
+      const isReturnable = !drone?.isActive || drone?.state === 'docked' || (event.isApproaching === true && drone?.state === 'returning');
+      
+      fsmLogger.info("🏠 [Exploring] DRONE_RETURNED (legacy) guard check", { 
+        botId: context.botId,
+        currentState: context.currentState,
+        droneState: drone?.state,
+        isActive: drone?.isActive,
+        isApproaching: event.isApproaching,
+        shouldTransition: isReturnable
+      });
+      
+      return isReturnable;
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("🏠 [Exploring] Drone returned to ship (legacy event), handling completion", { 
+        botId: context.botId,
+        droneType: event.droneType || 'explorer'
+      });
+      
+      // Si c'est une approche, traiter comme DRONE_APPROACHING_SHIP
+      if (event.isApproaching === true) {
+        return contextReducers.state.prepareEvaluating(context, {
+          reason: 'drone_approaching_ship_legacy'
+        });
+      }
+      
+      // Sinon, traiter comme un DRONE_REACHED_SHIP
+      const dockedContext = contextReducers.droneDeployment.dockDrone(context, {
+        droneType: event.droneType || 'explorer'
+      });
+      
+      // Préparer l'évaluation suivante
+      return contextReducers.state.prepareEvaluating(dockedContext, {
+        reason: 'drone_returned_successfully_legacy'
       });
     })
   ),
