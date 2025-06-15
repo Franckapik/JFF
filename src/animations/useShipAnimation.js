@@ -22,13 +22,15 @@ import fsmLogger from '../logger/fsmLogger';
 export const useShipAnimation = (context, shipWorldPosition, updateVisualPosition) => {
   const shipRef = useRef();
   const lastUpdateTime = useRef(0);
+  const initialPositionSent = useRef(false); // 🆕 Flag pour éviter duplications
 
-  // 🆕 TRANSMISSION DE LA POSITION INITIALE
+  // 🆕 TRANSMISSION DE LA POSITION INITIALE (UNE SEULE FOIS)
   // Envoie la position de départ au tracker FSM dès que la position mondiale est disponible
   useEffect(() => {
-    if (shipWorldPosition && updateVisualPosition) {
+    if (shipWorldPosition && updateVisualPosition && !initialPositionSent.current) {
       fsmLogger.mouvement(`🏠 [Ship] Transmitting initial position to FSM tracker:`, shipWorldPosition);
       updateVisualPosition(shipWorldPosition);
+      initialPositionSent.current = true; // ✅ Marquer comme envoyé
     }
   }, [shipWorldPosition, updateVisualPosition]);
 
@@ -108,6 +110,13 @@ export const useShipAnimation = (context, shipWorldPosition, updateVisualPositio
         break;
     }
   });
+
+  // 🧹 CLEANUP - Reset du flag lors du démontage
+  useEffect(() => {
+    return () => {
+      initialPositionSent.current = false;
+    };
+  }, []);
 
   return {
     shipRef,

@@ -23,6 +23,7 @@ import fsmLogger from '../logger/fsmLogger';
 export const useDroneAnimation = (context, shipPosition, updateVisualPosition, droneType = 'explorer') => {
   const droneRef = useRef();
   const lastUpdateTime = useRef(0);
+  const initialPositionSent = useRef(false); // 🆕 Flag pour éviter duplications
 
   // Position initiale du drone (coordonnées locales au vaisseau)
   const initialPosition = {
@@ -31,10 +32,10 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
     special: { x: 0, y: 0.3, z: -0.7 }
   }[droneType] || { x: 0.5, y: 0.3, z: 0.5 };
 
-  // 🆕 TRANSMISSION DE LA POSITION INITIALE DU DRONE
+  // 🆕 TRANSMISSION DE LA POSITION INITIALE DU DRONE (UNE SEULE FOIS)
   // Calcule et envoie la position mondiale initiale du drone au tracker FSM
   useEffect(() => {
-    if (shipPosition && updateVisualPosition) {
+    if (shipPosition && updateVisualPosition && !initialPositionSent.current) {
       const droneWorldPosition = {
         x: shipPosition.x + initialPosition.x,
         y: shipPosition.y + initialPosition.y, 
@@ -43,8 +44,9 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
       
       fsmLogger.mouvement(`🛸 [${droneType}] Transmitting initial drone position to FSM tracker:`, droneWorldPosition);
       updateVisualPosition(droneWorldPosition);
+      initialPositionSent.current = true; // ✅ Marquer comme envoyé
     }
-  }, [shipPosition, updateVisualPosition, droneType, initialPosition.x, initialPosition.y, initialPosition.z]);
+  }, [shipPosition, updateVisualPosition, droneType]);
 
   useFrame((state, delta) => {
     if (!droneRef.current) return;
@@ -132,6 +134,13 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
         break;
     }
   });
+
+  // 🧹 CLEANUP - Reset du flag lors du démontage
+  useEffect(() => {
+    return () => {
+      initialPositionSent.current = false;
+    };
+  }, []);
 
   return {
     droneRef,
