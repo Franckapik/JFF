@@ -264,6 +264,11 @@ export const shipCollectingActions = {
     // Mettre à jour la position 3D
     if (event.position) {
       updatedVehicle.position = event.position;
+      
+      // 🏠 INITIALISER basePosition SI C'EST LA PREMIÈRE FOIS
+      if (!updatedVehicle.basePosition) {
+        updatedVehicle.basePosition = { ...event.position };
+      }
     }
 
     let updatedContext = {

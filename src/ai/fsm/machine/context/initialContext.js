@@ -51,6 +51,7 @@ export const createEntityContext = (entityId, entityType = ENTITY_TYPES.auto) =>
       
       // Position et mouvement
       position: null,                            // Ex: Vector3(5.2, 0, 3.8) ou null
+      basePosition: null,                        // Ex: Vector3(1.8, 0.5, 0) - position fixe de base
       coord: null,                               // Ex: {x: 5, z: 3} ou null
       isMoving: false,                           // Ex: true, false
       progress: 0,                               // Ex: 0.0 à 1.0 (progression du mouvement)

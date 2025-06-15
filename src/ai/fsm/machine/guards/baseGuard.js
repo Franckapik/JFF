@@ -29,15 +29,37 @@ export const baseGuards = {
   isAtBase: (context, event) => {
     // Check if current position matches base position
     const { vehicle } = context;
-    const basePosition = vehicle?.basePosition || { x: 0, y: 0 };
-    const currentPosition = vehicle?.position || { x: 0, y: 0 };
+    const basePosition = vehicle?.basePosition;
+    const currentPosition = vehicle?.position;
 
-    fsmLogger.error(`Checking if at base:
-      Base Position: ${JSON.stringify(basePosition)},
-      Current Position: ${JSON.stringify(currentPosition)}`);
+    if (!basePosition || !currentPosition) {
+      fsmLogger.error(`❌ [isAtBase] Missing positions:`, {
+        hasBasePosition: !!basePosition,
+        hasCurrentPosition: !!currentPosition,
+        basePosition,
+        currentPosition
+      });
+      return false;
+    }
+
+    // 🎯 CALCUL DE DISTANCE avec tolérance
+    const distance = Math.sqrt(
+      Math.pow(currentPosition.x - basePosition.x, 2) + 
+      Math.pow(currentPosition.z - basePosition.z, 2)
+    );
     
-    return currentPosition.x === basePosition.x && 
-           currentPosition.y === basePosition.y;
+    const tolerance = 1.0; // Tolérance d'1 unité pour considérer "à la base"
+    const isAtBase = distance <= tolerance;
+
+    fsmLogger.info(`🏠 [isAtBase] Check:`, {
+      basePosition,
+      currentPosition,
+      distance: distance.toFixed(2),
+      tolerance,
+      result: isAtBase
+    });
+    
+    return isAtBase;
   },
 
   // Check if vehicle needs to return to base
