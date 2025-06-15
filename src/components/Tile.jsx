@@ -50,9 +50,12 @@ const Tile = React.memo(({
   // Sélecteurs pour les états de la tuile depuis le store
   const updateHoveredTile = useTileStore((state) => state.updateHoveredTile);
   
-  
   const resourcePercentage = useTileStore((state) => 
     state.tiles[coord] ? state.tiles[coord].resourcePercentage : 0
+  );
+  
+  const isExplored = useTileStore((state) => 
+    state.tiles[coord] ? state.tiles[coord].explored === true : false
   );
   
   /**
@@ -121,6 +124,21 @@ const Tile = React.memo(({
             {resourcePercentage}%
           </div>
         </Html>
+      )}
+
+      {/* Helper visuel pour les tuiles explorées */}
+      {isExplored && !isDepart && (
+        <mesh
+          position={[position[0], 0.2, position[2]]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <circleGeometry args={[0.6, 16]} />
+          <meshBasicMaterial 
+            color="#00ff88" 
+            transparent 
+            opacity={0.4}
+          />
+        </mesh>
       )}
 
       {/* Tuile de départ (base joueur) */}

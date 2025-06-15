@@ -385,7 +385,7 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                             fontWeight: 'bold',
                             fontSize: '9px'
                           }}>
-                            {String(event.eventName || 'unknown')}
+                            {typeof event.eventName === 'object' ? (event.eventName.type || 'UNKNOWN_EVENT') : String(event.eventName || 'unknown')}
                           </span>
                         </div>
                         <span style={{ color: '#888', fontSize: '7px' }}>

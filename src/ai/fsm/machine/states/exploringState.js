@@ -224,19 +224,19 @@ export const exploringState = state(
   // DRONE_REACHED_SHIP ou DRONE_APPROACHING_SHIP - Drone de retour au vaisseau depuis EXPLORING_RETURNING
   transition(MOVEMENT_EVENT_TYPES.DRONE_REACHED_SHIP, BOT_STATES.EVALUATING,
     guard((context, event) => {
-      // Vérifier si le drone est inactif ou en état "docked"
+      // Vérifier si le drone est actif et en état "returning" - c'est lui qui doit être docké
       const drone = context.droneFleet?.drones?.explorer;
-      const isDockable = !drone?.isActive || drone?.state === 'docked';
+      const shouldDock = drone?.isActive && drone?.state === 'returning';
       
       fsmLogger.info("🏠 [Exploring] DRONE_REACHED_SHIP guard check", { 
         botId: context.botId,
         currentState: context.currentState,
         droneState: drone?.state,
         isActive: drone?.isActive,
-        shouldTransition: isDockable
+        shouldTransition: shouldDock
       });
       
-      return isDockable;
+      return shouldDock;
     }),
     reduce((context, event) => {
       fsmLogger.info("🏠 [Exploring] Drone reached ship, docking complete", { 

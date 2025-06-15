@@ -39,7 +39,9 @@ export const useCentralizedEventHistorySync = (botId) => {
         context: current?.context ? JSON.stringify(current.context, null, 2) : 'N/A'
       };
 
-      fsmLogger.history(`Received sync event: ${eventName} for bot ${botId}`);
+      // Affichage sécurisé : eventName peut être un objet ou une chaîne
+      const eventDisplayName = typeof eventName === 'object' ? eventName.type || 'UNKNOWN_EVENT' : eventName;
+      fsmLogger.history(`Received sync event: ${eventDisplayName} for bot ${botId}`);
       addEventToHistory(botId, eventToAdd);
     });
     
@@ -56,7 +58,9 @@ export const useCentralizedEventHistorySync = (botId) => {
       context: current?.context ? JSON.stringify(current.context, null, 2) : 'N/A'
     };
 
-    fsmLogger.history(`Capturing sent event: ${eventName} for bot ${botId}`);
+    // Affichage sécurisé : eventName peut être un objet ou une chaîne
+    const eventDisplayName = typeof eventName === 'object' ? eventName.type || 'UNKNOWN_EVENT' : eventName;
+    fsmLogger.history(`Capturing sent event: ${eventDisplayName} for bot ${botId}`);
     addEventToHistory(botId, eventToAdd);
     
     // Appeler la fonction send originale (qui va synchroniser automatiquement)

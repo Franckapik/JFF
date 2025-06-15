@@ -529,14 +529,14 @@ export const droneDeploymentReducers = {
    * Finalise le retour du drone (ancrage)
    */
   dockDrone: (context, event) => {
-    return droneDeploymentActions.dockDrone(context, event);
+    return droneExploringActions.droneDockToShip(context, event);
   },
 
   /**
    * Met à jour la position du drone en temps réel
    */
   updateDronePosition: (context, event) => {
-    return droneDeploymentActions.updateDronePosition(context, event);
+    return droneExploringActions.droneUpdatePosition(context, event);
   }
 };
 
