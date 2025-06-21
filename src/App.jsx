@@ -4,12 +4,12 @@ import Scene from "./components/Scene";
 import "./styles/App.css";
 // import VehicleSelector from "./components/HUD/VehicleSelector"; // Commenté car non utile pour l'instant
 import Clock from "./components/HUD/Clock";
+import TileStoreMonitor from "./components/HUD/TileStoreMonitor";
 
 
 // ============= COMPOSANTS FSM =============
 import MultiBotManagerFSM from "./components/FSM/MultiBotManagerFSM";
 import FSMDebugPanel from "./components/FSM/FSMDebugPanel";
-import BotDebuggerNew from "./components/HUD/BotDebugger";
 import useFSMStore from "./stores/useFSMStore/index.js";
 import { FSMProvider } from "./ai/fsm/contexts/FSMContext.jsx";
 import { FSMSyncProvider } from "./ai/fsm/contexts/FSMSyncContext.jsx";
@@ -66,11 +66,6 @@ const App = () => {
             </div>
             */}
 
-                      {/* Bot Debugger - positionné à gauche de l'écran */}
-      {/*       <BotDebuggerNew /> */}
-
-
-
             {/* Main content area */}
             <div className="main-content">
               <div className="canvas-container">
@@ -97,6 +92,11 @@ const App = () => {
           minimizable={true}
         />
         
+        {/* Tile Store Monitor - réactivé pour diagnostic complémentaire */}
+        <TileStoreMonitor 
+          position="top-left"
+          isVisible={true}
+        />
 
       </div>
     </FSMSyncProvider>

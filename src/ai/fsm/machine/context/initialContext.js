@@ -113,14 +113,18 @@ export const createEntityContext = (entityId, entityType = ENTITY_TYPES.auto) =>
     },
     
     // ========================================================================
-    // MÉMOIRE DE L'ENTITÉ (structure PlayerStore)
+    // MÉMOIRE DE L'ENTITÉ (structure unifiée simplifiée)
     // ========================================================================
     memory: {
-      knownResources: [],                        // Ex: [{x:5,z:3,type:'food'}, {x:8,z:2,type:'debris'}]
+      knownTiles: new Map(),                     // Structure unifiée : coord -> TileData {coord, explored, collected, exploredAt, hasResources, resources, collectedAt, collectedBy}
       knownDangers: [],                          // Ex: [{x:4,z:6,type:'enemy'}, {x:9,z:1,type:'trap'}]
-      explorationCount: 0,                       // Ex: 0, 23, 156 (nombre d'explorations)
-      collectedResources: [],                    // Ex: [{type:'food',coord:{x:5,z:3},time:1703425234567}]
-      // Utiliser BOT_STATES
+      stats: {
+        tilesExplored: 0,                        // Nombre de tuiles explorées par drone
+        tilesCollected: 0,                       // Nombre de tuiles collectées par vaisseau
+        totalResourcesFound: 0,                  // Nombre total de ressources découvertes
+        lastExploration: null,                   // Dernière exploration : {coord, timestamp, hasResources}
+        lastCollection: null                     // Dernière collecte : {coord, timestamp, shipId}
+      },
       stateHistory: [BOT_STATES.EVALUATING],     // Ex: ['evaluating', 'exploring', 'collecting']
       transitionHistory: []                      // Ex: [{from:'evaluating',to:'exploring',timestamp:1703425234567}]
     },

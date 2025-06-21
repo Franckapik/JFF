@@ -5,12 +5,14 @@
  * 
  * Ce slice gère le marquage et le suivi de l'état d'exploration des tuiles :
  * - Marquage des tuiles comme explorées
+ * - Marquage des tuiles comme collectées
  * - Suivi du statut d'exploration pour la logique de jeu
  * - Gestion des états de visite et de découverte
  * - Support pour la logique d'exploration des bots et joueurs
  * 
  * États de marquage gérés :
  * - explored : indique si une tuile a été visitée/explorée
+ * - collected : indique si les ressources de la tuile ont été collectées
  * - Extensible pour d'autres types de marquage (visited, scanned, etc.)
  * 
  * Utilisé par :
@@ -46,6 +48,13 @@ const createTileMarkSlice = (set, get) => {
      * @param {string} coord - Coordonnée de la tuile à marquer comme explorée (format "x,y")
      */
     markTileAsExplored: (coord) => {
+      const currentTile = get().tiles[coord];
+      
+      if (!currentTile) {
+        console.warn('❌ [TileMarkSlice] Tile not found for coord:', coord);
+        return;
+      }
+      
       set((state) => ({
         tiles: {
           ...state.tiles,
@@ -86,43 +95,6 @@ const createTileMarkSlice = (set, get) => {
         };
         return { tiles: updatedTiles };
       });
-      
-      return true;
-    },
-
-    /**
-     * Marque une tuile comme prospectée avec détection des ressources
-     * 
-     * Cette fonction :
-     * 1. Vérifie que la tuile existe dans l'état global
-     * 2. Met à jour la propriété 'prospected' à true
-     * 3. Stocke les ressources détectées lors de la prospection
-     * 4. Met à jour le timestamp de la prospection
-     * 
-     * Utilisé principalement par :
-     * - La phase de prospection détaillée des drones
-     * - L'analyse des ressources avant collecte
-     * - Le système d'intelligence artificielle d'exploration
-     * 
-     * @param {string} coord - Coordonnée de la tuile à marquer comme prospectée (format "x,y")
-     * @param {object} resourcesFound - Ressources détectées lors de la prospection
-     * @returns {boolean} - true si la tuile a été marquée, false en cas d'erreur
-     */
-    markTileAsProspected: (coord, resourcesFound = {}) => {
-      const tile = get().tiles[coord];
-      if (!tile) return false;
-      
-      set((state) => ({
-        tiles: {
-          ...state.tiles,
-          [coord]: {
-            ...state.tiles[coord],
-            prospected: true,
-            prospectionResults: resourcesFound,
-            prospectionTimestamp: Date.now(),
-          },
-        },
-      }));
       
       return true;
     },

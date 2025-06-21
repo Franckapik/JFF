@@ -60,7 +60,7 @@ const Fleet = React.memo(({
   const { current, send: fsmSend, context, vehicle, state } = useBotMachine(botId, 'bot');
 
   // 🎯 TRACKERS SPÉCIALISÉS : Surveillance distance → événements FSM
-  // - useFSMDroneTracker : Gère deploying, exploring, prospecting, returning
+  // - useFSMDroneTracker : Gère deploying, exploring, returning
   // - useFSMShipTracker : Gère movement, collecting, refueling
   const updateDroneVisualPosition = useFSMDroneTracker(context, fsmSend, botId, 'explorer');
   const updateShipVisualPosition = useFSMShipTracker(context, fsmSend, botId);

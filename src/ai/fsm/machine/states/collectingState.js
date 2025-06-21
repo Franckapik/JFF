@@ -1,200 +1,142 @@
 /**
  * ============================================================================
- * État COLLECTING - Collecte de ressources
+ * État COLLECTING - Collecte de ressources (SIMPLIFIÉ)
  * ============================================================================
  * 
- * État de collecte pour récolter les ressources connues.
- * Gère l'inventaire et la capacité de stockage.
+ * État de collecte simplifié utilisant l'action unifiée.
+ * Utilise `shipCollectsFromTile` pour collecter depuis la mémoire unifiée.
  * 
- * 📋 TRANSITIONS DISPONIBLES DANS CET ÉTAT:
- * ==========================================
+ * 📋 TRANSITIONS PRINCIPALES:
+ * ===========================
  * 
- * 📦 ÉVÉNEMENTS DE PROGRESSION:
- * - RESOURCE_COLLECTED → EVALUATING (ressource collectée avec succès)
+ * 📦 COLLECTE UNIFIÉE:
+ * - TILE_COLLECTED → EVALUATING (ressource collectée avec succès)
  * - INVENTORY_FULL → RETURNING (inventaire plein)
  * - RESOURCE_UNAVAILABLE → EVALUATING (ressource épuisée/inaccessible)
  * 
- * ⏰ TIMEOUTS ET ÉCHECS:
- * - COLLECTION_TIMEOUT → EVALUATING (10s)
- * - HARVEST_FAILED → EVALUATING (échec de récolte)
- * 
- * 🔍 VÉRIFICATIONS PÉRIODIQUES:
- * - CAPACITY_CHECK → RETURNING (si 90% plein)
- * 
- * 🚨 TRANSITIONS D'URGENCE:
+ *  TRANSITIONS D'URGENCE:
  * - LOW_FUEL_DETECTED → RETURNING (carburant faible)
- * - MANUAL_OVERRIDE → EVALUATING (contrôle manuel)
  * - EMERGENCY_DETECTED → RETURNING (urgence générale)
  * 
- * @author FSM Migration
- * @version 1.0.0
+ * @author Migration FSM - Simplification Mémoire
+ * @version 4.0.0
  */
 
 import { state, transition, reduce, guard } from 'robot3';
 import { BOT_STATES } from '../constants/constants.js';
-import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/indexGuard.js';
 import { contextReducers } from '../reducers/context.js';
-import { RESOURCE_EVENT_TYPES } from '../events/resourceEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
-import { USER_EVENT_TYPES } from '../events/userEvents.js';
-import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
+import { shipCollectsFromTile } from '../actions/core/shipCollectingActions.js'; // ACTION UNIFIÉE
+import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**
- * État COLLECTING - Collecte de ressources connues
+ * État COLLECTING - Collecte simplifiée avec mémoire unifiée
  */
 export const collectingState = state(
-  // === ÉVÉNEMENTS DE PROGRESSION ===
+  // === COLLECTE UNIFIÉE ===
   
-  // Ressource collectée avec succès
-  transition(RESOURCE_EVENT_TYPES.RESOURCE_COLLECTED,
-    BOT_STATES.EVALUATING,
-    guard((context, event) => efficiencyGuards.shouldCollectMore(context, event)),
-    reduce((context, event) => {
-      // Ajouter la ressource à l'inventaire
-      let updatedContext = contextReducers.resource.addResource(context, {
-        resource: event.resource,
-        amount: event.amount || 1
-      });
-      
-      // Mettre à jour le contexte avec les informations supplémentaires
-      updatedContext = {
-        ...updatedContext,
-        lastCollectedResource: event.resource,
-        collectionTime: Date.now(),
-        hasNewResourceDiscovery: false // Reset le flag
-      };
-      
-      // Préparer l'évaluation pour décider de la prochaine action
-      return contextReducers.state.prepareEvaluating(updatedContext, {
-        reason: 'resource_collected'
-      });
-    })
-  ),
-
-  // Inventaire plein pendant la collecte
-  transition(RESOURCE_EVENT_TYPES.INVENTORY_FULL,
-    BOT_STATES.RETURNING,
-    guard((context, event) => efficiencyGuards.isAtMaxCapacity(context, event)),
-    reduce((context, event) => {
-      // Marquer l'inventaire comme plein
-      const updatedContext = {
-        ...context,
-        inventoryStatus: 'full'
-      };
-      
-      // Préparer le retour à la base
-      return contextReducers.state.prepareReturning(updatedContext, {
-        reason: 'returning_full_inventory'
-      });
-    })
-  ),
-
-  // Ressource épuisée ou non accessible
-  transition(RESOURCE_EVENT_TYPES.RESOURCE_UNAVAILABLE,
-    BOT_STATES.EVALUATING,
+  // TILE_COLLECTED - Ship a collecté les ressources d'une tuile explorée
+  transition('TILE_COLLECTED', BOT_STATES.EVALUATING,
     guard(() => true),
-    reduce((context, event) => ({
-      ...context,
-      // Retirer la ressource de la liste des ressources connues
-      knownResources: (context.knownResources || []).filter(
-        r => r.id !== event.resourceId
-      ),
-      unavailableResources: [
-        ...(context.unavailableResources || []),
-        {
-          resourceId: event.resourceId,
-          reason: event.reason,
-          timestamp: Date.now()
-        }
-      ],
-      currentAction: 'resource_unavailable',
-      lastStateChange: Date.now()
-    }))
+    reduce((context, event) => {
+      fsmLogger.info("📦 [Collecting] Collecting from tile using unified memory", { 
+        coord: event.coord,
+        botId: context.entityId 
+      });
+      
+      // Utiliser l'action unifiée pour collecter depuis la mémoire
+      const collectedContext = shipCollectsFromTile(context, {
+        coord: event.coord,
+        resourceType: event.resourceType
+      });
+      
+      // Vérifier si la collecte a réussi
+      if (collectedContext.error) {
+        fsmLogger.warn("⚠️ [Collecting] Collection failed", { 
+          error: collectedContext.error,
+          coord: event.coord,
+          botId: context.entityId 
+        });
+        
+        return contextReducers.state.prepareEvaluating(collectedContext, {
+          reason: 'collection_failed'
+        });
+      }
+      
+      // Préparer l'évaluation suivante après collecte réussie
+      return contextReducers.state.prepareEvaluating(collectedContext, {
+        reason: 'tile_collected_successfully'
+      });
+    })
   ),
 
-  // === TIMEOUTS ET ÉCHECS ===
-  
-  // Timeout de collecte (10s)
-  transition(SYSTEM_EVENT_TYPES.COLLECTION_TIMEOUT,
-    BOT_STATES.EVALUATING,
-    () => true,
-    reduce((context) => ({
-      ...context,
-      collectionStatus: 'timeout',
-      currentAction: 'collection_timeout',
-      lastStateChange: Date.now()
-    }))
-  ),
-
-  // Échec de récolte
-  transition(RESOURCE_EVENT_TYPES.HARVEST_FAILED,
-    BOT_STATES.EVALUATING,
-    () => true,
-    reduce((context, event) => ({
-      ...context,
-      collectionStatus: 'failed',
-      errorReason: event.reason,
-      currentAction: 'collection_failed',
-      lastStateChange: Date.now()
-    }))
-  ),
-
-  // === VÉRIFICATIONS PÉRIODIQUES ===
-  
-  // Vérification de la capacité pendant la collecte
-  transition(RESOURCE_EVENT_TYPES.CAPACITY_CHECK,
-    BOT_STATES.RETURNING,
-    guard((context) => {
-      const capacity = context.vehicle?.inventory?.capacity || 0;
-      const maxCapacity = context.vehicle?.inventory?.maxCapacity || 100;
-      return capacity >= maxCapacity * 0.9; // 90% plein
+  // INVENTORY_FULL - Inventaire plein pendant la collecte
+  transition('INVENTORY_FULL', BOT_STATES.RETURNING,
+    guard((context, event) => {
+      const vehicle = context.vehicle;
+      if (!vehicle || !vehicle.resources) return false;
+      
+      const totalResources = Object.values(vehicle.resources).reduce((sum, val) => sum + val, 0);
+      const maxCapacity = vehicle.maxCapacity || 10;
+      
+      return totalResources >= maxCapacity * 0.9; // 90% plein
     }),
-    reduce((context) => ({
-      ...context,
-      currentAction: 'returning_near_full',
-      capacityWarning: true,
-      lastStateChange: Date.now()
-    }))
+    reduce((context, event) => {
+      fsmLogger.info("📦 [Collecting] Inventory full, returning to base", { 
+        botId: context.entityId 
+      });
+      
+      return contextReducers.state.prepareReturning(context, {
+        reason: 'inventory_full'
+      });
+    })
+  ),
+
+  // RESOURCE_UNAVAILABLE - Ressource épuisée ou non accessible
+  transition('RESOURCE_UNAVAILABLE', BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context, event) => {
+      fsmLogger.info("⚠️ [Collecting] Resource unavailable", { 
+        coord: event.coord,
+        reason: event.reason,
+        botId: context.entityId 
+      });
+      
+      return contextReducers.state.prepareEvaluating(context, {
+        reason: 'resource_unavailable'
+      });
+    })
   ),
 
   // === TRANSITIONS D'URGENCE ===
   
   // Carburant faible pendant la collecte
-  transition(EMERGENCY_EVENT_TYPES.LOW_FUEL_DETECTED,
-    BOT_STATES.RETURNING,
-    () => true,
-    reduce((context) => ({
-      ...context,
-      emergencyFlag: true,
-      emergencyReason: 'low_fuel_during_collection',
-      currentAction: 'emergency_return',
-      lastStateChange: Date.now()
-    }))
-  ),
-
-  // Override manuel
-  transition(USER_EVENT_TYPES.MANUAL_OVERRIDE,
-    BOT_STATES.EVALUATING,
-    () => true,
-    reduce((context, event) => ({
-      ...context,
-      manualCommand: event.command,
-      manualParams: event.params,
-      lastDecision: 'manual_override',
-      lastStateChange: Date.now()
-    }))
+  transition(EMERGENCY_EVENT_TYPES.LOW_FUEL_DETECTED, BOT_STATES.RETURNING,
+    guard(() => true),
+    reduce((context) => {
+      fsmLogger.info("🔥 [Collecting] Low fuel detected, emergency return", { 
+        botId: context.entityId 
+      });
+      
+      return contextReducers.state.prepareReturning(context, {
+        reason: 'emergency_low_fuel'
+      });
+    })
   ),
 
   // Urgence générale
-  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED,
-    BOT_STATES.RETURNING,
-    () => true,
-    reduce((context, event) => ({
-      ...context,
-      emergencyFlag: true,
-      emergencyReason: event.reason || 'unknown',
-      currentAction: 'emergency_return',
-      lastStateChange: Date.now()
-    }))
+  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED, BOT_STATES.RETURNING,
+    guard(() => true),
+    reduce((context, event) => {
+      fsmLogger.info("🚨 [Collecting] Emergency detected, returning to base", { 
+        reason: event.reason,
+        botId: context.entityId 
+      });
+      
+      return contextReducers.state.prepareReturning(context, {
+        reason: 'emergency_return',
+        emergencyReason: event.reason || 'unknown'
+      });
+    })
   )
 );

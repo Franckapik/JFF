@@ -120,11 +120,28 @@ const createTileCoordinateSlice = (set, get) => ({
     }
     
     const xNum = parseInt(x);
-    // Handle negative coordinates appropriately
-    if (xNum < 0 || xNum > 25) return gridCoord; // Return as-is for out of range coordinates
+    const zNum = parseInt(z);
     
-    const letter = String.fromCharCode(65 + xNum);
-    return `${letter}${z}`;
+    // Use the same encoding system as tileGenerationSlice
+    // Assuming radius = 3 (default value from tileBaseSlice)
+    const radius = 3;
+    
+    // Convert grid coordinates to hex coordinates using the same encoding
+    // In the hex system: q corresponds to x, r corresponds to z
+    const q = xNum;
+    const r = zNum;
+    
+    // Check if coordinates are within valid range
+    if (q < -radius || q > radius || r < -radius || r > radius) {
+      // Coordinate out of range, return as-is (likely needs different handling)
+      return gridCoord;
+    }
+    
+    // Encode using the same formula as encodeHexCoord in tileGenerationSlice
+    const letter = String.fromCharCode(65 + q + radius); // 65 = 'A'
+    const encodedCoord = `${letter}${r + radius}`;
+    
+    return encodedCoord;
   },
 
   // =========================================================================

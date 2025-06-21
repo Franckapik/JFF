@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useTileStore } from "../../../stores/useTileStore";
 import { useBotMachine } from "../../../ai/fsm/hooks/useBotMachine.js";
+import contextReducers from "../../../ai/fsm/machine/reducers/context.js";
 
 /**
  * Hook personnalisé pour gérer les données du debugger (FSM-only)
@@ -27,15 +28,16 @@ export const useDebuggerData = () => {
     isMoving
   } = useBotMachine(activeBotId);
 
-  // Simulation des données pour l'onglet Actions (à remplacer par les vraies données FSM)
+  // Simulation des données pour l'onglet Actions (mise à jour pour la nouvelle structure)
   const actionQueue = [
-    { id: 1, type: 'MOVE_TO', status: 'pending', target: '5,3' },
-    { id: 2, type: 'EXPLORE', status: 'running', area: 'sector-A' }
+    { id: 1, type: 'DRONE_EXPLORES_TILE', status: 'pending', target: '5,3' },
+    { id: 2, type: 'SHIP_COLLECTS_TILE', status: 'running', target: '3,2' }
   ];
   
   const storeActionHistory = [
-    { id: 1, type: 'MOVE_TO', status: 'completed', timestamp: Date.now() - 10000 },
-    { id: 2, type: 'COLLECT', status: 'failed', timestamp: Date.now() - 5000 }
+    { id: 1, type: 'DRONE_EXPLORES_TILE', status: 'completed', timestamp: Date.now() - 10000, details: 'Tile 2,3 explored, resources found' },
+    { id: 2, type: 'SHIP_COLLECTS_TILE', status: 'completed', timestamp: Date.now() - 5000, details: 'Tile 2,3 collected successfully' },
+    { id: 3, type: 'DRONE_REACHED_SHIP', status: 'completed', timestamp: Date.now() - 2000, details: 'Drone returned to ship' }
   ];
 
   // Constants FSM
@@ -54,11 +56,31 @@ export const useDebuggerData = () => {
     FAILED: 'failed'
   };
   
-  // Simulation d'un véhicule bot basé sur l'entité FSM
-  const botMemory = entity ? {
-    exploredTiles: [],
-    knownResources: [],
-    lastTarget: entity.target
+  // Données de mémoire du bot basées sur la nouvelle structure unifiée
+  const botMemory = entity && context?.memory ? {
+    // Nouvelle structure unifiée
+    knownTiles: Array.from(context.memory.knownTiles?.values() || []),
+    stats: context.memory.stats || {
+      tilesExplored: 0,
+      tilesCollected: 0,
+      totalResourcesFound: 0,
+      lastExploration: null,
+      lastCollection: null
+    },
+    
+    // Données dérivées calculées à partir de knownTiles
+    exploredTiles: contextReducers.utils.getExploredTiles(context),
+    collectibleTiles: contextReducers.utils.getCollectibleTiles(context),
+    
+    // Historique conservé
+    knownDangers: context.memory.knownDangers || [],
+    stateHistory: context.memory.stateHistory || [],
+    transitionHistory: context.memory.transitionHistory || [],
+    
+    // Autres propriétés utiles pour le debug
+    lastTarget: entity.target,
+    memorySize: context.memory.knownTiles?.size || 0,
+    hasMemoryData: (context.memory.knownTiles?.size || 0) > 0
   } : null;
   
   // Récupérer les données du TileStore

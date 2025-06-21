@@ -93,13 +93,21 @@ export const stateTransitionReducers = {
    * @param {Object} event - Événement de transition
    * @returns {Object} - Contexte mis à jour pour collecte
    */
-  prepareCollecting: (context, event) => ({
-    ...context,
-    currentAction: 'collecting',
-    lastDecision: 'collect_resources',
-    targetResource: event.resource || context.knownResources?.[0] || null,
-    lastStateChange: Date.now()
-  }),
+  prepareCollecting: (context, event) => {
+    // Utiliser la nouvelle structure mémoire unifiée pour trouver des tuiles collectibles
+    const collectibleTiles = Array.from(context.memory.knownTiles.values()).filter(
+      tile => tile.explored && tile.hasResources && !tile.collected
+    );
+    const targetTile = event.tileCoord ? context.memory.knownTiles.get(event.tileCoord) : collectibleTiles[0];
+    
+    return {
+      ...context,
+      currentAction: 'collecting',
+      lastDecision: 'collect_resources',
+      targetTile: targetTile || null,
+      lastStateChange: Date.now()
+    };
+  },
 
   /**
    * Prepare une transition vers l'état RETURNING
@@ -241,25 +249,49 @@ export const resourceReducers = {
   },
   
   /**
-   * Ajoute une ressource découverte à la mémoire
+   * Enregistre une tuile découverte dans la mémoire unifiée
    * @param {Object} context - Contexte FSM actuel
-   * @param {Object} event - Événement avec nouvelle ressource
+   * @param {Object} event - Événement avec nouvelle tuile découverte
    * @returns {Object} - Contexte avec mémoire mise à jour
    */
-  recordDiscoveredResource: (context, event) => {
-    if (!event.resource) return context;
+  recordDiscoveredTile: (context, event) => {
+    if (!event.tileCoord || !event.resourcesFound) return context;
     
-    const alreadyKnown = context.memory.knownResources.some(
-      r => r.id === event.resource.id
-    );
+    const coord = typeof event.tileCoord === 'string' ? event.tileCoord : `${event.tileCoord.x},${event.tileCoord.z}`;
     
-    if (alreadyKnown) return context;
+    // Vérifier si la tuile est déjà connue
+    if (context.memory.knownTiles.has(coord)) {
+      return context;
+    }
+    
+    // Créer directement les données de tuile (même logique que markTileExplored)
+    const tileData = {
+      coord,
+      explored: true,
+      collected: false,
+      exploredAt: Date.now(),
+      hasResources: event.resourcesFound.food > 0 || event.resourcesFound.debris > 0 || event.resourcesFound.special > 0,
+      resources: { ...event.resourcesFound },
+      collectedAt: null,
+      collectedBy: null
+    };
+    
+    const newKnownTiles = new Map(context.memory.knownTiles);
+    newKnownTiles.set(coord, tileData);
+    
+    const totalResources = event.resourcesFound.food + event.resourcesFound.debris + event.resourcesFound.special;
     
     return {
       ...context,
       memory: {
         ...context.memory,
-        knownResources: [...context.memory.knownResources, event.resource]
+        knownTiles: newKnownTiles,
+        stats: {
+          ...context.memory.stats,
+          tilesExplored: context.memory.stats.tilesExplored + 1,
+          totalResourcesFound: context.memory.stats.totalResourcesFound + totalResources,
+          lastExploration: Date.now()
+        }
       },
       hasNewResourceDiscovery: true
     };
@@ -540,6 +572,151 @@ export const droneDeploymentReducers = {
   }
 };
 
+/**
+ * Réducteurs pour la mémoire unifiée des tuiles
+ */
+export const memoryReducers = {
+  /**
+   * Marque une tuile comme explorée dans la mémoire unifiée
+   * @param {Object} context - Contexte FSM actuel
+   * @param {Object} event - Événement avec coordonnées et ressources
+   * @returns {Object} - Contexte avec tuile marquée comme explorée
+   */
+  markTileExplored: (context, event) => {
+    if (!event.tileCoord || !event.resourcesFound) return context;
+    
+    const coord = typeof event.tileCoord === 'string' ? event.tileCoord : `${event.tileCoord.x},${event.tileCoord.z}`;
+    const tileData = {
+      coord,
+      explored: true,
+      collected: false,
+      exploredAt: Date.now(),
+      hasResources: event.resourcesFound.food > 0 || event.resourcesFound.debris > 0 || event.resourcesFound.special > 0,
+      resources: { ...event.resourcesFound },
+      collectedAt: null,
+      collectedBy: null
+    };
+    
+    const newKnownTiles = new Map(context.memory.knownTiles);
+    newKnownTiles.set(coord, tileData);
+    
+    const totalResources = event.resourcesFound.food + event.resourcesFound.debris + event.resourcesFound.special;
+    
+    return {
+      ...context,
+      memory: {
+        ...context.memory,
+        knownTiles: newKnownTiles,
+        stats: {
+          ...context.memory.stats,
+          tilesExplored: context.memory.stats.tilesExplored + 1,
+          totalResourcesFound: context.memory.stats.totalResourcesFound + totalResources,
+          lastExploration: Date.now()
+        }
+      }
+    };
+  },
+
+  /**
+   * Marque une tuile comme collectée dans la mémoire unifiée
+   * @param {Object} context - Contexte FSM actuel
+   * @param {Object} event - Événement avec coordonnées et collecteur
+   * @returns {Object} - Contexte avec tuile marquée comme collectée
+   */
+  markTileCollected: (context, event) => {
+    if (!event.tileCoord) return context;
+    
+    const coord = typeof event.tileCoord === 'string' ? event.tileCoord : `${event.tileCoord.x},${event.tileCoord.z}`;
+    const existingTile = context.memory.knownTiles.get(coord);
+    
+    if (!existingTile || !existingTile.explored || existingTile.collected) {
+      return context; // Tuile inexistante, non explorée ou déjà collectée
+    }
+    
+    const updatedTile = {
+      ...existingTile,
+      collected: true,
+      collectedAt: Date.now(),
+      collectedBy: event.collectedBy || 'ship'
+    };
+    
+    const newKnownTiles = new Map(context.memory.knownTiles);
+    newKnownTiles.set(coord, updatedTile);
+    
+    return {
+      ...context,
+      memory: {
+        ...context.memory,
+        knownTiles: newKnownTiles,
+        stats: {
+          ...context.memory.stats,
+          tilesCollected: context.memory.stats.tilesCollected + 1,
+          lastCollection: Date.now()
+        }
+      }
+    };
+  }
+};
+
+/**
+ * Fonctions utilitaires pour la mémoire unifiée
+ */
+export const memoryUtils = {
+  /**
+   * Retourne toutes les tuiles explorées
+   * @param {Object} context - Contexte FSM actuel
+   * @returns {Array} - Liste des tuiles explorées
+   */
+  getExploredTiles: (context) => {
+    return Array.from(context.memory.knownTiles.values()).filter(tile => tile.explored);
+  },
+
+  /**
+   * Retourne toutes les tuiles collectibles (explorées, avec ressources, non collectées)
+   * @param {Object} context - Contexte FSM actuel
+   * @returns {Array} - Liste des tuiles collectibles
+   */
+  getCollectibleTiles: (context) => {
+    return Array.from(context.memory.knownTiles.values()).filter(
+      tile => tile.explored && tile.hasResources && !tile.collected
+    );
+  },
+
+  /**
+   * Vérifie si une tuile est connue (dans la mémoire)
+   * @param {Object} context - Contexte FSM actuel
+   * @param {string|Object} coord - Coordonnées de la tuile
+   * @returns {boolean} - true si la tuile est connue
+   */
+  isTileKnown: (context, coord) => {
+    const coordStr = typeof coord === 'string' ? coord : `${coord.x},${coord.z}`;
+    return context.memory.knownTiles.has(coordStr);
+  },
+
+  /**
+   * Vérifie si une tuile peut être collectée
+   * @param {Object} context - Contexte FSM actuel
+   * @param {string|Object} coord - Coordonnées de la tuile
+   * @returns {boolean} - true si la tuile peut être collectée
+   */
+  isTileCollectible: (context, coord) => {
+    const coordStr = typeof coord === 'string' ? coord : `${coord.x},${coord.z}`;
+    const tile = context.memory.knownTiles.get(coordStr);
+    return tile && tile.explored && tile.hasResources && !tile.collected;
+  },
+
+  /**
+   * Obtient les données d'une tuile spécifique
+   * @param {Object} context - Contexte FSM actuel
+   * @param {string|Object} coord - Coordonnées de la tuile
+   * @returns {Object|null} - Données de la tuile ou null si inconnue
+   */
+  getTileData: (context, coord) => {
+    const coordStr = typeof coord === 'string' ? coord : `${coord.x},${coord.z}`;
+    return context.memory.knownTiles.get(coordStr) || null;
+  }
+};
+
 // ============================================================================
 // EXPORT
 // ============================================================================
@@ -551,12 +728,15 @@ export const contextReducers = {
   resource: resourceReducers,
   fuel: fuelReducers,
   exploration: explorationReducers,
+  memory: memoryReducers, // NOUVEAU - Reducers pour mémoire unifiée
   emergency: emergencyReducers,
   manual: manualControlReducers,
   base: baseReducers,
   droneDeployment: droneDeploymentReducers,  
   // Réducteur d'état (fonction principale)
-  updateState: updateStateReducer
+  updateState: updateStateReducer,
+  // Utilitaires pour la mémoire
+  utils: memoryUtils
 };
 
 export default contextReducers;

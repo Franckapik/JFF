@@ -272,7 +272,7 @@ const createShipRefuelCompletedEvent = (position, fuelAdded) => ({
 // ÉVÉNEMENTS DE DRONE
 // ============================================================================
 // Ces événements sont spécifiques aux drones
-// Les drones peuvent être déployés, explorer, prospecter et revenir au vaisseau
+// Les drones peuvent être déployés, explorer et revenir au vaisseau
 // ============================================================================
 
 /**
@@ -385,30 +385,6 @@ const createDroneReachedShipEvent = (position, droneType = 'explorer') => ({
   timestamp: Date.now()
 });
 
-/**
- * Événement de prospection terminée
- * Déclenché lorsqu'un drone termine sa phase de prospection détaillée
- */
-const PROSPECTING_COMPLETE = 'PROSPECTING_COMPLETE';
-
-/**
- * Créateur d'événement: PROSPECTING_COMPLETE
- * @param {object} position - Position où la prospection a été effectuée
- * @param {object} tileCoord - Coordonnées de la tuile prospectée
- * @param {object} resourcesFound - Ressources découvertes lors de la prospection
- * @param {string} droneType - Type de drone ('explorer', 'combat', 'special')
- * @returns {object} Event payload
- */
-const createProspectingCompleteEvent = (position, tileCoord, resourcesFound, droneType = 'explorer') => ({
-  type: PROSPECTING_COMPLETE,
-  position,
-  tileCoord,
-  resourcesFound,
-  droneType,
-  entityType: 'drone',
-  timestamp: Date.now()
-});
-
 // ============================================================================
 // EXPORTS - Types d'événements et créateurs
 // ============================================================================
@@ -436,7 +412,6 @@ export const MOVEMENT_EVENT_TYPES = {
   DRONE_REACHED_TARGET,
   DRONE_APPROACHING_SHIP,
   DRONE_REACHED_SHIP,
-  PROSPECTING_COMPLETE,
   
   // === RÉTROCOMPATIBILITÉ ===
   // Anciens noms redirigés vers les nouveaux événements standardisés
@@ -472,7 +447,6 @@ export const movementEvents = {
   createDroneReachedTargetEvent,
   createDroneApproachingShipEvent,
   createDroneReachedShipEvent,
-  createProspectingCompleteEvent,
   
   // === RÉTROCOMPATIBILITÉ ===
   // Anciens noms redirigés vers les nouvelles fonctions standardisées
