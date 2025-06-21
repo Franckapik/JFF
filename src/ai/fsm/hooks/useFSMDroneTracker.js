@@ -328,9 +328,23 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
       // 🆕 PRIORITÉ 1: Gérer la position initiale du drone en premier
       const initialPositionHandled = handleDroneInitialPosition(position);
       
-      // 🆕 PRIORITÉ 2: Faire le tracking dès que le drone est actif
+      // 🆕 PRIORITÉ 2: Faire le tracking dès que le drone est actif MAIS pas si il est docké OU si le bot est idle
       const currentDrone = context?.droneFleet?.drones?.[droneType];
-      const shouldTrack = currentDrone?.isActive || (initialPositionSent.current && !initialPositionHandled);
+      const isDocked = currentDrone?.state === 'docked';
+      const isBotIdle = context?.currentState === 'idleAtBase';
+      const shouldTrack = (currentDrone?.isActive || (initialPositionSent.current && !initialPositionHandled)) && !isDocked && !isBotIdle;
+      
+      // 🐛 DEBUG: Log pour comprendre pourquoi le tracking continue
+      if (currentDrone?.isActive && (isDocked || isBotIdle)) {
+        fsmLogger.context(`🚫 [${botId}] ${droneType} tracking stopped`, {
+          droneState: currentDrone.state,
+          isActive: currentDrone.isActive,
+          isDocked,
+          isBotIdle,
+          botState: context?.currentState,
+          shouldTrack
+        });
+      }
       
       if (shouldTrack) {
         checkDronePositionAndSendEvents(position);

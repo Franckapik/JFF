@@ -3,6 +3,7 @@ import { useTileAnimation } from "../animations/useTileAnimation";
 import { useTileStore } from "../stores/useTileStore";
 import { Html } from "@react-three/drei";
 import { FSMStateIndicator } from "./FSM";
+import fsmLogger from "../logger/fsmLogger";
 
 /**
  * =================================================================
@@ -135,11 +136,12 @@ const Tile = React.memo(({
           <circleGeometry args={[0.6, 16]} />
           <meshBasicMaterial 
             color="#00ff88" 
-            transparent 
-            opacity={0.4}
+
           />
         </mesh>
       )}
+
+         {isExplored && !isDepart && fsmLogger.info(`Tile at ${coord} is explored`)}
 
       {/* Tuile de départ (base joueur) */}
       {isDepart && (

@@ -47,6 +47,8 @@ import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
 import { USER_EVENT_TYPES } from '../events/userEvents.js';
 import { RESOURCE_EVENT_TYPES } from '../events/resourceEvents.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
+import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
+import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**
  * État IDLE_AT_BASE - Maintenance et attente à la base
@@ -142,6 +144,39 @@ export const idleAtBaseState = state(
     reduce((context, event) => {
       // Utiliser le reducer centralisé pour démarrer le déchargement
       return contextReducers.base.startUnloading(context, event);
+    })
+  ),
+
+  // === GESTION DRONES EN IDLE ===
+  
+  // Drone qui atteint le vaisseau alors qu'on est en idle - l'ancrer immédiatement
+  transition(MOVEMENT_EVENT_TYPES.DRONE_REACHED_SHIP,
+    BOT_STATES.IDLE_AT_BASE, // Reste à la base
+    guard((context, event) => {
+      const drone = context.droneFleet?.drones?.explorer;
+      // Ancrer le drone s'il est actif et pas encore docké, même s'il est déjà en returning
+      const shouldDock = drone?.isActive && drone?.state !== 'docked';
+      
+      fsmLogger.info("🏠 [IdleAtBase] DRONE_REACHED_SHIP guard check", { 
+        botId: context.botId,
+        currentState: context.currentState,
+        droneState: drone?.state,
+        isActive: drone?.isActive,
+        shouldDock
+      });
+      
+      return shouldDock;
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("🏠 [IdleAtBase] Docking drone while at base", { 
+        botId: context.botId,
+        droneType: event.droneType || 'explorer'
+      });
+      
+      // Ancrer le drone silencieusement pendant qu'on est à la base
+      return contextReducers.droneDeployment.dockDrone(context, {
+        droneType: event.droneType || 'explorer'
+      });
     })
   ),
 
