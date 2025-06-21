@@ -134,19 +134,33 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
           const tileCoord = gridToHexCoord(gridCoord);
           
           try {
-            const { markTileAsExplored } = useTileStore.getState();
+            const { markTileAsExplored, getTile } = useTileStore.getState();
             markTileAsExplored(tileCoord);
             fsmLogger.mouvement(`✅ [${botId}] Tile explored by ${droneType}: ${JSON.stringify(tileCoord)}`);
             
-            // Découverte des ressources en une fois
-            const resourcesFound = {
-              food: Math.random() > 0.7 ? Math.floor(Math.random() * 50) : 0,
-              debris: Math.random() > 0.5 ? Math.floor(Math.random() * 100) : 0,
-              special: Math.random() > 0.9 ? 1 : 0
+            // Récupérer les vraies ressources de la tuile explorée
+            const tile = getTile(tileCoord);
+            
+            // Debug temporaire pour voir la structure de la tuile
+            console.log("🔍 [DEBUG] Tile structure:", {
+              coord: tileCoord,
+              tile: tile,
+              hasResources: Boolean(tile?.resources),
+              resources: tile?.resources
+            });
+            
+            const resourcesFound = tile?.resources ? {
+              food: tile.resources.food || 0,
+              debris: tile.resources.debris || 0,
+              special: tile.resources.special || 0
+            } : {
+              food: 0,
+              debris: 0,
+              special: 0
             };
             
-            fsmLogger.mouvement(`💎 [${botId}] ${droneType} discovered resources: ${JSON.stringify(resourcesFound)}`);
-            
+            fsmLogger.mouvement(`💎 [${botId}] ${droneType} discovered resources from tile: ${JSON.stringify(resourcesFound)}`);
+
             // Envoyer l'événement d'exploration qui correspond à l'état FSM
             const tileExploredEvent = {
               type: 'TILE_EXPLORED',
@@ -157,6 +171,7 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
               hasResources: Object.values(resourcesFound).some(val => val > 0),
               timestamp: Date.now()
             };
+            
             send(tileExploredEvent);
             
           } catch (error) {

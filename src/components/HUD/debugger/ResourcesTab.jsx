@@ -6,6 +6,14 @@ import ShipResources from './ShipResources';
  * Composant de résumé des ressources découvertes
  */
 const ResourcesSummary = React.memo(({ botMemory }) => {
+  // 🔍 DEBUG TEMPORAIRE - Afficher l'état de la mémoire reçue
+  console.log("🔍 [DEBUG] ResourcesSummary received botMemory:", {
+    hasMemory: Boolean(botMemory),
+    hasKnownTiles: Boolean(botMemory?.knownTiles),
+    knownTilesLength: botMemory?.knownTiles?.length || 0,
+    knownTilesData: botMemory?.knownTiles
+  });
+
   if (!botMemory?.knownTiles || botMemory.knownTiles.length === 0) {
     return (
       <div className="debugger-resources-summary">

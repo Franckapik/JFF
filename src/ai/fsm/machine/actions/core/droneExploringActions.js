@@ -155,9 +155,16 @@ export const droneExploresTile = (context, event) => {
       lastAction: 'droneExploresTile_failed'
     };
   }
-  
+
+  // ✅ PROTECTION: Vérifier si la tuile n'est pas déjà dans la mémoire
+  const existingKnownTiles = context.memory?.knownTiles || new Map();
+  if (existingKnownTiles.has(coord)) {
+    console.log("🔍 [DEBUG] Tile already explored, skipping:", coord);
+    return context; // Retourner le contexte inchangé si déjà exploré
+  }
+
   // Initialiser knownTiles si nécessaire
-  const knownTiles = new Map(context.memory?.knownTiles || new Map());
+  const knownTiles = new Map(existingKnownTiles);
   
   // Créer les données de la tuile explorée
   const tileData = {
@@ -165,7 +172,7 @@ export const droneExploresTile = (context, event) => {
     explored: true,
     collected: false,
     exploredAt: Date.now(),
-    hasResources: Boolean(resources && Object.keys(resources).length > 0),
+    hasResources: Boolean(resources && Object.values(resources).some(val => val > 0)),
     resources: resources || null,
     collectedAt: null,
     collectedBy: null
@@ -173,6 +180,8 @@ export const droneExploresTile = (context, event) => {
   
   // Ajouter la tuile à la mémoire
   knownTiles.set(coord, tileData);
+
+  // ...existing code...
   
   // Mettre à jour les statistiques
   const currentStats = context.memory?.stats || {

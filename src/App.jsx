@@ -92,7 +92,7 @@ const App = () => {
           minimizable={true}
         />
         
-        {/* Tile Store Monitor - désactivé car redondant avec FSMDebugPanel */}
+        {/* Tile Store Monitor - réactivé pour diagnostic complémentaire */}
         <TileStoreMonitor 
           position="top-left"
           isVisible={true}
