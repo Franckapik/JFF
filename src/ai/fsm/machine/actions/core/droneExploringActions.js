@@ -156,10 +156,9 @@ export const droneExploresTile = (context, event) => {
     };
   }
 
-  // ✅ PROTECTION: Vérifier si la tuile n'est pas déjà dans la mémoire
+  // Protection contre les appels multiples - vérifier si la tuile est déjà explorée
   const existingKnownTiles = context.memory?.knownTiles || new Map();
   if (existingKnownTiles.has(coord)) {
-    console.log("🔍 [DEBUG] Tile already explored, skipping:", coord);
     return context; // Retourner le contexte inchangé si déjà exploré
   }
 

@@ -140,15 +140,6 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
             
             // Récupérer les vraies ressources de la tuile explorée
             const tile = getTile(tileCoord);
-            
-            // Debug temporaire pour voir la structure de la tuile
-            console.log("🔍 [DEBUG] Tile structure:", {
-              coord: tileCoord,
-              tile: tile,
-              hasResources: Boolean(tile?.resources),
-              resources: tile?.resources
-            });
-            
             const resourcesFound = tile?.resources ? {
               food: tile.resources.food || 0,
               debris: tile.resources.debris || 0,
@@ -159,7 +150,7 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
               special: 0
             };
             
-            fsmLogger.mouvement(`💎 [${botId}] ${droneType} discovered resources from tile: ${JSON.stringify(resourcesFound)}`);
+            fsmLogger.resources(`💎 [${botId}] ${droneType} discovered resources from tile: ${JSON.stringify(resourcesFound)}`);
 
             // Envoyer l'événement d'exploration qui correspond à l'état FSM
             const tileExploredEvent = {
