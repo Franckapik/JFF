@@ -19,6 +19,7 @@ import useFSMStore from "../stores/useFSMStore";
 
 // Utils
 import fsmLogger from "../logger/fsmLogger";
+import Fleet from "./Fleet";
 
 /* ========================================
  * MAIN COMPONENT
@@ -31,7 +32,6 @@ const Scene = () => {
    * ======================================== */
   
   // Tile management
-  const tiles = useTileStore((state) => state.tiles);
   const initializeTiles = useTileStore((state) => state.initializeTiles);
   const getWalkableTiles = useTileStore((state) => state.getWalkableTiles);
   const getDepartTiles = useTileStore((state) => state.getDepartTiles);
@@ -129,15 +129,6 @@ const Scene = () => {
         />
       )} */}
       
-      {/* AI Fleets with dynamic colors */}
-      {/* Temporairement désactivé - Fleet components */}
-      {/* {botIndices.map((botIndex) => (
-        <Fleet 
-          key={`bot-${botIndex}`}
-          botIndex={botIndex}
-          color={getBotColor(botIndex)}
-        />
-      ))} */}
 
       {/* Note: Les FSM State indicators sont maintenant automatiquement intégrés
        * dans les tuiles de départ (Tile component avec isDepart=true)
@@ -158,7 +149,7 @@ const Scene = () => {
       ))}
 
       {/* ========================================
-       * PLAYER BASES (DEPART TILES)
+       * PLAYER BASES (DEPART TILES) WITH FLEETS
        * ======================================== */}
       
       {getDepartTiles()
@@ -169,19 +160,37 @@ const Scene = () => {
           const labelText = tile.playerId;
           
           return (
-            <Tile
-              key={`depart-tile-${tile.coord}`}
-              position={[tile.position.x, 0, tile.position.z]}
-              radius={1}
-              color={tile.color || "#888888"} // couleur de base si non définie
-              coord={tile.coord}
-              isDepart={true}
-              baseColor={baseColor}
-              backgroundColor={backgroundColor}
-              labelText={labelText}
-              playerIndex={tile.playerIndex}
-              showFSMIndicator={true} // Afficher l'indicateur FSM dans la tuile
-            />
+            <group key={`depart-group-${tile.coord}`}>
+              {/* Render the departure tile */}
+              <Tile
+                key={`depart-tile-${tile.coord}`}
+                position={[tile.position.x, 0, tile.position.z]}
+                radius={1}
+                color={tile.color || "#888888"} // couleur de base si non définie
+                coord={tile.coord}
+                isDepart={true}
+                baseColor={baseColor}
+                backgroundColor={backgroundColor}
+                labelText={labelText}
+                playerIndex={tile.playerIndex}
+                showFSMIndicator={true} // Afficher l'indicateur FSM dans la tuile
+              />
+              
+              {/* Render the fleet at the same position with slight Y offset */}
+              <group position={[tile.position.x, 0.5, tile.position.z]}>
+                <Fleet
+                  botId={tile.playerId}
+                  botIndex={tile.playerIndex}
+                  color={getBotColor(tile.playerIndex)}
+                  shipPosition={{
+                    x: tile.position.x,
+                    y: 0.5,
+                    z: tile.position.z
+                  }}
+                  tileCoord={tile.coord}
+                />
+              </group>
+            </group>
           );
         })}
 

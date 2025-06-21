@@ -14,11 +14,11 @@
  * @version 1.0.0
  */
 
-import { BOT_STATES } from '../constants.js';
-import { movementActions } from '../../../../shared/actions/core/movement.js';
-import { fuelActions } from '../../../../shared/actions/core/fuel.js';
-import { resourceActions } from '../../../../shared/actions/core/resources.js';
-import { explorationActions } from '../../../../shared/actions/core/exploration.js';
+import { BOT_STATES } from '../constants/constants.js';
+import { shipCollectingActions } from '../actions/core/shipCollectingActions.js'; // NOUVEAU - Remplace movementActions
+import { droneExploringActions } from '../actions/core/droneExploringActions.js'; // NOUVEAU - Remplace explorationActions et droneDeploymentActions
+import { fuelActions } from '../actions/core/fuelActions.js';
+import { resourceActions } from '../actions/core/resourcesActions.js';
 
 // ============================================================================
 // RÉDUCTEURS D'ÉTAT - Mises à jour du contexte lors des transitions d'état
@@ -107,14 +107,37 @@ export const stateTransitionReducers = {
    * @param {Object} event - Événement de transition
    * @returns {Object} - Contexte mis à jour pour retour
    */
-  prepareReturning: (context, event) => ({
-    ...context,
-    currentAction: 'returning',
-    lastDecision: event.reason || 'returning_to_base',
-    emergencyReason: event.emergencyReason || null,
-    emergencyFlag: Boolean(event.emergencyReason),
-    lastStateChange: Date.now()
-  }),
+  prepareReturning: (context, event) => {
+    // ✅ CORRECTION: Définir updatedDrone à partir du contexte existant
+    const currentDrone = context.droneFleet?.drones?.explorer || {};
+    // ✅ CORRECTION: Utiliser la position réelle du vaisseau au lieu de la position codée en dur
+    const shipPosition = context.vehicle?.position || { x: 0, y: 0.5, z: 0 }; // Fallback sécurisé
+    
+    const updatedDrone = {
+      ...currentDrone,
+      state: 'returning',  // ✅ État visuel du drone (DRONE_VISUAL_STATES)
+      targetPosition: shipPosition,           // Position du vaisseau pour le retour
+      isReturning: true,
+      returnStartTime: Date.now(),
+      lastUpdate: Date.now()
+    };
+    
+    return {
+      ...context,
+      currentAction: 'returning',
+      lastDecision: event.reason || 'returning_to_base',
+      emergencyReason: event.emergencyReason || null,
+      emergencyFlag: Boolean(event.emergencyReason),
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet.drones,
+          explorer: updatedDrone
+        }
+      },
+      lastStateChange: Date.now()
+    };
+  },
 
   /**
    * Prepare une transition vers l'état IDLE_AT_BASE
@@ -484,6 +507,39 @@ export const baseReducers = {
   }
 };
 
+/**
+ * Réducteurs pour le déploiement et contrôle des drones
+ */
+export const droneDeploymentReducers = {
+  /**
+   * Déploie un drone vers une zone cible
+   */
+  deployDrone: (context, event) => {
+    return droneExploringActions.droneDeployForExploration(context, event);
+  },
+
+  /**
+   * Rappelle le drone au vaisseau
+   */
+  recallDrone: (context, event) => {
+    return droneExploringActions.droneRecallToShip(context, event);
+  },
+
+  /**
+   * Finalise le retour du drone (ancrage)
+   */
+  dockDrone: (context, event) => {
+    return droneExploringActions.droneDockToShip(context, event);
+  },
+
+  /**
+   * Met à jour la position du drone en temps réel
+   */
+  updateDronePosition: (context, event) => {
+    return droneExploringActions.droneUpdatePosition(context, event);
+  }
+};
+
 // ============================================================================
 // EXPORT
 // ============================================================================
@@ -498,7 +554,7 @@ export const contextReducers = {
   emergency: emergencyReducers,
   manual: manualControlReducers,
   base: baseReducers,
-  
+  droneDeployment: droneDeploymentReducers,  
   // Réducteur d'état (fonction principale)
   updateState: updateStateReducer
 };

@@ -22,6 +22,7 @@
  * - useFSMStore : pour synchroniser avec les bots actifs
  */
 
+import fsmLogger from '../../../logger/fsmLogger.js';
 import useFSMStore from '../../useFSMStore/index.js';
 
 // =========================================================================
@@ -73,25 +74,25 @@ const createTileFilterSlice = (set, get) => {
       
       if (!coord) return [];
       
-      const tiles = get().tiles;
-      const walkableTiles = [];
-      const calculateDistanceFn = get().calculateDistance;
+      // Utiliser getWalkableTiles comme base de filtrage
+      const walkableTiles = get().getWalkableTiles();
+      const tilesInRadius = [];
+
       
-      // Parcours optimisé de toutes les tuiles pour chercher celles dans le rayon
-      Object.entries(tiles).forEach(([tileCoord, tile]) => {
-        // Utiliser calculateDistance pour obtenir la distance réelle en nombre de tuiles
-        const distance = calculateDistanceFn(coord, tileCoord, false, true);
+      // Appliquer les filtres supplémentaires sur les tuiles walkables
+      walkableTiles.forEach(tile => {
+        // Calculer la distance réelle en nombre de tuiles via pathfinding
+        // Utiliser directement la fonction du pathSlice qui gère les coordonnées de grille
+        const distance = get().calculateDistance(coord, tile.coord, false, false);
         
         // Vérifier si la tuile est dans le rayon d'exploration spécifié
         if (distance <= exploringRadius) {
           // Application des filtres configurables
-          if (tile && 
-              tile.walkable !== false && 
-              (!excludeDanger || tile.type !== 'danger') &&
+          if ((!excludeDanger || tile.type !== 'danger') &&
               (!onlyUnexplored || !tile.explored)) {
             
-            walkableTiles.push({
-              coord: tileCoord,
+            tilesInRadius.push({
+              coord: tile.coord,
               position: tile.position,
               tile: tile,
               distance: distance
@@ -101,7 +102,7 @@ const createTileFilterSlice = (set, get) => {
       });
       
       // Retourne les tuiles walkable triées par proximité croissante
-      return walkableTiles.sort((a, b) => a.distance - b.distance);
+      return tilesInRadius.sort((a, b) => a.distance - b.distance);
     },
 
     /**

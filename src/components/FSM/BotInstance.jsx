@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { useBotMachineFixed } from '../../ai/fsm/hooks/useBotMachineFixed';
+import { useBotMachine } from '../../ai/fsm/hooks/useBotMachine.js';
 import fsmLogger from '../../logger/fsmLogger.js';
 
 const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) => {
@@ -9,20 +9,25 @@ const BotInstance = ({ botId, isManagerRunning, showDebug, onBotStateChange }) =
     state,
     actions,
     autoEvents,
-    isMoving
-  } = useBotMachineFixed(botId);
+    isMoving,
+    context  // Add the full FSM context
+  } = useBotMachine(botId);
 
   // Mémoriser les valeurs qui changent souvent
   const fuel = vehicle?.fuel || 0;
   const resources = vehicle?.resources || { food: 0, debris: 0, special: 0 };
 
   // Mémoriser l'objet de données du bot pour éviter les re-renders inutiles
+  // Include both UI data and full context for FSM hooks
   const botData = useMemo(() => ({
+    // UI display data
     state,
     isMoving,
     fuel,
-    resources
-  }), [state, isMoving, fuel, resources?.food, resources?.debris, resources?.special]);
+    resources,
+    // Full FSM context for hooks like useFSMDroneState
+    context
+  }), [state, isMoving, fuel, resources?.food, resources?.debris, resources?.special, context]);
 
   // Notifier le manager des changements d'état (avec dépendances stables)
   useEffect(() => {

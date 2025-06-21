@@ -10,9 +10,9 @@
  * @version 1.0.0
  */
 
-// Export des états
-export { evaluatingState } from './evaluating.js';
-export { exploringState } from './exploring.js';
-export { collectingState } from './collecting.js';
-export { returningState } from './returning.js';
-export { idleAtBaseState } from './idleAtBase.js';
+// Export des états avec nouveaux noms
+export { evaluatingState } from './evaluatingState.js';
+export { exploringState } from './exploringState.js';
+// returningState removed - EXPLORING_RETURNING logic is now in exploringState.js
+export { collectingState } from './collectingState.js';
+export { idleAtBaseState } from './idleAtBaseState.js';

@@ -17,7 +17,6 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useBotMachineFixed } from '../../ai/fsm/hooks/useBotMachineFixed';
 import fsmLogger from '../../logger/fsmLogger.js';
 import useFSMStore from '../../stores/useFSMStore/index.js';
 import BotInstance from './BotInstance';
@@ -93,7 +92,11 @@ const MultiBotManagerFSM = () => {
   // Calculer les statistiques globales
   const globalStats = {
     total: getBotCount(),
-    exploring: Object.values(botStates).filter(bot => bot?.state === 'EXPLORING').length,
+    exploring: Object.values(botStates).filter(bot => 
+      bot?.state === 'exploring_deploying' || 
+      bot?.state === 'exploring_prospecting' || 
+      bot?.state === 'exploring_returning'
+    ).length,
     collecting: Object.values(botStates).filter(bot => bot?.state === 'COLLECTING').length,
     returning: Object.values(botStates).filter(bot => bot?.state === 'RETURNING').length,
     idle: Object.values(botStates).filter(bot => bot?.state === 'IDLE').length

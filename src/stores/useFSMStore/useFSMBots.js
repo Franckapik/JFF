@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import useFSMStore from '../useFSMStore/index.js';
+import fsmLogger from '../../logger/fsmLogger.js';
 
 /**
  * Hook personnalisé pour faciliter l'interaction avec les bots FSM
@@ -11,27 +12,27 @@ export const useFSMBots = () => {
   
   // Actions avec logs personnalisés
   const addBot = useCallback(() => {
-    console.log('🤖 Ajout d\'un nouveau bot...');
+    fsmLogger.info('🤖 Ajout d\'un nouveau bot...');
     store.addBot();
   }, [store]);
   
   const removeBot = useCallback(() => {
-    console.log('🗑️ Suppression d\'un bot...');
+    fsmLogger.info('🗑️ Suppression d\'un bot...');
     store.removeBot();
   }, [store]);
   
   const startAllBots = useCallback(() => {
-    console.log('🚀 Démarrage de tous les bots...');
+    fsmLogger.info('🚀 Démarrage de tous les bots...');
     store.startSystem();
   }, [store]);
   
   const stopAllBots = useCallback(() => {
-    console.log('⏹️ Arrêt de tous les bots...');
+    fsmLogger.info('⏹️ Arrêt de tous les bots...');
     store.stopSystem();
     }, [store]);
     
   const toggleSystem = useCallback(() => {
-    console.log('🔄 Basculement de l\'état du système...');
+    fsmLogger.info('🔄 Basculement de l\'état du système...');
     store.toggleSystem();
   }, [store]);
 
@@ -63,6 +64,10 @@ export const useFSMBots = () => {
     getSystemStats,
     hasBotId: store.hasBotId,
     generateBotId: store.generateBotId,
+    
+    // Accès à l'historique centralisé
+    getEventHistory: useFSMStore(state => state.getEventHistory),
+    clearEventHistory: useFSMStore(state => state.clearEventHistory),
     
     // Accès direct au store pour les cas avancés
     store

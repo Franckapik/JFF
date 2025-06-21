@@ -92,6 +92,7 @@ const createTileCoordinateSlice = (set, get) => ({
    * @returns {string|null} - Coordonnée hex ou null si invalide
    */
   gridToHexCoord: (gridCoord) => {
+    
     if (gridCoord === null) return null;
     if (gridCoord === undefined) return undefined;
     if (gridCoord === '') return '';
@@ -100,10 +101,24 @@ const createTileCoordinateSlice = (set, get) => ({
     // Check if already in hex format (letter followed by number)
     if (gridCoord.match(/^[A-Za-z]\d+$/i)) return gridCoord;
     
-    const match = gridCoord.match(/^(-?\d+),(-?\d+)$/);
-    if (!match) return gridCoord; // Return as-is if it doesn't match expected format
+    // Handle both 2D (x,z) and 3D (x,y,z) formats
+    const match2D = gridCoord.match(/^(-?\d+),(-?\d+)$/);
+    const match3D = gridCoord.match(/^(-?\d+),(-?\d+),(-?\d+)$/);
     
-    const [_, x, z] = match;
+    let x, z;
+    
+    if (match3D) {
+      // 3D format: x,y,z - extract x and z (ignore y)
+      x = match3D[1];
+      z = match3D[3];
+    } else if (match2D) {
+      // 2D format: x,z
+      x = match2D[1];
+      z = match2D[2];
+    } else {
+      return gridCoord; // Return as-is if it doesn't match expected format
+    }
+    
     const xNum = parseInt(x);
     // Handle negative coordinates appropriately
     if (xNum < 0 || xNum > 25) return gridCoord; // Return as-is for out of range coordinates
@@ -112,57 +127,73 @@ const createTileCoordinateSlice = (set, get) => ({
     return `${letter}${z}`;
   },
 
+  // =========================================================================
+  // WORLD-GRID COORDINATE CONVERSION
+  // =========================================================================
+
   /**
-   * Convertit coordonnée grille vers position mondiale
-   * @param {string} coord - Coordonnée grille ou hex
-   * @returns {Object|null} - Position monde {x, y, z} ou null
+   * Convertit coordonnées de grille vers position mondiale
+   * @param {string} gridCoord - Coordonnée grille (ex: "1,5")
+   * @returns {Object|null} - Position {x, y, z} ou null si invalide
    */
-  gridToWorld: (coord) => {
-    const { hexToGridCoord, isValidGridCoord } = get();
+  gridToWorld: (gridCoord) => {
+    const { isValidGridCoord, hexToGridCoord } = get();
     
-    if (!coord) return null;
+    if (!gridCoord) return null;
     
-    // Convert hex format to grid format if necessary
-    const gridCoord = hexToGridCoord(coord);
-    if (!gridCoord) {
-      console.error('Invalid grid coordinate:', coord);
-      return null;
-    }
+    // Normaliser en coordonnée de grille si nécessaire
+    const normalizedCoord = hexToGridCoord(gridCoord);
+    if (!isValidGridCoord(normalizedCoord)) return null;
     
-    // Vérifier si le format est valide après conversion (doit être "x,z")
-    if (!isValidGridCoord(gridCoord)) {
-      return null;
-    }
+    const [x, z] = normalizedCoord.split(',').map(Number);
     
-    const [x, z] = gridCoord.split(',').map(Number);
+    // Utiliser les mêmes constantes que generateBaseHexGrid pour la cohérence
+    const hexSize = 1.7;
+    const sqrt3 = Math.sqrt(3);
+    const spacing = 0.1; // Utilise l'espacement par défaut du store
+    
+    // Convertir les coordonnées de grille en coordonnées hexagonales q,r
+    // puis en position mondiale en utilisant la même formule que generateBaseHexGrid
+    const q = x;
+    const r = z;
+    
+    const worldX = (q + r / 2) * (hexSize + spacing);
+    const worldZ = r * (sqrt3 / 2) * (hexSize + spacing);
+    
     return {
-      x: x,
-      y: 0, // We keep y constant for the game plane
-      z: z
+      x: worldX,
+      y: 0, // Position Y par défaut
+      z: worldZ
     };
   },
 
   /**
-   * Convertit position mondiale vers coordonnée grille
-   * @param {Object} position - Position monde {x, y, z}
-   * @returns {string|null} - Coordonnée grille ou null
+   * Convertit position mondiale vers coordonnées de grille
+   * @param {Object} worldPosition - Position {x, y, z}
+   * @returns {string|null} - Coordonnée grille ou null si invalide
    */
-  worldToGrid: (position) => {
+  worldToGrid: (worldPosition) => {
     const { isValidWorldPosition } = get();
     
-    if (position === null || position === undefined) return null;
+    if (!isValidWorldPosition(worldPosition)) return null;
     
-    // Handle empty object
-    if (typeof position === 'object' && Object.keys(position).length === 0) {
-      return '0,0';
-    }
+    // Utiliser les mêmes constantes que generateBaseHexGrid
+    const hexSize = 1.7;
+    const sqrt3 = Math.sqrt(3);
+    const spacing = 0.1;
     
-    if (!isValidWorldPosition(position)) {
-      console.error('Invalid world position:', position);
-      return null;
-    }
-    // Round to handle floating point imprecision
-    return `${Math.round(position.x)},${Math.round(position.z)}`;
+    const { x, z } = worldPosition;
+    
+    // Formules inverses pour convertir position mondiale en coordonnées hexagonales q,r
+    // Inversement de:
+    // worldX = (q + r / 2) * (hexSize + spacing)
+    // worldZ = r * (sqrt3 / 2) * (hexSize + spacing)
+    
+    const scale = hexSize + spacing;
+    const r = Math.round(z / ((sqrt3 / 2) * scale));
+    const q = Math.round((x / scale) - (r / 2));
+    
+    return `${q},${r}`;
   },
 
   // =========================================================================
@@ -248,24 +279,6 @@ const createTileCoordinateSlice = (set, get) => ({
   // =========================================================================
   // UTILITY METHODS FOR COORDINATE OPERATIONS
   // =========================================================================
-
-  /**
-   * Calcule la distance entre deux positions
-   * @param {Object} pos1 - Première position
-   * @param {Object} pos2 - Deuxième position
-   * @returns {number} - Distance euclidienne
-   */
-  calculateDistance: (pos1, pos2) => {
-    const { isValidWorldPosition } = get();
-    
-    if (!isValidWorldPosition(pos1) || !isValidWorldPosition(pos2)) {
-      return Infinity;
-    }
-    
-    const dx = pos2.x - pos1.x;
-    const dz = pos2.z - pos1.z;
-    return Math.sqrt(dx * dx + dz * dz);
-  },
 
   /**
    * Normalise une coordonnée (s'assure qu'elle est dans le bon format)

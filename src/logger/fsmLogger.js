@@ -32,6 +32,18 @@ const LOG_LEVEL = {
     prefix: '🎮 GAME',
     style: 'color: #E91E63; font-weight: bold'
   },
+  EVENT: {
+    prefix: '⚡ EVENT',
+    style: 'color: #FFC107; font-weight: bold'
+  },
+  CONTEXT: {
+    prefix: '🔧 CONTEXT',
+    style: 'color: #607D8B; font-weight: bold'
+  },
+  HISTORY: {
+    prefix: '📜 HISTORY',
+    style: 'color: #8BC34A; font-weight: bold'
+  },
   ERROR: {
     prefix: '🔴 ERROR',
     style: 'color: #F44336; font-weight: bold'
@@ -47,6 +59,120 @@ const logBuffer = {
 };
 
 /**
+ * Système de déduplication des logs répétitifs
+ */
+const deduplicationSystem = {
+  cache: new Map(),
+  config: {
+    enabled: true,
+    defaultTTL: 1000, // TTL par défaut en ms
+    maxCacheSize: 500,
+    typeTTL: {
+      // TTL spécifiques par type de log
+      'MOUVEMENT': 500,   // Messages de mouvement fréquents
+      'INFO': 1000,       // Messages d'info génériques
+      'CONTEXT': 2000,    // Messages de contexte moins fréquents
+      'HISTORY': 100,     // Historique très fréquent
+      'ERROR': 0          // Erreurs jamais filtrées
+    }
+  },
+  
+  /**
+   * Génère une clé unique pour le cache
+   */
+  generateKey: (type, message, playerId = null) => {
+    // Normaliser le message pour ignorer les valeurs changeantes
+    let normalizedMessage = message;
+    
+    // Remplacer les distances par un placeholder
+    normalizedMessage = normalizedMessage.replace(/distance: \d+\.\d+/g, 'distance: X.XX');
+    
+    // Remplacer les timestamps par un placeholder
+    normalizedMessage = normalizedMessage.replace(/\d{2}:\d{2}:\d{2}/g, 'XX:XX:XX');
+    
+    // Remplacer les coordonnées par un placeholder
+    normalizedMessage = normalizedMessage.replace(/\{x: [^}]+\}/g, '{x: X.XX, y: X.XX, z: X.XX}');
+    
+    // Créer la clé en combinant type, message normalisé et playerId
+    return `${type}:${normalizedMessage}${playerId ? `:${playerId}` : ''}`;
+  },
+  
+  /**
+   * Vérifie si un log doit être filtré
+   */
+  shouldFilter: (type, message, playerId = null) => {
+    if (!deduplicationSystem.config.enabled) return false;
+    
+    // Les erreurs ne sont jamais filtrées
+    if (type === 'ERROR') return false;
+    
+    const key = deduplicationSystem.generateKey(type, message, playerId);
+    const now = Date.now();
+    const ttl = deduplicationSystem.config.typeTTL[type] || deduplicationSystem.config.defaultTTL;
+    
+    // Vérifier si cette entrée existe dans le cache
+    if (deduplicationSystem.cache.has(key)) {
+      const lastTime = deduplicationSystem.cache.get(key);
+      
+      // Si le TTL n'est pas écoulé, filtrer ce log
+      if (now - lastTime < ttl) {
+        return true;
+      }
+    }
+    
+    // Mettre à jour le cache avec le nouveau timestamp
+    deduplicationSystem.cache.set(key, now);
+    
+    // Nettoyer le cache si il devient trop grand
+    if (deduplicationSystem.cache.size > deduplicationSystem.config.maxCacheSize) {
+      deduplicationSystem.cleanup();
+    }
+    
+    return false;
+  },
+  
+  /**
+   * Nettoie les entrées expirées du cache
+   */
+  cleanup: () => {
+    const now = Date.now();
+    const entries = Array.from(deduplicationSystem.cache.entries());
+    
+    // Garder seulement les entrées les plus récentes
+    const sortedEntries = entries.sort((a, b) => b[1] - a[1]);
+    const toKeep = sortedEntries.slice(0, Math.floor(deduplicationSystem.config.maxCacheSize * 0.8));
+    
+    deduplicationSystem.cache.clear();
+    toKeep.forEach(([key, timestamp]) => {
+      deduplicationSystem.cache.set(key, timestamp);
+    });
+  },
+  
+  /**
+   * Reset le cache (pour les tests ou le debugging)
+   */
+  reset: () => {
+    deduplicationSystem.cache.clear();
+  },
+  
+  /**
+   * Configure le système de déduplication
+   */
+  configure: (options) => {
+    Object.assign(deduplicationSystem.config, options);
+  },
+  
+  /**
+   * Obtient les statistiques du cache
+   */
+  getStats: () => ({
+    cacheSize: deduplicationSystem.cache.size,
+    maxCacheSize: deduplicationSystem.config.maxCacheSize,
+    enabled: deduplicationSystem.config.enabled
+  })
+};
+
+/**
  * Configuration du logger
  */
 let config = {
@@ -54,6 +180,7 @@ let config = {
   minLevel: 0, // Niveau minimum pour afficher un log
   enableBuffering: true, // Activer/désactiver le stockage des logs dans le buffer
   visibleTypes: null, // Filtrer les types visibles dans la console (null = tous, ou array de types)
+  enableDeduplication: true, // 🆕 Activer la déduplication
 };
 
 /**
@@ -92,13 +219,27 @@ const log = (type, message, data = null, playerId = null, ...additionalArgs) => 
   // Modifier le message pour inclure l'ID du joueur/bot si fourni
   const enhancedMessage = playerId ? `[${playerId}] ${formattedMessage}` : formattedMessage;
   
+  // 🆕 DÉDUPLICATION : Vérifier si ce log doit être filtré
+  if (config.enableDeduplication && deduplicationSystem.shouldFilter(type, enhancedMessage, playerId)) {
+    // Log filtré - ne pas afficher mais retourner une entrée minimale
+    return {
+      type,
+      message: enhancedMessage,
+      timestamp,
+      playerId,
+      metadata: data,
+      filtered: true
+    };
+  }
+  
   // Créer l'entrée de log
   const logEntry = {
     type,
     message: enhancedMessage,
     timestamp,
     playerId, // Stocker l'ID du joueur/bot pour référence
-    metadata: data // Renommer data en metadata pour les tests
+    metadata: data, // Renommer data en metadata pour les tests
+    filtered: false
   };
   
   // Ajouter au buffer si activé
@@ -202,6 +343,24 @@ const fsmLogger = {
     const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
     return log('ERROR', message, data, playerId);
   },
+  event: (...args) => {
+    const message = args[0] || '';
+    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
+    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
+    return log('EVENT', message, data, playerId);
+  },
+  context: (...args) => {
+    const message = args[0] || '';
+    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
+    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
+    return log('CONTEXT', message, data, playerId);
+  },
+  history: (...args) => {
+    const message = args[0] || '';
+    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
+    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
+    return log('HISTORY', message, data, playerId);
+  },
   
   /**
    * Enregistre une transition d'état
@@ -302,12 +461,61 @@ const fsmLogger = {
     
     // Pour corriger le test: ne pas logger la suppression du buffer
     // car cela interfère avec le test qui désactive enableConsole
+  },
+  
+  // 🆕 MÉTHODES DE DÉDUPLICATION
+  
+  /**
+   * Configure le système de déduplication
+   * @param {Object} options - Options de configuration
+   * @example
+   * fsmLogger.configureDeduplication({
+   *   enabled: true,
+   *   defaultTTL: 1000,
+   *   typeTTL: { 'MOUVEMENT': 500, 'INFO': 1000 }
+   * });
+   */
+  configureDeduplication: (options) => {
+    deduplicationSystem.configure(options);
+    return deduplicationSystem.config;
+  },
+  
+  /**
+   * Réinitialise le cache de déduplication
+   */
+  resetDeduplication: () => {
+    deduplicationSystem.reset();
+  },
+  
+  /**
+   * Obtient les statistiques de déduplication
+   * @returns {Object} Statistiques du cache
+   */
+  getDeduplicationStats: () => {
+    return deduplicationSystem.getStats();
+  },
+  
+  /**
+   * Active/désactive la déduplication
+   * @param {boolean} enabled - Activer ou désactiver
+   */
+  enableDeduplication: (enabled = true) => {
+    config.enableDeduplication = enabled;
+    deduplicationSystem.configure({ enabled });
+    return enabled;
+  },
+  
+  /**
+   * Nettoie manuellement le cache de déduplication
+   */
+  cleanupDeduplication: () => {
+    deduplicationSystem.cleanup();
   }
 };
 
-// Configurer pour n'afficher que les mouvements
+// Configurer pour n'afficher que les événements spécialisés et erreurs
 /* fsmLogger.configure({
-  visibleTypes: ['PLAYER', 'GAME']
+  visibleTypes: ['INFO', 'ERROR', 'EVENT', 'CONTEXT']
 }); */
 
 export default fsmLogger;

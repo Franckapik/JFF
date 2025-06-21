@@ -1,24 +1,28 @@
 /**
  * =========================================================================
- * TILE GENERATION SLICE - Gestion de la génération et pathfinding des tuiles
+ * TILE GENERATION SLICE - Gestion de la génération des tuiles
  * =========================================================================
  * 
- * Ce slice gère tous les aspects liés à la génération des tuiles et au pathfinding :
+ * Ce slice gère la génération et la configuration des tuiles :
  * - Génération des positions hexagonales
- * - Calculs de pathfinding (BFS)
- * - Mise à jour des véhicules
- * - Recherche de tuiles par position
- * - Calculs de distance et de chemins
+ * - Placement des stations de jeu
+ * - Configuration des tuiles de danger
+ * - Synchronisation avec les bots FSM
+ * - Gestion des tuiles de départ
  * 
- * Fonctionnalités migrées depuis utils/utils.js :
- * - generateHexPositions
- * - updateVehicle
- * - findPath, calculatePathDistance
- * - findTileAtPosition, calculatePath
+ * Fonctionnalités principales :
+ * - generateHexPositions, generateBaseHexGrid
+ * - placeGameStations, placeDangerTiles
+ * - syncStartingTilesWithFSMBots
+ * - initializeGameGrid
+ * 
+ * Note : Les fonctions de pathfinding ont été déplacées vers tilePathSlice
+ * pour une meilleure organisation du code.
  */
 
 import { Vector3 } from "three";
 import useGameStore from "../../useGameStore/";
+import fsmLogger from "../../../logger/fsmLogger";
 
 // =========================================================================
 // CONSTANTES HEXAGONALES
@@ -200,132 +204,14 @@ const createTileGenerationSlice = (set, get) => ({
 
 
   // =========================================================================
-  // PATHFINDING FUNCTIONS
+  // NOTE: PATHFINDING FUNCTIONS MOVED TO tilePathSlice
   // =========================================================================
-
-  /**
-   * Find a path between two hex coordinates using breadth-first search
-   * Utilise les fonctions du coordinateSlice pour la validation des coordonnées
-   * @param {string} startCoord - Starting coordinate (e.g., "A1")
-   * @param {string} targetCoord - Target coordinate (e.g., "B2")
-   * @param {Object} tiles - Map of all tiles
-   * @returns {Array} Array of coordinates representing the path
-   */
-  findPath: (startCoord, targetCoord, tiles) => {
-    const { isValidGridCoord, normalizeCoordinate } = get(); // Utilisation du coordinateSlice
-    
-    // Validation et normalisation des coordonnées d'entrée
-    const normalizedStart = normalizeCoordinate(startCoord);
-    const normalizedTarget = normalizeCoordinate(targetCoord);
-    
-    if (!normalizedStart || !normalizedTarget) {
-      console.warn('Invalid coordinates provided to findPath:', { startCoord, targetCoord });
-      return [];
-    }
-    
-    const queue = [[normalizedStart]];
-    const visited = new Set();
-
-    while (queue.length > 0) {
-      const path = queue.shift();
-      const currentCoord = path[path.length - 1];
-
-      if (currentCoord === normalizedTarget) {
-        return path;
-      }
-
-      if (!visited.has(currentCoord)) {
-        visited.add(currentCoord);
-        const neighbors = tiles[currentCoord]?.neighbors || [];
-        neighbors.forEach((neighbor) => {
-          if (!visited.has(neighbor) && 
-              tiles[neighbor]?.walkable !== false &&
-              isValidGridCoord(neighbor)) { // Validation avec coordinateSlice
-            queue.push([...path, neighbor]);
-          }
-        });
-      }
-    }
-
-    return [];
-  },
-
-  /**
-   * Calculate the total distance of a path
-   * Utilise les fonctions du coordinateSlice pour les calculs de distance
-   * @param {Array} path - Array of coordinates representing the path
-   * @param {Object} tiles - Map of all tiles
-   * @returns {number} Total distance of the path
-   */
-  calculatePathDistance: (path, tiles) => {
-    if (!path || path.length < 2) return 0;
-    
-    const { calculateDistance, toVector3 } = get(); // Utilisation du coordinateSlice
-    
-    let totalDistance = 0;
-    for (let i = 0; i < path.length - 1; i++) {
-      const tileA = tiles[path[i]];
-      const tileB = tiles[path[i + 1]];
-      if (tileA && tileB) {
-        // Utilisation de calculateDistance du coordinateSlice
-        totalDistance += calculateDistance(tileA.position, tileB.position);
-      }
-    }
-    
-    return totalDistance;
-  },
-
-  /**
-   * Find the current tile based on a 3D position
-   * Utilise les fonctions du coordinateSlice pour la validation et les constantes pour les seuils
-   * @param {Object} position - Position {x, y, z} to check
-   * @param {Object} tiles - Map of all tiles
-   * @returns {Object|null} The tile at this position or null if not found
-   */
-  findTileAtPosition: (position, tiles) => {
-    const { isValidWorldPosition, calculateDistance } = get(); // Utilisation du coordinateSlice
-    
-    if (!isValidWorldPosition(position)) {
-      return null;
-    }
-    
-    // Utilisation de calculateDistance pour une recherche plus précise avec constante
-    return Object.values(tiles).find(tile => {
-      if (!tile || !isValidWorldPosition(tile.position)) return false;
-      return calculateDistance(position, tile.position) < tileConstants.thresholds.positionMatch;
-    });
-  },
-
-  /**
-   * Calculate path from current position to target
-   * @param {Object} currentPosition - Current position {x, y, z}
-   * @param {string} targetCoord - Target coordinate
-   * @param {Object} tiles - Map of all tiles
-   * @param {string} fallbackCoord - Fallback coordinate if current position doesn't match a tile
-   * @returns {Object} Path data {path, totalDistance}
-   */
-  calculatePath: (currentPosition, targetCoord, tiles, fallbackCoord) => {
-    const { findTileAtPosition, findPath, calculatePathDistance } = get();
-    
-    // Find the tile at current position
-    const currentTile = findTileAtPosition(currentPosition, tiles);
-    
-    let path = [];
-    if (currentTile) {
-      path = findPath(currentTile.coord, targetCoord, tiles);
-    } else if (fallbackCoord) {
-      // Use fallback coordinate if we can't find a tile at current position
-      path = findPath(fallbackCoord, targetCoord, tiles);
-    }
-    
-    if (!path || path.length === 0) {
-      return { path: [], totalDistance: 0 };
-    }
-    
-    const totalDistance = calculatePathDistance(path, tiles);
-    
-    return { path, totalDistance };
-  },
+  // Les fonctions suivantes ont été déplacées vers tilePathSlice pour une meilleure organisation :
+  // - findPath
+  // - calculatePathDistance  
+  // - findTileAtPosition
+  // - calculatePath
+  // Ces fonctions sont maintenant accessibles via get() depuis le store unifié.
 
   /**
    * FONCTION CENTRALE : Synchronise les tuiles de départ avec les bots FSM actifs
@@ -354,7 +240,7 @@ const createTileGenerationSlice = (set, get) => ({
     
     // Éviter les boucles infinies en vérifiant s'il y a du travail à faire
     if (!activeBotIds || activeBotIds.length === 0) {
-      console.log('[TileStore] No active bots to sync, skipping synchronization');
+      fsmLogger.info('[TileStore] No active bots to sync, skipping synchronization');
       return;
     }
     
@@ -415,7 +301,7 @@ const createTileGenerationSlice = (set, get) => ({
         const playerIndex = currentDepartTiles.length + i;
         
         // Assigner le bot correspondant de la liste des non-assignés
-        const botId = unassignedBotIds[i] || `fsm-bot-${Date.now()}-${i}`;
+        const botId = unassignedBotIds[i] || `bot-${Date.now()}-${i}`;
         
         newTiles[selectedTile.coord] = {
           ...selectedTile,
@@ -483,7 +369,7 @@ const createTileGenerationSlice = (set, get) => ({
     set({ tiles: newTiles });
     
     // Log uniquement si des changements ont été effectués
-    console.log(`[TileStore] Synchronized starting tiles with FSM bots:`, {
+    fsmLogger.game(`[TileStore] Synchronized starting tiles with FSM bots:`, {
       totalBots: totalBotsNeeded,
       activeBots: activeBotIds.length,
       departTiles: Object.keys(newTiles).filter(coord => newTiles[coord].type === "depart").length

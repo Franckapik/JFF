@@ -11,8 +11,13 @@
  */
 
 import { createMachine } from 'robot3';
-import { BOT_STATES } from './constants.js';
-import { evaluatingState, exploringState, collectingState, returningState, idleAtBaseState } from './states/index.js';
+import { BOT_STATES } from './constants/constants.js';
+import { 
+  evaluatingState,
+  exploringState,
+  collectingState,
+  idleAtBaseState
+} from './states/index.js';
 import { createEntityContext } from './context/initialContext.js';
 
 // ============================================================================
@@ -34,9 +39,11 @@ export const createBotMachine = (botId, initialData = {}) => {
     // Mapping des états : nom → définition
     {
       [BOT_STATES.EVALUATING]: evaluatingState,
-      [BOT_STATES.EXPLORING]: exploringState,
+      // [BOT_STATES.EXPLORING]: exploringState, // ❌ REMOVED - unused generic state
+      [BOT_STATES.EXPLORING_DEPLOYING]: exploringState,
+      [BOT_STATES.EXPLORING_PROSPECTING]: exploringState,
+      [BOT_STATES.EXPLORING_RETURNING]: exploringState, // Now handled by exploringState
       [BOT_STATES.COLLECTING]: collectingState,
-      [BOT_STATES.RETURNING]: returningState,
       [BOT_STATES.IDLE_AT_BASE]: idleAtBaseState,
     },
     
@@ -62,13 +69,13 @@ export default createBotMachine;
  *    - Analyse la situation et choisit la prochaine action
  * 
  * 2. Transitions automatiques basées sur des événements :
- *    - ASSESSMENT_COMPLETE → détermine le prochain état
+ *    - EVALUATION_COMPLETE → détermine le prochain état
  *    - AREA_EXPLORED → retour à EVALUATING
  *    - RESOURCE_COLLECTED → retour à EVALUATING
  *    - BASE_REACHED → passage à IDLE_AT_BASE
  * 
  * 3. Transitions d'urgence (depuis n'importe quel état) :
- *    - EMERGENCY_DETECTED → RETURNING
+ *    - EMERGENCY_DETECTED → EXPLORING_RETURNING
  *    - MANUAL_OVERRIDE → EVALUATING
  * 
  * 4. Chaque état gère ses propres timeouts et conditions

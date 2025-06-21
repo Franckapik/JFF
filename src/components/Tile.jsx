@@ -3,6 +3,7 @@ import { useTileAnimation } from "../animations/useTileAnimation";
 import { useTileStore } from "../stores/useTileStore";
 import { Html } from "@react-three/drei";
 import { FSMStateIndicator } from "./FSM";
+import fsmLogger from "../logger/fsmLogger";
 
 /**
  * =================================================================
@@ -50,9 +51,12 @@ const Tile = React.memo(({
   // Sélecteurs pour les états de la tuile depuis le store
   const updateHoveredTile = useTileStore((state) => state.updateHoveredTile);
   
-  
   const resourcePercentage = useTileStore((state) => 
     state.tiles[coord] ? state.tiles[coord].resourcePercentage : 0
+  );
+  
+  const isExplored = useTileStore((state) => 
+    state.tiles[coord] ? state.tiles[coord].explored === true : false
   );
   
   /**
@@ -122,6 +126,22 @@ const Tile = React.memo(({
           </div>
         </Html>
       )}
+
+      {/* Helper visuel pour les tuiles explorées */}
+      {isExplored && !isDepart && (
+        <mesh
+          position={[position[0], 0.2, position[2]]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <circleGeometry args={[0.6, 16]} />
+          <meshBasicMaterial 
+            color="#00ff88" 
+
+          />
+        </mesh>
+      )}
+
+         {isExplored && !isDepart && fsmLogger.info(`Tile at ${coord} is explored`)}
 
       {/* Tuile de départ (base joueur) */}
       {isDepart && (
