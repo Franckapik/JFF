@@ -61,6 +61,19 @@ const Tile = React.memo(({
   
   /**
    * -----------------------------------------------------------------
+   * EFFETS
+   * -----------------------------------------------------------------
+   */
+  
+  // Log les tuiles explorées pour debugging
+  React.useEffect(() => {
+    if (isExplored && !isDepart) {
+      fsmLogger.info(`🗺️ Tile ${coord} is now marked as explored`);
+    }
+  }, [isExplored, coord, isDepart]);
+  
+  /**
+   * -----------------------------------------------------------------
    * ÉTATS DÉRIVÉS
    * -----------------------------------------------------------------
    */
@@ -136,12 +149,11 @@ const Tile = React.memo(({
           <circleGeometry args={[0.6, 16]} />
           <meshBasicMaterial 
             color="#00ff88" 
-
+            transparent={true}
+            opacity={0.7}
           />
         </mesh>
       )}
-
-         {isExplored && !isDepart && fsmLogger.info(`Tile at ${coord} is explored`)}
 
       {/* Tuile de départ (base joueur) */}
       {isDepart && (

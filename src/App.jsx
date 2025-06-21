@@ -4,6 +4,7 @@ import Scene from "./components/Scene";
 import "./styles/App.css";
 // import VehicleSelector from "./components/HUD/VehicleSelector"; // Commenté car non utile pour l'instant
 import Clock from "./components/HUD/Clock";
+import TileStoreMonitor from "./components/HUD/TileStoreMonitor";
 
 
 // ============= COMPOSANTS FSM =============
@@ -97,6 +98,11 @@ const App = () => {
           minimizable={true}
         />
         
+        {/* Tile Store Monitor - diagnostic des tuiles */}
+        <TileStoreMonitor 
+          position="top-left"
+          isVisible={true}
+        />
 
       </div>
     </FSMSyncProvider>

@@ -131,6 +131,7 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
           // Logique de marquage des tuiles
           const gridCoord = worldToGrid(visualPosition);
           const tileCoord = gridToHexCoord(gridCoord);
+          
           try {
             const { markTileAsExplored } = useTileStore.getState();
             markTileAsExplored(tileCoord);

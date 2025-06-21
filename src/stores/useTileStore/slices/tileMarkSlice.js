@@ -46,6 +46,13 @@ const createTileMarkSlice = (set, get) => {
      * @param {string} coord - Coordonnée de la tuile à marquer comme explorée (format "x,y")
      */
     markTileAsExplored: (coord) => {
+      const currentTile = get().tiles[coord];
+      
+      if (!currentTile) {
+        console.warn('❌ [TileMarkSlice] Tile not found for coord:', coord);
+        return;
+      }
+      
       set((state) => ({
         tiles: {
           ...state.tiles,
