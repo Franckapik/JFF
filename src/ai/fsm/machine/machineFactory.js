@@ -41,7 +41,6 @@ export const createBotMachine = (botId, initialData = {}) => {
       [BOT_STATES.EVALUATING]: evaluatingState,
       // [BOT_STATES.EXPLORING]: exploringState, // ❌ REMOVED - unused generic state
       [BOT_STATES.EXPLORING_DEPLOYING]: exploringState,
-      [BOT_STATES.EXPLORING_PROSPECTING]: exploringState,
       [BOT_STATES.EXPLORING_RETURNING]: exploringState, // Now handled by exploringState
       [BOT_STATES.COLLECTING]: collectingState,
       [BOT_STATES.IDLE_AT_BASE]: idleAtBaseState,

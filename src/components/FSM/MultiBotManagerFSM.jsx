@@ -94,7 +94,6 @@ const MultiBotManagerFSM = () => {
     total: getBotCount(),
     exploring: Object.values(botStates).filter(bot => 
       bot?.state === 'exploring_deploying' || 
-      bot?.state === 'exploring_prospecting' || 
       bot?.state === 'exploring_returning'
     ).length,
     collecting: Object.values(botStates).filter(bot => bot?.state === 'COLLECTING').length,

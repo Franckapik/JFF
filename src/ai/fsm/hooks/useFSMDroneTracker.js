@@ -16,15 +16,16 @@
  * - movementEvents.createDroneDeployedEvent() → 'DRONE_DEPLOYED'
  * - movementEvents.createDroneReachedTargetEvent() → 'DRONE_REACHED_TARGET'
  * 
- * 🔍 PROSPECTION (prospecting):
- * - movementEvents.createProspectingCompleteEvent() → 'PROSPECTING_COMPLETE'
+ * 🔍 EXPLORATION:
+ * - 'TILE_EXPLORED' lors de l'exploration complète d'une tuile (avec ressources)
  * 
  * 🏠 RETOUR (returning):
  * - movementEvents.createDroneApproachingShipEvent() → 'DRONE_APPROACHING_SHIP'
  * - movementEvents.createDroneReachedShipEvent() → 'DRONE_REACHED_SHIP'
  * 
- * 🎯 EXPLORATION (tous états):
- * - Marquage automatique des tuiles comme explorées/prospectées via useTileStore
+ * 🎯 EXPLORATION (déploiement):
+ * - Marquage automatique des tuiles comme explorées via useTileStore
+ * - Découverte et stockage des ressources en une fois
  */
 
 import { useEffect, useRef, useCallback, useMemo } from 'react';
@@ -128,7 +129,7 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
         if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
           fsmLogger.mouvement(`🔍 [${botId}] ${droneType} target reached - distance: ${distance.toFixed(2)}`);
           
-          // Logique de marquage des tuiles
+          // Logique de marquage des tuiles et découverte de ressources
           const gridCoord = worldToGrid(visualPosition);
           const tileCoord = gridToHexCoord(gridCoord);
           
@@ -136,73 +137,31 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
             const { markTileAsExplored } = useTileStore.getState();
             markTileAsExplored(tileCoord);
             fsmLogger.mouvement(`✅ [${botId}] Tile explored by ${droneType}: ${JSON.stringify(tileCoord)}`);
+            
+            // Découverte des ressources en une fois
+            const resourcesFound = {
+              food: Math.random() > 0.7 ? Math.floor(Math.random() * 50) : 0,
+              debris: Math.random() > 0.5 ? Math.floor(Math.random() * 100) : 0,
+              special: Math.random() > 0.9 ? 1 : 0
+            };
+            
+            fsmLogger.mouvement(`💎 [${botId}] ${droneType} discovered resources: ${JSON.stringify(resourcesFound)}`);
+            
+            // Envoyer l'événement d'exploration qui correspond à l'état FSM
+            const tileExploredEvent = {
+              type: 'TILE_EXPLORED',
+              coord: tileCoord,
+              resources: resourcesFound,
+              position: visualPosition,
+              droneType,
+              hasResources: Object.values(resourcesFound).some(val => val > 0),
+              timestamp: Date.now()
+            };
+            send(tileExploredEvent);
+            
           } catch (error) {
-            console.error(`❌ [${botId}] Failed to mark tile: ${error.message}`);
+            console.error(`❌ [${botId}] Failed to explore tile: ${error.message}`);
           }
-          
-          // ✅ CORRECTION: Utiliser l'événement simple qui existe
-          const droneReachedEvent = {
-            type: 'DRONE_REACHED_TARGET',
-            position: visualPosition,
-            tileCoord,
-            droneType,
-            timestamp: Date.now()
-          };
-          send(droneReachedEvent);
-          
-          markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.EXPLORATION_RESET);
-          return true;
-        }
-        return false;
-      }
-    },
-    prospecting: {
-      onProspectingStart: (distance, visualPosition, now) => {
-        const eventKey = `drone_prospecting_start_${botId}_${droneType}`;
-        if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
-          fsmLogger.mouvement(`🔍 [${botId}] ${droneType} starting prospecting phase`);
-          
-          // Capturer les valeurs pour éviter les problèmes de closure
-          const capturedPosition = { ...visualPosition };
-          const capturedGridCoord = worldToGrid(visualPosition);
-          const capturedTileCoord = gridToHexCoord(capturedGridCoord);
-          
-          // Timer pour la prospection
-          setTimeout(() => {
-            const prospectingEventKey = `drone_prospecting_complete_${botId}_${droneType}`;
-            if (canSendEvent(prospectingEventKey)) {
-              fsmLogger.mouvement(`💎 [${botId}] ${droneType} prospecting completed`);
-              
-              try {
-                const { markTileAsProspected } = useTileStore.getState();
-                
-                // Simuler la découverte de ressources
-                const resourcesFound = {
-                  food: Math.random() > 0.7 ? Math.floor(Math.random() * 50) : 0,
-                  debris: Math.random() > 0.5 ? Math.floor(Math.random() * 100) : 0,
-                  special: Math.random() > 0.9 ? 1 : 0
-                };
-                
-                markTileAsProspected(capturedTileCoord, resourcesFound);
-                fsmLogger.mouvement(`🔍 [${botId}] ${droneType} prospecting results: ${JSON.stringify(resourcesFound)}`);
-                
-                // ✅ CORRECTION: Utiliser l'événement simple qui existe
-                const prospectingCompleteEvent = {
-                  type: 'PROSPECTING_COMPLETE',
-                  position: capturedPosition,
-                  tileCoord: capturedTileCoord,
-                  resourcesFound,
-                  droneType,
-                  timestamp: Date.now()
-                };
-                send(prospectingCompleteEvent);
-                
-                markEventSent(prospectingEventKey, POSITION_TRACKER_CONFIG.TIMINGS.EXPLORATION_RESET);
-              } catch (error) {
-                console.error(`❌ [${botId}] Failed to complete ${droneType} prospecting: ${error.message}`);
-              }
-            }
-          }, POSITION_TRACKER_CONFIG.TIMINGS.PROSPECTING_DURATION || 3000);
           
           markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.EXPLORATION_RESET);
           return true;
@@ -305,10 +264,6 @@ export const useFSMDroneTracker = (context, send, botId, droneType = 'explorer')
       
       if (!eventSent && handler.onTargetReached) {
         eventSent = handler.onTargetReached(distance, visualPosition, now);
-      }
-      
-      if (!eventSent && handler.onProspectingStart) {
-        eventSent = handler.onProspectingStart(distance, visualPosition, now);
       }
     }
     

@@ -8,12 +8,16 @@ import ShipResources from './ShipResources';
 const ResourceSubTabs = React.memo(({ activeSubTab, setActiveSubTab, botMemory }) => {
   const subTabs = [
     { 
-      id: 'resources', 
-      label: `Ressources (${botMemory?.knownResources?.length || 0})` 
+      id: 'tiles', 
+      label: `Tuiles (${botMemory?.knownTiles?.length || 0})` 
     },
     { 
-      id: 'collected', 
-      label: `Collectées (${botMemory?.collectedResources?.length || 0})` 
+      id: 'explored', 
+      label: `Explorées (${botMemory?.exploredTiles?.length || 0})` 
+    },
+    { 
+      id: 'collectible', 
+      label: `Collectibles (${botMemory?.collectibleTiles?.length || 0})` 
     },
     { 
       id: 'dangers', 
@@ -37,11 +41,110 @@ const ResourceSubTabs = React.memo(({ activeSubTab, setActiveSubTab, botMemory }
 });
 
 /**
- * Composant pour l'affichage des ressources connues
+ * Composant pour l'affichage des tuiles connues
  */
-const KnownResourcesTable = ({ botMemory, botVehicle, calculateDistance }) => {
-  if (!botMemory?.knownResources || botMemory.knownResources.length === 0) {
-    return <div className="debugger-empty-message">Aucune ressource découverte</div>;
+const KnownTilesTable = ({ botMemory, botVehicle, calculateDistance }) => {
+  if (!botMemory?.knownTiles || botMemory.knownTiles.length === 0) {
+    return <div className="debugger-empty-message">Aucune tuile découverte</div>;
+  }
+
+  return (
+    <div className="debugger-table-container">
+      <table className="debugger-resources-table">
+        <thead>
+          <tr>
+            <th>Coord</th>
+            <th>État</th>
+            <th>Distance</th>
+            <th>Food</th>
+            <th>Debris</th>
+            <th>Special</th>
+            <th>Exploré</th>
+            <th>Collecté</th>
+          </tr>
+        </thead>
+        <tbody>
+          {botMemory.knownTiles.map((tile, index) => (
+            <tr key={index}>
+              <td>{tile.coord}</td>
+              <td>
+                <span className={`debugger-tile-status ${tile.collected ? 'collected' : tile.explored ? 'explored' : 'unknown'}`}>
+                  {tile.collected ? '✅ Collecté' : tile.explored ? '🔍 Exploré' : '❓ Inconnu'}
+                </span>
+              </td>
+              <td>{calculateDistance(botVehicle?.coord, tile.coord, true, true)}</td>
+              <td className={`debugger-resource-value ${tile.resources?.food > 0 ? 'debugger-resource-food' : ''}`}>
+                {tile.resources?.food || 0}
+              </td>
+              <td className={`debugger-resource-value ${tile.resources?.debris > 0 ? 'debugger-resource-debris' : ''}`}>
+                {tile.resources?.debris || 0}
+              </td>
+              <td className={`debugger-resource-value ${tile.resources?.special > 0 ? 'debugger-resource-special' : ''}`}>
+                {tile.resources?.special || 0}
+              </td>
+              <td>{tile.exploredAt ? new Date(tile.exploredAt).toLocaleTimeString() : '-'}</td>
+              <td>{tile.collectedAt ? new Date(tile.collectedAt).toLocaleTimeString() : '-'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+/**
+ * Composant pour l'affichage des tuiles explorées
+ */
+const ExploredTilesTable = ({ botMemory, botVehicle, calculateDistance }) => {
+  if (!botMemory?.exploredTiles || botMemory.exploredTiles.length === 0) {
+    return <div className="debugger-empty-message">Aucune tuile explorée</div>;
+  }
+
+  return (
+    <div className="debugger-table-container">
+      <table className="debugger-resources-table">
+        <thead>
+          <tr>
+            <th>Coord</th>
+            <th>Distance</th>
+            <th>Ressources</th>
+            <th>Exploré le</th>
+            <th>Collecté</th>
+          </tr>
+        </thead>
+        <tbody>
+          {botMemory.exploredTiles.map((tile, index) => (
+            <tr key={index}>
+              <td>{tile.coord}</td>
+              <td>{calculateDistance(botVehicle?.coord, tile.coord, true, true)}</td>
+              <td>
+                <span className={`debugger-resources-summary ${tile.hasResources ? 'has-resources' : 'no-resources'}`}>
+                  {tile.hasResources ? 
+                    `🎯 F:${tile.resources?.food || 0} D:${tile.resources?.debris || 0} S:${tile.resources?.special || 0}` : 
+                    '❌ Vide'
+                  }
+                </span>
+              </td>
+              <td>{tile.exploredAt ? new Date(tile.exploredAt).toLocaleTimeString() : '-'}</td>
+              <td>
+                <span className={`debugger-collected-status ${tile.collected ? 'collected' : 'not-collected'}`}>
+                  {tile.collected ? '✅ Oui' : '⏳ Non'}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+/**
+ * Composant pour l'affichage des tuiles collectibles
+ */
+const CollectibleTilesTable = ({ botMemory, botVehicle, calculateDistance }) => {
+  if (!botMemory?.collectibleTiles || botMemory.collectibleTiles.length === 0) {
+    return <div className="debugger-empty-message">Aucune tuile collectible disponible</div>;
   }
 
   return (
@@ -54,68 +157,31 @@ const KnownResourcesTable = ({ botMemory, botVehicle, calculateDistance }) => {
             <th>Food</th>
             <th>Debris</th>
             <th>Special</th>
+            <th>Total</th>
           </tr>
         </thead>
         <tbody>
-          {botMemory.knownResources.map((resource, index) => (
-            <tr key={index}>
-              <td>{resource.coord}</td>
-              <td>{calculateDistance(botVehicle?.coord, resource.coord, true, true)}</td>
-              <td className={`debugger-resource-value ${resource.resources?.food > 0 ? 'debugger-resource-food' : ''}`}>
-                {resource.resources?.food || 0}
-              </td>
-              <td className={`debugger-resource-value ${resource.resources?.debris > 0 ? 'debugger-resource-debris' : ''}`}>
-                {resource.resources?.debris || 0}
-              </td>
-              <td className={`debugger-resource-value ${resource.resources?.special > 0 ? 'debugger-resource-special' : ''}`}>
-                {resource.resources?.special || 0}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-
-/**
- * Composant pour l'affichage des ressources collectées
- */
-const CollectedResourcesTable = ({ botMemory }) => {
-  if (!botMemory?.collectedResources || botMemory.collectedResources.length === 0) {
-    return <div className="debugger-empty-message">Aucune ressource collectée</div>;
-  }
-
-  return (
-    <div className="debugger-table-container">
-      <table className="debugger-resources-table">
-        <thead>
-          <tr>
-            <th>Coord</th>
-            <th>Food</th>
-            <th>Debris</th>
-            <th>Special</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {botMemory.collectedResources.map((resource, index) => (
-            <tr key={index}>
-              <td>{resource.coord}</td>
-              <td className={`debugger-resource-value ${resource.resources?.food > 0 ? 'debugger-resource-food' : ''}`}>
-                {resource.resources?.food || 0}
-              </td>
-              <td className={`debugger-resource-value ${resource.resources?.debris > 0 ? 'debugger-resource-debris' : ''}`}>
-                {resource.resources?.debris || 0}
-              </td>
-              <td className={`debugger-resource-value ${resource.resources?.special > 0 ? 'debugger-resource-special' : ''}`}>
-                {resource.resources?.special || 0}
-              </td>
-              <td>
-                {resource.collectedAt ? new Date(resource.collectedAt).toLocaleTimeString() : 'N/A'}
-              </td>
-            </tr>
-          ))}
+          {botMemory.collectibleTiles.map((tile, index) => {
+            const totalResources = (tile.resources?.food || 0) + (tile.resources?.debris || 0) + (tile.resources?.special || 0);
+            return (
+              <tr key={index}>
+                <td>{tile.coord}</td>
+                <td>{calculateDistance(botVehicle?.coord, tile.coord, true, true)}</td>
+                <td className={`debugger-resource-value ${tile.resources?.food > 0 ? 'debugger-resource-food' : ''}`}>
+                  {tile.resources?.food || 0}
+                </td>
+                <td className={`debugger-resource-value ${tile.resources?.debris > 0 ? 'debugger-resource-debris' : ''}`}>
+                  {tile.resources?.debris || 0}
+                </td>
+                <td className={`debugger-resource-value ${tile.resources?.special > 0 ? 'debugger-resource-special' : ''}`}>
+                  {tile.resources?.special || 0}
+                </td>
+                <td className="debugger-resource-total">
+                  <strong>{totalResources}</strong>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -177,15 +243,26 @@ const ResourcesTab = ({
       />
       
       <div className="debugger-subtab-content">
-        {activeSubTab === 'resources' && (
-          <KnownResourcesTable 
+        {activeSubTab === 'tiles' && (
+          <KnownTilesTable 
             botMemory={botMemory}
             botVehicle={botVehicle}
             calculateDistance={calculateDistance}
           />
         )}
-        {activeSubTab === 'collected' && (
-          <CollectedResourcesTable botMemory={botMemory} />
+        {activeSubTab === 'explored' && (
+          <ExploredTilesTable 
+            botMemory={botMemory}
+            botVehicle={botVehicle}
+            calculateDistance={calculateDistance}
+          />
+        )}
+        {activeSubTab === 'collectible' && (
+          <CollectibleTilesTable 
+            botMemory={botMemory}
+            botVehicle={botVehicle}
+            calculateDistance={calculateDistance}
+          />
         )}
         {activeSubTab === 'dangers' && (
           <DangersTable 

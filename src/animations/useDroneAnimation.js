@@ -71,7 +71,6 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
     
     const isMoving = droneState === 'deploying' || 
                      droneState === 'exploring' || 
-                     droneState === 'prospecting' || 
                      droneState === 'returning';
     
     // Debug réduit - seulement en cas de problème
@@ -119,12 +118,6 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
       case 'exploring':
         droneRef.current.position.y = targetPosition.y + Math.sin(now * 3) * 0.2;
         droneRef.current.rotation.y += delta * 1.5;
-        break;
-        
-      case 'prospecting':
-        droneRef.current.position.y = targetPosition.y + Math.sin(now * 4) * 0.15;
-        droneRef.current.rotation.y += delta * 0.8;
-        droneRef.current.rotation.z = Math.sin(now * 2) * 0.1;
         break;
         
       case 'returning':

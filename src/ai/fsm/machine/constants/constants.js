@@ -7,7 +7,7 @@
  * Ce fichier contient uniquement les constantes activement utilisées.
  * 
  * @author FSM Migration
- * @version 2.0.0 - Nettoyage et ajout exploring_prospecting
+ * @version 2.0.0 - Nettoyage et simplification exploration
  */
 
 // ============================================================================
@@ -22,7 +22,6 @@ export const BOT_STATES = {
   EVALUATING: 'evaluating',
   EXPLORING: 'exploring',                          // ⚠️ LEGACY: Use specific sub-states instead
   EXPLORING_DEPLOYING: 'exploring_deploying',
-  EXPLORING_PROSPECTING: 'exploring_prospecting',  // Nouveau sous-état pour la prospection
   EXPLORING_RETURNING: 'exploring_returning',      // État de retour après exploration
   COLLECTING: 'collecting',
   IDLE_AT_BASE: 'idleAtBase'
@@ -48,7 +47,6 @@ export const DRONE_VISUAL_STATES = {
   docked: 'docked',           // En formation autour du vaisseau
   deploying: 'deploying',     // En mouvement vers la cible
   exploring: 'exploring',     // À la cible, en exploration
-  prospecting: 'prospecting', // En phase de prospection détaillée
   returning: 'returning',     // En retour vers le vaisseau
   failed: 'failed'           // En erreur
 };
@@ -83,7 +81,6 @@ export const POSITION_TRACKER_CONFIG = {
     DEPLOYMENT_RESET: 5000,    // Reset du flag de déploiement
     EXPLORATION_RESET: 3000,   // Reset du flag d'exploration
     RETURN_RESET: 5000,        // Reset du flag de retour
-    PROSPECTING_DURATION: 3000, // Durée de la phase de prospection
     
     // === TIMINGS VAISSEAUX ===
     SHIP_MOVEMENT_RESET: 2000, // Reset du flag de mouvement vaisseau

@@ -9,7 +9,7 @@ import { useTileStore } from '../../stores/useTileStore';
  * Composant de débogage pour surveiller l'état du TileStore en temps réel.
  * Affiche :
  * - Nombre total de tuiles
- * - Tuiles explorées, prospectées, collectées
+ * - Tuiles explorées, collectées
  * - Détails d'une tuile sélectionnée
  * - Log des changements d'état
  */
@@ -45,7 +45,6 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
     return {
       total: allTiles.length,
       explored: allTiles.filter(tile => tile.explored === true).length,
-      prospected: allTiles.filter(tile => tile.prospected === true).length,
       collected: allTiles.filter(tile => tile.collected === true).length,
       withResources: allTiles.filter(tile => tile.resourcePercentage > 0).length,
       depart: allTiles.filter(tile => tile.type === 'depart').length,
@@ -115,7 +114,6 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
         </div>
         <div>Total: {stats.total} tuiles</div>
         <div style={{ color: '#00ff88' }}>✅ Explorées: {stats.explored}</div>
-        <div style={{ color: '#FFD700' }}>🔍 Prospectées: {stats.prospected}</div>
         <div style={{ color: '#ff6b6b' }}>📦 Collectées: {stats.collected}</div>
         <div style={{ color: '#ff9933' }}>💎 Avec ressources: {stats.withResources}</div>
         <div style={{ color: '#9966ff' }}>🏠 Bases: {stats.depart}</div>
@@ -160,9 +158,6 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
             <div style={{ color: selectedTile.explored ? '#00ff88' : '#ccc' }}>
               Explorée: {selectedTile.explored ? '✅ OUI' : '❌ NON'}
             </div>
-            <div style={{ color: selectedTile.prospected ? '#FFD700' : '#ccc' }}>
-              Prospectée: {selectedTile.prospected ? '✅ OUI' : '❌ NON'}
-            </div>
             <div style={{ color: selectedTile.collected ? '#ff6b6b' : '#ccc' }}>
               Collectée: {selectedTile.collected ? '✅ OUI' : '❌ NON'}
             </div>
@@ -176,11 +171,6 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
             )}
             {selectedTile.playerId && (
               <div>Joueur: {selectedTile.playerId}</div>
-            )}
-            {selectedTile.prospectionTimestamp && (
-              <div style={{ fontSize: '9px', color: '#ccc' }}>
-                Dernière prospection: {new Date(selectedTile.prospectionTimestamp).toLocaleTimeString()}
-              </div>
             )}
           </div>
         </div>
