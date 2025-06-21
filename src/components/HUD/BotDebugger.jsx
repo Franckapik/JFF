@@ -11,6 +11,7 @@ import DebuggerTabs from './debugger/DebuggerTabs';
 // Composants des onglets
 import ActionsTab from './debugger/ActionsTab';
 import StateTab from './debugger/StateTab';
+import ResourcesTab from './debugger/ResourcesTab';
 import TileTab from './debugger/TileTab';
 import StoresTab from './debugger/StoresTab';
 
@@ -66,6 +67,16 @@ const BotDebuggerNew = () => {
             activeBotId={activeBotId}
             formatStateName={formatStateName}
             isVehicleActive={isVehicleActive}
+          />
+        );
+      case 'resources':
+        return (
+          <ResourcesTab
+            botVehicle={botVehicle}
+            botMemory={botMemory}
+            activeSubTab={activeSubTab}
+            setActiveSubTab={setActiveSubTab}
+            calculateDistance={calculateDistance}
           />
         );
       case 'tile':

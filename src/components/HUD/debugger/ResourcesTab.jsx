@@ -3,6 +3,105 @@ import ResourceBar from './ResourceBar';
 import ShipResources from './ShipResources';
 
 /**
+ * Composant de résumé des ressources découvertes
+ */
+const ResourcesSummary = React.memo(({ botMemory }) => {
+  if (!botMemory?.knownTiles || botMemory.knownTiles.length === 0) {
+    return (
+      <div className="debugger-resources-summary">
+        <div className="summary-card">
+          <h4>📊 Résumé de l'Exploration</h4>
+          <p>Aucune donnée de mémoire disponible</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculer les totaux depuis knownTiles
+  const totals = botMemory.knownTiles.reduce((acc, tile) => {
+    if (tile.explored && tile.resources) {
+      acc.food += tile.resources.food || 0;
+      acc.debris += tile.resources.debris || 0;
+      acc.special += tile.resources.special || 0;
+      acc.tilesWithResources += (tile.resources.food || tile.resources.debris || tile.resources.special) > 0 ? 1 : 0;
+    }
+    return acc;
+  }, { food: 0, debris: 0, special: 0, tilesWithResources: 0 });
+
+  const stats = botMemory.stats || {};
+  const exploredCount = botMemory.exploredTiles?.length || 0;
+  const collectibleCount = botMemory.collectibleTiles?.length || 0;
+  
+  // Indicateur de découverte récente (dernières 30 secondes)
+  const recentDiscovery = stats.lastExploration && 
+    (Date.now() - stats.lastExploration.timestamp) < 30000;
+
+  return (
+    <div className="debugger-resources-summary">
+      <div className="summary-grid">
+        <div className="summary-card">
+          <h4>📍 Exploration {recentDiscovery && <span className="recent-activity">🆕</span>}</h4>
+          <div className="stat-row">
+            <span>Tuiles explorées:</span>
+            <strong>{exploredCount}</strong>
+          </div>
+          <div className="stat-row">
+            <span>Avec ressources:</span>
+            <strong className="resource-highlight">{totals.tilesWithResources}</strong>
+          </div>
+          <div className="stat-row">
+            <span>Collectibles:</span>
+            <strong className="collectible-highlight">{collectibleCount}</strong>
+          </div>
+        </div>
+
+        <div className="summary-card">
+          <h4>💎 Ressources</h4>
+          <div className="resource-totals">
+            <div className="resource-item food">
+              <span className="resource-icon">🍞</span>
+              <span className="resource-label">Food:</span>
+              <strong>{totals.food}</strong>
+            </div>
+            <div className="resource-item debris">
+              <span className="resource-icon">🔩</span>
+              <span className="resource-label">Debris:</span>
+              <strong>{totals.debris}</strong>
+            </div>
+            <div className="resource-item special">
+              <span className="resource-icon">⭐</span>
+              <span className="resource-label">Special:</span>
+              <strong>{totals.special}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="summary-card">
+          <h4>⏱️ Actions</h4>
+          <div className="stat-row">
+            <span>Dernière:</span>
+            <small className={recentDiscovery ? 'recent-timestamp' : ''}>
+              {stats.lastExploration ? 
+                `${new Date(stats.lastExploration.timestamp).toLocaleTimeString().slice(0,5)} (${stats.lastExploration.coord})` : 
+                'Aucune'
+              }
+            </small>
+          </div>
+          <div className="stat-row">
+            <span>Collecte:</span>
+            <small>{stats.lastCollection ? new Date(stats.lastCollection.timestamp).toLocaleTimeString().slice(0,5) : 'Aucune'}</small>
+          </div>
+          <div className="stat-row">
+            <span>Mémoire:</span>
+            <small>{botMemory.memorySize} entrées</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+/**
  * Composant pour les sous-onglets des ressources
  */
 const ResourceSubTabs = React.memo(({ activeSubTab, setActiveSubTab, botMemory }) => {
@@ -64,28 +163,40 @@ const KnownTilesTable = ({ botMemory, botVehicle, calculateDistance }) => {
           </tr>
         </thead>
         <tbody>
-          {botMemory.knownTiles.map((tile, index) => (
-            <tr key={index}>
-              <td>{tile.coord}</td>
-              <td>
-                <span className={`debugger-tile-status ${tile.collected ? 'collected' : tile.explored ? 'explored' : 'unknown'}`}>
-                  {tile.collected ? '✅ Collecté' : tile.explored ? '🔍 Exploré' : '❓ Inconnu'}
-                </span>
-              </td>
-              <td>{calculateDistance(botVehicle?.coord, tile.coord, true, true)}</td>
-              <td className={`debugger-resource-value ${tile.resources?.food > 0 ? 'debugger-resource-food' : ''}`}>
-                {tile.resources?.food || 0}
-              </td>
-              <td className={`debugger-resource-value ${tile.resources?.debris > 0 ? 'debugger-resource-debris' : ''}`}>
-                {tile.resources?.debris || 0}
-              </td>
-              <td className={`debugger-resource-value ${tile.resources?.special > 0 ? 'debugger-resource-special' : ''}`}>
-                {tile.resources?.special || 0}
-              </td>
-              <td>{tile.exploredAt ? new Date(tile.exploredAt).toLocaleTimeString() : '-'}</td>
-              <td>{tile.collectedAt ? new Date(tile.collectedAt).toLocaleTimeString() : '-'}</td>
-            </tr>
-          ))}
+          {botMemory.knownTiles.map((tile, index) => {
+            const totalResources = (tile.resources?.food || 0) + (tile.resources?.debris || 0) + (tile.resources?.special || 0);
+            const hasResources = totalResources > 0;
+            
+            return (
+              <tr key={index} className={hasResources ? 'tile-with-resources' : ''}>
+                <td>
+                  <strong>{tile.coord}</strong>
+                  {hasResources && <span className="resource-indicator">💎</span>}
+                </td>
+                <td>
+                  <span className={`debugger-tile-status ${tile.collected ? 'collected' : tile.explored ? 'explored' : 'unknown'}`}>
+                    {tile.collected ? '✅ Collecté' : tile.explored ? '🔍 Exploré' : '❓ Inconnu'}
+                  </span>
+                </td>
+                <td>{calculateDistance(botVehicle?.coord, tile.coord, true, true)}</td>
+                <td className={`debugger-resource-value ${tile.resources?.food > 0 ? 'debugger-resource-food' : ''}`}>
+                  {tile.resources?.food > 0 && '🍞'} {tile.resources?.food || 0}
+                </td>
+                <td className={`debugger-resource-value ${tile.resources?.debris > 0 ? 'debugger-resource-debris' : ''}`}>
+                  {tile.resources?.debris > 0 && '🔩'} {tile.resources?.debris || 0}
+                </td>
+                <td className={`debugger-resource-value ${tile.resources?.special > 0 ? 'debugger-resource-special' : ''}`}>
+                  {tile.resources?.special > 0 && '⭐'} {tile.resources?.special || 0}
+                </td>
+                <td>
+                  <small>{tile.exploredAt ? new Date(tile.exploredAt).toLocaleTimeString() : '-'}</small>
+                </td>
+                <td>
+                  <small>{tile.collectedAt ? new Date(tile.collectedAt).toLocaleTimeString() : '-'}</small>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -236,6 +347,8 @@ const ResourcesTab = ({
 
   return (
     <div className="debugger-tab-content">
+      <ResourcesSummary botMemory={botMemory} />
+      
       <ResourceSubTabs 
         activeSubTab={activeSubTab}
         setActiveSubTab={setActiveSubTab}

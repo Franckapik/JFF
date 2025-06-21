@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useTileStore } from "../../../stores/useTileStore";
 import { useBotMachine } from "../../../ai/fsm/hooks/useBotMachine.js";
-import { memoryUtils } from "../../../ai/fsm/machine/reducers/context.js";
+import contextReducers from "../../../ai/fsm/machine/reducers/context.js";
 
 /**
  * Hook personnalisé pour gérer les données du debugger (FSM-only)
@@ -69,8 +69,8 @@ export const useDebuggerData = () => {
     },
     
     // Données dérivées calculées à partir de knownTiles
-    exploredTiles: memoryUtils.getExploredTiles(context),
-    collectibleTiles: memoryUtils.getCollectibleTiles(context),
+    exploredTiles: contextReducers.utils.getExploredTiles(context),
+    collectibleTiles: contextReducers.utils.getCollectibleTiles(context),
     
     // Historique conservé
     knownDangers: context.memory.knownDangers || [],

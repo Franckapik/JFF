@@ -12,6 +12,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useCentralizedEventHistorySync } from "../../ai/fsm/hooks/useCentralizedEventHistorySync.js";
 import { useFSMBots } from "../../stores/useFSMStore/useFSMBots.js";
+import { useTileStore } from "../../stores/useTileStore/index.js";
+import contextReducers from "../../ai/fsm/machine/reducers/context.js";
+
+// Import du composant ResourcesTab
+import ResourcesTab from "../HUD/debugger/ResourcesTab.jsx";
 
 /**
  * Composant de visualisation d'une machine d'état individuelle
@@ -450,7 +455,17 @@ const FSMDebugPanel = ({
   
   const [isMinimized, setIsMinimized] = useState(false);
   const [expandedBot, setExpandedBot] = useState(null);
+  const [activeTab, setActiveTab] = useState('fsm'); // Nouvel état pour les onglets
+  const [selectedBotId, setSelectedBotId] = useState(null); // Bot sélectionné pour l'onglet ressources
+  const [activeSubTab, setActiveSubTab] = useState('tiles'); // Sous-onglet pour ressources
   const [globalStats, setGlobalStats] = useState({});
+  
+  // Sélectionner le premier bot par défaut
+  useEffect(() => {
+    if (!selectedBotId && botIds.length > 0) {
+      setSelectedBotId(botIds[0]);
+    }
+  }, [botIds, selectedBotId]);
 
   // Calcul des stats globales
   useEffect(() => {
@@ -469,17 +484,20 @@ const FSMDebugPanel = ({
   const getContainerStyle = () => {
     const baseStyle = {
       position: 'fixed',
-      width: '350px',
-      maxHeight: '60vh',
+      width: '380px',
+      maxHeight: '70vh',
       overflowY: 'auto',
+      overflowX: 'hidden', // Empêcher le scroll horizontal
       backgroundColor: '#1a1a1a',
       border: '2px solid #4CAF50',
       borderRadius: '8px',
-      padding: '10px',
+      padding: '8px',
       fontFamily: 'monospace',
-      fontSize: '12px',
+      fontSize: '11px',
       color: '#fff',
-      zIndex: 1100
+      zIndex: 1100,
+      wordWrap: 'break-word', // Forcer le retour à la ligne
+      boxSizing: 'border-box' // Inclure padding dans la largeur
     };
 
     switch (position) {
@@ -521,6 +539,32 @@ const FSMDebugPanel = ({
     color: '#000'
   };
 
+  // Récupérer les données du bot sélectionné pour l'onglet ressources
+  const selectedBotContext = useCentralizedEventHistorySync(selectedBotId)?.current?.context;
+  const calculateDistance = useTileStore((state) => state.calculateDistance);
+
+  // Préparer les données de mémoire du bot
+  const botMemory = selectedBotContext?.memory ? {
+    knownTiles: Array.from(selectedBotContext.memory.knownTiles?.values() || []),
+    stats: selectedBotContext.memory.stats || {
+      tilesExplored: 0,
+      tilesCollected: 0,
+      totalResourcesFound: 0,
+      lastExploration: null,
+      lastCollection: null
+    },
+    exploredTiles: contextReducers.utils.getExploredTiles(selectedBotContext),
+    collectibleTiles: contextReducers.utils.getCollectibleTiles(selectedBotContext),
+    knownDangers: selectedBotContext.memory.knownDangers || [],
+    stateHistory: selectedBotContext.memory.stateHistory || [],
+    transitionHistory: selectedBotContext.memory.transitionHistory || [],
+    memorySize: selectedBotContext.memory.knownTiles?.size || 0,
+    hasMemoryData: (selectedBotContext.memory.knownTiles?.size || 0) > 0
+  } : null;
+
+  // Données du véhicule du bot sélectionné
+  const botVehicle = selectedBotContext?.vehicle || selectedBotContext?.botVehicle;
+
   return (
     <div style={getContainerStyle()}>
       {/* Header avec titre et contrôles */}
@@ -540,42 +584,127 @@ const FSMDebugPanel = ({
         </div>
       </div>
 
+      {/* Système d'onglets */}
+      {!isMinimized && (
+        <div style={{
+          display: 'flex',
+          flexWrap: 'nowrap',
+          borderBottom: '1px solid #333',
+          marginBottom: '8px',
+          gap: '2px'
+        }}>
+          <button
+            style={{
+              ...buttonStyle,
+              backgroundColor: activeTab === 'fsm' ? '#4CAF50' : '#333',
+              color: activeTab === 'fsm' ? '#000' : '#ccc',
+              borderRadius: '3px 3px 0 0',
+              flex: '0 0 auto',
+              fontSize: '9px',
+              padding: '3px 8px'
+            }}
+            onClick={() => setActiveTab('fsm')}
+          >
+            🔬 FSM
+          </button>
+          <button
+            style={{
+              ...buttonStyle,
+              backgroundColor: activeTab === 'resources' ? '#4CAF50' : '#333',
+              color: activeTab === 'resources' ? '#000' : '#ccc',
+              borderRadius: '3px 3px 0 0',
+              flex: '0 0 auto',
+              fontSize: '9px',
+              padding: '3px 8px'
+            }}
+            onClick={() => setActiveTab('resources')}
+          >
+            💎 Ressources
+          </button>
+          {activeTab === 'resources' && (
+            <select
+              style={{
+                backgroundColor: '#333',
+                color: '#fff',
+                border: 'none',
+                padding: '2px 4px',
+                fontSize: '9px',
+                borderRadius: '3px',
+                marginLeft: 'auto',
+                maxWidth: '80px',
+                flex: '0 0 auto'
+              }}
+              value={selectedBotId || ''}
+              onChange={(e) => setSelectedBotId(e.target.value)}
+            >
+              {botIds.map(botId => (
+                <option key={botId} value={botId}>{botId}</option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+
       {/* Contenu (si non minimisé) */}
       {!isMinimized && (
         <>
-          {/* Stats globales */}
-          <div style={{ 
-            marginBottom: '10px', 
-            padding: '5px', 
-            backgroundColor: '#2a2a2a', 
-            borderRadius: '3px',
-            fontSize: '11px'
-          }}>
-            <div><strong>Bots FSM actifs:</strong> {String(globalStats.activeCount || 0)}</div>
-            <div><strong>Système:</strong> {globalStats.systemRunning ? '🟢 ACTIF' : '🔴 ARRÊTÉ'}</div>
-            <div><strong>Dernière MAJ:</strong> {String(globalStats.timestamp || 'N/A')}</div>
-          </div>
+          {activeTab === 'fsm' && (
+            <>
+              {/* Stats globales */}
+              <div style={{ 
+                marginBottom: '10px', 
+                padding: '5px', 
+                backgroundColor: '#2a2a2a', 
+                borderRadius: '3px',
+                fontSize: '11px'
+              }}>
+                <div><strong>Bots FSM actifs:</strong> {String(globalStats.activeCount || 0)}</div>
+                <div><strong>Système:</strong> {globalStats.systemRunning ? '🟢 ACTIF' : '🔴 ARRÊTÉ'}</div>
+                <div><strong>Dernière MAJ:</strong> {String(globalStats.timestamp || 'N/A')}</div>
+              </div>
 
-          {/* Liste des machines d'état */}
-          {botIds.map(botId => (
-            <div key={botId}>
-              <FSMVisualization 
-                botId={botId}
-                expanded={expandedBot === botId}
+              {/* Liste des machines d'état */}
+              {botIds.map(botId => (
+                <div key={botId}>
+                  <FSMVisualization 
+                    botId={botId}
+                    expanded={expandedBot === botId}
+                  />
+                  <button
+                    style={{
+                      ...buttonStyle,
+                      marginLeft: '5px',
+                      marginBottom: '5px',
+                      fontSize: '9px'
+                    }}
+                    onClick={() => setExpandedBot(expandedBot === botId ? null : botId)}
+                  >
+                    {expandedBot === botId ? '🔼 Réduire' : '🔽 Détails'}
+                  </button>
+                </div>
+              ))}
+            </>
+          )}
+
+          {activeTab === 'resources' && selectedBotId && (
+            <div style={{
+              backgroundColor: '#1a1a1a',
+              borderRadius: '4px',
+              padding: '6px',
+              fontSize: '10px',
+              width: '100%',
+              boxSizing: 'border-box',
+              overflow: 'hidden'
+            }}>
+              <ResourcesTab
+                botVehicle={botVehicle}
+                botMemory={botMemory}
+                activeSubTab={activeSubTab}
+                setActiveSubTab={setActiveSubTab}
+                calculateDistance={calculateDistance}
               />
-              <button
-                style={{
-                  ...buttonStyle,
-                  marginLeft: '5px',
-                  marginBottom: '5px',
-                  fontSize: '9px'
-                }}
-                onClick={() => setExpandedBot(expandedBot === botId ? null : botId)}
-              >
-                {expandedBot === botId ? '🔼 Réduire' : '🔽 Détails'}
-              </button>
             </div>
-          ))}
+          )}
         </>
       )}
     </div>

@@ -7,6 +7,7 @@ const DebuggerTabs = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: 'actions', label: 'Actions' },
     { id: 'state', label: 'États FSM' },
+    { id: 'resources', label: 'Ressources' },
     { id: 'stores', label: 'Stores' },
     { id: 'tile', label: 'Tuile' }
   ];

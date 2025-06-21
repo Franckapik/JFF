@@ -65,8 +65,12 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
       borderRadius: '8px',
       fontFamily: 'monospace',
       fontSize: '12px',
-      maxWidth: '350px',
+      maxWidth: 'min(350px, 90vw)', // Responsive max width
+      minWidth: '280px',
       border: '1px solid #333',
+      boxSizing: 'border-box',
+      wordWrap: 'break-word',
+      overflow: 'hidden',
     };
     
     switch (position) {
@@ -136,7 +140,9 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
             color: '#fff',
             border: '1px solid #555',
             borderRadius: '3px',
-            fontSize: '11px'
+            fontSize: '11px',
+            boxSizing: 'border-box',
+            minWidth: 0,
           }}
         />
         {hoveredTile && (
@@ -185,7 +191,7 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
         <div style={{ color: '#87CEEB', fontWeight: 'bold', marginBottom: '4px' }}>
           ⚡ Actions Rapides
         </div>
-        <div style={{ fontSize: '10px' }}>
+        <div style={{ fontSize: '10px', display: 'flex', flexWrap: 'wrap', gap: '2px' }}>
           <button
             onClick={() => {
               const explored = Object.entries(tiles)
@@ -195,13 +201,14 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
             }}
             style={{
               padding: '3px 6px',
-              margin: '2px',
               fontSize: '9px',
               backgroundColor: '#00ff88',
               color: 'black',
               border: 'none',
               borderRadius: '3px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              flex: '1 1 auto',
+              minWidth: '70px',
             }}
           >
             Log Explorées
@@ -212,13 +219,14 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
             }}
             style={{
               padding: '3px 6px',
-              margin: '2px',
               fontSize: '9px',
               backgroundColor: '#87CEEB',
               color: 'black',
               border: 'none',
               borderRadius: '3px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              flex: '1 1 auto',
+              minWidth: '70px',
             }}
           >
             Log Complet
@@ -233,13 +241,14 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
             }}
             style={{
               padding: '3px 6px',
-              margin: '2px',
               fontSize: '9px',
               backgroundColor: '#FFD700',
               color: 'black',
               border: 'none',
               borderRadius: '3px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              flex: '1 1 auto',
+              minWidth: '70px',
             }}
           >
             Test 0,0
