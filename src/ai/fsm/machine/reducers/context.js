@@ -173,7 +173,38 @@ export const stateTransitionReducers = {
     currentAction: 'evaluating',
     lastDecision: event.reason || 'decision_needed',
     lastStateChange: Date.now()
-  })
+  }),
+
+  /**
+   * Prepare une transition vers l'état COLLECTING_MOVING_TO_TARGET
+   * @param {Object} context - Contexte FSM actuel
+   * @param {Object} event - Événement de transition
+   * @returns {Object} - Contexte mis à jour pour déplacement vers tuile cible
+   */
+  prepareCollectingMovingToTarget: (context, event) => {
+    return {
+      ...context,
+      currentAction: 'moving_to_target',
+      lastDecision: 'collect_best_tile',
+      targetTile: event.tileCoord ? context.memory.knownTiles.get(event.tileCoord) : null,
+      lastStateChange: Date.now()
+    };
+  },
+  
+  /**
+   * Prepare une transition vers l'état COLLECTING_RETURNING_TO_BASE
+   * @param {Object} context - Contexte FSM actuel
+   * @param {Object} event - Événement de transition
+   * @returns {Object} - Contexte mis à jour pour retour à la base après collecte
+   */
+  prepareReturningToBase: (context, event) => {
+    return {
+      ...context,
+      currentAction: 'returning_to_base',
+      lastDecision: 'return_after_collection',
+      lastStateChange: Date.now()
+    };
+  }
 };
 
 /**
