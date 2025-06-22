@@ -170,8 +170,6 @@ export const evaluatingState = state(
         needsMoreExploration,
         isDroneInactive,
         canDeploy,
-        deploymentAttempted: context.droneFleet?.deploymentAttempted,
-        droneState: context.droneFleet?.drones?.explorer?.state,
         tilesExplored: context.memory?.stats?.tilesExplored || 0,
         botId: context.entityId 
       });
@@ -254,10 +252,6 @@ export const evaluatingState = state(
     reduce((context) => {
       fsmLogger.info("😴 [Evaluating] No action needed, going idle", { 
         tilesExplored: context.memory?.stats?.tilesExplored || 0,
-        deploymentAttempted: context.droneFleet?.deploymentAttempted,
-        droneActive: context.droneFleet?.drones?.explorer?.isActive,
-        droneState: context.droneFleet?.drones?.explorer?.state,
-        hasUnexplored: context.memory?.knownTiles ? Array.from(context.memory.knownTiles.values()).some(tile => !tile.explored) : false,
         botId: context.entityId 
       });
       

@@ -500,9 +500,12 @@ export const selectBestTileForCollection = (context, event) => {
                        (bestTile.resources?.food || 0) * EXPLORATION_CYCLE_CONFIG.RESOURCE_PRIORITIES.food + 
                        (bestTile.resources?.debris || 0) * EXPLORATION_CYCLE_CONFIG.RESOURCE_PRIORITIES.debris;
   
-  fsmLogger.logInfo('selectBestTileForCollection', 
-    `Selected best tile: ${bestTile.coord} with value ${bestTileValue}`, 
-    { availableTiles: collectibleTiles.length, selectedTile: bestTile });
+  fsmLogger.info('🎯 [selectBestTileForCollection] Selected best tile', { 
+    coord: bestTile.coord,
+    value: bestTileValue,
+    availableTiles: collectibleTiles.length,
+    selectedTile: bestTile 
+  });
   
   return {
     ...context,

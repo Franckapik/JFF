@@ -97,8 +97,18 @@ export const exploringState = state(
         droneType: event.droneType || 'explorer'
       });
       
+      // IMPORTANT: Réinitialiser deploymentAttempted pour permettre la prochaine exploration
+      const contextWithResetDeployment = {
+        ...dockedContext,
+        droneFleet: {
+          ...dockedContext.droneFleet,
+          deploymentAttempted: false,  // Réinitialiser pour permettre nouvelle exploration
+          deploymentCompleted: false
+        }
+      };
+      
       // Préparer l'évaluation suivante
-      return contextReducers.state.prepareEvaluating(dockedContext, {
+      return contextReducers.state.prepareEvaluating(contextWithResetDeployment, {
         reason: 'drone_reached_ship_successfully'
       });
     })
