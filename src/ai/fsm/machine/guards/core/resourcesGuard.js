@@ -11,7 +11,7 @@
  * 🎯 Réutilisables par les guards FSM composés
  */
 
-import { RESOURCE_CONSTANTS, MOVEMENT_CONSTANTS } from '../../constants/constants.js';
+import { RESOURCE_CONSTANTS, MOVEMENT_CONSTANTS, DEFAULT_CAPACITIES, VEHICLE_TYPES } from '../../constants/constants.js';
 
 // ============================================================================
 // UTILITAIRES RESSOURCES
@@ -19,11 +19,22 @@ import { RESOURCE_CONSTANTS, MOVEMENT_CONSTANTS } from '../../constants/constant
 
 /**
  * Obtient la capacité maximale du véhicule
- * @param {Object} vehicle - Véhicule
- * @returns {number} Capacité maximale
+ * @param {Object} vehicle - Véhicule  
+ * @returns {number} Capacité maximale totale
  */
 const getMaxCapacity = (vehicle) => {
-  return vehicle?.capacity || RESOURCE_CONSTANTS.DEFAULT_CAPACITY;
+  // Utiliser les capacités spécifiques par type de ressource
+  const maxCapacity = vehicle?.maxCapacity;
+  
+  if (maxCapacity && typeof maxCapacity === 'object') {
+    // Calculer la capacité totale comme somme des capacités individuelles
+    return Object.values(maxCapacity).reduce((total, cap) => total + (cap || 0), 0);
+  }
+  
+  // Fallback avec capacités par défaut du main ship depuis constants.js
+  const defaultCapacities = DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP] || { food: 200, debris: 1800, special: 3 };
+  
+  return Object.values(defaultCapacities).reduce((total, cap) => total + cap, 0); // 2003
 };
 
 /**

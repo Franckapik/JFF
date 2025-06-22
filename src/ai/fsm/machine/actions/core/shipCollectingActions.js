@@ -224,11 +224,8 @@ export const shipCollectsFromTile = (context, event) => {
   const resourcesToCollect = tileData.resources;
   const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
   
-  // Utiliser les capacités par défaut selon le type de véhicule
-  const defaultCapacities = DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP] || { food: 100, debris: 1000, special: 10 };
-  const maxCapacity = vehicle.maxCapacity && typeof vehicle.maxCapacity === 'object' 
-    ? vehicle.maxCapacity 
-    : defaultCapacities;
+  // Force l'utilisation des nouvelles capacités depuis constants.js
+  const maxCapacity = DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP] || { food: 200, debris: 1800, special: 3 };
   
   fsmLogger.resources(`[${context.entityId}] 📊 Collection calculation`, {
     resourcesToCollect,
@@ -236,7 +233,7 @@ export const shipCollectsFromTile = (context, event) => {
     maxCapacity,
     vehicleType: vehicle.type,
     originalMaxCapacity: vehicle.maxCapacity,
-    usingDefault: vehicle.maxCapacity !== maxCapacity
+    usingCorrectCapacities: true
   });
   
   // Vérifier la capacité
@@ -264,20 +261,13 @@ export const shipCollectsFromTile = (context, event) => {
   }
   
   fsmLogger.resources(`[${context.entityId}] ✅ Capacity check passed, updating resources...`);
-   // Mettre à jour les ressources du vaisseau
+  // Mettre à jour les ressources du vaisseau (SANS ajouter au score)
   const updatedResources = { ...currentResources };
   Object.entries(resourcesToCollect).forEach(([type, amount]) => {
     updatedResources[type] = (updatedResources[type] || 0) + amount;
   });
 
-  // Accumuler les ressources dans le score persistant
-  const currentScore = context.score?.resources || { food: 0, debris: 0, special: 0 };
-  const updatedScore = { ...currentScore };
-  Object.entries(resourcesToCollect).forEach(([type, amount]) => {
-    updatedScore[type] = (updatedScore[type] || 0) + amount;
-  });
-
-  fsmLogger.resources(`[${context.entityId}] Collection successful: +${JSON.stringify(resourcesToCollect)} -> Score: ${JSON.stringify(updatedScore)}`);
+  fsmLogger.resources(`[${context.entityId}] Collection successful: +${JSON.stringify(resourcesToCollect)} -> Vehicle resources: ${JSON.stringify(updatedResources)} (Score transfer will happen at base)`);
 
   // Marquer la tuile comme collectée dans la mémoire FSM
   const updatedTileData = {
@@ -341,10 +331,7 @@ export const shipCollectsFromTile = (context, event) => {
       resources: updatedResources,
       lastCollectionTime: Date.now()
     },
-    score: {
-      ...context.score,
-      resources: updatedScore
-    },
+    // Score sera mis à jour uniquement lors du retour à la base
     memory: {
       ...context.memory,
       knownTiles,
@@ -684,20 +671,36 @@ export const shipShouldReturnToBase = (context) => {
   }
 
   const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
-  const maxCapacity = vehicle.maxCapacity || DEFAULT_CAPACITIES[VEHICLE_TYPES.SHIP];
+  
+  // Force l'utilisation des nouvelles capacités depuis constants.js
+  const maxCapacity = DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP] || { food: 200, debris: 1800, special: 3 };
+  
+  // Vérifier si une des capacités individuelles est à 80% ou plus
+  const capacityChecks = {
+    food: (currentResources.food || 0) >= (maxCapacity.food || 200) * 0.8,
+    debris: (currentResources.debris || 0) >= (maxCapacity.debris || 1800) * 0.8,
+    special: (currentResources.special || 0) >= (maxCapacity.special || 3) * 0.8
+  };
+  
+  const anyCapacityNearFull = Object.values(capacityChecks).some(isFull => isFull);
+  
+  // Pour les logs, calculer le total pour comparaison
   const totalResources = Object.values(currentResources).reduce((sum, val) => sum + val, 0);
+  const totalMaxCapacity = Object.values(maxCapacity).reduce((sum, val) => sum + val, 0);
+  const globalCapacityPercentage = totalMaxCapacity > 0 ? Math.round((totalResources / totalMaxCapacity) * 100) : 0;
   
-  // Retourner à la base si:
-  // 1. Le vaisseau est plein (à 80% de capacité ou plus)
-  // 2. Le vaisseau a collecté au moins 3 ressources
-  const capacityThreshold = Math.max(1, Math.floor(maxCapacity * 0.8));
-  const shouldReturn = totalResources >= capacityThreshold || totalResources >= 3;
-  
-  if (shouldReturn) {
-    fsmLogger.resources(`[${context.entityId}] Ship should return to base: ${totalResources}/${maxCapacity} resources (threshold: ${capacityThreshold})`);
+  if (anyCapacityNearFull) {
+    fsmLogger.resources(`[${context.entityId}] Ship should return to base: ${JSON.stringify(currentResources)} (${globalCapacityPercentage}% full)`, {
+      currentResources,
+      maxCapacity,
+      capacityChecks,
+      totalResources,
+      totalMaxCapacity,
+      vehicleMaxCapacityOriginal: vehicle.maxCapacity
+    });
   }
   
-  return shouldReturn;
+  return anyCapacityNearFull;
 };
 
 /**

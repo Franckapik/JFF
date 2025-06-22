@@ -293,17 +293,10 @@ export const collectingState = state(
         botId: context.entityId 
       });
       
-      // Déposer les ressources à la base et préparer l'évaluation
-      const contextWithCleanVehicle = {
-        ...context,
-        vehicle: {
-          ...context.vehicle,
-          resources: { food: 0, debris: 0, special: 0 }, // Ressources déposées
-          cargo: { food: 0, debris: 0, special: 0 }      // Cargo vidé
-        }
-      };
+      // ✅ CORRECTION : Utiliser shipDepositResources pour transférer au score
+      const contextWithDeposit = shipDepositResources(context, { resourceType: 'all' });
       
-      return contextReducers.state.prepareEvaluating(contextWithCleanVehicle, {
+      return contextReducers.state.prepareEvaluating(contextWithDeposit, {
         reason: 'arrived_at_base_with_resources',
         shouldConsiderIdleTime: true,  // 🆕 Flag pour indiquer qu'on peut aller en idle
         depositedResources: context.vehicle?.resources || {}

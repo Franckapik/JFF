@@ -145,15 +145,25 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                       margin: '2px 0',
                       border: '1px solid #4CAF50'
                     }}>
-                      <div>💎 Ressources: {
-                        typeof vehicle.resources === 'object' 
-                          ? `F:${vehicle.resources.food || 0} D:${vehicle.resources.debris || 0} S:${vehicle.resources.special || 0}`
-                          : String(vehicle.resources || 0)
-                      }/{
-                        typeof vehicle.maxCapacity === 'object'
-                          ? `F:${vehicle.maxCapacity.food || 0} D:${vehicle.maxCapacity.debris || 0} S:${vehicle.maxCapacity.special || 0}`
-                          : String(vehicle.maxCapacity || vehicle.capacity || 10)
-                      }</div>
+                      <div>💎 Ressources (% de remplissage):</div>
+                      {typeof vehicle.resources === 'object' && typeof vehicle.maxCapacity === 'object' ? (
+                        <>
+                          <div style={{ fontSize: '0.8em', marginLeft: '10px' }}>
+                            🍖 Food: {vehicle.resources.food || 0}/{vehicle.maxCapacity.food || 200} 
+                            ({Math.round(((vehicle.resources.food || 0) / (vehicle.maxCapacity.food || 200)) * 100)}%)
+                          </div>
+                          <div style={{ fontSize: '0.8em', marginLeft: '10px' }}>
+                            🔩 Debris: {vehicle.resources.debris || 0}/{vehicle.maxCapacity.debris || 1800} 
+                            ({Math.round(((vehicle.resources.debris || 0) / (vehicle.maxCapacity.debris || 1800)) * 100)}%)
+                          </div>
+                          <div style={{ fontSize: '0.8em', marginLeft: '10px' }}>
+                            ⭐ Special: {vehicle.resources.special || 0}/{vehicle.maxCapacity.special || 3} 
+                            ({Math.round(((vehicle.resources.special || 0) / (vehicle.maxCapacity.special || 3)) * 100)}%)
+                          </div>
+                        </>
+                      ) : (
+                        <div>F:{vehicle.resources.food || 0} D:{vehicle.resources.debris || 0} S:{vehicle.resources.special || 0}</div>
+                      )}
                     </div>
                   )}
                   {context?.score !== undefined && (
