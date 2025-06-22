@@ -10,7 +10,7 @@
  * @version 1.5.0
  */
 
-import { BOT_STATES, ENTITY_TYPES, DRONE_VISUAL_STATES } from '../constants/constants.js';
+import { BOT_STATES, ENTITY_TYPES, DRONE_VISUAL_STATES, EXPLORATION_CYCLE_CONFIG } from '../constants/constants.js';
 
 
 // ============================================================================
@@ -123,11 +123,34 @@ export const createEntityContext = (entityId, entityType = ENTITY_TYPES.auto) =>
         tilesCollected: 0,                       // Nombre de tuiles collectées par vaisseau
         totalResourcesFound: 0,                  // Nombre total de ressources découvertes
         lastExploration: null,                   // Dernière exploration : {coord, timestamp, hasResources}
-        lastCollection: null                     // Dernière collecte : {coord, timestamp, shipId}
+        lastCollection: null,                    // Dernière collecte : {coord, timestamp, shipId}
+        
+        // NOUVEAU : Statistiques de cycle d'exploration
+        explorationCycles: 0,                    // Nombre de cycles d'exploration terminés
+        currentCycleStartTime: null,             // Début du cycle actuel
+        tilesExploredInCycle: 0,                 // Tuiles explorées dans le cycle actuel
+        bestTileInCycle: null                    // Meilleure tuile trouvée dans le cycle
       },
       stateHistory: [BOT_STATES.EVALUATING],     // Ex: ['evaluating', 'exploring', 'collecting']
       transitionHistory: []                      // Ex: [{from:'evaluating',to:'exploring',timestamp:1703425234567}]
     },
+
+    // ========================================================================
+    // CYCLE D'EXPLORATION MULTI-TUILES
+    // ========================================================================
+    
+    // NOUVEAU : Données du cycle d'exploration actuel
+    explorationCycle: {
+      isActive: false,                         // Cycle d'exploration en cours
+      targetTilesCount: EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION,
+      exploredTiles: [],                       // Tuiles explorées dans ce cycle
+      bestTileFound: null,                     // Meilleure tuile trouvée
+      startTime: null,                         // Timestamp de début de cycle
+      phase: 'idle'                            // 'idle', 'exploring', 'evaluating', 'collecting'
+    },
+
+    // Tuile sélectionnée pour collecte (du cycle multi-tuiles)
+    selectedTileForCollection: null,           // Ex: {coord: {x:5,z:3}, resources: {special:2,food:1}, value: 22}
     
     // ========================================================================
     // CONFIGURATION FSM

@@ -26,14 +26,78 @@ import { state, transition, reduce, guard } from 'robot3';
 import { BOT_STATES } from '../constants/constants.js';
 import { contextReducers } from '../reducers/context.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
+import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
+import { RESOURCE_EVENT_TYPES } from '../events/resourceEvents.js';
 import { shipCollectsFromTile } from '../actions/core/shipCollectingActions.js'; // ACTION UNIFIÉE
 import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**
  * État COLLECTING - Collecte simplifiée avec mémoire unifiée
+ * Supporte maintenant les sous-états COLLECTING_MOVING_TO_TARGET et COLLECTING_RETURNING_TO_BASE
  */
 export const collectingState = state(
-  // === COLLECTE UNIFIÉE ===
+  // === NOUVELLES TRANSITIONS POUR CYCLE D'EXPLORATION MULTI-TUILES ===
+  
+  // SHIP_ARRIVED_AT_TILE - Vaisseau arrivé à la tuile cible pour collecte
+  transition(MOVEMENT_EVENT_TYPES.SHIP_ARRIVED_AT_TILE, BOT_STATES.COLLECTING_RETURNING_TO_BASE,
+    guard((context) => context.currentAction === 'moving_to_target'),
+    reduce((context, event) => {
+      fsmLogger.info("🚢 [Collecting] Ship arrived at target tile, starting collection", { 
+        coord: context.selectedTileForCollection?.coord,
+        botId: context.entityId 
+      });
+      
+      // Collecter automatiquement la tuile cible
+      const collectedContext = shipCollectsFromTile(context, {
+        coord: context.selectedTileForCollection?.coord,
+        resourceType: 'all'
+      });
+      
+      // Préparer le retour automatique à la base après collecte
+      return contextReducers.state.prepareReturningToBase(collectedContext, {
+        reason: 'tile_collected_returning_to_base'
+      });
+    })
+  ),
+
+  // SHIP_MOVEMENT_STARTED - Suivi du mouvement vers la tuile cible
+  transition(MOVEMENT_EVENT_TYPES.SHIP_MOVEMENT_STARTED, BOT_STATES.COLLECTING_MOVING_TO_TARGET,
+    guard((context) => context.currentAction === 'moving_to_target'),
+    reduce((context, event) => {
+      fsmLogger.info("🚢 [Collecting] Ship movement started toward target tile", { 
+        botId: context.entityId 
+      });
+      return contextReducers.movement.updateMovementProgress(context, event);
+    })
+  ),
+
+  // SHIP_REACHED_BASE - Vaisseau arrivé à la base après collecte
+  transition(MOVEMENT_EVENT_TYPES.SHIP_REACHED_BASE, BOT_STATES.EVALUATING,
+    guard((context) => context.currentAction === 'returning_to_base'),
+    reduce((context, event) => {
+      fsmLogger.info("🏠 [Collecting] Ship reached base after collection, starting evaluation", { 
+        botId: context.entityId 
+      });
+      
+      // Retour à EVALUATING qui décidera de la suite (IDLE_AT_BASE ou nouveau cycle)
+      return contextReducers.state.prepareEvaluating(context, {
+        reason: 'returned_to_base_after_collection'
+      });
+    })
+  ),
+
+  // SHIP_MOVEMENT_STARTED - Suivi du retour à la base
+  transition(MOVEMENT_EVENT_TYPES.SHIP_MOVEMENT_STARTED, BOT_STATES.COLLECTING_RETURNING_TO_BASE,
+    guard((context) => context.currentAction === 'returning_to_base'),
+    reduce((context, event) => {
+      fsmLogger.info("🚢 [Collecting] Ship movement started toward base", { 
+        botId: context.entityId 
+      });
+      return contextReducers.movement.updateMovementProgress(context, event);
+    })
+  ),
+
+  // === COLLECTE UNIFIÉE (TRANSITIONS EXISTANTES) ===
   
   // TILE_COLLECTED - Ship a collecté les ressources d'une tuile explorée
   transition('TILE_COLLECTED', BOT_STATES.EVALUATING,
@@ -70,8 +134,8 @@ export const collectingState = state(
     })
   ),
 
-  // INVENTORY_FULL - Inventaire plein pendant la collecte
-  transition('INVENTORY_FULL', BOT_STATES.RETURNING,
+  // INVENTORY_FULL - Inventaire plein pendant la collecte (CORRIGÉ)
+  transition(RESOURCE_EVENT_TYPES.INVENTORY_FULL, BOT_STATES.EVALUATING,
     guard((context, event) => {
       const vehicle = context.vehicle;
       if (!vehicle || !vehicle.resources) return false;
@@ -82,11 +146,12 @@ export const collectingState = state(
       return totalResources >= maxCapacity * 0.9; // 90% plein
     }),
     reduce((context, event) => {
-      fsmLogger.info("📦 [Collecting] Inventory full, returning to base", { 
+      fsmLogger.info("📦 [Collecting] Inventory full, returning to evaluation", { 
         botId: context.entityId 
       });
       
-      return contextReducers.state.prepareReturning(context, {
+      // Laisse EVALUATING décider (continuer collecte vs retour base)
+      return contextReducers.state.prepareEvaluating(context, {
         reason: 'inventory_full'
       });
     })
@@ -108,24 +173,25 @@ export const collectingState = state(
     })
   ),
 
-  // === TRANSITIONS D'URGENCE ===
+  // === TRANSITIONS D'URGENCE (CORRIGÉES) ===
   
-  // Carburant faible pendant la collecte
-  transition(EMERGENCY_EVENT_TYPES.LOW_FUEL_DETECTED, BOT_STATES.RETURNING,
+  // Carburant faible pendant la collecte (CORRIGÉ)
+  transition(EMERGENCY_EVENT_TYPES.LOW_FUEL_DETECTED, BOT_STATES.COLLECTING_RETURNING_TO_BASE,
     guard(() => true),
     reduce((context) => {
-      fsmLogger.info("🔥 [Collecting] Low fuel detected, emergency return", { 
+      fsmLogger.info("🔥 [Collecting] Low fuel detected, emergency return to base", { 
         botId: context.entityId 
       });
       
-      return contextReducers.state.prepareReturning(context, {
+      // Retour direct du vaisseau à la base dans le contexte de collecte
+      return contextReducers.state.prepareReturningToBase(context, {
         reason: 'emergency_low_fuel'
       });
     })
   ),
 
-  // Urgence générale
-  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED, BOT_STATES.RETURNING,
+  // Urgence générale (CORRIGÉ)
+  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED, BOT_STATES.COLLECTING_RETURNING_TO_BASE,
     guard(() => true),
     reduce((context, event) => {
       fsmLogger.info("🚨 [Collecting] Emergency detected, returning to base", { 
@@ -133,7 +199,8 @@ export const collectingState = state(
         botId: context.entityId 
       });
       
-      return contextReducers.state.prepareReturning(context, {
+      // Retour direct du vaisseau à la base dans le contexte de collecte
+      return contextReducers.state.prepareReturningToBase(context, {
         reason: 'emergency_return',
         emergencyReason: event.reason || 'unknown'
       });

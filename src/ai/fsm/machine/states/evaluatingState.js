@@ -1,5 +1,88 @@
 /**
- * ============================================================================
+ * ==================================================================      // Utiliser le reducer centralisé pour préparer le retour
+      return contextReducers.state.prepareReturning(context, enrichedEvent);
+    })
+  ),
+
+  // === TRANSITIONS POST-COLLECTE (APRÈS RETOUR DE COLLECTING_RETURNING_TO_BASE) ===
+  
+  // Si maintenance requise après retour de collecte → IDLE_AT_BASE
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.IDLE_AT_BASE,
+    guard((context, event) => {
+      // Conditions pour aller en maintenance
+      const needsMaintenance = context.vehicle?.fuel < 30 || 
+                              context.vehicle?.damage > 50 ||
+                              context.vehicle?.needsRepair;
+      const justReturnedFromCollection = context.lastStateChange === 'returned_to_base_after_collection';
+      
+      return needsMaintenance && justReturnedFromCollection;
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("🏠 [Evaluating] Maintenance required after collection, going idle", { 
+        fuel: context.vehicle?.fuel,
+        damage: context.vehicle?.damage,
+        botId: context.entityId 
+      });
+      
+      return contextReducers.state.prepareIdleAtBase(context, {
+        reason: 'maintenance_required_after_collection'
+      });
+    })
+  ),
+
+  // Si pas besoin de maintenance → Nouveau cycle d'exploration
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_DEPLOYING,
+    guard((context, event) => {
+      const justReturnedFromCollection = context.lastStateChange === 'returned_to_base_after_collection';
+      const canContinue = context.vehicle?.fuel >= 30 && 
+                         context.vehicle?.damage <= 50;
+      const hasUnexplored = discoveryGuards.hasUnexploredAreas(context, event);
+      const isDroneInactive = !context.droneFleet?.drones?.explorer?.isActive;
+      const canDeploy = !context.droneFleet?.deploymentAttempted;
+      
+      return justReturnedFromCollection && canContinue && hasUnexplored && isDroneInactive && canDeploy;
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("🔄 [Evaluating] Starting new exploration cycle after collection", { 
+        botId: context.entityId 
+      });
+      
+      // Reset les stats pour nouveau cycle avant de commencer
+      const resetContext = shipCollectingActions.resetExplorationCycleStats(context, event);
+      
+      // Utiliser le reducer centralisé pour préparer l'exploration ET déployer
+      const preparedContext = contextReducers.state.prepareExploring(resetContext, event);
+      
+      // Déployer immédiatement le drone
+      const deploymentResult = contextReducers.droneDeployment.deployDrone(preparedContext, {
+        range: 3,
+        droneType: 'explorer'
+      });
+
+      return {
+        ...deploymentResult,
+        currentAction: 'drone_exploring', // ✅ DIRECTEMENT EN EXPLORATION
+        droneFleet: {
+          ...deploymentResult.droneFleet,
+          deploymentAttempted: true,
+          deploymentCompleted: true,
+          explorationStarted: true,
+          explorationStartTime: Date.now(),
+          drones: {
+            ...deploymentResult.droneFleet.drones,
+            explorer: {
+              ...deploymentResult.droneFleet.drones.explorer,
+              state: 'deploying', // ✅ COMMENCER PAR DEPLOYING POUR ANIMATION
+              lastUpdate: Date.now(),
+              isActive: true
+            }
+          }
+        }
+      };
+    })
+  ),
+
+  // === TRANSITIONS NORMALES =======
  * État EVALUATING - Évaluation et prise de décision
  * ============================================================================
  * 
@@ -78,15 +161,37 @@ export const evaluatingState = state(
 
   // === TRANSITIONS NORMALES ===
   
+  // NOUVELLE PRIORITÉ : Si 3+ tuiles explorées ET tuiles collectibles → COLLECTING_MOVING_TO_TARGET
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.COLLECTING_MOVING_TO_TARGET, 
+    guard((context, event) => {
+      const hasEnoughExplored = discoveryGuards.hasExploredEnoughTiles(context, event);
+      const hasBestTile = discoveryGuards.hasBestTileForCollection(context, event);
+      const shouldTransition = discoveryGuards.shouldTransitionToCollection(context, event);
+      
+      return hasEnoughExplored && hasBestTile && shouldTransition;
+    }),
+    reduce((context, event) => {
+      // Sélectionner la meilleure tuile et préparer la collecte
+      const contextWithSelection = shipCollectingActions.selectBestTileForCollection(context, event);
+      
+      return contextReducers.state.prepareCollectingMovingToTarget(contextWithSelection, {
+        ...event,
+        tileCoord: contextWithSelection.selectedTileForCollection?.coord,
+        reason: 'best_tile_after_exploration_cycle'
+      });
+    })
+  ),
+
   // Si pas encore exploré → EXPLORING_DEPLOYING (directement)
   transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_DEPLOYING, 
-    // Guard d'exploration
+    // Guard d'exploration modifié pour tenir compte du cycle multi-tuiles
     guard((context, event) => {
       const hasUnexplored = discoveryGuards.hasUnexploredAreas(context, event);
+      const needsMoreExploration = discoveryGuards.needsExploration(context, event);
       const isDroneInactive = !context.droneFleet?.drones?.explorer?.isActive;
       const canDeploy = !context.droneFleet?.deploymentAttempted;
       
-      return hasUnexplored && isDroneInactive && canDeploy;
+      return (hasUnexplored || needsMoreExploration) && isDroneInactive && canDeploy;
     }),
     // Reducer d'exploration - déployer directement
     reduce((context, event) => {
@@ -195,7 +300,302 @@ export const evaluatingState = state(
       // Utiliser la nouvelle action droneUpdatePosition
       return droneExploringActions.droneUpdatePosition(context, event);
     })
-  )
+  ),
+
+  // ============================================================================
+  // ❌ TRANSITIONS COMMENTÉES - Non essentielles pour le flux principal
+  // ============================================================================
+
+  // === ÉVÉNEMENT AUTONOME ===
+  /*
+  // Déclenchement automatique vers l'exploration
+  transition(SYSTEM_EVENT_TYPES.AUTO, BOT_STATES.EXPLORING_DEPLOYING, 
+    guard(() => true),
+    reduce((context) => {
+      // Préparer l'état d'exploration ET déployer directement
+      const preparedContext = contextReducers.state.prepareExploring(context, {
+        reason: 'auto_exploration',
+        timestamp: Date.now()
+      });
+      
+      // Déployer immédiatement le drone
+      const deploymentResult = contextReducers.droneDeployment.deployDrone(preparedContext, {
+        range: 3,
+        droneType: 'explorer'
+      });
+
+      return {
+        ...deploymentResult,
+        currentAction: 'drone_exploring', // ✅ DIRECTEMENT EN EXPLORATION
+        droneFleet: {
+          ...deploymentResult.droneFleet,
+          deploymentAttempted: true,
+          deploymentCompleted: true,
+          explorationStarted: true,
+          explorationStartTime: Date.now(),
+          drones: {
+            ...deploymentResult.droneFleet.drones,
+            explorer: {
+              ...deploymentResult.droneFleet.drones.explorer,
+              state: 'deploying', // ✅ COMMENCER PAR DEPLOYING POUR ANIMATION
+              lastUpdate: Date.now(),
+              isActive: true
+            }
+          }
+        }
+      };
+    })
+  ),
+  */
+
+  // === TRANSITIONS D'URGENCE (DEPUIS N'IMPORTE QUEL ÉTAT) ===
+  /*
+  // Override manuel
+  transition(USER_EVENT_TYPES.MANUAL_OVERRIDE, BOT_STATES.EVALUATING, 
+    guard(() => true),
+    reduce((context, event) => ({
+      ...context,
+      manualCommand: event.command,
+      manualParams: event.params,
+      lastDecision: 'manual_override',
+      lastStateChange: Date.now()
+    }))
+  ),
+
+  // Urgence détectée
+  transition(EMERGENCY_EVENT_TYPES.EMERGENCY_DETECTED, BOT_STATES.EXPLORING_RETURNING, 
+    guard(() => true),
+    reduce((context, event) => ({
+      ...context,
+      emergencyFlag: true,
+      emergencyReason: event.reason || 'unknown',
+      currentAction: 'emergency_return',
+      lastDecision: 'emergency',
+      lastStateChange: Date.now()
+    }))
+  ),
+  */
+
+  // === TRANSITIONS POST-COLLECTE (APRÈS RETOUR DE COLLECTING_RETURNING_TO_BASE) ===
+  
+  // Si maintenance requise après retour de collecte → IDLE_AT_BASE
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.IDLE_AT_BASE,
+    guard((context, event) => {
+      // Conditions pour aller en maintenance
+      const needsMaintenance = context.vehicle?.fuel < 30 || 
+                              context.vehicle?.damage > 50 ||
+                              context.vehicle?.needsRepair;
+      const justReturnedFromCollection = context.lastStateChange === 'returned_to_base_after_collection';
+      
+      return needsMaintenance && justReturnedFromCollection;
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("🏠 [Evaluating] Maintenance required after collection, going idle", { 
+        fuel: context.vehicle?.fuel,
+        damage: context.vehicle?.damage,
+        botId: context.entityId 
+      });
+      
+      return contextReducers.state.prepareIdleAtBase(context, {
+        reason: 'maintenance_required_after_collection'
+      });
+    })
+  ),
+
+  // Si pas besoin de maintenance → Nouveau cycle d'exploration
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_DEPLOYING,
+    guard((context, event) => {
+      const justReturnedFromCollection = context.lastStateChange === 'returned_to_base_after_collection';
+      const canContinue = context.vehicle?.fuel >= 30 && 
+                         context.vehicle?.damage <= 50;
+      const hasUnexplored = discoveryGuards.hasUnexploredAreas(context, event);
+      const isDroneInactive = !context.droneFleet?.drones?.explorer?.isActive;
+      const canDeploy = !context.droneFleet?.deploymentAttempted;
+      
+      return justReturnedFromCollection && canContinue && hasUnexplored && isDroneInactive && canDeploy;
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("🔄 [Evaluating] Starting new exploration cycle after collection", { 
+        botId: context.entityId 
+      });
+      
+      // Reset les stats pour nouveau cycle avant de commencer
+      const resetContext = shipCollectingActions.resetExplorationCycleStats(context, event);
+      
+      // Utiliser le reducer centralisé pour préparer l'exploration ET déployer
+      const preparedContext = contextReducers.state.prepareExploring(resetContext, event);
+      
+      // Déployer immédiatement le drone
+      const deploymentResult = contextReducers.droneDeployment.deployDrone(preparedContext, {
+        range: 3,
+        droneType: 'explorer'
+      });
+
+      return {
+        ...deploymentResult,
+        currentAction: 'drone_exploring', // ✅ DIRECTEMENT EN EXPLORATION
+        droneFleet: {
+          ...deploymentResult.droneFleet,
+          deploymentAttempted: true,
+          deploymentCompleted: true,
+          explorationStarted: true,
+          explorationStartTime: Date.now(),
+          drones: {
+            ...deploymentResult.droneFleet.drones,
+            explorer: {
+              ...deploymentResult.droneFleet.drones.explorer,
+              state: 'deploying', // ✅ COMMENCER PAR DEPLOYING POUR ANIMATION
+              lastUpdate: Date.now(),
+              isActive: true
+            }
+          }
+        }
+      };
+    })
+  ),
+
+  // === TRANSITIONS NORMALES ===
+  
+  // NOUVELLE PRIORITÉ : Si 3+ tuiles explorées ET tuiles collectibles → COLLECTING_MOVING_TO_TARGET
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.COLLECTING_MOVING_TO_TARGET, 
+    guard((context, event) => {
+      const hasEnoughExplored = discoveryGuards.hasExploredEnoughTiles(context, event);
+      const hasBestTile = discoveryGuards.hasBestTileForCollection(context, event);
+      const shouldTransition = discoveryGuards.shouldTransitionToCollection(context, event);
+      
+      return hasEnoughExplored && hasBestTile && shouldTransition;
+    }),
+    reduce((context, event) => {
+      // Sélectionner la meilleure tuile et préparer la collecte
+      const contextWithSelection = shipCollectingActions.selectBestTileForCollection(context, event);
+      
+      return contextReducers.state.prepareCollectingMovingToTarget(contextWithSelection, {
+        ...event,
+        tileCoord: contextWithSelection.selectedTileForCollection?.coord,
+        reason: 'best_tile_after_exploration_cycle'
+      });
+    })
+  ),
+
+  // Si pas encore exploré → EXPLORING_DEPLOYING (directement)
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_DEPLOYING, 
+    // Guard d'exploration modifié pour tenir compte du cycle multi-tuiles
+    guard((context, event) => {
+      const hasUnexplored = discoveryGuards.hasUnexploredAreas(context, event);
+      const needsMoreExploration = discoveryGuards.needsExploration(context, event);
+      const isDroneInactive = !context.droneFleet?.drones?.explorer?.isActive;
+      const canDeploy = !context.droneFleet?.deploymentAttempted;
+      
+      return (hasUnexplored || needsMoreExploration) && isDroneInactive && canDeploy;
+    }),
+    // Reducer d'exploration - déployer directement
+    reduce((context, event) => {
+      // Utiliser le reducer centralisé pour préparer l'exploration ET déployer
+      const preparedContext = contextReducers.state.prepareExploring(context, event);
+      
+      // Déployer immédiatement le drone
+      const deploymentResult = contextReducers.droneDeployment.deployDrone(preparedContext, {
+        range: 3,
+        droneType: 'explorer'
+      });
+
+      return {
+        ...deploymentResult,
+        currentAction: 'drone_exploring', // ✅ DIRECTEMENT EN EXPLORATION
+        droneFleet: {
+          ...deploymentResult.droneFleet,
+          deploymentAttempted: true,
+          deploymentCompleted: true,
+          explorationStarted: true,
+          explorationStartTime: Date.now(),
+          drones: {
+            ...deploymentResult.droneFleet.drones,
+            explorer: {
+              ...deploymentResult.droneFleet.drones.explorer,
+              state: 'deploying', // ✅ COMMENCER PAR DEPLOYING POUR ANIMATION
+              lastUpdate: Date.now(),
+              isActive: true
+            }
+          }
+        }
+      };
+    })
+  ),
+
+  // Si nouvelles ressources découvertes → COLLECTING
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.COLLECTING, 
+    // Guard pour collection
+    guard((context, event) => {
+      const isEfficient = efficiencyGuards.isCollectionEfficient(context, event);
+      const hasNewResources = context.hasNewResourceDiscovery;
+      const hasKnownResources = context.knownResources?.length > 0;
+      
+      return isEfficient && 
+             hasNewResources && 
+             hasKnownResources;
+    }),
+    // Reducer pour collection
+    reduce((context, event) => {
+      // Utiliser le reducer centralisé pour préparer la collecte
+      // avec la première ressource connue comme cible
+      const resourceEvent = {
+        ...event,
+        resource: context.knownResources[0] // Prendre la première ressource
+      };
+      return contextReducers.state.prepareCollecting(context, resourceEvent);
+    })
+  ),
+
+  // Si drone pas à la base → EXPLORING_RETURNING (pour récupérer le drone)
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_RETURNING, 
+    // Guard pour drone pas à la base
+    guard((context, event) => {
+      const notAtBase = !baseGuards.isAtBase(context, event);
+      return notAtBase;
+    }),
+    // Reducer pour récupération du drone
+    reduce((context) => ({
+      ...context,
+      currentAction: 'returning_for_drone',
+      lastDecision: 'retrieve_drone',
+      lastStateChange: Date.now()
+    }))
+  ),
+
+  // Sinon → IDLE_AT_BASE (rien à faire)
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.IDLE_AT_BASE, 
+    // Guard par défaut
+    guard(() => {
+      return true;
+    }),
+    // Reducer par défaut
+    reduce((context) => ({
+      ...context,
+      currentAction: 'idling',
+      lastDecision: 'nothing_to_do',
+      lastStateChange: Date.now()
+    }))
+  ),
+
+  // === MISES À JOUR POSITION ===
+  
+  // Mise à jour de position du vaisseau (reste dans le même état)
+  transition(MOVEMENT_EVENT_TYPES.SHIP_UPDATE_POSITION, BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context, event) => {
+      // Utiliser la nouvelle action shipUpdatePosition
+      return shipCollectingActions.shipUpdatePosition(context, event);
+    })
+  ),
+
+  // Mise à jour de position de drone (reste dans le même état)
+  transition(MOVEMENT_EVENT_TYPES.DRONE_POSITION_UPDATE, BOT_STATES.EVALUATING,
+    guard(() => true),
+    reduce((context, event) => {
+      // Utiliser la nouvelle action droneUpdatePosition
+      return droneExploringActions.droneUpdatePosition(context, event);
+    })
+  ),
 
   // ============================================================================
   // ❌ TRANSITIONS COMMENTÉES - Non essentielles pour le flux principal
