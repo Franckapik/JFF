@@ -22,8 +22,10 @@ export const BOT_STATES = {
   EVALUATING: 'evaluating',
   EXPLORING: 'exploring',                          // ⚠️ LEGACY: Use specific sub-states instead
   EXPLORING_DEPLOYING: 'exploring_deploying',
-  EXPLORING_RETURNING: 'exploring_returning',      // État de retour après exploration
-  COLLECTING: 'collecting',
+  EXPLORING_RETURNING: 'exploring_returning',      // Retour DRONE vers VAISSEAU
+  COLLECTING: 'collecting',                        // ⚠️ LEGACY: Use specific sub-states instead
+  COLLECTING_MOVING_TO_TARGET: 'collecting_moving_to_target',    // Déplacement VAISSEAU vers tuile cible
+  COLLECTING_RETURNING_TO_BASE: 'collecting_returning_to_base',  // Retour VAISSEAU vers BASE après collecte
   IDLE_AT_BASE: 'idleAtBase'
 };
 
@@ -276,4 +278,21 @@ export const EXPLORATION_CONFIG = {
   MAX_EXPLORATION_TIME: 30000, // 30 secondes
   MIN_EXPLORATION_DISTANCE: 1,
   MAX_EXPLORATION_DISTANCE: 10
+};
+
+/**
+ * Configuration du cycle d'exploration multi-tuiles
+ */
+export const EXPLORATION_CYCLE_CONFIG = {
+  TILES_BEFORE_COLLECTION: 3,           // Nombre de tuiles à explorer avant collecte
+  MIN_TILES_BEFORE_COLLECTION: 2,       // Minimum de tuiles avant d'autoriser la collecte
+  MAX_EXPLORATION_CYCLES: 5,             // Maximum de cycles d'exploration par session
+  CYCLE_TIMEOUT: 600000,                 // 10 minutes maximum par cycle
+  
+  // Priorités des ressources pour sélection de meilleure tuile
+  RESOURCE_PRIORITIES: {
+    special: 10,     // Ressources spéciales = priorité max
+    food: 2,         // Nourriture = priorité moyenne
+    debris: 1        // Débris = priorité basse
+  }
 };

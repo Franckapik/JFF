@@ -6,6 +6,7 @@
 
 import { explorationGuards } from './core/explorationGuard.js';
 import { movementGuards } from './core/movementGuard.js';
+import { EXPLORATION_CYCLE_CONFIG } from '../constants/constants.js';
 
 /**
  * Discovery guards - Exploration and discovery logic
@@ -55,7 +56,12 @@ export const discoveryGuards = {
     // High priority if no recent exploration or critical areas unexplored
     return explorationGuards.isExplorationExpired(context, event) ||
            explorationGuards.needsExploration(context, event);
-  }
+  },
+
+  // Nouveaux guards pour cycle d'exploration multi-tuiles
+  hasExploredEnoughTiles: explorationGuards.hasExploredEnoughTiles,
+  hasBestTileForCollection: explorationGuards.hasBestTileForCollection,
+  shouldTransitionToCollection: explorationGuards.shouldTransitionToCollection
 };
 
 export default discoveryGuards;

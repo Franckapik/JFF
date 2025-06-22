@@ -12,6 +12,7 @@
  */
 
 import { EXPLORATION_CONSTANTS, MOVEMENT_CONSTANTS } from '../../constants/constants.js';
+import { EXPLORATION_CYCLE_CONFIG } from '../../constants/constants.js';
 
 // ============================================================================
 // UTILITAIRES EXPLORATION
@@ -140,6 +141,15 @@ const isExplorationComplete = (context, event) => {
  * @returns {boolean} True si exploration nécessaire
  */
 const needsExploration = (context, event) => {
+  // Nouveau: Logique de cycle d'exploration multi-tuiles
+  const exploredCount = context.memory?.stats?.tilesExplored || 0;
+  if (exploredCount >= EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION) {
+    // Vérifier s'il y a des tuiles collectibles avant de continuer l'exploration
+    const collectibleTiles = Array.from(context.memory.knownTiles.values())
+      .filter(tile => tile.explored && tile.hasResources && !tile.collected);
+    return collectibleTiles.length === 0; // Continue exploration seulement si rien à collecter
+  }
+  
   // Vérifie si l'exploration a expiré
   if (isExplorationExpired(context, event)) return true;
   
@@ -198,6 +208,47 @@ const isTargetExplorationZoneReachable = (context, event) => {
 };
 
 // ============================================================================
+// GUARDS CYCLE D'EXPLORATION MULTI-TUILES
+// ============================================================================
+
+/**
+ * Vérifie si assez de tuiles ont été explorées pour passer à la collecte
+ * @param {Object} context - Contexte FSM
+ * @param {Object} event - Événement FSM
+ * @returns {boolean} True si assez de tuiles explorées
+ */
+const hasExploredEnoughTiles = (context, event) => {
+  const exploredCount = context.memory?.stats?.tilesExplored || 0;
+  return exploredCount >= EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION; // Utilise la constante
+};
+
+/**
+ * Vérifie s'il y a des tuiles collectibles disponibles
+ * @param {Object} context - Contexte FSM
+ * @param {Object} event - Événement FSM
+ * @returns {boolean} True si tuiles collectibles disponibles
+ */
+const hasBestTileForCollection = (context, event) => {
+  const collectibleTiles = Array.from(context.memory.knownTiles.values())
+    .filter(tile => tile.explored && tile.hasResources && !tile.collected);
+  return collectibleTiles.length > 0;
+};
+
+/**
+ * Vérifie si doit passer à la collecte (assez de tuiles ET tuiles collectibles)
+ * @param {Object} context - Contexte FSM
+ * @param {Object} event - Événement FSM
+ * @returns {boolean} True si doit passer à la collecte
+ */
+const shouldTransitionToCollection = (context, event) => {
+  const exploredCount = context.memory?.stats?.tilesExplored || 0;
+  const collectibleTiles = Array.from(context.memory.knownTiles.values())
+    .filter(tile => tile.explored && tile.hasResources && !tile.collected);
+  
+  return exploredCount >= EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION && collectibleTiles.length > 0;
+};
+
+// ============================================================================
 // EXPORT DES GUARDS PRIMITIFS
 // ============================================================================
 
@@ -209,7 +260,12 @@ export const explorationGuards = {
   isExplorationComplete,
   needsExploration,
   isInValidExplorationZone,
-  isTargetExplorationZoneReachable
+  isTargetExplorationZoneReachable,
+  
+  // Nouveaux guards pour cycle d'exploration multi-tuiles
+  hasExploredEnoughTiles,
+  hasBestTileForCollection,
+  shouldTransitionToCollection
 };
 
 // Utilitaires également exportés
