@@ -50,17 +50,22 @@
 
 ## 🎯 Plan de Prompts Détaillé
 
-### **PROMPT 1 : Corriger les Erreurs de Compilation dans useFSMShipTracker.js**
+### **PROMPT 1 : Corriger les Erreurs de Compilation dans useFSMShipTracker.js** ✅
 **Objectif** : Fixer les erreurs `fsmlogger` → `fsmLogger` et finaliser la logique de collecte
 
-**Fichiers à modifier** :
+**Fichiers modifiés** :
 - `/src/ai/fsm/hooks/useFSMShipTracker.js`
 
-**Actions** :
-1. Corriger `fsmlogger` → `fsmLogger` (lignes 127, 150, 162)
-2. Compléter la logique de collecte dans `onCollectionStart`
-3. Ajouter l'événement `SHIP_COLLECTION_COMPLETED` avec les bonnes ressources
-4. Tester la détection de distance pour la collecte
+**Actions réalisées** :
+1. ✅ Corrigé `fsmlogger` → `fsmLogger` (lignes 127, 150, 162, 194)
+2. ✅ Ajouté validation pour la tuile cible avant collecte
+3. ✅ Améliorer la collecte pour utiliser `context.selectedTileForCollection` en priorité
+4. ✅ Ajouté fallback vers TileStore si pas de données FSM
+5. ✅ Ajouté logging des ressources avec `fsmLogger.resources()`
+6. ✅ Ajouté throttling des logs de debug avec `lastUpdateTime`
+7. ✅ Améliorer la détection d'action avec support pour `moving_to_target`
+
+**Résultat** : Le hook compile sans erreur et la logique de collecte est prête à être utilisée.
 
 ---
 

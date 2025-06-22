@@ -44,6 +44,7 @@ import fsmLogger from '../../../logger/fsmLogger.js';
 export const useFSMShipTracker = (context, send, botId) => {
   const currentVisualPosition = useRef(null);
   const initialPositionSent = useRef(false); // 🆕 Flag pour éviter les envois multiples
+  const lastUpdateTime = useRef(0); // 🆕 Pour throttling des logs de debug
   
   // Hook de debounce personnalisé
   const { canSendEvent, markEventSent, clearAllEvents } = useEventDebounce(
@@ -127,7 +128,7 @@ export const useFSMShipTracker = (context, send, botId) => {
       onTargetReached: (distance, visualPosition, now) => {
         const eventKey = `ship_target_reached_${botId}`;
         if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
-          fsmlogger.mouvement(`🎯 [${botId}] Ship reached target - distance: ${distance.toFixed(2)}`);
+          fsmLogger.mouvement(`🎯 [${botId}] Ship reached target - distance: ${distance.toFixed(2)}`);
           
           // Convertir en coordonnées de tuile
           const gridCoord = worldToGrid(visualPosition);
@@ -150,7 +151,15 @@ export const useFSMShipTracker = (context, send, botId) => {
       onCollectionStart: (distance, visualPosition, now) => {
         const eventKey = `ship_collection_start_${botId}`;
         if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
-          fsmlogger.mouvement(`📦 [${botId}] Ship started collecting resources`);
+          
+          // ✅ VALIDATION : Vérifier qu'on a bien une tuile cible à collecter
+          const targetTileCoord = context?.selectedTileForCollection?.coord;
+          if (!targetTileCoord) {
+            fsmLogger.warn(`⚠️ [${botId}] Cannot start collection: no target tile selected`);
+            return false;
+          }
+          
+          fsmLogger.mouvement(`📦 [${botId}] Ship started collecting resources at ${targetTileCoord}`);
           
           const gridCoord = worldToGrid(visualPosition);
           const tileCoord = gridToHexCoord(gridCoord);
@@ -159,25 +168,47 @@ export const useFSMShipTracker = (context, send, botId) => {
           setTimeout(() => {
             const collectionEventKey = `ship_collection_complete_${botId}`;
             if (canSendEvent(collectionEventKey)) {
-              fsmlogger.mouvement(`✅ [${botId}] Ship completed resource collection`);
+              fsmLogger.mouvement(`✅ [${botId}] Ship completed resource collection`);
               
               try {
-                const { getTileData } = useTileStore.getState();
-                const tileData = getTileData(tileCoord);
+                // Utiliser les données réelles du contexte FSM au lieu du TileStore
+                const targetTileCoord = context?.selectedTileForCollection?.coord || tileCoord;
+                const tileData = context?.memory?.knownTiles?.get(targetTileCoord);
                 
-                // Simuler la collecte de ressources
-                const collectedResources = {
-                  food: tileData?.resources?.food || 0,
-                  debris: tileData?.resources?.debris || 0,
-                  special: tileData?.resources?.special || 0
-                };
+                let collectedResources = { food: 0, debris: 0, special: 0 };
                 
-                const shipCollectionEvent = movementEvents.createShipCollectionCompletedEvent(
-                  visualPosition,
-                  tileCoord,
-                  collectedResources
-                );
-                send(shipCollectionEvent);
+                if (tileData && tileData.hasResources && !tileData.collected) {
+                  // Utiliser les ressources connues depuis la mémoire FSM
+                  collectedResources = {
+                    food: tileData.resources?.food || 0,
+                    debris: tileData.resources?.debris || 0,
+                    special: tileData.resources?.special || 0
+                  };
+                } else {
+                  // Fallback vers TileStore si pas de données FSM
+                  const { getTileData } = useTileStore.getState();
+                  const fallbackTileData = getTileData(tileCoord);
+                  collectedResources = {
+                    food: fallbackTileData?.resources?.food || 0,
+                    debris: fallbackTileData?.resources?.debris || 0,
+                    special: fallbackTileData?.resources?.special || 0
+                  };
+                }
+                
+                const totalResources = Object.values(collectedResources).reduce((sum, val) => sum + val, 0);
+                
+                if (totalResources > 0) {
+                  fsmLogger.resources(`💎 [${botId}] Ship collected resources from tile ${targetTileCoord}:`, collectedResources);
+                  
+                  const shipCollectionEvent = movementEvents.createShipCollectionCompletedEvent(
+                    visualPosition,
+                    targetTileCoord,
+                    collectedResources
+                  );
+                  send(shipCollectionEvent);
+                } else {
+                  fsmLogger.warn(`⚠️ [${botId}] No resources found to collect at tile ${targetTileCoord}`);
+                }
                 
                 markEventSent(collectionEventKey, POSITION_TRACKER_CONFIG.TIMINGS.COLLECTION_RESET);
               } catch (error) {
@@ -196,13 +227,13 @@ export const useFSMShipTracker = (context, send, botId) => {
       onRefuelStart: (distance, visualPosition, now) => {
         const eventKey = `ship_refuel_start_${botId}`;
         if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.STATION_REACH && canSendEvent(eventKey)) {
-          fsmlogger.mouvement(`⛽ [${botId}] Ship started refueling`);
+          fsmLogger.mouvement(`⛽ [${botId}] Ship started refueling`);
           
           // Simuler le processus de refuel
           setTimeout(() => {
             const refuelEventKey = `ship_refuel_complete_${botId}`;
             if (canSendEvent(refuelEventKey)) {
-              fsmlogger.mouvement(`✅ [${botId}] Ship refueling completed`);
+              fsmLogger.mouvement(`✅ [${botId}] Ship refueling completed`);
               
               const shipRefuelEvent = movementEvents.createShipRefuelCompletedEvent(
                 visualPosition,
@@ -243,13 +274,27 @@ export const useFSMShipTracker = (context, send, botId) => {
     
     const now = Date.now();
     
-    // Déterminer le handler basé sur l'action actuelle
+    // Déterminer le handler basé sur l'action actuelle et l'état FSM
     let handlerCategory = 'moving_to_tile'; // Par défaut
     
-    if (currentAction === 'collecting' || currentAction === 'resource_collection') {
+    // Logique améliorée pour détecter les actions de collecte
+    if (currentAction === 'collecting' || 
+        currentAction === 'resource_collection' ||
+        currentAction === 'moving_to_target') {
       handlerCategory = 'collecting';
     } else if (currentAction === 'refueling' || currentAction === 'fuel_maintenance') {
       handlerCategory = 'refueling';
+    }
+    
+    // Debug pour tracer les actions et handlers
+    if (currentAction && now - lastUpdateTime.current > 2000) {
+      fsmLogger.context(`🔍 [${botId}] Ship action tracking`, {
+        currentAction,
+        handlerCategory,
+        distance: distance.toFixed(2),
+        targetPosition
+      });
+      lastUpdateTime.current = now;
     }
     
     const handlers = shipStateHandlers[handlerCategory];
