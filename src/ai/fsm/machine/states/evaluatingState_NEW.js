@@ -130,6 +130,14 @@ export const evaluatingState = state(
       const hasBestTile = discoveryGuards.hasBestTileForCollection(context, event);
       const shouldTransition = discoveryGuards.shouldTransitionToCollection(context, event);
       
+      fsmLogger.info("🔍 [Evaluating] Checking multi-tile cycle guards", { 
+        hasEnoughExplored,
+        hasBestTile,
+        shouldTransition,
+        tilesExplored: context.memory?.stats?.tilesExplored || 0,
+        botId: context.entityId 
+      });
+      
       return hasEnoughExplored && hasBestTile && shouldTransition;
     }),
     reduce((context, event) => {
@@ -156,6 +164,15 @@ export const evaluatingState = state(
       const needsMoreExploration = discoveryGuards.needsExploration(context, event);
       const isDroneInactive = !context.droneFleet?.drones?.explorer?.isActive;
       const canDeploy = !context.droneFleet?.deploymentAttempted;
+      
+      fsmLogger.info("🔍 [Evaluating] Checking exploration guards", { 
+        hasUnexplored,
+        needsMoreExploration,
+        isDroneInactive,
+        canDeploy,
+        tilesExplored: context.memory?.stats?.tilesExplored || 0,
+        botId: context.entityId 
+      });
       
       return (hasUnexplored || needsMoreExploration) && isDroneInactive && canDeploy;
     }),
@@ -195,6 +212,23 @@ export const evaluatingState = state(
 
   // === PRIORITÉ 5 : AUTRES TRANSITIONS ===
   
+  // Nouvelles ressources découvertes → COLLECTING (ancienne logique)
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.COLLECTING, 
+    guard((context, event) => {
+      const isEfficient = efficiencyGuards.isCollectionEfficient(context, event);
+      const hasNewResources = context.hasNewResourceDiscovery;
+      const hasKnownResources = context.knownResources?.length > 0;
+      
+      return isEfficient && hasNewResources && hasKnownResources;
+    }),
+    reduce((context, event) => {
+      const resourceEvent = {
+        ...event,
+        resource: context.knownResources[0]
+      };
+      return contextReducers.state.prepareCollecting(context, resourceEvent);
+    })
+  ),
 
   // Drone pas à la base → EXPLORING_RETURNING
   transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_RETURNING, 
@@ -218,10 +252,6 @@ export const evaluatingState = state(
     reduce((context) => {
       fsmLogger.info("😴 [Evaluating] No action needed, going idle", { 
         tilesExplored: context.memory?.stats?.tilesExplored || 0,
-        deploymentAttempted: context.droneFleet?.deploymentAttempted,
-        droneActive: context.droneFleet?.drones?.explorer?.isActive,
-        droneState: context.droneFleet?.drones?.explorer?.state,
-        hasUnexplored: context.memory?.knownTiles ? Array.from(context.memory.knownTiles.values()).some(tile => !tile.explored) : false,
         botId: context.entityId 
       });
       

@@ -77,13 +77,6 @@ export const exploringState = state(
       const drone = context.droneFleet?.drones?.explorer;
       const shouldDock = drone?.isActive && drone?.state === 'returning';
       
-      fsmLogger.info("🏠 [Exploring] DRONE_REACHED_SHIP guard check", { 
-        botId: context.entityId,
-        droneState: drone?.state,
-        isActive: drone?.isActive,
-        shouldTransition: shouldDock
-      });
-      
       return shouldDock;
     }),
     reduce((context, event) => {
@@ -97,8 +90,18 @@ export const exploringState = state(
         droneType: event.droneType || 'explorer'
       });
       
+      // IMPORTANT: Réinitialiser deploymentAttempted pour permettre la prochaine exploration
+      const contextWithResetDeployment = {
+        ...dockedContext,
+        droneFleet: {
+          ...dockedContext.droneFleet,
+          deploymentAttempted: false,  // Réinitialiser pour permettre nouvelle exploration
+          deploymentCompleted: false
+        }
+      };
+      
       // Préparer l'évaluation suivante
-      return contextReducers.state.prepareEvaluating(dockedContext, {
+      return contextReducers.state.prepareEvaluating(contextWithResetDeployment, {
         reason: 'drone_reached_ship_successfully'
       });
     })

@@ -30,6 +30,7 @@
 
 import fsmLogger from '../../../../../logger/fsmLogger.js';
 import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES } from '../../constants/constants.js';
+import { EXPLORATION_CYCLE_CONFIG } from '../../constants/constants.js';
 
 // ============================================================================
 // UTILITAIRES INTERNES
@@ -459,6 +460,72 @@ export const shipUpdateInventory = (context, event) => {
 };
 
 // ============================================================================
+// 🎯 ACTIONS CYCLE D'EXPLORATION MULTI-TUILES
+// ============================================================================
+
+/**
+ * Sélectionne la meilleure tuile pour la collecte
+ * Utilise les priorités configurées pour trier les tuiles par valeur
+ * @param {Object} context - Contexte FSM actuel
+ * @param {Object} event - Événement (non utilisé)
+ * @returns {Object} - Contexte mis à jour avec selectedTileForCollection
+ */
+export const selectBestTileForCollection = (context, event) => {
+  const collectibleTiles = Array.from(context.memory.knownTiles.values())
+    .filter(tile => tile.explored && tile.hasResources && !tile.collected);
+  
+  if (collectibleTiles.length === 0) {
+    return { 
+      ...context, 
+      error: 'No collectible tiles available',
+      lastAction: 'selectBestTileForCollection_failed'
+    };
+  }
+  
+  // Trier par total des ressources (utilise les priorités configurées)
+  const sortedTiles = collectibleTiles.sort((a, b) => {
+    const getTotalValue = (tile) => {
+      const res = tile.resources || {};
+      const priorities = EXPLORATION_CYCLE_CONFIG.RESOURCE_PRIORITIES;
+      return (res.special || 0) * priorities.special + 
+             (res.food || 0) * priorities.food + 
+             (res.debris || 0) * priorities.debris;
+    };
+    return getTotalValue(b) - getTotalValue(a);
+  });
+  
+  return {
+    ...context,
+    selectedTileForCollection: sortedTiles[0],
+    lastAction: 'selectBestTileForCollection_success'
+  };
+};
+
+/**
+ * Remet à zéro les statistiques du cycle d'exploration
+ * Permet de commencer un nouveau cycle d'exploration
+ * @param {Object} context - Contexte FSM actuel
+ * @param {Object} event - Événement (non utilisé)
+ * @returns {Object} - Contexte mis à jour avec stats remises à zéro
+ */
+export const resetExplorationCycleStats = (context, event) => {
+  fsmLogger.logInfo('resetExplorationCycleStats', 'Resetting exploration cycle stats for new cycle');
+  
+  return {
+    ...context,
+    memory: {
+      ...context.memory,
+      stats: {
+        ...context.memory.stats,
+        tilesExplored: 0, // Reset pour nouveau cycle
+        cycleStartTime: Date.now()
+      }
+    },
+    lastAction: 'resetExplorationCycleStats_success'
+  };
+};
+
+// ============================================================================
 // EXPORTS ORGANISÉS
 // ============================================================================
 
@@ -474,7 +541,11 @@ export const shipCollectingActions = {
   shipCompleteMovement,
   shipCreateWithCapacities,
   shipDepositResources,
-  shipUpdateInventory
+  shipUpdateInventory,
+  
+  // Nouvelles actions pour cycle d'exploration multi-tuiles
+  selectBestTileForCollection,
+  resetExplorationCycleStats
 };
 
 /**

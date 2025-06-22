@@ -81,7 +81,7 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
     
     // 🎭 MOUVEMENT FLUIDE (INTERPOLATION VISUELLE)
     if (isMoving && targetPosition) {
-      const speed = delta * 0.8;
+      const speed = delta * 3.0; // 🚀 ACCÉLÉRATION FORTE (x3.75 plus rapide que 0.8)
       currentPosition.x = THREE.MathUtils.lerp(currentPosition.x, targetPosition.x, speed);
       currentPosition.y = THREE.MathUtils.lerp(currentPosition.y, targetPosition.y, speed);
       currentPosition.z = THREE.MathUtils.lerp(currentPosition.z, targetPosition.z, speed);

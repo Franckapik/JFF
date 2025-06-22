@@ -118,10 +118,19 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {
   const state = useMemo(() => current.name, [current.name]);
   const isMoving = useMemo(() => vehicle?.isMoving || false, [vehicle?.isMoving]);
   
-  // Démarrage automatique
+  // Démarrage automatique avec logging de debug
   useEffect(() => {
-    if (!hasStartedExploring.current && state === 'evaluating') {
+    // Réinitialiser le flag quand on entre en état evaluating
+    if (state === 'evaluating' && hasStartedExploring.current) {
+      fsmLogger.info(`🔄 [useBotMachine] Resetting evaluation flag for new cycle - ${botId}`);
+      hasStartedExploring.current = false;
+    }
+    
+    const shouldStartEvaluation = !hasStartedExploring.current && state === 'evaluating';
+    
+    if (shouldStartEvaluation) {
       timeoutRef.current = setTimeout(() => {
+        fsmLogger.info(`🎯 [useBotMachine] Sending EVALUATION_COMPLETE for ${botId}`);
         syncedSend(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE);
         hasStartedExploring.current = true;
       }, 2000);
@@ -133,7 +142,7 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {
         timeoutRef.current = null;
       }
     };
-  }, [state === 'evaluating' && !hasStartedExploring.current, syncedSend, botId]);
+  }, [state, syncedSend, botId, current?.context]);
 
   const instance = {
     entity,
