@@ -75,19 +75,19 @@ export const POSITION_TRACKER_CONFIG = {
     STATION_REACH: 0.3,        // Distance pour atteindre une station (fuel/repair)
   },
   TIMINGS: {
-    // === TIMINGS COMMUNS ===
-    EVENT_COOLDOWN: 1000,      // Cooldown entre événements identiques
-    DEBUG_LOG_INTERVAL: 2000,  // Intervalle des logs de debug
+    // === TIMINGS COMMUNS 🚀 ACCÉLÉRÉS ===
+    EVENT_COOLDOWN: 300,       // Cooldown entre événements identiques (était 1000)
+    DEBUG_LOG_INTERVAL: 1000,  // Intervalle des logs de debug (était 2000)
     
-    // === TIMINGS DRONES ===
-    DEPLOYMENT_RESET: 5000,    // Reset du flag de déploiement
-    EXPLORATION_RESET: 3000,   // Reset du flag d'exploration
-    RETURN_RESET: 5000,        // Reset du flag de retour
+    // === TIMINGS DRONES 🚀 ACCÉLÉRÉS ===
+    DEPLOYMENT_RESET: 1500,    // Reset du flag de déploiement (était 5000)
+    EXPLORATION_RESET: 1000,   // Reset du flag d'exploration (était 3000)
+    RETURN_RESET: 1500,        // Reset du flag de retour (était 5000)
     
-    // === TIMINGS VAISSEAUX ===
-    SHIP_MOVEMENT_RESET: 2000, // Reset du flag de mouvement vaisseau
-    SHIP_ARRIVAL_RESET: 3000,  // Reset du flag d'arrivée vaisseau
-    COLLECTION_DURATION: 2000, // Durée de collecte des ressources
+    // === TIMINGS VAISSEAUX 🚀 ACCÉLÉRÉS ===
+    SHIP_MOVEMENT_RESET: 600,  // Reset du flag de mouvement vaisseau (était 2000)
+    SHIP_ARRIVAL_RESET: 1000,  // Reset du flag d'arrivée vaisseau (était 3000)
+    COLLECTION_DURATION: 600,  // Durée de collecte des ressources (était 2000)
     COLLECTION_RESET: 4000,    // Reset du flag de collecte
     REFUEL_DURATION: 3000,     // Durée du refuel
     REFUEL_RESET: 5000,        // Reset du flag de refuel
@@ -137,23 +137,23 @@ export const DRONE_TYPES = {
 };
 
 /**
- * Configuration des drones par type
+ * Configuration des drones par type 🚀 VITESSES ACCÉLÉRÉES
  */
 export const DRONE_CONFIG = {
   explorer: {
-    speed: 2.0,
+    speed: 8.0,   // x4 plus rapide (était 2.0)
     range: 5,
     scanRadius: 2,
     fuelConsumption: 1
   },
   combat: {
-    speed: 1.5,
+    speed: 6.0,   // x4 plus rapide (était 1.5)
     range: 3,
     scanRadius: 1,
     fuelConsumption: 2
   },
   special: {
-    speed: 1.8,
+    speed: 7.2,   // x4 plus rapide (était 1.8)
     range: 4,
     scanRadius: 3,
     fuelConsumption: 1.5
@@ -171,11 +171,11 @@ export const VEHICLE_TYPES = {
 };
 
 /**
- * États de véhicule par défaut
+ * États de véhicule par défaut 🚀 VITESSE ACCÉLÉRÉE
  */
 export const DEFAULT_VEHICLE_STATE = {
   isMoving: false,
-  speed: 1,
+  speed: 4,      // x4 plus rapide (était 1)
   health: 100,
   shield: 0,
   active: true
@@ -239,13 +239,13 @@ export const MOVEMENT_CONSTANTS = {
 };
 
 /**
- * Constantes d'exploration (déplacé de explorationGuard.js)
+ * Constantes d'exploration (déplacé de explorationGuard.js) 🚀 TIMINGS ACCÉLÉRÉS
  */
 export const EXPLORATION_CONSTANTS = {
-  EXPLORATION_TIMEOUT: 300000,      // 5 minutes d'expiration
+  EXPLORATION_TIMEOUT: 60000,       // 1 minute d'expiration (était 5 min)
   MAX_EXPLORED_TILES: 100,          // Maximum de tuiles explorées
   MIN_EXPLORATION_DISTANCE: 2,      // Distance minimale pour explorer
-  DISCOVERY_COOLDOWN: 30000,        // 30 secondes entre découvertes
+  DISCOVERY_COOLDOWN: 5000,         // 5 secondes entre découvertes (était 30s)
   EXPLORATION_RADIUS: 5             // Rayon d'exploration
 };
 

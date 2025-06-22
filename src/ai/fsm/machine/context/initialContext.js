@@ -163,9 +163,9 @@ export const createEntityContext = (entityId, entityType = ENTITY_TYPES.auto) =>
       fuelThreshold: 20,                         // Ex: 20, 15, 30 (pourcentage)
       capacityThreshold: 80,                     // Ex: 80, 90, 70 (pourcentage)
       
-      // Vitesses et timings
-      movementSpeed: entityType === ENTITY_TYPES.auto ? 2 : 1, // Ex: 2, 1, 0.5 (multiplicateur)
-      explorationInterval: 3000,                 // Ex: 3000, 5000, 1500 (ms)
+      // Vitesses et timings 🚀 ACCÉLÉRATION
+      movementSpeed: entityType === ENTITY_TYPES.auto ? 8 : 4, // Ex: 8, 4, 2 (multiplicateur x4 plus rapide)
+      explorationInterval: 1000,                 // Ex: 1000, 1500, 2000 (ms) - 3x plus rapide
       
       // Debugging
       enableLogging: true,                       // Ex: true, false

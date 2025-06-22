@@ -13,6 +13,7 @@
 
 import { EXPLORATION_CONSTANTS, MOVEMENT_CONSTANTS } from '../../constants/constants.js';
 import { EXPLORATION_CYCLE_CONFIG } from '../../constants/constants.js';
+import fsmLogger from '../../../../../logger/fsmLogger.js';
 
 // ============================================================================
 // UTILITAIRES EXPLORATION
@@ -219,7 +220,9 @@ const isTargetExplorationZoneReachable = (context, event) => {
  */
 const hasExploredEnoughTiles = (context, event) => {
   const exploredCount = context.memory?.stats?.tilesExplored || 0;
-  return exploredCount >= EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION; // Utilise la constante
+  const result = exploredCount >= EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION;
+  
+  return result;
 };
 
 /**
@@ -229,9 +232,12 @@ const hasExploredEnoughTiles = (context, event) => {
  * @returns {boolean} True si tuiles collectibles disponibles
  */
 const hasBestTileForCollection = (context, event) => {
-  const collectibleTiles = Array.from(context.memory.knownTiles.values())
+  const knownTiles = context.memory?.knownTiles || new Map();
+  const collectibleTiles = Array.from(knownTiles.values())
     .filter(tile => tile.explored && tile.hasResources && !tile.collected);
-  return collectibleTiles.length > 0;
+  const result = collectibleTiles.length > 0;
+  
+  return result;
 };
 
 /**
@@ -242,10 +248,15 @@ const hasBestTileForCollection = (context, event) => {
  */
 const shouldTransitionToCollection = (context, event) => {
   const exploredCount = context.memory?.stats?.tilesExplored || 0;
-  const collectibleTiles = Array.from(context.memory.knownTiles.values())
+  const knownTiles = context.memory?.knownTiles || new Map();
+  const collectibleTiles = Array.from(knownTiles.values())
     .filter(tile => tile.explored && tile.hasResources && !tile.collected);
   
-  return exploredCount >= EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION && collectibleTiles.length > 0;
+  const hasEnoughExplored = exploredCount >= EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION;
+  const hasCollectibles = collectibleTiles.length > 0;
+  const result = hasEnoughExplored && hasCollectibles;
+  
+  return result;
 };
 
 // ============================================================================

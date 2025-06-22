@@ -494,19 +494,6 @@ export const selectBestTileForCollection = (context, event) => {
     return getTotalValue(b) - getTotalValue(a);
   });
   
-  // Calculer la valeur pour le log
-  const bestTile = sortedTiles[0];
-  const bestTileValue = (bestTile.resources?.special || 0) * EXPLORATION_CYCLE_CONFIG.RESOURCE_PRIORITIES.special + 
-                       (bestTile.resources?.food || 0) * EXPLORATION_CYCLE_CONFIG.RESOURCE_PRIORITIES.food + 
-                       (bestTile.resources?.debris || 0) * EXPLORATION_CYCLE_CONFIG.RESOURCE_PRIORITIES.debris;
-  
-  fsmLogger.info('🎯 [selectBestTileForCollection] Selected best tile', { 
-    coord: bestTile.coord,
-    value: bestTileValue,
-    availableTiles: collectibleTiles.length,
-    selectedTile: bestTile 
-  });
-  
   return {
     ...context,
     selectedTileForCollection: sortedTiles[0],

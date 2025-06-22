@@ -77,13 +77,6 @@ export const exploringState = state(
       const drone = context.droneFleet?.drones?.explorer;
       const shouldDock = drone?.isActive && drone?.state === 'returning';
       
-      fsmLogger.info("🏠 [Exploring] DRONE_REACHED_SHIP guard check", { 
-        botId: context.entityId,
-        droneState: drone?.state,
-        isActive: drone?.isActive,
-        shouldTransition: shouldDock
-      });
-      
       return shouldDock;
     }),
     reduce((context, event) => {
