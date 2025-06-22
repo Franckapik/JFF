@@ -19,6 +19,10 @@
  * 📦 COLLECTE (collecting):
  * - movementEvents.createShipCollectionCompletedEvent() → 'SHIP_COLLECTION_COMPLETED'
  * 
+ * 🏠 RETOUR À LA BASE (collecting_returning_to_base):
+ * - movementEvents.createShipMovementStartedEvent() → 'SHIP_MOVEMENT_STARTED' (retour)
+ * - movementEvents.createShipArrivedAtTileEvent() → 'SHIP_ARRIVED_AT_TILE' (à la base)
+ * 
  * ⛽ RAVITAILLEMENT (refueling):
  * - movementEvents.createShipRefuelCompletedEvent() → 'SHIP_REFUEL_COMPLETED'
  * 
@@ -126,8 +130,15 @@ export const useFSMShipTracker = (context, send, botId) => {
         return false;
       },
       onTargetReached: (distance, visualPosition, now) => {
+        // 🎯 SEUIL ADAPTATIF selon la distance initiale
+        const adaptiveThreshold = distance > 2.0 ? 
+          POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH_FAR || 0.8 :
+          distance > 1.0 ? 
+            POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH || 0.6 :
+            POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH_CLOSE || 0.4;
+            
         const eventKey = `ship_target_reached_${botId}`;
-        if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
+        if (distance < adaptiveThreshold && canSendEvent(eventKey)) {
           fsmLogger.mouvement(`🎯 [${botId}] Ship reached target - distance: ${distance.toFixed(2)}`);
           
           // Convertir en coordonnées de tuile
@@ -155,7 +166,7 @@ export const useFSMShipTracker = (context, send, botId) => {
           // ✅ VALIDATION : Vérifier qu'on a bien une tuile cible à collecter
           const targetTileCoord = context?.selectedTileForCollection?.coord;
           if (!targetTileCoord) {
-            fsmLogger.warn(`⚠️ [${botId}] Cannot start collection: no target tile selected`);
+            fsmLogger.error(`⚠️ [${botId}] Cannot start collection: no target tile selected`);
             return false;
           }
           
@@ -207,7 +218,7 @@ export const useFSMShipTracker = (context, send, botId) => {
                   );
                   send(shipCollectionEvent);
                 } else {
-                  fsmLogger.warn(`⚠️ [${botId}] No resources found to collect at tile ${targetTileCoord}`);
+                  fsmLogger.error(`⚠️ [${botId}] No resources found to collect at tile ${targetTileCoord}`);
                 }
                 
                 markEventSent(collectionEventKey, POSITION_TRACKER_CONFIG.TIMINGS.COLLECTION_RESET);
@@ -220,6 +231,64 @@ export const useFSMShipTracker = (context, send, botId) => {
           markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.COLLECTION_RESET);
           return true;
         }
+        return false;
+      }
+    },
+    collecting_returning_to_base: {
+      onReturnMovementStart: (distance, visualPosition, now) => {
+        const eventKey = `ship_return_movement_start_${botId}`;
+        if (distance > POSITION_TRACKER_CONFIG.THRESHOLDS.SHIP_MOVEMENT_START && canSendEvent(eventKey)) {
+          fsmLogger.mouvement(`🏠 [${botId}] Ship started returning to base after collection - distance: ${distance.toFixed(2)}`);
+          
+          // Créer un événement de démarrage de mouvement de retour à la base
+          const shipReturnMovementEvent = movementEvents.createShipMovementStartedEvent(
+            visualPosition,
+            context?.basePosition || null // Position de la base comme cible
+          );
+          send(shipReturnMovementEvent);
+          
+          markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.SHIP_MOVEMENT_RESET);
+          return true;
+        }
+        return false;
+      },
+      onBaseReached: (distance, visualPosition, now) => {
+        // 🏠 SEUIL PLUS TOLÉRANT pour l'arrivée à la base
+        const baseThreshold = POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH_FAR || 0.8;
+        const eventKey = `ship_base_reached_${botId}`;
+        if (distance < baseThreshold && canSendEvent(eventKey)) {
+          fsmLogger.mouvement(`🎯 [${botId}] Ship reached base after collection - distance: ${distance.toFixed(2)}`);
+          
+          // Convertir en coordonnées de tuile
+          const gridCoord = worldToGrid(visualPosition);
+          const tileCoord = gridToHexCoord(gridCoord);
+          
+          // Événement d'arrivée à la base après collecte
+          const shipArrivedAtBaseEvent = movementEvents.createShipArrivedAtTileEvent(
+            visualPosition,
+            tileCoord,
+            { 
+              isReturningFromCollection: true,
+              carriedResources: context?.vehicle?.cargo || {}
+            }
+          );
+          send(shipArrivedAtBaseEvent);
+          
+          markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.SHIP_ARRIVAL_RESET);
+          return true;
+        }
+        
+        // 🔍 DEBUG: Logger quand on est proche mais pas assez
+        if (distance < 0.7 && now % 3000 < 100) { // Log toutes les 3 secondes quand proche
+          fsmLogger.context(`🔍 [${botId}] Ship approaching base`, {
+            distance: distance.toFixed(3),
+            threshold: POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH,
+            visualPosition,
+            targetPosition: context?.targetPosition || context?.vehicle?.targetPosition,
+            basePosition: context?.basePosition
+          });
+        }
+        
         return false;
       }
     },
@@ -265,26 +334,39 @@ export const useFSMShipTracker = (context, send, botId) => {
     
     if (!visualPosition || !targetPosition) return;
     
-    // Calculer la distance entre position visuelle et cible FSM
+    // 🛑 ARRÊTER le tracking si le vaisseau est inactif à la base
+    if (currentAction === 'idling' && !ship.isMoving) {
+      return; // Pas de tracking nécessaire quand le vaisseau est en repos
+    }
+    
+    // 🛑 ARRÊTER aussi si distance est 0 et que le vaisseau n'est pas en mouvement  
     const distance = Math.sqrt(
       Math.pow(targetPosition.x - visualPosition.x, 2) +
       Math.pow(targetPosition.y - visualPosition.y, 2) +
       Math.pow(targetPosition.z - visualPosition.z, 2)
     );
     
+    if (distance === 0 && currentAction === 'idling') {
+      return; // Arrêter complètement le tracking quand arrivé et inactif
+    }
+    
     const now = Date.now();
     
     // Déterminer le handler basé sur l'action actuelle et l'état FSM
     let handlerCategory = 'moving_to_tile'; // Par défaut
     
+    // ⭐ SIMPLE: Détecter le retour à la base via l'action 'returning_to_base'
+    if (currentAction === 'returning_to_base') {
+      handlerCategory = 'collecting_returning_to_base';
+    }
     // Logique améliorée pour détecter les actions de collecte
-    if (currentAction === 'collecting' || 
-        currentAction === 'resource_collection' ||
-        currentAction === 'moving_to_target') {
+    else if (currentAction === 'collecting' || 
+        currentAction === 'resource_collection') {
       handlerCategory = 'collecting';
     } else if (currentAction === 'refueling' || currentAction === 'fuel_maintenance') {
       handlerCategory = 'refueling';
     }
+    // ⭐ Note: 'moving_to_target' reste dans 'moving_to_tile' pour déclencher l'arrivée
     
     // Debug pour tracer les actions et handlers
     if (currentAction && now - lastUpdateTime.current > 2000) {
@@ -301,18 +383,32 @@ export const useFSMShipTracker = (context, send, botId) => {
     if (handlers) {
       let eventSent = false;
       
+      // Handler pour mouvement standard
       if (handlers.onMovementStart) {
         eventSent = handlers.onMovementStart(distance, visualPosition, now);
       }
       
+      // Handler pour mouvement de retour à la base
+      if (!eventSent && handlers.onReturnMovementStart) {
+        eventSent = handlers.onReturnMovementStart(distance, visualPosition, now);
+      }
+      
+      // Handler pour arrivée standard
       if (!eventSent && handlers.onTargetReached) {
         eventSent = handlers.onTargetReached(distance, visualPosition, now);
       }
       
+      // Handler pour arrivée à la base
+      if (!eventSent && handlers.onBaseReached) {
+        eventSent = handlers.onBaseReached(distance, visualPosition, now);
+      }
+      
+      // Handler pour début de collecte
       if (!eventSent && handlers.onCollectionStart) {
         eventSent = handlers.onCollectionStart(distance, visualPosition, now);
       }
       
+      // Handler pour début de refuel
       if (!eventSent && handlers.onRefuelStart) {
         eventSent = handlers.onRefuelStart(distance, visualPosition, now);
       }

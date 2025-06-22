@@ -187,7 +187,7 @@ export const collectingState = state(
       
       // Vérifier si la collecte a réussi
       if (collectedContext.error) {
-        fsmLogger.warn("⚠️ [Collecting] Collection failed", { 
+        fsmLogger.error("⚠️ [Collecting] Collection failed", { 
           error: collectedContext.error,
           coord: event.coord,
           botId: context.entityId 
@@ -277,6 +277,52 @@ export const collectingState = state(
         reason: 'emergency_return',
         emergencyReason: event.reason || 'unknown'
       });
+    })
+  ),
+
+  // === ÉTAT COLLECTING_RETURNING_TO_BASE - Transitions spécialisées ===
+  
+  // SHIP_ARRIVED_AT_TILE - Le vaisseau arrive à la base (état COLLECTING_RETURNING_TO_BASE)
+  transition(MOVEMENT_EVENT_TYPES.SHIP_ARRIVED_AT_TILE, BOT_STATES.EVALUATING,
+    guard((context) => context.currentAction === 'returning_to_base'),
+    reduce((context, event) => {
+      fsmLogger.info("🏠 [ReturningToBase] Ship arrived at base, depositing resources", { 
+        position: event.position,
+        tileCoord: event.tileCoord,
+        carriedResources: context.vehicle?.resources || {},
+        botId: context.entityId 
+      });
+      
+      // Déposer les ressources à la base et préparer l'évaluation
+      const contextWithCleanVehicle = {
+        ...context,
+        vehicle: {
+          ...context.vehicle,
+          resources: { food: 0, debris: 0, special: 0 }, // Ressources déposées
+          cargo: { food: 0, debris: 0, special: 0 }      // Cargo vidé
+        }
+      };
+      
+      return contextReducers.state.prepareEvaluating(contextWithCleanVehicle, {
+        reason: 'arrived_at_base_with_resources',
+        shouldConsiderIdleTime: true,  // 🆕 Flag pour indiquer qu'on peut aller en idle
+        depositedResources: context.vehicle?.resources || {}
+      });
+    })
+  ),
+
+  // SHIP_MOVEMENT_STARTED - Le vaisseau commence le mouvement vers la base (état COLLECTING_RETURNING_TO_BASE)
+  transition(MOVEMENT_EVENT_TYPES.SHIP_MOVEMENT_STARTED, BOT_STATES.COLLECTING_RETURNING_TO_BASE,
+    guard((context) => context.currentAction === 'returning_to_base'),
+    reduce((context, event) => {
+      fsmLogger.info("🚀 [ReturningToBase] Ship movement toward base started", { 
+        position: event.position,
+        targetPosition: event.targetPosition || context.targetPosition,
+        botId: context.entityId 
+      });
+      
+      // Continuer dans le même état, juste logger le mouvement
+      return context;
     })
   )
 );

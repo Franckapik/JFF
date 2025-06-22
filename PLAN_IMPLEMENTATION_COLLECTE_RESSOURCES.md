@@ -191,17 +191,21 @@
 
 ---
 
-### **PROMPT 7 : Tests et Optimisation**
-**Objectif** : Validation complète du cycle exploration → collecte → dépôt
+### **PROMPT 7 : Tests et Optimisation du Cycle Complet** 🔧
+**Objectif** : Validation complète du cycle exploration → collecte → dépôt et correction du bug de disparition du vaisseau
 
-**Fichiers à modifier** :
-- Tests de l'ensemble du système
+**Problème identifié** : Le mesh du vaisseau disparaît lors de la transition vers l'état `collecting_moving_to_target`
 
-**Actions** :
-1. Tester le cycle complet : exploration → évaluation → collecte → retour → dépôt
-2. Vérifier l'accumulation des ressources sur plusieurs cycles
-3. Optimiser les seuils de transition (nombre de tuiles avant collecte)
-4. Documenter les performances et les métriques
+**Fichiers modifiés** :
+- `/src/ai/fsm/machine/actions/core/shipCollectingActions.js`
+- `/src/ai/fsm/machine/reducers/context.js`
+- `/src/animations/useShipAnimation.js`
+
+**Actions réalisées** :
+1. 🔧 **Correction de `selectBestTileForCollection`** : Ajout de la définition de `targetPosition` et `targetTile` dans le contexte du véhicule pour permettre l'animation
+2. 🔧 **Amélioration de `prepareCollectingMovingToTarget`** : Configuration complète du mouvement avec `isMoving: true` et position cible
+3. 🔧 **Debugging avancé dans `useShipAnimation`** : Ajout de logs détaillés pour diagnostiquer les problèmes de mouvement et de visibilité
+4. 🔧 **Logs de ressources** : Amélioration du logging lors de la sélection de tuile pour la collecte
 
 ---
 

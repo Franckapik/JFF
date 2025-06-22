@@ -44,7 +44,7 @@ export const createBotMachine = (botId, initialData = {}) => {
       [BOT_STATES.EXPLORING_RETURNING]: exploringState, // Now handled by exploringState
       [BOT_STATES.COLLECTING]: collectingState,
       [BOT_STATES.COLLECTING_MOVING_TO_TARGET]: collectingState,        // ✅ AJOUTÉ - Sous-état de collecte
-      [BOT_STATES.COLLECTING_RETURNING_TO_BASE]: collectingState,       // ✅ AJOUTÉ - Sous-état de collecte
+      [BOT_STATES.COLLECTING_RETURNING_TO_BASE]: collectingState,       // ✅ INTÉGRÉ - Géré par collectingState
       [BOT_STATES.IDLE_AT_BASE]: idleAtBaseState,
     },
     

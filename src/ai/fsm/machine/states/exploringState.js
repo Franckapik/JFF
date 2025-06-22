@@ -48,7 +48,8 @@ export const exploringState = state(
       // Utiliser l'action unifiée pour mettre à jour la mémoire
       const exploredContext = droneExploresTile(context, {
         coord: event.coord,
-        resources: event.resources
+        resources: event.resources,
+        position: event.position // ⭐ Inclure la position 3D de la tuile
       });
       
       // ✅ CYCLE COMPLET: Rappeler le drone après exploration

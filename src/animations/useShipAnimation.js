@@ -35,23 +35,37 @@ export const useShipAnimation = (context, shipWorldPosition, updateVisualPositio
   }, [shipWorldPosition, updateVisualPosition]);
 
   useFrame((state, delta) => {
-    if (!shipRef.current) return;
+    if (!shipRef.current || !context) return;
     
     const now = state.clock.elapsedTime;
-    const currentPosition = shipRef.current.position;
-    
-    // État du vaisseau lu directement depuis le contexte FSM
-    const vehicle = context?.vehicle;
-    const currentAction = context?.currentAction;
-    const isMoving = context?.isMoving || false;
-    
-    if (!vehicle) return;
-    
+    const currentAction = context.currentAction || 'idling';
+    const isMoving = context.vehicle?.isMoving || context.isMoving || false; // ⭐ Vérifier d'abord vehicle.isMoving
+    const vehicle = context.vehicle || {};
     const targetPosition = vehicle.targetPosition || context.targetPosition;
     
-    // Debug pour les problèmes de mouvement
-    if (now - lastUpdateTime.current > 3.0 && !isMoving && targetPosition) {
-      fsmLogger.error(`⚠️ [Ship] Action ${currentAction} mais pas en mouvement`);
+    // Debug pour les problèmes de mouvement - logging détaillé
+    if (now - lastUpdateTime.current > 3.0) {
+      if (currentAction === 'moving_to_target' && !isMoving) {
+        fsmLogger.error(`⚠️ [Ship] Action 'moving_to_target' mais isMoving=false`, {
+          currentAction,
+          isMoving,
+          hasTargetPosition: !!targetPosition,
+          targetPosition,
+          botId: context.entityId
+        });
+      }
+      
+      if (currentAction === 'moving_to_target' && !targetPosition) {
+        fsmLogger.error(`⚠️ [Ship] Action 'moving_to_target' mais pas de targetPosition`, {
+          currentAction,
+          isMoving,
+          hasTargetPosition: !!targetPosition,
+          vehicleTargetPosition: vehicle.targetPosition,
+          contextTargetPosition: context.targetPosition,
+          botId: context.entityId
+        });
+      }
+      
       lastUpdateTime.current = now;
     }
     
@@ -73,18 +87,28 @@ export const useShipAnimation = (context, shipWorldPosition, updateVisualPositio
         z: targetPosition.z - shipWorldPosition.z
       };
       
+      // Position actuelle du vaisseau (référence Three.js)
+      const currentPosition = shipRef.current.position;
+      
       // Calcul de la distance pour adapter l'animation
       const distance = Math.sqrt(
         Math.pow(localTargetPosition.x - currentPosition.x, 2) +
         Math.pow(localTargetPosition.z - currentPosition.z, 2)
       );
       
-      // Interpolation adaptée à la distance
+      // Interpolation adaptée à la distance avec convergence finale
       const adaptedSpeed = distance > 2.0 ? speed * 1.5 : speed;
       
-      currentPosition.x = THREE.MathUtils.lerp(currentPosition.x, localTargetPosition.x, adaptedSpeed);
-      currentPosition.y = THREE.MathUtils.lerp(currentPosition.y, localTargetPosition.y, speed);
-      currentPosition.z = THREE.MathUtils.lerp(currentPosition.z, localTargetPosition.z, adaptedSpeed);
+      // Si très proche de la cible, snapper à la position exacte pour éviter l'oscillation
+      if (distance < 0.1) {
+        currentPosition.x = localTargetPosition.x;
+        currentPosition.y = localTargetPosition.y;
+        currentPosition.z = localTargetPosition.z;
+      } else {
+        currentPosition.x = THREE.MathUtils.lerp(currentPosition.x, localTargetPosition.x, adaptedSpeed);
+        currentPosition.y = THREE.MathUtils.lerp(currentPosition.y, localTargetPosition.y, speed);
+        currentPosition.z = THREE.MathUtils.lerp(currentPosition.z, localTargetPosition.z, adaptedSpeed);
+      }
       
       // Rotation douce orientée vers la cible
       if (distance > 0.1) {
@@ -173,7 +197,7 @@ export const useShipAnimation = (context, shipWorldPosition, updateVisualPositio
   return {
     shipRef,
     currentAction: context?.currentAction || 'idling',
-    isMoving: context?.isMoving || false,
+    isMoving: context?.vehicle?.isMoving || context?.isMoving || false, // ⭐ Vérifier d'abord vehicle.isMoving
     // 🆕 Ajout d'infos supplémentaires pour debug
     targetPosition: context?.vehicle?.targetPosition || context?.targetPosition,
     hasResources: !!(context?.vehicle?.resources && 

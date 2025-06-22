@@ -51,6 +51,43 @@ export const evaluatingState = state(
     })
   ),
 
+  // === PRIORITÉ 1.5 : RETOUR DE BASE AVEC OPTION IDLE ===
+  
+  // Retour de base réussi avec option idle selon les conditions
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.IDLE_AT_BASE,
+    guard((context, event) => {
+      // Vérifier si on revient de la base avec des ressources déposées
+      const justReturnedFromBase = context.reason === 'arrived_at_base_with_resources';
+      const shouldConsiderIdle = context.shouldConsiderIdleTime;
+      
+      if (!justReturnedFromBase || !shouldConsiderIdle) {
+        return false;
+      }
+      
+      // Conditions pour prendre du repos :
+      const isLowEnergy = context.vehicle?.fuel < 50;
+      const needsRepair = context.vehicle?.damage > 30;
+      const hasWorkedEnough = (context.memory?.stats?.tilesExplored || 0) >= 2;
+      const resourcesDeposited = context.depositedResources && 
+        Object.values(context.depositedResources).reduce((sum, amount) => sum + amount, 0) > 500;
+      
+      return isLowEnergy || needsRepair || (hasWorkedEnough && resourcesDeposited);
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("🏠 [Evaluating] Taking earned rest after successful collection cycle", { 
+        fuel: context.vehicle?.fuel,
+        damage: context.vehicle?.damage,
+        tilesExplored: context.memory?.stats?.tilesExplored,
+        depositedAmount: context.depositedResources ? Object.values(context.depositedResources).reduce((sum, amount) => sum + amount, 0) : 0,
+        botId: context.entityId 
+      });
+      
+      return contextReducers.state.prepareIdleAtBase(context, {
+        reason: 'earned_rest_after_collection'
+      });
+    })
+  ),
+
   // Nouveau cycle d'exploration après collecte → EXPLORING_DEPLOYING
   transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_DEPLOYING,
     guard((context, event) => {
@@ -99,8 +136,8 @@ export const evaluatingState = state(
 
   // === PRIORITÉ 2 : TRANSITIONS DE SÉCURITÉ ===
   
-  // Carburant critique ou capacité pleine → EXPLORING_RETURNING
-  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.EXPLORING_RETURNING, 
+  // Carburant critique ou capacité pleine → COLLECTING_RETURNING_TO_BASE (vaisseau retourne à la base)
+  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.COLLECTING_RETURNING_TO_BASE, 
     guard((context, event) => {
       const needsEmergency = safetyGuards.needsEmergencyReturn(context, event);
       const shouldReturnEff = efficiencyGuards.shouldReturnForEfficiency(context, event);
@@ -117,7 +154,12 @@ export const evaluatingState = state(
         emergencyReason
       };
       
-      return contextReducers.state.prepareReturning(context, enrichedEvent);
+      fsmLogger.info("🚢 [Evaluating] Ship returning to base for safety", { 
+        reason: emergencyReason,
+        botId: context.entityId 
+      });
+      
+      return contextReducers.state.prepareReturningToBase(context, enrichedEvent);
     })
   ),
 

@@ -63,8 +63,10 @@ export const DRONE_VISUAL_STATES = {
 export const POSITION_TRACKER_CONFIG = {
   THRESHOLDS: {
     // === SEUILS COMMUNS ===
-    TARGET_REACH: 0.25,         // Distance pour considérer la cible atteinte (était 0.25 - trop strict)
-    RESET_MOVEMENT: 3.0,       // Distance pour nettoyer les flags (TARGET_REACH * 2)
+    TARGET_REACH: 0.6,         // Distance pour considérer la cible atteinte (ajusté à 0.6 pour équilibrer précision/tolérance)
+    TARGET_REACH_CLOSE: 0.4,   // Distance pour tuiles très proches (< 1.0 unité)
+    TARGET_REACH_FAR: 0.8,     // Distance pour tuiles éloignées (> 2.0 unités)
+    RESET_MOVEMENT: 4.0,       // Distance pour nettoyer les flags (TARGET_REACH * 5)
     
     // === SEUILS DRONES ===
     DEPLOYMENT_START: 0.5,     // Distance pour déclencher le déploiement de drone (était 0.1 - trop strict)

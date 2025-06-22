@@ -19,6 +19,7 @@ import { shipCollectingActions } from '../actions/core/shipCollectingActions.js'
 import { droneExploringActions } from '../actions/core/droneExploringActions.js'; // NOUVEAU - Remplace explorationActions et droneDeploymentActions
 import { fuelActions } from '../actions/core/fuelActions.js';
 import { resourceActions } from '../actions/core/resourcesActions.js';
+import fsmLogger from '../../../../logger/fsmLogger.js'; // Ajout de l'import manquant
 
 // ============================================================================
 // RÉDUCTEURS D'ÉTAT - Mises à jour du contexte lors des transitions d'état
@@ -172,7 +173,16 @@ export const stateTransitionReducers = {
     ...context,
     currentAction: 'evaluating',
     lastDecision: event.reason || 'decision_needed',
-    lastStateChange: Date.now()
+    lastStateChange: Date.now(),
+    // ⭐ Nettoyer les données de mouvement pour éviter les boucles
+    targetPosition: null,
+    selectedTileForCollection: null,
+    vehicle: {
+      ...context.vehicle,
+      isMoving: false,
+      targetPosition: null,
+      targetTile: null
+    }
   }),
 
   /**
@@ -182,11 +192,29 @@ export const stateTransitionReducers = {
    * @returns {Object} - Contexte mis à jour pour déplacement vers tuile cible
    */
   prepareCollectingMovingToTarget: (context, event) => {
+    const targetTile = context.selectedTileForCollection;
+    
+    if (!targetTile) {
+      fsmLogger.error(`[${context.entityId}] Cannot prepare collection movement: no target tile selected`);
+      return context;
+    }
+    
+    fsmLogger.info(`[${context.entityId}] Preparing ship movement to collection target: ${targetTile.coord}`, {
+      targetPosition: targetTile.position
+    });
+    
     return {
       ...context,
       currentAction: 'moving_to_target',
       lastDecision: 'collect_best_tile',
-      targetTile: event.tileCoord ? context.memory.knownTiles.get(event.tileCoord) : null,
+      targetTile: targetTile,
+      targetPosition: targetTile.position, // Pour l'animation
+      vehicle: {
+        ...context.vehicle,
+        isMoving: true,
+        targetPosition: targetTile.position,
+        targetTile: targetTile
+      },
       lastStateChange: Date.now()
     };
   },
@@ -198,11 +226,43 @@ export const stateTransitionReducers = {
    * @returns {Object} - Contexte mis à jour pour retour à la base après collecte
    */
   prepareReturningToBase: (context, event) => {
+    // 🏠 UTILISER LA BASE POSITION DÉFINIE AUTOMATIQUEMENT PAR LE TRACKER
+    const basePosition = context.vehicle?.basePosition;
+    
+    if (!basePosition) {
+      fsmLogger.error("🚨 [prepareReturningToBase] No basePosition found in context", {
+        hasVehicle: !!context.vehicle,
+        vehiclePosition: context.vehicle?.position,
+        vehicleBasePosition: context.vehicle?.basePosition,
+        botId: context.entityId
+      });
+      // Ne pas utiliser de fallback codé en dur, laisser le système se débrouiller
+      return {
+        ...context,
+        currentAction: 'returning_to_base',
+        lastDecision: 'return_after_collection_no_base',
+        lastStateChange: Date.now(),
+        error: 'no_base_position_found'
+      };
+    }
+
+    fsmLogger.info("🏠 [prepareReturningToBase] Using base position from context", {
+      basePosition,
+      botId: context.entityId
+    });
+
     return {
       ...context,
       currentAction: 'returning_to_base',
       lastDecision: 'return_after_collection',
-      lastStateChange: Date.now()
+      lastStateChange: Date.now(),
+      // 🎯 UTILISER LA VRAIE BASE POSITION DU CONTEXTE
+      targetPosition: basePosition,
+      vehicle: {
+        ...context.vehicle,
+        targetPosition: basePosition,
+        isMoving: true // 🚀 DÉCLENCHER LE MOUVEMENT
+      }
     };
   }
 };
@@ -218,8 +278,8 @@ export const movementReducers = {
    * @returns {Object} - Contexte avec mouvement démarré
    */
   startMovement: (context, event) => {
-    // Réutilise les actions core movement
-    return movementActions.startMoveTo(context, event);
+    // Réutilise les actions core ship movement
+    return shipCollectingActions.shipMoveToTile(context, event);
   },
 
   /**
@@ -229,8 +289,8 @@ export const movementReducers = {
    * @returns {Object} - Contexte avec progression mise à jour
    */
   updateMovementProgress: (context, event) => {
-    // Réutilise les actions core movement
-    return movementActions.updateMovementProgress(context, event);
+    // Réutilise les actions core ship movement
+    return shipCollectingActions.shipUpdateProgress(context, event);
   },
 
   /**
@@ -239,8 +299,8 @@ export const movementReducers = {
    * @returns {Object} - Contexte avec mouvement terminé
    */
   completeMovement: (context) => {
-    // Réutilise les actions core movement
-    return movementActions.completeMovement(context);
+    // Réutilise les actions core ship movement
+    return shipCollectingActions.shipCompleteMovement(context);
   },
 
   /**
@@ -249,8 +309,8 @@ export const movementReducers = {
    * @returns {Object} - Contexte avec mouvement annulé
    */
   cancelMovement: (context) => {
-    // Réutilise les actions core movement
-    return movementActions.stopMovement(context);
+    // Réutilise les actions core ship movement
+    return shipCollectingActions.shipStopMovement(context);
   }
 };
 
@@ -303,6 +363,7 @@ export const resourceReducers = {
       exploredAt: Date.now(),
       hasResources: event.resourcesFound.food > 0 || event.resourcesFound.debris > 0 || event.resourcesFound.special > 0,
       resources: { ...event.resourcesFound },
+      position: event.position, // ⭐ Inclure la position 3D de la tuile
       collectedAt: null,
       collectedBy: null
     };
@@ -624,6 +685,7 @@ export const memoryReducers = {
       exploredAt: Date.now(),
       hasResources: event.resourcesFound.food > 0 || event.resourcesFound.debris > 0 || event.resourcesFound.special > 0,
       resources: { ...event.resourcesFound },
+      position: event.position, // ⭐ Inclure la position 3D de la tuile
       collectedAt: null,
       collectedBy: null
     };

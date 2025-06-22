@@ -146,7 +146,7 @@ const selectTargetTileInRadiusForDrone = (context, range = 3) => {
  * @returns {Object} - Contexte mis à jour avec mémoire unifiée
  */
 export const droneExploresTile = (context, event) => {
-  const { coord, resources } = event;
+  const { coord, resources, position } = event;
   
   if (!coord) {
     return { 
@@ -173,6 +173,7 @@ export const droneExploresTile = (context, event) => {
     exploredAt: Date.now(),
     hasResources: Boolean(resources && Object.values(resources).some(val => val > 0)),
     resources: resources || null,
+    position: position, // ⭐ Inclure la position 3D de la tuile
     collectedAt: null,
     collectedBy: null
   };

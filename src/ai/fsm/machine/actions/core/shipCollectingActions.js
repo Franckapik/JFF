@@ -98,30 +98,49 @@ const calculateDistance = (coord1, coord2) => {
  * @returns {Object} - Contexte mis à jour avec mémoire unifiée
  */
 export const shipCollectsFromTile = (context, event) => {
-  const { coord, resourceType } = event;
-  
-  if (!coord) {
-    return { 
-      ...context, 
-      error: 'Tile coordinate is required for collection',
-      lastAction: 'shipCollectsFromTile_failed'
-    };
-  }
-  
-  const vehicle = context.vehicle;
-  if (!vehicle) {
-    return { 
-      ...context, 
-      error: 'Cannot collect: no ship found',
-      lastAction: 'shipCollectsFromTile_failed'
-    };
-  }
-  
-  // Vérifier la mémoire unifiée
-  const knownTiles = new Map(context.memory?.knownTiles || new Map());
-  const tileData = knownTiles.get(coord);
+  try {
+    fsmLogger.resources(`[${context.entityId}] 🔍 START shipCollectsFromTile with event:`, event);
+    
+    const { coord, resourceType } = event;
+    
+    if (!coord) {
+      fsmLogger.resources(`[${context.entityId}] ❌ FAILED: No coord in event`);
+      return { 
+        ...context, 
+        error: 'Tile coordinate is required for collection',
+        lastAction: 'shipCollectsFromTile_failed'
+      };
+    }
+    
+    const vehicle = context.vehicle;
+    if (!vehicle) {
+      fsmLogger.resources(`[${context.entityId}] ❌ FAILED: No vehicle in context`);
+      return { 
+        ...context, 
+        error: 'Cannot collect: no ship found',
+        lastAction: 'shipCollectsFromTile_failed'
+      };
+    }
+    
+    fsmLogger.resources(`[${context.entityId}] ✅ Basic validation passed, checking memory...`);
+    
+    // Vérifier la mémoire unifiée
+    const knownTiles = new Map(context.memory?.knownTiles || new Map());
+    const tileData = knownTiles.get(coord);
+    
+    fsmLogger.resources(`[${context.entityId}] Attempting collection from tile ${coord}`, {
+      tileExists: !!tileData,
+      explored: tileData?.explored,
+      alreadyCollected: tileData?.collected,
+      hasResources: tileData?.hasResources,
+      resources: tileData?.resources
+    });
   
   if (!tileData || !tileData.explored) {
+    fsmLogger.resources(`[${context.entityId}] ❌ FAILED: Tile not found or not explored`, {
+      tileData: !!tileData,
+      explored: tileData?.explored
+    });
     return { 
       ...context, 
       error: 'Cannot collect from unexplored tile',
@@ -130,6 +149,10 @@ export const shipCollectsFromTile = (context, event) => {
   }
   
   if (tileData.collected) {
+    fsmLogger.resources(`[${context.entityId}] ❌ FAILED: Tile already collected`, {
+      collected: tileData.collected,
+      collectedAt: tileData.collectedAt
+    });
     return { 
       ...context, 
       error: 'Tile already collected',
@@ -138,6 +161,10 @@ export const shipCollectsFromTile = (context, event) => {
   }
   
   if (!tileData.hasResources || !tileData.resources) {
+    fsmLogger.resources(`[${context.entityId}] ❌ FAILED: No resources on tile`, {
+      hasResources: tileData.hasResources,
+      resources: tileData.resources
+    });
     return { 
       ...context, 
       error: 'No resources available on this tile',
@@ -145,22 +172,52 @@ export const shipCollectsFromTile = (context, event) => {
     };
   }
   
+  fsmLogger.resources(`[${context.entityId}] ✅ Tile validation passed, calculating collection...`);
+  
   // Calculer les ressources à collecter
   const resourcesToCollect = tileData.resources;
   const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
-  const maxCapacity = vehicle.maxCapacity || DEFAULT_CAPACITIES[VEHICLE_TYPES.SHIP];
+  
+  // Utiliser les capacités par défaut selon le type de véhicule
+  const defaultCapacities = DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP] || { food: 100, debris: 1000, special: 10 };
+  const maxCapacity = vehicle.maxCapacity && typeof vehicle.maxCapacity === 'object' 
+    ? vehicle.maxCapacity 
+    : defaultCapacities;
+  
+  fsmLogger.resources(`[${context.entityId}] 📊 Collection calculation`, {
+    resourcesToCollect,
+    currentResources,
+    maxCapacity,
+    vehicleType: vehicle.type,
+    originalMaxCapacity: vehicle.maxCapacity,
+    usingDefault: vehicle.maxCapacity !== maxCapacity
+  });
   
   // Vérifier la capacité
   const totalCurrent = Object.values(currentResources).reduce((sum, val) => sum + val, 0);
   const totalToCollect = Object.values(resourcesToCollect).reduce((sum, val) => sum + val, 0);
   
-  if (totalCurrent + totalToCollect > maxCapacity) {
+  // Calculer la capacité totale (somme de toutes les capacités par type de ressource)
+  const totalMaxCapacity = typeof maxCapacity === 'object' 
+    ? Object.values(maxCapacity).reduce((sum, val) => sum + val, 0)
+    : maxCapacity || 1000; // Fallback raisonnable pour un vaisseau
+  
+  if (totalCurrent + totalToCollect > totalMaxCapacity) {
+    fsmLogger.resources(`[${context.entityId}] ❌ FAILED: Capacity exceeded`, {
+      totalCurrent,
+      totalToCollect,
+      totalMaxCapacity,
+      maxCapacityObject: maxCapacity,
+      total: totalCurrent + totalToCollect
+    });
     return { 
       ...context, 
       error: 'Cannot collect: ship capacity would be exceeded',
       lastAction: 'shipCollectsFromTile_failed'
     };
   }
+  
+  fsmLogger.resources(`[${context.entityId}] ✅ Capacity check passed, updating resources...`);
    // Mettre à jour les ressources du vaisseau
   const updatedResources = { ...currentResources };
   Object.entries(resourcesToCollect).forEach(([type, amount]) => {
@@ -187,23 +244,16 @@ export const shipCollectsFromTile = (context, event) => {
   };
   knownTiles.set(coord, updatedTileData);
   
+  fsmLogger.resources(`[${context.entityId}] Tile ${coord} marked as collected in FSM memory`, {
+    collected: updatedTileData.collected,
+    collectedAt: updatedTileData.collectedAt,
+    totalCollected: updatedTileData.totalResourcesCollected
+  });
+  
   // Mettre à jour le TileStore avec les données de collecte
-  try {
-    const useTileStore = require('../../../../../stores/useTileStore/index.js');
-    if (useTileStore?.useTileStore?.getState) {
-      const tileStoreState = useTileStore.useTileStore.getState();
-      if (tileStoreState.updateTileState) {
-        tileStoreState.updateTileState(coord, {
-          lastCollectedTimestamp: Date.now(),
-          totalResourcesCollected: (tileStoreState.tiles[coord]?.totalResourcesCollected || 0) + totalToCollect,
-          resourcePercentage: Math.max(0, (tileStoreState.tiles[coord]?.resourcePercentage || 100) - 20)
-        });
-        fsmLogger.resources(`[${context.entityId}] Updated TileStore for ${coord} with collection data`);
-      }
-    }
-  } catch (error) {
-    fsmLogger.warn(`[${context.entityId}] Could not update TileStore: ${error.message}`);
-  }
+  // Note: On évite l'accès au TileStore côté client pour éviter les erreurs require/import
+  fsmLogger.resources(`[${context.entityId}] Skipping TileStore update (client-side limitation)`);
+  // Le TileStore sera mis à jour via d'autres moyens si nécessaire
 
   // Mettre à jour les statistiques
   const currentStats = context.memory?.stats || {
@@ -246,6 +296,15 @@ export const shipCollectsFromTile = (context, event) => {
     },
     lastAction: 'shipCollectsFromTile_success'
   };
+  
+  } catch (error) {
+    fsmLogger.error(`[${context.entityId}] 💥 CRITICAL ERROR in shipCollectsFromTile:`, error);
+    return {
+      ...context,
+      error: `Collection failed: ${error.message}`,
+      lastAction: 'shipCollectsFromTile_critical_error'
+    };
+  }
 };
 /**
  * Initie le mouvement du ship vers une tuile cible
@@ -626,8 +685,20 @@ export const shipReturnToBase = (context) => {
  * @returns {Object} - Contexte mis à jour avec selectedTileForCollection
  */
 export const selectBestTileForCollection = (context, event) => {
-  const collectibleTiles = Array.from(context.memory.knownTiles.values())
+  const allKnownTiles = Array.from(context.memory.knownTiles.values());
+  const collectibleTiles = allKnownTiles
     .filter(tile => tile.explored && tile.hasResources && !tile.collected);
+  
+  fsmLogger.resources(`[${context.entityId}] Selecting best tile for collection`, {
+    totalKnownTiles: allKnownTiles.length,
+    collectibleTiles: collectibleTiles.length,
+    tileStates: allKnownTiles.map(t => ({
+      coord: t.coord,
+      explored: t.explored,
+      hasResources: t.hasResources,
+      collected: t.collected
+    }))
+  });
   
   if (collectibleTiles.length === 0) {
     return { 
@@ -648,10 +719,30 @@ export const selectBestTileForCollection = (context, event) => {
     };
     return getTotalValue(b) - getTotalValue(a);
   });
+
+  const selectedTile = sortedTiles[0];
+  
+  // Vérifier que la tuile a bien une position (maintenant incluse lors de l'exploration)
+  if (!selectedTile.position) {
+    fsmLogger.error(`[${context.entityId}] Selected tile ${selectedTile.coord} has no position data`);
+    return { 
+      ...context, 
+      error: 'Selected tile has no position data',
+      lastAction: 'selectBestTileForCollection_failed'
+    };
+  }
+  
+  fsmLogger.resources(`[${context.entityId}] Selected tile ${selectedTile.coord} for collection: ${JSON.stringify(selectedTile.resources)}, position: ${JSON.stringify(selectedTile.position)}`);
   
   return {
     ...context,
-    selectedTileForCollection: sortedTiles[0],
+    selectedTileForCollection: selectedTile,
+    vehicle: {
+      ...context.vehicle,
+      targetPosition: selectedTile.position,
+      targetTile: selectedTile
+    },
+    targetPosition: selectedTile.position, // Pour compatibilité avec l'animation
     lastAction: 'selectBestTileForCollection_success'
   };
 };
