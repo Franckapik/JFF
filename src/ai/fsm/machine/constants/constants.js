@@ -112,13 +112,6 @@ export const EMPTY_RESOURCES = {
 /**
  * Capacités par défaut des véhicules
  */
-// ============================================================================
-// LEGACY - À SUPPRIMER PROGRESSIVEMENT
-// ============================================================================
-
-/**
- * @deprecated Utiliser DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP] à la place
- */
 export const DEFAULT_CAPACITY = {
   food: 100,
   debris: 1000,
@@ -173,14 +166,10 @@ export const DRONE_CONFIG = {
  * Types de véhicules supportés
  */
 export const VEHICLE_TYPES = {
-  SHIP: 'ship',                     // Vaisseau principal (compatible vehicleFactory)
-  MAIN_SHIP: 'main-ship',          // Alias pour compatibilité FSM 
-  EXPLORER_DRONE: 'explorer_drone',
-  COMBAT_DRONE: 'combat_drone',
-  SPECIAL_DRONE: 'special_drone',
-  DRONE: 'drone',                  // Legacy - à supprimer
-  SCOUT: 'scout',                  // Legacy - à supprimer
-  HARVESTER: 'harvester'           // Legacy - à supprimer
+  MAIN_SHIP: 'main-ship',
+  DRONE: 'drone',
+  SCOUT: 'scout',
+  HARVESTER: 'harvester'
 };
 
 /**
@@ -196,25 +185,12 @@ export const DEFAULT_VEHICLE_STATE = {
 
 /**
  * Configuration par défaut des capacités par type de véhicule
- * 
- * SHIP/MAIN_SHIP : Capacité calculée pour 2-3 collectes COMPLÈTES avant retour à la base
- * Basé sur les ressources observées :
- * - Food: 30-80 par tuile → Capacité: 200 (permet 2-3 collectes)
- * - Debris: 150-720 par tuile → Capacité: 1800 (permet 2-3 collectes) 
- * - Special: 0-1 par tuile → Capacité: 3 (permet 3+ collectes)
- * 
- * Le debris est généralement le facteur limitant.
  */
 export const DEFAULT_CAPACITIES = {
-  [VEHICLE_TYPES.SHIP]: { food: 200, debris: 1800, special: 3 },          // Harmonisé avec MAIN_SHIP
-  [VEHICLE_TYPES.MAIN_SHIP]: { food: 200, debris: 1800, special: 3 },     // Optimisé pour 2-3 collectes complètes
-  [VEHICLE_TYPES.EXPLORER_DRONE]: { food: 0, debris: 0, special: 0 },     // Pas de collecte
-  [VEHICLE_TYPES.COMBAT_DRONE]: { food: 20, debris: 50, special: 1 },     // Collecte limitée
-  [VEHICLE_TYPES.SPECIAL_DRONE]: { food: 0, debris: 0, special: 0 },      // Pas de collecte
-  // Legacy - à supprimer progressivement
-  [VEHICLE_TYPES.DRONE]: { food: 20, debris: 50, special: 1 },
-  [VEHICLE_TYPES.SCOUT]: { food: 10, debris: 20, special: 0 },
-  [VEHICLE_TYPES.HARVESTER]: { food: 50, debris: 500, special: 1 }
+  'main-ship': { food: 100, debris: 1000, special: 2 },
+  'drone': { food: 20, debris: 50, special: 1 },
+  'scout': { food: 10, debris: 20, special: 0 },
+  'harvester': { food: 50, debris: 500, special: 1 }
 };
 
 /**
@@ -243,6 +219,7 @@ export const FUEL_THRESHOLDS = {
  * Constantes de ressources (déplacé de resourcesGuard.js)
  */
 export const RESOURCE_CONSTANTS = {
+  DEFAULT_CAPACITY: 100,    // Capacité par défaut
   MIN_COLLECTION: 1,        // Collecte minimale
   RESOURCE_TYPES: {
     FOOD: 'food',
@@ -309,8 +286,8 @@ export const EXPLORATION_CONFIG = {
  * Configuration du cycle d'exploration multi-tuiles
  */
 export const EXPLORATION_CYCLE_CONFIG = {
-  TILES_BEFORE_COLLECTION: 5,           // Nombre de tuiles à explorer avant collecte (augmenté pour exploration intensive)
-  MIN_TILES_BEFORE_COLLECTION: 3,       // Minimum de tuiles avant d'autoriser la collecte (augmenté)
+  TILES_BEFORE_COLLECTION: 2,           // Nombre de tuiles à explorer avant collecte (réduit pour tests)
+  MIN_TILES_BEFORE_COLLECTION: 1,       // Minimum de tuiles avant d'autoriser la collecte (réduit pour tests)
   MAX_EXPLORATION_CYCLES: 5,             // Maximum de cycles d'exploration par session
   CYCLE_TIMEOUT: 600000,                 // 10 minutes maximum par cycle
   
@@ -321,17 +298,3 @@ export const EXPLORATION_CYCLE_CONFIG = {
     debris: 1        // Débris = priorité basse
   }
 };
-
-// ============================================================================
-// UTILITAIRES ID
-// ============================================================================
-
-/**
- * Génère un ID de bot
- */
-export const getBotId = (index = 0) => `bot-${index}`;
-
-/**
- * Génère un ID de vaisseau principal
- */
-export const getMainShipId = (botId = 'bot-0') => `${botId}-main-ship`;

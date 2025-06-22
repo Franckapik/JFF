@@ -11,7 +11,7 @@
  */
 
 import { state, transition, reduce, guard } from 'robot3';
-import { BOT_STATES, EXPLORATION_CYCLE_CONFIG, DEFAULT_CAPACITIES, VEHICLE_TYPES } from '../constants/constants.js';
+import { BOT_STATES } from '../constants/constants.js';
 import { safetyGuards, efficiencyGuards, discoveryGuards, baseGuards } from '../guards/indexGuard.js';
 import { contextReducers } from '../reducers/context.js';
 import { SYSTEM_EVENT_TYPES } from '../events/systemEvents.js';
@@ -165,67 +165,7 @@ export const evaluatingState = state(
 
   // === PRIORITÉ 3 : CYCLE MULTI-TUILES (COLLECTE) ===
   
-  // NOUVELLE LOGIQUE INTELLIGENTE : Collecte prioritaire SEULEMENT après exploration intensive
-  transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.COLLECTING_MOVING_TO_TARGET, 
-    guard((context, event) => {
-      const hasBestTile = discoveryGuards.hasBestTileForCollection(context, event);
-      
-      if (!hasBestTile) return false;
-      
-      // Vérifier qu'on a exploré assez de tuiles avant d'autoriser la collecte
-      const knownTiles = context.memory?.knownTiles || new Map();
-      const totalExploredCount = Array.from(knownTiles.values()).filter(tile => tile.explored).length;
-      
-      // Constante pour le nombre minimum de tuiles à explorer avant collecte
-      const minTilesForCollection = EXPLORATION_CYCLE_CONFIG?.MIN_TILES_BEFORE_COLLECTION || 3;
-      const hasEnoughExplored = totalExploredCount >= minTilesForCollection;
-      
-      // Vérifier si le vaisseau n'est pas plein
-      const vehicle = context.vehicle;
-      const currentResources = vehicle?.resources || { food: 0, debris: 0, special: 0 };
-      const maxCapacity = vehicle?.maxCapacity || DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP];
-      
-      const isShipNotFull = (
-        (currentResources.food || 0) < (maxCapacity.food || 200) * 0.9 ||
-        (currentResources.debris || 0) < (maxCapacity.debris || 1800) * 0.9 ||
-        (currentResources.special || 0) < (maxCapacity.special || 3) * 0.9
-      );
-      
-      fsmLogger.info("🧠 [Evaluating] Smart collection evaluation", {
-        hasBestTile,
-        hasEnoughExplored,
-        totalExploredCount,
-        minTilesForCollection,
-        isShipNotFull,
-        currentResources,
-        maxCapacity,
-        foodPercentage: Math.round((currentResources.food / (maxCapacity.food || 200)) * 100),
-        debrisPercentage: Math.round((currentResources.debris / (maxCapacity.debris || 1800)) * 100),
-        specialPercentage: Math.round((currentResources.special / (maxCapacity.special || 3)) * 100),
-        result: hasBestTile && hasEnoughExplored && isShipNotFull,
-        botId: context.entityId
-      });
-      
-      return hasBestTile && hasEnoughExplored && isShipNotFull;
-    }),
-    reduce((context, event) => {
-      fsmLogger.info("🧠 [Evaluating] Smart collection - ship not full, collecting after exploration phase", { 
-        shipResources: context.vehicle?.resources,
-        shipCapacity: context.vehicle?.maxCapacity,
-        botId: context.entityId 
-      });
-      
-      const contextWithSelection = shipCollectingActions.selectBestTileForCollection(context, event);
-      
-      return contextReducers.state.prepareCollectingMovingToTarget(contextWithSelection, {
-        ...event,
-        tileCoord: contextWithSelection.selectedTileForCollection?.coord,
-        reason: 'smart_collection_ship_not_full'
-      });
-    })
-  ),
-  
-  // 3+ tuiles explorées ET tuiles collectibles → COLLECTING_MOVING_TO_TARGET (logique existante)
+  // 3+ tuiles explorées ET tuiles collectibles → COLLECTING_MOVING_TO_TARGET
   transition(SYSTEM_EVENT_TYPES.EVALUATION_COMPLETE, BOT_STATES.COLLECTING_MOVING_TO_TARGET, 
     guard((context, event) => {
       const hasEnoughExplored = discoveryGuards.hasExploredEnoughTiles(context, event);

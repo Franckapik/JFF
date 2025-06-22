@@ -2,30 +2,7 @@
  * Utilitaires pour la création et la gestion des véhicules
  */
 
-import { VEHICLE_TYPES, DEFAULT_CAPACITIES } from '../../../ai/fsm/machine/constants/constants.js';
-
-/**
- * Vérifie si un ID correspond à un drone
- */
-const isDroneId = (id) => {
-  if (!id || typeof id !== 'string') return false;
-  return id.includes('drone') || id.includes('explorer') || id.includes('combat') || id.includes('special');
-};
-
-/**
- * Vérifie si un drone est actif par défaut selon son type
- */
-const isDroneActiveByDefault = (droneType) => {
-  switch(droneType) {
-    case VEHICLE_TYPES.EXPLORER_DRONE:
-      return true;  // Explorer drones sont actifs par défaut
-    case VEHICLE_TYPES.COMBAT_DRONE:
-    case VEHICLE_TYPES.SPECIAL_DRONE:
-      return false; // Combat et special drones sont inactifs par défaut
-    default:
-      return false;
-  }
-};
+import { VEHICLE_TYPES, isDroneActiveByDefault, isDroneId } from '../../../shared/constants/playerConstants';
 
 /**
  * Crée un nouveau véhicule avec les propriétés de base
@@ -57,7 +34,7 @@ export const createVehicle = (id, type) => {
       path: [],
       startCoord: null,
       isAtCapacity: false,
-      maxCapacity: DEFAULT_CAPACITIES[VEHICLE_TYPES.SHIP],
+      maxCapacity: { food: 100, debris: 1000, special: 2 },
     };
   }
   
@@ -75,13 +52,13 @@ export const createVehicle = (id, type) => {
       case VEHICLE_TYPES.EXPLORER_DRONE:
         return {
           ...droneBase,
-          maxCapacity: DEFAULT_CAPACITIES[VEHICLE_TYPES.EXPLORER_DRONE],
+          maxCapacity: { food: 0, debris: 0, special: 0 },  // Can't carry resources
           explorationBonus: 1.5  // Better at exploring
         };
       case VEHICLE_TYPES.COMBAT_DRONE:
         return {
           ...droneBase,
-          maxCapacity: DEFAULT_CAPACITIES[VEHICLE_TYPES.COMBAT_DRONE],
+          maxCapacity: { food: 20, debris: 50, special: 1 },  // Can carry some resources
           damage: 5,  // Base damage for combat
           attackRange: 2,  // Combat range
           mineLayingCapacity: 3  // Can lay mines
@@ -89,7 +66,7 @@ export const createVehicle = (id, type) => {
       case VEHICLE_TYPES.SPECIAL_DRONE:
         return {
           ...droneBase,
-          maxCapacity: DEFAULT_CAPACITIES[VEHICLE_TYPES.SPECIAL_DRONE],
+          maxCapacity: { food: 0, debris: 0, special: 0 },  // Can't carry resources
           specialScanRange: 5,  // Better at finding special objects
           specialDetection: true,  // Can detect special items
           specialAbilityCharge: 100  // Special ability charge at 100%

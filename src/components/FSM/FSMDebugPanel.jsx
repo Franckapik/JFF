@@ -145,25 +145,7 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                       margin: '2px 0',
                       border: '1px solid #4CAF50'
                     }}>
-                      <div>💎 Ressources (% de remplissage):</div>
-                      {typeof vehicle.resources === 'object' && typeof vehicle.maxCapacity === 'object' ? (
-                        <>
-                          <div style={{ fontSize: '0.8em', marginLeft: '10px' }}>
-                            🍖 Food: {vehicle.resources.food || 0}/{vehicle.maxCapacity.food || 200} 
-                            ({Math.round(((vehicle.resources.food || 0) / (vehicle.maxCapacity.food || 200)) * 100)}%)
-                          </div>
-                          <div style={{ fontSize: '0.8em', marginLeft: '10px' }}>
-                            🔩 Debris: {vehicle.resources.debris || 0}/{vehicle.maxCapacity.debris || 1800} 
-                            ({Math.round(((vehicle.resources.debris || 0) / (vehicle.maxCapacity.debris || 1800)) * 100)}%)
-                          </div>
-                          <div style={{ fontSize: '0.8em', marginLeft: '10px' }}>
-                            ⭐ Special: {vehicle.resources.special || 0}/{vehicle.maxCapacity.special || 3} 
-                            ({Math.round(((vehicle.resources.special || 0) / (vehicle.maxCapacity.special || 3)) * 100)}%)
-                          </div>
-                        </>
-                      ) : (
-                        <div>F:{vehicle.resources.food || 0} D:{vehicle.resources.debris || 0} S:{vehicle.resources.special || 0}</div>
-                      )}
+                      <div>💎 Ressources: {String(vehicle.resources || 0)}/{String(vehicle.capacity || 10)}</div>
                     </div>
                   )}
                   {context?.score !== undefined && (
@@ -174,11 +156,7 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                       margin: '2px 0',
                       border: '1px solid #FFD700'
                     }}>
-                      <div>🏆 Score total: {
-                        typeof context.score === 'object' && context.score.resources
-                          ? `F:${context.score.resources.food || 0} D:${context.score.resources.debris || 0} S:${context.score.resources.special || 0}`
-                          : String(context.score || 0)
-                      } pts</div>
+                      <div>🏆 Score total: {String(context.score || 0)} pts</div>
                     </div>
                   )}
                 </>

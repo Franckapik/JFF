@@ -67,7 +67,7 @@
  */
 
 import fsmLogger from '../../../../../logger/fsmLogger.js';
-import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES } from '../../constants/constants.js';
+import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES, RESOURCE_CONSTANTS } from '../../constants/constants.js';
 import { EXPLORATION_CYCLE_CONFIG } from '../../constants/constants.js';
 import { useTileStore } from '../../../../../stores/useTileStore/index.js';
 
@@ -138,14 +138,9 @@ const calculateDistance = (coord1, coord2) => {
  */
 export const shipCollectsFromTile = (context, event) => {
   try {
-    fsmLogger.resources(`[${context.entityId}] 🔍 START shipCollectsFromTile with event:`, event);
-    fsmLogger.resources(`[${context.entityId}] 🔍 DEBUG: Collection attempt started`, {
-      entityId: context.entityId,
-      eventCoord: event.coord,
-      eventResourceType: event.resourceType,
-      contextMemoryExists: !!context.memory,
-      knownTilesCount: context.memory?.knownTiles?.size || 0
-    });
+    // Collection attempt started
+    const collectionStartTime = Date.now();
+    fsmLogger.info(`[${context.entityId}] Starting collection from tile ${event.coord}`);
     
     const { coord, resourceType } = event;
     
@@ -174,6 +169,24 @@ export const shipCollectsFromTile = (context, event) => {
     const knownTiles = new Map(context.memory?.knownTiles || new Map());
     const tileData = knownTiles.get(coord);
     
+    // 🔍 PHASE 3 DEBUG: État détaillé de la tuile AVANT collecte
+    fsmLogger.resources(`[${context.entityId}] 🔍 PHASE3-TILE-BEFORE: Tile state before collection`, {
+      coord,
+      tileExists: !!tileData,
+      tileData: tileData ? {
+        explored: tileData.explored,
+        collected: tileData.collected,
+        collectedAt: tileData.collectedAt,
+        collectedBy: tileData.collectedBy,
+        hasResources: tileData.hasResources,
+        resources: tileData.resources,
+        totalResourcesCollected: tileData.totalResourcesCollected,
+        lastCollectedTimestamp: tileData.lastCollectedTimestamp
+      } : null,
+      knownTilesTotal: knownTiles.size,
+      memoryTimestamp: context.memory?.timestamp
+    });
+
     fsmLogger.resources(`[${context.entityId}] Attempting collection from tile ${coord}`, {
       tileExists: !!tileData,
       explored: tileData?.explored,
@@ -220,45 +233,81 @@ export const shipCollectsFromTile = (context, event) => {
   
   fsmLogger.resources(`[${context.entityId}] ✅ Tile validation passed, calculating collection...`);
   
-  // Calculer les ressources à collecter (collecte complète)
-  const resourcesToCollect = tileData.resources;
-  const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
-  
   // Force l'utilisation des nouvelles capacités depuis constants.js
   const maxCapacity = DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP] || { food: 200, debris: 1800, special: 3 };
+  const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
+  const availableResources = tileData.resources;
   
-  fsmLogger.resources(`[${context.entityId}] 📊 Collection calculation`, {
-    resourcesToCollect,
-    currentResources,
-    maxCapacity,
+  // 🔍 PHASE 3 DEBUG: État détaillé du véhicule AVANT collecte
+  fsmLogger.resources(`[${context.entityId}] 🔍 PHASE3-VEHICLE-BEFORE: Vehicle state before collection`, {
+    vehicleId: vehicle.id,
     vehicleType: vehicle.type,
-    originalMaxCapacity: vehicle.maxCapacity,
-    usingCorrectCapacities: true
+    currentResources: { ...currentResources },
+    maxCapacity: vehicle.maxCapacity,
+    lastCollectionTime: vehicle.lastCollectionTime,
+    availableResources: { ...availableResources },
+    totalCurrentResources: Object.values(currentResources).reduce((sum, val) => sum + val, 0),
+    totalAvailable: Object.values(availableResources).reduce((sum, val) => sum + val, 0)
   });
   
-  // Vérifier la capacité
-  const totalCurrent = Object.values(currentResources).reduce((sum, val) => sum + val, 0);
-  const totalToCollect = Object.values(resourcesToCollect).reduce((sum, val) => sum + val, 0);
+  // COLLECTE PARTIELLE : Calculer ce qu'on peut réellement collecter selon les capacités par type
+  const resourcesToCollect = { food: 0, debris: 0, special: 0 };
+  const remainingResources = { ...availableResources };
+  let hasCollectedSomething = false;
   
-  // Calculer la capacité totale (somme de toutes les capacités par type de ressource)
-  const totalMaxCapacity = typeof maxCapacity === 'object' 
-    ? Object.values(maxCapacity).reduce((sum, val) => sum + val, 0)
-    : maxCapacity || 1000; // Fallback raisonnable pour un vaisseau
+  // Collecter chaque type de ressource selon les capacités spécifiques
+  Object.entries(availableResources).forEach(([resourceType, availableAmount]) => {
+    if (availableAmount > 0) {
+      const currentAmount = currentResources[resourceType] || 0;
+      const maxForType = maxCapacity[resourceType] || 0;
+      const canCollect = Math.max(0, maxForType - currentAmount);
+      const toCollect = Math.min(availableAmount, canCollect);
+      
+      if (toCollect > 0) {
+        resourcesToCollect[resourceType] = toCollect;
+        remainingResources[resourceType] = availableAmount - toCollect;
+        hasCollectedSomething = true;
+      }
+      
+      fsmLogger.resources(`[${context.entityId}] 📊 Resource calculation for ${resourceType}`, {
+        available: availableAmount,
+        current: currentAmount,
+        maxCapacity: maxForType,
+        canCollect,
+        willCollect: toCollect,
+        remaining: remainingResources[resourceType]
+      });
+    }
+  });
   
-  if (totalCurrent + totalToCollect > totalMaxCapacity) {
-    fsmLogger.resources(`[${context.entityId}] ❌ FAILED: Capacity exceeded`, {
+  // Vérification finale de sécurité
+  if (!hasCollectedSomething) {
+    const totalCurrent = Object.values(currentResources).reduce((sum, val) => sum + val, 0);
+    const totalMaxCapacity = Object.values(maxCapacity).reduce((sum, val) => sum + val, 0);
+    
+    fsmLogger.resources(`[${context.entityId}] ❌ FAILED: Cannot collect anything (capacity full)`, {
       totalCurrent,
-      totalToCollect,
       totalMaxCapacity,
-      maxCapacityObject: maxCapacity,
-      total: totalCurrent + totalToCollect
+      currentResources,
+      maxCapacity,
+      availableResources
     });
     return { 
       ...context, 
-      error: 'Cannot collect: ship capacity would be exceeded',
-      lastAction: 'shipCollectsFromTile_failed'
+      error: 'Cannot collect: ship is at full capacity',
+      lastAction: 'shipCollectsFromTile_capacity_full'
     };
   }
+  
+  fsmLogger.resources(`[${context.entityId}] 📊 PARTIAL COLLECTION CALCULATED`, {
+    availableResources,
+    resourcesToCollect,
+    remainingResources,
+    currentResources,
+    maxCapacity,
+    hasCollectedSomething,
+    isPartialCollection: Object.values(remainingResources).some(amount => amount > 0)
+  });
   
   fsmLogger.resources(`[${context.entityId}] ✅ Capacity check passed, updating resources...`);
   // Mettre à jour les ressources du vaisseau (SANS ajouter au score)
@@ -267,18 +316,73 @@ export const shipCollectsFromTile = (context, event) => {
     updatedResources[type] = (updatedResources[type] || 0) + amount;
   });
 
+  // 🔍 PHASE 3 DEBUG: État détaillé du véhicule APRÈS collecte
+  fsmLogger.resources(`[${context.entityId}] 🔍 PHASE3-VEHICLE-AFTER: Vehicle state after collection`, {
+    vehicleId: vehicle.id,
+    previousResources: { ...currentResources },
+    resourcesToCollect: { ...resourcesToCollect },
+    updatedResources: { ...updatedResources },
+    resourceChanges: Object.fromEntries(
+      Object.entries(resourcesToCollect).map(([type, amount]) => [
+        type, 
+        { 
+          before: currentResources[type] || 0, 
+          collected: amount, 
+          after: updatedResources[type] 
+        }
+      ])
+    ),
+    totalBefore: Object.values(currentResources).reduce((sum, val) => sum + val, 0),
+    totalAfter: Object.values(updatedResources).reduce((sum, val) => sum + val, 0)
+  });
+
   fsmLogger.resources(`[${context.entityId}] Collection successful: +${JSON.stringify(resourcesToCollect)} -> Vehicle resources: ${JSON.stringify(updatedResources)} (Score transfer will happen at base)`);
 
-  // Marquer la tuile comme collectée dans la mémoire FSM
+  // Déterminer si la tuile est entièrement collectée ou partiellement collectée
+  const hasRemainingResources = Object.values(remainingResources).some(amount => amount > 0);
+  const totalCollected = Object.values(resourcesToCollect).reduce((sum, val) => sum + val, 0);
+  const isFullyCollected = !hasRemainingResources;
+  
+  // Mettre à jour la tuile dans la mémoire FSM selon le type de collecte
   const updatedTileData = {
     ...tileData,
-    collected: true,
-    collectedAt: Date.now(),
-    collectedBy: vehicle.id,
+    resources: remainingResources, // Les ressources restantes après collecte
+    collected: isFullyCollected, // Seulement true si tout a été collecté
+    collectedAt: isFullyCollected ? Date.now() : tileData.collectedAt,
+    collectedBy: isFullyCollected ? vehicle.id : tileData.collectedBy,
     lastCollectedTimestamp: Date.now(),
-    totalResourcesCollected: (tileData.totalResourcesCollected || 0) + totalToCollect
+    totalResourcesCollected: (tileData.totalResourcesCollected || 0) + totalCollected,
+    hasResources: hasRemainingResources, // False seulement si plus rien sur la tuile
+    partiallyCollected: hasRemainingResources, // Nouvelle propriété pour tracking
+    lastPartialCollection: hasRemainingResources ? {
+      timestamp: Date.now(),
+      vehicleId: vehicle.id,
+      collected: resourcesToCollect,
+      remaining: remainingResources
+    } : tileData.lastPartialCollection
   };
   knownTiles.set(coord, updatedTileData);
+  
+  // 🔍 PHASE 3 DEBUG: État détaillé de la tuile APRÈS mise à jour FSM
+  fsmLogger.resources(`[${context.entityId}] 🔍 PHASE3-TILE-AFTER-FSM: Tile state after FSM update`, {
+    coord,
+    previousTileData: {
+      collected: tileData.collected,
+      collectedAt: tileData.collectedAt,
+      collectedBy: tileData.collectedBy,
+      resources: tileData.resources,
+      totalResourcesCollected: tileData.totalResourcesCollected
+    },
+    updatedTileData: {
+      collected: updatedTileData.collected,
+      collectedAt: updatedTileData.collectedAt,
+      collectedBy: updatedTileData.collectedBy,
+      resources: updatedTileData.resources,
+      totalResourcesCollected: updatedTileData.totalResourcesCollected
+    },
+    fsmMemoryUpdated: knownTiles.has(coord),
+    knownTilesSize: knownTiles.size
+  });
   
   fsmLogger.resources(`[${context.entityId}] Tile ${coord} marked as collected in FSM memory`, {
     collected: updatedTileData.collected,
@@ -289,7 +393,41 @@ export const shipCollectsFromTile = (context, event) => {
   // Synchroniser avec le TileStore pour permettre la collecte partielle et l'affichage du pourcentage
   try {
     const tileStore = useTileStore.getState();
+    
+    // 🔍 PHASE 3 DEBUG: État du TileStore AVANT synchronisation
+    const tileStoreStateBefore = tileStore.tiles?.[coord];
+    fsmLogger.resources(`[${context.entityId}] 🔍 PHASE3-STORE-BEFORE: TileStore state before sync`, {
+      coord,
+      tileStoreExists: !!tileStore,
+      tileExistsInStore: !!tileStoreStateBefore,
+      tileStoreData: tileStoreStateBefore ? {
+        resources: tileStoreStateBefore.resources,
+        resourcePercentage: tileStoreStateBefore.resourcePercentage,
+        collected: tileStoreStateBefore.collected,
+        explored: tileStoreStateBefore.explored
+      } : null,
+      resourcesToDeduct: { ...resourcesToCollect }
+    });
+    
     const syncSuccess = tileStore.deductTileResources(coord, resourcesToCollect);
+    
+    // 🔍 PHASE 3 DEBUG: État du TileStore APRÈS synchronisation
+    const tileStoreStateAfter = tileStore.tiles?.[coord];
+    fsmLogger.resources(`[${context.entityId}] 🔍 PHASE3-STORE-AFTER: TileStore state after sync`, {
+      coord,
+      syncSuccess,
+      tileStoreStateBefore: tileStoreStateBefore ? {
+        resources: tileStoreStateBefore.resources,
+        resourcePercentage: tileStoreStateBefore.resourcePercentage,
+        collected: tileStoreStateBefore.collected
+      } : null,
+      tileStoreStateAfter: tileStoreStateAfter ? {
+        resources: tileStoreStateAfter.resources,
+        resourcePercentage: tileStoreStateAfter.resourcePercentage,
+        collected: tileStoreStateAfter.collected
+      } : null,
+      resourcesDeducted: { ...resourcesToCollect }
+    });
     
     if (syncSuccess) {
       fsmLogger.resources(`[${context.entityId}] ✅ TileStore synchronized - partial collection enabled`, {
@@ -323,6 +461,25 @@ export const shipCollectsFromTile = (context, event) => {
       shipId: vehicle.id
     }
   };
+  
+  // 🔍 PHASE 3 DEBUG: Résumé final de la collecte
+  const collectionEndTime = Date.now();
+  fsmLogger.resources(`[${context.entityId}] 🔍 PHASE3-FINAL: Collection completed successfully`, {
+    coord,
+    collectionDuration: collectionEndTime - collectionStartTime,
+    vehicleIdBefore: context.vehicle?.id,
+    vehicleIdAfter: vehicle.id,
+    resourcesBefore: context.vehicle?.resources,
+    resourcesAfter: updatedResources,
+    tileCollectedInFSM: updatedTileData.collected,
+    tileCollectedAt: updatedTileData.collectedAt,
+    statsUpdated: {
+      tilesCollectedBefore: currentStats.tilesCollected,
+      tilesCollectedAfter: newStats.tilesCollected
+    },
+    memorySize: knownTiles.size,
+    lastAction: 'shipCollectsFromTile_success'
+  });
   
   return {
     ...context,
@@ -516,7 +673,7 @@ export const shipCompleteMovement = (context) => ({
  */
 export const shipCreateWithCapacities = (context, event) => {
   const vehicleData = event.vehicleData || {};
-  const defaultCapacity = DEFAULT_CAPACITIES[vehicleData.type] || DEFAULT_CAPACITIES[VEHICLE_TYPES.SHIP];
+  const defaultCapacity = DEFAULT_CAPACITIES[vehicleData.type] || DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP];
   
   const vehicleWithCapacities = {
     ...DEFAULT_VEHICLE_STATE,
@@ -675,11 +832,14 @@ export const shipShouldReturnToBase = (context) => {
   // Force l'utilisation des nouvelles capacités depuis constants.js
   const maxCapacity = DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP] || { food: 200, debris: 1800, special: 3 };
   
-  // Vérifier si une des capacités individuelles est à 80% ou plus
+  // Seuil configurable de retour à la base (80% par défaut)
+  const threshold = RESOURCE_CONSTANTS.RETURN_TO_BASE_THRESHOLD;
+  
+  // Vérifier si une des capacités individuelles atteint le seuil
   const capacityChecks = {
-    food: (currentResources.food || 0) >= (maxCapacity.food || 200) * 0.8,
-    debris: (currentResources.debris || 0) >= (maxCapacity.debris || 1800) * 0.8,
-    special: (currentResources.special || 0) >= (maxCapacity.special || 3) * 0.8
+    food: (currentResources.food || 0) >= (maxCapacity.food || 200) * threshold,
+    debris: (currentResources.debris || 0) >= (maxCapacity.debris || 1800) * threshold,
+    special: (currentResources.special || 0) >= (maxCapacity.special || 3) * threshold
   };
   
   const anyCapacityNearFull = Object.values(capacityChecks).some(isFull => isFull);
@@ -690,10 +850,20 @@ export const shipShouldReturnToBase = (context) => {
   const globalCapacityPercentage = totalMaxCapacity > 0 ? Math.round((totalResources / totalMaxCapacity) * 100) : 0;
   
   if (anyCapacityNearFull) {
-    fsmLogger.resources(`[${context.entityId}] Ship should return to base: ${JSON.stringify(currentResources)} (${globalCapacityPercentage}% full)`, {
+    // Calculer les pourcentages individuels pour un meilleur diagnostic
+    const individualPercentages = {
+      food: Math.round(((currentResources.food || 0) / (maxCapacity.food || 200)) * 100),
+      debris: Math.round(((currentResources.debris || 0) / (maxCapacity.debris || 1800)) * 100),
+      special: Math.round(((currentResources.special || 0) / (maxCapacity.special || 3)) * 100)
+    };
+    
+    const detailedCapacity = `F:${individualPercentages.food}% D:${individualPercentages.debris}% S:${individualPercentages.special}%`;
+    
+    fsmLogger.resources(`[${context.entityId}] Ship should return to base: ${JSON.stringify(currentResources)} (${globalCapacityPercentage}% full - ${detailedCapacity}) - Threshold: ${Math.round(threshold * 100)}%`, {
       currentResources,
       maxCapacity,
       capacityChecks,
+      individualPercentages,
       totalResources,
       totalMaxCapacity,
       vehicleMaxCapacityOriginal: vehicle.maxCapacity
@@ -749,17 +919,46 @@ export const shipReturnToBase = (context) => {
  */
 export const selectBestTileForCollection = (context, event) => {
   const allKnownTiles = Array.from(context.memory.knownTiles.values());
+  
+  // Filtrer les tuiles collectibles, en excluant la tuile précédemment collectée si le vaisseau est plein
+  const currentVehicle = context.vehicle;
+  const isShipFull = currentVehicle && shipShouldReturnToBase(context, null);
+  const lastCollectedTile = context.selectedTileCoord;
+  
   const collectibleTiles = allKnownTiles
-    .filter(tile => tile.explored && tile.hasResources && !tile.collected);
+    .filter(tile => {
+      // Conditions de base : explorée, a des ressources, pas complètement collectée
+      if (!tile.explored || !tile.hasResources || tile.collected) {
+        return false;
+      }
+      
+      // Si le vaisseau est plein et qu'on vient de collecter cette tuile, l'éviter
+      if (isShipFull && lastCollectedTile === tile.coord) {
+        return false;
+      }
+      
+      // Éviter de re-collecter immédiatement la même tuile (cooldown de 5 secondes)
+      if (tile.lastCollectedTimestamp && lastCollectedTile === tile.coord) {
+        const timeSinceLastCollection = Date.now() - tile.lastCollectedTimestamp;
+        if (timeSinceLastCollection < 5000) { // 5 secondes de cooldown
+          return false;
+        }
+      }
+      
+      return true;
+    });
   
   fsmLogger.resources(`[${context.entityId}] Selecting best tile for collection`, {
     totalKnownTiles: allKnownTiles.length,
     collectibleTiles: collectibleTiles.length,
+    isShipFull,
+    lastCollectedTile,
     tileStates: allKnownTiles.map(t => ({
       coord: t.coord,
       explored: t.explored,
       hasResources: t.hasResources,
-      collected: t.collected
+      collected: t.collected,
+      excluded: (isShipFull && lastCollectedTile === t.coord)
     }))
   });
   
