@@ -75,8 +75,8 @@ export const createEntityContext = (entityId, entityType = ENTITY_TYPES.auto) =>
       maxSpeed: 1,                               // Ex: 1, 2, 0.5 (unités/sec)
       currentSpeed: 0,                           // Ex: 0, 1.2, 0.8 (unités/sec)
       
-      // Capacité maximale (ex DEFAULT_VEHICLE_CONFIG)
-      maxCapacity: 10                            // Ex: 10, 15, 5 (nombre d'objets)
+      // Capacité maximale (utilise les nouvelles capacités depuis constants.js)
+      maxCapacity: { food: 200, debris: 1800, special: 3 }  // Nouvelles capacités optimisées
     },
     
     // ========================================================================

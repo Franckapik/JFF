@@ -15,6 +15,9 @@ import { useFSMBots } from "../../stores/useFSMStore/useFSMBots.js";
 import { useTileStore } from "../../stores/useTileStore/index.js";
 import contextReducers from "../../ai/fsm/machine/reducers/context.js";
 
+// Import des constantes pour les capacités par défaut
+import { DEFAULT_CAPACITIES, VEHICLE_TYPES } from "../../ai/fsm/machine/constants/constants.js";
+
 // Import du composant ResourcesTab
 import ResourcesTab from "../HUD/debugger/ResourcesTab.jsx";
 
@@ -145,7 +148,35 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                       margin: '2px 0',
                       border: '1px solid #4CAF50'
                     }}>
-                      <div>💎 Ressources: {String(vehicle.resources || 0)}/{String(vehicle.capacity || 10)}</div>
+                      <div>💎 Ressources (% de remplissage):</div>
+                      {typeof vehicle.resources === 'object' && typeof vehicle.maxCapacity === 'object' ? (
+                        <>
+                          <div style={{ fontSize: '0.8em', marginLeft: '10px' }}>
+                            🍖 Food: {vehicle.resources.food || 0}/{vehicle.maxCapacity.food || 200} 
+                            ({Math.round(((vehicle.resources.food || 0) / (vehicle.maxCapacity.food || 200)) * 100)}%)
+                          </div>
+                          <div style={{ fontSize: '0.8em', marginLeft: '10px' }}>
+                            🔩 Debris: {vehicle.resources.debris || 0}/{vehicle.maxCapacity.debris || 1800} 
+                            ({Math.round(((vehicle.resources.debris || 0) / (vehicle.maxCapacity.debris || 1800)) * 100)}%)
+                          </div>
+                          <div style={{ fontSize: '0.8em', marginLeft: '10px' }}>
+                            ⭐ Special: {vehicle.resources.special || 0}/{vehicle.maxCapacity.special || 3} 
+                            ({Math.round(((vehicle.resources.special || 0) / (vehicle.maxCapacity.special || 3)) * 100)}%)
+                          </div>
+                          <div style={{ fontSize: '0.8em', marginLeft: '10px', fontWeight: 'bold', borderTop: '1px solid #4CAF50', paddingTop: '2px', marginTop: '3px' }}>
+                            📊 Total: {
+                              (() => {
+                                const totalResources = (vehicle.resources.food || 0) + (vehicle.resources.debris || 0) + (vehicle.resources.special || 0);
+                                const totalCapacity = (vehicle.maxCapacity.food || 200) + (vehicle.maxCapacity.debris || 1800) + (vehicle.maxCapacity.special || 3);
+                                const totalPercentage = totalCapacity > 0 ? Math.round((totalResources / totalCapacity) * 100) : 0;
+                                return `${totalResources}/${totalCapacity} (${totalPercentage}%)`;
+                              })()
+                            }
+                          </div>
+                        </>
+                      ) : (
+                        <div>F:{vehicle.resources.food || 0} D:{vehicle.resources.debris || 0} S:{vehicle.resources.special || 0}</div>
+                      )}
                     </div>
                   )}
                   {context?.score !== undefined && (
@@ -156,7 +187,11 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                       margin: '2px 0',
                       border: '1px solid #FFD700'
                     }}>
-                      <div>🏆 Score total: {String(context.score || 0)} pts</div>
+                      <div>🏆 Score total: {
+                        typeof context.score === 'object' && context.score.resources
+                          ? `F:${context.score.resources.food || 0} D:${context.score.resources.debris || 0} S:${context.score.resources.special || 0}`
+                          : String(context.score || 0)
+                      } pts</div>
                     </div>
                   )}
                 </>
@@ -735,3 +770,39 @@ const FSMDebugPanel = ({
 };
 
 export default FSMDebugPanel;
+
+/**
+ * Affichage détaillé des ressources avec pourcentages
+ */
+const renderResourceDetails = (resources, maxCapacity) => {
+  if (!resources || typeof resources !== 'object') return 'N/A';
+  
+  const details = Object.entries(resources).map(([type, amount]) => {
+    const max = maxCapacity?.[type] || DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP]?.[type] || 0;
+    const percentage = max > 0 ? Math.round((amount / max) * 100) : 0;
+    return `${type}: ${amount}/${max} (${percentage}%)`;
+  }).join(', ');
+  
+  // Calculer le total
+  const totalResources = Object.values(resources).reduce((sum, res) => sum + (res || 0), 0);
+  const totalCapacity = Object.values(maxCapacity || DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP]).reduce((sum, cap) => sum + (cap || 0), 0);
+  const totalPercentage = totalCapacity > 0 ? Math.round((totalResources / totalCapacity) * 100) : 0;
+  
+  return `${details} | Total: ${totalResources}/${totalCapacity} (${totalPercentage}%)`;
+};
+
+/**
+ * Calcule les pourcentages de remplissage par type de ressource
+ */
+const getResourcePercentages = (resources, maxCapacity) => {
+  if (!resources || !maxCapacity) return {};
+  
+  const result = {};
+  Object.keys(resources).forEach(type => {
+    const current = resources[type] || 0;
+    const max = maxCapacity[type] || DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP]?.[type] || 0;
+    result[type] = max > 0 ? Math.round((current / max) * 100) : 0;
+  });
+  
+  return result;
+};

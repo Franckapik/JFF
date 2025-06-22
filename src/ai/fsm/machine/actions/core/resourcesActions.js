@@ -32,7 +32,7 @@
  * @version 1.0.0
  */
 
-import { EMPTY_RESOURCES, DEFAULT_CAPACITY } from '../../constants/constants.js';
+import { EMPTY_RESOURCES, DEFAULT_CAPACITIES, VEHICLE_TYPES } from '../../constants/constants.js';
 
 // ============================================================================
 // UTILITAIRES INTERNES
@@ -105,7 +105,7 @@ export const resourceActions = {
 
       const currentResources = validateResources(vehicle.resources);
       const toCollect = validateResources(event.resources);
-      const capacity = vehicle.maxCapacity || DEFAULT_CAPACITY;
+      const capacity = vehicle.maxCapacity || DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP];
 
       // Vérifier la capacité
       if (currentResources.food + toCollect.food > capacity.food ||
@@ -257,7 +257,8 @@ export default {
   // events: resourceEvents, // ❌ COMMENTÉ
   constants: {
     EMPTY_RESOURCES,
-    DEFAULT_CAPACITY
+    DEFAULT_CAPACITIES,
+    VEHICLE_TYPES
   },
   utils: {
     validateResources,

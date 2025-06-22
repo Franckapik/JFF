@@ -958,7 +958,10 @@ export const selectBestTileForCollection = (context, event) => {
       explored: t.explored,
       hasResources: t.hasResources,
       collected: t.collected,
-      excluded: (isShipFull && lastCollectedTile === t.coord)
+      lastCollectedTimestamp: t.lastCollectedTimestamp,
+      timeSinceLastCollection: t.lastCollectedTimestamp ? Date.now() - t.lastCollectedTimestamp : null,
+      excludedByCapacity: (isShipFull && lastCollectedTile === t.coord),
+      excludedByCooldown: (t.lastCollectedTimestamp && lastCollectedTile === t.coord && (Date.now() - t.lastCollectedTimestamp) < 5000)
     }))
   });
   

@@ -1,3 +1,8 @@
+Il faut que collected : true et la logique associée pour les mouvement etc soit peut etre remplacée par un pourcentage de collecte d'une tuile pour que l'on puisse calculer et déduire plus facilement lors de la collecte.
+
+Il faut supprimer tous les fichiers obsoletes et les docs md.
+
+
 Il doit y avoir une confiusion dans les basePosition entre drone et ship. Essayer de savoir que faire de idleAtBAse et revoir le guard isNotATBase. Verifier que la position du ship est bien msie a jour egalement. Le tout est d'éviter l'état returning d'urgence.
 
 

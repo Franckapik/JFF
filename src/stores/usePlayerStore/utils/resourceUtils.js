@@ -26,7 +26,8 @@ export const checkVehicleCapacity = (vehicle) => {
   if (!vehicle) return false;
   
   const current = vehicle.resources || { food: 0, debris: 0, special: 0 };
-  const max = vehicle.maxCapacity || { food: 100, debris: 1000, special: 2 };
+  // Utilise les nouvelles capacités optimisées
+  const max = vehicle.maxCapacity || { food: 200, debris: 1800, special: 3 };
 
   return current.food >= max.food || 
          current.debris >= max.debris || 

@@ -43,12 +43,30 @@ export const collectingState = state(
     guard((context) => {
       const isMovingToTarget = context.currentAction === 'moving_to_target';
       const shouldReturn = shipShouldReturnToBase(context);
+      
+      // 🔍 PHASE 3 DEBUG: Tracer la première transition (retour à la base)
+      fsmLogger.resources(`[${context.entityId}] 🔍 PHASE3-TRANSITION-1: SHIP_ARRIVED_AT_TILE guard evaluation (RETURNING_TO_BASE)`, {
+        isMovingToTarget,
+        shouldReturn,
+        guardResult: isMovingToTarget && shouldReturn,
+        currentAction: context.currentAction,
+        selectedTileCoord: context.selectedTileForCollection?.coord,
+        vehicleResources: context.vehicle?.resources
+      });
+      
       return isMovingToTarget && shouldReturn;
     }),
     reduce((context, event) => {
       fsmLogger.info("🚢 [Collecting] Ship arrived at target tile, collecting and returning to base", { 
         coord: context.selectedTileForCollection?.coord,
         botId: context.entityId 
+      });
+      
+      // 🔍 PHASE 3 DEBUG: Tracer l'exécution de la première transition
+      fsmLogger.resources(`[${context.entityId}] 🔍 PHASE3-TRANSITION-1-EXEC: Executing transition to RETURNING_TO_BASE`, {
+        event,
+        selectedTileCoord: context.selectedTileForCollection?.coord,
+        aboutToCallShipCollectsFromTile: true
       });
       
       // Collecter automatiquement la tuile cible
@@ -69,12 +87,30 @@ export const collectingState = state(
     guard((context) => {
       const isMovingToTarget = context.currentAction === 'moving_to_target';
       const shouldReturn = shipShouldReturnToBase(context);
+      
+      // 🔍 PHASE 3 DEBUG: Tracer la deuxième transition (continue exploration)
+      fsmLogger.resources(`[${context.entityId}] 🔍 PHASE3-TRANSITION-2: SHIP_ARRIVED_AT_TILE guard evaluation (EVALUATING)`, {
+        isMovingToTarget,
+        shouldReturn,
+        guardResult: isMovingToTarget && !shouldReturn,
+        currentAction: context.currentAction,
+        selectedTileCoord: context.selectedTileForCollection?.coord,
+        vehicleResources: context.vehicle?.resources
+      });
+      
       return isMovingToTarget && !shouldReturn;
     }),
     reduce((context, event) => {
       fsmLogger.info("🚢 [Collecting] Ship arrived at target tile, collecting and continuing exploration", { 
         coord: context.selectedTileForCollection?.coord,
         botId: context.entityId 
+      });
+      
+      // 🔍 PHASE 3 DEBUG: Tracer l'exécution de la deuxième transition
+      fsmLogger.resources(`[${context.entityId}] 🔍 PHASE3-TRANSITION-2-EXEC: Executing transition to EVALUATING`, {
+        event,
+        selectedTileCoord: context.selectedTileForCollection?.coord,
+        aboutToCallShipCollectsFromTile: true
       });
       
       // Collecter automatiquement la tuile cible
@@ -293,17 +329,10 @@ export const collectingState = state(
         botId: context.entityId 
       });
       
-      // Déposer les ressources à la base et préparer l'évaluation
-      const contextWithCleanVehicle = {
-        ...context,
-        vehicle: {
-          ...context.vehicle,
-          resources: { food: 0, debris: 0, special: 0 }, // Ressources déposées
-          cargo: { food: 0, debris: 0, special: 0 }      // Cargo vidé
-        }
-      };
+      // ✅ CORRECTION : Utiliser shipDepositResources pour transférer au score
+      const contextWithDeposit = shipDepositResources(context, { resourceType: 'all' });
       
-      return contextReducers.state.prepareEvaluating(contextWithCleanVehicle, {
+      return contextReducers.state.prepareEvaluating(contextWithDeposit, {
         reason: 'arrived_at_base_with_resources',
         shouldConsiderIdleTime: true,  // 🆕 Flag pour indiquer qu'on peut aller en idle
         depositedResources: context.vehicle?.resources || {}
