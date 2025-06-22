@@ -1,5 +1,4 @@
 import React from "react";
-import { Html } from "@react-three/drei";
 
 const ShipMesh = ({ color, botId, context, currentAction, isMoving }) => {
   
@@ -56,66 +55,7 @@ const ShipMesh = ({ color, botId, context, currentAction, isMoving }) => {
         metalness={hasResources ? 0.3 : 0.1}
         roughness={hasResources ? 0.4 : 0.8}
       />
-      
-      {/* ID LABEL - Vaisseau principal avec état et ressources */}
-      <Html position={[0, 0.4, 0]} center>
-        <div style={{ 
-          color: 'rgba(255,255,255,0.8)', 
-          fontSize: '10px', 
-          background: 'rgba(0,0,0,0.7)', 
-          padding: '3px 8px', 
-          borderRadius: '6px',
-          fontFamily: 'monospace',
-          textAlign: 'center',
-          border: currentAction === 'collecting' ? '1px solid #32CD32' : 
-                  currentAction === 'moving_to_target' ? '1px solid #FFA500' : 
-                  'none'
-        }}>
-          <div>{context?.vehicle?.id || `${botId}-ship`}</div>
-          
-          {/* État actuel */}
-          {currentAction && (
-            <div style={{ 
-              fontSize: '8px', 
-              color: getEmissiveColor(),
-              fontWeight: currentAction === 'collecting' ? 'bold' : 'normal'
-            }}>
-              {currentAction === 'moving_to_target' ? '→ TARGET' :
-               currentAction === 'collecting' ? '⚡ COLLECTING' :
-               currentAction === 'returning_to_base' ? '← BASE' :
-               currentAction.toUpperCase()}
-            </div>
-          )}
-          
-          {/* Indicateur de ressources */}
-          {hasResources && (
-            <div style={{ 
-              fontSize: '7px', 
-              color: '#FFD700',
-              marginTop: '1px'
-            }}>
-              💎 {currentResources.food + currentResources.debris + currentResources.special}
-              {context?.vehicle?.capacity && (
-                <span style={{ color: '#ccc' }}>
-                  /{context.vehicle.capacity}
-                </span>
-              )}
-            </div>
-          )}
-          
-          {/* Affichage du score persistant */}
-          {context?.score !== undefined && context.score > 0 && (
-            <div style={{ 
-              fontSize: '7px', 
-              color: '#00FF00',
-              marginTop: '1px',
-              fontWeight: 'bold'
-            }}>
-              🏆 {context.score}pts
-            </div>
-          )}
-        </div>
-      </Html>
+
     </mesh>
   );
 };
