@@ -145,7 +145,15 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                       margin: '2px 0',
                       border: '1px solid #4CAF50'
                     }}>
-                      <div>💎 Ressources: {String(vehicle.resources || 0)}/{String(vehicle.capacity || 10)}</div>
+                      <div>💎 Ressources: {
+                        typeof vehicle.resources === 'object' 
+                          ? `F:${vehicle.resources.food || 0} D:${vehicle.resources.debris || 0} S:${vehicle.resources.special || 0}`
+                          : String(vehicle.resources || 0)
+                      }/{
+                        typeof vehicle.maxCapacity === 'object'
+                          ? `F:${vehicle.maxCapacity.food || 0} D:${vehicle.maxCapacity.debris || 0} S:${vehicle.maxCapacity.special || 0}`
+                          : String(vehicle.maxCapacity || vehicle.capacity || 10)
+                      }</div>
                     </div>
                   )}
                   {context?.score !== undefined && (
@@ -156,7 +164,11 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                       margin: '2px 0',
                       border: '1px solid #FFD700'
                     }}>
-                      <div>🏆 Score total: {String(context.score || 0)} pts</div>
+                      <div>🏆 Score total: {
+                        typeof context.score === 'object' && context.score.resources
+                          ? `F:${context.score.resources.food || 0} D:${context.score.resources.debris || 0} S:${context.score.resources.special || 0}`
+                          : String(context.score || 0)
+                      } pts</div>
                     </div>
                   )}
                 </>

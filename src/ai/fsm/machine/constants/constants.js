@@ -185,12 +185,20 @@ export const DEFAULT_VEHICLE_STATE = {
 
 /**
  * Configuration par défaut des capacités par type de véhicule
+ * 
+ * MAIN_SHIP : Capacité calculée pour 2-3 collectes COMPLÈTES avant retour à la base
+ * Basé sur les ressources observées :
+ * - Food: 30-80 par tuile → Capacité: 200 (permet 2-3 collectes)
+ * - Debris: 150-720 par tuile → Capacité: 1800 (permet 2-3 collectes) 
+ * - Special: 0-1 par tuile → Capacité: 3 (permet 3+ collectes)
+ * 
+ * Le debris est généralement le facteur limitant.
  */
 export const DEFAULT_CAPACITIES = {
-  'main-ship': { food: 100, debris: 1000, special: 2 },
-  'drone': { food: 20, debris: 50, special: 1 },
-  'scout': { food: 10, debris: 20, special: 0 },
-  'harvester': { food: 50, debris: 500, special: 1 }
+  [VEHICLE_TYPES.MAIN_SHIP]: { food: 200, debris: 1800, special: 3 }, // Optimisé pour 2-3 collectes complètes
+  [VEHICLE_TYPES.DRONE]: { food: 20, debris: 50, special: 1 },
+  [VEHICLE_TYPES.SCOUT]: { food: 10, debris: 20, special: 0 },
+  [VEHICLE_TYPES.HARVESTER]: { food: 50, debris: 500, special: 1 }
 };
 
 /**

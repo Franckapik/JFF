@@ -21,6 +21,8 @@
  * - originalResources : copie des ressources initiales pour référence
  */
 
+import fsmLogger from '../../../logger/fsmLogger.js';
+
 // =========================================================================
 // SLICE PRINCIPAL
 // =========================================================================
@@ -56,7 +58,24 @@ const createTileResourceSlice = (set, get) => {
      */
     deductTileResources: (coord, collectedResources) => {
       const tile = get().tiles[coord];
-      if (!tile || !tile.resources) return false;
+      
+      // 🔍 DEBUG: Log de la fonction deductTileResources
+      fsmLogger.resources(`🔍 DEBUG: deductTileResources called`, {
+        coord,
+        collectedResources,
+        tileExists: !!tile,
+        tileHasResources: !!tile?.resources,
+        currentResources: tile?.resources
+      });
+      
+      if (!tile || !tile.resources) {
+        fsmLogger.resources(`🔍 DEBUG: deductTileResources failed - no tile or resources`, {
+          coord,
+          tileExists: !!tile,
+          hasResources: !!tile?.resources
+        });
+        return false;
+      }
       
       // Ressources initiales (si originalResources n'existe pas, on utilise les ressources actuelles)
       const originalResources = tile.originalResources || { ...tile.resources };
@@ -82,6 +101,17 @@ const createTileResourceSlice = (set, get) => {
         ? Math.round((totalRemaining / totalOriginal) * 100) 
         : 0;
       
+      // 🔍 DEBUG: Log du calcul du pourcentage
+      fsmLogger.resources(`🔍 DEBUG: Resource percentage calculated`, {
+        coord,
+        originalResources,
+        remainingResources,
+        totalOriginal,
+        totalRemaining,
+        percentageRemaining,
+        isEmpty
+      });
+      
       set((state) => {
         const updatedTiles = { ...state.tiles };
         updatedTiles[coord] = {
@@ -92,6 +122,14 @@ const createTileResourceSlice = (set, get) => {
           resourcePercentage: percentageRemaining // Pourcentage de ressources restantes (0-100)
         };
         return { tiles: updatedTiles };
+      });
+      
+      // 🔍 DEBUG: Log de la mise à jour réussie
+      fsmLogger.resources(`🔍 DEBUG: TileStore updated successfully`, {
+        coord,
+        newPercentage: percentageRemaining,
+        isCompletelyCollected: isEmpty,
+        finalResources: remainingResources
       });
       
       return true;

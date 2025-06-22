@@ -3,7 +3,45 @@
  * SHIP COLLECTING ACTIONS CORE - Actions de collecte des ships (SIMPLIFIÉ)
  * ============================================================================
  * 
- * Actions simplifiées pour la collecte de ressources par les ships.
+ * Action  // 🔍 DEBUG: Synchroniser avec le TileStore pour permettre la collecte et l'affichage du statut
+  fsmLogger.resources(`[${context.entityId}] 🔍 DEBUG: Starting TileStore synchronization`, {
+    coord,
+    resourcesToCollect,
+    tileStoreAvailable: !!useTileStore
+  });
+  
+  try {
+    const tileStore = useTileStore.getState();
+    fsmLogger.resources(`[${context.entityId}] 🔍 DEBUG: TileStore state retrieved`, {
+      tilesCount: Object.keys(tileStore.tiles || {}).length,
+      tileExists: !!tileStore.tiles?.[coord],
+      tileHasResources: !!tileStore.tiles?.[coord]?.resources
+    });
+    
+    const syncSuccess = tileStore.deductTileResources(coord, resourcesToCollect);
+    
+    if (syncSuccess) {
+      // Vérifier le résultat de la déduction
+      const updatedTile = tileStore.tiles?.[coord];
+      fsmLogger.resources(`[${context.entityId}] ✅ DEBUG: TileStore synchronized - collection complete`, {
+        coord,
+        deductedResources: resourcesToCollect,
+        remainingResources: updatedTile?.resources,
+        resourcePercentage: updatedTile?.resourcePercentage,
+        isCollected: updatedTile?.collected
+      });
+    } else {
+      fsmLogger.resources(`[${context.entityId}] ⚠️ DEBUG: TileStore sync failed - tile not found in store`, {
+        coord,
+        availableTiles: Object.keys(tileStore.tiles || {}).slice(0, 5) // Premier 5 coords pour debug
+      });
+    }
+  } catch (error) {
+    fsmLogger.resources(`[${context.entityId}] ⚠️ DEBUG: TileStore sync error (non-critical):`, {
+      errorMessage: error.message,
+      errorStack: error.stack
+    });
+  } la collecte de ressources par les ships.
  * Utilise la mémoire unifiée `knownTiles` au lieu des anciens systèmes.
  * 
  * 📋 ACTIONS PRINCIPALES:
@@ -31,6 +69,7 @@
 import fsmLogger from '../../../../../logger/fsmLogger.js';
 import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES } from '../../constants/constants.js';
 import { EXPLORATION_CYCLE_CONFIG } from '../../constants/constants.js';
+import { useTileStore } from '../../../../../stores/useTileStore/index.js';
 
 // ============================================================================
 // UTILITAIRES INTERNES
@@ -100,6 +139,13 @@ const calculateDistance = (coord1, coord2) => {
 export const shipCollectsFromTile = (context, event) => {
   try {
     fsmLogger.resources(`[${context.entityId}] 🔍 START shipCollectsFromTile with event:`, event);
+    fsmLogger.resources(`[${context.entityId}] 🔍 DEBUG: Collection attempt started`, {
+      entityId: context.entityId,
+      eventCoord: event.coord,
+      eventResourceType: event.resourceType,
+      contextMemoryExists: !!context.memory,
+      knownTilesCount: context.memory?.knownTiles?.size || 0
+    });
     
     const { coord, resourceType } = event;
     
@@ -174,7 +220,7 @@ export const shipCollectsFromTile = (context, event) => {
   
   fsmLogger.resources(`[${context.entityId}] ✅ Tile validation passed, calculating collection...`);
   
-  // Calculer les ressources à collecter
+  // Calculer les ressources à collecter (collecte complète)
   const resourcesToCollect = tileData.resources;
   const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
   
@@ -233,7 +279,7 @@ export const shipCollectsFromTile = (context, event) => {
 
   fsmLogger.resources(`[${context.entityId}] Collection successful: +${JSON.stringify(resourcesToCollect)} -> Score: ${JSON.stringify(updatedScore)}`);
 
-  // Marquer la tuile comme collectée dans la mémoire
+  // Marquer la tuile comme collectée dans la mémoire FSM
   const updatedTileData = {
     ...tileData,
     collected: true,
@@ -250,10 +296,24 @@ export const shipCollectsFromTile = (context, event) => {
     totalCollected: updatedTileData.totalResourcesCollected
   });
   
-  // Mettre à jour le TileStore avec les données de collecte
-  // Note: On évite l'accès au TileStore côté client pour éviter les erreurs require/import
-  fsmLogger.resources(`[${context.entityId}] Skipping TileStore update (client-side limitation)`);
-  // Le TileStore sera mis à jour via d'autres moyens si nécessaire
+  // Synchroniser avec le TileStore pour permettre la collecte partielle et l'affichage du pourcentage
+  try {
+    const tileStore = useTileStore.getState();
+    const syncSuccess = tileStore.deductTileResources(coord, resourcesToCollect);
+    
+    if (syncSuccess) {
+      fsmLogger.resources(`[${context.entityId}] ✅ TileStore synchronized - partial collection enabled`, {
+        coord,
+        deductedResources: resourcesToCollect
+      });
+    } else {
+      fsmLogger.resources(`[${context.entityId}] ⚠️ TileStore sync failed - tile not found in store`, {
+        coord
+      });
+    }
+  } catch (error) {
+    fsmLogger.resources(`[${context.entityId}] ⚠️ TileStore sync error (non-critical):`, error.message);
+  }
 
   // Mettre à jour les statistiques
   const currentStats = context.memory?.stats || {
