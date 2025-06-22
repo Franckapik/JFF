@@ -130,6 +130,14 @@ export const evaluatingState = state(
       const hasBestTile = discoveryGuards.hasBestTileForCollection(context, event);
       const shouldTransition = discoveryGuards.shouldTransitionToCollection(context, event);
       
+      fsmLogger.info("🔍 [Evaluating] Collection transition evaluation", {
+        hasEnoughExplored,
+        hasBestTile, 
+        shouldTransition,
+        result: hasEnoughExplored && hasBestTile && shouldTransition,
+        botId: context.entityId
+      });
+      
       return hasEnoughExplored && hasBestTile && shouldTransition;
     }),
     reduce((context, event) => {

@@ -2,7 +2,11 @@
  * ============================================================================
  * EXPLORATION GUARDS - Guards primitifs pour la gestion de l'exploration
  * ============================================================================
- * 
+
+// ============================================================================
+// EXPLORATION GUARDS CORE
+// ============================================================================
+/**
  * Guards de base pour la gestion de l'exploration et de la découverte.
  * Ces guards sont réutilisables et constituent la base logique métier.
  * 
@@ -237,6 +241,14 @@ const hasBestTileForCollection = (context, event) => {
     .filter(tile => tile.explored && tile.hasResources && !tile.collected);
   const result = collectibleTiles.length > 0;
   
+  fsmLogger.info(`🎯 [hasBestTileForCollection] Guard check`, {
+    totalKnownTiles: knownTiles.size,
+    collectibleTiles: collectibleTiles.length,
+    collectibleDetails: collectibleTiles.map(t => ({ coord: t.coord, resources: t.resources })),
+    result,
+    botId: context.entityId
+  });
+  
   return result;
 };
 
@@ -252,9 +264,20 @@ const shouldTransitionToCollection = (context, event) => {
   const collectibleTiles = Array.from(knownTiles.values())
     .filter(tile => tile.explored && tile.hasResources && !tile.collected);
   
-  const hasEnoughExplored = exploredCount >= EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION;
+  const required = EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION;
+  const hasEnoughExplored = exploredCount >= required;
   const hasCollectibles = collectibleTiles.length > 0;
   const result = hasEnoughExplored && hasCollectibles;
+  
+  fsmLogger.info(`🔄 [shouldTransitionToCollection] Guard check`, {
+    exploredCount,
+    required,
+    hasEnoughExplored,
+    collectibleTiles: collectibleTiles.length,
+    hasCollectibles,
+    result,
+    botId: context.entityId
+  });
   
   return result;
 };

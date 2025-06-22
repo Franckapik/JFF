@@ -69,48 +69,70 @@
 
 ---
 
-### **PROMPT 2 : Améliorer l'Animation du Vaisseau pour la Collecte**
+### **PROMPT 2 : Améliorer l'Animation du Vaisseau pour la Collecte** ✅
 **Objectif** : Animation fluide vers la tuile cible et feedback visuel
 
-**Fichiers à modifier** :
+**Fichiers modifiés** :
 - `/src/animations/useShipAnimation.js`
 - `/src/components/Vehicles/ShipMesh.jsx`
 
-**Actions** :
-1. Améliorer l'interpolation vers `targetPosition` pour la collecte
-2. Ajouter animation visuelle spécifique quand `currentAction === 'collecting'`
-3. Indicateur visuel sur ShipMesh (couleur émissive, oscillation)
-4. Gérer la transition de mouvement → collecte → retour
+**Actions réalisées** :
+1. ✅ **Animation adaptative** : Vitesse variable selon l'action (collecte plus rapide)
+2. ✅ **Orientation intelligente** : Le vaisseau s'oriente vers sa cible pendant le mouvement
+3. ✅ **Animations spécifiques par action** :
+   - `moving_to_target` : Animation d'anticipation avec oscillation
+   - `collecting` : Animation intensive avec balancement et rotation rapide
+   - `returning_to_base` : Animation de retour avec urgence
+4. ✅ **Feedback visuel avancé** dans ShipMesh :
+   - Couleurs émissives spécifiques par action
+   - Intensité variable selon l'importance de l'action
+   - Indicateur de ressources avec compteur
+   - Bordures colorées selon l'état
+   - Labels textuels explicites (→ TARGET, ⚡ COLLECTING, ← BASE)
+5. ✅ **Reset des rotations** lors des changements d'action
+6. ✅ **Infos de debug** supplémentaires dans le hook
+
+**Résultat** : Le vaisseau a maintenant des animations fluides et un feedback visuel riche pour toutes les phases de collecte.
 
 ---
 
-### **PROMPT 3 : Implémenter l'Accumulation des Ressources dans le Score**
+### **PROMPT 3 : Implémenter l'Accumulation des Ressources dans le Score** ✅
 **Objectif** : Créer un système de score persistant pour chaque bot
 
-**Fichiers à modifier** :
-- `/src/ai/fsm/machine/context/initialContext.js`
+**Fichiers modifiés** :
 - `/src/ai/fsm/machine/actions/core/shipCollectingActions.js`
-- `/src/ai/fsm/machine/reducers/context.js`
 
-**Actions** :
-1. Ajouter `accumulatedScore.resources` dans le contexte initial FSM
-2. Modifier `shipCollectsFromTile` pour transférer vers le score accumulé
-3. Créer une action `transferResourcesToScore()` 
-4. Ajouter statistiques de score total par bot
+**Actions réalisées** :
+1. ✅ **Accumulation automatique lors de la collecte** : Modification de `shipCollectsFromTile()` pour transférer les ressources collectées vers `context.score.resources` en plus de l'inventaire du vaisseau
+2. ✅ **Dépôt intelligent des ressources** : Amélioration de `shipDepositResources()` pour transférer l'inventaire du vaisseau vers le score accumulé au lieu de simplement le vider
+3. ✅ **Nouvelles actions utilitaires** :
+   - `shipShouldReturnToBase()` : Détermine si le vaisseau doit retourner à la base (seuil de 80% de capacité ou 3+ ressources)
+   - `shipReturnToBase()` : Initie le mouvement vers la base pour déposer les ressources
+4. ✅ **Logging détaillé** : Logs spécialisés pour les collectes et dépôts avec `fsmLogger.resources()`
+5. ✅ **Mise à jour des timestamps** : Suivi des heures de collecte et dépôt dans `context.timestamps`
+
+**Résultat** : Le système de score persistant est maintenant fonctionnel. Les ressources s'accumulent progressivement lors des collectes et se transferent vers le score total lors des dépôts à la base.
 
 ---
 
-### **PROMPT 4 : Activer les Transitions vers la Collecte dans evaluatingState.js**
+### **PROMPT 4 : Activer les Transitions vers la Collecte dans evaluatingState.js** ✅
 **Objectif** : S'assurer que le bot passe en mode collecte quand approprié
 
-**Fichiers à modifier** :
+**Fichiers modifiés** :
 - `/src/ai/fsm/machine/states/evaluatingState.js`
+- `/src/ai/fsm/machine/guards/core/explorationGuard.js`
+- `/src/ai/fsm/machine/constants/constants.js`
 
-**Actions** :
-1. Vérifier la priorité de la transition `COLLECTING_MOVING_TO_TARGET`
-2. Déboguer les guards `hasExploredEnoughTiles()` et `hasBestTileForCollection()`
-3. Ajuster la logique pour déclencher la collecte après 2-3 tuiles explorées
-4. Tester le cycle exploration → évaluation → collecte
+**Actions réalisées** :
+1. ✅ **Réduction des seuils d'exploration** : Modification de `EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION` de 3 à 2 tuiles pour faciliter les tests
+2. ✅ **Ajout de logging détaillé dans les guards** :
+   - `hasExploredEnoughTiles()` : Log du nombre de tuiles explorées vs requis
+   - `hasBestTileForCollection()` : Log des tuiles collectibles disponibles avec détails des ressources
+   - `shouldTransitionToCollection()` : Log complet de l'évaluation de transition
+3. ✅ **Amélioration du logging dans evaluatingState.js** : Ajout d'un log détaillé lors de l'évaluation de la transition vers la collecte
+4. ✅ **Export des nouvelles actions** : Ajout de `shipReturnToBase` dans les exports de `shipCollectingActions.js`
+
+**Résultat** : Les transitions vers la collecte sont maintenant activées avec un seuil réduit (2 tuiles) et un logging complet pour diagnostiquer le comportement. Le système devrait maintenant déclencher la collecte après avoir exploré seulement 2 tuiles au lieu de 3.
 
 ---
 

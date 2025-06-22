@@ -161,13 +161,21 @@ export const shipCollectsFromTile = (context, event) => {
       lastAction: 'shipCollectsFromTile_failed'
     };
   }
-  
-  // Mettre à jour les ressources du vaisseau
+   // Mettre à jour les ressources du vaisseau
   const updatedResources = { ...currentResources };
   Object.entries(resourcesToCollect).forEach(([type, amount]) => {
     updatedResources[type] = (updatedResources[type] || 0) + amount;
   });
-  
+
+  // Accumuler les ressources dans le score persistant
+  const currentScore = context.score?.resources || { food: 0, debris: 0, special: 0 };
+  const updatedScore = { ...currentScore };
+  Object.entries(resourcesToCollect).forEach(([type, amount]) => {
+    updatedScore[type] = (updatedScore[type] || 0) + amount;
+  });
+
+  fsmLogger.resources(`[${context.entityId}] Collection successful: +${JSON.stringify(resourcesToCollect)} -> Score: ${JSON.stringify(updatedScore)}`);
+
   // Marquer la tuile comme collectée dans la mémoire
   const updatedTileData = {
     ...tileData,
@@ -203,10 +211,18 @@ export const shipCollectsFromTile = (context, event) => {
       resources: updatedResources,
       lastCollectionTime: Date.now()
     },
+    score: {
+      ...context.score,
+      resources: updatedScore
+    },
     memory: {
       ...context.memory,
       knownTiles,
       stats: newStats
+    },
+    timestamps: {
+      ...context.timestamps,
+      lastCollection: Date.now()
     },
     lastAction: 'shipCollectsFromTile_success'
   };
@@ -403,15 +419,27 @@ export const shipDepositResources = (context, event) => {
   const depositType = event.resourceType || 'all';
   
   let updatedResources = { ...currentResources };
-  let depositedAmount = 0;
+  let depositedResources = { food: 0, debris: 0, special: 0 };
 
   if (depositType === 'all') {
-    depositedAmount = Object.values(currentResources).reduce((sum, val) => sum + val, 0);
+    depositedResources = { ...currentResources };
     updatedResources = { food: 0, debris: 0, special: 0 };
   } else {
-    depositedAmount = currentResources[depositType] || 0;
+    depositedResources[depositType] = currentResources[depositType] || 0;
     updatedResources[depositType] = 0;
   }
+
+  // Transférer les ressources vers le score accumulé
+  const currentScore = context.score?.resources || { food: 0, debris: 0, special: 0 };
+  const updatedScore = { ...currentScore };
+  Object.entries(depositedResources).forEach(([type, amount]) => {
+    if (amount > 0) {
+      updatedScore[type] = (updatedScore[type] || 0) + amount;
+    }
+  });
+
+  const totalDeposited = Object.values(depositedResources).reduce((sum, val) => sum + val, 0);
+  fsmLogger.resources(`[${context.entityId}] Deposit successful: +${JSON.stringify(depositedResources)} -> Total Score: ${JSON.stringify(updatedScore)}`);
 
   return {
     ...context,
@@ -420,10 +448,19 @@ export const shipDepositResources = (context, event) => {
       resources: updatedResources,
       lastDepositTime: Date.now()
     },
+    score: {
+      ...context.score,
+      resources: updatedScore
+    },
     depositedResources: {
       type: depositType,
-      amount: depositedAmount,
+      resources: depositedResources,
+      totalAmount: totalDeposited,
       timestamp: Date.now()
+    },
+    timestamps: {
+      ...context.timestamps,
+      lastDeposit: Date.now()
     },
     lastAction: 'shipDepositResources_success'
   };
@@ -456,6 +493,65 @@ export const shipUpdateInventory = (context, event) => {
       lastInventoryUpdate: Date.now()
     },
     lastAction: 'shipUpdateInventory_success'
+  };
+};
+
+/**
+ * Vérifie si le ship doit retourner à la base pour déposer les ressources
+ */
+export const shipShouldReturnToBase = (context) => {
+  const vehicle = context.vehicle;
+  if (!vehicle) {
+    return false;
+  }
+
+  const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
+  const maxCapacity = vehicle.maxCapacity || DEFAULT_CAPACITIES[VEHICLE_TYPES.SHIP];
+  const totalResources = Object.values(currentResources).reduce((sum, val) => sum + val, 0);
+  
+  // Retourner à la base si:
+  // 1. Le vaisseau est plein (à 80% de capacité ou plus)
+  // 2. Le vaisseau a collecté au moins 3 ressources
+  const capacityThreshold = Math.max(1, Math.floor(maxCapacity * 0.8));
+  const shouldReturn = totalResources >= capacityThreshold || totalResources >= 3;
+  
+  if (shouldReturn) {
+    fsmLogger.resources(`[${context.entityId}] Ship should return to base: ${totalResources}/${maxCapacity} resources (threshold: ${capacityThreshold})`);
+  }
+  
+  return shouldReturn;
+};
+
+/**
+ * Initie le retour du ship vers la base pour déposer les ressources
+ */
+export const shipReturnToBase = (context) => {
+  const vehicle = context.vehicle;
+  if (!vehicle) {
+    return { ...context, error: 'Cannot return to base: no ship found' };
+  }
+
+  const basePosition = vehicle.basePosition;
+  if (!basePosition) {
+    return { ...context, error: 'Cannot return to base: no base position found' };
+  }
+
+  fsmLogger.resources(`[${context.entityId}] Ship returning to base from ${JSON.stringify(vehicle.coord)} to deposit resources`);
+
+  return {
+    ...context,
+    vehicle: {
+      ...vehicle,
+      targetTile: {
+        position: basePosition,
+        coord: { x: 0, z: 0 } // Position de la base (peut être ajustée)
+      },
+      isMoving: true,
+      progress: 0,
+      startCoord: vehicle.coord
+    },
+    currentAction: 'returning_to_base',
+    lastAction: 'shipReturnToBase_initiated'
   };
 };
 
@@ -545,7 +641,11 @@ export const shipCollectingActions = {
   
   // Nouvelles actions pour cycle d'exploration multi-tuiles
   selectBestTileForCollection,
-  resetExplorationCycleStats
+  resetExplorationCycleStats,
+  shipShouldReturnToBase,
+  shipReturnToBase,
+  shipReturnToBase,
+  shipReturnToBase
 };
 
 /**

@@ -284,8 +284,8 @@ export const EXPLORATION_CONFIG = {
  * Configuration du cycle d'exploration multi-tuiles
  */
 export const EXPLORATION_CYCLE_CONFIG = {
-  TILES_BEFORE_COLLECTION: 3,           // Nombre de tuiles à explorer avant collecte
-  MIN_TILES_BEFORE_COLLECTION: 2,       // Minimum de tuiles avant d'autoriser la collecte
+  TILES_BEFORE_COLLECTION: 2,           // Nombre de tuiles à explorer avant collecte (réduit pour tests)
+  MIN_TILES_BEFORE_COLLECTION: 1,       // Minimum de tuiles avant d'autoriser la collecte (réduit pour tests)
   MAX_EXPLORATION_CYCLES: 5,             // Maximum de cycles d'exploration par session
   CYCLE_TIMEOUT: 600000,                 // 10 minutes maximum par cycle
   
