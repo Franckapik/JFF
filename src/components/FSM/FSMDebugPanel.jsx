@@ -136,6 +136,29 @@ const FSMVisualization = ({ botId, expanded = false }) => {
                 <>
                   <div>Position: {String(vehicle.coord || 'N/A')}</div>
                   <div>Carburant: {String(vehicle.fuel || 0)}/100</div>
+                  {/* Affichage des ressources et score pour les vaisseaux */}
+                  {vehicle.resources !== undefined && (
+                    <div style={{ 
+                      backgroundColor: '#1a3a1a', 
+                      padding: '3px 5px', 
+                      borderRadius: '3px', 
+                      margin: '2px 0',
+                      border: '1px solid #4CAF50'
+                    }}>
+                      <div>💎 Ressources: {String(vehicle.resources || 0)}/{String(vehicle.capacity || 10)}</div>
+                    </div>
+                  )}
+                  {context?.score !== undefined && (
+                    <div style={{ 
+                      backgroundColor: '#3a3a1a', 
+                      padding: '3px 5px', 
+                      borderRadius: '3px', 
+                      margin: '2px 0',
+                      border: '1px solid #FFD700'
+                    }}>
+                      <div>🏆 Score total: {String(context.score || 0)} pts</div>
+                    </div>
+                  )}
                 </>
               )}
             </div>

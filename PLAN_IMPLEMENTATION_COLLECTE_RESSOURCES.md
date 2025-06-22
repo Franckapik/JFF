@@ -158,19 +158,36 @@
 
 ---
 
-### **PROMPT 6 : Améliorer les Indicateurs Visuels et Debug**
+### **PROMPT 6 : Améliorer les Indicateurs Visuels et Debug** ✅
 **Objectif** : Feedback visuel pour la collecte et monitoring des ressources
 
-**Fichiers à modifier** :
+**Fichiers modifiés** :
 - `/src/components/FSM/FSMDebugPanel.jsx`
 - `/src/components/HUD/TileStoreMonitor.jsx`
 - `/src/components/Vehicles/ShipMesh.jsx`
+- `/src/components/Tile.jsx`
+- `/src/styles/App.css`
+- `/src/ai/fsm/machine/actions/core/shipCollectingActions.js`
+- `/src/stores/useTileStore/slices/tileBaseSlice.js`
 
-**Actions** :
-1. Afficher les ressources accumulées par bot dans FSMDebugPanel
-2. Indicateur visuel sur les tuiles collectées
-3. Animation du vaisseau pendant la collecte (pulsation, couleur)
-4. Log détaillé des collectes dans TileStoreMonitor
+**Actions réalisées** :
+1. ✅ **Affichage du score persistant dans FSMDebugPanel** : Ajout d'un indicateur de score accumulé par bot avec bordure dorée et icône trophée
+2. ✅ **Indicateurs visuels sur les tuiles collectées** :
+   - Détection des tuiles récemment collectées (10 secondes)
+   - Effet de pulsation lumineux cyan avec bordure
+   - Label "💎 Collecté !" avec animation
+3. ✅ **Amélioration du feedback visuel sur le vaisseau** :
+   - Affichage du score persistant sous le nom du vaisseau
+   - Indicateur de capacité (ressources actuelles/capacité max)
+   - Couleurs et icônes améliorées
+4. ✅ **Logs détaillés dans TileStoreMonitor** :
+   - Statistiques de collectes récentes (30 secondes)
+   - Total des ressources collectées globalement
+   - Affichage du timestamp de dernière collecte par tuile
+   - Compteur de ressources totales collectées par tuile
+5. ✅ **Animations CSS** : Ajout d'animations `pulse` et `glow` pour les effets visuels
+6. ✅ **Enregistrement des timestamps** : Mise à jour des actions de collecte pour enregistrer les timestamps dans le TileStore
+7. ✅ **Méthode updateTileState** : Ajout d'une méthode spécialisée pour gérer les mises à jour de collecte
 
 ---
 

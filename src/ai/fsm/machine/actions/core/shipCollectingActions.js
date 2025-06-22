@@ -181,10 +181,30 @@ export const shipCollectsFromTile = (context, event) => {
     ...tileData,
     collected: true,
     collectedAt: Date.now(),
-    collectedBy: vehicle.id
+    collectedBy: vehicle.id,
+    lastCollectedTimestamp: Date.now(),
+    totalResourcesCollected: (tileData.totalResourcesCollected || 0) + totalToCollect
   };
   knownTiles.set(coord, updatedTileData);
   
+  // Mettre à jour le TileStore avec les données de collecte
+  try {
+    const useTileStore = require('../../../../../stores/useTileStore/index.js');
+    if (useTileStore?.useTileStore?.getState) {
+      const tileStoreState = useTileStore.useTileStore.getState();
+      if (tileStoreState.updateTileState) {
+        tileStoreState.updateTileState(coord, {
+          lastCollectedTimestamp: Date.now(),
+          totalResourcesCollected: (tileStoreState.tiles[coord]?.totalResourcesCollected || 0) + totalToCollect,
+          resourcePercentage: Math.max(0, (tileStoreState.tiles[coord]?.resourcePercentage || 100) - 20)
+        });
+        fsmLogger.resources(`[${context.entityId}] Updated TileStore for ${coord} with collection data`);
+      }
+    }
+  } catch (error) {
+    fsmLogger.warn(`[${context.entityId}] Could not update TileStore: ${error.message}`);
+  }
+
   // Mettre à jour les statistiques
   const currentStats = context.memory?.stats || {
     tilesExplored: 0,

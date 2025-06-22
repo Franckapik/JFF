@@ -58,6 +58,19 @@ const Tile = React.memo(({
   const isExplored = useTileStore((state) => 
     state.tiles[coord] ? state.tiles[coord].explored === true : false
   );
+
+  // Nouveau sélecteur pour les tuiles récemment collectées
+  const lastCollectedTimestamp = useTileStore((state) => 
+    state.tiles[coord] ? state.tiles[coord].lastCollectedTimestamp : null
+  );
+
+  // Une tuile est récemment collectée si elle l'a été dans les 10 dernières secondes
+  const isRecentlyCollected = React.useMemo(() => {
+    if (!lastCollectedTimestamp) return false;
+    const now = Date.now();
+    const timeDiff = now - lastCollectedTimestamp;
+    return timeDiff < 10000; // 10 secondes
+  }, [lastCollectedTimestamp]);
   
   /**
    * -----------------------------------------------------------------
@@ -138,6 +151,45 @@ const Tile = React.memo(({
             {resourcePercentage}%
           </div>
         </Html>
+      )}
+
+      {/* Indicateur de collecte récente */}
+      {isRecentlyCollected && (
+        <>
+          {/* Effet de pulsation lumineux */}
+          <mesh
+            position={[position[0], 0.15, position[2]]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <circleGeometry args={[0.8, 32]} />
+            <meshBasicMaterial 
+              color="#00ffff" 
+              transparent={true}
+              opacity={0.3}
+            />
+          </mesh>
+          
+          {/* Label de collecte récente */}
+          <Html
+            position={[position[0], 0.6, position[2]]}
+            center
+            distanceFactor={20}
+          >
+            <div style={{
+              background: 'rgba(0,255,255,0.8)',
+              color: '#000',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              userSelect: 'none',
+              pointerEvents: 'none',
+              animation: 'pulse 1s infinite',
+            }}>
+              💎 Collecté !
+            </div>
+          </Html>
+        </>
       )}
 
       {/* Helper visuel pour les tuiles explorées */}

@@ -121,6 +121,25 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
         <div style={{ color: '#ff6b6b' }}>📦 Collectées: {stats.collected}</div>
         <div style={{ color: '#ff9933' }}>💎 Avec ressources: {stats.withResources}</div>
         <div style={{ color: '#9966ff' }}>🏠 Bases: {stats.depart}</div>
+        
+        {/* Statistiques de collecte additionnelles */}
+        <div style={{ marginTop: '4px', fontSize: '10px', color: '#ccc' }}>
+          {(() => {
+            const recentlyCollected = Object.values(tiles).filter(tile => 
+              tile.lastCollectedTimestamp && 
+              Date.now() - tile.lastCollectedTimestamp < 30000 // 30 secondes
+            );
+            const totalResourcesCollected = Object.values(tiles).reduce((total, tile) => 
+              total + (tile.totalResourcesCollected || 0), 0
+            );
+            return (
+              <>
+                <div>⏰ Collectées récemment: {recentlyCollected.length}</div>
+                <div>💰 Ressources totales collectées: {totalResourcesCollected}</div>
+              </>
+            );
+          })()}
+        </div>
       </div>
       
       {/* Sélecteur de tuile */}
@@ -168,6 +187,16 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
               Collectée: {selectedTile.collected ? '✅ OUI' : '❌ NON'}
             </div>
             <div>Ressources: {selectedTile.resourcePercentage || 0}%</div>
+            {selectedTile.lastCollectedTimestamp && (
+              <div style={{ color: '#00ffff' }}>
+                Dernière collecte: {new Date(selectedTile.lastCollectedTimestamp).toLocaleTimeString()}
+              </div>
+            )}
+            {selectedTile.totalResourcesCollected > 0 && (
+              <div style={{ color: '#ffd700' }}>
+                Total collecté: {selectedTile.totalResourcesCollected} ressources
+              </div>
+            )}
             {selectedTile.resources && (
               <div style={{ marginLeft: '10px', fontSize: '9px' }}>
                 Food: {selectedTile.resources.food || 0} | 

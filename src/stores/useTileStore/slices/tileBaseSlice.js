@@ -119,6 +119,31 @@ const createTileBaseSlice = (set, get) => {
     },
 
     /**
+     * Met à jour l'état d'une tuile pour les collectes
+     * Méthode spécialisée pour gérer les timestamps et statistiques de collecte
+     * 
+     * @param {string} coord - Coordonnée de la tuile
+     * @param {Object} updates - Mises à jour spécifiques aux collectes
+     */
+    updateTileState: (coord, updates) => {
+      set((state) => {
+        const updatedTiles = { ...state.tiles };
+        if (updatedTiles[coord]) {
+          updatedTiles[coord] = { 
+            ...updatedTiles[coord], 
+            ...updates,
+            // Assurer que les timestamps sont correctement gérés
+            lastCollectedTimestamp: updates.lastCollectedTimestamp || updatedTiles[coord].lastCollectedTimestamp,
+            totalResourcesCollected: updates.totalResourcesCollected !== undefined 
+              ? updates.totalResourcesCollected 
+              : (updatedTiles[coord].totalResourcesCollected || 0)
+          };
+        }
+        return { tiles: updatedTiles };
+      });
+    },
+
+    /**
      * Efface toutes les tuiles du jeu
      * Remet l'état des tuiles à un objet vide
      */

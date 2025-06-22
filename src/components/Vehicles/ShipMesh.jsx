@@ -95,6 +95,23 @@ const ShipMesh = ({ color, botId, context, currentAction, isMoving }) => {
               marginTop: '1px'
             }}>
               💎 {currentResources.food + currentResources.debris + currentResources.special}
+              {context?.vehicle?.capacity && (
+                <span style={{ color: '#ccc' }}>
+                  /{context.vehicle.capacity}
+                </span>
+              )}
+            </div>
+          )}
+          
+          {/* Affichage du score persistant */}
+          {context?.score !== undefined && context.score > 0 && (
+            <div style={{ 
+              fontSize: '7px', 
+              color: '#00FF00',
+              marginTop: '1px',
+              fontWeight: 'bold'
+            }}>
+              🏆 {context.score}pts
             </div>
           )}
         </div>
