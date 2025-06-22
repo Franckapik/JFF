@@ -136,18 +136,25 @@
 
 ---
 
-### **PROMPT 5 : Intégrer le Dépôt de Ressources à la Base**
+### **PROMPT 5 : Intégrer le Dépôt de Ressources à la Base** ✅
 **Objectif** : Transfert automatique des ressources quand le vaisseau retourne à la base
 
-**Fichiers à modifier** :
+**Fichiers modifiés** :
 - `/src/ai/fsm/machine/states/collectingState.js`
 - `/src/ai/fsm/machine/actions/core/shipCollectingActions.js`
 
-**Actions** :
-1. Ajouter logique de dépôt dans la transition `SHIP_REACHED_BASE`
-2. Créer action `shipDepositResourcesAtBase()` 
-3. Vider l'inventaire du vaisseau et transférer vers le score
-4. Logger le dépôt avec `fsmLogger.resources()`
+**Actions réalisées** :
+1. ✅ **Dépôt automatique à la base** : Modification de la transition `SHIP_REACHED_BASE` pour appeler automatiquement le dépôt de ressources
+2. ✅ **Action spécialisée** : Création de `shipDepositResourcesAtBase()` avec des statistiques de dépôt et logging spécialisé
+3. ✅ **Logique intelligente de retour** : Amélioration des transitions `SHIP_ARRIVED_AT_TILE` pour décider automatiquement si retourner à la base ou continuer selon la capacité du vaisseau
+4. ✅ **Gestion de l'inventaire plein** : 
+   - Transition `INVENTORY_FULL` → `COLLECTING_RETURNING_TO_BASE` (au lieu d'EVALUATING)
+   - Seuil ajusté à 80% pour cohérence avec `shipShouldReturnToBase()`
+   - Retour automatique à la base quand l'inventaire est plein
+5. ✅ **Transitions de fin de collecte** : Nouvelles transitions `SHIP_COLLECTION_COMPLETED` qui décident automatiquement de continuer l'exploration ou retourner à la base selon la capacité
+6. ✅ **Logging détaillé** : Logs spécialisés pour tous les dépôts avec score total et statistiques
+
+**Résultat** : Le système de dépôt automatique est maintenant fonctionnel. Le vaisseau dépose automatiquement toutes ses ressources à la base, met à jour le score accumulé, et décide intelligemment s'il doit continuer l'exploration ou retourner selon sa capacité.
 
 ---
 

@@ -28,7 +28,7 @@ import { contextReducers } from '../reducers/context.js';
 import { EMERGENCY_EVENT_TYPES } from '../events/emergencyEvents.js';
 import { MOVEMENT_EVENT_TYPES } from '../events/movementEvents.js';
 import { RESOURCE_EVENT_TYPES } from '../events/resourceEvents.js';
-import { shipCollectsFromTile } from '../actions/core/shipCollectingActions.js'; // ACTION UNIFIÉE
+import { shipCollectsFromTile, shipDepositResources, shipShouldReturnToBase, shipDepositResourcesAtBase } from '../actions/core/shipCollectingActions.js'; // ACTION UNIFIÉE
 import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**
@@ -40,9 +40,13 @@ export const collectingState = state(
   
   // SHIP_ARRIVED_AT_TILE - Vaisseau arrivé à la tuile cible pour collecte
   transition(MOVEMENT_EVENT_TYPES.SHIP_ARRIVED_AT_TILE, BOT_STATES.COLLECTING_RETURNING_TO_BASE,
-    guard((context) => context.currentAction === 'moving_to_target'),
+    guard((context) => {
+      const isMovingToTarget = context.currentAction === 'moving_to_target';
+      const shouldReturn = shipShouldReturnToBase(context);
+      return isMovingToTarget && shouldReturn;
+    }),
     reduce((context, event) => {
-      fsmLogger.info("🚢 [Collecting] Ship arrived at target tile, starting collection", { 
+      fsmLogger.info("🚢 [Collecting] Ship arrived at target tile, collecting and returning to base", { 
         coord: context.selectedTileForCollection?.coord,
         botId: context.entityId 
       });
@@ -56,6 +60,32 @@ export const collectingState = state(
       // Préparer le retour automatique à la base après collecte
       return contextReducers.state.prepareReturningToBase(collectedContext, {
         reason: 'tile_collected_returning_to_base'
+      });
+    })
+  ),
+  
+  // SHIP_ARRIVED_AT_TILE - Vaisseau collecte mais continue l'exploration (capacité disponible)
+  transition(MOVEMENT_EVENT_TYPES.SHIP_ARRIVED_AT_TILE, BOT_STATES.EVALUATING,
+    guard((context) => {
+      const isMovingToTarget = context.currentAction === 'moving_to_target';
+      const shouldReturn = shipShouldReturnToBase(context);
+      return isMovingToTarget && !shouldReturn;
+    }),
+    reduce((context, event) => {
+      fsmLogger.info("🚢 [Collecting] Ship arrived at target tile, collecting and continuing exploration", { 
+        coord: context.selectedTileForCollection?.coord,
+        botId: context.entityId 
+      });
+      
+      // Collecter automatiquement la tuile cible
+      const collectedContext = shipCollectsFromTile(context, {
+        coord: context.selectedTileForCollection?.coord,
+        resourceType: 'all'
+      });
+      
+      // Retourner à l'évaluation pour décider de la suite (plus d'exploration ou autre)
+      return contextReducers.state.prepareEvaluating(collectedContext, {
+        reason: 'tile_collected_continue_exploration'
       });
     })
   ),
@@ -75,13 +105,22 @@ export const collectingState = state(
   transition(MOVEMENT_EVENT_TYPES.SHIP_REACHED_BASE, BOT_STATES.EVALUATING,
     guard((context) => context.currentAction === 'returning_to_base'),
     reduce((context, event) => {
-      fsmLogger.info("🏠 [Collecting] Ship reached base after collection, starting evaluation", { 
+      fsmLogger.info("🏠 [Collecting] Ship reached base after collection", { 
         botId: context.entityId 
       });
       
+      // Déposer automatiquement toutes les ressources transportées
+      const depositedContext = shipDepositResourcesAtBase(context);
+      
+      fsmLogger.resources(`💰 [Collecting] Resources deposited at base - Total Score: ${JSON.stringify(depositedContext.score?.resources)}`, {
+        botId: context.entityId,
+        deposited: depositedContext.depositedResources
+      });
+      
       // Retour à EVALUATING qui décidera de la suite (IDLE_AT_BASE ou nouveau cycle)
-      return contextReducers.state.prepareEvaluating(context, {
-        reason: 'returned_to_base_after_collection'
+      return contextReducers.state.prepareEvaluating(depositedContext, {
+        reason: 'returned_to_base_after_collection',
+        lastStateChange: 'returned_to_base_after_collection'
       });
     })
   ),
@@ -94,6 +133,38 @@ export const collectingState = state(
         botId: context.entityId 
       });
       return contextReducers.movement.updateMovementProgress(context, event);
+    })
+  ),
+
+  // SHIP_COLLECTION_COMPLETED - Collecte terminée, décision automatique selon capacité
+  transition(MOVEMENT_EVENT_TYPES.SHIP_COLLECTION_COMPLETED, BOT_STATES.COLLECTING_RETURNING_TO_BASE,
+    guard((context) => shipShouldReturnToBase(context)),
+    reduce((context, event) => {
+      fsmLogger.info("📦 [Collecting] Collection completed, ship full - returning to base", { 
+        botId: context.entityId,
+        capacity: context.vehicle?.resources
+      });
+      
+      // Préparer le retour automatique à la base
+      return contextReducers.state.prepareReturningToBase(context, {
+        reason: 'collection_completed_ship_full'
+      });
+    })
+  ),
+  
+  // SHIP_COLLECTION_COMPLETED - Collecte terminée, capacité disponible - continuer
+  transition(MOVEMENT_EVENT_TYPES.SHIP_COLLECTION_COMPLETED, BOT_STATES.EVALUATING,
+    guard((context) => !shipShouldReturnToBase(context)),
+    reduce((context, event) => {
+      fsmLogger.info("📦 [Collecting] Collection completed, capacity available - continuing exploration", { 
+        botId: context.entityId,
+        capacity: context.vehicle?.resources
+      });
+      
+      // Retourner à l'évaluation pour décider de la suite
+      return contextReducers.state.prepareEvaluating(context, {
+        reason: 'collection_completed_continue'
+      });
     })
   ),
 
@@ -134,8 +205,8 @@ export const collectingState = state(
     })
   ),
 
-  // INVENTORY_FULL - Inventaire plein pendant la collecte (CORRIGÉ)
-  transition(RESOURCE_EVENT_TYPES.INVENTORY_FULL, BOT_STATES.EVALUATING,
+  // INVENTORY_FULL - Inventaire plein pendant la collecte → Retour à la base automatique
+  transition(RESOURCE_EVENT_TYPES.INVENTORY_FULL, BOT_STATES.COLLECTING_RETURNING_TO_BASE,
     guard((context, event) => {
       const vehicle = context.vehicle;
       if (!vehicle || !vehicle.resources) return false;
@@ -143,16 +214,18 @@ export const collectingState = state(
       const totalResources = Object.values(vehicle.resources).reduce((sum, val) => sum + val, 0);
       const maxCapacity = vehicle.maxCapacity || 10;
       
-      return totalResources >= maxCapacity * 0.9; // 90% plein
+      return totalResources >= maxCapacity * 0.8; // 80% plein (ajusté pour être cohérent avec shipShouldReturnToBase)
     }),
     reduce((context, event) => {
-      fsmLogger.info("📦 [Collecting] Inventory full, returning to evaluation", { 
+      fsmLogger.info("📦 [Collecting] Inventory full, automatically returning to base", { 
+        totalResources: Object.values(context.vehicle?.resources || {}).reduce((sum, val) => sum + val, 0),
+        maxCapacity: context.vehicle?.maxCapacity || 10,
         botId: context.entityId 
       });
       
-      // Laisse EVALUATING décider (continuer collecte vs retour base)
-      return contextReducers.state.prepareEvaluating(context, {
-        reason: 'inventory_full'
+      // Retour automatique à la base quand l'inventaire est plein
+      return contextReducers.state.prepareReturningToBase(context, {
+        reason: 'inventory_full_auto_return'
       });
     })
   ),

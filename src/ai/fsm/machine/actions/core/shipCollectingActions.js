@@ -467,6 +467,45 @@ export const shipDepositResources = (context, event) => {
 };
 
 /**
+ * Dépose toutes les ressources du ship à la base avec logging spécialisé
+ */
+export const shipDepositResourcesAtBase = (context) => {
+  const vehicle = context.vehicle;
+  if (!vehicle) {
+    return { ...context, error: 'Cannot deposit at base: no ship found' };
+  }
+
+  const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
+  const totalToDeposit = Object.values(currentResources).reduce((sum, val) => sum + val, 0);
+  
+  if (totalToDeposit === 0) {
+    fsmLogger.resources(`[${context.entityId}] No resources to deposit at base`);
+    return {
+      ...context,
+      lastAction: 'shipDepositResourcesAtBase_no_resources'
+    };
+  }
+
+  // Utiliser l'action générale de dépôt
+  const depositResult = shipDepositResources(context, { resourceType: 'all' });
+  
+  // Ajouter des métadonnées spécifiques au dépôt à la base
+  return {
+    ...depositResult,
+    timestamps: {
+      ...depositResult.timestamps,
+      lastBaseDeposit: Date.now()
+    },
+    stats: {
+      ...context.stats,
+      baseDeposits: (context.stats?.baseDeposits || 0) + 1,
+      totalResourcesDeposited: (context.stats?.totalResourcesDeposited || 0) + totalToDeposit
+    },
+    lastAction: 'shipDepositResourcesAtBase_success'
+  };
+};
+
+/**
  * Met à jour l'inventaire du ship
  */
 export const shipUpdateInventory = (context, event) => {
@@ -643,6 +682,7 @@ export const shipCollectingActions = {
   selectBestTileForCollection,
   resetExplorationCycleStats,
   shipShouldReturnToBase,
+  shipDepositResourcesAtBase,
   shipReturnToBase,
   shipReturnToBase,
   shipReturnToBase
