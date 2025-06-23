@@ -3,7 +3,7 @@
  * ======================================== */
 
 // React imports
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useEffect } from "react";
 
 // Three.js imports
 import { GridHelper } from "three";
@@ -50,19 +50,13 @@ const Scene = () => {
   
   // Initialization state
   const {
-    playersInitialized,
-    botsInitialized,
     tilesInitialized,
-    markPlayersAsInitialized,
-    markBotsAsInitialized,
     markTilesAsInitialized
   } = useGameStore();
   
   /* ========================================
    * CONFIGURATION & CONSTANTS
    * ======================================== */
-   // Generate bot indices dynamically based on activeBots from FSMStore
-  const botIndices = activeBots.map((_, index) => index);
 
   // Synchroniser les tuiles de départ avec les bots FSM actifs
   useEffect(() => {

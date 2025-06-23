@@ -1,0 +1,27 @@
+{
+  "cleanup_date": "2025-06-23",
+  "phase": "Phase 4 - Nettoyage Progressif",
+  "title": "Journal de Nettoyage du Code Mort",
+  
+  "execution_log": {
+    "etape_1_TRES_SUR": {
+      "start_time": "2025-06-23",
+      "status": "EN_COURS",
+      "description": "Nettoyage du code avec risque minimal",
+      "files_to_modify": [
+        "src/components/Scene.jsx",
+        "src/ai/fsm/contexts/FSMContext.jsx", 
+        "src/ai/fsm/contexts/FSMSyncContext.jsx",
+        "src/App.jsx"
+      ],
+      "actions_planned": [
+        "Supprimer imports React non utilisés (useRef, useMemo)",
+        "Supprimer variables store non utilisées", 
+        "Supprimer exports jamais importés",
+        "Supprimer code commenté obsolète VehicleSelector"
+      ],
+      "actions_completed": [],
+      "validation_status": "pending"
+    }
+  }
+}

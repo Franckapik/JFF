@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
 import "./styles/App.css";
-// import VehicleSelector from "./components/HUD/VehicleSelector"; // Commenté car non utile pour l'instant
 import Clock from "./components/HUD/Clock";
 import TileStoreMonitor from "./components/HUD/TileStoreMonitor";
 
@@ -59,13 +58,6 @@ const App = () => {
         </div>
 
           <>
-            {/* Selector container for VehicleSelector - retiré car non utile pour l'instant */}
-            {/* 
-            <div className="selector-container">
-              <VehicleSelector />
-            </div>
-            */}
-
             {/* Main content area */}
             <div className="main-content">
               <div className="canvas-container">
