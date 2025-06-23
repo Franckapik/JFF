@@ -34,9 +34,10 @@ import { useEffect, useRef, useCallback, useMemo } from 'react';
 import { MOVEMENT_EVENT_TYPES, movementEvents } from '../machine/events/movementEvents.js';
 import { POSITION_TRACKER_CONFIG } from '../machine/constants/constants.js';
 import { useTileStore } from '../../../stores/useTileStore/index.js';
-import { useEventDebounce } from './useEventDebounce.js';
-import { useFSMSync } from '../contexts/FSMSyncContext.jsx';
+import { useFSMStore } from '../../../stores/useFSMStore/index.js';
+import { gameEvents, movementEvents } from '../machine/events/index.js';
 import fsmLogger from '../../../logger/fsmLogger.js';
+import { isTileAvailableForCollection } from '../../../utils/tileUtils.js';
 
 /**
  * Hook spécialisé pour le tracking des vaisseaux
@@ -188,7 +189,7 @@ export const useFSMShipTracker = (context, send, botId) => {
                 
                 let collectedResources = { food: 0, debris: 0, special: 0 };
                 
-                if (tileData && tileData.hasResources && !tileData.collected) {
+                if (tileData && isTileAvailableForCollection(tileData)) {
                   // Utiliser les ressources connues depuis la mémoire FSM
                   collectedResources = {
                     food: tileData.resources?.food || 0,

@@ -20,6 +20,7 @@ import { droneExploringActions } from '../actions/core/droneExploringActions.js'
 import { fuelActions } from '../actions/core/fuelActions.js';
 import { resourceActions } from '../actions/core/resourcesActions.js';
 import fsmLogger from '../../../../logger/fsmLogger.js'; // Ajout de l'import manquant
+import { isTileAvailableForCollection, isTileCompletelyCollected } from '../../../../utils/tileUtils.js';
 
 // ============================================================================
 // RÉDUCTEURS D'ÉTAT - Mises à jour du contexte lors des transitions d'état
@@ -97,7 +98,7 @@ export const stateTransitionReducers = {
   prepareCollecting: (context, event) => {
     // Utiliser la nouvelle structure mémoire unifiée pour trouver des tuiles collectibles
     const collectibleTiles = Array.from(context.memory.knownTiles.values()).filter(
-      tile => tile.explored && tile.hasResources && !tile.collected
+      isTileAvailableForCollection
     );
     const targetTile = event.tileCoord ? context.memory.knownTiles.get(event.tileCoord) : collectibleTiles[0];
     
@@ -359,13 +360,13 @@ export const resourceReducers = {
     const tileData = {
       coord,
       explored: true,
-      collected: false,
       exploredAt: Date.now(),
       hasResources: event.resourcesFound.food > 0 || event.resourcesFound.debris > 0 || event.resourcesFound.special > 0,
       resources: { ...event.resourcesFound },
+      originalResources: { ...event.resourcesFound },
+      resourcePercentage: (event.resourcesFound.food > 0 || event.resourcesFound.debris > 0 || event.resourcesFound.special > 0) ? 100 : 0,
       position: event.position, // ⭐ Inclure la position 3D de la tuile
-      collectedAt: null,
-      collectedBy: null
+      lastCollectedTimestamp: null
     };
     
     const newKnownTiles = new Map(context.memory.knownTiles);
@@ -681,13 +682,13 @@ export const memoryReducers = {
     const tileData = {
       coord,
       explored: true,
-      collected: false,
       exploredAt: Date.now(),
       hasResources: event.resourcesFound.food > 0 || event.resourcesFound.debris > 0 || event.resourcesFound.special > 0,
       resources: { ...event.resourcesFound },
+      originalResources: { ...event.resourcesFound },
+      resourcePercentage: (event.resourcesFound.food > 0 || event.resourcesFound.debris > 0 || event.resourcesFound.special > 0) ? 100 : 0,
       position: event.position, // ⭐ Inclure la position 3D de la tuile
-      collectedAt: null,
-      collectedBy: null
+      lastCollectedTimestamp: null
     };
     
     const newKnownTiles = new Map(context.memory.knownTiles);
@@ -722,14 +723,16 @@ export const memoryReducers = {
     const coord = typeof event.tileCoord === 'string' ? event.tileCoord : `${event.tileCoord.x},${event.tileCoord.z}`;
     const existingTile = context.memory.knownTiles.get(coord);
     
-    if (!existingTile || !existingTile.explored || existingTile.collected) {
-      return context; // Tuile inexistante, non explorée ou déjà collectée
+    if (!existingTile || !existingTile.explored || isTileCompletelyCollected(existingTile)) {
+      return context; // Tuile inexistante, non explorée ou déjà complètement collectée
     }
     
+    // Marquer la tuile comme complètement collectée (0% de ressources)
     const updatedTile = {
       ...existingTile,
-      collected: true,
-      collectedAt: Date.now(),
+      resourcePercentage: 0,
+      resources: { food: 0, debris: 0, special: 0 },
+      lastCollectedTimestamp: Date.now(),
       collectedBy: event.collectedBy || 'ship'
     };
     
@@ -771,7 +774,7 @@ export const memoryUtils = {
    */
   getCollectibleTiles: (context) => {
     return Array.from(context.memory.knownTiles.values()).filter(
-      tile => tile.explored && tile.hasResources && !tile.collected
+      isTileAvailableForCollection
     );
   },
 
@@ -795,7 +798,7 @@ export const memoryUtils = {
   isTileCollectible: (context, coord) => {
     const coordStr = typeof coord === 'string' ? coord : `${coord.x},${coord.z}`;
     const tile = context.memory.knownTiles.get(coordStr);
-    return tile && tile.explored && tile.hasResources && !tile.collected;
+    return tile && isTileAvailableForCollection(tile);
   },
 
   /**

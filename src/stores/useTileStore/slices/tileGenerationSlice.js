@@ -160,8 +160,6 @@ const createTileGenerationSlice = (set, get) => ({
             position: { x, y: tileConstants.defaultY, z },
             walkable: true,
             explored: false,
-            collected: false,
-            partiallyCollected: false,
             type: "resource",
             neighbors,
             color: generateRandomColor(),

@@ -4,6 +4,7 @@ import { useTileStore } from "../stores/useTileStore";
 import { Html } from "@react-three/drei";
 import { FSMStateIndicator } from "./FSM";
 import fsmLogger from "../logger/fsmLogger";
+import { isTileCompletelyCollected, isTilePartiallyCollected } from "../utils/tileUtils";
 
 /**
  * =================================================================
@@ -90,13 +91,15 @@ const Tile = React.memo(({
    * ÉTATS DÉRIVÉS
    * -----------------------------------------------------------------
    */
-  // Une tuile est partiellement collectée si le pourcentage est entre 1 et 99%
-  const isPartiallyCollected = resourcePercentage > 0 && resourcePercentage < 100;
   
-  // Une tuile est complètement collectée si elle a été visitée et le pourcentage est à 0%
-  const isCompletelyCollected = useTileStore((state) => 
-    state.tiles[coord] ? state.tiles[coord].collected === true : false
-  );
+  // Récupérer la tuile depuis le store pour utiliser les utilitaires
+  const tile = useTileStore((state) => state.tiles[coord]);
+  
+  // Une tuile est partiellement collectée si le pourcentage est entre 1 et 99%
+  const isPartiallyCollected = tile ? isTilePartiallyCollected(tile) : false;
+  
+  // Une tuile est complètement collectée si le pourcentage est à 0%
+  const isCompletelyCollected = tile ? isTileCompletelyCollected(tile) : false;
   
   // Afficher le pourcentage seulement si la tuile a été collectée (pour voir 0%)
   const shouldShowPercentage = isCompletelyCollected && resourcePercentage !== undefined;
@@ -113,7 +116,7 @@ const Tile = React.memo(({
         willShowRedCircle: isCompletelyCollected,
         tileExists: !!useTileStore.getState().tiles[coord],
         tileResources: useTileStore.getState().tiles[coord]?.resources,
-        tileCollected: useTileStore.getState().tiles[coord]?.collected
+        tileCollected: tile?.resourcePercentage
       });
     }
   }, [resourcePercentage, coord, isPartiallyCollected, isCompletelyCollected, shouldShowPercentage]);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTileStore } from '../../stores/useTileStore';
+import { isTileCompletelyCollected, getTileCollectionStateLabel } from '../../utils/tileUtils';
 
 /**
  * ===================================================================
@@ -45,7 +46,7 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
     return {
       total: allTiles.length,
       explored: allTiles.filter(tile => tile.explored === true).length,
-      collected: allTiles.filter(tile => tile.collected === true).length,
+      collected: allTiles.filter(tile => isTileCompletelyCollected(tile)).length,
       withResources: allTiles.filter(tile => tile.resourcePercentage > 0).length,
       depart: allTiles.filter(tile => tile.type === 'depart').length,
     };
@@ -183,8 +184,8 @@ const TileStoreMonitor = ({ isVisible = true, position = 'top-right' }) => {
             <div style={{ color: selectedTile.explored ? '#00ff88' : '#ccc' }}>
               Explorée: {selectedTile.explored ? '✅ OUI' : '❌ NON'}
             </div>
-            <div style={{ color: selectedTile.collected ? '#ff6b6b' : '#ccc' }}>
-              Collectée: {selectedTile.collected ? '✅ OUI' : '❌ NON'}
+            <div style={{ color: isTileCompletelyCollected(selectedTile) ? '#ff6b6b' : '#ccc' }}>
+              {getTileCollectionStateLabel(selectedTile)}
             </div>
             <div>Ressources: {selectedTile.resourcePercentage || 0}%</div>
             {selectedTile.lastCollectedTimestamp && (

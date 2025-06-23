@@ -28,7 +28,7 @@
         deductedResources: resourcesToCollect,
         remainingResources: updatedTile?.resources,
         resourcePercentage: updatedTile?.resourcePercentage,
-        isCollected: updatedTile?.collected
+        isCompletelyCollected: isTileCompletelyCollected(useTileStore.getState().tiles[coord]),
       });
     } else {
       fsmLogger.resources(`[${context.entityId}] ⚠️ DEBUG: TileStore sync failed - tile not found in store`, {
@@ -70,6 +70,7 @@ import fsmLogger from '../../../../../logger/fsmLogger.js';
 import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES, RESOURCE_CONSTANTS } from '../../constants/constants.js';
 import { EXPLORATION_CYCLE_CONFIG } from '../../constants/constants.js';
 import { useTileStore } from '../../../../../stores/useTileStore/index.js';
+import { isTileCompletelyCollected, isTileAvailableForCollection } from '../../../../../utils/tileUtils.js';
 
 // ============================================================================
 // UTILITAIRES INTERNES
@@ -175,9 +176,8 @@ export const shipCollectsFromTile = (context, event) => {
       tileExists: !!tileData,
       tileData: tileData ? {
         explored: tileData.explored,
-        collected: tileData.collected,
-        collectedAt: tileData.collectedAt,
-        collectedBy: tileData.collectedBy,
+        resourcePercentage: tileData.resourcePercentage,
+        isCompletelyCollected: isTileCompletelyCollected(tileData),
         hasResources: tileData.hasResources,
         resources: tileData.resources,
         totalResourcesCollected: tileData.totalResourcesCollected,
@@ -190,7 +190,7 @@ export const shipCollectsFromTile = (context, event) => {
     fsmLogger.resources(`[${context.entityId}] Attempting collection from tile ${coord}`, {
       tileExists: !!tileData,
       explored: tileData?.explored,
-      alreadyCollected: tileData?.collected,
+      isCompletelyCollected: tileData ? isTileCompletelyCollected(tileData) : false,
       hasResources: tileData?.hasResources,
       resources: tileData?.resources
     });
@@ -207,14 +207,14 @@ export const shipCollectsFromTile = (context, event) => {
     };
   }
   
-  if (tileData.collected) {
-    fsmLogger.resources(`[${context.entityId}] ❌ FAILED: Tile already collected`, {
-      collected: tileData.collected,
-      collectedAt: tileData.collectedAt
+  if (tileData && isTileCompletelyCollected(tileData)) {
+    fsmLogger.resources(`[${context.entityId}] ❌ FAILED: Tile already completely collected`, {
+      resourcePercentage: tileData.resourcePercentage,
+      isCompletelyCollected: true
     });
     return { 
       ...context, 
-      error: 'Tile already collected',
+      error: 'Tile already completely collected',
       lastAction: 'shipCollectsFromTile_failed'
     };
   }
@@ -327,7 +327,7 @@ export const shipCollectsFromTile = (context, event) => {
         type, 
         { 
           before: currentResources[type] || 0, 
-          collected: amount, 
+          amount: amount, 
           after: updatedResources[type] 
         }
       ])
@@ -343,13 +343,18 @@ export const shipCollectsFromTile = (context, event) => {
   const totalCollected = Object.values(resourcesToCollect).reduce((sum, val) => sum + val, 0);
   const isFullyCollected = !hasRemainingResources;
   
-  // Mettre à jour la tuile dans la mémoire FSM selon le type de collecte
+  // Calculer le nouveau pourcentage de ressources restantes pour la FSM
+  const originalResources = tileData.originalResources || tileData.resources;
+  const totalOriginal = Object.values(originalResources).reduce((sum, val) => sum + val, 0);
+  const totalRemaining = Object.values(remainingResources).reduce((sum, val) => sum + val, 0);
+  const newResourcePercentage = totalOriginal > 0 ? Math.round((totalRemaining / totalOriginal) * 100) : 0;
+  
+  // Mettre à jour la tuile dans la mémoire FSM selon le type de collected
   const updatedTileData = {
     ...tileData,
     resources: remainingResources, // Les ressources restantes après collecte
-    collected: isFullyCollected, // Seulement true si tout a été collecté
-    collectedAt: isFullyCollected ? Date.now() : tileData.collectedAt,
-    collectedBy: isFullyCollected ? vehicle.id : tileData.collectedBy,
+    resourcePercentage: newResourcePercentage, // Pourcentage de ressources restantes
+    originalResources: originalResources, // Conserver les ressources originales pour référence
     lastCollectedTimestamp: Date.now(),
     totalResourcesCollected: (tileData.totalResourcesCollected || 0) + totalCollected,
     hasResources: hasRemainingResources, // False seulement si plus rien sur la tuile
@@ -357,7 +362,7 @@ export const shipCollectsFromTile = (context, event) => {
     lastPartialCollection: hasRemainingResources ? {
       timestamp: Date.now(),
       vehicleId: vehicle.id,
-      collected: resourcesToCollect,
+      resourcesCollected: resourcesToCollect,
       remaining: remainingResources
     } : tileData.lastPartialCollection
   };
@@ -367,16 +372,12 @@ export const shipCollectsFromTile = (context, event) => {
   fsmLogger.resources(`[${context.entityId}] 🔍 PHASE3-TILE-AFTER-FSM: Tile state after FSM update`, {
     coord,
     previousTileData: {
-      collected: tileData.collected,
-      collectedAt: tileData.collectedAt,
-      collectedBy: tileData.collectedBy,
+      resourcePercentage: tileData.resourcePercentage,
       resources: tileData.resources,
       totalResourcesCollected: tileData.totalResourcesCollected
     },
     updatedTileData: {
-      collected: updatedTileData.collected,
-      collectedAt: updatedTileData.collectedAt,
-      collectedBy: updatedTileData.collectedBy,
+      resourcePercentage: updatedTileData.resourcePercentage,
       resources: updatedTileData.resources,
       totalResourcesCollected: updatedTileData.totalResourcesCollected
     },
@@ -384,9 +385,9 @@ export const shipCollectsFromTile = (context, event) => {
     knownTilesSize: knownTiles.size
   });
   
-  fsmLogger.resources(`[${context.entityId}] Tile ${coord} marked as collected in FSM memory`, {
-    collected: updatedTileData.collected,
-    collectedAt: updatedTileData.collectedAt,
+  fsmLogger.resources(`[${context.entityId}] Tile ${coord} updated in FSM memory`, {
+    resourcePercentage: updatedTileData.resourcePercentage,
+    isCompletelyCollected: isTileCompletelyCollected(updatedTileData),
     totalCollected: updatedTileData.totalResourcesCollected
   });
   
@@ -403,7 +404,7 @@ export const shipCollectsFromTile = (context, event) => {
       tileStoreData: tileStoreStateBefore ? {
         resources: tileStoreStateBefore.resources,
         resourcePercentage: tileStoreStateBefore.resourcePercentage,
-        collected: tileStoreStateBefore.collected,
+        isCompletelyCollected: isTileCompletelyCollected(tileStoreStateBefore),
         explored: tileStoreStateBefore.explored
       } : null,
       resourcesToDeduct: { ...resourcesToCollect }
@@ -419,12 +420,12 @@ export const shipCollectsFromTile = (context, event) => {
       tileStoreStateBefore: tileStoreStateBefore ? {
         resources: tileStoreStateBefore.resources,
         resourcePercentage: tileStoreStateBefore.resourcePercentage,
-        collected: tileStoreStateBefore.collected
+        isCompletelyCollected: isTileCompletelyCollected(tileStoreStateBefore)
       } : null,
       tileStoreStateAfter: tileStoreStateAfter ? {
         resources: tileStoreStateAfter.resources,
         resourcePercentage: tileStoreStateAfter.resourcePercentage,
-        collected: tileStoreStateAfter.collected
+        isCompletelyCollected: isTileCompletelyCollected(tileStoreStateAfter)
       } : null,
       resourcesDeducted: { ...resourcesToCollect }
     });
@@ -471,8 +472,8 @@ export const shipCollectsFromTile = (context, event) => {
     vehicleIdAfter: vehicle.id,
     resourcesBefore: context.vehicle?.resources,
     resourcesAfter: updatedResources,
-    tileCollectedInFSM: updatedTileData.collected,
-    tileCollectedAt: updatedTileData.collectedAt,
+    tileResourcePercentage: updatedTileData.resourcePercentage,
+    tileCompletelyCollected: isTileCompletelyCollected(updatedTileData),
     statsUpdated: {
       tilesCollectedBefore: currentStats.tilesCollected,
       tilesCollectedAfter: newStats.tilesCollected
@@ -928,7 +929,7 @@ export const selectBestTileForCollection = (context, event) => {
   const collectibleTiles = allKnownTiles
     .filter(tile => {
       // Conditions de base : explorée, a des ressources, pas complètement collectée
-      if (!tile.explored || !tile.hasResources || tile.collected) {
+      if (!isTileAvailableForCollection(tile)) {
         return false;
       }
       
@@ -957,7 +958,8 @@ export const selectBestTileForCollection = (context, event) => {
       coord: t.coord,
       explored: t.explored,
       hasResources: t.hasResources,
-      collected: t.collected,
+      resourcePercentage: t.resourcePercentage,
+      isCompletelyCollected: isTileCompletelyCollected(t),
       lastCollectedTimestamp: t.lastCollectedTimestamp,
       timeSinceLastCollection: t.lastCollectedTimestamp ? Date.now() - t.lastCollectedTimestamp : null,
       excludedByCapacity: (isShipFull && lastCollectedTile === t.coord),

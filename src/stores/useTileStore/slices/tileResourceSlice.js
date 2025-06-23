@@ -16,12 +16,13 @@
  * - special : ressources rares et précieuses
  * 
  * État géré :
- * - collected : statut de collecte de chaque tuile
+ * - resourcePercentage : pourcentage de ressources restantes (0-100%)
  * - resourcePercentage : pourcentage de ressources restantes (0-100%)
  * - originalResources : copie des ressources initiales pour référence
  */
 
 import fsmLogger from '../../../logger/fsmLogger.js';
+import { isTileCompletelyCollected } from '../../../utils/tileUtils.js';
 
 // =========================================================================
 // SLICE PRINCIPAL
@@ -118,7 +119,6 @@ const createTileResourceSlice = (set, get) => {
           ...updatedTiles[coord],
           resources: remainingResources,
           originalResources: originalResources,  // Stocker les ressources originales pour référence
-          collected: isEmpty, // Marquer comme complètement collectée seulement si vide
           resourcePercentage: percentageRemaining // Pourcentage de ressources restantes (0-100)
         };
         return { tiles: updatedTiles };
@@ -155,7 +155,6 @@ const createTileResourceSlice = (set, get) => {
         updatedTiles[coord] = {
           ...updatedTiles[coord],
           resources: { food: 0, debris: 0, special: 0 },
-          collected: true,
           resourcePercentage: 0
         };
         return { tiles: updatedTiles };
@@ -207,7 +206,7 @@ const createTileResourceSlice = (set, get) => {
           const tile = tiles[tileCoord];
           
           // Vérifie si la tuile contient des ressources non collectées
-          if (tile && !tile.collected && tile.resources && 
+          if (tile && !isTileCompletelyCollected(tile) && tile.resources && 
               (tile.resources.food > 0 || tile.resources.debris > 0 || tile.resources.special > 0)) {
             resources.push({
               coord: tileCoord,

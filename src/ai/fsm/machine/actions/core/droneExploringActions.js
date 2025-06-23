@@ -169,13 +169,13 @@ export const droneExploresTile = (context, event) => {
   const tileData = {
     coord,
     explored: true,
-    collected: false,
     exploredAt: Date.now(),
     hasResources: Boolean(resources && Object.values(resources).some(val => val > 0)),
     resources: resources || null,
     position: position, // ⭐ Inclure la position 3D de la tuile
-    collectedAt: null,
-    collectedBy: null
+    originalResources: resources ? { ...resources } : null, // Conserver les ressources originales
+    resourcePercentage: resources && Object.values(resources).some(val => val > 0) ? 100 : 0, // 100% si ressources, 0% sinon
+    lastCollectedTimestamp: null
   };
   
   // Ajouter la tuile à la mémoire

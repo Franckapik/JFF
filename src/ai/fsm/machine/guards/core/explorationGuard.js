@@ -18,6 +18,7 @@
 import { EXPLORATION_CONSTANTS, MOVEMENT_CONSTANTS } from '../../constants/constants.js';
 import { EXPLORATION_CYCLE_CONFIG } from '../../constants/constants.js';
 import fsmLogger from '../../../../../logger/fsmLogger.js';
+import { isTileAvailableForCollection } from '../../../../../utils/tileUtils.js';
 
 // ============================================================================
 // UTILITAIRES EXPLORATION
@@ -151,7 +152,7 @@ const needsExploration = (context, event) => {
   if (exploredCount >= EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION) {
     // Vérifier s'il y a des tuiles collectibles avant de continuer l'exploration
     const collectibleTiles = Array.from(context.memory.knownTiles.values())
-      .filter(tile => tile.explored && tile.hasResources && !tile.collected);
+      .filter(isTileAvailableForCollection);
     return collectibleTiles.length === 0; // Continue exploration seulement si rien à collecter
   }
   
@@ -238,7 +239,7 @@ const hasExploredEnoughTiles = (context, event) => {
 const hasBestTileForCollection = (context, event) => {
   const knownTiles = context.memory?.knownTiles || new Map();
   const collectibleTiles = Array.from(knownTiles.values())
-    .filter(tile => tile.explored && tile.hasResources && !tile.collected);
+    .filter(isTileAvailableForCollection);
   const result = collectibleTiles.length > 0;
   
   fsmLogger.info(`🎯 [hasBestTileForCollection] Guard check`, {
@@ -262,7 +263,7 @@ const shouldTransitionToCollection = (context, event) => {
   const exploredCount = context.memory?.stats?.tilesExplored || 0;
   const knownTiles = context.memory?.knownTiles || new Map();
   const collectibleTiles = Array.from(knownTiles.values())
-    .filter(tile => tile.explored && tile.hasResources && !tile.collected);
+    .filter(isTileAvailableForCollection);
   
   const required = EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION;
   const hasEnoughExplored = exploredCount >= required;

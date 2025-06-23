@@ -1,6 +1,7 @@
 import React from 'react';
 import ResourceBar from './ResourceBar';
 import ShipResources from './ShipResources';
+import { isTileCompletelyCollected, getTileCollectionStateLabel } from '../../../utils/tileUtils';
 
 /**
  * Composant de résumé des ressources découvertes
@@ -174,8 +175,8 @@ const KnownTilesTable = ({ botMemory, botVehicle, calculateDistance }) => {
                   {hasResources && <span className="resource-indicator">💎</span>}
                 </td>
                 <td>
-                  <span className={`debugger-tile-status ${tile.collected ? 'collected' : tile.explored ? 'explored' : 'unknown'}`}>
-                    {tile.collected ? '✅ Collecté' : tile.explored ? '🔍 Exploré' : '❓ Inconnu'}
+                  <span className={`debugger-tile-status ${isTileCompletelyCollected(tile) ? 'collected' : tile.explored ? 'explored' : 'unknown'}`}>
+                    {isTileCompletelyCollected(tile) ? '✅ Collecté' : tile.explored ? '🔍 Exploré' : '❓ Inconnu'}
                   </span>
                 </td>
                 <td>{calculateDistance(botVehicle?.coord, tile.coord, true, true)}</td>
@@ -238,8 +239,8 @@ const ExploredTilesTable = ({ botMemory, botVehicle, calculateDistance }) => {
               </td>
               <td>{tile.exploredAt ? new Date(tile.exploredAt).toLocaleTimeString() : '-'}</td>
               <td>
-                <span className={`debugger-collected-status ${tile.collected ? 'collected' : 'not-collected'}`}>
-                  {tile.collected ? '✅ Oui' : '⏳ Non'}
+                <span className={`debugger-collected-status ${isTileCompletelyCollected(tile) ? 'collected' : 'not-collected'}`}>
+                  {isTileCompletelyCollected(tile) ? '✅ Oui' : '⏳ Non'}
                 </span>
               </td>
             </tr>
