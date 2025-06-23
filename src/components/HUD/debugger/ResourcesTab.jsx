@@ -1,7 +1,7 @@
 import React from 'react';
 import ResourceBar from './ResourceBar';
 import ShipResources from './ShipResources';
-import { isTileCompletelyCollected, getTileCollectionStateLabel } from '../../../utils/tileUtils';
+import { isTileCompletelyCollected, getTileCollectionStateLabel } from '../../../stores/useTileStore/slices/tileResourceSlice';
 
 /**
  * Composant de résumé des ressources découvertes

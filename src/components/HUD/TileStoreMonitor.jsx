@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTileStore } from '../../stores/useTileStore';
-import { isTileCompletelyCollected, getTileCollectionStateLabel } from '../../utils/tileUtils';
+import { isTileCompletelyCollected, getTileCollectionStateLabel } from '../../stores/useTileStore/slices/tileResourceSlice';
 
 /**
  * ===================================================================

@@ -4,7 +4,7 @@ import { useTileStore } from "../stores/useTileStore";
 import { Html } from "@react-three/drei";
 import { FSMStateIndicator } from "./FSM";
 import fsmLogger from "../logger/fsmLogger";
-import { isTileCompletelyCollected, isTilePartiallyCollected } from "../utils/tileUtils";
+import { isTileCompletelyCollected, isTilePartiallyCollected } from "../stores/useTileStore/slices/tileResourceSlice";
 
 /**
  * =================================================================

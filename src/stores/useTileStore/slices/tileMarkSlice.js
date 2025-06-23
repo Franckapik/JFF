@@ -24,7 +24,7 @@
 // SLICE PRINCIPAL
 // =========================================================================
 
-import { isTileCompletelyCollected } from '../../../utils/tileUtils.js';
+import { isTileCompletelyCollected } from './tileResourceSlice.js';
 
 const createTileMarkSlice = (set, get) => {
   return {

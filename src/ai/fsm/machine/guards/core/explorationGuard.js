@@ -18,7 +18,7 @@
 import { EXPLORATION_CONSTANTS, MOVEMENT_CONSTANTS } from '../../constants/constants.js';
 import { EXPLORATION_CYCLE_CONFIG } from '../../constants/constants.js';
 import fsmLogger from '../../../../../logger/fsmLogger.js';
-import { isTileAvailableForCollection } from '../../../../../utils/tileUtils.js';
+import { isTileAvailableForCollection } from '../../../../../stores/useTileStore/slices/tileResourceSlice.js';
 
 // ============================================================================
 // UTILITAIRES EXPLORATION

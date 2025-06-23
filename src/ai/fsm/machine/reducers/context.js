@@ -20,7 +20,7 @@ import { droneExploringActions } from '../actions/core/droneExploringActions.js'
 import { fuelActions } from '../actions/core/fuelActions.js';
 import { resourceActions } from '../actions/core/resourcesActions.js';
 import fsmLogger from '../../../../logger/fsmLogger.js'; // Ajout de l'import manquant
-import { isTileAvailableForCollection, isTileCompletelyCollected } from '../../../../utils/tileUtils.js';
+import { isTileAvailableForCollection, isTileCompletelyCollected } from '../../../../stores/useTileStore/slices/tileResourceSlice.js';
 
 // ============================================================================
 // RÉDUCTEURS D'ÉTAT - Mises à jour du contexte lors des transitions d'état

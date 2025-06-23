@@ -1,6 +1,6 @@
 import React from 'react';
 import ResourceBar from './ResourceBar';
-import { getTileCollectionStateLabel } from '../../../utils/tileUtils';
+import { getTileCollectionStateLabel } from '../../../stores/useTileStore/slices/tileResourceSlice';
 
 /**
  * Composant pour les informations de base d'une tuile
