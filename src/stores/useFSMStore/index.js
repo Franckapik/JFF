@@ -106,7 +106,8 @@ const useFSMStore = create(
         };
       });
     },
-     /**
+    
+    /**
      * Remplace complètement la liste des bots actifs
      * @param {string[]} botIds - Nouvelle liste d'IDs de bots
      */
@@ -118,7 +119,26 @@ const useFSMStore = create(
       
       set({ activeBots: [...botIds] });
     },
-
+    
+    /**
+     * Supprime un bot spécifique par son ID
+     * @param {string} botId - ID du bot à supprimer
+     */
+    removeBotById: (botId) => {
+      set(state => {
+        const newActiveBots = state.activeBots.filter(id => id !== botId);
+        
+        fsmLogger.info(`Bot supprimé par ID: ${botId}`, {
+          totalBots: newActiveBots.length,
+          botIds: newActiveBots
+        });
+        
+        return {
+          activeBots: newActiveBots
+        };
+      });
+    },
+    
     // ====================================================================
     // ACTIONS - SYSTÈME GLOBAL
     // ====================================================================

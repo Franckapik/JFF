@@ -6,34 +6,34 @@
   "execution_log": {
     "etape_1_TRES_SUR": {
       "start_time": "2025-06-23",
-      "status": "✅ TERMINÉE",
+      "status": "✅ TERMINÉ",
       "description": "Nettoyage du code avec risque minimal",
       "files_modified": [
-        "src/components/Scene.jsx - Imports React inutilisés supprimés",
-        "src/components/Scene.jsx - Variables store non utilisées supprimées", 
-        "src/components/Scene.jsx - Variable botIndices supprimée",
-        "src/App.jsx - Code commenté VehicleSelector supprimé"
+        "src/components/Scene.jsx",
+        "src/App.jsx"
       ],
       "actions_completed": [
-        "✅ Supprimé imports React (useRef, useMemo)",
-        "✅ Supprimé variables store (playersInitialized, botsInitialized, etc.)",
-        "✅ Supprimé variable botIndices non utilisée",
-        "✅ Supprimé code commenté VehicleSelector"
+        "✅ Supprimé imports React non utilisés (useRef, useMemo) dans Scene.jsx",
+        "✅ Supprimé variables store non utilisées (playersInitialized, botsInitialized, etc.) dans Scene.jsx", 
+        "✅ Supprimé variable botIndices non utilisée dans Scene.jsx",
+        "✅ Supprimé code commenté VehicleSelector dans App.jsx"
       ],
-      "validation_status": "✅ Compilation OK, build réussi"
+      "validation_status": "✅ SUCCÈS - Compilation et build OK",
+      "lines_removed": 8
     },
-
+    
     "etape_2_SUR": {
       "start_time": "2025-06-23",
       "status": "EN_COURS",
-      "description": "Nettoyage props et interfaces non utilisées",
+      "description": "Nettoyage des props et interfaces non utilisées",
       "files_to_modify": [
-        "src/App.jsx - Supprimer prop isTimerRunning",
-        "src/components/HUD/Clock.jsx - Vérifier interface"
+        "src/App.jsx",
+        "src/components/HUD/Clock.jsx"
       ],
       "actions_planned": [
-        "Supprimer prop isTimerRunning de App.jsx vers Clock",
-        "Vérifier que Clock fonctionne avec useGameStore uniquement"
+        "Supprimer prop isTimerRunning non utilisée dans Clock",
+        "Nettoyer interface du composant Clock",
+        "Simplifier état App.jsx"
       ],
       "actions_completed": [],
       "validation_status": "pending"
