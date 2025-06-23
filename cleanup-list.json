@@ -1,0 +1,154 @@
+{
+  "cleanup_date": "2025-06-23",
+  "description": "Liste complète des fichiers et dossiers à supprimer selon les recommandations d'investigation",
+  "deletion_categories": {
+    "stores_obsoletes": {
+      "description": "Stores anciens avec références cassées ou obsolètes",
+      "items": [
+        "src/stores/useBotStore/",
+        "src/stores/usePlayerStore/"
+      ],
+      "reason": "useBotStore: références vers oldfsm/ inexistant | usePlayerStore: remplacé par useFSMStore"
+    },
+    "backup_files": {
+      "description": "Fichiers de sauvegarde d'anciens états",
+      "items": [
+        "src/ai/fsm/machine/states/evaluatingState_NEW.js",
+        "src/ai/fsm/machine/states/evaluatingState_OLD.js"
+      ],
+      "reason": "Fichiers de backup non utilisés"
+    },
+    "empty_directories": {
+      "description": "Dossiers vides sans contenu",
+      "items": [
+        "src/debug/",
+        "src/components/Move/"
+      ],
+      "reason": "Dossiers vides"
+    },
+    "documentation_files": {
+      "description": "Tous les fichiers .md (demande utilisateur)",
+      "items": [
+        "README.md",
+        "HUD_SIMPLIFICATION_REPORT.md",
+        "RESOURCES_ZERO_ISSUE_RESOLVED.md",
+        "POSITION_TRANSMISSION_IMPLEMENTATION.md",
+        "CAPACITY_ISSUES_ACTION_PLAN.md",
+        "GUARDS_MIGRATION_REPORT.md",
+        "REAL_TILE_RESOURCES_IMPLEMENTATION.md",
+        "PLAN_IMPLEMENTATION_COLLECTE_RESSOURCES.md",
+        "MEMORY_SIMPLIFICATION_PLAN.md",
+        "MEMORY_SIMPLIFICATION_MIGRATION_COMPLETE.md",
+        "EVENTS_AUDIT_REPORT.md",
+        "FSM_LOGGER_RESOURCES_TYPE.md",
+        "PLAN_EXPLORATION_MULTI_TUILES.md",
+        "todo.md",
+        "FSM_DEBUGPANEL_INTEGRATION_COMPLETE.md",
+        "src/components/HUD/debugger/REFACTORING_SUMMARY.md",
+        "src/components/HUD/debugger/README.md",
+        "src/components/HUD/debugger/BOT_ONLY_MIGRATION_SUMMARY.md",
+        "src/ai/fsm/machine/states/README.md",
+        "src/ai/fsm/machine/events/README.md",
+        "src/ai/fsm/machine/reducers/README.md",
+        "src/ai/fsm/hooks/README.md",
+        "src/ai/fsm/hooks/CONSOLIDATION.md",
+        "src/ai/fsm/machine/guards/README.md"
+      ],
+      "reason": "Demande utilisateur: suppression de tous les .md"
+    },
+    "documentation_directories": {
+      "description": "Dossiers de documentation (demande utilisateur)",
+      "items": [
+        "doc/",
+        "docs/"
+      ],
+      "reason": "Demande utilisateur: suppression des dossiers doc(s)"
+    }
+  },
+  "files_to_keep": {
+    "description": "Fichiers non supprimés nécessitant refactoring ou organisationnels",
+    "refactoring_needed": [
+      "src/components/Messagerie/MessageSelector.jsx",
+      "src/components/Messagerie/MessageModal.jsx"
+    ],
+    "organizational_files": [
+      "src/animations/index.js",
+      "src/ai/fsm/index.js",
+      "src/ai/fsm/machine/actions/core/index.js",
+      "src/ai/fsm/machine/guards/core/index.js",
+      "src/ai/fsm/machine/events/index.js",
+      "src/ai/fsm/machine/reducers/index.js",
+      "src/ai/fsm/hooks/index.js",
+      "src/components/HUD/debugger/index.js"
+    ],
+    "utility_files": [
+      "src/animations/useFloatingAnimation.js",
+      "src/shared/constants/vehicleConstants.js",
+      "src/stores/useFSMStore/useFSMEventHistory.js"
+    ]
+  },
+  "deletion_summary": {
+    "total_files_to_delete": 30,
+    "total_directories_to_delete": 6,
+    "breakdown": {
+      "stores_obsoletes": 2,
+      "backup_files": 2,
+      "empty_directories": 2,
+      "documentation_files": 24,
+      "documentation_directories": 2
+    }
+  },
+  "deletion_commands": {
+    "description": "Commandes bash pour supprimer les éléments listés",
+    "commands": [
+      "# Suppression des stores obsolètes",
+      "rm -rf src/stores/useBotStore/",
+      "rm -rf src/stores/usePlayerStore/",
+      "",
+      "# Suppression des fichiers de backup",
+      "rm src/ai/fsm/machine/states/evaluatingState_NEW.js",
+      "rm src/ai/fsm/machine/states/evaluatingState_OLD.js",
+      "",
+      "# Suppression des dossiers vides",
+      "rm -rf src/debug/",
+      "rm -rf src/components/Move/",
+      "",
+      "# Suppression des dossiers de documentation",
+      "rm -rf doc/",
+      "rm -rf docs/",
+      "",
+      "# Suppression des fichiers .md",
+      "rm README.md",
+      "rm HUD_SIMPLIFICATION_REPORT.md",
+      "rm RESOURCES_ZERO_ISSUE_RESOLVED.md",
+      "rm POSITION_TRANSMISSION_IMPLEMENTATION.md",
+      "rm CAPACITY_ISSUES_ACTION_PLAN.md",
+      "rm GUARDS_MIGRATION_REPORT.md",
+      "rm REAL_TILE_RESOURCES_IMPLEMENTATION.md",
+      "rm PLAN_IMPLEMENTATION_COLLECTE_RESSOURCES.md",
+      "rm MEMORY_SIMPLIFICATION_PLAN.md",
+      "rm MEMORY_SIMPLIFICATION_MIGRATION_COMPLETE.md",
+      "rm EVENTS_AUDIT_REPORT.md",
+      "rm FSM_LOGGER_RESOURCES_TYPE.md",
+      "rm PLAN_EXPLORATION_MULTI_TUILES.md",
+      "rm todo.md",
+      "rm FSM_DEBUGPANEL_INTEGRATION_COMPLETE.md",
+      "rm src/components/HUD/debugger/REFACTORING_SUMMARY.md",
+      "rm src/components/HUD/debugger/README.md",
+      "rm src/components/HUD/debugger/BOT_ONLY_MIGRATION_SUMMARY.md",
+      "rm src/ai/fsm/machine/states/README.md",
+      "rm src/ai/fsm/machine/events/README.md",
+      "rm src/ai/fsm/machine/reducers/README.md",
+      "rm src/ai/fsm/hooks/README.md",
+      "rm src/ai/fsm/hooks/CONSOLIDATION.md",
+      "rm src/ai/fsm/machine/guards/README.md"
+    ]
+  },
+  "safety_notes": [
+    "⚠️  IMPORTANT: Vérifier que le projet compile après suppression des stores",
+    "⚠️  BACKUP: Faire une sauvegarde avant suppression massive",
+    "⚠️  GIT: Vérifier le statut git avant suppression",
+    "✅ SAFE: Les fichiers de messagerie sont conservés pour refactoring ultérieur",
+    "✅ SAFE: Les fichiers index.js organisationnels sont conservés"
+  ]
+}

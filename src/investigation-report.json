@@ -1,0 +1,141 @@
+{
+  "investigation_date": "2025-06-23",
+  "investigation_results": {
+    "stores_analysis": {
+      "usePlayerStore": {
+        "status": "ANCIEN SYSTÈME - OBSOLÈTE",
+        "description": "Store Zustand v2.0.0 avec architecture en slices spécialisés",
+        "evidence": [
+          "Commentaire dans le code : 'PLAYER STORE - Architecture refactorisée en slices spécialisés'",
+          "Version 2.0.0 indiquant une refactorisation",
+          "Import de 7 slices différents (player, vehicle, movement, fuel, resource, memory, message)",
+          "Aucune utilisation détectée dans le code actuel",
+          "Système complet de 20 fichiers non référencés"
+        ],
+        "conclusion": "PEUT ÊTRE SUPPRIMÉ - Ancien système remplacé par useFSMStore",
+        "risk_level": "LOW"
+      },
+      "useBotStore": {
+        "status": "ANCIEN SYSTÈME FSM - OBSOLÈTE",
+        "description": "Store avec dépendances vers 'oldfsm' (système FSM précédent)",
+        "evidence": [
+          "Import de '../../../oldfsm/constants/botConstants' dans botManagementSlice.js",
+          "Import de '../../../oldfsm/states/botStates' dans plusieurs fichiers",
+          "Import de '../../../oldfsm/actions/botActions' dans executionSlice.js",
+          "Le dossier 'src/oldfsm' n'existe plus dans le projet",
+          "Fichier BOT_ONLY_MIGRATION_SUMMARY.md mentionne la suppression de useBotStore",
+          "Aucune utilisation actuelle détectée"
+        ],
+        "conclusion": "DOIT ÊTRE SUPPRIMÉ - Références vers code inexistant (oldfsm)",
+        "risk_level": "NONE"
+      },
+      "useFSMStore": {
+        "status": "SYSTÈME ACTUEL - ACTIF",
+        "description": "Store moderne avec subscribeWithSelector middleware",
+        "evidence": [
+          "Utilisé dans graph.json (détecté par madge)",
+          "Architecture moderne avec middleware Zustand",
+          "Gestion centralisée des bots FSM",
+          "Documentation à jour et active"
+        ],
+        "conclusion": "SYSTÈME PRINCIPAL ACTUEL",
+        "risk_level": "CRITICAL"
+      }
+    },
+    "messaging_components_analysis": {
+      "MessageModal.jsx": {
+        "status": "COMPOSANT EN DÉVELOPPEMENT - NON INTÉGRÉ",
+        "description": "Modal de messagerie avec dépendances vers useTileStore",
+        "evidence": [
+          "Import useTileStore pour markMessageAsRead",
+          "Interface fonctionnelle complète avec tri des messages",
+          "Formatage timestamp et gestion état sélectionné",
+          "Styles CSS importés (../../styles/App.css)"
+        ],
+        "integration_status": "NON UTILISÉ",
+        "risk_level": "LOW"
+      },
+      "MessageSelector.jsx": {
+        "status": "COMPOSANT ORPHELIN - DÉPENDANCE OBSOLÈTE",
+        "description": "Sélecteur de messagerie avec dépendance vers usePlayerStore",
+        "evidence": [
+          "Import usePlayerStore (système obsolète)",
+          "Fonctionnalité compteur messages non lus",
+          "Interface bouton avec modal",
+          "Gestion playerId par défaut 'player-1'"
+        ],
+        "integration_status": "NON UTILISABLE - Dépendance obsolète",
+        "risk_level": "HIGH"
+      },
+      "conclusion": "FONCTIONNALITÉ EN DÉVELOPPEMENT - Besoin refactoring pour nouveau système"
+    },
+    "index_files_analysis": {
+      "animations/index.js": {
+        "status": "EXPORT CENTRALISÉ - NON UTILISÉ",
+        "description": "Point d'entrée pour hooks d'animation",
+        "exports": [
+          "useDroneAnimation",
+          "useShipAnimation", 
+          "useFloatingAnimation",
+          "useTileAnimation"
+        ],
+        "usage_pattern": "DIRECT IMPORTS - Les fichiers importent directement les hooks individuels",
+        "madge_detection": "Non détecté car imports directs bypassed l'index",
+        "recommendation": "GARDER - Améliore l'organisation du code"
+      },
+      "ai/fsm/index.js": {
+        "status": "EXPORT CENTRALISÉ COMPLEXE - NON UTILISÉ",
+        "description": "Point d'entrée FSM avec exports multiples",
+        "exports": [
+          "createEntityContext, ENTITY_TYPES, isAutonomous, etc.",
+          "botMachine, fsmGuards",
+          "Plus de 20 exports centralisés"
+        ],
+        "usage_pattern": "DIRECT IMPORTS - Imports directs vers fichiers spécifiques",
+        "recommendation": "GARDER - Architecture modulaire importante"
+      },
+      "core_index_files": {
+        "pattern": "EXPORTS CENTRALISÉS MODULAIRES",
+        "files": [
+          "ai/fsm/machine/actions/core/index.js - 149 lignes d'exports",
+          "ai/fsm/machine/guards/core/index.js",
+          "ai/fsm/machine/events/index.js",
+          "ai/fsm/machine/reducers/index.js",
+          "ai/fsm/hooks/index.js"
+        ],
+        "explanation": "Madge ne détecte pas ces fichiers car l'architecture utilise des imports directs pour optimiser le tree-shaking",
+        "value": "ORGANISATIONAL - Facilitent maintenance et découvrabilité"
+      },
+      "empty_directories": {
+        "debug/index.js": "FICHIER INEXISTANT - Dossier vide",
+        "components/Move/index.js": "FICHIER INEXISTANT - Dossier vide"
+      }
+    }
+  },
+  "recommendations": {
+    "immediate_actions": [
+      "SUPPRIMER stores/useBotStore/ - Références cassées vers oldfsm",
+      "SUPPRIMER stores/usePlayerStore/ - Système obsolète remplacé",
+      "SUPPRIMER ai/fsm/machine/states/evaluatingState_NEW.js et evaluatingState_OLD.js",
+      "NETTOYER dossiers vides debug/ et components/Move/"
+    ],
+    "messaging_system": [
+      "REFACTORISER MessageSelector.jsx pour utiliser useFSMStore au lieu de usePlayerStore",
+      "INTÉGRER les composants messagerie dans l'architecture actuelle",
+      "TESTER MessageModal.jsx avec le système de tuiles actuel"
+    ],
+    "index_files": [
+      "GARDER tous les fichiers index.js - Ils servent à l'organisation modulaire",
+      "DOCUMENTER leur rôle dans l'architecture pour les futurs développeurs",
+      "CONSIDÉRER leur utilisation pour améliorer les imports dans le futur"
+    ]
+  },
+  "summary": {
+    "stores_obsoletes": 2,
+    "composants_messagerie_non_integres": 2,
+    "fichiers_index_organisationnels": 8,
+    "dossiers_vides": 2,
+    "fichiers_backup_supprimables": 2,
+    "total_suppressions_recommandees": 26
+  }
+}
