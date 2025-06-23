@@ -16,7 +16,6 @@ import { FSMSyncProvider } from "./ai/fsm/contexts/FSMSyncContext.jsx";
 
 
 const App = () => {
-  const [isTimerRunning, setIsTimerRunning] = useState(true);
   const [showFleetExample, setShowFleetExample] = useState(false);
   
   // Initialiser le store FSM avec des bots par défaut
@@ -68,7 +67,7 @@ const App = () => {
               
               {/* Clock HUD */}
               <div className="clock-hud">
-                <Clock isTimerRunning={isTimerRunning} />
+                <Clock />
               </div>
             </div>
           </>
