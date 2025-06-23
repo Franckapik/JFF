@@ -7,8 +7,7 @@ import TileStoreMonitor from "./components/HUD/TileStoreMonitor";
 
 
 // ============= COMPOSANTS FSM =============
-import MultiBotManagerFSM from "./components/FSM/MultiBotManagerFSM";
-import FSMDebugPanel from "./components/FSM/FSMDebugPanel";
+import FusedBotManagerHUD from "./components/FSM/FusedBotManagerHUD";
 import useFSMStore from "./stores/useFSMStore/index.js";
 import { FSMProvider } from "./ai/fsm/contexts/FSMContext.jsx";
 import { FSMSyncProvider } from "./ai/fsm/contexts/FSMSyncContext.jsx";
@@ -75,14 +74,8 @@ const App = () => {
    
 
         {/* ============= SYSTÈME FSM ============= */}
-        {/* MultiBotManager FSM - gestionnaire principal */}
-        <MultiBotManagerFSM />
-        
-        {/* FSM Debug Panel - panneau de debug */}
-        <FSMDebugPanel 
-          position="bottom-left"
-          minimizable={true}
-        />
+        {/* HUD Fusionné - Gestion et debug des bots FSM */}
+        <FusedBotManagerHUD />
         
         {/* Tile Store Monitor - réactivé pour diagnostic complémentaire */}
         <TileStoreMonitor 

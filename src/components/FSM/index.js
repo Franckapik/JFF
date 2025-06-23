@@ -9,7 +9,8 @@
  */
 
 // Composants principaux
-export { default as MultiBotManagerFSM } from './MultiBotManagerFSM';
-export { default as FSMDebugPanel } from './FSMDebugPanel';
+export { default as FusedBotManagerHUD } from './FusedBotManagerHUD';
+export { default as MultiBotManagerFSM } from './MultiBotManagerFSM'; // Gardé pour compatibilité
+export { default as FSMDebugPanel } from './FSMDebugPanel'; // Gardé pour compatibilité
 export { default as FSMStateIndicator, MultiFSMStateIndicator } from './FSMStateIndicator';
 
