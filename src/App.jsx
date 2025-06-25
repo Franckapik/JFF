@@ -11,6 +11,7 @@ import FusedBotManagerHUD from "./components/FSM/FusedBotManagerHUD";
 import useFSMStore from "./stores/useFSMStore/index.js";
 import { FSMProvider } from "./ai/fsm/contexts/FSMContext.jsx";
 import { FSMSyncProvider } from "./ai/fsm/contexts/FSMSyncContext.jsx";
+import CentralFSMHud from './components/HUD/CentralFSMHud';
 
 
 
@@ -82,6 +83,9 @@ const App = () => {
           position="top-left"
           isVisible={true}
         />
+
+        {/* HUD FSM Centralisé */}
+        <CentralFSMHud />
 
       </div>
     </FSMSyncProvider>
