@@ -12,6 +12,7 @@ import useFSMStore from "./stores/useFSMStore/index.js";
 import { FSMProvider } from "./ai/fsm/contexts/FSMContext.jsx";
 import { FSMSyncProvider } from "./ai/fsm/contexts/FSMSyncContext.jsx";
 import CentralFSMHud from './components/HUD/CentralFSMHud';
+import BotInstanceXStateTest from './components/FSM/BotInstanceXStateTest.jsx';
 
 
 
@@ -86,6 +87,9 @@ const App = () => {
 
         {/* HUD FSM Centralisé */}
         <CentralFSMHud />
+
+        {/* Test XState Bot Instance */}
+        <BotInstanceXStateTest />
 
       </div>
     </FSMSyncProvider>
