@@ -10,7 +10,7 @@ import { useCallback, useMemo } from 'react';
 export function useFSM(botId = 'main') {
   // Log pour tracer les rendus du hook. Si ce message apparaît en boucle,
   // le problème se situe en amont (store) ou en aval (composant).
-  console.log(`[useFSM Minimal] Hook rendering for botId: ${botId}`);
+  // console.log(`[useFSM Minimal] Hook rendering for botId: ${botId}`); // Debug log désactivé
 
   // 1. Sélecteur mémorisé pour l'état du bot.
   // useCallback garantit que la fonction sélecteur elle-même est stable entre les rendus.

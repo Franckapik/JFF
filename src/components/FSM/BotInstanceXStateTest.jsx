@@ -12,7 +12,7 @@ function BotInstanceXStateTest({ botId, label }) {
 
   // Log pour vérifier les re-rendus du composant.
   // Si ce message apparaît en boucle, le problème persiste.
-  console.log(`[BotInstanceXStateTest] Rendering component for botId: ${botId}`);
+  // console.log(`[BotInstanceXStateTest] Rendering component for botId: ${botId}`); // Debug log désactivé
 
   // Gestionnaire d'événement simple pour tester l'envoi.
   const handleToggle = () => {
