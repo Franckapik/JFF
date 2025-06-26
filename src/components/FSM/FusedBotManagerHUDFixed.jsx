@@ -6,8 +6,9 @@ import fsmLogger from '../../logger/fsmLogger.js';
 const hudStyles = {
   container: {
     position: 'absolute',
-    top: '10px',
+    top: '50%',
     left: '10px',
+    transform: 'translateY(-50%)',
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     color: 'white',
     padding: '15px',

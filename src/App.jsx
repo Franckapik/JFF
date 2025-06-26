@@ -12,7 +12,9 @@ import FusedBotManagerHUDFixed from "./components/FSM/FusedBotManagerHUDFixed";
 import CentralFSMHudFixed from './components/HUD/CentralFSMHudFixed';
 import StoreTestMinimal from './components/FSM/StoreTestMinimal';
 import BotInstanceXStateTest from './components/FSM/BotInstanceXStateTest.jsx';
-import { useFSMStore } from './stores/useFSMStoreXState';
+import XStateSharedTest from './components/Tests/XStateSharedTest';
+import XStateSharedTestSimple from './components/Tests/XStateSharedTestSimple';
+import { useFSMStore } from './stores/useFSMStore';
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
@@ -53,9 +55,12 @@ const App = () => {
         
         {/* TileStoreMonitor */}
         <TileStoreMonitor 
-          position="top-left"
+          position="bottom-left"
           isVisible={true}
         />
+
+        {/* Test de validation de l'état partagé XState - Mode développement uniquement */}
+        {process.env.NODE_ENV === 'development' && <XStateSharedTestSimple />}
 
         {/* Tests FSM - masqués maintenant que tout fonctionne (décommentez si besoin) */}
         {/* 

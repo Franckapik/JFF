@@ -79,7 +79,7 @@ const CentralFSMHudFixed = () => {
   const styles = {
     container: {
       position: 'absolute',
-      top: '10px',
+      bottom: '10px',
       right: '10px',
       backgroundColor: 'rgba(0, 0, 0, 0.85)',
       color: 'white',
