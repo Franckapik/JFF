@@ -51,20 +51,20 @@ export const useXFSMStore = create((set, get) => {
     return actor;
   };
 
-  // Créer l'acteur principal au démarrage
-  const mainActor = createBotActor('main');
+  // Créer l'acteur principal au démarrage (bot-0 par défaut)
+  const mainActor = createBotActor('bot-0');
 
   return {
     // État initial
     botStates: {
-      main: mainActor.getSnapshot(),
+      'bot-0': mainActor.getSnapshot(),
     },
     
     // Liste des IDs de bots actifs
-    activeBots: ['main'],
+    activeBots: ['bot-0'],
 
     // Action pour envoyer un événement à un bot
-    send: (event, botId = 'main') => {
+    send: (event, botId = 'bot-0') => {
       const actor = actors.get(botId);
       if (actor) {
         actor.send(event);
@@ -94,7 +94,7 @@ export const useXFSMStore = create((set, get) => {
 
     // Action pour supprimer un bot
     removeBot: (botId) => {
-      if (botId === 'main' || !actors.has(botId)) return;
+      if (botId === 'bot-0' || !actors.has(botId)) return;
       
       const actor = actors.get(botId);
       actor.stop();
@@ -114,7 +114,7 @@ export const useXFSMStore = create((set, get) => {
 
     // Sélecteur interne pour obtenir l'état d'un bot.
     // C'est la fonction la plus critique pour la stabilité.
-    getBotState: (botId = 'main') => {
+    getBotState: (botId = 'bot-0') => {
       // On retourne TOUJOURS depuis le cache pour garantir une référence stable.
       return snapshotCache.get(botId) || EMPTY_BOT_STATE;
     },
