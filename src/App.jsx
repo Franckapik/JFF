@@ -6,14 +6,17 @@ import Clock from "./components/HUD/Clock";
 import TileStoreMonitor from "./components/HUD/TileStoreMonitor";
 
 // ============= COMPOSANTS FSM =============
-import FusedBotManagerHUD from "./components/FSM/FusedBotManagerHUD";
-// import CentralFSMHud from './components/HUD/CentralFSMHud';
+import FSMHUD from "./components/FSM/FSMHUD";
+import FSMHUDFixed from "./components/FSM/FSMHUDFixed";
+import FusedBotManagerHUDFixed from "./components/FSM/FusedBotManagerHUDFixed";
+import CentralFSMHudFixed from './components/HUD/CentralFSMHudFixed';
+import StoreTestMinimal from './components/FSM/StoreTestMinimal';
 import BotInstanceXStateTest from './components/FSM/BotInstanceXStateTest.jsx';
-import { useCentralFSMStore } from './stores/useCentralFSMStore';
+import { useFSMStore } from './stores/useFSMStoreXState';
 
 const App = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
-  const addBot = useCentralFSMStore((state) => state.addBot);
+  const addBot = useFSMStore((state) => state.addBot);
   
   // Créer le bot drone_1 au chargement de l'application
   useEffect(() => {
@@ -38,8 +41,15 @@ const App = () => {
         </div>
         
         {/* ============= SYSTÈME FSM ============= */}
-        {/* HUD Fusionné - Gestion et debug des bots FSM */}
-        <FusedBotManagerHUD />
+
+        
+        {/* FSM HUDs - Versions corrigées pour éviter les boucles infinies */}
+        <FSMHUDFixed />
+        <FusedBotManagerHUDFixed />
+        <CentralFSMHudFixed />
+        
+        {/* FSMHUD Original - DÉSACTIVÉ CAR BOUCLE INFINIE */}
+        {/* <FSMHUD /> */}
         
         {/* TileStoreMonitor */}
         <TileStoreMonitor 

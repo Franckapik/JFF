@@ -20,16 +20,20 @@ export function useFSM(botId = 'main') {
 
   const botState = useFSMStore(botStateSelector);
 
-  // 2. Sélecteurs mémorisés pour les actions et propriétés globales
-  const activeBots = useFSMStore(useCallback((store) => store.activeBots, []));
-  const isSystemRunning = useFSMStore(useCallback((store) => store.isSystemRunning, []));
-  const addBot = useFSMStore(useCallback((store) => store.addBot, []));
-  const removeBot = useFSMStore(useCallback((store) => store.removeBot, []));
-  const startSystem = useFSMStore(useCallback((store) => store.startSystem, []));
-  const stopSystem = useFSMStore(useCallback((store) => store.stopSystem, []));
-  const toggleSystem = useFSMStore(useCallback((store) => store.toggleSystem, []));
-  const getBotCount = useFSMStore(useCallback((store) => store.getBotCount, []));
-  const updateBotStatesSnapshot = useFSMStore(useCallback((store) => store.updateBotStatesSnapshot, []));
+  // 2. Sélecteur mémorisé pour les actions globales du store
+  const actionsSelector = useCallback((store) => ({
+    addBot: store.addBot,
+    removeBot: store.removeBot,
+    startSystem: store.startSystem,
+    stopSystem: store.stopSystem,
+    toggleSystem: store.toggleSystem,
+    getBotCount: store.getBotCount,
+    updateBotStatesSnapshot: store.updateBotStatesSnapshot,
+    activeBots: store.activeBots,
+    isSystemRunning: store.isSystemRunning
+  }), []);
+
+  const actions = useFSMStore(actionsSelector);
 
   // 3. Extraction de l'état FSM et du contexte avec sécurité
   const fsmState = botState?.actor?.getSnapshot() || null;
@@ -62,17 +66,17 @@ export function useFSM(botId = 'main') {
     isIn,
     
     // Propriétés globales
-    botIds: activeBots || [],
-    isSystemRunning: isSystemRunning || false,
-    botCount: getBotCount ? getBotCount() : 0,
+    botIds: actions.activeBots || [],
+    isSystemRunning: actions.isSystemRunning || false,
+    botCount: actions.getBotCount ? actions.getBotCount() : 0,
     
     // Actions
-    addBot,
-    removeBot,
-    startSystem,
-    stopSystem,
-    toggleSystem,
-    getBotCount,
-    updateBotStatesSnapshot
+    addBot: actions.addBot,
+    removeBot: actions.removeBot,
+    startSystem: actions.startSystem,
+    stopSystem: actions.stopSystem,
+    toggleSystem: actions.toggleSystem,
+    getBotCount: actions.getBotCount,
+    updateBotStatesSnapshot: actions.updateBotStatesSnapshot
   };
 }

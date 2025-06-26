@@ -1,5 +1,6 @@
 import React from 'react';
 import { useFSM } from '../../hooks/useFSM';
+import { useFSMStore } from '../../stores/useFSMStoreXState';
 
 /**
  * Formate la valeur d'état FSM pour l'affichage
@@ -34,12 +35,21 @@ function formatFSMStateValue(value) {
 export default function CentralFSMHud() {
   console.log('[CentralFSMHud] render');
   const [selectedBot, setSelectedBot] = React.useState('main');
-  const { fsmState, send, allBots, addBot, removeBot } = useFSM(selectedBot) || {};
+  
+  // Hook simplifié - seulement fsmState et send
+  const { fsmState, send } = useFSM(selectedBot) || {};
+  
+  // Fonctions directes du store - séparées pour éviter les boucles
+  const allBots = useFSMStore(React.useCallback((state) => Object.keys(state.botStates || {}), []));
+  const addBotFn = useFSMStore(React.useCallback((state) => state.addBot, []));
+  const removeBotFn = useFSMStore(React.useCallback((state) => state.removeBot, []));
+  
+  // Valeurs sécurisées
   const safeFsmState = fsmState || { value: 'N/A', context: {} };
   const safeAllBots = Array.isArray(allBots) ? allBots : ['main'];
   const safeSend = typeof send === 'function' ? send : () => {};
-  const safeAddBot = typeof addBot === 'function' ? addBot : () => {};
-  const safeRemoveBot = typeof removeBot === 'function' ? removeBot : () => {};
+  const safeAddBot = typeof addBotFn === 'function' ? addBotFn : () => {};
+  const safeRemoveBot = typeof removeBotFn === 'function' ? removeBotFn : () => {};
   
   // Fonction pour ajouter un nouveau bot
   const handleAddBot = () => {

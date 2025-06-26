@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { createActor } from 'xstate';
 import fsmBotMachine from '../ai/fsm/machine/fsmBotMachine.xstate';
-import initialContextModule from '../ai/fsm/machine/context/initialContext';
+import { createEntityContext } from '../ai/fsm/machine/context/initialContext';
 
 // Constante pour un état vide et stable, évite les undefined.
 const EMPTY_BOT_STATE = { value: 'uninitialized', context: {} };
 
-export const useCentralFSMStore = create((set, get) => {
+export const useFSMStore = create((set, get) => {
   // Map pour stocker les acteurs XState par botId
   const actors = new Map();
   // Map pour mettre en cache la dernière référence de snapshot connue par botId
@@ -17,7 +17,7 @@ export const useCentralFSMStore = create((set, get) => {
       return actors.get(botId);
     }
 
-    const botContext = initialContextModule.createEntityContext(botId, 'auto');
+    const botContext = createEntityContext(botId, 'auto');
     const actor = createActor(fsmBotMachine, { input: botContext });
 
     actor.subscribe((snapshot) => {
@@ -66,7 +66,7 @@ export const useCentralFSMStore = create((set, get) => {
       if (actor) {
         actor.send(event);
       } else {
-        console.warn(`[useCentralFSMStore] Attempted to send event to non-existent bot: ${botId}`);
+        console.warn(`[useFSMStore] Attempted to send event to non-existent bot: ${botId}`);
       }
     },
 

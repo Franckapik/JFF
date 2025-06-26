@@ -36,10 +36,10 @@
  */
 
 // Import des actions core refactorisées
-import shipCollectingCore from './shipCollectingActions.js'; // NOUVEAU - Domaine métier collecting
-import droneExploringCore from './droneExploringActions.js'; // NOUVEAU - Domaine métier exploring
-import fuelCore from './fuelActions.js';
-import resourceCore from './resourcesActions.js';
+import { shipCollectingActions } from './shipCollectingActions.js'; // NOUVEAU - Domaine métier collecting
+import { droneExploringActions } from './droneExploringActions.js'; // NOUVEAU - Domaine métier exploring
+import { fuelActions } from './fuelActions.js';
+import { resourceActions } from './resourcesActions.js';
 
 // ⚠️ ANCIENS IMPORTS SUPPRIMÉS - Fichiers supprimés lors du nettoyage
 // import movementCore from './movementActions.js'; // SUPPRIMÉ
@@ -87,12 +87,12 @@ export {
 // ============================================================================
 
 // Nouveaux domaines métier
-export const shipCollecting = shipCollectingCore; // NOUVEAU - Domaine collecting
-export const droneExploring = droneExploringCore; // NOUVEAU - Domaine exploring
+export const shipCollecting = shipCollectingActions; // NOUVEAU - Domaine collecting
+export const droneExploring = droneExploringActions; // NOUVEAU - Domaine exploring
 
 // Domaines inchangés
-export const fuel = fuelCore;
-export const resource = resourceCore;
+export const fuel = fuelActions;
+export const resource = resourceActions;
 
 // ⚠️ ANCIENS EXPORTS SUPPRIMÉS - Remplacés par les nouveaux domaines métier
 // export const movement = movementCore; // SUPPRIMÉ - Utiliser shipCollecting
@@ -108,20 +108,20 @@ export const resource = resourceCore;
  */
 export const coreActions = {
   // Nouveaux domaines métier avec préfixes cohérents
-  shipCollecting: shipCollectingCore.actions, // NOUVEAU - Actions avec préfixe "ship"
-  droneExploring: droneExploringCore.actions, // NOUVEAU - Actions avec préfixe "drone"
+  shipCollecting: shipCollectingActions.actions, // NOUVEAU - Actions avec préfixe "ship"
+  droneExploring: droneExploringActions.actions, // NOUVEAU - Actions avec préfixe "drone"
   
   // Domaines inchangés
-  fuel: fuelCore.actions,
-  resource: resourceCore.actions,
+  fuel: fuelActions.actions,
+  resource: resourceActions.actions,
   
   // ⚠️ RÉTROCOMPATIBILITÉ - Redirige vers les nouvelles actions
-  movement: shipCollectingCore.actions, // RÉTROCOMPATIBILITÉ - Redirige vers shipCollecting
-  shipMovement: shipCollectingCore.shipActions, // RÉTROCOMPATIBILITÉ - Redirige vers shipCollecting
-  entityMovement: shipCollectingCore.entityActions, // RÉTROCOMPATIBILITÉ - Redirige vers shipCollecting
-  drone: droneExploringCore.actions, // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
-  droneFleet: droneExploringCore.fleetActions, // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
-  exploration: droneExploringCore.actions // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
+  movement: shipCollectingActions.actions, // RÉTROCOMPATIBILITÉ - Redirige vers shipCollecting
+  shipMovement: shipCollectingActions.shipActions, // RÉTROCOMPATIBILITÉ - Redirige vers shipCollecting
+  entityMovement: shipCollectingActions.entityActions, // RÉTROCOMPATIBILITÉ - Redirige vers shipCollecting
+  drone: droneExploringActions.actions, // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
+  droneFleet: droneExploringActions.fleetActions, // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
+  exploration: droneExploringActions.actions // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
 };
 
 // ============================================================================
@@ -130,18 +130,18 @@ export const coreActions = {
 
 export default {
   // Nouveaux domaines métier
-  shipCollecting: shipCollectingCore, // NOUVEAU - Domaine collecting avec préfixe "ship"
-  droneExploring: droneExploringCore, // NOUVEAU - Domaine exploring avec préfixe "drone"
+  shipCollecting: shipCollectingActions, // NOUVEAU - Domaine collecting avec préfixe "ship"
+  droneExploring: droneExploringActions, // NOUVEAU - Domaine exploring avec préfixe "drone"
   
   // Domaines inchangés
-  fuel: fuelCore,
-  resource: resourceCore,
+  fuel: fuelActions,
+  resource: resourceActions,
   
   // ⚠️ RÉTROCOMPATIBILITÉ - Redirige vers les nouvelles actions
   // Les anciens noms pointent maintenant vers les nouveaux domaines
-  movement: shipCollectingCore, // RÉTROCOMPATIBILITÉ - Redirige vers shipCollecting
-  exploration: droneExploringCore, // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
-  drone: droneExploringCore, // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
+  movement: shipCollectingActions, // RÉTROCOMPATIBILITÉ - Redirige vers shipCollecting
+  exploration: droneExploringActions, // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
+  drone: droneExploringActions, // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
   
   // Collection globale des actions
   actions: coreActions

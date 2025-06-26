@@ -2,7 +2,7 @@ import React from 'react';
 import { useFSM } from '../../hooks/useFSM';
 
 /**
- * Composant de test minimal pour valider le hook `useFSM` et le store `useCentralFSMStore`.
+ * Composant de test minimal pour valider le hook `useFSM` et le store `useFSMStore`.
  * Affiche l'état actuel de la machine et un bouton pour envoyer un événement.
  * @param {{ botId: string, label: string }}
  */

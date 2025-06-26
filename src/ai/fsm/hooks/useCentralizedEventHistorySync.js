@@ -13,7 +13,7 @@
 
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { useFSM } from '../../../hooks/useFSM';
-import { useCentralFSMStore } from '../../../stores/useCentralFSMStore';
+import { useFSMStore } from '../../../stores/useFSMStoreXState';
 import fsmLogger from '../../../logger/fsmLogger.js';
 
 /**

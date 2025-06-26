@@ -9,6 +9,6 @@
  */
 
 // Composants principaux
-export { default as FusedBotManagerHUD } from './FusedBotManagerHUD';
+export { default as FSMHUD } from './FSMHUD';
 export { default as FSMStateIndicator, MultiFSMStateIndicator } from './FSMStateIndicator';
 

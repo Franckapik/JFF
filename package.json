@@ -43,7 +43,9 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:multibot": "vitest multiBot"
+    "test:multibot": "vitest multiBot",
+    "check-exports": "node scripts/check-exports.js",
+    "check-imports": "node scripts/check-exports.js"
   },
   "browserslist": [
     ">0.2%",

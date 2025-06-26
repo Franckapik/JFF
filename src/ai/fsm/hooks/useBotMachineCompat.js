@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useCentralFSMStore } from '../../../stores/useCentralFSMStore';
+import { useFSMStore } from '../../../stores/useFSMStoreXState';
 import fsmLogger from '../../../logger/fsmLogger.js';
 
 /**
@@ -29,7 +29,7 @@ export const useBotMachine = (botId = 'main', entityType = 'auto', options = {})
   }, [botId]);
   
   // État local pour suivre l'état du bot
-  const [current, setCurrent] = useState(() => useCentralFSMStore.getState().getBotState(botId));
+  const [current, setCurrent] = useState(() => useFSMStore.getState().getBotState(botId));
   
   // Références pour simuler les fonctions de synchronisation
   const syncCallbacks = useRef(new Map());
@@ -53,19 +53,19 @@ export const useBotMachine = (botId = 'main', entityType = 'auto', options = {})
   const syncEvent = useCallback((botId, eventName, eventData) => {
     // Simplement envoyer au store centralisé
     const event = { type: eventName, ...eventData };
-    useCentralFSMStore.getState().send(event, botId);
+    useFSMStore.getState().send(event, botId);
   }, []);
   
   // S'abonner aux changements du store centralisé
   useEffect(() => {
     // S'assurer que le bot existe
-    const store = useCentralFSMStore.getState();
+    const store = useFSMStore.getState();
     if (!store.botStates || !store.botStates[botId]) {
       store.addBot(botId);
     }
     
     // S'abonner aux changements
-    const unsubscribe = useCentralFSMStore.subscribe((state) => {
+    const unsubscribe = useFSMStore.subscribe((state) => {
       if (state.botStates && state.botStates[botId]) {
         setCurrent(state.botStates[botId]);
         
@@ -89,7 +89,7 @@ export const useBotMachine = (botId = 'main', entityType = 'auto', options = {})
       : eventType;
       
     // Envoyer au store central
-    useCentralFSMStore.getState().send(event, botId);
+    useFSMStore.getState().send(event, botId);
   }, [botId]);
   
   // Exposer également les fonctions de synchronisation simulées pour compatibilité
