@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { createActor } from 'xstate';
-import fsmBotMachine from '../../ai/fsm/machine/machine.xstate';
+import { machine } from '../../ai/fsm/machine/machine.xstate';
 import { createEntityContext } from '../../ai/fsm/machine/context/initialContext';
 
 // Constante pour un état vide et stable, évite les undefined.
@@ -18,7 +18,7 @@ export const useXFSMStore = create((set, get) => {
     }
 
     const botContext = createEntityContext(botId, 'auto');
-    const actor = createActor(fsmBotMachine, { input: botContext });
+    const actor = createActor(machine, { input: botContext });
 
     actor.subscribe((snapshot) => {
       const previousSnapshot = snapshotCache.get(botId);

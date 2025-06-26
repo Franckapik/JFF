@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useXFSM } from '../../hooks/useXFSM';
-import fsmBotMachine from '../../ai/fsm/machine/machine.xstate';
+import { machine as fsmBotMachine } from '../../ai/fsm/machine/machine.xstate';
 
 /**
  * Panneau de simulation XState dynamique qui s'adapte automatiquement à la machine
@@ -129,66 +129,33 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
 
     return {
       events: events.sort(),
-      guards: allGuards.filter(g => g).sort(), // Filtre les valeurs vides
-      actions: allActions.filter(a => a).sort(), // Filtre les valeurs vides
+      guards: allGuards.filter(g => g).sort(),
+      actions: allActions.filter(a => a).sort(),
       states: allStates.sort()
     };
   }, []);
 
-  // États forcés pour les guards (basés sur les guards réels de la machine)
-  const [forcedGuards, setForcedGuards] = useState(() => {
-    const initialGuards = {};
-    machineConfig.guards.forEach(guardName => {
-      initialGuards[guardName] = false;
-    });
-    return initialGuards;
-  });
-
-  // Contexte simulé pour les tests
+  // Contexte simulé pour les tests (adapté à la nouvelle machine)
   const [simulatedContext, setSimulatedContext] = useState({
-    fuel: 80,
-    damage: 20,
-    inventoryFull: false,
-    resources: { food: 50, debris: 200, special: 1 },
-    position: { x: 0, y: 0, z: 0 },
-    target: { x: 5, y: 0, z: 5 }
+    energy: 10,
+    cargo: 1,
+    needsMaintenance: false,
   });
 
-  // Fonction pour envoyer des événements avec contexte forcé
+  // Fonction pour envoyer des événements avec contexte simulé
   const sendEventWithContext = (eventType, payload = {}) => {
-    // Mise à jour du contexte FSM avec nos valeurs simulées
-    const enhancedPayload = {
-      ...payload,
-      vehicle: {
-        fuel: simulatedContext.fuel,
-        damage: simulatedContext.damage,
-        needsRepair: simulatedContext.damage > 50
-      },
-      inventory: {
-        isFull: forcedGuards.isAtMaxCapacity || simulatedContext.inventoryFull,
-        resources: simulatedContext.resources
-      },
-      position: simulatedContext.position,
-      target: simulatedContext.target,
-      // Force les guards selon les boutons
-      _forcedGuards: forcedGuards
-    };
-
-    send({ type: eventType, ...enhancedPayload });
+    // Log l'envoi d'événement pour debug
+    if (window && window.fsmLogger) {
+      window.fsmLogger.event && window.fsmLogger.event(`[XStateSimulationPanel] sendEventWithContext: ${eventType}`, { ...simulatedContext });
+    } else if (typeof console !== 'undefined') {
+      console.log('[XStateSimulationPanel] sendEventWithContext:', eventType, simulatedContext);
+    }
+    send({ type: eventType, ...simulatedContext, ...payload });
   };
 
-  const toggleGuard = (guardName) => {
-    setForcedGuards(prev => ({
-      ...prev,
-      [guardName]: !prev[guardName]
-    }));
-  };
-
-  const updateSimulatedValue = (path, value) => {
-    setSimulatedContext(prev => ({
-      ...prev,
-      [path]: value
-    }));
+  // Helpers pour sliders/checkbox
+  const updateSimulatedValue = (key, value) => {
+    setSimulatedContext(prev => ({ ...prev, [key]: value }));
   };
 
   const getCurrentState = () => {
@@ -202,6 +169,24 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
     }
     return JSON.stringify(fsmState.value);
   };
+
+  // Affichage et forçage des guards (liés au contexte simulé)
+  const [forcedGuards, setForcedGuards] = useState(() => {
+    const initialGuards = {};
+    machineConfig.guards.forEach(guardName => {
+      initialGuards[guardName] = false;
+    });
+    return initialGuards;
+  });
+
+  // Synchroniser les guards avec le contexte simulé
+  useEffect(() => {
+    setForcedGuards({
+      shouldExplore: simulatedContext.energy > 0,
+      shouldCollect: simulatedContext.cargo > 0,
+      shouldMaintain: simulatedContext.needsMaintenance === true
+    });
+  }, [simulatedContext]);
 
   return (
     <div 
@@ -231,67 +216,40 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
         <strong>Bot ID:</strong> {botId}
       </div>
 
-      {/* Contrôle des Guards */}
-      <div style={{ marginBottom: 15 }}>
-        <h4>🛡️ Guards ({machineConfig.guards.length})</h4>
-        {machineConfig.guards.length > 0 ? (
-          Object.entries(forcedGuards).map(([guardName, isActive]) => (
-            <div key={guardName} style={{ display: 'flex', justifyContent: 'space-between', margin: '5px 0' }}>
-              <span title={guardName}>{guardName}:</span>
-              <button 
-                onClick={() => toggleGuard(guardName)}
-                style={{ 
-                  background: isActive ? '#4CAF50' : '#f44336',
-                  color: 'white',
-                  border: 'none',
-                  padding: '2px 8px',
-                  borderRadius: 4,
-                  cursor: 'pointer'
-                }}
-              >
-                {isActive ? 'TRUE' : 'FALSE'}
-              </button>
-            </div>
-          ))
-        ) : (
-          <div style={{ opacity: 0.6, fontSize: '10px' }}>Aucun guard détecté</div>
-        )}
-      </div>
-
       {/* Contrôle du contexte simulé */}
       <div style={{ marginBottom: 15 }}>
         <h4>⚙️ Contexte Simulé</h4>
         <div style={{ fontSize: '10px' }}>
           <div>
-            Fuel: 
+            Energy: 
             <input 
               type="range" 
               min="0" 
-              max="100" 
-              value={simulatedContext.fuel}
-              onChange={(e) => updateSimulatedValue('fuel', parseInt(e.target.value))}
+              max="20" 
+              value={simulatedContext.energy}
+              onChange={(e) => updateSimulatedValue('energy', parseInt(e.target.value))}
             />
-            {simulatedContext.fuel}%
+            {simulatedContext.energy}
           </div>
           <div>
-            Damage: 
+            Cargo: 
             <input 
               type="range" 
               min="0" 
-              max="100" 
-              value={simulatedContext.damage}
-              onChange={(e) => updateSimulatedValue('damage', parseInt(e.target.value))}
+              max="10" 
+              value={simulatedContext.cargo}
+              onChange={(e) => updateSimulatedValue('cargo', parseInt(e.target.value))}
             />
-            {simulatedContext.damage}%
+            {simulatedContext.cargo}
           </div>
           <div>
             <label>
               <input 
                 type="checkbox" 
-                checked={simulatedContext.inventoryFull}
-                onChange={(e) => updateSimulatedValue('inventoryFull', e.target.checked)}
+                checked={simulatedContext.needsMaintenance}
+                onChange={(e) => updateSimulatedValue('needsMaintenance', e.target.checked)}
               />
-              Inventory Full
+              Needs Maintenance
             </label>
           </div>
         </div>
@@ -329,6 +287,21 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
         >
           Add Bot-2
         </button>
+      </div>
+
+      {/* Contrôle des Guards */}
+      <div style={{ marginBottom: 15 }}>
+        <h4>🛡️ Guards ({machineConfig.guards.length})</h4>
+        {machineConfig.guards.length > 0 ? (
+          Object.entries(forcedGuards).map(([guardName, isActive]) => (
+            <div key={guardName} style={{ display: 'flex', justifyContent: 'space-between', margin: '5px 0' }}>
+              <span title={guardName}>{guardName}:</span>
+              <span style={{ color: isActive ? '#4CAF50' : '#f44336', fontWeight: 'bold' }}>{isActive ? 'TRUE' : 'FALSE'}</span>
+            </div>
+          ))
+        ) : (
+          <div style={{ opacity: 0.6, fontSize: '10px' }}>Aucun guard détecté</div>
+        )}
       </div>
 
       {/* Informations de debug */}
