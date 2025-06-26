@@ -1,24 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
+import XStateSimulationPanel from "./components/Debug/XStateSimulationPanel";
 import "./styles/App.css";
-import Clock from "./components/HUD/Clock";
-import TileStoreMonitor from "./components/HUD/TileStoreMonitor";
-
-// ============= COMPOSANTS FSM =============
-import FSMHUD from "./components/FSM/FSMHUD";
-import FSMHUDFixed from "./components/FSM/FSMHUDFixed";
-import FusedBotManagerHUDFixed from "./components/FSM/FusedBotManagerHUDFixed";
-import CentralFSMHudFixed from './components/HUD/CentralFSMHudFixed';
-import StoreTestMinimal from './components/FSM/StoreTestMinimal';
-import BotInstanceXStateTest from './components/FSM/BotInstanceXStateTest.jsx';
-import XStateSharedTest from './components/Tests/XStateSharedTest';
-import XStateSharedTestSimple from './components/Tests/XStateSharedTestSimple';
-import { useFSMStore } from './stores/useFSMStore';
+import { useXFSMStore } from './stores/useXFSMStore';
 
 const App = () => {
-  const [isTimerRunning, setIsTimerRunning] = useState(true);
-  const addBot = useFSMStore((state) => state.addBot);
+  const addBot = useXFSMStore((state) => state.addBot);
   
   // Créer le bot drone_1 au chargement de l'application
   useEffect(() => {
@@ -35,43 +23,10 @@ const App = () => {
               <Scene />
             </Canvas>
           </div>
-          
-          {/* Clock HUD */}
-          <div className="clock-hud">
-            <Clock isTimerRunning={isTimerRunning} />
-          </div>
         </div>
         
-        {/* ============= SYSTÈME FSM ============= */}
-
-        
-        {/* FSM HUDs - Versions corrigées pour éviter les boucles infinies */}
-        <FSMHUDFixed />
-        <FusedBotManagerHUDFixed />
-        <CentralFSMHudFixed />
-        
-        {/* FSMHUD Original - DÉSACTIVÉ CAR BOUCLE INFINIE */}
-        {/* <FSMHUD /> */}
-        
-        {/* TileStoreMonitor */}
-        <TileStoreMonitor 
-          position="bottom-left"
-          isVisible={true}
-        />
-
-        {/* Test de validation de l'état partagé XState - Mode développement uniquement */}
-        {process.env.NODE_ENV === 'development' && <XStateSharedTestSimple />}
-
-        {/* Tests FSM - masqués maintenant que tout fonctionne (décommentez si besoin) */}
-        {/* 
-        <div style={{ marginTop: '20px', borderTop: '2px solid #ccc', paddingTop: '20px' }}>
-          <h2>FSM Test Components (for validation)</h2>
-          <BotInstanceXStateTest botId="main" label="Main Bot" />
-          <BotInstanceXStateTest botId="drone_1" label="Drone #1" />
-        </div>
-        */}
-        
-
+        {/* Panneau de simulation XState */}
+        <XStateSimulationPanel botId="bot-0" />
       </div>
   );
 };

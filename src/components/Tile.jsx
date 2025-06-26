@@ -2,7 +2,6 @@ import React from "react";
 import { useTileAnimation } from "../animations/useTileAnimation";
 import { useTileStore } from "../stores/useTileStore";
 import { Html } from "@react-three/drei";
-import { FSMStateIndicator } from "./FSM";
 import fsmLogger from "../logger/fsmLogger";
 import { isTileCompletelyCollected, isTilePartiallyCollected } from "../stores/useTileStore/slices/tileResourceSlice";
 
@@ -265,16 +264,7 @@ const Tile = React.memo(({
             <circleGeometry args={[0.5, 32]} />
             <meshStandardMaterial color={baseColor} />
           </mesh>
-          
-          {/* Optionnellement afficher l'indicateur FSM pour cette tuile */}
-          {showFSMIndicator && labelText && (
-            <FSMStateIndicator
-              botId={labelText}
-              position={[position[0], 1.0, position[2]]}
-              showDetails={false}
-            />
-          )}
-          
+                    
           {/* Player identifier label */}
           <Html
             position={[position[0], 0.5, position[2]]}

@@ -1,15 +1,14 @@
 /**
  * ============================================================================
- * FSM HOOKS INDEX - Exports centralisés
+ * FSM HOOKS INDEX - Exports centralisés (NETTOYÉ)
  * ============================================================================
  * 
- * Point d'entrée pour tous les hooks FSM avec l'architecture refactorisée.
+ * Point d'entrée pour tous les hooks FSM avec l'architecture moderne.
  */
 
 // === HOOKS CORE ===
-export { useBotMachine, useBotMachineFixed, useBotMachineSharedInstance } from './useBotMachineCompat.js';
+export { useBotMachine, useBotMachineFixed, useBotMachineSharedInstance } from './useBotMachine.js';
 export { useEventDebounce } from './useEventDebounce.js';
-export { useCentralizedEventHistorySync } from './useCentralizedEventHistorySync.js';
 
 // === TRACKERS SPÉCIALISÉS (NOUVELLE ARCHITECTURE) ===
 export { useFSMDroneTracker } from './useFSMDroneTracker.js';

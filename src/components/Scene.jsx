@@ -15,7 +15,7 @@ import Tile from "./Tile";
 // Stores
 import { useTileStore } from "../stores/useTileStore";
 import useGameStore from "../stores/useGameStore";
-import { useFSMStore } from "../stores/useFSMStore";
+import { useXFSMStore } from "../stores/useXFSMStore";
 
 // Utils
 import fsmLogger from "../logger/fsmLogger";
@@ -45,8 +45,8 @@ const Scene = () => {
   const getPlayerBaseColor = useGameStore((state) => state.getPlayerBaseColor);
   const getBackgroundColor = useGameStore((state) => state.getBackgroundColor);
   
-  // FSM Store - source de vérité pour les bots actifs (ancien système robot3)
-  const activeBots = useFSMStore((state) => state.activeBots);
+  // FSM Store - source de vérité pour les bots actifs (nouveau système XState)
+  const activeBots = useXFSMStore((state) => state.activeBots);
   
   // Initialization state
   const {

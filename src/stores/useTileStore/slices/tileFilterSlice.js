@@ -19,11 +19,11 @@
  * Dépendances :
  * - playerConstants : pour l'attribution des bases aux joueurs
  * - calculateDistance : pour les calculs de proximité (via get())
- * - useFSMStore : pour synchroniser avec les bots actifs
+ * - useXFSMStore : pour synchroniser avec les bots actifs
  */
 
 import fsmLogger from '../../../logger/fsmLogger.js';
-import useFSMStore from '../../useFSMStore/index.js';
+import { useXFSMStore } from '../../useXFSMStore/index.js';
 
 // =========================================================================
 // IMPORTS
@@ -184,8 +184,8 @@ const createTileFilterSlice = (set, get) => {
     syncDepartTilesWithActiveBots: () => {
       const { syncStartingTilesWithFSMBots } = get();
       
-      // Récupérer les bots actifs depuis le FSMStore
-      const activeBots = useFSMStore.getState().activeBots;
+      // Récupérer les bots actifs depuis le XFSMStore
+      const activeBots = useXFSMStore.getState().activeBots;
       const activeBotIds = activeBots;
       
       // Synchroniser les tuiles de départ avec les bots actifs
