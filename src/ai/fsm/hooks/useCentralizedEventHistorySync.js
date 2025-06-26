@@ -1,163 +1,112 @@
 /**
  * ============================================================================
- * CENTRALIZED EVENT HISTORY HOOK - Version avec synchronisation FSM
+ * CENTRALIZED EVENT HISTORY HOOK - Version de compatibilité
  * ============================================================================
  * 
- * Hook qui utilise le système de synchronisation FSM pour détecter 
- * les changements d'état de manière plus fiable.
+ * Version adaptée pour utiliser le store centralisé XState/Zustand.
+ * Ce hook permet de suivre l'historique des événements et facilite la synchronisation
+ * entre les différentes instances pour le même bot.
  * 
  * @version 2.0.0
+ * @deprecated Utilisez directement le hook useFSM qui donne accès à l'état complet
  */
 
-import { useCallback, useEffect, useRef } from 'react';
-import { useBotMachine } from "./useBotMachine.js";
-import { useFSMSync } from '../contexts/FSMSyncContext.jsx';
-import useFSMStore from '../../../stores/useFSMStore/index.js';
+import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
+import { useFSM } from '../../../hooks/useFSM';
+import { useCentralFSMStore } from '../../../stores/useCentralFSMStore';
 import fsmLogger from '../../../logger/fsmLogger.js';
 
 /**
  * Hook centralisé pour l'historique des événements FSM avec synchronisation
+ * Version adaptée pour utiliser le store centralisé
  */
 export const useCentralizedEventHistorySync = (botId) => {
-  const { send: originalSend, current } = useBotMachine(botId);
-  const { registerSyncCallback } = useFSMSync();
-  const addEventToHistory = useFSMStore(state => state.addEventToHistory);
-  const getEventHistory = useFSMStore(state => state.getEventHistory);
-  const clearEventHistory = useFSMStore(state => state.clearEventHistory);
+  // Obtenir les fonctions et l'état directement depuis useFSM (centralisé)
+  const { send: originalSend, fsmState: current } = useFSM(botId);
   
+  // État local pour l'historique des événements
+  const [eventHistory, setEventHistory] = useState([]);
+  
+  // Références pour le suivi des changements d'état
   const lastStateRef = useRef(current?.name);
   const lastContextRef = useRef(current?.context);
 
-  // Enregistrer pour recevoir les événements synchronisés
-  useEffect(() => {
-    const cleanup = registerSyncCallback(botId, (eventName, eventData) => {
-      const eventToAdd = {
-        type: 'SYNC',
-        eventName,
-        eventData,
-        fromState: current?.name || 'unknown',
-        context: current?.context ? JSON.stringify(current.context, null, 2) : 'N/A'
-      };
+  // Fonction pour ajouter un événement à l'historique local
+  const addEventToHistory = useCallback((event) => {
+    setEventHistory(prev => [...prev.slice(-99), { 
+      ...event, 
+      timestamp: Date.now(),
+      botId
+    }]);
+  }, [botId]);
+  
+  // Fonction pour obtenir l'historique des événements
+  const getEventHistory = useCallback(() => eventHistory, [eventHistory]);
+  
+  // Fonction pour effacer l'historique des événements
+  const clearEventHistory = useCallback(() => setEventHistory([]), []);
 
-      // Affichage sécurisé : eventName peut être un objet ou une chaîne
-      const eventDisplayName = typeof eventName === 'object' ? eventName.type || 'UNKNOWN_EVENT' : eventName;
-      fsmLogger.history(`Received sync event: ${eventDisplayName} for bot ${botId}`);
-      addEventToHistory(botId, eventToAdd);
+  // Memoized state name and context string for effect dependencies
+  const currentStateName = current?.name;
+  const currentContextString = useMemo(() => JSON.stringify(current?.context), [current?.context]);
+
+  // Effet pour suivre les changements d'état
+  useEffect(() => {
+    console.log('[useCentralizedEventHistorySync] effect fired', { currentStateName, currentContextString, lastState: lastStateRef.current, lastContext: lastContextRef.current });
+    // Only proceed if all values are defined
+    if (!current || currentStateName === undefined || currentContextString === undefined) return;
+    // Only proceed if previous refs are also defined (avoid running on initial undefined)
+    if ((lastStateRef.current === undefined && lastContextRef.current === undefined) &&
+        (currentStateName === undefined && currentContextString === undefined)) {
+      // Both previous and current are undefined, never update
+      return;
+    }
+    // Guard strict : ne rien faire si rien n'a changé
+    if (lastStateRef.current === currentStateName && JSON.stringify(lastContextRef.current) === currentContextString) {
+      return;
+    }
+    // Vérifier si l'état a changé
+    if (lastStateRef.current !== currentStateName) {
+      fsmLogger.info(`[History] State changed for bot ${botId}: ${lastStateRef.current} -> ${currentStateName}`);
+      addEventToHistory({
+        type: 'STATE_CHANGE',
+        fromState: lastStateRef.current || 'unknown',
+        toState: currentStateName,
+        context: currentContextString
+      });
+      lastStateRef.current = currentStateName;
+    }
+    // Vérifier si le contexte a changé
+    const lastContextString = JSON.stringify(lastContextRef.current);
+    if (currentContextString !== lastContextString) {
+      fsmLogger.info(`[History] Context changed for bot ${botId}`);
+      addEventToHistory({
+        type: 'CONTEXT_UPDATE',
+        details: `Context changed`,
+        context: currentContextString
+      });
+      lastContextRef.current = current?.context;
+    }
+  }, [currentStateName, currentContextString, botId, addEventToHistory]);
+
+  // Wrapper la fonction send pour enregistrer les événements envoyés
+  const send = useCallback((eventType, payload = {}) => {
+    // Compatible avec le format d'événement de XState v5
+    const event = typeof eventType === 'string' 
+      ? { type: eventType, ...payload }
+      : eventType;
+    
+    // Ajouter à l'historique
+    addEventToHistory({
+      type: 'SENT',
+      eventName: event.type,
+      payload: payload,
+      fromState: current?.name || 'unknown'
     });
     
-    return cleanup;
-  }, [botId, registerSyncCallback, addEventToHistory, current?.name, current?.context]);
+    // Envoyer l'événement via le hook original
+    originalSend(event);
+  }, [originalSend, addEventToHistory, current]);
 
-  // Wrapper pour capturer les événements envoyés manuellement
-  const send = useCallback((eventName, eventData = {}) => {
-    const eventToAdd = {
-      type: 'SENT',
-      eventName,
-      eventData,
-      fromState: current?.name || 'unknown',
-      context: current?.context ? JSON.stringify(current.context, null, 2) : 'N/A'
-    };
-
-    // Affichage sécurisé : eventName peut être un objet ou une chaîne
-    const eventDisplayName = typeof eventName === 'object' ? eventName.type || 'UNKNOWN_EVENT' : eventName;
-    fsmLogger.history(`Capturing sent event: ${eventDisplayName} for bot ${botId}`);
-    addEventToHistory(botId, eventToAdd);
-    
-    // Appeler la fonction send originale (qui va synchroniser automatiquement)
-    return originalSend(eventName, eventData);
-  }, [originalSend, current?.name, current?.context, botId, addEventToHistory]);
-
-  // Capturer les changements d'état (transitions automatiques)
-  useEffect(() => {
-    if (current?.name && current.name !== lastStateRef.current) {
-      let eventName = 'STATE_CHANGE';
-      if (lastStateRef.current === 'evaluating' && current.name === 'exploring') {
-        eventName = 'EVALUATION_COMPLETE';
-      }
-      
-      const eventToAdd = {
-        type: 'TRANSITION',
-        eventName,
-        eventData: { 
-          from: lastStateRef.current, 
-          to: current.name 
-        },
-        fromState: lastStateRef.current || 'unknown',
-        toState: current.name,
-        context: current?.context ? JSON.stringify(current.context, null, 2) : 'N/A'
-      };
-
-      fsmLogger.history(`State transition detected: ${lastStateRef.current} → ${current.name} for bot ${botId}`);
-      addEventToHistory(botId, eventToAdd);
-      lastStateRef.current = current.name;
-    }
-  }, [current?.name, botId, addEventToHistory]);
-
-  // Capturer les changements de contexte significatifs avec meilleure détection
-  useEffect(() => {
-    if (current?.context) {
-      const currentContextString = JSON.stringify(current.context);
-      const lastContextString = lastContextRef.current ? JSON.stringify(lastContextRef.current) : null;
-      
-      // Détection spécifique pour les changements d'état de drone
-      const currentDroneState = current.context.droneFleet?.drones?.explorer?.state;
-      const currentLastUpdate = current.context.droneFleet?.drones?.explorer?.lastUpdate;
-      const lastDroneState = lastContextRef.current?.droneFleet?.drones?.explorer?.state;
-      const lastLastUpdate = lastContextRef.current?.droneFleet?.drones?.explorer?.lastUpdate;
-      
-      fsmLogger.history(`Context effect triggered for bot ${botId}:`, {
-        hasContext: !!current.context,
-        hasLastContext: !!lastContextRef.current,
-        currentDroneState,
-        lastDroneState,
-        droneStateChanged: currentDroneState !== lastDroneState,
-        lastUpdateChanged: currentLastUpdate !== lastLastUpdate,
-        stringifyMatch: currentContextString === lastContextString
-      });
-      
-      // Détecter les changements significatifs
-      const hasSignificantChange = (
-        !lastContextRef.current || 
-        currentDroneState !== lastDroneState ||
-        currentLastUpdate !== lastLastUpdate ||
-        currentContextString !== lastContextString
-      );
-      
-      if (hasSignificantChange) {
-        const eventToAdd = {
-          type: 'CONTEXT_UPDATE',
-          eventName: 'CONTEXT_CHANGED',
-          eventData: {
-            droneStateChange: currentDroneState !== lastDroneState ? {
-              from: lastDroneState,
-              to: currentDroneState
-            } : null,
-            timestamp: Date.now()
-          },
-          fromState: current.name || 'unknown',
-          context: currentContextString
-        };
-
-        fsmLogger.history(`Context change detected for bot ${botId}:`, {
-          droneStateChange: currentDroneState !== lastDroneState ? `${lastDroneState} → ${currentDroneState}` : 'none',
-          reason: hasSignificantChange ? 'significant change detected' : 'no change'
-        });
-        
-        addEventToHistory(botId, eventToAdd);
-      } else {
-        fsmLogger.history(`NO context change detected for bot ${botId}`);
-      }
-      
-      lastContextRef.current = current.context;
-    }
-  }, [current?.context, botId, addEventToHistory]);
-
-  return {
-    send,
-    current,
-    eventHistory: getEventHistory(botId),
-    clearHistory: () => clearEventHistory(botId)
-  };
+  return { send, current, eventHistory, clearHistory: clearEventHistory };
 };
-
-export default useCentralizedEventHistorySync;

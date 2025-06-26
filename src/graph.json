@@ -1,7 +1,6 @@
 {
   "App.jsx": [
     "ai/fsm/contexts/FSMContext.jsx",
-    "ai/fsm/contexts/FSMSyncContext.jsx",
     "components/FSM/FSMDebugPanel.jsx",
     "components/FSM/MultiBotManagerFSM.jsx",
     "components/HUD/Clock.jsx",
@@ -16,11 +15,7 @@
     "ai/fsm/machine/machineFactory.js",
     "logger/fsmLogger.js"
   ],
-  "ai/fsm/contexts/FSMSyncContext.jsx": [
-    "logger/fsmLogger.js"
-  ],
   "ai/fsm/hooks/useBotMachine.js": [
-    "ai/fsm/contexts/FSMSyncContext.jsx",
     "ai/fsm/machine/constants/constants.js",
     "ai/fsm/machine/context/initialContext.js",
     "ai/fsm/machine/events/movementEvents.js",
@@ -30,7 +25,6 @@
     "stores/useTileStore/index.js"
   ],
   "ai/fsm/hooks/useCentralizedEventHistorySync.js": [
-    "ai/fsm/contexts/FSMSyncContext.jsx",
     "ai/fsm/hooks/useBotMachine.js",
     "logger/fsmLogger.js",
     "stores/useFSMStore/index.js"

@@ -34,19 +34,19 @@ const createResourcesDiscoveredEvent = (resources, location) => ({
 });
 
 /**
- * Événement de zone explorée
- * Déclenché lorsqu'une zone a été complètement explorée
+ * Événement de tuile explorée
+ * Déclenché lorsqu'une tuile a été complètement explorée par un drone
  */
-const AREA_EXPLORED = 'AREA_EXPLORED';
+const TILE_EXPLORED = 'TILE_EXPLORED';
 
 /**
- * Créateur d'événement: AREA_EXPLORED
+ * Créateur d'événement: TILE_EXPLORED
  * @param {Array} completedSections - Sections explorées
  * @param {Array} discoveredResources - Ressources découvertes
  * @returns {object} Event payload
  */
-const createAreaExploredEvent = (completedSections, discoveredResources = []) => ({
-  type: AREA_EXPLORED,
+const createTileExploredEvent = (completedSections, discoveredResources = []) => ({
+  type: TILE_EXPLORED,
   completedSections,
   discoveredResources,
   timestamp: Date.now()
@@ -169,7 +169,7 @@ const createCapacityCheckEvent = (currentCapacity, maxCapacity) => ({
 // Export des types d'événements (constants)
 export const RESOURCE_EVENT_TYPES = {
   RESOURCES_DISCOVERED,
-  AREA_EXPLORED,
+  TILE_EXPLORED,
   NEW_RESOURCES_DETECTED,
   RESOURCE_COLLECTED,
   INVENTORY_FULL,
@@ -181,7 +181,7 @@ export const RESOURCE_EVENT_TYPES = {
 // Export des créateurs d'événements
 export const resourceEvents = {
   createResourcesDiscoveredEvent,
-  createAreaExploredEvent,
+  createTileExploredEvent,
   createNewResourcesDetectedEvent,
   createResourceCollectedEvent,
   createInventoryFullEvent,

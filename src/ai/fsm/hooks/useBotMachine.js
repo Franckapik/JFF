@@ -17,7 +17,6 @@ import { useMachine } from 'react-robot';
 import { createEntityContext } from '../machine/context/initialContext.js';
 import { ENTITY_TYPES } from '../machine/constants/constants.js';
 import { createBotMachine } from '../machine/machineFactory.js';
-import { useFSMSync } from '../contexts/FSMSyncContext.jsx';
 import { SYSTEM_EVENT_TYPES } from '../machine/events/systemEvents.js';
 import { MOVEMENT_EVENT_TYPES, movementEvents } from '../machine/events/movementEvents.js';
 import { useTileStore } from '../../../stores/useTileStore/index.js';
@@ -47,32 +46,10 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {
   const machine = useMemo(() => createBotMachine(botId, initialContext), [botId, initialContext]);
   const [current, send] = useMachine(machine, initialContext);
   
-  // Système de synchronisation FSM
-  const { registerSyncCallback, syncEvent } = useFSMSync();
-  
-  // Enregistrer ce hook pour la synchronisation
-  useEffect(() => {
-    const cleanup = registerSyncCallback(botId, (eventName, eventData) => {
-      if (eventName === 'CONTEXT_UPDATE') {
-        // fsmLogger.info(`[useBotMachine] Received context sync for ${botId}:`, eventData);
-      } else {
-        // fsmLogger.info(`[useBotMachine] Received sync event ${eventName} for ${botId}`);
-        send(eventName, eventData);
-      }
-    });
-    
-    return cleanup;
-  }, [botId, registerSyncCallback, send]);
-  
   // Wrapper pour send qui synchronise vers toutes les instances
   const syncedSend = useCallback((eventName, eventData = {}) => {
-    // fsmLogger.info(`[useBotMachine] Sending ${eventName} for bot ${botId}`);
-    
-    const result = send(eventName, eventData);
-    syncEvent(botId, eventName, eventData);
-    
-    return result;
-  }, [send, botId, syncEvent]);
+    return send(eventName, eventData);
+  }, [send]);
 
   const timeoutRef = useRef(null);
   const hasStartedExploring = useRef(false);

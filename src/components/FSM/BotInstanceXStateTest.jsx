@@ -1,39 +1,42 @@
 import React from 'react';
-import { useBotMachineXState } from '../../ai/fsm/hooks/useBotMachineXState';
+import { useFSM } from '../../hooks/useFSM';
 
 /**
- * Composant test pour la machine XState d'un bot FSM
+ * Composant de test minimal pour valider le hook `useFSM` et le store `useCentralFSMStore`.
+ * Affiche l'état actuel de la machine et un bouton pour envoyer un événement.
+ * @param {{ botId: string, label: string }}
  */
-export default function BotInstanceXStateTest({ botId = 'bot-xstate' }) {
-  const [state, send] = useBotMachineXState();
+function BotInstanceXStateTest({ botId, label }) {
+  // Utilise le hook `useFSM` minimal.
+  const { fsmState, context, send, isIn } = useFSM(botId);
+
+  // Log pour vérifier les re-rendus du composant.
+  // Si ce message apparaît en boucle, le problème persiste.
+  console.log(`[BotInstanceXStateTest] Rendering component for botId: ${botId}`);
+
+  // Gestionnaire d'événement simple pour tester l'envoi.
+  const handleToggle = () => {
+    // Envoie un événement simple. Assurez-vous que cet événement
+    // est géré par votre machine d'état (par exemple, 'TOGGLE').
+    // Adaptez si nécessaire à un événement qui existe dans votre machine.
+    send({ type: 'TOGGLE' });
+  };
 
   return (
-    <div style={{
-      position: 'absolute',
-      top: 20,
-      left: 20,
-      background: '#222', color: '#fff', padding: 16, borderRadius: 8, margin: 8, fontFamily: 'monospace', minWidth: 220,
-      zIndex: 3000
-    }}>
-      <div style={{ fontWeight: 'bold', marginBottom: 8 }}>BotInstanceXStateTest</div>
-      <div>Bot ID : <b>{botId}</b></div>
-      <div>État courant : <b>{String(state.value)}</b></div>
-      <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button onClick={() => send({ type: 'EVALUATION_COMPLETE' })}>EVALUATION_COMPLETE</button>
-        <button onClick={() => send({ type: 'AREA_EXPLORED' })}>AREA_EXPLORED</button>
-        <button onClick={() => send({ type: 'BASE_REACHED' })}>BASE_REACHED</button>
-        <button onClick={() => send({ type: 'RESOURCE_COLLECTED' })}>RESOURCE_COLLECTED</button>
-        <button onClick={() => send({ type: 'MANUAL_OVERRIDE' })}>MANUAL_OVERRIDE</button>
-        <button onClick={() => send({ type: 'EMERGENCY_DETECTED' })}>EMERGENCY_DETECTED</button>
-        <button onClick={() => send({ type: 'INVENTORY_FULL' })}>INVENTORY_FULL</button>
-        <button onClick={() => send({ type: 'TILE_COLLECTED' })}>TILE_COLLECTED</button>
-        <button onClick={() => send({ type: 'REFUEL_COMPLETE' })}>REFUEL_COMPLETE</button>
-        <button onClick={() => send({ type: 'UNLOAD_COMPLETE' })}>UNLOAD_COMPLETE</button>
-        <button onClick={() => send({ type: 'REPAIR_COMPLETE' })}>REPAIR_COMPLETE</button>
-        <button onClick={() => send({ type: 'MAINTENANCE_COMPLETE' })}>MAINTENANCE_COMPLETE</button>
-        <button onClick={() => send({ type: 'IDLE_TIMEOUT' })}>IDLE_TIMEOUT</button>
-        <button onClick={() => send({ type: 'EXPLORATION_REQUESTED' })}>EXPLORATION_REQUESTED</button>
-      </div>
+    <div style={{ border: '1px solid #ccc', margin: '10px', padding: '10px' }}>
+      <h4>{label} (ID: {botId})</h4>
+      {fsmState && typeof fsmState.matches === 'function' ? (
+        <>
+          <p>État actuel : <strong>{JSON.stringify(fsmState.value)}</strong></p>
+          <p>Est dans l'état 'actif' ? <strong>{isIn('active') ? 'Oui' : 'Non'}</strong></p>
+          <pre>Contexte : {JSON.stringify(context, null, 2)}</pre>
+          <button onClick={handleToggle}>Envoyer l'événement 'TOGGLE'</button>
+        </>
+      ) : (
+        <p>Chargement de l'état... (Bot non initialisé ou état invalide)</p>
+      )}
     </div>
   );
 }
+
+export default BotInstanceXStateTest;

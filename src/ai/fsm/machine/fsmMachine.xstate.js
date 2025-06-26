@@ -13,7 +13,7 @@ export const fsmMachine = createMachine({
     },
     [BOT_STATES.EXPLORING_DEPLOYING]: {
       on: {
-        AREA_EXPLORED: BOT_STATES.EVALUATING
+        TILE_EXPLORED: BOT_STATES.EVALUATING
       }
     }
   }

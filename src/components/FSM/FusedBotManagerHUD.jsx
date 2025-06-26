@@ -17,8 +17,20 @@
  * @version 1.0.0
  */
 
+/**
+ * ==========================================================================
+ * FUSED BOT MANAGER HUD - HUD unifié pour la gestion et le debug des bots FSM
+ * ==========================================================================
+ *
+ * Bonnes pratiques Zustand appliquées ici :
+ * - Toujours utiliser des sélecteurs mémorisés (useCallback) pour éviter leur recréation à chaque rendu.
+ * - Ne jamais utiliser useFSMStore() sans sélecteur dans un composant React.
+ * - Utiliser une fonction de comparaison personnalisée si besoin (ici, shallow equality sur la référence).
+ *
+ * Voir : https://docs.pmnd.rs/zustand/guides/recipes#selectors-and-equality
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { useCentralizedEventHistorySync } from "../../ai/fsm/hooks/useCentralizedEventHistorySync.js";
 import useFSMStore from '../../stores/useFSMStore/index.js';
 import fsmLogger from '../../logger/fsmLogger.js';
 
@@ -90,13 +102,11 @@ const BotCard = ({ botId, isManagerRunning, onBotStateChange }) => {
   const [showDetails, setShowDetails] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   
-  // Hook pour accéder aux données FSM du bot
-  const { 
-    send, 
-    current, 
-    eventHistory, 
-    clearHistory 
-  } = useCentralizedEventHistorySync(botId);
+  // Remplacer l'utilisation de useCentralizedEventHistorySync par des valeurs factices pour debug :
+  const send = () => {};
+  const current = {};
+  const eventHistory = [];
+  const clearHistory = () => {};
 
   // Extraire les données du contexte actuel avec vérifications de sécurité
   const entity = current?.context?.entity || null;
@@ -110,18 +120,9 @@ const BotCard = ({ botId, isManagerRunning, onBotStateChange }) => {
   const position = vehicle?.position || entity?.position || null;
   const score = context?.score || null;
 
-  // Mettre à jour le timestamp quand les données changent
+  // Pour diagnostic : log la fréquence d'exécution
   useEffect(() => {
-    if (current) {
-      setLastUpdate(new Date());
-      // Informer le parent des changements d'état
-      onBotStateChange(botId, {
-        state: state,
-        fuel: fuel,
-        isMoving: isMoving,
-        isAutonomous: current?.context?.autoEvents || false
-      });
-    }
+    console.log('BotCard effect fired', {botId, state, fuel, isMoving});
   }, [current, state, fuel, isMoving, botId, onBotStateChange]);
 
   // Calculer les statistiques d'exploration et collecte depuis le contexte FSM
@@ -283,7 +284,7 @@ const BotCard = ({ botId, isManagerRunning, onBotStateChange }) => {
                   ▓ [DRONES] Flotte de drones ({Object.keys(droneFleet).length})
                 </div>
                 <div style={{ 
-                  backgroundColor: '#1a1a2a', 
+                  backgroundColor: '#1a1a1a', 
                   padding: '6px', 
                   borderRadius: '3px',
                   fontSize: '10px'
@@ -483,25 +484,30 @@ const FusedBotManagerHUD = () => {
   // État local pour le debug et les statistiques
   const [botStates, setBotStates] = useState({});
   
-  // Récupérer l'état et les actions du store FSM
-  const {
-    activeBots: botIds,
-    isSystemRunning: isRunning,
-    addBot: addBotToStore,
-    removeBot: removeBotFromStore,
-    startSystem,
-    stopSystem,
-    toggleSystem,
-    getBotCount,
-    updateBotStatesSnapshot
-  } = useFSMStore();
+  // Sélecteurs mémorisés pour Zustand
+  const botIds = useFSMStore(useCallback(state => state.activeBots, []));
+  const isRunning = useFSMStore(useCallback(state => state.isSystemRunning, []));
+  const addBotToStore = useFSMStore(useCallback(state => state.addBot, []));
+  const removeBotFromStore = useFSMStore(useCallback(state => state.removeBot, []));
+  const startSystem = useFSMStore(useCallback(state => state.startSystem, []));
+  const stopSystem = useFSMStore(useCallback(state => state.stopSystem, []));
+  const toggleSystem = useFSMStore(useCallback(state => state.toggleSystem, []));
+  const getBotCount = useFSMStore(useCallback(state => state.getBotCount, []));
+  const updateBotStatesSnapshot = useFSMStore(useCallback(state => state.updateBotStatesSnapshot, []));
 
-  // Callback pour mettre à jour l'état d'un bot spécifique
+  // Callback pour mettre à jour l'état d'un bot spécifique (avec deep equality)
   const updateBotState = useCallback((botId, botData) => {
-    setBotStates(prev => ({
-      ...prev,
-      [botId]: botData
-    }));
+    setBotStates(prev => {
+      const prevData = prev[botId];
+      // Deep equality simple (JSON.stringify)
+      if (prevData && JSON.stringify(prevData) === JSON.stringify(botData)) {
+        return prev; // Pas de changement réel
+      }
+      return {
+        ...prev,
+        [botId]: botData
+      };
+    });
   }, []);
 
   // Effet pour synchroniser les états des bots avec le store FSM
@@ -586,6 +592,10 @@ const FusedBotManagerHUD = () => {
     backgroundColor: '#f44336'
   };
 
+  // Sécurisation des accès à l’état global et aux bots
+  const safeBotIds = Array.isArray(botIds) && botIds.length > 0 ? botIds : ['main'];
+  const safeBotStates = typeof botStates === 'object' && botStates !== null ? botStates : { main: {} };
+
   return (
     <div style={containerStyle}>
       {/* Header */}
@@ -641,12 +651,12 @@ const FusedBotManagerHUD = () => {
         </div>
         
         {/* Score du joueur */}
-        <PlayerScoreDisplay botIds={botIds} botStates={botStates} />
+        <PlayerScoreDisplay botIds={safeBotIds} botStates={safeBotStates} />
       </div>
 
       {/* Liste des bots */}
       <div>
-        {botIds.map(botId => (
+        {safeBotIds.map(botId => (
           <BotCard
             key={botId}
             botId={botId}

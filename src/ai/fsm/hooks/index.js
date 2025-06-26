@@ -7,7 +7,7 @@
  */
 
 // === HOOKS CORE ===
-export { useBotMachine, useBotMachineFixed, useBotMachineSharedInstance } from './useBotMachine.js';
+export { useBotMachine, useBotMachineFixed, useBotMachineSharedInstance } from './useBotMachineCompat.js';
 export { useEventDebounce } from './useEventDebounce.js';
 export { useCentralizedEventHistorySync } from './useCentralizedEventHistorySync.js';
 

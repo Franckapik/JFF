@@ -1,99 +1,42 @@
-import React, { useState, useEffect } from "react";
-import { Canvas } from "@react-three/fiber";
-import Scene from "./components/Scene";
+import React, { useEffect } from 'react';
+// import { Canvas } from "@react-three/fiber";
+// import Scene from "./components/Scene";
 import "./styles/App.css";
-import Clock from "./components/HUD/Clock";
-import TileStoreMonitor from "./components/HUD/TileStoreMonitor";
-
+// import Clock from "./components/HUD/Clock";
+// import TileStoreMonitor from "./components/HUD/TileStoreMonitor";
 
 // ============= COMPOSANTS FSM =============
-import FusedBotManagerHUD from "./components/FSM/FusedBotManagerHUD";
-import useFSMStore from "./stores/useFSMStore/index.js";
-import { FSMProvider } from "./ai/fsm/contexts/FSMContext.jsx";
-import { FSMSyncProvider } from "./ai/fsm/contexts/FSMSyncContext.jsx";
-import CentralFSMHud from './components/HUD/CentralFSMHud';
+// import FusedBotManagerHUD from "./components/FSM/FusedBotManagerHUD";
+// import CentralFSMHud from './components/HUD/CentralFSMHud';
 import BotInstanceXStateTest from './components/FSM/BotInstanceXStateTest.jsx';
-
-
+import { useCentralFSMStore } from './stores/useCentralFSMStore';
 
 const App = () => {
-  const [isTimerRunning, setIsTimerRunning] = useState(true);
-  const [showFleetExample, setShowFleetExample] = useState(false);
+  // const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const addBot = useCentralFSMStore((state) => state.addBot);
   
-  // Initialiser le store FSM avec des bots par défaut
-  const { setBots, getBotCount } = useFSMStore();
-  
+  // Créer le bot drone_1 au chargement de l'application
   useEffect(() => {
-    // Initialiser avec 2 bots par défaut si aucun bot n'est présent
-    if (getBotCount() === 0) {
-      setBots(['bot-0', 'bot-1']);
-    }
-  }, [setBots, getBotCount]);
+    console.log('[App] Creating drone_1 bot...');
+    addBot('drone_1');
+  }, [addBot]);
   
   return (
-    <FSMProvider>
-      <FSMSyncProvider>
-        <div className="app-container">
-        {/* Bouton pour basculer vers FleetExample */}
-        <div style={{
-          position: 'absolute',
-          top: '10px',
-          right: '10px',
-          zIndex: 1000
-        }}>
-          <button
-            onClick={() => setShowFleetExample(!showFleetExample)}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: showFleetExample ? '#ff4444' : '#4444ff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              fontFamily: 'monospace',
-              fontSize: '14px'
-            }}
-          >
-            {showFleetExample ? '🏠 Scène Principale' : '🤖 Demo FSM → Fleet'}
-          </button>
-        </div>
-
-          <>
-            {/* Main content area */}
-            <div className="main-content">
-              <div className="canvas-container">
-                <Canvas>
-                  <Scene />
-                </Canvas>
-              </div>
-              
-              {/* Clock HUD */}
-              <div className="clock-hud">
-                <Clock isTimerRunning={isTimerRunning} />
-              </div>
-            </div>
-          </>
-   
-
-        {/* ============= SYSTÈME FSM ============= */}
-        {/* HUD Fusionné - Gestion et debug des bots FSM */}
-        <FusedBotManagerHUD />
+      <div className="app-container">
+        <h1>Minimal Test for FSM Stability</h1>
+        <p>
+          This view renders only the necessary components to test the FSM store and hook.
+          Check the console for logs from `[useCentralFSMStore]`, `[useFSM Minimal]`, and `[BotInstanceXStateTest]`.
+          If there are no infinite loops, the core issue is solved.
+        </p>
         
-        {/* Tile Store Monitor - réactivé pour diagnostic complémentaire */}
-        <TileStoreMonitor 
-          position="top-left"
-          isVisible={true}
-        />
+        {/* Test avec le bot par défaut ('main') */}
+        <BotInstanceXStateTest botId="main" label="Main Bot" />
 
-        {/* HUD FSM Centralisé */}
-        <CentralFSMHud />
-
-        {/* Test XState Bot Instance */}
-        <BotInstanceXStateTest />
+        {/* Test avec un second bot pour vérifier l'isolation */}
+        <BotInstanceXStateTest botId="drone_1" label="Drone #1" />
 
       </div>
-    </FSMSyncProvider>
-    </FSMProvider>
   );
 };
 

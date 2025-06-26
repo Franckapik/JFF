@@ -1,10 +1,109 @@
 import { create } from 'zustand';
-import { zustandXStateMiddleware } from './zustandXStateMiddleware';
-import fsmMachine from '../ai/fsm/machine/fsmMachine.xstate';
+import { createActor } from 'xstate';
+import fsmBotMachine from '../ai/fsm/machine/fsmBotMachine.xstate';
+import initialContextModule from '../ai/fsm/machine/context/initialContext';
 
-// Store Zustand centralisé avec middleware XState
-export const useCentralFSMStore = create(
-  zustandXStateMiddleware(fsmMachine, 'fsm')((set, get) => ({
-    // Ajoutez ici d'autres slices ou actions globales si besoin
-  }))
-);
+// Constante pour un état vide et stable, évite les undefined.
+const EMPTY_BOT_STATE = { value: 'uninitialized', context: {} };
+
+export const useCentralFSMStore = create((set, get) => {
+  // Map pour stocker les acteurs XState par botId
+  const actors = new Map();
+  // Map pour mettre en cache la dernière référence de snapshot connue par botId
+  const snapshotCache = new Map();
+
+  const createBotActor = (botId) => {
+    if (actors.has(botId)) {
+      return actors.get(botId);
+    }
+
+    const botContext = initialContextModule.createEntityContext(botId, 'auto');
+    const actor = createActor(fsmBotMachine, { input: botContext });
+
+    actor.subscribe((snapshot) => {
+      const previousSnapshot = snapshotCache.get(botId);
+      if (snapshot === previousSnapshot) {
+        return; // La référence est identique, aucune mise à jour nécessaire.
+      }
+
+      // Mettre à jour le cache avec la nouvelle référence de snapshot
+      snapshotCache.set(botId, snapshot);
+
+      // Mettre à jour l'état Zustand de manière sécurisée.
+      // On utilise la forme fonctionnelle de `set` car l'état (`state`)
+      // peut être `undefined` lors du tout premier appel synchrone
+      // pendant l'initialisation du store.
+      set((state) => ({
+        botStates: {
+          ...(state?.botStates ?? {}), // Si state ou state.botStates est undefined, on part d'un objet vide
+          [botId]: snapshot,
+        },
+      }));
+    });
+
+    actors.set(botId, actor);
+    actor.start();
+    
+    // Initialiser le cache avec le premier snapshot
+    const initialSnapshot = actor.getSnapshot();
+    snapshotCache.set(botId, initialSnapshot);
+
+    return actor;
+  };
+
+  // Créer l'acteur principal au démarrage
+  const mainActor = createBotActor('main');
+
+  return {
+    // État initial
+    botStates: {
+      main: mainActor.getSnapshot(),
+    },
+
+    // Action pour envoyer un événement à un bot
+    send: (event, botId = 'main') => {
+      const actor = actors.get(botId);
+      if (actor) {
+        actor.send(event);
+      } else {
+        console.warn(`[useCentralFSMStore] Attempted to send event to non-existent bot: ${botId}`);
+      }
+    },
+
+    // Action pour ajouter un nouveau bot
+    addBot: (botId) => {
+      if (!botId || actors.has(botId)) return;
+      const newActor = createBotActor(botId);
+      // Utiliser get() pour la mise à jour afin de garantir la cohérence
+      const currentState = get();
+      set({
+        botStates: {
+          ...currentState.botStates,
+          [botId]: newActor.getSnapshot(),
+        },
+      });
+    },
+
+    // Action pour supprimer un bot
+    removeBot: (botId) => {
+      if (botId === 'main' || !actors.has(botId)) return;
+      
+      const actor = actors.get(botId);
+      actor.stop();
+      actors.delete(botId);
+      snapshotCache.delete(botId);
+
+      // Utiliser get() pour la mise à jour
+      const currentState = get();
+      const { [botId]: _, ...rest } = currentState.botStates;
+      set({ botStates: rest });
+    },
+
+    // Sélecteur interne pour obtenir l'état d'un bot.
+    // C'est la fonction la plus critique pour la stabilité.
+    getBotState: (botId = 'main') => {
+      // On retourne TOUJOURS depuis le cache pour garantir une référence stable.
+      return snapshotCache.get(botId) || EMPTY_BOT_STATE;
+    },
+  };
+});
