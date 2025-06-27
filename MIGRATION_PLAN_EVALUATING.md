@@ -207,9 +207,9 @@ src/ai/fsm/machineX/
 ## 📋 Checklist de Migration
 
 ### Phase 1 - Structure (Prompts 1-2)
-- [ ] Architecture de dossiers créée
-- [ ] Fichiers vides avec headers
-- [ ] Constantes essentielles migrées
+- [x] Architecture de dossiers créée
+- [x] Fichiers vides avec headers
+- [x] Constantes essentielles migrées
 
 ### Phase 2 - Guards (Prompts 3-5)  
 - [ ] Guards de sécurité migrés
