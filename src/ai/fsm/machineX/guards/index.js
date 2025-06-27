@@ -16,7 +16,7 @@
 
 import { safetyGuards } from './safety.guards.js';
 import { efficiencyGuards } from './efficiency.guards.js';
-// TODO: PROMPT 5 - import { discoveryGuards } from './discovery.guards.js';
+import { discoveryGuards } from './discovery.guards.js';
 
 // ============================================================================
 // EXPORT CENTRALISÉ (À compléter)
@@ -31,7 +31,8 @@ export const allGuards = {
   ...safetyGuards,
   // Efficiency guards (PROMPT 4 - COMPLETED)
   ...efficiencyGuards,
-  // TODO: PROMPT 5 - ...discoveryGuards
+  // Discovery guards (PROMPT 5 - COMPLETED)
+  ...discoveryGuards
 };
 
 /**
@@ -40,11 +41,11 @@ export const allGuards = {
 export const guardsByCategory = {
   safety: safetyGuards,
   efficiency: efficiencyGuards,
-  // TODO: PROMPT 5 - discovery: discoveryGuards
+  discovery: discoveryGuards
 };
 
 // Exports individuels pour faciliter l'usage
-export { safetyGuards, efficiencyGuards };
+export { safetyGuards, efficiencyGuards, discoveryGuards };
 
 // Export par défaut
 export default allGuards;

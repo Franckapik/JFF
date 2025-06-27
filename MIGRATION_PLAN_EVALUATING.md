@@ -102,21 +102,18 @@ src/ai/fsm/machineX/
 
 ---
 
-### **PROMPT 5 : Migration des guards de découverte**
+### **PROMPT 5 : Migration des guards de découverte** ✅
 
-**Objectif** : Migrer les guards d'exploration/découverte
+**Objectif** : Migrer les guards d'exploration/découverte utilisés dans evaluating
 
-**Actions à demander** :
-1. Analyser `machine/guards/discoveryGuard.js` existant  
-2. Identifier tous les guards utilisés dans evaluating (le plus complexe)
-3. Réécrire en syntaxe XState dans `machineX/guards/discovery.guards.js`
+**COMPLETED** - Discovery guards migrated successfully:
+- ✅ Analyzed `machine/guards/discoveryGuard.js` and all core exploration guards
+- ✅ Migrated all guards used in evaluating: `hasBestTileForCollection`, `hasExploredEnoughTiles`, `shouldTransitionToCollection`, `hasUnexploredAreas`, `needsExploration`
+- ✅ Implémentation XState pure, documentation, structure modulaire
+- ✅ Updated `guards/index.js` to export discovery guards
+- ✅ All guards follow XState syntax and structure
 
-**Guards à migrer** :
-- `hasBestTileForCollection`
-- `hasExploredEnoughTiles`
-- `shouldTransitionToCollection`
-- `hasUnexploredAreas`
-- `needsExploration`
+**Résultat** : ✅ Fichier `discovery.guards.js` avec syntaxe XState native - TERMINÉ
 
 ---
 
@@ -212,7 +209,7 @@ src/ai/fsm/machineX/
 ### Phase 2 - Guards (Prompts 3-5)  
 - [x] Guards de sécurité migrés
 - [x] Guards d'efficacité migrés
-- [ ] Guards de découverte migrés
+- [x] Guards de découverte migrés
 
 ### Phase 3 - Configuration (Prompts 6-8)
 - [ ] Événements configurés
