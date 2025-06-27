@@ -86,19 +86,19 @@ src/ai/fsm/machineX/
 
 ---
 
-### **PROMPT 4 : Migration des guards d'efficacité**
+### **PROMPT 4 : Migration des guards d'efficacité** ✅
 
 **Objectif** : Migrer les guards d'efficacité utilisés dans evaluating
 
-**Actions à demander** :
-1. Analyser `machine/guards/efficiencyGuard.js` existant
-2. Identifier les guards utilisés dans les transitions de `evaluatingState.js`
-3. Réécrire en syntaxe XState dans `machineX/guards/efficiency.guards.js`
+**COMPLETED** - Efficiency guards migrated successfully:
+- ✅ Analyzed `machine/guards/efficiencyGuard.js` and identified used guards
+- ✅ Migrated `shouldReturnForEfficiency` (used in evaluatingState.js line 143)
+- ✅ Migrated all core efficiency guards: `hasCapacityFor`, `isAtMaxCapacity`, `canCollectResource`, `isFullTank`, `canRefuel`, etc.
+- ✅ Implemented resource management utilities for capacity calculations
+- ✅ Updated `guards/index.js` to export efficiency guards
+- ✅ All guards follow XState syntax and structure
 
-**Guards à migrer** :
-- `shouldReturnForEfficiency`
-- `isFullTank` (si utilisé)
-- Autres guards d'efficacité dans evaluating
+**Résultat** : ✅ Fichier `efficiency.guards.js` avec syntaxe XState native - TERMINÉ
 
 ---
 
@@ -211,7 +211,7 @@ src/ai/fsm/machineX/
 
 ### Phase 2 - Guards (Prompts 3-5)  
 - [x] Guards de sécurité migrés
-- [ ] Guards d'efficacité migrés
+- [x] Guards d'efficacité migrés
 - [ ] Guards de découverte migrés
 
 ### Phase 3 - Configuration (Prompts 6-8)
