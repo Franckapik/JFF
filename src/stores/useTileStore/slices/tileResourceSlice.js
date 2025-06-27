@@ -287,7 +287,6 @@ const createTileResourceSlice = (set, get) => {
       } else if (source && source.coord) {
         coord = source.coord;
       } else {
-        console.warn("Source invalide pour analyzeResourcesNearPosition");
         return [];
       }
       

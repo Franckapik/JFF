@@ -11,12 +11,14 @@
  */
 
 import { createMachine } from 'xstate';
-import { allActions } from './actions/index.js';
-import { allGuards } from './guards/index.js';
 import { evaluatingState } from './states/evaluating.state.js';
 import { exploringState } from './states/exploring.state.js';
 import { collectingState } from './states/collecting.state.js';
 import { maintainingState } from './states/maintaining.state.js';
+import { XSTATE_STATES} from './config/constants.js';
+import * as allGuards from './guards/guards.all.js';
+import allActions from './actions/index.js';
+
 
 // États temporaires/simplifiés pour la structure
 const maintainingStateRef = maintainingState;
@@ -27,7 +29,7 @@ const maintainingStateRef = maintainingState;
 export const machineX = createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5gF8A0IB2B7CdGgFsBDAYwAsBLDMADXxAActYKAXCrDegD0QFoAbOgCe-AcjQhi5KrQB0YbgwA2WAE5Uo9Ji3aceiACwBOOQGYzARgBMAVmvGz9swAYA7JZGJrls+Zu2LvbWhmaGbtYS6NKU1DRyJFjKymAk7BhaSIzMbBxcWbwI4XLGAnYulqGWlu62niCiCGGGJYEuLgAcLtZutrZmblFSpLHyxFSsRFSa2jl6+aCFhtZeCB2WcgK97SE+lS4CHRISQA */
   id: 'machineX',
-  initial: 'evaluating',
+  initial: XSTATE_STATES.EVALUATING,   
   states: {
     evaluating: evaluatingState,
     exploring: exploringState,
@@ -35,8 +37,12 @@ export const machineX = createMachine({
     maintaining: maintainingStateRef
   }
 }, {
-  actions: allActions,
-  guards: allGuards
+  guards: {
+    ...allGuards
+  },
+  actions: {
+    ...allActions
+  }
 });
 
 export default machineX;

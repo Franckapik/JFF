@@ -52,7 +52,6 @@ const createTileMarkSlice = (set, get) => {
       const currentTile = get().tiles[coord];
       
       if (!currentTile) {
-        console.warn('❌ [TileMarkSlice] Tile not found for coord:', coord);
         return;
       }
       

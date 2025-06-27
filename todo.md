@@ -1,3 +1,6 @@
+reprendre le travail au niveau de la ligne 64 de la scnene pour la synchronisation avec les bots. 
+
+
 Le fichier vehicleConstant doit etre supprimé. Le contenu utilisé dans ce fichier peut etre placé dans le fichier constants.js. Mettre a jour les imports/exports dans le codebase.
 
 Le chemin du vaisseau lors des deplacements liés a la collecte doivent utiliser les fonctions utilitaires du fichier tilePathSlice. L'animation du vaisseau doit alors emprunter un chemin calculé qui passe de tuile en tuiles selon les tuiles walkables et voisines. Ainsi, le chemin calculé montre un déplacement réaliste entre les tuiles. 

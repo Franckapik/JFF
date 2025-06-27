@@ -11,17 +11,9 @@ export function useXFSM(botId = getBotId(0)) {
   // 1. Sélecteur optimisé pour l'état du bot - Utilise directement botStates
   const botState = useXFSMStore((store) => {
     if (!store?.botStates) {
-      console.warn(`[useXFSM] Store botStates is missing for ${botId}`);
       return null;
     }
     const state = store.botStates[botId];
-    console.log(`[useXFSM] Selector receiving state for ${botId}:`, {
-      hasState: !!state,
-      stateValue: state?.value,
-      contextSize: state?.context ? Object.keys(state.context).length : 0,
-      fullState: state,
-      allBotIds: Object.keys(store.botStates || {})
-    });
     return state;
   });
 
@@ -35,20 +27,9 @@ export function useXFSM(botId = getBotId(0)) {
   const fsmState = botState || { value: 'uninitialized', context: {} };
   const context = fsmState.context || {};
 
-  // 4. Log du contexte lors des changements
-  useEffect(() => {
-    console.log(`[useXFSM] Context for ${botId} updated:`, {
-      contextKeys: Object.keys(context),
-      contextSize: Object.keys(context).length,
-      entityId: context?.entityId || "missing",
-      entityType: context?.entityType || "missing"
-    });
-  }, [context, botId]);
-
   // 5. Mémorisation de la fonction send spécifique au bot
   const sendToBots = useCallback(
     (event) => {
-      console.log(`[useXFSM] Sending event via hook to ${botId}:`, event);
       send(event, botId);
     },
     [send, botId]

@@ -68,7 +68,6 @@ const createTileFilterSlice = (set, get) => {
       } else if (source && source.coord) {
         coord = source.coord;
       } else {
-        console.warn("Source invalide pour getWalkableTilesInRadius");
         return [];
       }
       
@@ -130,7 +129,6 @@ const createTileFilterSlice = (set, get) => {
       );
       
       if (walkableTiles.length === 0) {
-        console.warn("Aucune tuile walkable disponible pour la sélection aléatoire");
         return null;
       }
       

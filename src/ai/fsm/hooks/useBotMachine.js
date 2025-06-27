@@ -14,7 +14,7 @@
 
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useMachine } from 'react-robot';
-import { createMachineContext } from '../machine/context/initialContext.js';
+import { createMachineContext } from '../machineX/context/initialContext.js';
 import { ENTITY_TYPES } from '../machine/constants/constants.js';
 import { createBotMachine } from '../machine/machineFactory.js';
 import { SYSTEM_EVENT_TYPES } from '../machine/events/systemEvents.js';

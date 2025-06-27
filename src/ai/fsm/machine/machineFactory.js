@@ -18,7 +18,7 @@ import {
   collectingState,
   idleAtBaseState
 } from './states/index.js';
-import { createMachineContext } from './context/initialContext.js';
+import { createMachineContext } from '../machineX/context/initialContext.js';
 
 // ============================================================================
 // MACHINE FSM SIMPLIFIÉE - Utilise les états modulaires

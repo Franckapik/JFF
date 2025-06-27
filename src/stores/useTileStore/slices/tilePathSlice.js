@@ -64,7 +64,6 @@ const createTilePathSlice = (set, get) => ({
     const normalizedTarget = normalizeCoordinate(targetCoord);
     
     if (!normalizedStart || !normalizedTarget) {
-      console.warn('Invalid coordinates provided to findPath:', { startCoord, targetCoord });
       return [];
     }
     
@@ -230,7 +229,6 @@ const createTilePathSlice = (set, get) => ({
         return formatted ? distance.toFixed(1) : distance;
       }
     } catch (error) {
-      console.error("Error calculating distance:", error);
       return formatted ? "N/A" : 0;
     }
   },

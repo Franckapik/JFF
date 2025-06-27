@@ -1,7 +1,37 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useXFSM } from '../../hooks/useXFSM';
-import { machineX, allGuards as importedAllGuards, guardsByCategory } from '../../ai/fsm/machineX';
-import { createMachineContext } from '../../ai/fsm/machine/context/initialContext';
+import { machineX } from '../../ai/fsm/machineX';
+import { createMachineContext } from '../../ai/fsm/machineX/context/initialContext';
+import { 
+  shouldExplore,
+  hasCapacityFor,
+  isAtMaxCapacity,
+  canCollectResource,
+  canDepositResources,
+  isFullTank,
+  canRefuel,
+  isLowFuel,
+  shouldReturnForEfficiency,
+  isCollectionEfficient,
+  shouldCollectMore,
+  needsRefuelForEfficiency,
+  needsInventoryManagement,
+  hasBestTileForCollection,
+  hasExploredEnoughTiles,
+  shouldTransitionToCollection,
+  hasUnexploredAreas,
+  needsExploration,
+  isCriticalFuel,
+  isLowFuelSafety,
+  hasEnoughFuelForDistance,
+  canConsumeFuel,
+  isVehicleCritical,
+  isVehicleOperational,
+  hasEnoughFuel,
+  needsEmergencyReturn,
+  isSafeToOperate,
+  canContinueOperation
+} from '../../ai/fsm/machineX/guards/guards.all.js';
 
 /**
  * Panneau de simulation XState dynamique qui s'adapte automatiquement à la machine
@@ -27,8 +57,6 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
     // Valeurs par défaut en cas d'erreur
     fsmState = { value: 'error', context: {} };
     context = {};
-    send = () => console.warn('Send function not available due to error');
-    addBot = () => console.warn('AddBot function not available due to error');
   }
   
   // Afficher l'erreur si elle persiste
@@ -43,10 +71,37 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
   }
 
   // Extraction dynamique des guards de la machineX
-  const allGuards = useMemo(() => {
-    // On prend tous les guards exportés (fonctions)
-    return importedAllGuards || {};
-  }, []);
+  // On prend tous les guards exportés (fonctions)
+  const allGuards = {
+    shouldExplore,
+    hasCapacityFor,
+    isAtMaxCapacity,
+    canCollectResource,
+    canDepositResources,
+    isFullTank,
+    canRefuel,
+    isLowFuel,
+    shouldReturnForEfficiency,
+    isCollectionEfficient,
+    shouldCollectMore,
+    needsRefuelForEfficiency,
+    needsInventoryManagement,
+    hasBestTileForCollection,
+    hasExploredEnoughTiles,
+    shouldTransitionToCollection,
+    hasUnexploredAreas,
+    needsExploration,
+    isCriticalFuel,
+    isLowFuelSafety,
+    hasEnoughFuelForDistance,
+    canConsumeFuel,
+    isVehicleCritical,
+    isVehicleOperational,
+    hasEnoughFuel,
+    needsEmergencyReturn,
+    isSafeToOperate,
+    canContinueOperation
+  };
 
   // Extraction dynamique COMPLÈTE des éléments de la machine XState
   const machineConfig = useMemo(() => {
@@ -273,15 +328,12 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
 
   // Effet pour logger le contexte au chargement
   useEffect(() => {
-    console.log('[XStateSimulationPanel] Mounted for', botId);
-    console.log('[XStateSimulationPanel] Initial context:', context);
-    console.log('[XStateSimulationPanel] Context properties:', Object.keys(context).length);
+    // Suppression de tous les console.log et console.error non fsmLogger
   }, []);
 
   // Effet pour logger les changements de contexte
   useEffect(() => {
-    console.log('[XStateSimulationPanel] Context updated for', botId);
-    console.log('[XStateSimulationPanel] Context properties:', Object.keys(context).length);
+    // Suppression de tous les console.log et console.error non fsmLogger
   }, [context, botId]);
 
   // Affichage des métriques de contexte
@@ -308,18 +360,11 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
       contextSize: Object.keys(context).length,
       hasEntityId: context?.entityId ? true : false 
     });
-    
-    // Envoyer l'événement avec les données simulées et la charge utile
-    const eventData = { 
-      type: eventType, 
-      ...simulatedContext, 
-      ...payload 
-    };
-    
+    // N'envoie que le type d'événement (pas de simulatedContext)
+    const eventData = { type: eventType, ...payload };
     if (window && window.fsmLogger) {
       window.fsmLogger.event(`[XStateSimulationPanel] sendEventWithContext: ${eventType}`, eventData);
     } 
-    
     send(eventData);
   };
 
@@ -558,45 +603,42 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
 
       {/* Contrôle des Guards */}
       <div style={{ marginBottom: 15 }}>
-        <h4>🛡️ Guards par catégorie</h4>
-        {Object.entries(guardsByCategory).map(([category, guardsObj]) => (
-          <div key={category} style={{ marginBottom: 8, borderLeft: '3px solid #2196F3', paddingLeft: 8 }}>
-            <strong style={{ textTransform: 'capitalize', color: '#2196F3' }}>{category}</strong>
-            {Object.keys(guardsObj).length > 0 ? (
-              Object.keys(guardsObj).map((guardName) => {
-                const override = guardOverrides[guardName] || { mode: 'auto', value: false };
-                const isAuto = override.mode !== 'forced';
-                const realValue = evaluateGuard(guardName);
-                const displayValue = isAuto ? realValue : override.value;
-                return (
-                  <div key={guardName} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '3px 0' }}>
-                    <span title={guardName}>{guardName}:</span>
-                    <span style={{ color: displayValue ? '#4CAF50' : '#f44336', fontWeight: 'bold', marginRight: 8 }}>{displayValue ? 'TRUE' : 'FALSE'}</span>
-                    <label style={{ fontSize: '10px', marginRight: 4 }}>
-                      <input
-                        type="checkbox"
-                        checked={!isAuto}
-                        onChange={e => setGuardMode(guardName, e.target.checked ? 'forced' : 'auto')}
-                      />
-                      Forcer
-                    </label>
-                    {!isAuto && (
-                      <button
-                        style={{ fontSize: '10px', background: displayValue ? '#4CAF50' : '#f44336', color: 'white', border: 'none', borderRadius: 3, padding: '2px 6px', marginLeft: 2 }}
-                        onClick={() => setGuardForcedValue(guardName, !displayValue)}
-                      >
-                        {displayValue ? 'TRUE' : 'FALSE'}
-                      </button>
-                    )}
-                    {isAuto && <span style={{ fontSize: '9px', color: '#888', marginLeft: 4 }}>(auto)</span>}
-                  </div>
-                );
-              })
-            ) : (
-              <div style={{ opacity: 0.6, fontSize: '10px' }}>Aucun guard</div>
-            )}
-          </div>
-        ))}
+        <h4>🛡️ Guards</h4>
+        <div>
+          {machineConfig.guards.filter(guardName => typeof guardName === 'string').length > 0 ? (
+            machineConfig.guards.filter(guardName => typeof guardName === 'string').map((guardName) => {
+              const override = guardOverrides[guardName] || { mode: 'auto', value: false };
+              const isAuto = override.mode !== 'forced';
+              const realValue = evaluateGuard(guardName);
+              const displayValue = isAuto ? realValue : override.value;
+              return (
+                <div key={guardName} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '3px 0' }}>
+                  <span title={guardName}>{guardName}:</span>
+                  <span style={{ color: displayValue ? '#4CAF50' : '#f44336', fontWeight: 'bold', marginRight: 8 }}>{displayValue ? 'TRUE' : 'FALSE'}</span>
+                  <label style={{ fontSize: '10px', marginRight: 4 }}>
+                    <input
+                      type="checkbox"
+                      checked={!isAuto}
+                      onChange={e => setGuardMode(guardName, e.target.checked ? 'forced' : 'auto')}
+                    />
+                    Forcer
+                  </label>
+                  {!isAuto && (
+                    <button
+                      style={{ fontSize: '10px', background: displayValue ? '#4CAF50' : '#f44336', color: 'white', border: 'none', borderRadius: 3, padding: '2px 6px', marginLeft: 2 }}
+                      onClick={() => setGuardForcedValue(guardName, !displayValue)}
+                    >
+                      {displayValue ? 'TRUE' : 'FALSE'}
+                    </button>
+                  )}
+                  {isAuto && <span style={{ fontSize: '9px', color: '#888', marginLeft: 4 }}>(auto)</span>}
+                </div>
+              );
+            })
+          ) : (
+            <div style={{ opacity: 0.6, fontSize: '10px' }}>Aucun guard</div>
+          )}
+        </div>
       </div>
 
       {/* Informations de debug */}

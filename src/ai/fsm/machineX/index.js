@@ -12,7 +12,7 @@
 
 export { machineX } from './machine.xstate.js';
 export * from './actions/index.js';
-export * from './guards/index.js';
+export * from './guards/guards.all.js';
 export * from './states/index.js';
 export * from './config/constants.js';
 export * from './config/events.config.js';

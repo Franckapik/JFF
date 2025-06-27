@@ -234,7 +234,6 @@ const createTileCoordinateSlice = (set, get) => ({
       return new Vector3(x, y, z);
     }
     
-    console.error('Invalid world position for Vector3:', position);
     return null;
   },
 
@@ -256,7 +255,6 @@ const createTileCoordinateSlice = (set, get) => ({
     }
     
     if (!(vector3 instanceof Vector3)) {
-      console.error('Invalid Vector3:', vector3);
       return null;
     }
     

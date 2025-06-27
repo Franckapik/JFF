@@ -47,6 +47,7 @@ const Scene = () => {
   
   // FSM Store - source de vérité pour les bots actifs (nouveau système XState)
   const activeBots = useXFSMStore((state) => state.activeBots);
+  const addBot = useXFSMStore((state) => state.addBot);
   
   // Initialization state
   const {
@@ -60,14 +61,17 @@ const Scene = () => {
 
   // Synchroniser les tuiles de départ avec les bots FSM actifs
   useEffect(() => {
-    if (tilesInitialized) {
+    console.log(getDepartTiles().length );
+    
+    if (tilesInitialized && activeBots.length > 0 && getDepartTiles().length !== 0) {
       syncStartingTilesWithFSMBots(activeBots);
       fsmLogger.info("[Scene] Synchronized starting tiles with FSM bots", { 
         activeBots: activeBots.length,
-        botIds: activeBots 
+        botIds: activeBots,
+        departTiles: getDepartTiles().length
       });
     }
-  }, [activeBots, tilesInitialized, syncStartingTilesWithFSMBots]);
+  }, [activeBots, tilesInitialized, syncStartingTilesWithFSMBots, getDepartTiles]);
 
   /* ========================================
    * INITIALIZATION EFFECTS
@@ -76,11 +80,21 @@ const Scene = () => {
   // Initialize game tiles on component mount
   useEffect(() => {
     if (!tilesInitialized) {
-      fsmLogger.info("[Scene] Initializing tiles...");
+      fsmLogger.game("[Scene] Initializing tiles...");
       initializeTiles();
       markTilesAsInitialized();
     }
   }, [tilesInitialized, initializeTiles, markTilesAsInitialized]);
+
+
+  // Ajout du bot par défaut après initialisation des tuiles
+  useEffect(() => {
+    console.log("useEffect check", { tilesInitialized, activeBots });
+    if (tilesInitialized && !activeBots.includes('bot-0')) {
+      console.log("addBot('bot-0') triggered");
+      addBot('bot-0');
+    }
+  }, [tilesInitialized, addBot, activeBots]);
 
 
   /* ========================================
@@ -145,9 +159,21 @@ const Scene = () => {
       {/* ========================================
        * PLAYER BASES (DEPART TILES) WITH FLEETS
        * ======================================== */}
-      
+      {console.log("[Scene] Rendering depart tiles for active bots", {
+        activeBots,
+        departTiles: getDepartTiles()
+      })}
       {getDepartTiles()
-        .filter(tile => tile.playerId && activeBots.includes(tile.playerId))
+        .filter(tile => {
+          const hasPlayer = tile.playerId && activeBots.includes(tile.playerId);
+          console.log('[Scene] departTile filter', {
+            tileCoord: tile.coord,
+            playerId: tile.playerId,
+            activeBots,
+            hasPlayer
+          });
+          return hasPlayer;
+        })
         .map((tile) => {
           const baseColor = getPlayerBaseColor(tile.playerIndex);
           const backgroundColor = getBackgroundColor(baseColor);

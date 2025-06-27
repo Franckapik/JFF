@@ -10,7 +10,7 @@
  * @version 1.5.0
  */
 
-import { BOT_STATES, ENTITY_TYPES, DRONE_VISUAL_STATES, EXPLORATION_CYCLE_CONFIG } from '../constants/constants.js';
+import { BOT_STATES, ENTITY_TYPES, DRONE_VISUAL_STATES, EXPLORATION_CYCLE_CONFIG } from '../../machine/constants/constants.js';
 
 
 // ============================================================================

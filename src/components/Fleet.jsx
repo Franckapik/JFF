@@ -1,7 +1,8 @@
 import React, { useMemo } from "react";
+import { useXFSM } from "../hooks/useXFSM";
 import { useBotMachine } from "../ai/fsm/hooks/useBotMachine.js";
-import { useFSMDroneTracker } from "../ai/fsm/hooks/useFSMDroneTracker.js";
-import { useFSMShipTracker } from "../ai/fsm/hooks/useFSMShipTracker.js";
+import { useXFSMDroneTracker } from "../ai/fsm/hooks/trackers/useXFSMDroneTracker.js";
+import { useXFSMShipTracker } from "../ai/fsm/hooks/trackers/useXFSMShipTracker.js";
 import { useDroneAnimation } from "../animations/useDroneAnimation.js";
 import { useShipAnimation } from "../animations/useShipAnimation.js";
 import ShipMesh from "./Vehicles/ShipMesh.jsx";
@@ -57,13 +58,13 @@ const Fleet = React.memo(({
   // 🚀 INTÉGRATION FSM AVEC ARCHITECTURE SPÉCIALISÉE
   // ===================================================================
   
-  const { current, send: fsmSend, context, vehicle, state } = useBotMachine(botId, 'bot');
+  const { fsmState, context, send: fsmSend } = useXFSM(botId);
 
   // 🎯 TRACKERS SPÉCIALISÉS : Surveillance distance → événements FSM
-  // - useFSMDroneTracker : Gère deploying, exploring, returning
+  // - useXFSMDroneTracker : Gère deploying, exploring, returning (XState)
   // - useFSMShipTracker : Gère movement, collecting, refueling
-  const updateDroneVisualPosition = useFSMDroneTracker(context, fsmSend, botId, 'explorer');
-  const updateShipVisualPosition = useFSMShipTracker(context, fsmSend, botId);
+  const updateDroneVisualPosition = useXFSMDroneTracker(context, fsmSend, botId, 'explorer');
+  const updateShipVisualPosition = useXFSMShipTracker(context, fsmSend, botId, 'ship');
 
   // 🎭 ANIMATIONS SPÉCIALISÉES : Interpolation visuelle + feedback d'état
   // - useDroneAnimation : Position relative + animations par état drone
