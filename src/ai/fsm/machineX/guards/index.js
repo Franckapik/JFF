@@ -1,11 +1,11 @@
 /**
- * ============================================================================
+ * ==========================================================================
  * XSTATE GUARDS INDEX - Export centralisé des guards
- * ============================================================================
- * 
- * Point d'entrée central pour tous les guards XState.
- * À compléter avec les imports des guards spécialisés.
- * 
+ * ==========================================================================
+ *
+ * Point d'entrée central pour tous les guards XState (safety, efficiency, discovery, ...).
+ * Chaque groupe de guards doit être importé et exporté ici pour garantir la cohérence de la machine.
+ *
  * @author Migration FSM Robot3 → XState
  * @version 1.0.0 - Architecture XState
  */

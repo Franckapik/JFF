@@ -14,23 +14,12 @@ import { createMachine } from 'xstate';
 import { allActions } from './actions/index.js';
 import { allGuards } from './guards/index.js';
 import { evaluatingState } from './states/evaluating.state.js';
+import { exploringState } from './states/exploring.state.js';
+import { collectingState } from './states/collecting.state.js';
+import { maintainingState } from './states/maintaining.state.js';
 
 // États temporaires/simplifiés pour la structure
-const exploringState = {
-  entry: 'action_exploring_entry',
-  exit: 'action_exploring_exit',
-  // ...transitions internes à ajouter plus tard
-};
-const collectingState = {
-  entry: 'action_collecting_entry',
-  exit: 'action_collecting_exit',
-  // ...transitions internes à ajouter plus tard
-};
-const maintainingState = {
-  entry: 'action_maintaining_entry',
-  exit: 'action_maintaining_exit',
-  // ...transitions internes à ajouter plus tard
-};
+const maintainingStateRef = maintainingState;
 
 /**
  * Machine XState principale (modulaire)
@@ -43,7 +32,7 @@ export const machineX = createMachine({
     evaluating: evaluatingState,
     exploring: exploringState,
     collecting: collectingState,
-    maintaining: maintainingState
+    maintaining: maintainingStateRef
   }
 }, {
   actions: allActions,

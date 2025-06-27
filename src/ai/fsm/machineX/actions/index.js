@@ -1,11 +1,11 @@
 /**
- * ============================================================================
+ * ==========================================================================
  * XSTATE ACTIONS INDEX - Export centralisé des actions
- * ============================================================================
- * 
- * Point d'entrée central pour toutes les actions XState.
- * À compléter avec les imports des actions spécialisées.
- * 
+ * ==========================================================================
+ *
+ * Point d'entrée central pour toutes les actions XState (evaluating, exploring, ...).
+ * Chaque groupe d'actions doit être importé et exporté ici pour garantir la cohérence de la machine.
+ *
  * @author Migration FSM Robot3 → XState
  * @version 1.0.0 - Architecture XState
  */
@@ -15,6 +15,9 @@
 // ============================================================================
 
 import * as evaluatingActions from './evaluating.actions.js';
+import * as exploringActions from './exploring.actions.js';
+import * as collectingActions from './collecting.actions.js';
+import * as maintainingActions from './maintaining.actions.js';
 
 // ============================================================================
 // EXPORT CENTRALISÉ (À compléter)
@@ -25,14 +28,20 @@ import * as evaluatingActions from './evaluating.actions.js';
  * Structure plate pour faciliter l'usage dans la machine
  */
 export const allActions = {
-  ...evaluatingActions
+  ...evaluatingActions,
+  ...exploringActions,
+  ...collectingActions,
+  ...maintainingActions
 };
 
 /**
  * Actions organisées par catégorie (pour référence)
  */
 export const actionsByCategory = {
-  evaluating: evaluatingActions
+  evaluating: evaluatingActions,
+  exploring: exploringActions,
+  collecting: collectingActions,
+  maintaining: maintainingActions
 };
 
 // Export par défaut

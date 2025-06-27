@@ -8,37 +8,41 @@
 - [ ] Ajouter les entrées correspondantes dans les `index.js` (`states`, `actions`, `guards` si besoin).
 
 ## 2. Migration des constantes
-- [ ] Identifier et migrer dans `config/constants.js` uniquement les constantes utilisées par l’état `exploring` (seuils, types, etc.).
+- [x] Identifier et migrer dans `config/constants.js` uniquement les constantes utilisées par l’état `exploring` (seuils, types, etc.).
+  - ✅ Toutes les constantes nécessaires à `exploring` sont déjà présentes dans `machineX/config/constants.js` (EXPLORATION_CYCLE_CONFIG, EXPLORING_SUBSTATES, seuils, etc.).
 
 ## 3. Migration des guards
-- [ ] Migrer les guards utilisés par `exploring` dans un fichier dédié (`guards/exploring.guards.js` ou dans les guards existants si déjà centralisés).
-- [ ] Centraliser les exports dans `guards/index.js`.
+- [x] Migrer les guards utilisés par `exploring` dans un fichier dédié (`guards/exploring.guards.js` ou dans les guards existants si déjà centralisés).
+  - ✅ Tous les guards nécessaires à `exploring` sont déjà couverts par `discoveryGuards` (needsExploration, hasUnexploredAreas, etc.).
+- [x] Centraliser les exports dans `guards/index.js`.
+  - ✅ Les guards discovery sont déjà centralisés dans l'index.
 
 ## 4. Configuration des événements
-- [ ] Lister et migrer dans `config/events.config.js` uniquement les événements utilisés par l’état `exploring` (et urgences associées).
+- [x] Lister et migrer dans `config/events.config.js` uniquement les événements utilisés par l’état `exploring` (et urgences associées).
+  - ✅ `TILE_EXPLORED` et `DRONE_REACHED_SHIP` ajoutés à la config XState.
 
 ## 5. Migration des actions
-- [ ] Migrer les actions d’entrée/sortie et internes de l’état `exploring` dans `actions/exploring.actions.js`.
-- [ ] Centraliser dans `actions/index.js`.
+- [x] Étape 5 : Migration des actions d’entrée/sortie et internes de l’état `exploring` dans `actions/exploring.actions.js` (en n’utilisant que les events autorisés).
+  - [x] Centralisation dans `actions/index.js`.
 
 ## 6. Recréation de l’état `exploring`
-- [ ] Recréer l’état `exploring` dans `states/exploring.state.js` selon la logique XState actuelle (transitions, actions, guards).
-- [ ] Centraliser dans `states/index.js`.
+- [x] Étape 6 : Recréation de l’état `exploring` dans `states/exploring.state.js` (logique XState, transitions, actions, guards, events autorisés uniquement).
+  - [x] Centralisation dans `states/index.js`.
 
 ## 7. Intégration dans la machine principale
-- [ ] Intégrer l’état `exploring` dans `machine.xstate.js` (remplacer l’état temporaire).
-- [ ] S’assurer que les actions/guards sont bien centralisés.
+- [x] Étape 7 : Intégrer l’état `exploring` dans `machine.xstate.js` (remplacer l’état temporaire).
+  - [x] S’assurer que les actions/guards sont bien centralisés.
 
 ## 8. Export principal
-- [ ] Mettre à jour `machineX/index.js` pour exposer le nouvel état, ses actions, guards, et la config.
+- [x] Étape 8 : Mettre à jour `machineX/index.js` pour exposer le nouvel état, ses actions, guards, et la config.
 
 ## 9. Validation continue
-- [ ] À chaque étape, valider la compilation (aucune erreur).
-- [ ] Mettre à jour ce plan en cochant chaque étape terminée.
+- [x] Étape 9 : À chaque étape, valider la compilation (aucune erreur).
+  - [x] Mettre à jour ce plan en cochant chaque étape terminée.
 
 ## 10. Documentation
-- [ ] Ajouter/compléter la documentation dans chaque fichier d’index si besoin.
-- [ ] Vérifier la cohérence des imports/exports dans tous les index.
+- [x] Étape 10 : Ajouter/compléter la documentation dans chaque fichier d’index si besoin.
+  - [x] Vérifier la cohérence des imports/exports dans tous les index.
 
 ## 11. (Optionnel) Enrichissement
 - [ ] Ajouter des transitions internes ou sous-états détaillés pour `exploring` si nécessaire.

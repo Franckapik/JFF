@@ -51,21 +51,33 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
   // Extraction dynamique COMPLÈTE des éléments de la machine XState
   const machineConfig = useMemo(() => {
     const machine = machineX;
-    
-    // Extraire tous les événements depuis les transitions (récursif pour tous les sous-états)
-    const extractEventsFromStates = (states, events = new Set()) => {
-      Object.values(states).forEach(state => {
-        // Événements au niveau de l'état
+
+    // Associe chaque event à l'état principal où il est utilisé
+    const eventStateMap = {};
+    const extractEventsByState = (states, parentState = null) => {
+      Object.entries(states).forEach(([stateName, state]) => {
+        const mainState = parentState || stateName;
         if (state.on) {
-          Object.keys(state.on).forEach(event => events.add(event));
+          Object.keys(state.on).forEach(event => {
+            if (!eventStateMap[event]) eventStateMap[event] = new Set();
+            eventStateMap[event].add(mainState);
+          });
         }
-        // Récursion dans les sous-états
         if (state.states) {
-          extractEventsFromStates(state.states, events);
+          extractEventsByState(state.states, mainState);
         }
       });
-      return events;
     };
+    extractEventsByState(machine.config.states);
+
+    // Regroupe les events par état principal
+    const eventsByState = {};
+    Object.entries(eventStateMap).forEach(([event, statesSet]) => {
+      statesSet.forEach(state => {
+        if (!eventsByState[state]) eventsByState[state] = [];
+        eventsByState[state].push(event);
+      });
+    });
 
     // Extraire tous les guards depuis les transitions (récursif)
     const extractGuardsFromStates = (states, guards = new Set()) => {
@@ -154,7 +166,9 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
     };
 
     // Extraction complète
-    const events = Array.from(extractEventsFromStates(machine.config.states));
+    // SUPPRESSION de extractEventsFromStates qui n'existe pas
+    // const events = Array.from(extractEventsFromStates(machine.config.states));
+    // On n'utilise plus 'events' ici, car eventsByState est déjà construit juste au-dessus
     const extractedGuards = Array.from(extractGuardsFromStates(machine.config.states));
     const extractedActions = Array.from(extractActionsFromStates(machine.config.states));
     const allStates = Array.from(extractAllStates(machine.config.states));
@@ -167,7 +181,7 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
     const allActions = [...new Set([...extractedActions, ...implementationActions])];
 
     return {
-      events: events.sort(),
+      eventsByState,
       guards: allGuards.filter(g => g).sort(),
       actions: allActions.filter(a => a).sort(),
       states: allStates.sort()
@@ -506,19 +520,23 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
 
       {/* Boutons d'événements dynamiques */}
       <div style={{ marginBottom: 15 }}>
-        <h4>📡 Événements FSM ({machineConfig.events.length})</h4>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, fontSize: '10px' }}>
-          {machineConfig.events.map(eventType => (
-            <button 
-              key={eventType}
-              onClick={() => sendEventWithContext(eventType)}
-              title={`Envoyer l'événement ${eventType}`}
-            >
-              {eventType}
-            </button>
-          ))}
-        </div>
+        <h4>📡 Événements FSM (par état)</h4>
+        {Object.entries(machineConfig.eventsByState).map(([state, events]) => (
+          <div key={state} style={{ marginBottom: 8 }}>
+            <strong style={{ color: '#4CAF50' }}>{state}</strong>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, fontSize: '10px', marginTop: 2 }}>
+              {events.sort().map(eventType => (
+                <button 
+                  key={eventType}
+                  onClick={() => sendEventWithContext(eventType)}
+                  title={`Envoyer l'événement ${eventType}`}
+                >
+                  {eventType}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Actions de gestion des bots */}
