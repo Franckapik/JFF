@@ -1,34 +1,55 @@
 /**
  * ============================================================================
- * XSTATE EVENTS CONFIG - Configuration des événements pour XState
+ * XSTATE EVENTS CONFIG - Événements utilisés par la machine XState (minimal)
  * ============================================================================
  * 
- * Configuration centralisée des événements utilisés par l'état EVALUATING.
- * À compléter dans le PROMPT 6.
+ * Ce fichier centralise uniquement les types d'événements utilisés dans la machine XState
+ * (machine.xstate.js) + urgences. Les autres événements sont exclus pour l'instant.
  * 
  * @author Migration FSM Robot3 → XState
  * @version 1.0.0 - Architecture XState
  */
 
-// ============================================================================
-// TODO: PROMPT 6 - Configuration des événements
-// ============================================================================
-
-/**
- * TODO: Analyser tous les événements utilisés dans evaluatingState.js de Robot3
- * TODO: Créer la configuration des événements pour EVALUATING
- * TODO: Organiser par catégories (système, mouvement, urgence, etc.)
- * 
- * Événements probables à configurer:
- * - EVALUATION_COMPLETE
- * - SHIP_UPDATE_POSITION 
- * - DRONE_POSITION_UPDATE
- * - Événements de transition vers autres états
- */
-
-// Placeholder pour compilation
-export const EVENTS_CONFIG = {
-  // À compléter dans PROMPT 6
+// -----------------------------------------------------------------------------
+// Événements principaux de la machine (machine.xstate.js)
+// -----------------------------------------------------------------------------
+export const MACHINE_EVENT_TYPES = {
+  needExploring: 'needExploring',
+  needCollecting: 'needCollecting',
+  needMaintenance: 'needMaintenance',
+  RESET_CONTEXT: 'RESET_CONTEXT',
+  FORCE_STATE: 'FORCE_STATE',
+  // Sous-états internes
+  DRONE_REACHES_TILE: 'DRONE_REACHES_TILE',
+  DRONE_SCANS_TILE: 'DRONE_SCANS_TILE',
+  DRONE_REACHES_BASE: 'DRONE_REACHES_BASE',
+  SHIP_REACHES_TILE: 'SHIP_REACHES_TILE',
+  SHIP_LOAD_RESOURCES: 'SHIP_LOAD_RESOURCES',
+  SHIP_REACHES_BASE: 'SHIP_REACHES_BASE',
+  SHIP_DEPOSIT_COMPLETE: 'SHIP_DEPOSIT_COMPLETE',
+  SHIP_REPAIR_COMPLETE: 'SHIP_REPAIR_COMPLETE',
+  SHIP_REFUEL_COMPLETE: 'SHIP_REFUEL_COMPLETE',
+  SHIP_START_DEPOSIT: 'SHIP_START_DEPOSIT',
+  SHIP_START_REPAIR: 'SHIP_START_REPAIR',
+  SHIP_START_REFUEL: 'SHIP_START_REFUEL',
 };
 
-export default EVENTS_CONFIG;
+// -----------------------------------------------------------------------------
+// Événements d'Urgence (optionnel, pour transitions critiques)
+// -----------------------------------------------------------------------------
+export const EMERGENCY_EVENT_TYPES = {
+  EMERGENCY_DETECTED: 'EMERGENCY_DETECTED',
+  CRITICAL_FUEL: 'CRITICAL_FUEL',
+  LOW_FUEL_DETECTED: 'LOW_FUEL_DETECTED',
+  EMERGENCY_RESOLVED: 'EMERGENCY_RESOLVED'
+};
+
+// -----------------------------------------------------------------------------
+// Export global pour usage machine
+// -----------------------------------------------------------------------------
+export const ALL_EVENT_TYPES = {
+  ...MACHINE_EVENT_TYPES,
+  ...EMERGENCY_EVENT_TYPES
+};
+
+export default ALL_EVENT_TYPES;

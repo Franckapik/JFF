@@ -117,20 +117,23 @@ src/ai/fsm/machineX/
 
 ---
 
-### **PROMPT 6 : Configuration des événements**
+### **PROMPT 6 : Configuration des événements** ✅
 
 **Objectif** : Définir les événements utilisés par l'état evaluating
 
-**Actions à demander** :
-1. Analyser tous les événements utilisés dans `evaluatingState.js` de Robot3
-2. Créer la configuration des événements dans `machineX/config/events.config.js`
-3. Organiser par catégories (système, mouvement, urgence, etc.)
+**COMPLETED** - Events config migrated successfully:
+- ✅ Listé tous les événements utilisés dans evaluatingState.js et la table de migration
+- ✅ Créé une configuration claire et modulaire dans `machineX/config/events.config.js`
+- ✅ Organisation par catégorie (système, mouvement, urgence, ressources, custom)
+- ✅ Export global pour usage machine
+- ✅ Compilation sans erreur
 
-**Événements à configurer** :
-- `EVALUATION_COMPLETE`
-- `SHIP_UPDATE_POSITION` 
-- `DRONE_POSITION_UPDATE`
-- Événements de transition vers autres états
+**Résultat** : ✅ Fichier `events.config.js` complet et documenté - TERMINÉ
+
+### Phase 3 - Configuration (Prompts 6-8)
+- [x] Événements configurés
+- [ ] Actions evaluating migrées
+- [ ] État evaluating configuré
 
 ---
 
@@ -212,7 +215,7 @@ src/ai/fsm/machineX/
 - [x] Guards de découverte migrés
 
 ### Phase 3 - Configuration (Prompts 6-8)
-- [ ] Événements configurés
+- [x] Événements configurés
 - [ ] Actions evaluating migrées
 - [ ] État evaluating configuré
 
