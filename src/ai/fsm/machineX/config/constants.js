@@ -93,6 +93,18 @@ export const EXPLORATION_CONFIG = {
 };
 
 // ============================================================================
+// CONFIGURATION DU CYCLE D'EXPLORATION (utilisée dans les guards de découverte)
+// ============================================================================
+
+/**
+ * Configuration du cycle d'exploration (utilisé dans discovery.guards.js)
+ */
+export const EXPLORATION_CYCLE_CONFIG = {
+  TILES_BEFORE_COLLECTION: 5,
+  MIN_TILES_BEFORE_COLLECTION: 3
+};
+
+// ============================================================================
 // CAPACITÉS DES VÉHICULES (Utilisées dans evaluatingState.js)
 // ============================================================================
 
@@ -113,6 +125,21 @@ export const VEHICLE_CAPACITIES = {
     food: 200,    // ✅ Utilisé pour calcul isShipNotFull
     debris: 1800, // ✅ Utilisé pour calcul isShipNotFull  
     special: 3    // ✅ Utilisé pour calcul isShipNotFull
+  }
+};
+
+// ============================================================================
+// CAPACITÉS PAR DÉFAUT DES VÉHICULES (utilisées dans les guards d'efficacité)
+// ============================================================================
+
+/**
+ * Capacités par défaut des véhicules (utilisé dans efficiency.guards.js)
+ */
+export const DEFAULT_CAPACITIES = {
+  [VEHICLE_TYPES.MAIN_SHIP]: {
+    food: 200,
+    debris: 1800,
+    special: 3
   }
 };
 
@@ -203,6 +230,48 @@ export const TRANSITION_REASONS = {
 export const MOVEMENT_EVENTS = {
   SHIP_UPDATE_POSITION: 'SHIP_UPDATE_POSITION',        // ✅ ligne 349
   DRONE_POSITION_UPDATE: 'DRONE_POSITION_UPDATE'       // ✅ ligne 356
+};
+
+// ============================================================================
+// SEUILS DE CARBURANT (utilisés dans les guards de sécurité/efficacité)
+// ============================================================================
+
+/**
+ * Seuils de carburant pour la logique de sécurité et d'efficacité
+ * Utilisé dans safety.guards.js et efficiency.guards.js
+ */
+export const FUEL_THRESHOLDS = {
+  CRITICAL: 10, // Critique : nécessite retour urgent
+  LOW: 30,     // Bas : nécessite attention
+  FULL: 100    // Plein : réservoir rempli
+};
+
+// ============================================================================
+// CONSTANTES DE MOUVEMENT (utilisées dans les guards de sécurité)
+// ============================================================================
+
+/**
+ * Constantes de mouvement pour la logique de sécurité
+ * Utilisé dans safety.guards.js
+ */
+export const MOVEMENT_CONSTANTS = {
+  CRITICAL_DAMAGE: 90, // Seuil de dégâts critiques
+  MAX_DAMAGE: 100,     // Dégâts maximum
+  MIN_SPEED: 1         // Vitesse minimale considérée comme opérationnelle
+};
+
+// ============================================================================
+// CONSTANTES DE RESSOURCES (utilisées dans les guards d'efficacité)
+// ============================================================================
+
+/**
+ * Constantes de ressources pour la logique d'efficacité
+ * Utilisé dans efficiency.guards.js
+ */
+export const RESOURCE_CONSTANTS = {
+  FOOD: 'food',
+  DEBRIS: 'debris',
+  SPECIAL: 'special'
 };
 
 // ============================================================================
