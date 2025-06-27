@@ -8,7 +8,39 @@ import { createMachineContext } from '../../ai/fsm/machine/context/initialContex
  * Extrait automatiquement les événements, guards et actions de la machine existante
  */
 const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
-  const { fsmState, context, send, addBot } = useXFSM(botId);
+  const [error, setError] = useState(null);
+  
+  // Protection contre les erreurs de synchronisation Zustand/React
+  let fsmState, context, send, addBot;
+  try {
+    const hookResult = useXFSM(botId);
+    fsmState = hookResult.fsmState;
+    context = hookResult.context;
+    send = hookResult.send;
+    addBot = hookResult.addBot;
+    
+    // Réinitialiser l'erreur si le hook fonctionne maintenant
+    if (error) setError(null);
+  } catch (err) {
+    console.error('[XStateSimulationPanel] Error with useXFSM hook:', err);
+    setError(err);
+    // Valeurs par défaut en cas d'erreur
+    fsmState = { value: 'error', context: {} };
+    context = {};
+    send = () => console.warn('Send function not available due to error');
+    addBot = () => console.warn('AddBot function not available due to error');
+  }
+  
+  // Afficher l'erreur si elle persiste
+  if (error) {
+    return (
+      <div style={{ padding: '10px', backgroundColor: '#ffe6e6', border: '1px solid #ff0000' }}>
+        <h3>Hook Error</h3>
+        <p>There was an error with the state management. This usually resolves after hot reload.</p>
+        <button onClick={() => setError(null)}>Retry</button>
+      </div>
+    );
+  }
 
   // Extraction dynamique COMPLÈTE des éléments de la machine XState
   const machineConfig = useMemo(() => {
@@ -142,6 +174,21 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
     cargo: 1,
     needsMaintenance: false,
   });
+
+  // État pour les guards forcés
+  const [forcedGuards, setForcedGuards] = useState({
+    shouldExplore: true,
+    shouldCollect: true,
+    shouldMaintain: false
+  });
+
+  // Fonction pour mettre à jour les valeurs du contexte simulé
+  const updateSimulatedValue = (key, value) => {
+    setSimulatedContext(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
 
   // Effet pour logger le contexte au chargement
   useEffect(() => {

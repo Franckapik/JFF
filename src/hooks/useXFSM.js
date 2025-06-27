@@ -8,17 +8,28 @@ import { getBotId } from '../ai/fsm/machine/constants/constants';
  * @param {string} botId - L'ID du bot à contrôler (par défaut: 'bot-0').
  */
 export function useXFSM(botId = getBotId(0)) {
-  // 1. Sélecteur mémorisé pour l'état du bot
-  const botState = useXFSMStore(useCallback(
-    (store) => store.getBotState(botId),
-    [botId]
-  ));
+  // 1. Sélecteur optimisé pour l'état du bot - Utilise directement botStates
+  const botState = useXFSMStore((store) => {
+    if (!store?.botStates) {
+      console.warn(`[useXFSM] Store botStates is missing for ${botId}`);
+      return null;
+    }
+    const state = store.botStates[botId];
+    console.log(`[useXFSM] Selector receiving state for ${botId}:`, {
+      hasState: !!state,
+      stateValue: state?.value,
+      contextSize: state?.context ? Object.keys(state.context).length : 0,
+      fullState: state,
+      allBotIds: Object.keys(store.botStates || {})
+    });
+    return state;
+  });
 
-  // 2. Sélecteurs mémorisés pour les propriétés globales
-  const activeBots = useXFSMStore(useCallback((store) => store.activeBots, []));
-  const addBot = useXFSMStore(useCallback((store) => store.addBot, []));
-  const removeBot = useXFSMStore(useCallback((store) => store.removeBot, []));
-  const send = useXFSMStore(useCallback((store) => store.send, []));
+  // 2. Sélecteurs stables pour les propriétés globales
+  const activeBots = useXFSMStore((store) => store.activeBots);
+  const addBot = useXFSMStore((store) => store.addBot);
+  const removeBot = useXFSMStore((store) => store.removeBot);
+  const send = useXFSMStore((store) => store.send);
 
   // 3. Extraction de l'état FSM et du contexte avec sécurité
   const fsmState = botState || { value: 'uninitialized', context: {} };

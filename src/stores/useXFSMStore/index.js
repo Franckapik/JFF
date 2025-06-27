@@ -63,13 +63,26 @@ const useXFSMStore = create(zukeeper((set, get) => {
   };
 
   // Créer l'acteur principal au démarrage (bot-0 par défaut)
+  // FORCE RECREATION après correctif de la machine pour s'assurer que bot-0 utilise la nouvelle configuration
+  
+  // Nettoyer les anciens acteurs et cache pour forcer la recréation
+  if (actors.has('bot-0')) {
+    const oldActor = actors.get('bot-0');
+    oldActor.stop();
+    actors.delete('bot-0');
+    snapshotCache.delete('bot-0');
+  }
+  
   const mainActor = createBotActor('bot-0');
 
+  // État initial avec les snapshots synchronisés
+  const initialBotStates = {
+    'bot-0': mainActor.getSnapshot(),
+  };
+
   return {
-    // État initial
-    botStates: {
-      'bot-0': mainActor.getSnapshot(),
-    },
+    // État initial synchronisé avec le cache
+    botStates: initialBotStates,
     
     // Liste des IDs de bots actifs
     activeBots: ['bot-0'],
@@ -124,11 +137,30 @@ const useXFSMStore = create(zukeeper((set, get) => {
       });
     },
 
-    // Sélecteur interne pour obtenir l'état d'un bot.
-    // C'est la fonction la plus critique pour la stabilité.
+    // Fonction helper pour récupérer un état depuis le store Zustand
+    // Utilise les botStates du store au lieu du cache interne
     getBotState: (botId = 'bot-0') => {
-      // On retourne TOUJOURS depuis le cache pour garantir une référence stable.
-      return snapshotCache.get(botId) || EMPTY_BOT_STATE;
+      const currentState = get();
+      const botState = currentState.botStates[botId];
+      
+      console.log(`[getBotState] Requesting state for ${botId}:`, {
+        hasStateInStore: !!botState,
+        storeKeys: Object.keys(currentState.botStates),
+        storeSize: Object.keys(currentState.botStates).length,
+        contextSize: botState?.context ? Object.keys(botState.context).length : 0,
+        fallbackUsed: !botState
+      });
+      
+      const result = botState || EMPTY_BOT_STATE;
+      
+      console.log(`[getBotState] Returning for ${botId}:`, {
+        hasResult: !!result,
+        resultType: typeof result,
+        resultValue: result?.value,
+        resultContextSize: result?.context ? Object.keys(result.context).length : 0
+      });
+      
+      return result;
     },
   };
 }));
