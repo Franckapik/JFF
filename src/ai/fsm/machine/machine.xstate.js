@@ -2,7 +2,7 @@ import { createMachine, assign, log } from 'xstate';
 import fsmLogger from '../../../logger/fsmLogger';
 
 export const machine = createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QFsCGBjAFgSwHZgGIAlAUQGUSAVAfQGEB5AOUpIA1KBtABgF1FQADgHtY2AC7YhufiAAeiAIwBWAGwBOAHQrlADi4AWNWoDMKnfv0AaEAE9EagOz6NDgEwOlxrutV6FAX39rNCw8QgAxeiJaEmoySgBBFm4+JBBhUQkpGXkEJQdrOwRzHS0HD1c1V30FFRV9FUDgjBx8DTAAN1QAGwBXVAlcKAJ8SBJZAW6hACc8KBSZDPFJaTTc5QVSrm2FBSquJQMdQsRq52NDNW19Lh0lVwOdJpAQ1rB2rr6BuZGwSFohN1umB0IN5rxFiJltk1op7lsdnsHod9MdbIgVFwHFodE5PMZyoZcc9XmEPj1+mDfpAALKoPBiMC4VC4dBgBZpJZZVagXIqArohAKYyaG6uEX5CwOPT6EktMlgCZTWZDDQQaZSMDUCBgSZCGw-AAiRCYsVICVoAAlyNRKABJAAyJA5gih3JypwUNQ0XhUxlx3nc7hOCGMDw0rhUriUXsxej0SjloTair1Kqgao1+GosHQLNwRpNjFiZFoCUYZFtjudEM5bpWHoQkY8Wn0IvqmK9OjUIbDXAjUZjDVuI8TQRe8pTSpmc0zmuo0zAYl60wLQwIxtN1HNVptACEEhQXel6zDeXDbhptlxdvsUWiijoFGVDHUlDpcUo1MKk28NOhAWBUFZ1gHABGoZAhA6OZqDEIRYOwYECDIS07QABW3EgLWtSt7SdY8uQbWEmwUNwr0DBwb27VRhRDMxjA0L8jBjFQY0ohw1F-MkAKBEEwQ0UDsHAnigKpFD0OoB16ASQ1MLIegAFVonIAjTx5ORTjMVxGOMWobjcJR3wUOidAYpi1BYtisU48dSTaES+JAsCFyXFc12GcSMJ3HDqAPI9a1dTIiPPIV4XIm8kQOI4QwsJQrwUaMuFMap1D2YwuLaNAGXpdyBOcqRqAAI1QWBCE8uJEiIGhDRIND6DIO1OACk8grPDSEDFRi23KaVep0P1jBizEtHufRPC4VxaiMCwMveLLcDEHKnKE6gCuK0rkNQjD4gSKrMLQhI7SIVTWvU3JOqUbrylxG6BpDL9tNcbsrm-TFKK4GzmmTOacsWvBlvAtaSrKraKt2mhSHCBSSAdE7oTOxALquvrpTuwU3AYqonDuSpHAmscvr-ea-tynVCPXcqarqhqaAYGk0KdZJmsItrciuOKPoJTw9BFLwH0R4bWOqcbJvUNQZtsycfuy-7VUXAR6XTTaJNIA6jroeh6cZmtUkC+HG3Zq8TA8f0kpMW57qqCNntSt7tk+idvo0YmlrlsAADNejAbofnKyHoYdDWtaoHXIVOg3WKNrnTd5i30fFDQsdRe4jEo9xAnHXAhB1eA0jssAw-14iVBDABaFRwuvKvr3yWbyS+MFC-dYiEt0n1VGSiyPye+78kT-H9AcOoRTudLJad1NlTmJvgva0jTIjbwakjcXqgFIoEu0zwnCe1FKh51w68nmdVXVecyamA0hhn1nFFM58HnqBL1H0NeQyehiCSJbHVDUCaj+nOmOc2Zcz5mnnWcOxFxSUR9NGL0FxjBeEuiXQUH8fRODULiZO6h-7jz-MfIBZ9syLmXKucBetm4hSev1FwBIzB-yMAcCy78F5f0wT-HBh88HcUAo5a+ECi4hVIlcDQmwh6mA4hZcWMU7gaCwezGM3ZhRJTrg5YCqpBLgUgtBIYsF4ISGBDfBGQpzDODEX6fkzFpGCg7C4BKg9xbILMATR2f41H8U0dQdx5CWqCPauKBek0V7vgcMYTwdEGh2LXo4hozjVG8PURmTxJC3I+JZsYyoCd77aE8FUUyKCii2IcPYjiY1Yl3Dri7WWUAjGNkuu-KMid3Cv02JNCylTfquySflXARVga1JbhNGKMYXxhMwV+GoKjuGZU6dUtUup6z8IobPPk0ZGJPncI8QwT1XAxQTkPIktwUpMQ6TLXK8tFZpLUo2KMWwzDFPKDgpwg1BSGTimKV8VxTDXFOQtLpGhFye29lcyBIVbmiKMI4e4oTHDFJMtiAwOxdITWHgEDOQA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QFsCGBjAFgSwHZgGIAlAUQGUSAVAfQGEB5AOUpIA1KBtABgF1FQADgHtY2AC7YhufiAAeiAIwBWAGwBOAHQrlADi4AWNWoDMKnfv0AaEAE9EagOz6NDgEwOlxrutV6FAX39rNCw8QgAxeiJaEmoySgBBFm4+JBBhUQkpGXkEJQdrOwRzHS0HD1c1V30FFRV9FUDgjBx8DTAAN1QAGwBXVAlcKAJ8SBJZAW6hACc8KBSZDPFJaTTchWMnDS5NnQUqpSUdVx1jQsRXY1ctfXyuJwtamqaQENawdq6+gbmRsEhaEJut0wOhBvNeIsRMtsmtFEoTtsuFwFPtXFwlAYdOcECp7lodE5PJsnGpCS83mFPj1+uC-pAALKoPBiMC4VC4dBgBZpJZZVagXIqAq2RTGTT6LiXNT5CwOPT6CktKlgCZTWZDDQQaZSMDUCBgSZCGy-AAiRCYsVICVoAAlyNRKABJAAyJB5gmh-JyFwUNQ0XhUxkJ3nc7hxVy4GlcKlcSj9eL0eiUStCbVVRo1UC1Ovw1Fg6A5uDNFsYsTItASjDIjtd7shvK9Kx9CBjHhu4vqeL9OjUEfR0dj8YaXCTGNT73aapmcxzuuo0zAYl602LQwI5st1GtdodACEEhQPekm7DBfDR0iUWiMVicXsyoY6kdCUo1BsJ1T0ECQWDZ7AcAEahkCEDo5moMQhAg7AQQIMhbSdAAFbcSBte0a2dN1jz5Zs4VbBQ3CRWMHBRXtVA2HEzGMDQ3yMeMVHjEiHDUT82m-YFQXBDQAOwID2N-Ol4KQ6gXXoBJTRQsh6AAVWichsNPAU5AuMxrk8J57jjI4FEo04aKMGVakY+4WKCV5lTYn9OP-QCFyXFc12GITkJ3dDqAPI8G09TJcPPBBlERZFryqW99GxUUEAsJRtgUOMdljBp3xMViPjQFlmUc7jbKkagACNUFgQhnLiRIiBoU0SEQ+gyCdTgvJPHyz2UyKpRo-QSXlTqdCDM4IpHLQEVuLxXFqIwLBSjQ0twMQMps3jqBy-LCrghDkPiBIypQxCEidIgFMapTcklNT2vKLr5R6nE32uE4jHUWp7mRUzmjTVKMpmvA5qAxaCqK1aSo2mhSHCaSSBdfaYUOxBjrajrCXhy6IrcaiqicHQESMEi4wmqaPsyg0cPXYqKqqmqaAYBlELdZJ6pwprcjUBjthMDxgx2ExRxxfqGOqTwpVGtRxrMyk2lx2bNUXARmSzFbhNIbbdroehKep+tUm8yGW0Z6KuBZzw9HFLxwqKa7o17Rn3zxEjdZx97xezRcADNejAbpfmK4HQZdJWVaoNWoQOrWmd1zZ9fZo2cWRjRUbCjHHClBxAjM3AhANeA0hFsAA81vCVBxABaFQr3uAK8WMQx4wmzoaR+IZs+9PDYuMBQA1UUxKhfE4rvyaOpSUfQHDqcV0eMKvpyzevfOagi9PRepYvUfRqhFIpYrUzYLBMP0B7jRPhYsj4M3VWdtXnAmphNOvG0DxvThbueahjQXl5xE5qI3sk0dUNQpTHzMT9zHqAsRY5iT3phcTYUYrjDnLsYLw-c84RTfgGUkhJY7qF-vvV6U5-6alPnmRcy5VygOvjnPyJxuouE2GYH+RgMQylfnpD+aD0YYNcBNfi1kr4awbn5AijMNAKEJEGYUdFBZc3RhoNBdDDgOD9JiFMWDJycL-JqHiQEQJgSGBBKCEgQRgKhv5cwzghGD1MMxGU4iIpdhcLFAegsEFmEUS9ZRVlVHZnUdQFR4IDEtkuLPBeMpCTGE8JRBotjl4OIaE4jhbiuKeMIQ5EhPCp65EqJcKRzdtCeCqKcRBRQbFyMibcaJ6NbbpU+twhqZDmr91frGaO7hDBojkaYdq5Tpr2yyvNH6hVfGNylFzeMj4QlkjfDUHYHS8Yn0NE2KpdNDFDhonsdwGJzC5NcFzDJg9DBJmqAxIwUyumS2lsk6pvDmqxlKN4QkBFB4-ycL1E2hwNDHSfIzUw2hFRKKpGLSpDswDO1dmchZLYrmCIMhUBw4pyg6WsYSbYkoUTNylEPAIScgA */
   id: 'machine',
   
   // 🔧 CORRECTIF CRITIQUE : Traiter l'input pour initialiser le contexte
@@ -169,34 +169,90 @@ export const machine = createMachine({
       const { type, ...newContext } = event;
       return newContext;
     }),
-    action_evaluating_entry: () => {},
-    action_evaluating_exit: () => {},
-    action_exploring_entry: () => {},
-    action_exploring_exit: () => {},
-    action_drone_deploying_entry: () => {fsmLogger.state('action_drone_deploying_entry');},
-    action_drone_deploying_exit: () => {},
-    action_drone_scanning_entry: () => {},
-    action_drone_scanning_exit: () => {},
-    action_drone_returning_entry: () => {},
-    action_drone_returning_exit: () => {},
-    action_collecting_entry: () => {},
-    action_collecting_exit: () => {},
-    action_ship_moving_to_tile_entry: () => {},
-    action_ship_moving_to_tile_exit: () => {},
-    action_ship_collecting_entry: () => {},
-    action_ship_collecting_exit: () => {},
-    action_ship_returning_entry: () => {},
-    action_ship_returning_exit: () => {},
-    action_maintaining_entry: () => {},
-    action_maintaining_exit: () => {},
-    action_ship_on_base_entry: () => {},
-    action_ship_on_base_exit: () => {},
-    action_ship_depositing_entry: () => {},
-    action_ship_depositing_exit: () => {},
-    action_ship_repairing_entry: () => {},
-    action_ship_repairing_exit: () => {},
-    action_ship_refueling_entry: () => {},
-    action_ship_refueling_exit: () => {},
+    action_evaluating_entry: ({ context, self }) => {
+      logAction('action_evaluating_entry');
+      
+      // Évaluation des conditions environnementales
+      const vehicle = context?.vehicle || {};
+      const fuel = vehicle.fuel || 100;
+      const damage = vehicle.damage || 0;
+      const resources = vehicle.resources || { food: 0, debris: 0, special: 0 };
+      const maxCapacity = vehicle.maxCapacity || { food: 200, debris: 1800, special: 3 };
+      
+      // Vérifier si maintenance nécessaire (priorité 1)
+      const needsMaintenance = fuel < 30 || damage > 50 || vehicle.needsRepair;
+      
+      // Vérifier si collecte possible (priorité 2)
+      const knownTiles = context.memory?.knownTiles || new Map();
+      const tilesWithResources = Array.from(knownTiles.values()).filter(tile => 
+        tile.explored && tile.hasResources && tile.resourcePercentage > 0
+      );
+      const hasCollectibleTiles = tilesWithResources.length > 0;
+      
+      // Vérifier capacité du vaisseau
+      const totalResources = Object.values(resources).reduce((sum, val) => sum + val, 0);
+      const totalCapacity = Object.values(maxCapacity).reduce((sum, val) => sum + val, 0);
+      const isShipNotFull = totalResources < totalCapacity * 0.8;
+      
+      // Vérifier si exploration nécessaire (priorité 3)
+      const exploredTilesCount = Array.from(knownTiles.values()).filter(tile => tile.explored).length;
+      const needsExploration = exploredTilesCount < 3; // Explorer au moins 3 tuiles
+      
+      console.log('[Evaluating] Conditions:', {
+        fuel, damage, needsMaintenance,
+        hasCollectibleTiles, isShipNotFull,
+        exploredTilesCount, needsExploration
+      });
+      
+      // Décision basée sur les priorités
+      setTimeout(() => {
+        if (needsMaintenance) {
+          console.log('[Evaluating] → needMaintenance (fuel/damage critical)');
+          self.send({ type: 'needMaintenance', reason: 'critical_condition' });
+        } else if (hasCollectibleTiles && isShipNotFull) {
+          console.log('[Evaluating] → needCollecting (resources available)');
+          self.send({ type: 'needCollecting', reason: 'resources_available' });
+        } else if (needsExploration) {
+          console.log('[Evaluating] → needExploring (need more exploration)');
+          self.send({ type: 'needExploring', reason: 'insufficient_exploration' });
+        } else {
+          console.log('[Evaluating] → needMaintenance (nothing to do)');
+          self.send({ type: 'needMaintenance', reason: 'idle_time' });
+        }
+      }, 1000); // Délai de 1s pour permettre à l'état de s'initialiser
+    },
+    action_evaluating_exit: () => logAction('action_evaluating_exit'),
+    action_exploring_entry: () => logAction('action_exploring_entry'),
+    action_exploring_exit: () => logAction('action_exploring_exit'),
+    action_drone_deploying_entry: () => logAction('action_drone_deploying_entry'),
+    action_drone_deploying_exit: () => logAction('action_drone_deploying_exit'),
+    action_drone_scanning_entry: () => logAction('action_drone_scanning_entry'),
+    action_drone_scanning_exit: () => logAction('action_drone_scanning_exit'),
+    action_drone_returning_entry: () => logAction('action_drone_returning_entry'),
+    action_drone_returning_exit: () => logAction('action_drone_returning_exit'),
+    action_collecting_entry: () => logAction('action_collecting_entry'),
+    action_collecting_exit: () => logAction('action_collecting_exit'),
+    action_ship_moving_to_tile_entry: () => logAction('action_ship_moving_to_tile_entry'),
+    action_ship_moving_to_tile_exit: () => logAction('action_ship_moving_to_tile_exit'),
+    action_ship_collecting_entry: () => logAction('action_ship_collecting_entry'),
+    action_ship_collecting_exit: () => logAction('action_ship_collecting_exit'),
+    action_ship_returning_entry: () => logAction('action_ship_returning_entry'),
+    action_ship_returning_exit: () => logAction('action_ship_returning_exit'),
+    action_maintaining_entry: () => logAction('action_maintaining_entry'),
+    action_maintaining_exit: () => logAction('action_maintaining_exit'),
+    action_ship_on_base_entry: () => logAction('action_ship_on_base_entry'),
+    action_ship_on_base_exit: () => logAction('action_ship_on_base_exit'),
+    action_ship_depositing_entry: () => logAction('action_ship_depositing_entry'),
+    action_ship_depositing_exit: () => logAction('action_ship_depositing_exit'),
+    action_ship_repairing_entry: () => logAction('action_ship_repairing_entry'),
+    action_ship_repairing_exit: () => logAction('action_ship_repairing_exit'),
+    action_ship_refueling_entry: () => logAction('action_ship_refueling_entry'),
+    action_ship_refueling_exit: () => logAction('action_ship_refueling_exit'),
   }
 });
+
+// Generic logging function for FSM actions
+const logAction = (actionName) => {
+  fsmLogger.state(actionName);
+};
 
