@@ -70,21 +70,19 @@ src/ai/fsm/machineX/
 
 ---
 
-### **PROMPT 3 : Migration des guards de sécurité**
+### ✅ **PROMPT 3 : Migration des guards de sécurité** ✅
 
 **Objectif** : Migrer les guards de sécurité utilisés dans evaluating
 
-**Actions à demander** :
-1. Analyser `machine/guards/safetyGuard.js` existant
-2. Identifier les guards utilisés dans `evaluatingState.js` de Robot3
-3. Réécrire ces guards en syntaxe XState dans `machineX/guards/safety.guards.js`
+**COMPLETED** - Safety guards migrated successfully:
+- ✅ Analyzed `machine/guards/safetyGuard.js` and identified used guards
+- ✅ Migrated `needsEmergencyReturn` (used in evaluatingState.js line 142)
+- ✅ Migrated `isCriticalFuel` (used in evaluatingState.js line 148)
+- ✅ Migrated all core safety guards: `isLowFuel`, `hasEnoughFuelForDistance`, `isVehicleCritical`, `isVehicleOperational`, etc.
+- ✅ Updated `guards/index.js` to export safety guards
+- ✅ All guards follow XState syntax and structure
 
-**Guards à migrer** :
-- `needsEmergencyReturn` 
-- `isCriticalFuel`
-- Autres guards de sécurité utilisés dans evaluating
-
-**Résultat attendu** : Fichier `safety.guards.js` avec syntaxe XState native
+**Résultat** : ✅ Fichier `safety.guards.js` avec syntaxe XState native - TERMINÉ
 
 ---
 
@@ -212,7 +210,7 @@ src/ai/fsm/machineX/
 - [x] Constantes essentielles migrées
 
 ### Phase 2 - Guards (Prompts 3-5)  
-- [ ] Guards de sécurité migrés
+- [x] Guards de sécurité migrés
 - [ ] Guards d'efficacité migrés
 - [ ] Guards de découverte migrés
 

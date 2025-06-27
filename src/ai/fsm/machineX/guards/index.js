@@ -11,10 +11,10 @@
  */
 
 // ============================================================================
-// TODO: Imports à ajouter progressivement (PROMPTS 3-5)
+// IMPORTS DES GUARDS SPÉCIALISÉS
 // ============================================================================
 
-// TODO: PROMPT 3 - import { safetyGuards } from './safety.guards.js';
+import { safetyGuards } from './safety.guards.js';
 // TODO: PROMPT 4 - import { efficiencyGuards } from './efficiency.guards.js';  
 // TODO: PROMPT 5 - import { discoveryGuards } from './discovery.guards.js';
 
@@ -27,20 +27,23 @@
  * Structure plate pour faciliter l'usage dans la machine
  */
 export const allGuards = {
-  // TODO: PROMPT 3-5 - Ajouter tous les guards ici
-  // ...safetyGuards,
-  // ...efficiencyGuards,
-  // ...discoveryGuards
+  // Safety guards (PROMPT 3 - COMPLETED)
+  ...safetyGuards,
+  // TODO: PROMPT 4 - ...efficiencyGuards,
+  // TODO: PROMPT 5 - ...discoveryGuards
 };
 
 /**
  * Guards organisés par catégorie (pour référence)
  */
 export const guardsByCategory = {
-  // TODO: PROMPT 3 - safety: safetyGuards,
+  safety: safetyGuards,
   // TODO: PROMPT 4 - efficiency: efficiencyGuards,
   // TODO: PROMPT 5 - discovery: discoveryGuards
 };
+
+// Exports individuels pour faciliter l'usage
+export { safetyGuards };
 
 // Export par défaut
 export default allGuards;
