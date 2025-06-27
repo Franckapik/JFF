@@ -165,7 +165,10 @@ const createTileFilterSlice = (set, get) => {
      */
     getDepartTiles: () => {
       const { tiles } = get();
-      
+      fsmLogger.info("[TileFilter] getDepartTiles called", {
+        totalTiles: Object.keys(tiles).length,
+        departTilesCount: Object.values(tiles).filter(tile => tile.type === "depart").length
+      });
       // Récupérer uniquement les tuiles de départ existantes (lecture seule)
       const departTiles = Object.values(tiles).filter(tile => tile.type === "depart");
       
