@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import { createActor } from 'xstate';
 import { machine } from '../../ai/fsm/machine/machine.xstate';
-import { createEntityContext } from '../../ai/fsm/machine/context/initialContext';
+import { createMachineContext } from '../../ai/fsm/machine/context/initialContext';
+import zukeeper from 'zukeeper';
 
 // Constante pour un état vide et stable, évite les undefined.
 const EMPTY_BOT_STATE = { value: 'uninitialized', context: {} };
 
-export const useXFSMStore = create((set, get) => {
+const useXFSMStore = create(zukeeper((set, get) => {
   // Map pour stocker les acteurs XState par botId
   const actors = new Map();
   // Map pour mettre en cache la dernière référence de snapshot connue par botId
@@ -17,7 +18,9 @@ export const useXFSMStore = create((set, get) => {
       return actors.get(botId);
     }
 
-    const botContext = createEntityContext(botId, 'auto');
+    const botContext = createMachineContext(botId, 'auto');
+    console.log(`[useXFSMStore] Creating actor for ${botId} with initial context:`, botContext);
+    
     const actor = createActor(machine, { input: botContext });
 
     actor.subscribe((snapshot) => {
@@ -26,13 +29,16 @@ export const useXFSMStore = create((set, get) => {
         return; // La référence est identique, aucune mise à jour nécessaire.
       }
 
+      console.log(`[useXFSMStore] Actor update for ${botId}:`, {
+        state: snapshot.value,
+        contextProps: Object.keys(snapshot.context),
+        contextSize: Object.keys(snapshot.context).length
+      });
+
       // Mettre à jour le cache avec la nouvelle référence de snapshot
       snapshotCache.set(botId, snapshot);
 
       // Mettre à jour l'état Zustand de manière sécurisée.
-      // On utilise la forme fonctionnelle de `set` car l'état (`state`)
-      // peut être `undefined` lors du tout premier appel synchrone
-      // pendant l'initialisation du store.
       set((state) => ({
         botStates: {
           ...(state?.botStates ?? {}), // Si state ou state.botStates est undefined, on part d'un objet vide
@@ -47,6 +53,11 @@ export const useXFSMStore = create((set, get) => {
     // Initialiser le cache avec le premier snapshot
     const initialSnapshot = actor.getSnapshot();
     snapshotCache.set(botId, initialSnapshot);
+    console.log(`[useXFSMStore] Initial snapshot for ${botId}:`, {
+      state: initialSnapshot.value,
+      contextProps: Object.keys(initialSnapshot.context),
+      contextSize: Object.keys(initialSnapshot.context).length
+    });
 
     return actor;
   };
@@ -65,6 +76,7 @@ export const useXFSMStore = create((set, get) => {
 
     // Action pour envoyer un événement à un bot
     send: (event, botId = 'bot-0') => {
+      console.log(`[useXFSMStore] Sending event to ${botId}:`, event);
       const actor = actors.get(botId);
       if (actor) {
         actor.send(event);
@@ -119,4 +131,8 @@ export const useXFSMStore = create((set, get) => {
       return snapshotCache.get(botId) || EMPTY_BOT_STATE;
     },
   };
-});
+}));
+
+window.store = useXFSMStore; // Exposer le store globalement pour un accès facile
+
+export default useXFSMStore;

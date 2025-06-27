@@ -18,7 +18,7 @@ import {
   collectingState,
   idleAtBaseState
 } from './states/index.js';
-import { createEntityContext } from './context/initialContext.js';
+import { createMachineContext } from './context/initialContext.js';
 
 // ============================================================================
 // MACHINE FSM SIMPLIFIÉE - Utilise les états modulaires
@@ -49,7 +49,7 @@ export const createBotMachine = (botId, initialData = {}) => {
     },
     
     // Fonction de création du contexte initial
-    () => createEntityContext(botId, initialData)
+    () => createMachineContext(botId, initialData)
   );
 };
 

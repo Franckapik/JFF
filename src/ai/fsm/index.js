@@ -15,7 +15,7 @@
 
 // Contexte principal
 export { 
-  createEntityContext, 
+  createMachineContext, 
   ENTITY_TYPES, 
   isAutonomous,
   canManualControl,

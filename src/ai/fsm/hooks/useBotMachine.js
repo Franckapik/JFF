@@ -14,7 +14,7 @@
 
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useMachine } from 'react-robot';
-import { createEntityContext } from '../machine/context/initialContext.js';
+import { createMachineContext } from '../machine/context/initialContext.js';
 import { ENTITY_TYPES } from '../machine/constants/constants.js';
 import { createBotMachine } from '../machine/machineFactory.js';
 import { SYSTEM_EVENT_TYPES } from '../machine/events/systemEvents.js';
@@ -42,7 +42,7 @@ export const useBotMachine = (botId, entityType = ENTITY_TYPES.auto, options = {
   }
   
   // Créer une machine FSM locale
-  const initialContext = useMemo(() => createEntityContext(botId, entityType), [botId, entityType]);
+  const initialContext = useMemo(() => createMachineContext(botId, entityType), [botId, entityType]);
   const machine = useMemo(() => createBotMachine(botId, initialContext), [botId, initialContext]);
   const [current, send] = useMachine(machine, initialContext);
   

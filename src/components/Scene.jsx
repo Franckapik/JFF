@@ -15,7 +15,7 @@ import Tile from "./Tile";
 // Stores
 import { useTileStore } from "../stores/useTileStore";
 import useGameStore from "../stores/useGameStore";
-import { useXFSMStore } from "../stores/useXFSMStore";
+import  useXFSMStore  from "../stores/useXFSMStore";
 
 // Utils
 import fsmLogger from "../logger/fsmLogger";

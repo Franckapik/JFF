@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useXFSM } from '../../hooks/useXFSM';
 import { machine as fsmBotMachine } from '../../ai/fsm/machine/machine.xstate';
+import { createMachineContext } from '../../ai/fsm/machine/context/initialContext';
 
 /**
  * Panneau de simulation XState dynamique qui s'adapte automatiquement à la machine
@@ -142,23 +143,86 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
     needsMaintenance: false,
   });
 
+  // Effet pour logger le contexte au chargement
+  useEffect(() => {
+    console.log('[XStateSimulationPanel] Mounted for', botId);
+    console.log('[XStateSimulationPanel] Initial context:', context);
+    console.log('[XStateSimulationPanel] Context properties:', Object.keys(context).length);
+  }, []);
+
+  // Effet pour logger les changements de contexte
+  useEffect(() => {
+    console.log('[XStateSimulationPanel] Context updated for', botId);
+    console.log('[XStateSimulationPanel] Context properties:', Object.keys(context).length);
+  }, [context, botId]);
+
+  // Affichage des métriques de contexte
+  const contextMetrics = useMemo(() => {
+    const keys = Object.keys(context);
+    const hasEntityId = Boolean(context?.entityId);
+    const hasVehicle = Boolean(context?.vehicle);
+    const hasMemory = Boolean(context?.memory);
+    
+    return {
+      count: keys.length,
+      keysList: keys.slice(0, 5).join(', ') + (keys.length > 5 ? '...' : ''),
+      hasEntityId,
+      hasVehicle,
+      hasMemory,
+    };
+  }, [context]);
+
   // Fonction pour envoyer des événements avec contexte simulé
   const sendEventWithContext = (eventType, payload = {}) => {
     // Log l'envoi d'événement pour debug
+    console.log('[XStateSimulationPanel] sendEventWithContext:', eventType, { 
+      simulatedContext,
+      contextSize: Object.keys(context).length,
+      hasEntityId: context?.entityId ? true : false 
+    });
+    
+    // Envoyer l'événement avec les données simulées et la charge utile
+    const eventData = { 
+      type: eventType, 
+      ...simulatedContext, 
+      ...payload 
+    };
+    
     if (window && window.fsmLogger) {
-      window.fsmLogger.event && window.fsmLogger.event(`[XStateSimulationPanel] sendEventWithContext: ${eventType}`, { ...simulatedContext });
-    } else if (typeof console !== 'undefined') {
-      console.log('[XStateSimulationPanel] sendEventWithContext:', eventType, simulatedContext);
-    }
-    send({ type: eventType, ...simulatedContext, ...payload });
+      window.fsmLogger.event(`[XStateSimulationPanel] sendEventWithContext: ${eventType}`, eventData);
+    } 
+    
+    send(eventData);
   };
 
-  // Helpers pour sliders/checkbox
-  const updateSimulatedValue = (key, value) => {
-    setSimulatedContext(prev => ({ ...prev, [key]: value }));
+  // Debug helper to check context
+  const checkContext = () => {
+    const contextSnapshot = {
+      context,
+      contextPropsCount: Object.keys(context).length,
+      simulatedContext,
+      botId,
+      fsmState,
+      hasEntityId: context?.entityId ? true : false,
+      snapshotKeysList: Object.keys(fsmState || {}).join(', ')
+    };
+
+    console.log("CONTEXTE COMPLET:", contextSnapshot);
+
+    // Essayons de débugger pourquoi le contexte semble vide
+    alert(`Contexte:\n- Props: ${contextMetrics.count}\n- EntityId: ${context?.entityId || "manquant"}\n- Entity Type: ${context?.entityType || "manquant"}\n- Keys: ${contextMetrics.keysList}`);
   };
 
+  // Reset context function - creates a fresh context using the initialContext helper
+  const resetContext = () => {
+    const freshContext = createMachineContext(botId, 'auto');
+    console.log('[XStateSimulationPanel] Resetting context with fresh data:', freshContext);
+    send({ type: 'RESET_CONTEXT', ...freshContext });
+  };
+  
+  // Helper function to get the current state in string format
   const getCurrentState = () => {
+    if (!fsmState) return 'undefined';
     if (typeof fsmState.value === 'string') {
       return fsmState.value;
     }
@@ -170,14 +234,15 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
     return JSON.stringify(fsmState.value);
   };
 
-  // Affichage et forçage des guards (liés au contexte simulé)
-  const [forcedGuards, setForcedGuards] = useState(() => {
-    const initialGuards = {};
-    machineConfig.guards.forEach(guardName => {
-      initialGuards[guardName] = false;
-    });
-    return initialGuards;
-  });
+  // Debug mode - forcer certains états/valeurs
+  const [debugMode, setDebugMode] = useState(false);
+  const [forcedState, setForcedState] = useState('');
+
+  // Forcer un état spécifique (pour tests)
+  const forceState = (state) => {
+    setForcedState(state);
+    send({ type: 'FORCE_STATE', state });
+  };
 
   // Synchroniser les guards avec le contexte simulé
   useEffect(() => {
@@ -214,6 +279,33 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
         <strong>État actuel:</strong> {getCurrentState()}
         <br />
         <strong>Bot ID:</strong> {botId}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
+          <button onClick={checkContext} 
+            style={{ background: '#ff9800', color: 'black', fontSize: '8px' }}>
+            Debug Context
+          </button>
+          <button onClick={resetContext} 
+            style={{ background: '#e91e63', color: 'white', fontSize: '8px' }}>
+            Reset Context
+          </button>
+        </div>
+      </div>
+
+      {/* Info Contexte */}
+      <div style={{ marginBottom: 15, padding: 5, background: 'rgba(0,0,100,0.3)', fontSize: '9px' }}>
+        <strong>Context Info:</strong> {contextMetrics.count} properties
+        <br />
+        <span style={{ color: contextMetrics.hasEntityId ? '#4CAF50' : '#f44336' }}>
+          {contextMetrics.hasEntityId ? '✓' : '✗'} EntityId
+        </span>
+        {' | '}
+        <span style={{ color: contextMetrics.hasVehicle ? '#4CAF50' : '#f44336' }}>
+          {contextMetrics.hasVehicle ? '✓' : '✗'} Vehicle
+        </span>
+        {' | '}
+        <span style={{ color: contextMetrics.hasMemory ? '#4CAF50' : '#f44336' }}>
+          {contextMetrics.hasMemory ? '✓' : '✗'} Memory
+        </span>
       </div>
 
       {/* Contrôle du contexte simulé */}

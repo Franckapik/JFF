@@ -1,5 +1,5 @@
-import { useXFSMStore } from '../stores/useXFSMStore';
-import { useCallback, useMemo } from 'react';
+import  useXFSMStore  from '../stores/useXFSMStore';
+import { useCallback, useMemo, useEffect } from 'react';
 import { getBotId } from '../ai/fsm/machine/constants/constants';
 
 /**
@@ -24,15 +24,26 @@ export function useXFSM(botId = getBotId(0)) {
   const fsmState = botState || { value: 'uninitialized', context: {} };
   const context = fsmState.context || {};
 
-  // 4. Mémorisation de la fonction send spécifique au bot
+  // 4. Log du contexte lors des changements
+  useEffect(() => {
+    console.log(`[useXFSM] Context for ${botId} updated:`, {
+      contextKeys: Object.keys(context),
+      contextSize: Object.keys(context).length,
+      entityId: context?.entityId || "missing",
+      entityType: context?.entityType || "missing"
+    });
+  }, [context, botId]);
+
+  // 5. Mémorisation de la fonction send spécifique au bot
   const sendToBots = useCallback(
     (event) => {
+      console.log(`[useXFSM] Sending event via hook to ${botId}:`, event);
       send(event, botId);
     },
     [send, botId]
   );
 
-  // 5. Mémorisation de la fonction isIn
+  // 6. Mémorisation de la fonction isIn
   const isIn = useCallback(
     (stateValue) => {
       return fsmState?.value === stateValue || fsmState?.matches?.(stateValue) || false;
@@ -40,7 +51,7 @@ export function useXFSM(botId = getBotId(0)) {
     [fsmState]
   );
 
-  // 6. Retourner une API complète et stable
+  // 7. Retourner une API complète et stable
   return { 
     // État FSM
     fsmState, 

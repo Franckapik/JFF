@@ -3,7 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import Scene from "./components/Scene";
 import XStateSimulationPanel from "./components/Debug/XStateSimulationPanel";
 import "./styles/App.css";
-import { useXFSMStore } from './stores/useXFSMStore';
+import  useXFSMStore  from './stores/useXFSMStore';
 
 const App = () => {
   const addBot = useXFSMStore((state) => state.addBot);

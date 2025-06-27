@@ -120,25 +120,48 @@ export const machine = createMachine({
         }
       }
     }
+  },
+  on: {
+    RESET_CONTEXT: {
+      actions: 'resetContext'
+    },
+    FORCE_STATE: {
+      target: '#machine.evaluating',
+      actions: 'updateContext'
+    }
   }
 }, {
   guards: {
     shouldExplore: (context, event) => {
-      // Exemple : autorise la transition seulement si context.energy > 0
-      console.log('shouldExplore', context);
+      // Exemple : autorise la transition seulement si context.energy > 0
+      console.log('shouldExplore guard called with context:', context);
       return true;
     },
     shouldCollect: (context, event) => {
-      // Exemple : autorise la transition seulement si context.cargo > 0
+      // Exemple : autorise la transition seulement si context.cargo > 0
+      console.log('shouldCollect guard called with context:', context);
       return context.cargo > 0;
     },
     shouldMaintain: (context, event) => {
-      // Exemple : autorise la transition seulement si context.needsMaintenance === true
+      // Exemple : autorise la transition seulement si context.needsMaintenance === true
+      console.log('shouldMaintain guard called with context:', context);
       return context.needsMaintenance === true;
     }
   },
   actions: {
-    updateContext: assign((ctx, event) => ({ ...ctx, ...event })),
+    updateContext: assign((ctx, event) => {
+      console.log('[FSM] updateContext - Previous context:', ctx);
+      console.log('[FSM] updateContext - Event received:', event);
+      const updatedContext = { ...ctx, ...event };
+      console.log('[FSM] updateContext - New context:', updatedContext);
+      return updatedContext;
+    }),
+    resetContext: assign((ctx, event) => {
+      console.log('[FSM] resetContext called - Replacing context with event data');
+      // Reject type property from the event to avoid XState errors
+      const { type, ...newContext } = event;
+      return newContext;
+    }),
     action_evaluating_entry: () => {},
     action_evaluating_exit: () => {},
     action_exploring_entry: () => {},

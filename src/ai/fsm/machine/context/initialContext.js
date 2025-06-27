@@ -25,7 +25,7 @@ import { BOT_STATES, ENTITY_TYPES, DRONE_VISUAL_STATES, EXPLORATION_CYCLE_CONFIG
  * @param {string} entityType - Type d'entité (auto, manual, human)
  * @returns {Object} - Contexte FSM initial
  */
-export const createEntityContext = (entityId, entityType = ENTITY_TYPES.auto) => {
+export const createMachineContext = (entityId, entityType = ENTITY_TYPES.auto) => {
   // ID du véhicule principal (compatible avec PlayerStore)
   const mainVehicleId = `${entityId}-ship`;
   
@@ -277,6 +277,6 @@ export const updateStateHistory = (context, newState) => {
 // ============================================================================
 
 export default {
-  createEntityContext,
+  createMachineContext,
   updateStateHistory
 };

@@ -23,7 +23,7 @@
  */
 
 import fsmLogger from '../../../logger/fsmLogger.js';
-import { useXFSMStore } from '../../useXFSMStore/index.js';
+import  useXFSMStore  from '../../useXFSMStore/index.js';
 
 // =========================================================================
 // IMPORTS
