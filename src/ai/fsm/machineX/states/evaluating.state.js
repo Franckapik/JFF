@@ -1,33 +1,44 @@
 /**
  * ============================================================================
- * XSTATE EVALUATING STATE - Configuration de l'état EVALUATING
+ * XSTATE EVALUATING STATE - Configuration de l'état evaluating
  * ============================================================================
  * 
- * Configuration complète de l'état EVALUATING migré depuis Robot3 vers XState.
- * À compléter dans le PROMPT 8.
+ * État evaluating migré depuis la logique machine.xstate.js (XState natif).
+ * - Transitions : needExploring, needCollecting, needMaintenance
+ * - Actions : action_evaluating_entry, action_evaluating_exit, updateContext
+ * - Guards : shouldExplore, shouldCollect, shouldMaintain
  * 
  * @author Migration FSM Robot3 → XState
  * @version 1.0.0 - Architecture XState
  */
 
-// ============================================================================
-// TODO: PROMPT 8 - Configuration de l'état evaluating
-// ============================================================================
+import { action_evaluating_entry, action_evaluating_exit } from '../actions/evaluating.actions.js';
+import { allGuards } from '../guards/index.js';
+import { assign } from 'xstate';
 
 /**
- * TODO: Analyser toutes les transitions de evaluatingState.js de Robot3
- * TODO: Reconstruire l'état evaluating complet
- * TODO: Utiliser tous les guards et actions migrés précédemment
- * 
- * Transitions probables à reconfigurer:
- * - Toutes les transitions EVALUATION_COMPLETE vers différents états
- * - Transitions de mise à jour de position
- * - Gestion des priorités et conditions
+ * Configuration XState de l'état evaluating (modulaire)
  */
-
-// Placeholder pour compilation
 export const evaluatingState = {
-  // TODO: PROMPT 8 - Configuration complète de l'état
+  entry: 'action_evaluating_entry',
+  exit: 'action_evaluating_exit',
+  on: {
+    needExploring: {
+      target: 'exploring',
+      guard: 'shouldExplore',
+      actions: 'updateContext'
+    },
+    needCollecting: {
+      target: 'collecting',
+      guard: 'shouldCollect',
+      actions: 'updateContext'
+    },
+    needMaintenance: {
+      target: 'maintaining',
+      guard: 'shouldMaintain',
+      actions: 'updateContext'
+    }
+  }
 };
 
 export default evaluatingState;

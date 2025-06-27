@@ -14,7 +14,7 @@
 // TODO: Imports à ajouter progressivement (PROMPT 8)
 // ============================================================================
 
-// TODO: PROMPT 8 - import { evaluatingState } from './evaluating.state.js';
+import { evaluatingState } from './evaluating.state.js';
 
 // ============================================================================
 // EXPORT CENTRALISÉ (À compléter)
@@ -24,9 +24,10 @@
  * Tous les états disponibles pour XState
  */
 export const allStates = {
-  // TODO: PROMPT 8 - Ajouter tous les états ici
-  // evaluating: evaluatingState
+  evaluating: evaluatingState
 };
 
 // Export par défaut
 export default allStates;
+
+export { evaluatingState };

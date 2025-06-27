@@ -132,41 +132,47 @@ src/ai/fsm/machineX/
 
 ### Phase 3 - Configuration (Prompts 6-8)
 - [x] Événements configurés
-- [ ] Actions evaluating migrées
+- [x] Actions evaluating migrées
 - [ ] État evaluating configuré
 
 ---
 
-### **PROMPT 7 : Migration des actions evaluating**
+### **PROMPT 7 : Migration des actions evaluating** ✅
 
 **Objectif** : Migrer les actions spécifiques à l'état evaluating
 
-**Actions à demander** :
-1. Analyser les actions utilisées dans `evaluatingState.js` de Robot3
-2. Extraire la logique actuelle de `action_evaluating_entry` du fichier existant
-3. Réécrire en architecture modulaire dans `machineX/actions/evaluating.actions.js`
+**COMPLETED** - Evaluating actions migrated successfully:
+- ✅ Logique de décision (maintenance, collecte, exploration, idle) migrée dans `action_evaluating_entry`
+- ✅ Logging de sortie dans `action_evaluating_exit`
+- ✅ Structure modulaire, documentation, XState natif
+- ✅ Export centralisé dans `actions/index.js`
+- ✅ Compilation sans erreur
 
-**Actions à migrer** :
-- `action_evaluating_entry` (logique d'évaluation complexe)
-- `action_evaluating_exit`
-- Actions de mise à jour de contexte
-- Actions de logging spécialisées
+**Résultat** : ✅ Fichier `evaluating.actions.js` complet et documenté - TERMINÉ
+
+### Phase 3 - Configuration (Prompts 6-8)
+- [x] Événements configurés
+- [x] Actions evaluating migrées
+- [ ] État evaluating configuré
 
 ---
 
-### **PROMPT 8 : Configuration de l'état evaluating**
+### **PROMPT 8 : Configuration de l'état evaluating** ✅
 
 **Objectif** : Créer la configuration complète de l'état evaluating
 
-**Actions à demander** :
-1. Analyser toutes les transitions de `evaluatingState.js` de Robot3
-2. Reconstruire l'état evaluating complet dans `machineX/states/evaluating.state.js`
-3. Utiliser tous les guards et actions migrés précédemment
+**COMPLETED** - Evaluating state migrated successfully:
+- ✅ Logique et transitions strictement issues de machine.xstate.js (pas d'EVALUATION_COMPLETE)
+- ✅ Actions et guards centralisés, XState natif
+- ✅ Export centralisé dans `states/index.js`
+- ✅ Compilation sans erreur
 
-**Transitions à reconfigurer** :
-- Toutes les transitions `EVALUATION_COMPLETE` vers différents états
-- Transitions de mise à jour de position
-- Gestion des priorités et conditions
+**Résultat** : ✅ Fichier `evaluating.state.js` complet et documenté - TERMINÉ
+
+### Phase 3 - Configuration (Prompts 6-8)
+- [x] Événements configurés
+- [x] Actions evaluating migrées
+- [x] État evaluating configuré
 
 ---
 
@@ -216,8 +222,8 @@ src/ai/fsm/machineX/
 
 ### Phase 3 - Configuration (Prompts 6-8)
 - [x] Événements configurés
-- [ ] Actions evaluating migrées
-- [ ] État evaluating configuré
+- [x] Actions evaluating migrées
+- [x] État evaluating configuré
 
 ### Phase 4 - Intégration (Prompts 9-10)
 - [ ] Machine XState créée

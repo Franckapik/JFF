@@ -14,7 +14,7 @@
 // TODO: Imports à ajouter progressivement (PROMPT 7)
 // ============================================================================
 
-// TODO: PROMPT 7 - import { evaluatingActions } from './evaluating.actions.js';
+import * as evaluatingActions from './evaluating.actions.js';
 
 // ============================================================================
 // EXPORT CENTRALISÉ (À compléter)
@@ -25,15 +25,14 @@
  * Structure plate pour faciliter l'usage dans la machine
  */
 export const allActions = {
-  // TODO: PROMPT 7 - Ajouter toutes les actions ici
-  // ...evaluatingActions
+  ...evaluatingActions
 };
 
 /**
  * Actions organisées par catégorie (pour référence)
  */
 export const actionsByCategory = {
-  // TODO: PROMPT 7 - evaluating: evaluatingActions
+  evaluating: evaluatingActions
 };
 
 // Export par défaut

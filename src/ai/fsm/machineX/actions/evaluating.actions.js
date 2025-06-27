@@ -1,34 +1,83 @@
 /**
  * ============================================================================
- * XSTATE EVALUATING ACTIONS - Actions pour l'état EVALUATING
+ * XSTATE EVALUATING ACTIONS - Actions spécifiques à l'état evaluating
  * ============================================================================
  * 
- * Actions spécifiques à l'état EVALUATING migrées depuis Robot3 vers XState.
- * À compléter dans le PROMPT 7.
+ * Actions migrées depuis la machine.xstate.js (XState), version modulaire.
+ * - action_evaluating_entry : logique de décision (maintenance, collecte, exploration, idle)
+ * - action_evaluating_exit : simple log
  * 
  * @author Migration FSM Robot3 → XState
  * @version 1.0.0 - Architecture XState
  */
 
-// ============================================================================
-// TODO: PROMPT 7 - Migration des actions evaluating
-// ============================================================================
+import fsmLogger from '../../../../logger/fsmLogger.js';
 
 /**
- * TODO: Analyser les actions utilisées dans evaluatingState.js de Robot3
- * TODO: Extraire la logique actuelle de action_evaluating_entry du fichier existant
- * TODO: Réécrire en architecture modulaire
- * 
- * Actions probables à migrer:
- * - action_evaluating_entry (logique d'évaluation complexe)
- * - action_evaluating_exit
- * - Actions de mise à jour de contexte
- * - Actions de logging spécialisées
+ * Action d'entrée de l'état evaluating : logique de décision prioritaire
+ * Envoie un événement selon la situation du contexte
  */
+export const action_evaluating_entry = ({ context, self }) => {
+  fsmLogger.state('action_evaluating_entry');
 
-// Placeholder pour compilation
-export const evaluatingActions = {
-  // TODO: PROMPT 7 - Implémenter les actions d'évaluation
+  // Évaluation des conditions environnementales
+  const vehicle = context?.vehicle || {};
+  const fuel = vehicle.fuel || 100;
+  const damage = vehicle.damage || 0;
+  const resources = vehicle.resources || { food: 0, debris: 0, special: 0 };
+  const maxCapacity = vehicle.maxCapacity || { food: 200, debris: 1800, special: 3 };
+
+  // Vérifier si maintenance nécessaire (priorité 1)
+  const needsMaintenance = fuel < 30 || damage > 50 || vehicle.needsRepair;
+
+  // Vérifier si collecte possible (priorité 2)
+  const knownTiles = context.memory?.knownTiles || new Map();
+  const tilesWithResources = Array.from(knownTiles.values()).filter(tile => 
+    tile.explored && tile.hasResources && tile.resourcePercentage > 0
+  );
+  const hasCollectibleTiles = tilesWithResources.length > 0;
+
+  // Vérifier capacité du vaisseau
+  const totalResources = Object.values(resources).reduce((sum, val) => sum + val, 0);
+  const totalCapacity = Object.values(maxCapacity).reduce((sum, val) => sum + val, 0);
+  const isShipNotFull = totalResources < totalCapacity * 0.8;
+
+  // Vérifier si exploration nécessaire (priorité 3)
+  const exploredTilesCount = Array.from(knownTiles.values()).filter(tile => tile.explored).length;
+  const needsExploration = exploredTilesCount < 3; // Explorer au moins 3 tuiles
+
+  fsmLogger.info('[Evaluating] Conditions', {
+    fuel, damage, needsMaintenance,
+    hasCollectibleTiles, isShipNotFull,
+    exploredTilesCount, needsExploration
+  });
+
+  // Décision basée sur les priorités
+  setTimeout(() => {
+    if (needsMaintenance) {
+      fsmLogger.info('[Evaluating] → needMaintenance (fuel/damage critical)');
+      self.send({ type: 'needMaintenance', reason: 'critical_condition' });
+    } else if (hasCollectibleTiles && isShipNotFull) {
+      fsmLogger.info('[Evaluating] → needCollecting (resources available)');
+      self.send({ type: 'needCollecting', reason: 'resources_available' });
+    } else if (needsExploration) {
+      fsmLogger.info('[Evaluating] → needExploring (need more exploration)');
+      self.send({ type: 'needExploring', reason: 'insufficient_exploration' });
+    } else {
+      fsmLogger.info('[Evaluating] → needMaintenance (nothing to do)');
+      self.send({ type: 'needMaintenance', reason: 'idle_time' });
+    }
+  }, 1000); // Délai de 1s pour permettre à l'état de s'initialiser
 };
 
-export default evaluatingActions;
+/**
+ * Action de sortie de l'état evaluating : simple log
+ */
+export const action_evaluating_exit = () => {
+  fsmLogger.state('action_evaluating_exit');
+};
+
+export default {
+  action_evaluating_entry,
+  action_evaluating_exit
+};
