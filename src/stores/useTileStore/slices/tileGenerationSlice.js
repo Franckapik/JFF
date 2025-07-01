@@ -238,7 +238,6 @@ const createTileGenerationSlice = (set, get) => ({
     
     // Éviter les boucles infinies en vérifiant s'il y a du travail à faire
     if (!activeBotIds || activeBotIds.length === 0) {
-      fsmLogger.info('[TileStore] No active bots to sync, skipping synchronization');
       return;
     }
     
@@ -366,12 +365,11 @@ const createTileGenerationSlice = (set, get) => ({
     // Mettre à jour l'état avec les nouvelles tuiles
     set({ tiles: newTiles });
     
-    // Log uniquement si des changements ont été effectués
-    fsmLogger.game(`[TileStore] Synchronized starting tiles with FSM bots:`, {
-      totalBots: totalBotsNeeded,
-      activeBots: activeBotIds.length,
-      departTiles: Object.keys(newTiles).filter(coord => newTiles[coord].type === "depart").length
-    });
+    // Log essentiel pour confirmer la synchronisation réussie
+    const finalDepartTilesCount = Object.values(newTiles).filter(tile => tile.type === "depart").length;
+    if (finalDepartTilesCount > 0) {
+      fsmLogger.game(`[TileStore] Synchronized ${finalDepartTilesCount} starting tiles with ${totalBotsNeeded} active bots`);
+    }
   },
 
   /**

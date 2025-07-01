@@ -1,4 +1,6 @@
-reprendre le travail au niveau de la ligne 64 de la scnene pour la synchronisation avec les bots. 
+
+
+reprendre le travail au niveau de la ligne 64 de la scnene pour la synchronisation avec les bots. => confusion de fonciton ici ? 
 
 
 Le fichier vehicleConstant doit etre supprimé. Le contenu utilisé dans ce fichier peut etre placé dans le fichier constants.js. Mettre a jour les imports/exports dans le codebase.
