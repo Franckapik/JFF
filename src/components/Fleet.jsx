@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { useXFSM } from "../hooks/useXFSM";
-import { useBotMachine } from "../ai/fsm/hooks/useBotMachine.js";
 import { useXFSMDroneTracker } from "../ai/fsm/hooks/trackers/useXFSMDroneTracker.js";
 import { useXFSMShipTracker } from "../ai/fsm/hooks/trackers/useXFSMShipTracker.js";
 import { useDroneAnimation } from "../animations/useDroneAnimation.js";
@@ -59,6 +58,28 @@ const Fleet = React.memo(({
   // ===================================================================
   
   const { fsmState, context, send: fsmSend } = useXFSM(botId);
+
+  // 🐛 DIAGNOSTIC : Log du contexte FSM reçu
+  React.useEffect(() => {
+    console.log(`🛸 [Fleet] Full context for ${botId}:`, {
+      context,
+      fsmState,
+      hasDroneFleet: !!context?.droneFleet,
+      hasDrones: !!context?.droneFleet?.drones,
+      hasExplorer: !!context?.droneFleet?.drones?.explorer,
+      contextKeys: Object.keys(context || {})
+    });
+    
+    if (context?.droneFleet?.drones?.explorer) {
+      console.log(`🛸 [Fleet] Drone context for ${botId}:`, {
+        droneState: context.droneFleet.drones.explorer.state,
+        isActive: context.droneFleet.drones.explorer.isActive,
+        hasTargetPosition: !!context.droneFleet.drones.explorer.targetPosition,
+        targetPosition: context.droneFleet.drones.explorer.targetPosition,
+        fsmState
+      });
+    }
+  }, [context, fsmState, botId]);
 
   // 🎯 TRACKERS SPÉCIALISÉS : Surveillance distance → événements FSM
   // - useXFSMDroneTracker : Gère deploying, exploring, returning (XState)

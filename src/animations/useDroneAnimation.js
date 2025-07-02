@@ -62,6 +62,19 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
     const isActive = drone.isActive || false;
     const droneTargetPos = drone.targetPosition;
     
+    // 🐛 DIAGNOSTIC : Log des informations du drone
+    if (now - lastUpdateTime.current > 3.0) {
+      fsmLogger.info(`🛸 [${droneType}] Drone diagnostic:`, {
+        droneState,
+        isActive,
+        hasTargetPosition: !!droneTargetPos,
+        targetPosition: droneTargetPos,
+        currentPosition: currentPosition,
+        shipPosition
+      });
+      lastUpdateTime.current = now;
+    }
+    
     // Position cible calculée (coordonnées locales)
     const targetPosition = droneTargetPos ? {
       x: droneTargetPos.x - shipPosition.x,
@@ -69,9 +82,10 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
       z: droneTargetPos.z - shipPosition.z
     } : initialPosition;
     
-    const isMoving = droneState === 'deploying' || 
-                     droneState === 'exploring' || 
-                     droneState === 'returning';
+    // États de mouvement du drone (XState uniquement)
+    const isMoving = droneState === 'drone_deploying' || 
+                     droneState === 'drone_scanning' || 
+                     droneState === 'drone_returning';
     
     // Debug réduit - seulement en cas de problème
     if (now - lastUpdateTime.current > 5.0 && !isMoving && isActive) {
@@ -98,7 +112,7 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
     }
     
     // 🔄 COMMUNICATION SPÉCIALE POUR LE RETOUR
-    if (droneState === 'returning' && targetPosition) {
+    if (droneState === 'drone_returning' && targetPosition) {
       const worldPosition = {
         x: currentPosition.x + shipPosition.x,
         y: currentPosition.y + shipPosition.y,
@@ -115,12 +129,12 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
         droneRef.current.position.y = targetPosition.y + Math.sin(now * 2) * 0.1;
         break;
         
-      case 'exploring':
+      case 'drone_scanning':
         droneRef.current.position.y = targetPosition.y + Math.sin(now * 3) * 0.2;
         droneRef.current.rotation.y += delta * 1.5;
         break;
         
-      case 'returning':
+      case 'drone_returning':
         droneRef.current.position.y = targetPosition.y + Math.sin(now * 6) * 0.1;
         droneRef.current.rotation.y += delta * 2.5;
         droneRef.current.rotation.z = 0;

@@ -31,12 +31,12 @@
  */
 
 import { useEffect, useRef, useCallback, useMemo } from 'react';
-import { MOVEMENT_EVENT_TYPES, movementEvents } from '../machine/events/movementEvents.js';
-import { POSITION_TRACKER_CONFIG } from '../machine/constants/constants.js';
-import { useTileStore } from '../../../stores/useTileStore/index.js';
-import { useEventDebounce } from './useEventDebounce.js';
-import fsmLogger from '../../../logger/fsmLogger.js';
-import { isTileAvailableForCollection } from '../../../stores/useTileStore/slices/tileResourceSlice.js';
+import { MOVEMENT_EVENT_TYPES, movementEvents } from '../../../../src/ai/fsm/machine/events/movementEvents.js';
+import { POSITION_TRACKER_CONFIG } from '../../../../src/ai/fsm/machine/constants/constants.js';
+import { useTileStore } from '../../../../src/stores/useTileStore/index.js';
+import { useEventDebounce } from '../../../../src/ai/fsm/hooks/useEventDebounce.js';
+import fsmLogger from '../../../../src/logger/fsmLogger.js';
+import { isTileAvailableForCollection } from '../../../../src/stores/useTileStore/slices/tileResourceSlice.js';
 
 /**
  * Hook spécialisé pour le tracking des vaisseaux

@@ -11,7 +11,7 @@
  */
 
 // ============================================================================
-// TODO: Imports à ajouter progressivement (PROMPT 7)
+// IMPORTS ACTIONS
 // ============================================================================
 
 import * as evaluatingActions from './evaluating.actions.js';
@@ -20,7 +20,7 @@ import * as collectingActions from './collecting.actions.js';
 import * as maintainingActions from './maintaining.actions.js';
 
 // ============================================================================
-// EXPORT CENTRALISÉ (À compléter)
+// EXPORT CENTRALISÉ
 // ============================================================================
 
 /**

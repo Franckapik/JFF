@@ -15,10 +15,10 @@
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useMachine } from 'react-robot';
 import { createMachineContext } from '../machineX/context/initialContext.js';
-import { ENTITY_TYPES } from '../machine/constants/constants.js';
-import { createBotMachine } from '../machine/machineFactory.js';
-import { SYSTEM_EVENT_TYPES } from '../machine/events/systemEvents.js';
-import { MOVEMENT_EVENT_TYPES, movementEvents } from '../machine/events/movementEvents.js';
+import { ENTITY_TYPES } from '../../../src/ai/fsm/machine/constants/constants.js';
+import { createBotMachine } from '../../../src/ai/fsm/machine/machineFactory.js';
+import { SYSTEM_EVENT_TYPES } from '../../../src/ai/fsm/machine/events/systemEvents.js';
+import { MOVEMENT_EVENT_TYPES, movementEvents } from '../../../src/ai/fsm/machine/events/movementEvents.js';
 import { useTileStore } from '../../../stores/useTileStore/index.js';
 import fsmLogger from '../../../logger/fsmLogger.js';
 
