@@ -14,10 +14,10 @@
  */
 
 import { useRef, useCallback, useEffect } from 'react';
-import { useEventDebounce } from '../useEventDebounce';
-import { POSITION_TRACKER_CONFIG } from '../../machine/constants/constants';
-import { useTileStore } from '../../../../stores/useTileStore';
-import { processDronePosition } from './drone/droneTrackerEngine';
+import { useEventDebounce } from '../../useEventDebounce';
+import { POSITION_TRACKER_CONFIG } from '../../../machine/constants/constants';
+import { useTileStore } from '../../../../../stores/useTileStore';
+import { processDronePosition } from './droneTrackerEngine';
 
 /**
  * Hook spécialisé pour le tracking des drones (XState)

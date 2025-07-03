@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useXFSM } from "../hooks/useXFSM";
-import { useXFSMDroneTracker } from "../ai/fsm/hooks/trackers/useXFSMDroneTracker.js";
-import { useXFSMShipTracker } from "../ai/fsm/hooks/trackers/useXFSMShipTracker.js";
+import { useXFSMDroneTracker } from "../ai/fsm/hooks/trackers/drone/useXFSMDroneTracker.js";
+import { useXFSMShipTracker } from "../ai/fsm/hooks/trackers/ship/useXFSMShipTracker.js";
 import { useDroneAnimation } from "../animations/useDroneAnimation.js";
 import { useShipAnimation } from "../animations/useShipAnimation.js";
 import ShipMesh from "./Vehicles/ShipMesh.jsx";
