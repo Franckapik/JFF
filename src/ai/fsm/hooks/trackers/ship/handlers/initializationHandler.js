@@ -20,6 +20,12 @@ export const createShipInitializationHandler = ({ fsmSend, botId, shipType, init
      */
     handleInitialPosition(position) {
       if (!initialPositionSent.current && position) {
+        console.log('🚢 [SHIP TRACKER] About to send SHIP_POSITION_UPDATE event:', {
+          position,
+          shipType,
+          botId
+        });
+        
         fsmLogger.context(`🚢 [${botId}] Setting initial ship position`, {
           position,
           shipType
@@ -33,6 +39,8 @@ export const createShipInitializationHandler = ({ fsmSend, botId, shipType, init
           shipType,
           timestamp: Date.now()
         });
+        
+        console.log('🚢 [SHIP TRACKER] SHIP_POSITION_UPDATE event sent successfully');
         
         initialPositionSent.current = true;
         return true;

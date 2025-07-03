@@ -69,7 +69,7 @@ const useXFSMStore = create((set, get) => {
       const actor = actors.get(botId);
       if (actor) {
         const botState = snapshotCache.get(botId) || EMPTY_BOT_STATE;
-        fsmLogger.event('[XFSMStore.send]', { event, botId, currentState: botState.value });
+        fsmLogger.event(event.type, { event, botId, currentState: botState.value });
         actor.send(event);
       } 
     },

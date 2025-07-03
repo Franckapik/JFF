@@ -50,9 +50,9 @@ export const createMachineContext = (entityId, entityType = ENTITY_TYPES.auto) =
       type: 'main_ship',                         // Ex: 'main_ship'
       
       // Position et mouvement
-      position: null,                            // Ex: Vector3(5.2, 0, 3.8) ou null
-      basePosition: null,                        // Ex: Vector3(1.8, 0.5, 0) - position fixe de base
-      coord: null,                               // Ex: {x: 5, z: 3} ou null
+      position: { x: 0, y: 0.5, z: 0 },          // Position par défaut pour éviter les nulls
+      basePosition: { x: 0, y: 0.5, z: 0 },      // Position de base par défaut
+      coord: { x: 0, z: 0 },                     // Coordonnées par défaut
       isMoving: false,                           // Ex: true, false
       progress: 0,                               // Ex: 0.0 à 1.0 (progression du mouvement)
       
@@ -188,9 +188,9 @@ export const createMachineContext = (entityId, entityType = ENTITY_TYPES.auto) =
           id: `${entityId}-drone-explorer`,     // Ex: 'bot-0-drone-explorer'
           type: 'explorer',                      // Ex: 'explorer'
           state: DRONE_VISUAL_STATES.docked,       // Ex: 'docked', 'deploying', 'exploring'
-          position: null,                        // Ex: Vector3(6.2, 1.5, 4.8) ou null
-          targetPosition: null,                  // Ex: Vector3(9.0, 1.5, 7.0) ou null
-          missionTarget: null,                   // Ex: {x: 9, z: 7, type: 'explore'} ou null
+          position: { x: 0, y: 0.5, z: 0 },      // Position par défaut pour éviter les nulls
+          targetPosition: { x: 0, y: 0.5, z: 0 },// Position cible par défaut pour éviter les nulls
+          missionTarget: { x: 0, z: 0, type: 'explore' }, // Cible de mission par défaut
           isActive: false,                       // Ex: true, false
           lastUpdate: Date.now()                 // Ex: 1703425234567 (timestamp)
         },

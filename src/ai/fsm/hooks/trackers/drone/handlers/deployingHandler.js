@@ -23,8 +23,17 @@ export const createDeployingHandler = ({ botId, droneType, send, canSendEvent, m
     process(distance, position) {
       const eventKey = `drone_deploying_reached_${botId}_${droneType}`;
       
+      // 🚨 DIAGNOSTIC: Loguer les données de distance pour debug
+      if (position) {
+        fsmLogger.mouvement(`📏 [${botId}] ${droneType} distance to target: ${distance.toFixed(2)}`);
+      }
+      
       if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
-        fsmLogger.mouvement(`🎯 [${botId}] ${droneType} reached target tile for scanning`);
+        fsmLogger.mouvement(`🎯 [${botId}] ${droneType} reached target tile for scanning`, {
+          position,
+          distance,
+          threshold: POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH
+        });
         
         // Transition vers drone_scanning
         send({

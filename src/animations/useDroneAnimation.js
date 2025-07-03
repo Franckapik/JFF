@@ -101,7 +101,7 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
       currentPosition.z = THREE.MathUtils.lerp(currentPosition.z, targetPosition.z, speed);
       droneRef.current.rotation.y += delta * 2;
       
-      // 🔄 COMMUNICATION VERS LE TRACKER
+      // 🔄 COMMUNICATION VERS LE TRACKER - POUR TOUS LES ÉTATS EN MOUVEMENT
       const worldPosition = {
         x: currentPosition.x + shipPosition.x,
         y: currentPosition.y + shipPosition.y,
@@ -109,16 +109,16 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
       };
       
       updateVisualPosition(worldPosition);
-    }
-    
-    // 🔄 COMMUNICATION SPÉCIALE POUR LE RETOUR
-    if (droneState === 'drone_returning' && targetPosition) {
+    } else {
+      // Mettre à jour la position pour tous les états, pas seulement en mouvement
+      // Envoi régulier de la position actuelle du drone pour mise à jour du contexte
       const worldPosition = {
         x: currentPosition.x + shipPosition.x,
         y: currentPosition.y + shipPosition.y,
         z: currentPosition.z + shipPosition.z
       };
       
+      // Envoyer la position actuelle au tracker
       updateVisualPosition(worldPosition);
     }
     

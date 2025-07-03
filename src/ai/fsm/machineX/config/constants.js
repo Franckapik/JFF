@@ -229,6 +229,7 @@ export const TRANSITION_REASONS = {
  */
 export const MOVEMENT_EVENTS = {
   SHIP_UPDATE_POSITION: 'SHIP_UPDATE_POSITION',        // ✅ ligne 349
+  SHIP_POSITION_UPDATE: 'SHIP_POSITION_UPDATE',        // Event from ship tracker
   DRONE_POSITION_UPDATE: 'DRONE_POSITION_UPDATE'       // ✅ ligne 356
 };
 

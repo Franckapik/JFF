@@ -40,6 +40,7 @@ import { shipCollectingActions } from './core/shipCollectingActions.js'; // NOUV
 import { droneExploringActions } from './droneExploringActions.js'; // NOUVEAU - Domaine métier exploring
 import { fuelActions } from './fuelActions.js';
 import { resourceActions } from './resourcesActions.js';
+import { positionActions } from './positionActions.js'; // NOUVEAU - Actions liées à la position
 
 // ⚠️ ANCIENS IMPORTS SUPPRIMÉS - Fichiers supprimés lors du nettoyage
 // import movementCore from './movementActions.js'; // SUPPRIMÉ
@@ -59,6 +60,7 @@ export { droneExploringActions } from './droneExploringActions.js';
 // Autres Actions inchangées
 export { fuelActions } from './fuelActions.js';
 export { resourceActions } from './resourcesActions.js';
+export { positionActions } from './positionActions.js'; // NOUVEAU - Export des actions de position
 
 // ============================================================================
 // EXPORTS RÉTROCOMPATIBILITÉ - UTILISANT LES NOUVELLES ACTIONS
@@ -136,6 +138,7 @@ export default {
   // Domaines inchangés
   fuel: fuelActions,
   resource: resourceActions,
+  position: positionActions, // NOUVEAU - Domaine position
   
   // ⚠️ RÉTROCOMPATIBILITÉ - Redirige vers les nouvelles actions
   // Les anciens noms pointent maintenant vers les nouveaux domaines

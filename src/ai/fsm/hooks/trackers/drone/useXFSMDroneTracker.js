@@ -47,8 +47,13 @@ export const useXFSMDroneTracker = (context, send, botId, droneType = 'explorer'
   const updateDroneVisualPosition = useCallback((position) => {
     if (!position) return;
     
+    
     currentVisualPosition.current = position;
     
+    // Gestion de l'initialisation sans log spécifique
+    // La position initiale sera loguée par processDronePosition si nécessaire
+    
+    // Toujours traiter la position via le moteur principal
     processDronePosition({
       position,
       context,

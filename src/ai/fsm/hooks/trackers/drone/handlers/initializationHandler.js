@@ -30,14 +30,8 @@ export const createInitializationHandler = ({ context, send, botId, droneType, i
             droneActive: drone.isActive
           });
           
-          // Événement de mise à jour de position pour initialiser le drone
-          send({
-            type: 'DRONE_POSITION_UPDATE',
-            position,
-            droneType,
-            timestamp: Date.now()
-          });
-          
+          // Marquer l'initialisation comme faite, mais laisser le droneTrackerEngine
+          // s'occuper d'envoyer l'événement de position
           initialPositionSent.current = true;
           return true;
         }

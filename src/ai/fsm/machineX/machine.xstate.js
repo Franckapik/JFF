@@ -39,6 +39,15 @@ export const machineX = createMachine({
     // Fallback si l'input n'est pas fourni correctement
     return createMachineContext(input?.entityId || 'bot-0', input?.entityType || 'auto');
   },
+  on: {
+    // Global event handlers - These events can be received in any state
+    SHIP_POSITION_UPDATE: {
+      actions: 'updateShipPosition'
+    },
+    DRONE_POSITION_UPDATE: {
+      actions: 'updateDronePosition'
+    }
+  },
   states: {
     evaluating: evaluatingState,
     exploring: exploringState,
