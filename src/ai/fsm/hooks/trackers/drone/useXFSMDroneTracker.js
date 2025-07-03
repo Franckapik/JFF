@@ -15,7 +15,7 @@
 
 import { useRef, useCallback, useEffect } from 'react';
 import { useEventDebounce } from '../../useEventDebounce';
-import { POSITION_TRACKER_CONFIG } from '../../../machine/constants/constants';
+import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants';
 import { useTileStore } from '../../../../../stores/useTileStore';
 import { processDronePosition } from './droneTrackerEngine';
 

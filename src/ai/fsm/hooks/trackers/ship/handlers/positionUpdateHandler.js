@@ -5,7 +5,7 @@
  */
 
 import fsmLogger from '../../../../../../logger/fsmLogger';
-import { POSITION_TRACKER_CONFIG } from '../../../../machine/constants/constants';
+import { POSITION_TRACKER_CONFIG } from '../../../../machineX/config/constants';
 import { useTileStore } from '../../../../../../stores/useTileStore';
 
 /**

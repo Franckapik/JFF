@@ -1,6 +1,6 @@
 import  useXFSMStore  from '../stores/useXFSMStore';
 import { useCallback, useMemo, useEffect } from 'react';
-import { getBotId } from '../ai/fsm/machine/constants/constants';
+import { getBotId } from '../ai/fsm/machineX/config/constants';
 
 /**
  * Hook complet pour interagir avec une machine d'état XState via Zustand.

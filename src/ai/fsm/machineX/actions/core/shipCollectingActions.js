@@ -67,8 +67,8 @@
  */
 
 import fsmLogger from '../../../../../logger/fsmLogger.js';
-import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES, RESOURCE_CONSTANTS } from '../../constants/constants.js';
-import { EXPLORATION_CYCLE_CONFIG } from '../../constants/constants.js';
+import { VEHICLE_TYPES, DEFAULT_VEHICLE_STATE, DEFAULT_CAPACITIES, RESOURCE_CONSTANTS } from '../../config/constants.js';
+import { EXPLORATION_CYCLE_CONFIG } from '../../config/constants.js';
 import { useTileStore } from '../../../../../stores/useTileStore/index.js';
 import { isTileCompletelyCollected, isTileAvailableForCollection } from '../../../../../stores/useTileStore/slices/tileResourceSlice.js';
 

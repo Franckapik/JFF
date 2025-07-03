@@ -14,7 +14,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { useEventDebounce } from '../../useEventDebounce';
-import { POSITION_TRACKER_CONFIG } from '../../../machine/constants/constants';
+import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants';
 import { processShipPosition } from './shipTrackerEngine';
 
 /**

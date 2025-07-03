@@ -31,7 +31,7 @@ import {
   DRONE_TYPES, 
   DRONE_VISUAL_STATES, 
   DRONE_CONFIG
-} from '../../constants/constants.js';
+} from '../../config/constants.js';
 import { useTileStore } from '../../../../../stores/useTileStore/index.js';
 
 // ============================================================================

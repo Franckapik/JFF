@@ -1,5 +1,5 @@
-1- Il faut factoriser ship tracker comme pour le drone.
-2- Il faut deplacer machine vers backup en reprenant le fichier constant.
+1- ✅ Il faut factoriser ship tracker comme pour le drone.
+2- ✅ Il faut migrer toutes les imports depuis machine/constants/constants vers machineX/config/constants (TERMINÉ - exclusions machine et backup respectées).
 3- IL faut comprendre pourquoi la distance ne trigger pas pour avoir un event reached_tile ? 
 4- Il faut developper chanque hanflers de l'exploration.
 

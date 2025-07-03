@@ -12,7 +12,7 @@
 
 import fsmLogger from '../../../../logger/fsmLogger.js';
 import { assign } from 'xstate';
-import { droneDeployForExploration } from '../../machine/actions/core/droneExploringActions.js';
+import { droneDeployForExploration } from './core/droneExploringActions.js';
 
 /**
  * Action d'entrée de l'état exploring : log + initialisation éventuelle

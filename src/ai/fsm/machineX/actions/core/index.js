@@ -36,7 +36,7 @@
  */
 
 // Import des actions core refactorisées
-import { shipCollectingActions } from './shipCollectingActions.js'; // NOUVEAU - Domaine métier collecting
+import { shipCollectingActions } from './core/shipCollectingActions.js'; // NOUVEAU - Domaine métier collecting
 import { droneExploringActions } from './droneExploringActions.js'; // NOUVEAU - Domaine métier exploring
 import { fuelActions } from './fuelActions.js';
 import { resourceActions } from './resourcesActions.js';
@@ -51,7 +51,7 @@ import { resourceActions } from './resourcesActions.js';
 // ============================================================================
 
 // 🚢 Ship Collecting Actions - NOUVEAU (Domaine métier: Collecting)
-export { shipCollectingActions } from './shipCollectingActions.js';
+export { shipCollectingActions } from './core/shipCollectingActions.js';
 
 // 🚁 Drone Exploring Actions - NOUVEAU (Domaine métier: Exploring) 
 export { droneExploringActions } from './droneExploringActions.js';
@@ -69,7 +69,7 @@ export {
   movementActions, 
   shipMovementActions, 
   entityMovementActions 
-} from './shipCollectingActions.js';
+} from './core/shipCollectingActions.js';
 
 // Drone Actions - RÉTROCOMPATIBILITÉ (Redirige vers droneExploringActions)
 export { 
