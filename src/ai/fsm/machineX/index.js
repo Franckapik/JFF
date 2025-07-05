@@ -15,4 +15,4 @@ export * from './actions/index.js';
 export * from './guards/guards.all.js';
 export * from './states/index.js';
 export * from './config/constants.js';
-export * from './config/events.config.js';
+export * from './events/events.config.js';

@@ -1,4 +1,13 @@
-reprendre le travail au niveau de la ligne 64 de la scnene pour la synchronisation avec les bots. 
+corriger ce qui a été fait pour le returning qui donne qqchose de tr-s etrange.
+
+
+
+1- ✅ Il faut factoriser ship tracker comme pour le drone.
+2- ✅ Il faut migrer toutes les imports depuis machine/constants/constants vers machineX/config/constants (TERMINÉ - exclusions machine et backup respectées).
+3- IL faut comprendre pourquoi la distance ne trigger pas pour avoir un event reached_tile ? 
+4- Il faut developper chanque hanflers de l'exploration.
+
+reprendre le travail au niveau de la ligne 64 de la scnene pour la synchronisation avec les bots. => confusion de fonciton ici ? 
 
 
 Le fichier vehicleConstant doit etre supprimé. Le contenu utilisé dans ce fichier peut etre placé dans le fichier constants.js. Mettre a jour les imports/exports dans le codebase.

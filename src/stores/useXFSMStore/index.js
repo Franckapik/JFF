@@ -69,9 +69,11 @@ const useXFSMStore = create((set, get) => {
       const actor = actors.get(botId);
       if (actor) {
         const botState = snapshotCache.get(botId) || EMPTY_BOT_STATE;
-        fsmLogger.event('[XFSMStore.send]', { event, botId, currentState: botState.value });
+        fsmLogger.event(event.type, { event, botId, currentState: botState.value });
         actor.send(event);
-      } 
+      } else {
+        console.warn('📨 [XFSMStore.send] No actor found for botId:', botId);
+      }
     },
 
     // Action pour ajouter un nouveau bot

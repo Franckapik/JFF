@@ -27,11 +27,10 @@
  */
 
 import { 
-  DRONE_DEPLOYMENT_STATES, 
   DRONE_TYPES, 
   DRONE_VISUAL_STATES, 
   DRONE_CONFIG
-} from '../../constants/constants.js';
+} from '../../config/constants.js';
 import { useTileStore } from '../../../../../stores/useTileStore/index.js';
 
 // ============================================================================
@@ -70,7 +69,7 @@ const selectTargetTileInRadiusForDrone = (context, range = 3) => {
     const vehicle = context.vehicle || context.botVehicle;
     
     if (!vehicle || !vehicle.coord) {
-      console.warn('[selectTargetTileInRadiusForDrone] Vehicle or vehicle.coord not found in context');
+      console.info('[selectTargetTileInRadiusForDrone] Vehicle or vehicle.coord not found in context');
       return { x: 0, y: 0.5, z: 0 };
     }
 
@@ -88,7 +87,7 @@ const selectTargetTileInRadiusForDrone = (context, range = 3) => {
     );
     
     if (validTargets.length === 0) {
-      console.warn('[selectTargetTileInRadiusForDrone] No valid tiles found, falling back to random tile');
+      console.info('[selectTargetTileInRadiusForDrone] No valid tiles found, falling back to random tile');
       
       const randomTile = tileStore.selectRandomWalkableTile();
       if (randomTile && randomTile.position) {
@@ -398,7 +397,6 @@ export default {
   
   // Constants
   constants: {
-    droneDeploymentStates: DRONE_DEPLOYMENT_STATES,
     droneTypes: DRONE_TYPES,
     droneVisualStates: DRONE_VISUAL_STATES,
     droneConfig: DRONE_CONFIG

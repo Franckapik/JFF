@@ -246,7 +246,7 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
   // Initialisation du contexte simulé avec la vraie structure
   const getInitialSimContext = () => {
     // On clone le contexte initial pour éviter les effets de bord
-    const base = createMachineContext('sim-bot', 'auto');
+    const base = createMachineContext(botId, 'auto'); // ✅ Utiliser le vrai botId
     // On ne garde que les propriétés utiles à la simulation
     return {
       entityId: base.entityId,

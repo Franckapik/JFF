@@ -154,7 +154,7 @@ export const FUEL_CONFIG = {
   
   // Seuils décisionnels
   CRITICAL: 10,    // Ex-FUEL_THRESHOLDS.CRITICAL et FUEL_CONSTANTS.CRITICAL_FUEL_THRESHOLD
-  LOW: 30,         // Ex-FUEL_THRESHOLDS.LOW (30) - priorité sur FUEL_CONSTANTS.LOW_FUEL_THRESHOLD (20)
+  LOW: 30,         // Ex-FUEL_THRESHOLDS.LOW et FUEL_CONSTANTS.LOW_FUEL_THRESHOLD  
   FULL: 100,       // Ex-FUEL_THRESHOLDS.FULL et FUEL_CONSTANTS.MAX_FUEL
   
   // Consommation
@@ -194,7 +194,7 @@ export const RESOURCE_CONSTANTS = {
 export const POSITION_TRACKER_CONFIG = {
   THRESHOLDS: {
     // Seuils communs
-    TARGET_REACH: 1,
+    TARGET_REACH: 1.5,
     TARGET_REACH_CLOSE: 1.2,
     TARGET_REACH_FAR: 2.0,
     RESET_MOVEMENT: 6.0,
@@ -315,4 +315,27 @@ export default {
   DRONE_CONFIG,
   getBotId,
   getMainShipId,
+  
+  // ============================================================================
+  // ALIASES LEGACY POUR RÉTROCOMPATIBILITÉ (À SUPPRIMER APRÈS MIGRATION)
+  // ============================================================================
+  
+  // Fusion des constantes fuel
+  FUEL_THRESHOLDS: {
+    CRITICAL: 10,
+    LOW: 30,
+    FULL: 100
+  },
+  FUEL_CONSTANTS: {
+    MAX_FUEL: 100,
+    MIN_FUEL: 0,
+    DEFAULT_CONSUMPTION: 5,
+    LOW_FUEL_THRESHOLD: 20,
+    CRITICAL_FUEL_THRESHOLD: 10,
+    CONSUMPTION_PER_DISTANCE: 2
+  },
+  
+  // Alias états (déjà unifiés)
+  XSTATE_STATES: FSM_STATES,
+  BOT_STATES: FSM_STATES
 };

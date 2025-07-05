@@ -39,7 +39,7 @@ src/ai/fsm/machineX/
 
 **Fichiers à créer** :
 - `machineX/config/constants.js` (constantes minimales)
-- `machineX/config/events.config.js` (vide avec TODO)
+- `machineX/events/events.config.js` (vide avec TODO)
 - `machineX/guards/index.js` (export vide)
 - `machineX/guards/safety.guards.js` (structure vide)
 - `machineX/guards/efficiency.guards.js` (structure vide) 
@@ -123,7 +123,7 @@ src/ai/fsm/machineX/
 
 **COMPLETED** - Events config migrated successfully:
 - ✅ Listé tous les événements utilisés dans evaluatingState.js et la table de migration
-- ✅ Créé une configuration claire et modulaire dans `machineX/config/events.config.js`
+- ✅ Créé une configuration claire et modulaire dans `machineX/events/events.config.js`
 - ✅ Organisation par catégorie (système, mouvement, urgence, ressources, custom)
 - ✅ Export global pour usage machine
 - ✅ Compilation sans erreur

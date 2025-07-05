@@ -28,9 +28,11 @@ export const useShipAnimation = (context, shipWorldPosition, updateVisualPositio
   // Envoie la position de départ au tracker FSM dès que la position mondiale est disponible
   useEffect(() => {
     if (shipWorldPosition && updateVisualPosition && !initialPositionSent.current) {
+      console.log('🏠 [Ship] About to transmit initial position to FSM tracker:', shipWorldPosition);
       fsmLogger.mouvement(`🏠 [Ship] Transmitting initial position to FSM tracker:`, shipWorldPosition);
       updateVisualPosition(shipWorldPosition);
       initialPositionSent.current = true; // ✅ Marquer comme envoyé
+      console.log('🏠 [Ship] Initial position transmitted successfully');
     }
   }, [shipWorldPosition, updateVisualPosition]);
 
@@ -122,6 +124,20 @@ export const useShipAnimation = (context, shipWorldPosition, updateVisualPositio
         y: currentPosition.y + shipWorldPosition.y,
         z: currentPosition.z + shipWorldPosition.z
       };
+      
+      // 🔍 DIAGNOSTIC: Log détaillé de la position du vaisseau
+      if (now - lastUpdateTime.current > 2.0) {
+        fsmLogger.info(`🚢 [SHIP-POSITION-DEBUG] Ship position update:`, {
+          localPosition: currentPosition,
+          worldBasePosition: shipWorldPosition,
+          calculatedWorldPosition: worldPosition,
+          contextVehiclePosition: context?.vehicle?.position,
+          isMoving,
+          currentAction,
+          note: 'Calling updateVisualPosition with worldPosition'
+        });
+        lastUpdateTime.current = now;
+      }
       
       updateVisualPosition(worldPosition);
     }

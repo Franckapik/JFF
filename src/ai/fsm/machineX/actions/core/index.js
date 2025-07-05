@@ -36,10 +36,11 @@
  */
 
 // Import des actions core refactorisées
-import { shipCollectingActions } from './shipCollectingActions.js'; // NOUVEAU - Domaine métier collecting
+import { shipCollectingActions } from './core/shipCollectingActions.js'; // NOUVEAU - Domaine métier collecting
 import { droneExploringActions } from './droneExploringActions.js'; // NOUVEAU - Domaine métier exploring
 import { fuelActions } from './fuelActions.js';
 import { resourceActions } from './resourcesActions.js';
+import { positionActions } from './positionActions.js'; // NOUVEAU - Actions liées à la position
 
 // ⚠️ ANCIENS IMPORTS SUPPRIMÉS - Fichiers supprimés lors du nettoyage
 // import movementCore from './movementActions.js'; // SUPPRIMÉ
@@ -51,7 +52,7 @@ import { resourceActions } from './resourcesActions.js';
 // ============================================================================
 
 // 🚢 Ship Collecting Actions - NOUVEAU (Domaine métier: Collecting)
-export { shipCollectingActions } from './shipCollectingActions.js';
+export { shipCollectingActions } from './core/shipCollectingActions.js';
 
 // 🚁 Drone Exploring Actions - NOUVEAU (Domaine métier: Exploring) 
 export { droneExploringActions } from './droneExploringActions.js';
@@ -59,6 +60,7 @@ export { droneExploringActions } from './droneExploringActions.js';
 // Autres Actions inchangées
 export { fuelActions } from './fuelActions.js';
 export { resourceActions } from './resourcesActions.js';
+export { positionActions } from './positionActions.js'; // NOUVEAU - Export des actions de position
 
 // ============================================================================
 // EXPORTS RÉTROCOMPATIBILITÉ - UTILISANT LES NOUVELLES ACTIONS
@@ -69,7 +71,7 @@ export {
   movementActions, 
   shipMovementActions, 
   entityMovementActions 
-} from './shipCollectingActions.js';
+} from './core/shipCollectingActions.js';
 
 // Drone Actions - RÉTROCOMPATIBILITÉ (Redirige vers droneExploringActions)
 export { 
@@ -136,6 +138,7 @@ export default {
   // Domaines inchangés
   fuel: fuelActions,
   resource: resourceActions,
+  position: positionActions, // NOUVEAU - Domaine position
   
   // ⚠️ RÉTROCOMPATIBILITÉ - Redirige vers les nouvelles actions
   // Les anciens noms pointent maintenant vers les nouveaux domaines

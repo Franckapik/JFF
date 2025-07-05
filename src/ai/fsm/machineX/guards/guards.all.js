@@ -4,7 +4,7 @@
 
 // --- EFFICIENCY GUARDS & UTILS ---
 import fsmLogger from '../../../../logger/fsmLogger.js';
-import { FUEL_THRESHOLDS, RESOURCE_CONSTANTS, DEFAULT_CAPACITIES, VEHICLE_TYPES } from '../config/constants.js';
+import { FUEL_CONFIG, RESOURCE_CONSTANTS, DEFAULT_CAPACITIES, VEHICLE_TYPES } from '../config/constants.js';
 
 // Utils
 export const getMaxCapacity = (vehicle) => {
@@ -56,15 +56,15 @@ export const canDepositResources = (context, event) => {
 };
 export const isFullTank = (context, event) => {
   const fuel = context?.vehicle?.fuel || 0;
-  return fuel >= FUEL_THRESHOLDS.FULL;
+  return fuel >= FUEL_CONFIG.FULL;
 };
 export const canRefuel = (context, event) => {
   const fuel = context?.vehicle?.fuel || 0;
-  return fuel < FUEL_THRESHOLDS.FULL;
+  return fuel < FUEL_CONFIG.FULL;
 };
 export const isLowFuel = (context, event) => {
   const fuel = context?.vehicle?.fuel || 0;
-  return fuel <= FUEL_THRESHOLDS.LOW;
+  return fuel <= FUEL_CONFIG.LOW;
 };
 export const shouldReturnForEfficiency = (context, event) => {
   const atMaxCapacity = isAtMaxCapacity(context, event);
@@ -119,11 +119,11 @@ export const needsExploration = (context, event) => {
 // --- SAFETY GUARDS ---
 export const isCriticalFuel = (context, event) => {
   const fuel = context?.vehicle?.fuel || 0;
-  return fuel <= FUEL_THRESHOLDS.CRITICAL;
+  return fuel <= FUEL_CONFIG.CRITICAL;
 };
 export const isLowFuelSafety = (context, event) => {
   const fuel = context?.vehicle?.fuel || 0;
-  return fuel <= FUEL_THRESHOLDS.LOW;
+  return fuel <= FUEL_CONFIG.LOW;
 };
 export const hasEnoughFuelForDistance = (context, event, distance = 10) => {
   const fuel = context?.vehicle?.fuel || 0;

@@ -15,9 +15,9 @@
 import { action_evaluating_entry, action_evaluating_exit } from '../actions/evaluating.actions.js';
 import { shouldExplore } from '../guards/guards.all.js';
 import { assign } from 'xstate';
-import { XSTATE_STATES} from '../config/constants.js';
+import { FSM_STATES } from '../config/constants.js';
 
-console.log(XSTATE_STATES.EXPLORING);
+console.log(FSM_STATES.EXPLORING);
 
 /**
  * Configuration XState de l'état evaluating (modulaire)
@@ -27,17 +27,17 @@ export const evaluatingState = {
   exit: 'action_evaluating_exit',
   on: {
     needExploring: {
-      target: XSTATE_STATES.EXPLORING,
+      target: FSM_STATES.EXPLORING,
       guard: 'shouldExplore', // Ajout du guard pour contrôler la transition
       actions: 'updateContext'
     },
     needCollecting: {
-      target: XSTATE_STATES.COLLECTING,
+      target: FSM_STATES.COLLECTING,
       guard: 'shouldCollect',
       actions: 'updateContext'
     },
     needMaintenance: {
-      target: XSTATE_STATES.MAINTAINING,
+      target: FSM_STATES.MAINTAINING,
       guard: 'shouldMaintain',
       actions: 'updateContext'
     }

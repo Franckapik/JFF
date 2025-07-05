@@ -33,6 +33,7 @@ const Scene = () => {
   
   // Tile management
   const initializeTiles = useTileStore((state) => state.initializeTiles);
+  const tiles = useTileStore((state) => state.tiles); // Ajout pour forcer le re-rendu
   const getWalkableTiles = useTileStore((state) => state.getWalkableTiles);
   const getDepartTiles = useTileStore((state) => state.getDepartTiles);
   const getFuelStations = useTileStore((state) => state.getFuelStations);
@@ -61,17 +62,11 @@ const Scene = () => {
 
   // Synchroniser les tuiles de départ avec les bots FSM actifs
   useEffect(() => {
-    console.log(getDepartTiles().length );
-    
-    if (tilesInitialized && activeBots.length > 0 && getDepartTiles().length !== 0) {
+    // Permettre la création initiale de tuiles de départ même s'il n'y en a pas encore
+    if (tilesInitialized && activeBots.length > 0) {
       syncStartingTilesWithFSMBots(activeBots);
-      fsmLogger.info("[Scene] Synchronized starting tiles with FSM bots", { 
-        activeBots: activeBots.length,
-        botIds: activeBots,
-        departTiles: getDepartTiles().length
-      });
     }
-  }, [activeBots, tilesInitialized, syncStartingTilesWithFSMBots, getDepartTiles]);
+  }, [activeBots, tilesInitialized, syncStartingTilesWithFSMBots]); 
 
   /* ========================================
    * INITIALIZATION EFFECTS
@@ -89,9 +84,7 @@ const Scene = () => {
 
   // Ajout du bot par défaut après initialisation des tuiles
   useEffect(() => {
-    console.log("useEffect check", { tilesInitialized, activeBots });
     if (tilesInitialized && !activeBots.includes('bot-0')) {
-      console.log("addBot('bot-0') triggered");
       addBot('bot-0');
     }
   }, [tilesInitialized, addBot, activeBots]);
@@ -159,19 +152,9 @@ const Scene = () => {
       {/* ========================================
        * PLAYER BASES (DEPART TILES) WITH FLEETS
        * ======================================== */}
-      {console.log("[Scene] Rendering depart tiles for active bots", {
-        activeBots,
-        departTiles: getDepartTiles()
-      })}
       {getDepartTiles()
         .filter(tile => {
           const hasPlayer = tile.playerId && activeBots.includes(tile.playerId);
-          console.log('[Scene] departTile filter', {
-            tileCoord: tile.coord,
-            playerId: tile.playerId,
-            activeBots,
-            hasPlayer
-          });
           return hasPlayer;
         })
         .map((tile) => {
