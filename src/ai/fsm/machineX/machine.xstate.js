@@ -15,7 +15,7 @@ import { evaluatingState } from './states/evaluating.state.js';
 import { exploringState } from './states/exploring.state.js';
 import { collectingState } from './states/collecting.state.js';
 import { maintainingState } from './states/maintaining.state.js';
-import { XSTATE_STATES} from './config/constants.js';
+import { FSM_STATES } from './config/constants.js';
 import * as allGuards from './guards/guards.all.js';
 import allActions from './actions/index.js';
 import { createMachineContext } from './context/initialContext.js';
@@ -30,7 +30,7 @@ const maintainingStateRef = maintainingState;
 export const machineX = createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5gF8A0IB2B7CdGgFsBDAYwAsBLDMADXxAActYKAXCrDegD0QFoAbOgCe-AcjQhi5KrQB0YbgwA2WAE5Uo9Ji3aceiACwBOOQGYzARgBMAVmvGz9swAYA7JZGJrls+Zu2LvbWhmaGbtYS6NKU1DRyJFjKymAk7BhaSIzMbBxcWbwI4XLGAnYulqGWlu62niCiCGGGJYEuLgAcLtZutrZmblFSpLHyxFSsRFSa2jl6+aCFhtZeCB2WcgK97SE+lS4CHRISQA */
   id: 'machineX',
-  initial: XSTATE_STATES.EVALUATING,
+  initial: FSM_STATES.EVALUATING,
   context: ({ input }) => {
     // L'input est déjà le contexte complet créé par le store
     if (input && input.entityId) {

@@ -10,7 +10,7 @@
  * @version 1.5.0
  */
 
-import { BOT_STATES, ENTITY_TYPES, DRONE_VISUAL_STATES, EXPLORATION_CYCLE_CONFIG } from '../config/constants.js';
+import { FSM_STATES, ENTITY_TYPES, DRONE_VISUAL_STATES, EXPLORATION_CYCLE_CONFIG } from '../config/constants.js';
 
 
 // ============================================================================
@@ -84,7 +84,7 @@ export const createMachineContext = (entityId, entityType = ENTITY_TYPES.auto) =
     // ========================================================================
     
     // État FSM actuel
-    currentState: BOT_STATES.EVALUATING,        // Ex: 'evaluating', 'exploring', 'collecting'
+    currentState: FSM_STATES.EVALUATING,        // Ex: 'evaluating', 'exploring', 'collecting'
     
     // Cible actuelle (compatible avec BotStore)
     currentTarget: null,                         // Ex: {x: 7, z: 4, type: 'food'} ou null
@@ -131,7 +131,7 @@ export const createMachineContext = (entityId, entityType = ENTITY_TYPES.auto) =
         tilesExploredInCycle: 0,                 // Tuiles explorées dans le cycle actuel
         bestTileInCycle: null                    // Meilleure tuile trouvée dans le cycle
       },
-      stateHistory: [BOT_STATES.EVALUATING],     // Ex: ['evaluating', 'exploring', 'collecting']
+      stateHistory: [FSM_STATES.EVALUATING],     // Ex: ['evaluating', 'exploring', 'collecting']
       transitionHistory: []                      // Ex: [{from:'evaluating',to:'exploring',timestamp:1703425234567}]
     },
 

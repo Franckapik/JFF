@@ -22,7 +22,7 @@
  * - validateFuelLevel(fuel) : Validation niveau (0-100)
  * - calculateFuelConsumption(distance, rate) : Calcul consommation
  * - clampFuel(value) : Contraindre valeur carburant
- * - FUEL_CONSTANTS : Constantes du système carburant
+ * - FUEL_CONFIG : Constantes du système carburant
  * 
  * ❌ FONCTIONNALITÉS COMMENTÉES (Éviter confusion/conflits):
  * - Guards (fuelGuards) - COMMENTÉS
@@ -33,7 +33,7 @@
  * @version 1.0.0
  */
 
-import { FUEL_CONSTANTS } from '../../config/constants.js';
+import { FUEL_CONFIG } from '../../config/constants.js';
 
 // ============================================================================
 // UTILITAIRES INTERNES
@@ -45,13 +45,13 @@ import { FUEL_CONSTANTS } from '../../config/constants.js';
 const validateFuelLevel = (fuel) => {
   const fuelNumber = Number(fuel);
   if (isNaN(fuelNumber)) return 0;
-  return Math.max(FUEL_CONSTANTS.MIN_FUEL, Math.min(FUEL_CONSTANTS.MAX_FUEL, fuelNumber));
+  return Math.max(FUEL_CONFIG.MIN_FUEL, Math.min(FUEL_CONFIG.MAX_FUEL, fuelNumber));
 };
 
 /**
  * Calcule la consommation de carburant pour une distance
  */
-const calculateFuelConsumption = (distance, rate = FUEL_CONSTANTS.CONSUMPTION_PER_DISTANCE) => {
+const calculateFuelConsumption = (distance, rate = FUEL_CONFIG.CONSUMPTION_PER_DISTANCE) => {
   if (typeof distance !== 'number' || distance < 0) return 0;
   return Math.ceil(distance * rate);
 };
@@ -78,7 +78,7 @@ export const fuelActions = {
     if (!vehicle) return { ...context, error: 'No vehicle found' };
 
     const currentFuel = validateFuelLevel(vehicle.fuel);
-    const consumptionAmount = event?.amount || FUEL_CONSTANTS.DEFAULT_CONSUMPTION;
+    const consumptionAmount = event?.amount || FUEL_CONFIG.DEFAULT_CONSUMPTION;
 
     if (currentFuel < consumptionAmount) {
       return { ...context, error: 'Cannot consume fuel: insufficient fuel' };
@@ -109,7 +109,7 @@ export const fuelActions = {
 
     const currentFuel = validateFuelLevel(vehicle.fuel);
 
-    if (currentFuel >= FUEL_CONSTANTS.MAX_FUEL) {
+    if (currentFuel >= FUEL_CONFIG.MAX_FUEL) {
       return { ...context, error: 'Cannot refuel: tank already full' };
     }
 
@@ -117,11 +117,11 @@ export const fuelActions = {
       ...context,
       vehicle: {
         ...vehicle,
-        fuel: FUEL_CONSTANTS.MAX_FUEL,
+        fuel: FUEL_CONFIG.MAX_FUEL,
         lastRefuel: {
           timestamp: Date.now(),
           previousLevel: currentFuel,
-          amountAdded: FUEL_CONSTANTS.MAX_FUEL - currentFuel
+          amountAdded: FUEL_CONFIG.MAX_FUEL - currentFuel
         }
       }
     };
@@ -189,7 +189,7 @@ export const fuelActions = {
       ...context,
       vehicle: {
         ...vehicle,
-        fuel: FUEL_CONSTANTS.MIN_FUEL,
+        fuel: FUEL_CONFIG.MIN_FUEL,
         lastFuelEmpty: {
           timestamp: Date.now(),
           previousLevel: currentFuel
@@ -238,7 +238,7 @@ export default {
   // selectors: fuelSelectors, // ❌ COMMENTÉ
   // events: fuelEvents, // ❌ COMMENTÉ
   constants: {
-    FUEL_CONSTANTS
+    FUEL_CONFIG
   },
   utils: {
     validateFuelLevel,

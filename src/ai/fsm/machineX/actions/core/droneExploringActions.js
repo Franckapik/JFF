@@ -27,7 +27,6 @@
  */
 
 import { 
-  DRONE_DEPLOYMENT_STATES, 
   DRONE_TYPES, 
   DRONE_VISUAL_STATES, 
   DRONE_CONFIG
@@ -398,7 +397,6 @@ export default {
   
   // Constants
   constants: {
-    droneDeploymentStates: DRONE_DEPLOYMENT_STATES,
     droneTypes: DRONE_TYPES,
     droneVisualStates: DRONE_VISUAL_STATES,
     droneConfig: DRONE_CONFIG
