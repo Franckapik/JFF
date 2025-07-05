@@ -194,7 +194,7 @@ export const RESOURCE_CONSTANTS = {
 export const POSITION_TRACKER_CONFIG = {
   THRESHOLDS: {
     // Seuils communs
-    TARGET_REACH: 1.5,
+    TARGET_REACH: 1,
     TARGET_REACH_CLOSE: 1.2,
     TARGET_REACH_FAR: 2.0,
     RESET_MOVEMENT: 6.0,

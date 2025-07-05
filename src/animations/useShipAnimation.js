@@ -125,6 +125,20 @@ export const useShipAnimation = (context, shipWorldPosition, updateVisualPositio
         z: currentPosition.z + shipWorldPosition.z
       };
       
+      // 🔍 DIAGNOSTIC: Log détaillé de la position du vaisseau
+      if (now - lastUpdateTime.current > 2.0) {
+        fsmLogger.info(`🚢 [SHIP-POSITION-DEBUG] Ship position update:`, {
+          localPosition: currentPosition,
+          worldBasePosition: shipWorldPosition,
+          calculatedWorldPosition: worldPosition,
+          contextVehiclePosition: context?.vehicle?.position,
+          isMoving,
+          currentAction,
+          note: 'Calling updateVisualPosition with worldPosition'
+        });
+        lastUpdateTime.current = now;
+      }
+      
       updateVisualPosition(worldPosition);
     }
     

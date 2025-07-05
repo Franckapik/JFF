@@ -34,7 +34,7 @@ const useMessageManager = () => {
         break;
 
       default:
-        console.warn(`Type de message inconnu : ${type}`);
+        console.info(`Type de message inconnu : ${type}`);
         return;
     }
 

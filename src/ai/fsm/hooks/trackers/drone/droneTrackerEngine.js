@@ -157,7 +157,7 @@ export const processDronePosition = (params) => {
   
   if (distance === Infinity) {
     // ENHANCED LOGGING: Log when distance calculation fails
-    fsmLogger.warn(`⚠️ [${botId}] Distance calculation returned Infinity for state ${droneState}`, {
+    fsmLogger.info(`⚠️ [${botId}] Distance calculation returned Infinity for state ${droneState}`, {
       droneType,
       droneState,
       position,
@@ -257,12 +257,20 @@ function getDistanceForState(state, position, drone, context) {
         return Infinity;
       }
       
+      // 🔍 DIAGNOSTIC: Log pour confirmer l'utilisation de la position absolue
+      fsmLogger.info(`🔍 [TRACKER-RETURN-DEBUG] FSM Tracker using absolute ship position:`, {
+        shipPosition,
+        dronePosition: position,
+        calculatingDistanceFor: 'drone_returning',
+        note: 'Both animation and tracker should use this same position reference'
+      });
+      
       // CORRECTIF: Vérifier si la position mesh est corrompue (valeurs infinitésimales)
       const isPositionCorrupted = Math.abs(position.x) < 1e-100 || Math.abs(position.z) < 1e-100;
       
       // ENHANCED LOGGING: Log detailed position information for debugging
       if (position.x === 0 && position.z === 0) {
-        fsmLogger.warn(`🚨 [drone_returning] Drone position is exactly at origin (0,0) - potential issue`, {
+        fsmLogger.info(`🚨 [drone_returning] Drone position is exactly at origin (0,0) - potential issue`, {
           meshPosition: position,
           shipPosition,
           isCorrupted: isPositionCorrupted
@@ -302,7 +310,7 @@ function getDistanceForState(state, position, drone, context) {
       const distanceThreshold = 1.5; // From POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH or similar
       
       if (actualDistance > 10) {
-        fsmLogger.warn(`🎯 [drone_returning] Large distance detected - potential stuck drone`, {
+        fsmLogger.info(`🎯 [drone_returning] Large distance detected - potential stuck drone`, {
           meshPosition: position,
           shipPosition,
           distance: actualDistance,

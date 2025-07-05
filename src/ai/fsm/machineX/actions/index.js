@@ -18,7 +18,7 @@ import * as evaluatingActions from './evaluating.actions.js';
 import * as exploringActions from './exploring.actions.js';
 import * as collectingActions from './collecting.actions.js';
 import * as maintainingActions from './maintaining.actions.js';
-import { positionActions } from './core/positionActions.js'; // Import position actions
+import { positionActions } from './core/positionActions_clean.js'; // Import position actions
 
 // ============================================================================
 // EXPORT CENTRALISÉ
@@ -33,7 +33,7 @@ export const allActions = {
   ...exploringActions,
   ...collectingActions,
   ...maintainingActions,
-  ...positionActions.actions // Add position actions to the main export
+  ...positionActions // Add position actions to the main export
 };
 
 /**

@@ -24,43 +24,41 @@ export const createScanningHandler = ({ botId, droneType, send, canSendEvent, ma
       const eventKey = `drone_scanning_complete_${botId}_${droneType}`;
       
       if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
-        // Délai pour simuler le scan de la tuile
-        setTimeout(() => {
-          fsmLogger.mouvement(`🔍 [${botId}] ${droneType} completed tile scanning`);
+        // Scan immédiat (sans setTimeout pour test)
+        fsmLogger.mouvement(`🔍 [${botId}] ${droneType} completed tile scanning`);
+        
+        try {
+          // Conversion de la position en coordonnées de tuile
+          const gridCoord = worldToGrid(position);
+          const tileCoord = gridToHexCoord(gridCoord);
           
-          try {
-            // Conversion de la position en coordonnées de tuile
-            const gridCoord = worldToGrid(position);
-            const tileCoord = gridToHexCoord(gridCoord);
-            
-            // Marquer la tuile comme explorée et récupérer ses ressources
-            const { markTileAsExplored, getTile } = useTileStore.getState();
-            markTileAsExplored(tileCoord);
-            
-            const tile = getTile(tileCoord);
-            const resourcesFound = tile?.resources ? {
-              food: tile.resources.food || 0,
-              debris: tile.resources.debris || 0,
-              special: tile.resources.special || 0
-            } : { food: 0, debris: 0, special: 0 };
-            
-            fsmLogger.resources(`💎 [${botId}] ${droneType} discovered resources:`, resourcesFound);
-            
-            // Transition vers drone_returning
-            send({
-              type: 'DRONE_SCANS_TILE',
-              position,
-              coord: tileCoord,
-              resources: resourcesFound,
-              droneType,
-              hasResources: Object.values(resourcesFound).some(val => val > 0),
-              timestamp: Date.now()
-            });
-            
-          } catch (error) {
-            fsmLogger.error(`❌ [${botId}] Failed to scan tile: ${error.message}`);
-          }
-        }, 2000); // 2 secondes de scan
+          // Marquer la tuile comme explorée et récupérer ses ressources
+          const { markTileAsExplored, getTile } = useTileStore.getState();
+          markTileAsExplored(tileCoord);
+          
+          const tile = getTile(tileCoord);
+          const resourcesFound = tile?.resources ? {
+            food: tile.resources.food || 0,
+            debris: tile.resources.debris || 0,
+            special: tile.resources.special || 0
+          } : { food: 0, debris: 0, special: 0 };
+          
+          fsmLogger.resources(`💎 [${botId}] ${droneType} discovered resources:`, resourcesFound);
+          
+          // Transition vers drone_returning
+          send({
+            type: 'DRONE_SCANS_TILE',
+            position,
+            coord: tileCoord,
+            resources: resourcesFound,
+            droneType,
+            hasResources: Object.values(resourcesFound).some(val => val > 0),
+            timestamp: Date.now()
+          });
+          
+        } catch (error) {
+          fsmLogger.error(`❌ [${botId}] Failed to scan tile: ${error.message}`);
+        }
         
         markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.EXPLORATION_RESET);
         return true;

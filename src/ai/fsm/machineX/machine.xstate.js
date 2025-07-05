@@ -10,7 +10,7 @@
  * @version 1.0.0 - Architecture XState
  */
 
-import { createMachine } from 'xstate';
+import { createMachine, assign } from 'xstate';
 import { evaluatingState } from './states/evaluating.state.js';
 import { exploringState } from './states/exploring.state.js';
 import { collectingState } from './states/collecting.state.js';
@@ -42,10 +42,14 @@ export const machineX = createMachine({
   on: {
     // Global event handlers - These events can be received in any state
     SHIP_POSITION_UPDATE: {
-      actions: 'updateShipPosition'
+      actions: assign(({ context, event }) => {
+        return allActions.updateShipPosition(context, event);
+      })
     },
     DRONE_POSITION_UPDATE: {
-      actions: 'updateDronePosition'
+      actions: assign(({ context, event }) => {
+        return allActions.updateDronePosition(context, event);
+      })
     }
   },
   states: {

@@ -64,13 +64,25 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
     
     // 🐛 DIAGNOSTIC : Log des informations du drone
     if (now - lastUpdateTime.current > 3.0) {
+      const shipContextPosition = context?.vehicle?.position;
       fsmLogger.info(`🛸 [${droneType}] Drone diagnostic:`, {
         droneState,
         isActive,
         hasTargetPosition: !!droneTargetPos,
         targetPosition: droneTargetPos,
         currentPosition: currentPosition,
-        shipPosition
+        shipPosition,
+        shipContextPosition,
+        positionSync: shipContextPosition ? 
+          `Context(${shipContextPosition.x.toFixed(2)},${shipContextPosition.z.toFixed(2)}) vs Ship(${shipPosition.x.toFixed(2)},${shipPosition.z.toFixed(2)})` : 
+          'No context position',
+        // 🔍 DIAGNOSTIC DÉTAILLÉ: Vérifier si la position du contexte FSM est mise à jour
+        contextPositionDetails: {
+          hasVehicle: !!context?.vehicle,
+          hasPosition: !!context?.vehicle?.position,
+          vehicleLastUpdate: context?.vehicle?.lastPositionUpdate || 'No timestamp',
+          vehicleCoord: context?.vehicle?.coord || 'No coord'
+        }
       });
       lastUpdateTime.current = now;
     }
@@ -78,8 +90,27 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
     // Position cible calculée (coordonnées locales)
     const targetPosition = (() => {
       if (droneState === 'drone_returning') {
-        // Pour le retour, la cible est la position du vaisseau (origine locale 0,0,0)
-        return { x: 0, y: 0.5, z: 0 }; // Position relative au vaisseau
+        // 🔧 CORRECTION: Pour le retour, utiliser la position absolue du vaisseau depuis le contexte FSM
+        const shipContextPosition = context?.vehicle?.position;
+        if (shipContextPosition) {
+          // 🎯 APPROCHE ABSOLUE: Retourner directement à la position absolue du contexte FSM
+          // Convertir en coordonnées locales pour l'animation en soustrayant la position actuelle du vaisseau
+          fsmLogger.info(`🔍 [ANIMATION-RETURN-DEBUG] Using absolute ship position from FSM context:`, {
+            shipContextPosition,
+            shipAnimationPosition: shipPosition,
+            willReturnTo: 'FSM context position'
+          });
+          
+          return {
+            x: shipContextPosition.x - shipPosition.x,
+            y: shipContextPosition.y - shipPosition.y + 0.5, // Légère hauteur pour le retour
+            z: shipContextPosition.z - shipPosition.z
+          };
+        } else {
+          // Fallback : position relative au vaisseau si pas de contexte
+          fsmLogger.warn(`⚠️ [${droneType}] No ship context position for return, using fallback`);
+          return { x: 0, y: 0.5, z: 0 };
+        }
       } else if (droneTargetPos) {
         // Pour les autres états, utiliser la cible du drone
         return {
