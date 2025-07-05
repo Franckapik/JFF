@@ -62,16 +62,72 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
     const isActive = drone.isActive || false;
     const droneTargetPos = drone.targetPosition;
     
-    // Position cible calculée (coordonnées locales)
-    const targetPosition = droneTargetPos ? {
-      x: droneTargetPos.x - shipPosition.x,
-      y: droneTargetPos.y - shipPosition.y,
-      z: droneTargetPos.z - shipPosition.z
-    } : initialPosition;
+    // 🐛 DIAGNOSTIC : Log des informations du drone
+    if (now - lastUpdateTime.current > 3.0) {
+      const shipContextPosition = context?.vehicle?.position;
+      fsmLogger.info(`🛸 [${droneType}] Drone diagnostic:`, {
+        droneState,
+        isActive,
+        hasTargetPosition: !!droneTargetPos,
+        targetPosition: droneTargetPos,
+        currentPosition: currentPosition,
+        shipPosition,
+        shipContextPosition,
+        positionSync: shipContextPosition ? 
+          `Context(${shipContextPosition.x.toFixed(2)},${shipContextPosition.z.toFixed(2)}) vs Ship(${shipPosition.x.toFixed(2)},${shipPosition.z.toFixed(2)})` : 
+          'No context position',
+        // 🔍 DIAGNOSTIC DÉTAILLÉ: Vérifier si la position du contexte FSM est mise à jour
+        contextPositionDetails: {
+          hasVehicle: !!context?.vehicle,
+          hasPosition: !!context?.vehicle?.position,
+          vehicleLastUpdate: context?.vehicle?.lastPositionUpdate || 'No timestamp',
+          vehicleCoord: context?.vehicle?.coord || 'No coord'
+        }
+      });
+      lastUpdateTime.current = now;
+    }
     
-    const isMoving = droneState === 'deploying' || 
-                     droneState === 'exploring' || 
-                     droneState === 'returning';
+    // Position cible calculée (coordonnées locales)
+    const targetPosition = (() => {
+      if (droneState === 'drone_returning') {
+        // 🔧 CORRECTION: Pour le retour, utiliser la position absolue du vaisseau depuis le contexte FSM
+        const shipContextPosition = context?.vehicle?.position;
+        if (shipContextPosition) {
+          // 🎯 APPROCHE ABSOLUE: Retourner directement à la position absolue du contexte FSM
+          // Convertir en coordonnées locales pour l'animation en soustrayant la position actuelle du vaisseau
+          fsmLogger.info(`🔍 [ANIMATION-RETURN-DEBUG] Using absolute ship position from FSM context:`, {
+            shipContextPosition,
+            shipAnimationPosition: shipPosition,
+            willReturnTo: 'FSM context position'
+          });
+          
+          return {
+            x: shipContextPosition.x - shipPosition.x,
+            y: shipContextPosition.y - shipPosition.y + 0.5, // Légère hauteur pour le retour
+            z: shipContextPosition.z - shipPosition.z
+          };
+        } else {
+          // Fallback : position relative au vaisseau si pas de contexte
+          fsmLogger.warn(`⚠️ [${droneType}] No ship context position for return, using fallback`);
+          return { x: 0, y: 0.5, z: 0 };
+        }
+      } else if (droneTargetPos) {
+        // Pour les autres états, utiliser la cible du drone
+        return {
+          x: droneTargetPos.x - shipPosition.x,
+          y: droneTargetPos.y - shipPosition.y,
+          z: droneTargetPos.z - shipPosition.z
+        };
+      } else {
+        // Fallback : position initiale
+        return initialPosition;
+      }
+    })();
+    
+    // États de mouvement du drone (XState uniquement)
+    const isMoving = droneState === 'drone_deploying' || 
+                     droneState === 'drone_scanning' || 
+                     droneState === 'drone_returning';
     
     // Debug réduit - seulement en cas de problème
     if (now - lastUpdateTime.current > 5.0 && !isMoving && isActive) {
@@ -81,13 +137,13 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
     
     // 🎭 MOUVEMENT FLUIDE (INTERPOLATION VISUELLE)
     if (isMoving && targetPosition) {
-      const speed = delta * 3.0; // 🚀 ACCÉLÉRATION FORTE (x3.75 plus rapide que 0.8)
+      const speed = delta * 5.0; // 🚀 ACCÉLÉRATION TRÈS FORTE (augmenté de 3.0 à 5.0)
       currentPosition.x = THREE.MathUtils.lerp(currentPosition.x, targetPosition.x, speed);
       currentPosition.y = THREE.MathUtils.lerp(currentPosition.y, targetPosition.y, speed);
       currentPosition.z = THREE.MathUtils.lerp(currentPosition.z, targetPosition.z, speed);
       droneRef.current.rotation.y += delta * 2;
       
-      // 🔄 COMMUNICATION VERS LE TRACKER
+      // 🔄 COMMUNICATION VERS LE TRACKER - POUR TOUS LES ÉTATS EN MOUVEMENT
       const worldPosition = {
         x: currentPosition.x + shipPosition.x,
         y: currentPosition.y + shipPosition.y,
@@ -95,16 +151,25 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
       };
       
       updateVisualPosition(worldPosition);
-    }
-    
-    // 🔄 COMMUNICATION SPÉCIALE POUR LE RETOUR
-    if (droneState === 'returning' && targetPosition) {
+    } else {
+      // Mettre à jour la position pour tous les états, pas seulement en mouvement
+      // Envoi régulier de la position actuelle du drone pour mise à jour du contexte
       const worldPosition = {
         x: currentPosition.x + shipPosition.x,
         y: currentPosition.y + shipPosition.y,
         z: currentPosition.z + shipPosition.z
       };
       
+      // 🚨 LOG CRITIQUE: Vérifier si on appelle bien le tracker (mode statique)
+      if (now - lastUpdateTime.current > 1.0) {
+        fsmLogger.info(`🚨 [ANIMATION-STATIC] Calling updateVisualPosition for ${droneType}`, {
+          worldPosition,
+          droneState,
+          isMoving: false
+        });
+      }
+      
+      // Envoyer la position actuelle au tracker
       updateVisualPosition(worldPosition);
     }
     
@@ -115,12 +180,12 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
         droneRef.current.position.y = targetPosition.y + Math.sin(now * 2) * 0.1;
         break;
         
-      case 'exploring':
+      case 'drone_scanning':
         droneRef.current.position.y = targetPosition.y + Math.sin(now * 3) * 0.2;
         droneRef.current.rotation.y += delta * 1.5;
         break;
         
-      case 'returning':
+      case 'drone_returning':
         droneRef.current.position.y = targetPosition.y + Math.sin(now * 6) * 0.1;
         droneRef.current.rotation.y += delta * 2.5;
         droneRef.current.rotation.z = 0;

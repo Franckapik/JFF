@@ -2,8 +2,8 @@ import React from "react";
 import { useTileAnimation } from "../animations/useTileAnimation";
 import { useTileStore } from "../stores/useTileStore";
 import { Html } from "@react-three/drei";
-import { FSMStateIndicator } from "./FSM";
 import fsmLogger from "../logger/fsmLogger";
+import { isTileCompletelyCollected, isTilePartiallyCollected } from "../stores/useTileStore/slices/tileResourceSlice";
 
 /**
  * =================================================================
@@ -58,6 +58,19 @@ const Tile = React.memo(({
   const isExplored = useTileStore((state) => 
     state.tiles[coord] ? state.tiles[coord].explored === true : false
   );
+
+  // Nouveau sélecteur pour les tuiles récemment collectées
+  const lastCollectedTimestamp = useTileStore((state) => 
+    state.tiles[coord] ? state.tiles[coord].lastCollectedTimestamp : null
+  );
+
+  // Une tuile est récemment collectée si elle l'a été dans les 10 dernières secondes
+  const isRecentlyCollected = React.useMemo(() => {
+    if (!lastCollectedTimestamp) return false;
+    const now = Date.now();
+    const timeDiff = now - lastCollectedTimestamp;
+    return timeDiff < 10000; // 10 secondes
+  }, [lastCollectedTimestamp]);
   
   /**
    * -----------------------------------------------------------------
@@ -77,8 +90,35 @@ const Tile = React.memo(({
    * ÉTATS DÉRIVÉS
    * -----------------------------------------------------------------
    */
+  
+  // Récupérer la tuile depuis le store pour utiliser les utilitaires
+  const tile = useTileStore((state) => state.tiles[coord]);
+  
   // Une tuile est partiellement collectée si le pourcentage est entre 1 et 99%
-  const isPartiallyCollected = resourcePercentage > 0 && resourcePercentage < 100;
+  const isPartiallyCollected = tile ? isTilePartiallyCollected(tile) : false;
+  
+  // Une tuile est complètement collectée si le pourcentage est à 0%
+  const isCompletelyCollected = tile ? isTileCompletelyCollected(tile) : false;
+  
+  // Afficher le pourcentage seulement si la tuile a été collectée (pour voir 0%)
+  const shouldShowPercentage = isCompletelyCollected && resourcePercentage !== undefined;
+  
+  // 🔍 DEBUG: Log pour tracer l'affichage du pourcentage de ressources (toutes valeurs)
+  React.useEffect(() => {
+    if (resourcePercentage !== undefined && resourcePercentage !== null) {
+      fsmLogger.resources(`🔍 DEBUG: Tile ${coord} resource percentage update`, {
+        coord,
+        resourcePercentage,
+        isPartiallyCollected,
+        isCompletelyCollected,
+        shouldShowPercentage,
+        willShowRedCircle: isCompletelyCollected,
+        tileExists: !!useTileStore.getState().tiles[coord],
+        tileResources: useTileStore.getState().tiles[coord]?.resources,
+        tileCollected: tile?.resourcePercentage
+      });
+    }
+  }, [resourcePercentage, coord, isPartiallyCollected, isCompletelyCollected, shouldShowPercentage]);
   
   /**
    * -----------------------------------------------------------------
@@ -119,25 +159,83 @@ const Tile = React.memo(({
       {/* Pour les tuiles de départ (bases des joueurs) - élément de base */}
 
       {/* Indicateur de pourcentage de ressources restantes */}
-      {isPartiallyCollected && (
-        <Html
-          position={[position[0], 0.4, position[2]]}
-          center
-          distanceFactor={15}
-        >
-          <div style={{
-            background: 'rgba(0,0,0,0.7)',
-            color: '#ff9933',
-            padding: '3px 6px',
-            borderRadius: '4px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            userSelect: 'none',
-            pointerEvents: 'none',
-          }}>
-            {resourcePercentage}%
-          </div>
-        </Html>
+      {shouldShowPercentage && (
+        <>
+          {/* Cercle rouge pour les tuiles complètement collectées */}
+          {isCompletelyCollected && (
+            <mesh
+              position={[position[0], 0.05, position[2]]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <circleGeometry args={[0.6, 32]} />
+              <meshBasicMaterial 
+                color="#ff4444" 
+                transparent={true}
+                opacity={0.6}
+              />
+            </mesh>
+          )}
+          
+          {/* Affichage du pourcentage */}
+          <Html
+            position={[position[0], 0.4, position[2]]}
+            center
+            distanceFactor={15}
+          >
+            <div style={{
+              background: isCompletelyCollected ? 'rgba(255, 68, 68, 0.8)' : 'rgba(0,0,0,0.7)',
+              color: isCompletelyCollected ? '#ffffff' : '#ff9933',
+              padding: '3px 6px',
+              borderRadius: '4px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              userSelect: 'none',
+              pointerEvents: 'none',
+              border: isCompletelyCollected ? '2px solid #ff4444' : 'none',
+            }}>
+              {resourcePercentage}%
+            </div>
+          </Html>
+        </>
+      )}
+
+      {/* Indicateur de collecte récente */}
+      {isRecentlyCollected && (
+        <>
+          {/* Effet de pulsation lumineux */}
+          <mesh
+            position={[position[0], 0.15, position[2]]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <circleGeometry args={[0.8, 32]} />
+            <meshBasicMaterial 
+              color="#00ffff" 
+              transparent={true}
+              opacity={0.3}
+            />
+          </mesh>
+          
+          {/* Label de collecte récente */}
+          <Html
+            position={[position[0], 0.6, position[2]]}
+            center
+            distanceFactor={20}
+          >
+            <div style={{
+              background: 'rgba(0,255,255,0.8)',
+              color: '#000',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              userSelect: 'none',
+              pointerEvents: 'none',
+              animation: 'pulse 1s infinite',
+            }}>
+              💎 Collecté !
+            </div>
+          </Html>
+        </>
       )}
 
       {/* Helper visuel pour les tuiles explorées */}
@@ -166,16 +264,7 @@ const Tile = React.memo(({
             <circleGeometry args={[0.5, 32]} />
             <meshStandardMaterial color={baseColor} />
           </mesh>
-          
-          {/* Optionnellement afficher l'indicateur FSM pour cette tuile */}
-          {showFSMIndicator && labelText && (
-            <FSMStateIndicator
-              botId={labelText}
-              position={[position[0], 1.0, position[2]]}
-              showDetails={false}
-            />
-          )}
-          
+                    
           {/* Player identifier label */}
           <Html
             position={[position[0], 0.5, position[2]]}

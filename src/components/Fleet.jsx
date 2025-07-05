@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
-import { useBotMachine } from "../ai/fsm/hooks/useBotMachine.js";
-import { useFSMDroneTracker } from "../ai/fsm/hooks/useFSMDroneTracker.js";
-import { useFSMShipTracker } from "../ai/fsm/hooks/useFSMShipTracker.js";
+import { useXFSM } from "../hooks/useXFSM";
+import { useXFSMDroneTracker } from "../ai/fsm/hooks/trackers/drone/useXFSMDroneTracker.js";
+import { useXFSMShipTracker } from "../ai/fsm/hooks/trackers/ship/useXFSMShipTracker.js";
 import { useDroneAnimation } from "../animations/useDroneAnimation.js";
 import { useShipAnimation } from "../animations/useShipAnimation.js";
 import ShipMesh from "./Vehicles/ShipMesh.jsx";
@@ -57,13 +57,61 @@ const Fleet = React.memo(({
   // 🚀 INTÉGRATION FSM AVEC ARCHITECTURE SPÉCIALISÉE
   // ===================================================================
   
-  const { current, send: fsmSend, context, vehicle, state } = useBotMachine(botId, 'bot');
+  const { fsmState, context, send: fsmSend } = useXFSM(botId);
+
+  // 🐛 DIAGNOSTIC : Log limité du contexte FSM lors de changements significatifs
+  const lastLoggedContext = React.useRef({});
+  React.useEffect(() => {
+    // Ne logger que lors d'un changement d'état ou d'action
+    const hasStateChanged = fsmState !== lastLoggedContext.current.fsmState;
+    const hasActionChanged = context?.lastAction !== lastLoggedContext.current.lastAction;
+    const droneState = context?.droneFleet?.drones?.explorer?.state;
+    const hasDroneStateChanged = droneState !== lastLoggedContext.current.droneState;
+    
+    if (hasStateChanged || hasActionChanged || hasDroneStateChanged) {
+      console.log(`🛸 [Fleet] Context update for ${botId}:`, {
+        fsmState,
+        lastAction: context?.lastAction,
+        vehiclePosition: context?.vehicle?.position ? 
+          `(${context.vehicle.position.x.toFixed(1)}, ${context.vehicle.position.y.toFixed(1)}, ${context.vehicle.position.z.toFixed(1)})` : 
+          'none',
+        droneActive: context?.droneFleet?.drones?.explorer?.isActive,
+        droneState,
+        hasTargetPosition: !!context?.droneFleet?.drones?.explorer?.targetPosition,
+        targetPosition: context?.droneFleet?.drones?.explorer?.targetPosition ? 
+          `(${context.droneFleet.drones.explorer.targetPosition.x.toFixed(1)}, ${context.droneFleet.drones.explorer.targetPosition.y.toFixed(1)}, ${context.droneFleet.drones.explorer.targetPosition.z.toFixed(1)})` : 
+          'none'
+      });
+      
+      // Sauvegarder l'état actuel pour comparaison future
+      lastLoggedContext.current = {
+        fsmState,
+        lastAction: context?.lastAction,
+        droneState
+      };
+    }
+  }, [context, fsmState, botId, shipPosition]);
+  
+  // 🔄 NOUVEAU - Log spécifique pour les changements d'état de drone
+  const prevDroneState = React.useRef(null);
+  React.useEffect(() => {
+    const currentDroneState = context?.droneFleet?.drones?.explorer?.state;
+    if (currentDroneState && currentDroneState !== prevDroneState.current) {
+      console.log(`🚨 [Fleet] DRONE STATE CHANGE for ${botId}:`, {
+        from: prevDroneState.current,
+        to: currentDroneState,
+        position: context?.droneFleet?.drones?.explorer?.position,
+        targetPosition: context?.droneFleet?.drones?.explorer?.targetPosition
+      });
+      prevDroneState.current = currentDroneState;
+    }
+  }, [context?.droneFleet?.drones?.explorer?.state, botId, context]);
 
   // 🎯 TRACKERS SPÉCIALISÉS : Surveillance distance → événements FSM
-  // - useFSMDroneTracker : Gère deploying, exploring, returning
+  // - useXFSMDroneTracker : Gère deploying, exploring, returning (XState)
   // - useFSMShipTracker : Gère movement, collecting, refueling
-  const updateDroneVisualPosition = useFSMDroneTracker(context, fsmSend, botId, 'explorer');
-  const updateShipVisualPosition = useFSMShipTracker(context, fsmSend, botId);
+  const updateDroneVisualPosition = useXFSMDroneTracker(context, fsmSend, botId, 'explorer');
+  const updateShipVisualPosition = useXFSMShipTracker(context, fsmSend, botId, 'ship');
 
   // 🎭 ANIMATIONS SPÉCIALISÉES : Interpolation visuelle + feedback d'état
   // - useDroneAnimation : Position relative + animations par état drone

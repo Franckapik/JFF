@@ -8,11 +8,10 @@
  * - Marquage des tuiles comme collectées
  * - Suivi du statut d'exploration pour la logique de jeu
  * - Gestion des états de visite et de découverte
- * - Support pour la logique d'exploration des bots et joueurs
  * 
  * États de marquage gérés :
  * - explored : indique si une tuile a été visitée/explorée
- * - collected : indique si les ressources de la tuile ont été collectées
+ * - resourcePercentage : pourcentage de ressources restantes (0-100%)
  * - Extensible pour d'autres types de marquage (visited, scanned, etc.)
  * 
  * Utilisé par :
@@ -24,6 +23,8 @@
 // =========================================================================
 // SLICE PRINCIPAL
 // =========================================================================
+
+import { isTileCompletelyCollected } from './tileResourceSlice.js';
 
 const createTileMarkSlice = (set, get) => {
   return {
@@ -51,7 +52,6 @@ const createTileMarkSlice = (set, get) => {
       const currentTile = get().tiles[coord];
       
       if (!currentTile) {
-        console.warn('❌ [TileMarkSlice] Tile not found for coord:', coord);
         return;
       }
       
@@ -82,14 +82,13 @@ const createTileMarkSlice = (set, get) => {
       const tile = get().tiles[coord];
       if (!tile) return false;
       
-      // Si la tuile est déjà collectée, ne rien faire
-      if (tile.collected) return false;
+      // Si la tuile est déjà complètement collectée, ne rien faire
+      if (isTileCompletelyCollected(tile)) return false;
       
       set((state) => {
         const updatedTiles = { ...state.tiles };
         updatedTiles[coord] = { 
           ...updatedTiles[coord], 
-          collected: true,
           resourcePercentage: 0, // Mettre à 0% car la tuile est complètement collectée
           resources: { food: 0, debris: 0, special: 0 }
         };

@@ -19,11 +19,11 @@
  * Dépendances :
  * - playerConstants : pour l'attribution des bases aux joueurs
  * - calculateDistance : pour les calculs de proximité (via get())
- * - useFSMStore : pour synchroniser avec les bots actifs
+ * - useXFSMStore : pour synchroniser avec les bots actifs
  */
 
 import fsmLogger from '../../../logger/fsmLogger.js';
-import useFSMStore from '../../useFSMStore/index.js';
+import  useXFSMStore  from '../../useXFSMStore/index.js';
 
 // =========================================================================
 // IMPORTS
@@ -68,7 +68,6 @@ const createTileFilterSlice = (set, get) => {
       } else if (source && source.coord) {
         coord = source.coord;
       } else {
-        console.warn("Source invalide pour getWalkableTilesInRadius");
         return [];
       }
       
@@ -130,7 +129,6 @@ const createTileFilterSlice = (set, get) => {
       );
       
       if (walkableTiles.length === 0) {
-        console.warn("Aucune tuile walkable disponible pour la sélection aléatoire");
         return null;
       }
       
@@ -167,7 +165,6 @@ const createTileFilterSlice = (set, get) => {
      */
     getDepartTiles: () => {
       const { tiles } = get();
-      
       // Récupérer uniquement les tuiles de départ existantes (lecture seule)
       const departTiles = Object.values(tiles).filter(tile => tile.type === "depart");
       
@@ -184,8 +181,8 @@ const createTileFilterSlice = (set, get) => {
     syncDepartTilesWithActiveBots: () => {
       const { syncStartingTilesWithFSMBots } = get();
       
-      // Récupérer les bots actifs depuis le FSMStore
-      const activeBots = useFSMStore.getState().activeBots;
+      // Récupérer les bots actifs depuis le XFSMStore
+      const activeBots = useXFSMStore.getState().activeBots;
       const activeBotIds = activeBots;
       
       // Synchroniser les tuiles de départ avec les bots actifs

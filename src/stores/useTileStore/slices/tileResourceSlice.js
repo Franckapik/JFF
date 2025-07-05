@@ -9,6 +9,7 @@
  * - Calcul des pourcentages de ressources restantes
  * - Analyse des ressources à proximité d'une position
  * - Reset et réinitialisation des ressources
+ * - Utilitaires pour déterminer l'état de collecte des tuiles
  * 
  * Types de ressources gérées :
  * - food : nourriture pour les équipages
@@ -16,10 +17,110 @@
  * - special : ressources rares et précieuses
  * 
  * État géré :
- * - collected : statut de collecte de chaque tuile
  * - resourcePercentage : pourcentage de ressources restantes (0-100%)
  * - originalResources : copie des ressources initiales pour référence
+ * 
+ * Source de vérité unique : resourcePercentage (0-100%)
+ * - 0% = tuile complètement collectée (plus de ressources)
+ * - 1-99% = tuile partiellement collectée (ressources restantes)
+ * - 100% = tuile non collectée (ressources intactes)
+ * - undefined/null = tuile non explorée ou sans ressources
  */
+
+import fsmLogger from '../../../logger/fsmLogger.js';
+
+// =========================================================================
+// UTILITAIRES DE COLLECTE DES TUILES
+// =========================================================================
+
+/**
+ * Détermine si une tuile est complètement collectée
+ * Une tuile est considérée comme complètement collectée si son pourcentage de ressources est exactement 0%
+ * 
+ * @param {Object} tile - Objet tuile
+ * @param {number} tile.resourcePercentage - Pourcentage de ressources restantes (0-100)
+ * @returns {boolean} - true si la tuile est complètement collectée
+ */
+export const isTileCompletelyCollected = (tile) => {
+  if (!tile || tile.resourcePercentage === undefined || tile.resourcePercentage === null) {
+    return false;
+  }
+  return tile.resourcePercentage === 0;
+};
+
+/**
+ * Détermine si une tuile est partiellement collectée
+ * Une tuile est considérée comme partiellement collectée si son pourcentage est entre 1% et 99%
+ * 
+ * @param {Object} tile - Objet tuile
+ * @param {number} tile.resourcePercentage - Pourcentage de ressources restantes (0-100)
+ * @returns {boolean} - true si la tuile est partiellement collectée
+ */
+export const isTilePartiallyCollected = (tile) => {
+  if (!tile || tile.resourcePercentage === undefined || tile.resourcePercentage === null) {
+    return false;
+  }
+  return tile.resourcePercentage > 0 && tile.resourcePercentage < 100;
+};
+
+/**
+ * Détermine si une tuile a été collectée (complètement ou partiellement)
+ * Une tuile est considérée comme ayant été collectée si son pourcentage est inférieur à 100%
+ * 
+ * @param {Object} tile - Objet tuile
+ * @param {number} tile.resourcePercentage - Pourcentage de ressources restantes (0-100)
+ * @returns {boolean} - true si la tuile a été collectée (même partiellement)
+ */
+export const isTileCollected = (tile) => {
+  if (!tile || tile.resourcePercentage === undefined || tile.resourcePercentage === null) {
+    return false;
+  }
+  return tile.resourcePercentage < 100;
+};
+
+/**
+ * Détermine si une tuile est disponible pour la collecte
+ * Une tuile est disponible si elle est explorée, a des ressources, et n'est pas complètement collectée
+ * 
+ * @param {Object} tile - Objet tuile
+ * @param {boolean} tile.explored - Si la tuile a été explorée
+ * @param {boolean} tile.hasResources - Si la tuile contient des ressources
+ * @param {number} tile.resourcePercentage - Pourcentage de ressources restantes (0-100)
+ * @returns {boolean} - true si la tuile est disponible pour la collecte
+ */
+export const isTileAvailableForCollection = (tile) => {
+  if (!tile || !tile.explored || !tile.hasResources) {
+    return false;
+  }
+  // Une tuile est disponible si elle n'est pas complètement collectée
+  return !isTileCompletelyCollected(tile);
+};
+
+/**
+ * Retourne un label descriptif de l'état de collecte d'une tuile
+ * 
+ * @param {Object} tile - Objet tuile
+ * @returns {string} - Label décrivant l'état de la tuile
+ */
+export const getTileCollectionStateLabel = (tile) => {
+  if (!tile) return "Inconnue";
+  if (!tile.explored) return "Non explorée";
+  if (!tile.hasResources) return "Sans ressources";
+  
+  if (isTileCompletelyCollected(tile)) return "Collectée";
+  if (isTilePartiallyCollected(tile)) return "Partiellement collectée";
+  return "Disponible";
+};
+
+/**
+ * Filtre les tuiles disponibles pour la collecte
+ * 
+ * @param {Array} tiles - Array de tuiles
+ * @returns {Array} - Array des tuiles disponibles pour la collecte
+ */
+export const filterAvailableTiles = (tiles) => {
+  return tiles.filter(isTileAvailableForCollection);
+};
 
 // =========================================================================
 // SLICE PRINCIPAL
@@ -56,7 +157,24 @@ const createTileResourceSlice = (set, get) => {
      */
     deductTileResources: (coord, collectedResources) => {
       const tile = get().tiles[coord];
-      if (!tile || !tile.resources) return false;
+      
+      // 🔍 DEBUG: Log de la fonction deductTileResources
+      fsmLogger.resources(`🔍 DEBUG: deductTileResources called`, {
+        coord,
+        collectedResources,
+        tileExists: !!tile,
+        tileHasResources: !!tile?.resources,
+        currentResources: tile?.resources
+      });
+      
+      if (!tile || !tile.resources) {
+        fsmLogger.resources(`🔍 DEBUG: deductTileResources failed - no tile or resources`, {
+          coord,
+          tileExists: !!tile,
+          hasResources: !!tile?.resources
+        });
+        return false;
+      }
       
       // Ressources initiales (si originalResources n'existe pas, on utilise les ressources actuelles)
       const originalResources = tile.originalResources || { ...tile.resources };
@@ -82,16 +200,34 @@ const createTileResourceSlice = (set, get) => {
         ? Math.round((totalRemaining / totalOriginal) * 100) 
         : 0;
       
+      // 🔍 DEBUG: Log du calcul du pourcentage
+      fsmLogger.resources(`🔍 DEBUG: Resource percentage calculated`, {
+        coord,
+        originalResources,
+        remainingResources,
+        totalOriginal,
+        totalRemaining,
+        percentageRemaining,
+        isEmpty
+      });
+      
       set((state) => {
         const updatedTiles = { ...state.tiles };
         updatedTiles[coord] = {
           ...updatedTiles[coord],
           resources: remainingResources,
           originalResources: originalResources,  // Stocker les ressources originales pour référence
-          collected: isEmpty, // Marquer comme complètement collectée seulement si vide
           resourcePercentage: percentageRemaining // Pourcentage de ressources restantes (0-100)
         };
         return { tiles: updatedTiles };
+      });
+      
+      // 🔍 DEBUG: Log de la mise à jour réussie
+      fsmLogger.resources(`🔍 DEBUG: TileStore updated successfully`, {
+        coord,
+        newPercentage: percentageRemaining,
+        isCompletelyCollected: isEmpty,
+        finalResources: remainingResources
       });
       
       return true;
@@ -117,7 +253,6 @@ const createTileResourceSlice = (set, get) => {
         updatedTiles[coord] = {
           ...updatedTiles[coord],
           resources: { food: 0, debris: 0, special: 0 },
-          collected: true,
           resourcePercentage: 0
         };
         return { tiles: updatedTiles };
@@ -152,7 +287,6 @@ const createTileResourceSlice = (set, get) => {
       } else if (source && source.coord) {
         coord = source.coord;
       } else {
-        console.warn("Source invalide pour analyzeResourcesNearPosition");
         return [];
       }
       
@@ -169,7 +303,7 @@ const createTileResourceSlice = (set, get) => {
           const tile = tiles[tileCoord];
           
           // Vérifie si la tuile contient des ressources non collectées
-          if (tile && !tile.collected && tile.resources && 
+          if (tile && !isTileCompletelyCollected(tile) && tile.resources && 
               (tile.resources.food > 0 || tile.resources.debris > 0 || tile.resources.special > 0)) {
             resources.push({
               coord: tileCoord,

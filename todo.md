@@ -1,66 +1,29 @@
-Il doit y avoir une confiusion dans les basePosition entre drone et ship. Essayer de savoir que faire de idleAtBAse et revoir le guard isNotATBase. Verifier que la position du ship est bien msie a jour egalement. Le tout est d'éviter l'état returning d'urgence.
+corriger ce qui a été fait pour le returning qui donne qqchose de tr-s etrange.
 
 
 
+1- ✅ Il faut factoriser ship tracker comme pour le drone.
+2- ✅ Il faut migrer toutes les imports depuis machine/constants/constants vers machineX/config/constants (TERMINÉ - exclusions machine et backup respectées).
+3- IL faut comprendre pourquoi la distance ne trigger pas pour avoir un event reached_tile ? 
+4- Il faut developper chanque hanflers de l'exploration.
+
+reprendre le travail au niveau de la ligne 64 de la scnene pour la synchronisation avec les bots. => confusion de fonciton ici ? 
 
 
+Le fichier vehicleConstant doit etre supprimé. Le contenu utilisé dans ce fichier peut etre placé dans le fichier constants.js. Mettre a jour les imports/exports dans le codebase.
 
+Le chemin du vaisseau lors des deplacements liés a la collecte doivent utiliser les fonctions utilitaires du fichier tilePathSlice. L'animation du vaisseau doit alors emprunter un chemin calculé qui passe de tuile en tuiles selon les tuiles walkables et voisines. Ainsi, le chemin calculé montre un déplacement réaliste entre les tuiles. 
 
+Je souhaiterais fusionner les deux hud FSM debug panel et FSM bot manager . Le style des deux huds me plait et je te laisse choisir ce qui semble le plus clair et lisible. Je souhaiterais preserver les fonctionnalités suivantes :
+- Pouvoir ajouter ou supprimer des bots. 
+- status du bot, actif ou non. 
+- -compter le nombre d'explorations, de collectepour chaque bot. 
+- affiche le fuel, la cible du vaisseau/drone.
+- l'heure de derniere MAJ
+- le nom du bot, son état actuel, les ressources du vaisseau, la position actuelle du drone/vaisseau et le score du bot.
 
-COmprendre pourquoi plusieurs log sont envoyés pour les transitions et les actions. Revoir la synchronisation des bots et instances. Et essayer de finir le cycle returning vers evaluating par la suppression des fonctions .
+Les elements suivants sont visibles lorsque l'on clique sur un bouton details :
+-La flotte de drones, leurs status et leurs positions.
+-les debug data : contexte FSM et historique des evenements. Je souhaite que event et etat soit biens visibles dans cet historique. Pas de taille de police différente mais des couleurs, cicones pour identifier les deux.
 
-Refuel et repair lents sur les bonnes stations.
-Les drones ont des limites de deplacements.
-Les tuiles peuvent regenerer de la nourriture et des cartes spéciales avec le temps. Les débris sont issus des anciennes batailles (depart) et des dégats eventuels liés au damage.
-Le joueur doit alors se souvenir des tuiles explorées.
-
-Je dois mettre a la place du bot.
-
-Le jeu demarre, je dois avoir plus de ressources pour progresser, je vais :
-- collecter une tuile :
-    - se deplacer vers la tuile
-    - collecter les ressources
-    - mettre à jour certains états.
-- mon deplacement à couter du carburant,  il me faut le plein :
-    - je cherche où est la station
-    - je bouge vers la station
-    - je récupère le carburant
-    - je mets à jour mes etats.
-
-- mon carburant me permets de revenir à la base :
-    - je cherche ma base
-    - je me deplace vers la base
-    - je verse mes ressources pour augmenter mon score.
-
-
-Je souhaite creer un nouvel hud dans le style identique de BotHUD qui donnerait des informations sur une tuile lorsque celle ci est onHover. 
-
-
-
----TODO
-
-Recommandations
-Standardiser l'utilisation des types d'événements : Utiliser systématiquement les imports de constantes (RESOURCE_EVENT_TYPES, etc.) au lieu de chaînes littérales.
-
-~~Unifier les définitions d'états : Choisir entre FSM_STATES et BOT_STATES et utiliser une seule source de vérité.~~ ✅ FAIT
-
-Vérifier les transitions manquantes : S'assurer que tous les événements utilisés dans les transitions des états sont correctement définis dans les fichiers d'événements.
-
-Standardiser l'utilisation des reducers : Éviter les mises à jour manuelles du contexte et utiliser systématiquement les reducers centralisés.
-
-Standardiser la structure des guards : Choisir soit l'utilisation directe de guards spécifiques, soit l'utilisation des guards regroupés par catégorie, mais pas les deux approches mélangées.
-
-Documenter les événements temporels : Assurez-vous que tous les événements liés aux timeouts (EXPLORATION_TIMEOUT, etc.) sont correctement définis et documentés.
-
-Implémenter des vérifications automatisées : Créer des tests qui vérifient que tous les événements utilisés dans les transitions sont bien définis dans les fichiers d'événements correspondants.
-
-
-
-Les drones doievtne etre placés selon la position definies dans le store et lorsque ces dernieres existent. 
-
-- L'état returning et son action doit etre réécrite selon la structure des autres . 
-- Peut etre que le player doit etre initialisé de maniere dynamique pour avoir plsuieurs bots ou plutot qu'un seul store pour deux joueurs (bot et reel)
-- Messagerie pour le bot
-
-
-
+Ce nouveau HUD fusioné doit etre positionné sur la droite. Il faut supprimer ensuite les deux huds anciens. 

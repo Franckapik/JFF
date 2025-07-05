@@ -1,0 +1,54 @@
+/**
+ * ==========================================================================
+ * POSITION UPDATE HANDLER - Handler pour les mises à jour de position du vaisseau
+ * ==========================================================================
+ */
+
+import fsmLogger from '../../../../../../logger/fsmLogger';
+import { POSITION_TRACKER_CONFIG } from '../../../../machineX/config/constants';
+import { useTileStore } from '../../../../../../stores/useTileStore';
+
+/**
+ * Création d'un handler pour les mises à jour de position du vaisseau
+ * @param {Object} params - Les paramètres nécessaires
+ * @returns {Object} - L'objet handler avec les méthodes
+ */
+export const createPositionUpdateHandler = ({ fsmSend, botId, shipType, canSendEvent, markEventSent }) => {
+  return {
+    /**
+     * Traite une mise à jour de position du vaisseau
+     * @param {Object} newPosition - Nouvelle position du vaisseau
+     * @param {Object} lastPosition - Dernière position connue
+     * @returns {boolean} - True si un événement a été envoyé
+     */
+    process(newPosition, lastPosition) {
+      if (!lastPosition) return false;
+      
+      // Utilise calculate3DDistance depuis le TileStore
+      const calculate3DDistance = useTileStore.getState().calculate3DDistance;
+      const distance = calculate3DDistance(lastPosition, newPosition);
+      
+      // Seulement envoyer des mises à jour pour des mouvements significatifs
+      const eventKey = `ship_position_update_${botId}`;
+      if (distance > POSITION_TRACKER_CONFIG.THRESHOLDS.MIN_MOVEMENT && canSendEvent(eventKey)) {
+        fsmLogger.mouvement(`🚢 [${botId}] Ship position updated - distance moved: ${distance.toFixed(2)}`);
+        
+        fsmSend({ 
+          type: 'SHIP_POSITION_UPDATE', 
+          position: newPosition, 
+          botId, 
+          shipType,
+          distance,
+          timestamp: Date.now()
+        });
+        
+        markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.MOVEMENT_RESET);
+        return true;
+      }
+      
+      return false;
+    }
+  };
+};
+
+export default createPositionUpdateHandler;

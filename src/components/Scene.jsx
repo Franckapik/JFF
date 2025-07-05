@@ -3,7 +3,7 @@
  * ======================================== */
 
 // React imports
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useEffect } from "react";
 
 // Three.js imports
 import { GridHelper } from "three";
@@ -15,7 +15,7 @@ import Tile from "./Tile";
 // Stores
 import { useTileStore } from "../stores/useTileStore";
 import useGameStore from "../stores/useGameStore";
-import useFSMStore from "../stores/useFSMStore";
+import  useXFSMStore  from "../stores/useXFSMStore";
 
 // Utils
 import fsmLogger from "../logger/fsmLogger";
@@ -33,6 +33,7 @@ const Scene = () => {
   
   // Tile management
   const initializeTiles = useTileStore((state) => state.initializeTiles);
+  const tiles = useTileStore((state) => state.tiles); // Ajout pour forcer le re-rendu
   const getWalkableTiles = useTileStore((state) => state.getWalkableTiles);
   const getDepartTiles = useTileStore((state) => state.getDepartTiles);
   const getFuelStations = useTileStore((state) => state.getFuelStations);
@@ -45,35 +46,27 @@ const Scene = () => {
   const getPlayerBaseColor = useGameStore((state) => state.getPlayerBaseColor);
   const getBackgroundColor = useGameStore((state) => state.getBackgroundColor);
   
-  // FSM Store - source de vérité pour les bots actifs
-  const activeBots = useFSMStore((state) => state.activeBots);
+  // FSM Store - source de vérité pour les bots actifs (nouveau système XState)
+  const activeBots = useXFSMStore((state) => state.activeBots);
+  const addBot = useXFSMStore((state) => state.addBot);
   
   // Initialization state
   const {
-    playersInitialized,
-    botsInitialized,
     tilesInitialized,
-    markPlayersAsInitialized,
-    markBotsAsInitialized,
     markTilesAsInitialized
   } = useGameStore();
   
   /* ========================================
    * CONFIGURATION & CONSTANTS
    * ======================================== */
-   // Generate bot indices dynamically based on activeBots from FSMStore
-  const botIndices = activeBots.map((_, index) => index);
 
   // Synchroniser les tuiles de départ avec les bots FSM actifs
   useEffect(() => {
-    if (tilesInitialized) {
+    // Permettre la création initiale de tuiles de départ même s'il n'y en a pas encore
+    if (tilesInitialized && activeBots.length > 0) {
       syncStartingTilesWithFSMBots(activeBots);
-      fsmLogger.info("[Scene] Synchronized starting tiles with FSM bots", { 
-        activeBots: activeBots.length,
-        botIds: activeBots 
-      });
     }
-  }, [activeBots, tilesInitialized, syncStartingTilesWithFSMBots]);
+  }, [activeBots, tilesInitialized, syncStartingTilesWithFSMBots]); 
 
   /* ========================================
    * INITIALIZATION EFFECTS
@@ -82,11 +75,19 @@ const Scene = () => {
   // Initialize game tiles on component mount
   useEffect(() => {
     if (!tilesInitialized) {
-      fsmLogger.info("[Scene] Initializing tiles...");
+      fsmLogger.game("[Scene] Initializing tiles...");
       initializeTiles();
       markTilesAsInitialized();
     }
   }, [tilesInitialized, initializeTiles, markTilesAsInitialized]);
+
+
+  // Ajout du bot par défaut après initialisation des tuiles
+  useEffect(() => {
+    if (tilesInitialized && !activeBots.includes('bot-0')) {
+      addBot('bot-0');
+    }
+  }, [tilesInitialized, addBot, activeBots]);
 
 
   /* ========================================
@@ -151,9 +152,11 @@ const Scene = () => {
       {/* ========================================
        * PLAYER BASES (DEPART TILES) WITH FLEETS
        * ======================================== */}
-      
       {getDepartTiles()
-        .filter(tile => tile.playerId && activeBots.includes(tile.playerId))
+        .filter(tile => {
+          const hasPlayer = tile.playerId && activeBots.includes(tile.playerId);
+          return hasPlayer;
+        })
         .map((tile) => {
           const baseColor = getPlayerBaseColor(tile.playerIndex);
           const backgroundColor = getBackgroundColor(baseColor);

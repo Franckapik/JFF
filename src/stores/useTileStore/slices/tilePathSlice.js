@@ -64,7 +64,6 @@ const createTilePathSlice = (set, get) => ({
     const normalizedTarget = normalizeCoordinate(targetCoord);
     
     if (!normalizedStart || !normalizedTarget) {
-      console.warn('Invalid coordinates provided to findPath:', { startCoord, targetCoord });
       return [];
     }
     
@@ -230,7 +229,6 @@ const createTilePathSlice = (set, get) => ({
         return formatted ? distance.toFixed(1) : distance;
       }
     } catch (error) {
-      console.error("Error calculating distance:", error);
       return formatted ? "N/A" : 0;
     }
   },
@@ -273,6 +271,22 @@ const createTilePathSlice = (set, get) => ({
   },
 
   /**
+   * Calcule la distance euclidienne 3D entre deux positions dans l'espace
+   * @param {Object} pos1 - Première position (x, y, z)
+   * @param {Object} pos2 - Deuxième position (x, y, z)
+   * @returns {number} - Distance euclidienne entre les deux points
+   */
+  calculate3DDistance: (pos1, pos2) => {
+    if (!pos1 || !pos2) return Infinity;
+    
+    return Math.sqrt(
+      Math.pow(pos2.x - pos1.x, 2) +
+      Math.pow(pos2.y - pos1.y, 2) +
+      Math.pow(pos2.z - pos1.z, 2)
+    );
+  },
+
+  /**
    * Trouve la tuile la plus proche d'une position donnée
    * @param {Object} position - Position {x, y, z}
    * @param {Object} tiles - Map de toutes les tuiles
@@ -280,7 +294,7 @@ const createTilePathSlice = (set, get) => ({
    * @returns {Object|null} La tuile la plus proche ou null
    */
   findNearestTile: (position, tiles, filter = null) => {
-    const { isValidWorldPosition, calculateDistance } = get();
+    const { isValidWorldPosition, calculate3DDistance } = get();
     
     if (!isValidWorldPosition(position)) {
       return null;
@@ -293,7 +307,7 @@ const createTilePathSlice = (set, get) => ({
       if (!tile || !isValidWorldPosition(tile.position)) return;
       if (filter && !filter(tile)) return;
       
-      const distance = calculateDistance(position, tile.position);
+      const distance = calculate3DDistance(position, tile.position);
       if (distance < minDistance) {
         minDistance = distance;
         nearestTile = tile;
