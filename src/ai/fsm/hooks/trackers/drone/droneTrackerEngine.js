@@ -18,7 +18,7 @@
         const logThrottleReady = timeSinceLastLog > LOG_THROTTLE_MS;
         
         if (significantMovement && logThrottleReady) {
-          fsmLogger.debug(`🛸 [${botId}] ${droneType} position: (${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})`);
+          fsmLogger.info(`🛸 [${botId}] ${droneType} position: (${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})`);
           lastLogTimes.set(droneKey, now);
         }
       } de traitement des positions de drones
@@ -33,6 +33,7 @@ import {
 } from './handlers';
 import { useTileStore } from '../../../../../stores/useTileStore';
 import fsmLogger from '../../../../../logger/fsmLogger';
+import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants';
 
 // Maps pour stocker les données de traçage
 const lastReportedPositions = new Map(); // Dernière position signalée par drone
@@ -95,9 +96,10 @@ const createAllHandlers = (params) => {
  * Ce moteur coordonne les différents handlers selon l'état
  */
 export const processDronePosition = (params) => {
+  const { position, context, droneType, send, botId } = params;
+  
   // 1. Créer tous les handlers nécessaires
   const handlers = createAllHandlers(params);
-  const { position, context, droneType, send, botId } = params;
   
   // Clé unique pour identifier ce drone
   const droneKey = `${botId}-${droneType}`;
@@ -143,16 +145,50 @@ export const processDronePosition = (params) => {
   const drone = context?.droneFleet?.drones?.[droneType];
   const currentState = context?.value;
   
-  // Vérifications de sécurité
-  if (!drone?.isActive || !currentState?.exploring) return;
+  // Vérifications de sécurité - Utiliser l'état du drone au lieu de l'état global FSM
+  if (!drone?.isActive || !drone?.state) {
+    return;
+  }
   
-  const droneState = currentState.exploring;
+  const droneState = drone?.state; // Utiliser l'état du drone directement
   
   // 4. Calculer la distance appropriée selon l'état
   let distance = getDistanceForState(droneState, position, drone, context);
-  if (distance === Infinity) return; // Pas de cible valide
   
-  // 5. Appeler le handler correspondant à l'état actuel
+  if (distance === Infinity) {
+    // ENHANCED LOGGING: Log when distance calculation fails
+    fsmLogger.warn(`⚠️ [${botId}] Distance calculation returned Infinity for state ${droneState}`, {
+      droneType,
+      droneState,
+      position,
+      droneData: {
+        isActive: drone?.isActive,
+        targetPosition: drone?.targetPosition,
+        state: drone?.state
+      }
+    });
+    return; // Pas de cible valide
+  }
+  
+  // ENHANCED LOGGING: Log distance calculation results for stuck drone detection
+  const now = Date.now();
+  if (now % 5000 < 100) { // Log every 5 seconds to avoid spam
+    fsmLogger.info(`📍 [${botId}] Drone ${droneType} tracking update`, {
+      state: droneState,
+      distance: distance.toFixed(3),
+      position,
+      targetPosition: drone?.targetPosition
+    });
+  }
+  
+  // 5. Vérifier à nouveau l'état du drone avant d'appeler le handler (au cas où il aurait changé)
+  const currentDroneState = context?.droneFleet?.drones?.[droneType]?.state;
+  if (currentDroneState !== droneState) {
+    // L'état a changé entre-temps, ne pas traiter
+    return;
+  }
+  
+  // 6. Appeler le handler correspondant à l'état actuel
   switch (droneState) {
     case 'drone_deploying':
       handlers.deploying.process(distance, position);
@@ -173,20 +209,108 @@ export const processDronePosition = (params) => {
  * @private
  */
 function getDistanceForState(state, position, drone, context) {
+  // Accéder une seule fois au tileStore pour éviter des appels multiples
+  const tileStore = useTileStore.getState();
+  const calculate3DDistance = tileStore.calculate3DDistance;
+  
+  // Vérification de validité des données
+  if (!position) {
+    fsmLogger.info(`⚠️ getDistanceForState: Position du drone manquante`);
+    return Infinity;
+  }
+  
   switch (state) {
     case 'drone_deploying':
     case 'drone_scanning': {
       const targetPosition = drone.targetPosition;
-      return targetPosition 
-        ? useTileStore.getState().calculate3DDistance(position, targetPosition) 
-        : Infinity;
+      
+      // Détection de problèmes de cible
+      if (!targetPosition) {
+        fsmLogger.info(`⚠️ getDistanceForState (${state}): Pas de targetPosition définie pour le drone`, { droneData: drone });
+        return Infinity;
+      }
+      
+      // Vérifier si la cible est à zéro (valeur par défaut potentiellement problématique)
+      if (targetPosition.x === 0 && targetPosition.z === 0) {
+        fsmLogger.info(`⚠️ getDistanceForState: La target du drone semble être à l'origine (0,0)`, { 
+          targetPosition,
+          droneState: state
+        });
+      }
+      
+      // Calcul des distances sur chaque axe
+      const dx = position.x - targetPosition.x;
+      const dz = position.z - targetPosition.z;
+      
+      // Distance 2D (XZ) uniquement - ignorer hauteur Y pour la détection d'arrivée
+      // Utilise le théorème de Pythagore au lieu de calculate3DDistance pour avoir le contrôle exact
+      const distance2D = Math.sqrt(dx * dx + dz * dz);
+      
+      return distance2D;
     }
     
     case 'drone_returning': {
       const shipPosition = context?.vehicle?.position || context?.vehicle?.basePosition;
-      return shipPosition 
-        ? useTileStore.getState().calculate3DDistance(position, shipPosition) 
-        : Infinity;
+      
+      if (!shipPosition) {
+        fsmLogger.info(`⚠️ getDistanceForState (${state}): Pas de position de vaisseau définie`);
+        return Infinity;
+      }
+      
+      // CORRECTIF: Vérifier si la position mesh est corrompue (valeurs infinitésimales)
+      const isPositionCorrupted = Math.abs(position.x) < 1e-100 || Math.abs(position.z) < 1e-100;
+      
+      // ENHANCED LOGGING: Log detailed position information for debugging
+      if (position.x === 0 && position.z === 0) {
+        fsmLogger.warn(`🚨 [drone_returning] Drone position is exactly at origin (0,0) - potential issue`, {
+          meshPosition: position,
+          shipPosition,
+          isCorrupted: isPositionCorrupted
+        });
+      }
+      
+      // Additional check for NaN or undefined values
+      const hasInvalidValues = isNaN(position.x) || isNaN(position.z) || 
+                               position.x === undefined || position.z === undefined;
+      
+      if (hasInvalidValues) {
+        fsmLogger.error(`❌ [drone_returning] Invalid position values detected`, {
+          meshPosition: position,
+          shipPosition,
+          hasNaN: isNaN(position.x) || isNaN(position.z),
+          hasUndefined: position.x === undefined || position.z === undefined
+        });
+        return 0.5; // Force transition
+      }
+      
+      if (isPositionCorrupted) {
+        // Position mesh corrompue - utiliser une heuristique pour forcer le retour
+        fsmLogger.info(`🔧 [drone_returning] Position du mesh corrompue (${position.x}, ${position.z}) - forçage du retour au base`, {
+          meshPosition: position,
+          shipPosition,
+          threshold: '1e-100',
+          actualXAbs: Math.abs(position.x),
+          actualZAbs: Math.abs(position.z)
+        });
+        
+        // Retourner une distance qui va déclencher la transition (< 1.5)
+        return 0.5;
+      }
+      
+      // ENHANCED LOGGING: Log distance calculation details for debugging stuck drones
+      const actualDistance = calculate3DDistance(position, shipPosition);
+      const distanceThreshold = 1.5; // From POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH or similar
+      
+      if (actualDistance > 10) {
+        fsmLogger.warn(`🎯 [drone_returning] Large distance detected - potential stuck drone`, {
+          meshPosition: position,
+          shipPosition,
+          distance: actualDistance,
+          threshold: distanceThreshold
+        });
+      }
+      
+      return calculate3DDistance(position, shipPosition);
     }
     
     default:

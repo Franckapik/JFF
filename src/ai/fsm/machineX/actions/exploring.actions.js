@@ -121,38 +121,117 @@ export const action_drone_deploying_exit = ({ context }) => {
 // ============================================================================
 
 /**
- * Action d'entrée drone_scanning : démarrage du scan
+ * Action d'entrée drone_scanning : démarrage du scan + mise à jour de l'état du drone
  */
-export const action_drone_scanning_entry = ({ context }) => {
+export const action_drone_scanning_entry = assign(({ context }) => {
   fsmLogger.state(`🔍 [${context.entityId}] Drone scanning - analyzing tile`);
-  // Le scan est géré par le tracker via setTimeout
-};
+  
+  // Mettre à jour l'état du drone dans le contexte pour synchroniser avec la FSM
+  if (context.droneFleet?.drones?.explorer) {
+    return {
+      ...context,
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet.drones,
+          explorer: {
+            ...context.droneFleet.drones.explorer,
+            state: 'drone_scanning',  // 🔧 CORRECTION: Synchroniser l'état du drone
+            lastUpdate: Date.now()
+          }
+        }
+      }
+    };
+  }
+  
+  return context;
+});
 
 /**
- * Action de sortie drone_scanning : log de fin de scan
+ * Action de sortie drone_scanning : log de fin de scan + potentielle mise à jour d'état
  */
-export const action_drone_scanning_exit = ({ context }) => {
+export const action_drone_scanning_exit = assign(({ context }) => {
   fsmLogger.state(`📊 [${context.entityId}] Drone scan complete - data collected`);
-};
+  
+  // Optionnel: mettre à jour l'état du drone pour le retour
+  if (context.droneFleet?.drones?.explorer) {
+    return {
+      ...context,
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet.drones,
+          explorer: {
+            ...context.droneFleet.drones.explorer,
+            state: 'drone_returning',  // 🔧 CORRECTION: Préparer pour le retour
+            lastUpdate: Date.now()
+          }
+        }
+      }
+    };
+  }
+  
+  return context;
+});
 
 // ============================================================================
 // ACTIONS SOUS-ÉTATS : DRONE RETURNING
 // ============================================================================
 
 /**
- * Action d'entrée drone_returning : démarrage du retour
+ * Action d'entrée drone_returning : démarrage du retour + mise à jour de l'état du drone
  */
-export const action_drone_returning_entry = ({ context }) => {
+export const action_drone_returning_entry = assign(({ context }) => {
   fsmLogger.state(`🏠 [${context.entityId}] Drone returning - heading to base`);
-  // Le retour est géré par les actions existantes (droneRecallToShip)
-};
+  
+  // Mettre à jour l'état du drone dans le contexte pour synchroniser avec la FSM
+  if (context.droneFleet?.drones?.explorer) {
+    return {
+      ...context,
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet.drones,
+          explorer: {
+            ...context.droneFleet.drones.explorer,
+            state: 'drone_returning',  // 🔧 CORRECTION: Synchroniser l'état du drone
+            lastUpdate: Date.now()
+          }
+        }
+      }
+    };
+  }
+  
+  return context;
+});
 
 /**
- * Action de sortie drone_returning : log de fin de retour
+ * Action de sortie drone_returning : log de fin de retour + mise à jour de l'état du drone
  */
-export const action_drone_returning_exit = ({ context }) => {
+export const action_drone_returning_exit = assign(({ context }) => {
   fsmLogger.state(`🔌 [${context.entityId}] Drone return complete - docked to ship`);
-};
+  
+  // Remettre le drone en état docked quand il revient à la base
+  if (context.droneFleet?.drones?.explorer) {
+    return {
+      ...context,
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet.drones,
+          explorer: {
+            ...context.droneFleet.drones.explorer,
+            state: 'docked',  // 🔧 CORRECTION: Le drone est maintenant amarré
+            isActive: false,  // 🔧 CORRECTION: Désactiver le drone
+            lastUpdate: Date.now()
+          }
+        }
+      }
+    };
+  }
+  
+  return context;
+});
 
 export default {
   action_exploring_entry,

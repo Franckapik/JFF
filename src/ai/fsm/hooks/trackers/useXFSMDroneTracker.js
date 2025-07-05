@@ -14,11 +14,10 @@
  */
 
 import { useRef, useCallback, useEffect } from 'react';
-import { useEventDebounce } from '../../useEventDebounce';
-import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants';
-import { useTileStore } from '../../../../../stores/useTileStore';
-import { processDronePosition } from './droneTrackerEngine';
-import fsmLogger from '../../../../../logger/fsmLogger';
+import { useEventDebounce } from '../useEventDebounce';
+import { POSITION_TRACKER_CONFIG } from '../../machine/constants/constants';
+import { useTileStore } from '../../../../stores/useTileStore';
+import { processDronePosition } from './drone/droneTrackerEngine';
 
 /**
  * Hook spécialisé pour le tracking des drones (XState)
@@ -50,10 +49,6 @@ export const useXFSMDroneTracker = (context, send, botId, droneType = 'explorer'
     
     currentVisualPosition.current = position;
     
-    // Gestion de l'initialisation sans log spécifique
-    // La position initiale sera loguée par processDronePosition si nécessaire
-    
-    // Toujours traiter la position via le moteur principal
     processDronePosition({
       position,
       context,

@@ -76,11 +76,22 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
     }
     
     // Position cible calculée (coordonnées locales)
-    const targetPosition = droneTargetPos ? {
-      x: droneTargetPos.x - shipPosition.x,
-      y: droneTargetPos.y - shipPosition.y,
-      z: droneTargetPos.z - shipPosition.z
-    } : initialPosition;
+    const targetPosition = (() => {
+      if (droneState === 'drone_returning') {
+        // Pour le retour, la cible est la position du vaisseau (origine locale 0,0,0)
+        return { x: 0, y: 0.5, z: 0 }; // Position relative au vaisseau
+      } else if (droneTargetPos) {
+        // Pour les autres états, utiliser la cible du drone
+        return {
+          x: droneTargetPos.x - shipPosition.x,
+          y: droneTargetPos.y - shipPosition.y,
+          z: droneTargetPos.z - shipPosition.z
+        };
+      } else {
+        // Fallback : position initiale
+        return initialPosition;
+      }
+    })();
     
     // États de mouvement du drone (XState uniquement)
     const isMoving = droneState === 'drone_deploying' || 
@@ -95,7 +106,7 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
     
     // 🎭 MOUVEMENT FLUIDE (INTERPOLATION VISUELLE)
     if (isMoving && targetPosition) {
-      const speed = delta * 3.0; // 🚀 ACCÉLÉRATION FORTE (x3.75 plus rapide que 0.8)
+      const speed = delta * 5.0; // 🚀 ACCÉLÉRATION TRÈS FORTE (augmenté de 3.0 à 5.0)
       currentPosition.x = THREE.MathUtils.lerp(currentPosition.x, targetPosition.x, speed);
       currentPosition.y = THREE.MathUtils.lerp(currentPosition.y, targetPosition.y, speed);
       currentPosition.z = THREE.MathUtils.lerp(currentPosition.z, targetPosition.z, speed);
@@ -117,6 +128,15 @@ export const useDroneAnimation = (context, shipPosition, updateVisualPosition, d
         y: currentPosition.y + shipPosition.y,
         z: currentPosition.z + shipPosition.z
       };
+      
+      // 🚨 LOG CRITIQUE: Vérifier si on appelle bien le tracker (mode statique)
+      if (now - lastUpdateTime.current > 1.0) {
+        fsmLogger.info(`🚨 [ANIMATION-STATIC] Calling updateVisualPosition for ${droneType}`, {
+          worldPosition,
+          droneState,
+          isMoving: false
+        });
+      }
       
       // Envoyer la position actuelle au tracker
       updateVisualPosition(worldPosition);
