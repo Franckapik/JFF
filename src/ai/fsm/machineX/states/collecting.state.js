@@ -1,4 +1,4 @@
-import { MACHINE_EVENT_TYPES } from '../config/events.config.js';
+import { MACHINE_EVENT_TYPES } from '../events/events.config.js';
 /**
  * ==========================================================================
  * XSTATE COLLECTING STATE - Structure conforme au modèle machine.xstate.js
