@@ -59,6 +59,7 @@ export const updateShipPosition = (context, event) => {
         coord: coord,
         lastPositionUpdate: timestamp || Date.now()
       },
+      explorationComplete: false, // Réinitialiser le flag d'exploration quand le vaisseau bouge
       lastAction: 'updateShipPosition_success'
     };
     

@@ -74,6 +74,14 @@ export const EXPLORATION_CYCLE_CONFIG = {
   MIN_TILES_BEFORE_COLLECTION: 3
 };
 
+/**
+ * Configuration de l'exploration par drone
+ * ✅ Utilisé dans droneExploringActions.js et tileFilterSlice.js
+ */
+export const DRONE_EXPLORATION_CONFIG = {
+  MAX_EXPLORATION_RADIUS: 2  // Rayon maximum pour l'exploration des drones (en tuiles)
+};
+
 // ============================================================================
 // TYPES ET CAPACITÉS DES VÉHICULES
 // ============================================================================
@@ -302,6 +310,7 @@ export default {
   FSM_STATES,
   EVALUATION_THRESHOLDS,
   EXPLORATION_CYCLE_CONFIG,
+  DRONE_EXPLORATION_CONFIG,
   VEHICLE_TYPES,
   DEFAULT_CAPACITIES,
   DEFAULT_VEHICLE_STATE,

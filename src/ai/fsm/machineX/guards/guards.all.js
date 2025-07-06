@@ -168,5 +168,12 @@ export const canContinueOperation = (context, event) => {
 // --- EXPLORING GUARD ---
 export function shouldExplore(context, event) {
   fsmLogger.info('[shouldExplore]', { context, event });
-  return true
+  
+  // Si l'exploration locale est terminée (aucune tuile dans un rayon de 3), ne pas explorer
+  if (context.explorationComplete) {
+    fsmLogger.info('[shouldExplore] Local exploration complete - no valid targets within radius 3');
+    return false;
+  }
+  
+  return true;
 }

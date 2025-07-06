@@ -24,6 +24,7 @@
 
 import fsmLogger from '../../../logger/fsmLogger.js';
 import  useXFSMStore  from '../../useXFSMStore/index.js';
+import { DRONE_EXPLORATION_CONFIG } from '../../../ai/fsm/machineX/config/constants.js';
 
 // =========================================================================
 // IMPORTS
@@ -43,53 +44,142 @@ const createTileFilterSlice = (set, get) => {
     /**
      * Récupère les tuiles 'walkable' dans un rayon donné autour d'une position
      * 
-     * Cette fonction polyvalente :
-     * 1. Accepte soit des coordonnées soit un objet véhicule avec propriété coord
-     * 2. Utilise l'algorithme de pathfinding pour calculer les distances réelles
-     * 3. Applique des filtres configurables (exploration, danger)
-     * 4. Retourne les résultats triés par proximité
+     * ⭐ FONCTION CRITIQUE POUR L'EXPLORATION DES DRONES ⭐
      * 
-     * Utilisée principalement par :
-     * - Logique d'exploration automatique des bots
-     * - Système de recherche de cibles
-     * - Calculs de territoire accessible
+     * Cette fonction polyvalente est utilisée principalement par la logique d'exploration
+     * automatique des drones. Elle filtre les tuiles accessibles dans un rayon strict
+     * et applique des critères avancés pour la sélection de cibles.
+     * 
+     * 🔧 FONCTIONNEMENT DÉTAILLÉ :
+     * 1. Conversion flexible de la source (coordonnée string ou objet avec .coord)
+     * 2. Récupération de toutes les tuiles walkable via getWalkableTiles()
+     * 3. Calcul de distance euclidienne via calculateDistance() pour chaque tuile
+     * 4. Filtrage par rayon d'exploration (défaut: 3, drone max: 2)
+     * 5. Application des filtres optionnels (exploration, danger)
+     * 6. Tri par proximité croissante (tuiles les plus proches en premier)
+     * 
+     * 🎯 UTILISATIONS PRINCIPALES :
+     * - Exploration automatique des drones (rayon strictement limité à 2)
+     * - Recherche de cibles pour les actions de bots
+     * - Calculs de territoire accessible autour d'une position
+     * - Planification de mouvement avec contraintes
+     * 
+     * 📊 LOGS DÉTAILLÉS POUR DEBUG :
+     * - Source de coordonnées détectée et convertie
+     * - Nombre total de tuiles walkable disponibles
+     * - Processus de filtrage étape par étape
+     * - Distances calculées et critères appliqués
+     * - Résultats finaux avec métadonnées complètes
+     * 
+     * ⚠️ CONSTANTE DE CONFIGURATION :
+     * - DRONE_EXPLORATION_CONFIG.MAX_EXPLORATION_RADIUS = 2 (tuiles max pour drones)
+     * - Ce rayon strict évite l'exploration excessive et maintient la performance
      * 
      * @param {string|Object} source - Coordonnée (format "x,y") ou objet avec propriété coord
-     * @param {number} exploringRadius - Rayon de recherche autour de la position (défaut: 3)
+     * @param {number} exploringRadius - Rayon de recherche autour de la position (défaut: 3, drone max: 2)
      * @param {boolean} onlyUnexplored - Si true, retourne uniquement les tuiles non explorées
      * @param {boolean} excludeDanger - Si true, exclut les tuiles de type 'danger'
      * @returns {Array} - Liste des tuiles walkable trouvées avec métadonnées, triées par distance
      */
     getWalkableTilesInRadius: (source, exploringRadius = 3, onlyUnexplored = false, excludeDanger = true) => {
-      // Conversion flexible de la source en coordonnées (accepte véhicules et coordonnées)
+      // 🎯 ÉTAPE 1: Conversion et validation de la source
+      // Détection automatique du type de source (coordonnée directe ou objet)
+      fsmLogger.info('🎯 [getWalkableTilesInRadius] Source directe détectée:', source);
+      
       let coord;
       if (typeof source === 'string') {
         coord = source;
+        fsmLogger.info('🔍 [getWalkableTilesInRadius] Début de recherche:', {
+          centerCoord: coord,
+          exploringRadius,
+          onlyUnexplored,
+          excludeDanger
+        });
       } else if (source && source.coord) {
         coord = source.coord;
+        fsmLogger.info('🔍 [getWalkableTilesInRadius] Début de recherche depuis objet:', {
+          centerCoord: coord,
+          sourceType: 'object',
+          exploringRadius,
+          onlyUnexplored,
+          excludeDanger
+        });
       } else {
+        fsmLogger.warning('⚠️ [getWalkableTilesInRadius] Source invalide:', source);
         return [];
       }
       
-      if (!coord) return [];
+      if (!coord) {
+        fsmLogger.warning('⚠️ [getWalkableTilesInRadius] Coordonnée manquante');
+        return [];
+      }
       
-      // Utiliser getWalkableTiles comme base de filtrage
+      // 📋 ÉTAPE 2: Récupération de la base de données des tuiles walkable
+      // Utilisation du filtre optimisé getWalkableTiles() comme source
       const walkableTiles = get().getWalkableTiles();
-      const tilesInRadius = [];
-
+      fsmLogger.info('📋 [getWalkableTilesInRadius] Tuiles walkables totales:', walkableTiles.length);
       
-      // Appliquer les filtres supplémentaires sur les tuiles walkables
+      // 🧪 ÉTAPE 3: Test de cohérence des distances (debug pour les 3 premières tuiles)
+      fsmLogger.info('🧪 [getWalkableTilesInRadius] Test de cohérence des distances:');
+      walkableTiles.slice(0, 3).forEach((tile, index) => {
+        const euclideanDistance = get().calculateDistance(coord, tile.coord, false, false);
+        const pathfindingDistance = get().calculateDistance(coord, tile.coord, true, false);
+        fsmLogger.info(`   Tuile ${index + 1}: ${coord} → ${tile.coord}`, {
+          euclidean: euclideanDistance.toFixed(3),
+          pathfinding: pathfindingDistance,
+          difference: Math.abs(euclideanDistance - pathfindingDistance).toFixed(3),
+          tileType: tile.type
+        });
+      });
+      
+      // 🔄 ÉTAPE 4: Traitement principal - Filtrage avec calcul de distance
+      const tilesInRadius = [];
+      let tilesProcessed = 0;
+      let tilesInRadiusCount = 0;
+      let tilesFilteredByDanger = 0;
+      let tilesFilteredByExploration = 0;
+
       walkableTiles.forEach(tile => {
-        // Calculer la distance réelle en nombre de tuiles via pathfinding
-        // Utiliser directement la fonction du pathSlice qui gère les coordonnées de grille
+        tilesProcessed++;
+        
+        // 🧮 Calcul de distance euclidienne (plus précis pour les rayons stricts)
+        // Utilisation directe de calculateDistance du pathSlice avec coordonnées de grille
         const distance = get().calculateDistance(coord, tile.coord, false, false);
         
-        // Vérifier si la tuile est dans le rayon d'exploration spécifié
+        // Exemple de log détaillé pour une tuile spécifique (debug)
+        if (tilesProcessed === 1) {
+          fsmLogger.info('🧮 [getWalkableTilesInRadius] Distance calculée:', {
+            from: coord,
+            to: tile.coord,
+            centerGridCoord: coord,
+            tileGridCoord: tile.coord,
+            calculatedDistance: distance.toFixed(3),
+            exploringRadius,
+            withinRadius: distance <= exploringRadius
+          });
+        }
+        
+        // ✅ Vérification du rayon d'exploration spécifié
         if (distance <= exploringRadius) {
-          // Application des filtres configurables
-          if ((!excludeDanger || tile.type !== 'danger') &&
-              (!onlyUnexplored || !tile.explored)) {
-            
+          tilesInRadiusCount++;
+          
+          // 🚫 Application des filtres configurables
+          let includeInResult = true;
+          
+          // Filtre danger
+          if (excludeDanger && tile.type === 'danger') {
+            includeInResult = false;
+            tilesFilteredByDanger++;
+          }
+          
+          // Filtre exploration
+          if (onlyUnexplored && tile.explored) {
+            includeInResult = false;
+            tilesFilteredByExploration++;
+          }
+          
+          // ➕ Ajout à la liste des résultats si tous les filtres passent
+          if (includeInResult) {
             tilesInRadius.push({
               coord: tile.coord,
               position: tile.position,
@@ -100,8 +190,43 @@ const createTileFilterSlice = (set, get) => {
         }
       });
       
-      // Retourne les tuiles walkable triées par proximité croissante
-      return tilesInRadius.sort((a, b) => a.distance - b.distance);
+      // 📈 ÉTAPE 5: Bilan et statistiques de filtrage
+      fsmLogger.info('📈 [getWalkableTilesInRadius] Bilan de filtrage:', {
+        tilesProcessed,
+        tilesInRadiusCount,
+        tilesFilteredByDanger,
+        tilesFilteredByExploration,
+        finalValidTiles: tilesInRadius.length,
+        searchRadius: exploringRadius,
+        centerCoord: coord
+      });
+      
+      // ⚠️ Vérification spéciale pour rayon drone (constante)
+      if (exploringRadius <= DRONE_EXPLORATION_CONFIG.MAX_EXPLORATION_RADIUS) {
+        if (tilesInRadius.length === 0) {
+          fsmLogger.info(`🚫 [getWalkableTilesInRadius] Aucune tuile valide trouvée dans le rayon ${exploringRadius}`);
+        } else {
+          fsmLogger.info(`✅ [getWalkableTilesInRadius] ${tilesInRadius.length} tuiles trouvées dans le rayon drone ${exploringRadius}`);
+        }
+      }
+      
+      // 🔄 ÉTAPE 6: Tri par proximité croissante et retour
+      // Les tuiles les plus proches sont prioritaires pour l'exploration
+      const sortedResults = tilesInRadius.sort((a, b) => a.distance - b.distance);
+      
+      // 📊 Log final des premiers résultats pour debug
+      if (sortedResults.length > 0) {
+        fsmLogger.info('📊 [getWalkableTilesInRadius] Premiers résultats triés:', 
+          sortedResults.slice(0, 3).map(t => ({
+            coord: t.coord,
+            distance: t.distance.toFixed(3),
+            type: t.tile.type,
+            explored: t.tile.explored
+          }))
+        );
+      }
+      
+      return sortedResults;
     },
 
     /**

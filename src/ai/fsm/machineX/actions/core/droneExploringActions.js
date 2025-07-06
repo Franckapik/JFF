@@ -62,6 +62,7 @@ export const calculateDroneFleetStatus = (context) => {
 
 /**
  * Sélectionne une tuile cible dans un rayon donné autour du véhicule (pour drones)
+ * RÈGLE STRICTE : Maximum 3 tuiles de rayon. Si aucune tuile valide, retourne null.
  */
 const selectTargetTileInRadiusForDrone = (context, range = 3) => {
   try {
@@ -70,12 +71,15 @@ const selectTargetTileInRadiusForDrone = (context, range = 3) => {
     
     if (!vehicle || !vehicle.coord) {
       console.info('[selectTargetTileInRadiusForDrone] Vehicle or vehicle.coord not found in context');
-      return { x: 0, y: 0.5, z: 0 };
+      return null;
     }
+
+    // Enforcer la règle du rayon maximum de 3
+    const maxRadius = Math.min(range, 3);
 
     const walkableTiles = tileStore.getWalkableTilesInRadius(
       vehicle.coord,
-      range,
+      maxRadius,
       true, // Seulement les tuiles non explorées
       true  // Exclure les tuiles dangereuses
     );
@@ -87,27 +91,17 @@ const selectTargetTileInRadiusForDrone = (context, range = 3) => {
     );
     
     if (validTargets.length === 0) {
-      console.info('[selectTargetTileInRadiusForDrone] No valid tiles found, falling back to random tile');
-      
-      const randomTile = tileStore.selectRandomWalkableTile();
-      if (randomTile && randomTile.position) {
-        return {
-          x: randomTile.position.x,
-          y: randomTile.position.y + 0.5,
-          z: randomTile.position.z
-        };
-      }
-      
-      const fallbackAngle = Math.random() * Math.PI * 2;
-      const fallbackDistance = Math.min(range, 2);
-      return {
-        x: vehicle.position.x + Math.cos(fallbackAngle) * fallbackDistance,
-        y: vehicle.position.y + 0.5,
-        z: vehicle.position.z + Math.sin(fallbackAngle) * fallbackDistance
-      };
+      console.info(`[selectTargetTileInRadiusForDrone] No valid tiles found within radius ${maxRadius}, exploration complete in this area`);
+      return null; // Pas de fallback - retourner null pour déclencher le retour en évaluation
     }
 
     const targetTile = validTargets[0];
+    
+    console.info(`[selectTargetTileInRadiusForDrone] Target selected within radius ${maxRadius}:`, {
+      coord: targetTile.coord,
+      distance: targetTile.distance,
+      position: targetTile.position
+    });
     
     return {
       x: targetTile.position.x,
@@ -117,19 +111,7 @@ const selectTargetTileInRadiusForDrone = (context, range = 3) => {
     
   } catch (error) {
     console.error('[selectTargetTileInRadiusForDrone] Error selecting target tile:', error);
-    
-    const vehicle = context.vehicle || context.botVehicle;
-    if (vehicle && vehicle.position) {
-      const safeAngle = Math.random() * Math.PI * 2;
-      const safeDistance = Math.min(range, 2);
-      return {
-        x: vehicle.position.x + Math.cos(safeAngle) * safeDistance,
-        y: vehicle.position.y + 0.5,
-        z: vehicle.position.z + Math.sin(safeAngle) * safeDistance
-      };
-    }
-    
-    return { x: 0, y: 0.5, z: 0 };
+    return null; // En cas d'erreur, retourner null au lieu d'un fallback
   }
 };
 
@@ -234,6 +216,16 @@ export const droneDeployForExploration = (context, event) => {
     // Utiliser le tileStore pour obtenir une position réelle dans un rayon de 3 tuiles
     const targetPosition = selectTargetTileInRadiusForDrone(context, range);
 
+    // Si aucune cible valide dans le rayon autorisé, déclencher un retour en évaluation
+    if (!targetPosition) {
+      console.info(`[droneDeployForExploration] No valid exploration targets within radius ${range}, area exploration complete`);
+      return {
+        ...context,
+        explorationComplete: true, // Flag pour indiquer que l'exploration locale est terminée
+        lastAction: 'droneDeployForExploration_noTargets'
+      };
+    }
+
     const updatedDrone = {
       ...context.droneFleet.drones[droneType],
       state: DRONE_VISUAL_STATES.deploying,
@@ -259,6 +251,7 @@ export const droneDeployForExploration = (context, event) => {
           [droneType]: updatedDrone
         }
       },
+      explorationComplete: false, // Reset le flag si on trouve une cible
       lastAction: 'droneDeployForExploration_success'
     };
   } catch (error) {
