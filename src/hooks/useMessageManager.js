@@ -34,7 +34,7 @@ const useMessageManager = () => {
         break;
 
       default:
-        console.info(`Type de message inconnu : ${type}`);
+        // Type de message inconnu - notification supprimée
         return;
     }
 

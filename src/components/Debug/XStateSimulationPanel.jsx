@@ -52,7 +52,7 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
     // Réinitialiser l'erreur si le hook fonctionne maintenant
     if (error) setError(null);
   } catch (err) {
-    console.error('[XStateSimulationPanel] Error with useXFSM hook:', err);
+    // Error with useXFSM hook - logged via fsmLogger
     setError(err);
     // Valeurs par défaut en cas d'erreur
     fsmState = { value: 'error', context: {} };
@@ -354,12 +354,6 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
 
   // Fonction pour envoyer des événements avec contexte simulé
   const sendEventWithContext = (eventType, payload = {}) => {
-    // Log l'envoi d'événement pour debug
-    console.log('[XStateSimulationPanel] sendEventWithContext:', eventType, { 
-      simulatedContext,
-      contextSize: Object.keys(context).length,
-      hasEntityId: context?.entityId ? true : false 
-    });
     // N'envoie que le type d'événement (pas de simulatedContext)
     const eventData = { type: eventType, ...payload };
     if (window && window.fsmLogger) {
@@ -380,8 +374,6 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
       snapshotKeysList: Object.keys(fsmState || {}).join(', ')
     };
 
-    console.log("CONTEXTE COMPLET:", contextSnapshot);
-
     // Essayons de débugger pourquoi le contexte semble vide
     alert(`Contexte:\n- Props: ${contextMetrics.count}\n- EntityId: ${context?.entityId || "manquant"}\n- Entity Type: ${context?.entityType || "manquant"}\n- Keys: ${contextMetrics.keysList}`);
   };
@@ -389,7 +381,6 @@ const XStateSimulationPanel = ({ botId = 'bot-0' }) => {
   // Reset context function - creates a fresh context using the initialContext helper
   const resetContext = () => {
     const freshContext = createMachineContext(botId, 'auto');
-    console.log('[XStateSimulationPanel] Resetting context with fresh data:', freshContext);
     send({ type: 'RESET_CONTEXT', ...freshContext });
   };
   

@@ -17,8 +17,6 @@ import { shouldExplore } from '../guards/guards.all.js';
 import { assign } from 'xstate';
 import { FSM_STATES } from '../config/constants.js';
 
-console.log(FSM_STATES.EXPLORING);
-
 /**
  * Configuration XState de l'état evaluating (modulaire)
  */

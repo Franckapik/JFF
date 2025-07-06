@@ -6,6 +6,7 @@ import { useDroneAnimation } from "../animations/useDroneAnimation.js";
 import { useShipAnimation } from "../animations/useShipAnimation.js";
 import ShipMesh from "./Vehicles/ShipMesh.jsx";
 import DroneMesh from "./Vehicles/DroneMesh.jsx";
+import  fsmLogger  from "../logger/fsmLogger.js";
 
 /**
  * =================================================================
@@ -69,7 +70,7 @@ const Fleet = React.memo(({
     const hasDroneStateChanged = droneState !== lastLoggedContext.current.droneState;
     
     if (hasStateChanged || hasActionChanged || hasDroneStateChanged) {
-      console.log(`🛸 [Fleet] Context update for ${botId}:`, {
+      fsmLogger.info(`🛸 [Fleet] Context update for ${botId}:`, {
         fsmState,
         lastAction: context?.lastAction,
         vehiclePosition: context?.vehicle?.position ? 
@@ -97,7 +98,7 @@ const Fleet = React.memo(({
   React.useEffect(() => {
     const currentDroneState = context?.droneFleet?.drones?.explorer?.state;
     if (currentDroneState && currentDroneState !== prevDroneState.current) {
-      console.log(`🚨 [Fleet] DRONE STATE CHANGE for ${botId}:`, {
+      fsmLogger.info(`🚨 [Fleet] DRONE STATE CHANGE for ${botId}:`, {
         from: prevDroneState.current,
         to: currentDroneState,
         position: context?.droneFleet?.drones?.explorer?.position,

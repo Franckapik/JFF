@@ -1,5 +1,4 @@
 // 🧪 FICHIER DE TEST - Exports non utilisés
-console.log("Test exports ESLint");
 
 // ❌ Exports non utilisés - DEVRAIENT être détectés par unimported
 export const UNUSED_CONSTANT = "Je ne suis pas utilisée";

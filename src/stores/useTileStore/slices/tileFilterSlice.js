@@ -84,12 +84,12 @@ const createTileFilterSlice = (set, get) => {
     getWalkableTilesInRadius: (source, exploringRadius = 3, onlyUnexplored = false, excludeDanger = true) => {
       // 🎯 ÉTAPE 1: Conversion et validation de la source
       // Détection automatique du type de source (coordonnée directe ou objet)
-      fsmLogger.info('🎯 [getWalkableTilesInRadius] Source directe détectée:', source);
+      console.log('🎯 [getWalkableTilesInRadius] Source directe détectée:', source); 
       
       let coord;
       if (typeof source === 'string') {
         coord = source;
-        fsmLogger.info('🔍 [getWalkableTilesInRadius] Début de recherche:', {
+        console.log('🔍 [getWalkableTilesInRadius] Début de recherche:', { 
           centerCoord: coord,
           exploringRadius,
           onlyUnexplored,
@@ -97,7 +97,7 @@ const createTileFilterSlice = (set, get) => {
         });
       } else if (source && source.coord) {
         coord = source.coord;
-        fsmLogger.info('🔍 [getWalkableTilesInRadius] Début de recherche depuis objet:', {
+        console.log('🔍 [getWalkableTilesInRadius] Début de recherche depuis objet:', { 
           centerCoord: coord,
           sourceType: 'object',
           exploringRadius,
@@ -105,26 +105,26 @@ const createTileFilterSlice = (set, get) => {
           excludeDanger
         });
       } else {
-        fsmLogger.warning('⚠️ [getWalkableTilesInRadius] Source invalide:', source);
+        console.log('⚠️ [getWalkableTilesInRadius] Source invalide:', source); 
         return [];
       }
       
       if (!coord) {
-        fsmLogger.warning('⚠️ [getWalkableTilesInRadius] Coordonnée manquante');
+        console.log('⚠️ [getWalkableTilesInRadius] Coordonnée manquante');
         return [];
       }
       
       // 📋 ÉTAPE 2: Récupération de la base de données des tuiles walkable
       // Utilisation du filtre optimisé getWalkableTiles() comme source
       const walkableTiles = get().getWalkableTiles();
-      fsmLogger.info('📋 [getWalkableTilesInRadius] Tuiles walkables totales:', walkableTiles.length);
+      console.log('📋 [getWalkableTilesInRadius] Tuiles walkables totales:', walkableTiles.length);
       
       // 🧪 ÉTAPE 3: Test de cohérence des distances (debug pour les 3 premières tuiles)
-      fsmLogger.info('🧪 [getWalkableTilesInRadius] Test de cohérence des distances:');
+      console.log('🧪 [getWalkableTilesInRadius] Test de cohérence des distances:');
       walkableTiles.slice(0, 3).forEach((tile, index) => {
         const euclideanDistance = get().calculateDistance(coord, tile.coord, false, false);
         const pathfindingDistance = get().calculateDistance(coord, tile.coord, true, false);
-        fsmLogger.info(`   Tuile ${index + 1}: ${coord} → ${tile.coord}`, {
+        console.log(`   Tuile ${index + 1}: ${coord} → ${tile.coord}`, {
           euclidean: euclideanDistance.toFixed(3),
           pathfinding: pathfindingDistance,
           difference: Math.abs(euclideanDistance - pathfindingDistance).toFixed(3),
@@ -148,7 +148,7 @@ const createTileFilterSlice = (set, get) => {
         
         // Exemple de log détaillé pour une tuile spécifique (debug)
         if (tilesProcessed === 1) {
-          fsmLogger.info('🧮 [getWalkableTilesInRadius] Distance calculée:', {
+          console.log('🧮 [getWalkableTilesInRadius] Distance calculée:', {
             from: coord,
             to: tile.coord,
             centerGridCoord: coord,
@@ -191,7 +191,7 @@ const createTileFilterSlice = (set, get) => {
       });
       
       // 📈 ÉTAPE 5: Bilan et statistiques de filtrage
-      fsmLogger.info('📈 [getWalkableTilesInRadius] Bilan de filtrage:', {
+      console.log('📈 [getWalkableTilesInRadius] Bilan de filtrage:', {
         tilesProcessed,
         tilesInRadiusCount,
         tilesFilteredByDanger,
@@ -204,9 +204,9 @@ const createTileFilterSlice = (set, get) => {
       // ⚠️ Vérification spéciale pour rayon drone (constante)
       if (exploringRadius <= DRONE_EXPLORATION_CONFIG.MAX_EXPLORATION_RADIUS) {
         if (tilesInRadius.length === 0) {
-          fsmLogger.info(`🚫 [getWalkableTilesInRadius] Aucune tuile valide trouvée dans le rayon ${exploringRadius}`);
+          console.log(`🚫 [getWalkableTilesInRadius] Aucune tuile valide trouvée dans le rayon ${exploringRadius}`);
         } else {
-          fsmLogger.info(`✅ [getWalkableTilesInRadius] ${tilesInRadius.length} tuiles trouvées dans le rayon drone ${exploringRadius}`);
+          console.log(`✅ [getWalkableTilesInRadius] ${tilesInRadius.length} tuiles trouvées dans le rayon drone ${exploringRadius}`);
         }
       }
       
@@ -216,7 +216,7 @@ const createTileFilterSlice = (set, get) => {
       
       // 📊 Log final des premiers résultats pour debug
       if (sortedResults.length > 0) {
-        fsmLogger.info('📊 [getWalkableTilesInRadius] Premiers résultats triés:', 
+        console.log('📊 [getWalkableTilesInRadius] Premiers résultats triés:', 
           sortedResults.slice(0, 3).map(t => ({
             coord: t.coord,
             distance: t.distance.toFixed(3),

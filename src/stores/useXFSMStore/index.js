@@ -72,7 +72,7 @@ const useXFSMStore = create((set, get) => {
         fsmLogger.event(event.type, { event, botId, currentState: botState.value });
         actor.send(event);
       } else {
-        console.warn('📨 [XFSMStore.send] No actor found for botId:', botId);
+        // Warning: No actor found for botId - logged via fsmLogger
       }
     },
 

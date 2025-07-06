@@ -28,11 +28,9 @@ export const useShipAnimation = (context, shipWorldPosition, updateVisualPositio
   // Envoie la position de départ au tracker FSM dès que la position mondiale est disponible
   useEffect(() => {
     if (shipWorldPosition && updateVisualPosition && !initialPositionSent.current) {
-      console.log('🏠 [Ship] About to transmit initial position to FSM tracker:', shipWorldPosition);
       fsmLogger.mouvement(`🏠 [Ship] Transmitting initial position to FSM tracker:`, shipWorldPosition);
       updateVisualPosition(shipWorldPosition);
       initialPositionSent.current = true; // ✅ Marquer comme envoyé
-      console.log('🏠 [Ship] Initial position transmitted successfully');
     }
   }, [shipWorldPosition, updateVisualPosition]);
 

@@ -32,6 +32,7 @@ import {
   DRONE_CONFIG
 } from '../../config/constants.js';
 import { useTileStore } from '../../../../../stores/useTileStore/index.js';
+import fsmLogger from '../../../../../logger/fsmLogger.js';
 
 // ============================================================================
 // UTILITAIRES INTERNES
@@ -68,9 +69,10 @@ const selectTargetTileInRadiusForDrone = (context, range = 3) => {
   try {
     const tileStore = useTileStore.getState();
     const vehicle = context.vehicle || context.botVehicle;
+    console.log(vehicle)
     
     if (!vehicle || !vehicle.coord) {
-      console.info('[selectTargetTileInRadiusForDrone] Vehicle or vehicle.coord not found in context');
+      fsmLogger.debug('[selectTargetTileInRadiusForDrone] Vehicle or vehicle.coord not found in context');
       return null;
     }
 
@@ -91,13 +93,13 @@ const selectTargetTileInRadiusForDrone = (context, range = 3) => {
     );
     
     if (validTargets.length === 0) {
-      console.info(`[selectTargetTileInRadiusForDrone] No valid tiles found within radius ${maxRadius}, exploration complete in this area`);
+      fsmLogger.debug(`[selectTargetTileInRadiusForDrone] No valid tiles found within radius ${maxRadius}, exploration complete in this area`);
       return null; // Pas de fallback - retourner null pour déclencher le retour en évaluation
     }
 
     const targetTile = validTargets[0];
     
-    console.info(`[selectTargetTileInRadiusForDrone] Target selected within radius ${maxRadius}:`, {
+    fsmLogger.debug(`[selectTargetTileInRadiusForDrone] Target selected within radius ${maxRadius}:`, {
       coord: targetTile.coord,
       distance: targetTile.distance,
       position: targetTile.position
@@ -110,7 +112,7 @@ const selectTargetTileInRadiusForDrone = (context, range = 3) => {
     };
     
   } catch (error) {
-    console.error('[selectTargetTileInRadiusForDrone] Error selecting target tile:', error);
+    fsmLogger.debug('[selectTargetTileInRadiusForDrone] Error selecting target tile:', error);
     return null; // En cas d'erreur, retourner null au lieu d'un fallback
   }
 };
@@ -218,7 +220,7 @@ export const droneDeployForExploration = (context, event) => {
 
     // Si aucune cible valide dans le rayon autorisé, déclencher un retour en évaluation
     if (!targetPosition) {
-      console.info(`[droneDeployForExploration] No valid exploration targets within radius ${range}, area exploration complete`);
+      fsmLogger.debug(`[droneDeployForExploration] No valid exploration targets within radius ${range}, area exploration complete`);
       return {
         ...context,
         explorationComplete: true, // Flag pour indiquer que l'exploration locale est terminée

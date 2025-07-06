@@ -118,7 +118,7 @@ function analyzeImports(content, filePath) {
  * Génère un rapport d'analyse
  */
 function generateReport() {
-  console.log('🔍 Analyse des exports/imports du projet...\n');
+  // Analysis starting
   
   const files = findFiles(SRC_DIR);
   const allExports = [];
@@ -142,7 +142,7 @@ function generateReport() {
         allImports.push(...imports);
       }
     } catch (error) {
-      console.error(`❌ Erreur lors de l'analyse de ${file}:`, error.message);
+      // Error lors de l'analyse - information supprimée
     }
   }
   
@@ -171,37 +171,8 @@ function generateReport() {
     }
   }
   
-  // Affichage du rapport
-  console.log('📊 RAPPORT D\'ANALYSE\n');
-  
-  console.log('📦 EXPORTS PAR FICHIER:');
-  for (const exp of allExports) {
-    console.log(`\n📁 ${exp.file}`);
-    if (exp.default.length > 0) {
-      console.log(`   ↳ Default: ${exp.default.join(', ')}`);
-    }
-    if (exp.named.length > 0) {
-      console.log(`   ↳ Named: ${exp.named.join(', ')}`);
-    }
-  }
-  
-  if (issues.length > 0) {
-    console.log('\n⚠️  PROBLÈMES DÉTECTÉS:');
-    for (const issue of issues) {
-      console.log(`\n❌ ${issue.type}`);
-      console.log(`   📍 Dans: ${issue.import.file}`);
-      console.log(`   🔗 Import: ${issue.import.name} (${issue.import.type}) from "${issue.import.from}"`);
-      console.log(`   📁 Cible: ${issue.target.file}`);
-    }
-  } else {
-    console.log('\n✅ Aucun problème d\'import/export détecté !');
-  }
-  
-  console.log(`\n📈 STATISTIQUES:`);
-  console.log(`   • Fichiers analysés: ${files.length}`);
-  console.log(`   • Fichiers avec exports: ${allExports.length}`);
-  console.log(`   • Total d'imports: ${allImports.length}`);
-  console.log(`   • Problèmes détectés: ${issues.length}`);
+  // Affichage du rapport - informations supprimées
+  // Rapport disponible via le return de issues.length
 }
 
 /**

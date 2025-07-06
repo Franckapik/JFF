@@ -48,6 +48,10 @@ const LOG_LEVEL = {
     prefix: '💎 RESOURCES',
     style: 'color: #FFD700; font-weight: bold'
   },
+  DEBUG: {
+    prefix: '🐛 DEBUG',
+    style: 'color: #795548; font-weight: bold'
+  },
   ERROR: {
     prefix: '🔴 ERROR',
     style: 'color: #F44336; font-weight: bold'
@@ -77,6 +81,7 @@ const deduplicationSystem = {
       'INFO': 1000,       // Messages d'info génériques
       'CONTEXT': 2000,    // Messages de contexte moins fréquents
       'HISTORY': 100,     // Historique très fréquent
+      'DEBUG': 0,         // Debug jamais filtré
       'ERROR': 0          // Erreurs jamais filtrées
     }
   },
@@ -183,7 +188,7 @@ let config = {
   enableConsole: true, // Activé pour voir les logs dans la console
   minLevel: 0, // Niveau minimum pour afficher un log
   enableBuffering: true, // Activer/désactiver le stockage des logs dans le buffer
-  visibleTypes: null, // Filtrer les types visibles dans la console (null = tous, ou array de types)
+  visibleTypes: ['DEBUG'], // Activer seulement les logs DEBUG
   enableDeduplication: true, // 🆕 Activer la déduplication
 };
 
@@ -371,6 +376,12 @@ const fsmLogger = {
     const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
     return log('HISTORY', message, data, playerId);
   },
+  debug: (...args) => {
+    const message = args[0] || '';
+    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
+    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
+    return log('DEBUG', message, data, playerId);
+  },
   
   /**
    * Enregistre une transition d'état
@@ -523,9 +534,8 @@ const fsmLogger = {
   }
 };
 
-// Configurer pour n'afficher que les événements spécialisés et erreurs
-/* fsmLogger.configure({
-  visibleTypes: ['INFO', 'ERROR', 'EVENT', 'CONTEXT']
-}); */
+// Configuration par défaut : n'afficher que les logs DEBUG
+// Pour réactiver tous les logs : fsmLogger.configure({ visibleTypes: null });
+// Pour changer les types : fsmLogger.configure({ visibleTypes: ['INFO', 'ERROR', 'DEBUG'] });
 
 export default fsmLogger;
