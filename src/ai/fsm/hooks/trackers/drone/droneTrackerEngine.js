@@ -25,15 +25,14 @@
  * ==========================================================================
  */
 
-import {
-  createInitializationHandler,
-  createDeployingHandler,
-  createScanningHandler,
-  createReturningHandler
-} from './handlers';
-import { useTileStore } from '../../../../../stores/useTileStore';
 import fsmLogger from '../../../../../logger/fsmLogger';
-import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants';
+import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
+import {
+    createDeployingHandler,
+    createInitializationHandler,
+    createReturningHandler,
+    createScanningHandler
+} from './handlers';
 
 // Maps pour stocker les données de traçage
 const lastReportedPositions = new Map(); // Dernière position signalée par drone

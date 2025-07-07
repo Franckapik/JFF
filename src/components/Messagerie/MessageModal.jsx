@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import ReactDOM from "react-dom";
-import { useTileStore } from "../../stores/useTileStore"; // Import Zustand store
+import { useTileStore } from "../../stores/useTileStore/index.ts"; // Import Zustand store
 import "../../styles/App.css"; // Import CSS for modal styling
 
 const MessageModal = ({ messages, onClose }) => {

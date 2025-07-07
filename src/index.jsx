@@ -1,6 +1,5 @@
-import React from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";
+import App from "./App.tsx";
 import "./styles/App.css";
 
 // Les versions App et SimpleApp ont été fusionnées en une seule version

@@ -5,8 +5,8 @@
  */
 
 import fsmLogger from '../../../../../../logger/fsmLogger';
+import { useTileStore } from '../../../../../../stores/useTileStore/index.ts';
 import { POSITION_TRACKER_CONFIG } from '../../../../machineX/config/constants';
-import { useTileStore } from '../../../../../../stores/useTileStore';
 
 /**
  * Création d'un handler pour les mises à jour de position du vaisseau

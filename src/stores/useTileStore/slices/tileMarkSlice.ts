@@ -1,6 +1,6 @@
 /**
  * =========================================================================
- * TILE MARK SLICE
+ * TILE MARK SLICE (TypeScript)
  * =========================================================================
  * 
  * Ce slice gère le marquage et le suivi de l'état d'exploration des tuiles :
@@ -20,13 +20,27 @@
  * - Calculs de territoire et de contrôle
  */
 
+import type {
+    GridCoordinate
+} from '../../../types/index.js';
+
+import { isTileCompletelyCollected } from './tileResourceSlice.js';
+
+// =========================================================================
+// TYPES LOCAUX
+// =========================================================================
+
+/** Actions du slice de marquage */
+interface TileMarkSliceActions {
+  markTileAsExplored: (coord: GridCoordinate, explorer?: string) => void;
+  markTileAsCollected: (coord: GridCoordinate, collector?: string) => boolean;
+}
+
 // =========================================================================
 // SLICE PRINCIPAL
 // =========================================================================
 
-import { isTileCompletelyCollected } from './tileResourceSlice.js';
-
-const createTileMarkSlice = (set, get) => {
+const createTileMarkSlice = (set: any, get: any): TileMarkSliceActions => {
   return {
 
     // =====================================================================
@@ -39,34 +53,38 @@ const createTileMarkSlice = (set, get) => {
      * Cette fonction :
      * 1. Vérifie que la tuile existe dans l'état global
      * 2. Met à jour la propriété 'explored' à true
-     * 3. Préserve toutes les autres propriétés de la tuile
+     * 3. Ajoute les métadonnées d'exploration (timestamp, explorateur)
+     * 4. Préserve toutes les autres propriétés de la tuile
      * 
      * Utilisé principalement par :
      * - Les systèmes de mouvement des véhicules
      * - La logique d'exploration automatique des bots
      * - Les mécaniques de découverte de territoire
      * 
-     * @param {string} coord - Coordonnée de la tuile à marquer comme explorée (format "x,y")
+     * @param coord - Coordonnée de la tuile à marquer comme explorée (format "x,y")
+     * @param explorer - ID de l'entité qui explore (optionnel)
      */
-    markTileAsExplored: (coord) => {
+    markTileAsExplored: (coord: GridCoordinate, explorer?: string): void => {
       const currentTile = get().tiles[coord];
       
       if (!currentTile) {
         return;
       }
       
-      set((state) => ({
+      set((state: any) => ({
         tiles: {
           ...state.tiles,
           [coord]: {
             ...state.tiles[coord],
             explored: true,
+            exploredAt: Date.now(),
+            exploredBy: explorer,
           },
         },
       }));
     },
 
-        /**
+    /**
      * Marque une tuile comme ayant eu ses ressources collectées
      * 
      * Cette fonction :
@@ -74,30 +92,36 @@ const createTileMarkSlice = (set, get) => {
      * 2. Marque la tuile comme collectée
      * 3. Met le pourcentage de ressources à 0%
      * 4. Vide toutes les ressources de la tuile
+     * 5. Ajoute les métadonnées de collecte
      * 
-     * @param {string} coord - Coordonnée de la tuile à marquer
-     * @returns {boolean} - true si la tuile a été marquée, false si déjà collectée
+     * @param coord - Coordonnée de la tuile à marquer
+     * @param collector - ID de l'entité qui collecte (optionnel)
+     * @returns true si la tuile a été marquée, false si déjà collectée
      */
-    markTileAsCollected: (coord) => {
+    markTileAsCollected: (coord: GridCoordinate, collector?: string): boolean => {
       const tile = get().tiles[coord];
       if (!tile) return false;
       
       // Si la tuile est déjà complètement collectée, ne rien faire
       if (isTileCompletelyCollected(tile)) return false;
       
-      set((state) => {
+      set((state: any) => {
         const updatedTiles = { ...state.tiles };
         updatedTiles[coord] = { 
           ...updatedTiles[coord], 
+          collected: true,
+          collectedAt: Date.now(),
+          collectedBy: collector,
           resourcePercentage: 0, // Mettre à 0% car la tuile est complètement collectée
-          resources: { food: 0, debris: 0, special: 0 }
+          hasResources: false,
+          resources: { food: 0, debris: 0, special: 0, total: 0 }
         };
         return { tiles: updatedTiles };
       });
       
       return true;
     },
-  };
+  } as TileMarkSliceActions;
 };
 
 export default createTileMarkSlice;

@@ -1,0 +1,289 @@
+/**
+ * =========================================================================
+ * TILE PATH SLICE - Gestion des chemins et calculs de distance (TypeScript)
+ * =========================================================================
+ * 
+ * Ce slice unifie toutes les fonctionnalités liées aux chemins et distances :
+ * - Algorithmes de pathfinding (BFS)
+ * - Calculs de distance (euclidienne et pathfinding)
+ * - Recherche de tuiles par position
+ * - Analyses spatiales et géométriques
+ * 
+ * Fonctionnalités consolidées depuis :
+ * - tileCalculationSlice : calculateDistance
+ * - tileGenerationSlice : findPath, calculatePathDistance, findTileAtPosition, calculatePath
+ * 
+ * Types de calculs disponibles :
+ * - Distance euclidienne : distance en ligne droite entre deux points
+ * - Distance pathfinding : nombre de tuiles dans le chemin le plus court
+ * - Recherche de chemins optimaux avec BFS
+ * - Analyses de proximité et voisinage
+ */
+
+import type {
+    GridCoordinate,
+    Tile,
+    TileCoordinate,
+    TileMap,
+    WorldPosition
+} from '../../../types/index.js';
+
+
+// =========================================================================
+// CONSTANTES DE PATHFINDING
+// =========================================================================
+
+/**
+ * Seuils et précisions pour les calculs de pathfinding
+ */
+const pathConstants = {
+  // Seuils de distance et précision
+  thresholds: {
+    positionMatch: 0.3,    // Seuil pour considérer qu'une position correspond à une tuile
+    movementReach: 0.15,   // Seuil pour considérer qu'un véhicule a atteint sa cible
+    floatingPrecision: 0.1 // Précision pour les calculs de position flottante
+  }
+};
+
+// =========================================================================
+// TYPES LOCAUX
+// =========================================================================
+
+/** Résultat d'un calcul de chemin */
+interface PathResult {
+  path: GridCoordinate[];
+  totalDistance: number;
+  isReachable: boolean;
+}
+
+/** Actions du slice de pathfinding */
+interface TilePathSliceActions {
+  findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap) => GridCoordinate[];
+  calculateDistance: (
+    from: GridCoordinate | TileCoordinate | WorldPosition, 
+    to: GridCoordinate | TileCoordinate | WorldPosition, 
+    usePathfinding?: boolean, 
+    detailed?: boolean
+  ) => number;
+  calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap) => number;
+  findTileAtPosition: (position: WorldPosition, tiles?: TileMap) => Tile | null;
+  calculatePath: (
+    currentPosition: WorldPosition, 
+    targetCoord: GridCoordinate, 
+    tiles?: TileMap, 
+    fallbackCoord?: GridCoordinate
+  ) => PathResult;
+  isReachable: (from: GridCoordinate, to: GridCoordinate, tiles?: TileMap) => boolean;
+}
+
+// =========================================================================
+// SLICE FACTORY - TILE PATH UTILITIES
+// =========================================================================
+
+const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
+  
+  // =========================================================================
+  // PATHFINDING FUNCTIONS - Algorithmes de recherche de chemin
+  // =========================================================================
+
+  /**
+   * Find a path between two hex coordinates using breadth-first search
+   * Utilise les fonctions du coordinateSlice pour la validation des coordonnées
+   * @param startCoord - Starting coordinate (e.g., "A1")
+   * @param targetCoord - Target coordinate (e.g., "B2")
+   * @param tiles - Map of all tiles (optionnel, utilise get().tiles par défaut)
+   * @returns Array of coordinates representing the path
+   */
+  findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap): GridCoordinate[] => {
+    const tilesMap = tiles || get().tiles;
+    
+    if (!startCoord || !targetCoord || startCoord === targetCoord) {
+      return startCoord === targetCoord ? [startCoord] : [];
+    }
+    
+    const queue: GridCoordinate[][] = [[startCoord]];
+    const visited = new Set<GridCoordinate>();
+
+    while (queue.length > 0) {
+      const path = queue.shift()!;
+      const currentCoord = path[path.length - 1];
+
+      if (currentCoord === targetCoord) {
+        return path;
+      }
+
+      if (visited.has(currentCoord)) {
+        continue;
+      }
+
+      visited.add(currentCoord);
+      const currentTile = tilesMap[currentCoord];
+
+      if (currentTile && (currentTile as any).neighbors) {
+        for (const neighborCoord of (currentTile as any).neighbors) {
+          const neighborTile = tilesMap[neighborCoord];
+          
+          if (neighborTile && neighborTile.walkable && !visited.has(neighborCoord)) {
+            queue.push([...path, neighborCoord]);
+          }
+        }
+      }
+    }
+
+    return []; // Aucun chemin trouvé
+  },
+
+  /**
+   * Calcule la distance entre deux positions ou coordonnées
+   * Supporte plusieurs formats d'entrée et types de calcul
+   * 
+   * @param from - Position/coordonnée de départ
+   * @param to - Position/coordonnée d'arrivée
+   * @param usePathfinding - Si true, utilise le pathfinding, sinon distance euclidienne
+   * @param detailed - Si true, retourne des informations détaillées
+   * @returns Distance calculée
+   */
+  calculateDistance: (
+    from: GridCoordinate | TileCoordinate | WorldPosition, 
+    to: GridCoordinate | TileCoordinate | WorldPosition, 
+    usePathfinding: boolean = false, 
+    detailed: boolean = false
+  ): number => {
+    const tiles = get().tiles;
+    
+    // Conversion des entrées vers GridCoordinate
+    const fromCoord = typeof from === 'string' 
+      ? from 
+      : typeof from === 'object' && 'x' in from && 'z' in from 
+        ? `${from.x},${from.z}` 
+        : null;
+        
+    const toCoord = typeof to === 'string' 
+      ? to 
+      : typeof to === 'object' && 'x' in to && 'z' in to 
+        ? `${to.x},${to.z}` 
+        : null;
+    
+    if (!fromCoord || !toCoord) {
+      return Infinity;
+    }
+    
+    if (usePathfinding) {
+      // Calcul via pathfinding
+      const path = get().findPath(fromCoord, toCoord, tiles);
+      return path.length > 0 ? path.length - 1 : Infinity;
+    } else {
+      // Calcul euclidien
+      const [fromX, fromZ] = fromCoord.split(',').map(Number);
+      const [toX, toZ] = toCoord.split(',').map(Number);
+      
+      return Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toZ - fromZ, 2));
+    }
+  },
+
+  /**
+   * Calculate the total distance of a path
+   * @param path - Array of coordinates representing the path
+   * @param tiles - Map of all tiles (optionnel)
+   * @returns Total distance of the path
+   */
+  calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap): number => {
+    if (!path || path.length < 2) return 0;
+    
+    const tilesMap = tiles || get().tiles;
+    
+    let totalDistance = 0;
+    for (let i = 0; i < path.length - 1; i++) {
+      const tileA = tilesMap[path[i]];
+      const tileB = tilesMap[path[i + 1]];
+      if (tileA && tileB) {
+        const distance = Math.sqrt(
+          Math.pow(tileB.position.x - tileA.position.x, 2) + 
+          Math.pow(tileB.position.z - tileA.position.z, 2)
+        );
+        totalDistance += distance;
+      }
+    }
+    
+    return totalDistance;
+  },
+
+  /**
+   * Find the current tile based on a 3D position
+   * @param position - Position {x, y, z} to check
+   * @param tiles - Map of all tiles (optionnel)
+   * @returns The tile at this position or null if not found
+   */
+  findTileAtPosition: (position: WorldPosition, tiles?: TileMap): Tile | null => {
+    const tilesMap = tiles || get().tiles;
+    
+    if (!position || typeof position.x !== 'number' || typeof position.z !== 'number') {
+      return null;
+    }
+    
+    // Recherche de la tuile la plus proche dans le seuil
+    const foundTile = Object.values(tilesMap).find((tile: any) => {
+      if (!tile || !tile.position) return false;
+      
+      const distance = Math.sqrt(
+        Math.pow(tile.position.x - position.x, 2) + 
+        Math.pow(tile.position.z - position.z, 2)
+      );
+      
+      return distance < pathConstants.thresholds.positionMatch;
+    });
+    
+    return foundTile as Tile || null;
+  },
+
+  /**
+   * Calculate path from current position to target
+   * @param currentPosition - Current position {x, y, z}
+   * @param targetCoord - Target coordinate
+   * @param tiles - Map of all tiles (optionnel)
+   * @param fallbackCoord - Fallback coordinate if current position doesn't match a tile
+   * @returns Path data {path, totalDistance, isReachable}
+   */
+  calculatePath: (
+    currentPosition: WorldPosition, 
+    targetCoord: GridCoordinate, 
+    tiles?: TileMap, 
+    fallbackCoord?: GridCoordinate
+  ): PathResult => {
+    const tilesMap = tiles || get().tiles;
+    
+    // Find the tile at current position
+    const currentTile = get().findTileAtPosition(currentPosition, tilesMap);
+    
+    let path: GridCoordinate[] = [];
+    if (currentTile) {
+      path = get().findPath(currentTile.coord, targetCoord, tilesMap);
+    } else if (fallbackCoord) {
+      // Use fallback coordinate if we can't find a tile at current position
+      path = get().findPath(fallbackCoord, targetCoord, tilesMap);
+    }
+    
+    const totalDistance = get().calculatePathDistance(path, tilesMap);
+    const isReachable = path.length > 0;
+    
+    return {
+      path,
+      totalDistance,
+      isReachable
+    };
+  },
+
+  /**
+   * Vérifie si une destination est atteignable depuis une position
+   * @param from - Coordonnée de départ
+   * @param to - Coordonnée d'arrivée
+   * @param tiles - Map des tuiles (optionnel)
+   * @returns true si la destination est atteignable
+   */
+  isReachable: (from: GridCoordinate, to: GridCoordinate, tiles?: TileMap): boolean => {
+    const path = get().findPath(from, to, tiles);
+    return path.length > 0;
+  }
+});
+
+export default createTilePathSlice;

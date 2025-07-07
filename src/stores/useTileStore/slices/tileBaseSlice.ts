@@ -1,6 +1,6 @@
 /**
  * =========================================================================
- * TILE BASE SLICE
+ * TILE BASE SLICE (TypeScript)
  * =========================================================================
  * 
  * Ce slice gère la logique de base des tuiles dans le jeu :
@@ -19,16 +19,41 @@
  * - hoveredTile : tuile actuellement survolée
  */
 
+import type {
+  GridCoordinate,
+  Tile,
+  TileMap
+} from '../../../types/index.js';
+
 // =========================================================================
-// IMPORTS
+// TYPES LOCAUX
 // =========================================================================
-// Import removed - generateHexPositions is now accessed via get() from the same store
+
+/** Actions du slice de base */
+interface TileBaseSliceState {
+  tiles: TileMap;
+  radius: number;
+  spacing: number;
+  hoveredTile: GridCoordinate | null;
+}
+
+interface TileBaseSliceActions {
+  updateHoveredTile: (coord: GridCoordinate | null) => void;
+  setTiles: (tiles: TileMap) => void;
+  getTile: (coord: GridCoordinate) => Tile | undefined;
+  getNeighbors: (coord: GridCoordinate) => Tile[];
+  updateTile: (coord: GridCoordinate, updates: Partial<Tile>) => void;
+  updateTileState: (coord: GridCoordinate, updates: Partial<Tile>) => void;
+  clearTiles: () => void;
+}
+
+type TileBaseSlice = TileBaseSliceState & TileBaseSliceActions;
 
 // =========================================================================
 // SLICE PRINCIPAL
 // =========================================================================
 
-const createTileBaseSlice = (set, get) => {
+const createTileBaseSlice = (set: any, get: any): TileBaseSlice => {
   return {
     
     // =====================================================================
@@ -63,9 +88,9 @@ const createTileBaseSlice = (set, get) => {
      * Met à jour la tuile actuellement survolée
      * Utilisé pour les interactions UI et les effets visuels
      * 
-     * @param {string} coord - Coordonnée de la tuile survolée
+     * @param coord - Coordonnée de la tuile survolée
      */
-    updateHoveredTile: (coord) => {
+    updateHoveredTile: (coord: GridCoordinate | null): void => {
       set({ hoveredTile: coord });
     },
 
@@ -77,39 +102,41 @@ const createTileBaseSlice = (set, get) => {
      * Définit toutes les tuiles du jeu
      * Remplace complètement l'état existant des tuiles
      * 
-     * @param {Object} tiles - Objet contenant toutes les tuiles indexées par coordonnées
+     * @param tiles - Objet contenant toutes les tuiles indexées par coordonnées
      */
-    setTiles: (tiles) => set({ tiles }),
+    setTiles: (tiles: TileMap): void => set({ tiles }),
 
     /**
      * Récupère une tuile par ses coordonnées
      * 
-     * @param {string} coord - Coordonnée de la tuile au format "x,y"
-     * @returns {Object|undefined} - La tuile correspondante ou undefined si non trouvée
+     * @param coord - Coordonnée de la tuile au format "x,y"
+     * @returns La tuile correspondante ou undefined si non trouvée
      */
-    getTile: (coord) => get().tiles[coord],
+    getTile: (coord: GridCoordinate): Tile | undefined => get().tiles[coord],
 
     /**
      * Récupère les tuiles voisines d'une tuile donnée
      * Utilise la liste des voisins pré-calculée de la tuile
      * 
-     * @param {string} coord - Coordonnée de la tuile centrale
-     * @returns {Array} - Liste des tuiles voisines (objets complets)
+     * @param coord - Coordonnée de la tuile centrale
+     * @returns Liste des tuiles voisines (objets complets)
      */
-    getNeighbors: (coord) => {
+    getNeighbors: (coord: GridCoordinate): Tile[] => {
       const tile = get().tiles[coord];
-      return tile ? tile.neighbors.map((neighbor) => get().tiles[neighbor]) : [];
+      return tile && (tile as any).neighbors 
+        ? (tile as any).neighbors.map((neighbor: GridCoordinate) => get().tiles[neighbor]).filter(Boolean)
+        : [];
     },
 
     /**
      * Met à jour une tuile avec de nouvelles propriétés
      * Effectue une fusion des propriétés existantes avec les nouvelles
      * 
-     * @param {string} coord - Coordonnée de la tuile à mettre à jour
-     * @param {Object} updates - Propriétés à mettre à jour ou ajouter
+     * @param coord - Coordonnée de la tuile à mettre à jour
+     * @param updates - Propriétés à mettre à jour ou ajouter
      */
-       updateTile: (coord, updates) => {
-      set((state) => {
+    updateTile: (coord: GridCoordinate, updates: Partial<Tile>): void => {
+      set((state: any) => {
         const updatedTiles = { ...state.tiles };
         if (updatedTiles[coord]) {
           updatedTiles[coord] = { ...updatedTiles[coord], ...updates };
@@ -122,21 +149,19 @@ const createTileBaseSlice = (set, get) => {
      * Met à jour l'état d'une tuile pour les collectes
      * Méthode spécialisée pour gérer les timestamps et statistiques de collecte
      * 
-     * @param {string} coord - Coordonnée de la tuile
-     * @param {Object} updates - Mises à jour spécifiques aux collectes
+     * @param coord - Coordonnée de la tuile
+     * @param updates - Mises à jour spécifiques aux collectes
      */
-    updateTileState: (coord, updates) => {
-      set((state) => {
+    updateTileState: (coord: GridCoordinate, updates: Partial<Tile>): void => {
+      set((state: any) => {
         const updatedTiles = { ...state.tiles };
         if (updatedTiles[coord]) {
+          const currentTile = updatedTiles[coord];
           updatedTiles[coord] = { 
-            ...updatedTiles[coord], 
+            ...currentTile, 
             ...updates,
             // Assurer que les timestamps sont correctement gérés
-            lastCollectedTimestamp: updates.lastCollectedTimestamp || updatedTiles[coord].lastCollectedTimestamp,
-            totalResourcesCollected: updates.totalResourcesCollected !== undefined 
-              ? updates.totalResourcesCollected 
-              : (updatedTiles[coord].totalResourcesCollected || 0)
+            lastUpdate: updates.lastUpdate || Date.now()
           };
         }
         return { tiles: updatedTiles };
@@ -147,35 +172,9 @@ const createTileBaseSlice = (set, get) => {
      * Efface toutes les tuiles du jeu
      * Remet l'état des tuiles à un objet vide
      */
-    clearTiles: () => set({ tiles: {} }),
+    clearTiles: (): void => set({ tiles: {} }),
 
-    // =====================================================================
-    // ACTIONS PUBLIQUES - INITIALISATION
-    // =====================================================================
-
-    /**
-     * Initialise les tuiles en générant une grille hexagonale
-     * 
-     * Cette fonction :
-     * 1. Génère les positions hexagonales selon le rayon et l'espacement
-     * 2. Initialise chaque tuile avec ses propriétés de base
-     * 3. Configure les ressources originales et les pourcentages
-     * 4. Met à jour l'état global des tuiles
-     * 
-     * @param {number} radius - Rayon de génération des tuiles (défaut: 3)
-     * @param {number} spacing - Espacement entre les tuiles (défaut: 0.1)
-     * @param {number} initialPlayerCount - Nombre initial de joueurs (défaut: 1)
-     */
-    initializeTiles: (radius = 3, spacing = 0.1, initialPlayerCount = 1) => {
-      const { initializeGameGrid } = get();
-      const hexPositions = initializeGameGrid(radius, spacing, initialPlayerCount);
-      const tiles = hexPositions.reduce((acc, tile) => {
-        return { ...acc, [tile.coord]: tile };
-      }, {});
-      
-      set({ tiles });
-    },
-  };
+  } as TileBaseSlice;
 };
 
 export default createTileBaseSlice;

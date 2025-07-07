@@ -29,7 +29,7 @@ const createInitializationFlagsSlice = (set, get) => ({
    * Marque les joueurs comme initialisés
    */
   markPlayersAsInitialized: () => {
-    fsmLogger.game('Players initialized', { component: 'players' });
+    fsmLogger.game('Players initialized');
     set({ playersInitialized: true });
   },
   
@@ -37,7 +37,7 @@ const createInitializationFlagsSlice = (set, get) => ({
    * Marque les bots comme initialisés
    */
   markBotsAsInitialized: () => {
-    fsmLogger.game('Bots initialized', { component: 'bots' });
+    fsmLogger.game('Bots initialized');
     set({ botsInitialized: true });
   },
   
@@ -45,7 +45,7 @@ const createInitializationFlagsSlice = (set, get) => ({
    * Marque les tuiles comme initialisées
    */
   markTilesAsInitialized: () => {
-    fsmLogger.game('Tiles initialized', { component: 'tiles' });
+    fsmLogger.game('Tiles initialized');
     set({ tilesInitialized: true });
   },
   

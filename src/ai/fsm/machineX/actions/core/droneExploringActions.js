@@ -26,13 +26,13 @@
  * @version 4.0.0
  */
 
-import { 
-  DRONE_TYPES, 
-  DRONE_VISUAL_STATES, 
-  DRONE_CONFIG
-} from '../../config/constants.js';
-import { useTileStore } from '../../../../../stores/useTileStore/index.js';
 import fsmLogger from '../../../../../logger/fsmLogger.js';
+import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
+import {
+  DRONE_CONFIG,
+  DRONE_TYPES,
+  DRONE_VISUAL_STATES
+} from '../../config/constants.js';
 
 // ============================================================================
 // UTILITAIRES INTERNES
@@ -82,8 +82,10 @@ const selectTargetTileInRadiusForDrone = (context, range = 3) => {
     const walkableTiles = tileStore.getWalkableTilesInRadius(
       vehicle.coord,
       maxRadius,
-      true, // Seulement les tuiles non explorées
-      true  // Exclure les tuiles dangereuses
+      {
+        onlyUnexplored: true,
+        excludeDanger: true
+      }
     );
     
     const validTargets = walkableTiles.filter(tile => 

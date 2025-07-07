@@ -1,10 +1,10 @@
-import React from 'react';
 import { Canvas } from "@react-three/fiber";
-import Scene from "./components/Scene";
+import React from 'react';
 import XStateSimulationPanel from "./components/Debug/XStateSimulationPanel";
+import Scene from "./components/Scene.tsx";
 import "./styles/App.css";
 
-const App = () => {
+const App: React.FC = () => {
   return (
       <div className="app-container">
         {/* Interface principale restaurée */}

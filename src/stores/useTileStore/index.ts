@@ -21,11 +21,11 @@
  * 
  * Utilisation :
  * ```typescript
- * import { useTileStore } from './stores/useTileStore';
+ * import { useTileStore } from './stores/useTileStore/index.ts';
  * 
  * const { 
  *   tiles, 
- *   setTiles, 
+ *   setTiles,
  *   calculateDistance, 
  *   findPath,
  *   markTileAsExplored, 
@@ -42,15 +42,15 @@
 import { create } from 'zustand';
 
 // Import des slices spécialisés
-import createTileBaseSlice from './slices/tileBaseSlice';
-import createTileFilterSlice from './slices/tileFilterSlice';
-import createTileMarkSlice from './slices/tileMarkSlice';
-import createTilePathSlice from './slices/tilePathSlice';
-import createTileResourceSlice from './slices/tileResourceSlice';
+import createTileBaseSlice from './slices/tileBaseSlice.js';
+import createTileFilterSlice from './slices/tileFilterSlice.js';
+import createTileMarkSlice from './slices/tileMarkSlice.js';
+import createTilePathSlice from './slices/tilePathSlice.js';
+import createTileResourceSlice from './slices/tileResourceSlice.js';
 
 // Import des nouveaux slices migrés depuis utils
-import createTileCoordinateSlice from './slices/tileCoordinateSlice';
-import createTileGenerationSlice from './slices/tileGenerationSlice';
+import createTileCoordinateSlice from './slices/tileCoordinateSlice.js';
+import createTileGenerationSlice from './slices/tileGenerationSlice.js';
 
 // =========================================================================
 // STORE PRINCIPAL
@@ -68,7 +68,7 @@ import createTileGenerationSlice from './slices/tileGenerationSlice';
  * 6. Coordinate : système de coordonnées (migré depuis utils/coordinateSystem)
  * 7. Generation : génération hexagonale (migré depuis utils/utils)
  */
-export const useTileStore = create((set, get) => ({
+export const useTileStore = create((set: any, get: any) => ({
   // =========================================================================
   // COMPOSITION DES SLICES
   // =========================================================================

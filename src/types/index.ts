@@ -56,3 +56,14 @@ export type {
 export {
   isValidStateTransition
 } from './fsm';
+
+// ============================================================================
+// TUILES ET SYSTÈME DE GRILLE
+// ============================================================================
+export type {
+  DistanceResult, HexPosition, PathNode, Tile, TileBiome, TileGenerationConfig, TileMap, TileSearchOptions, TileStore, TileStoreActions, TileStoreState, TileType, TileWithDistance
+} from './tile';
+
+export {
+  isTile, isTileBiome, isTileType
+} from './tile';

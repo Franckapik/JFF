@@ -6,33 +6,37 @@
 import React, { useEffect } from "react";
 
 // Three.js imports
-import { GridHelper } from "three";
 import { useThree } from "@react-three/fiber";
 
 // Components
-import Tile from "./Tile";
+import Fleet from "./Fleet";
+import Tile from "./Tile.tsx";
 
 // Stores
-import { useTileStore } from "../stores/useTileStore";
 import useGameStore from "../stores/useGameStore";
-import  useXFSMStore  from "../stores/useXFSMStore";
+import { useTileStore } from "../stores/useTileStore/index";
+import useXFSMStore from "../stores/useXFSMStore";
+
+// Types
+import type { VehicleId } from "../types";
+import "../types/r3f.d.ts"; // Import R3F global type declarations
 
 // Utils
 import fsmLogger from "../logger/fsmLogger";
-import Fleet from "./Fleet";
 
 /* ========================================
  * MAIN COMPONENT
  * ======================================== */
 
-const Scene = () => {
+const Scene: React.FC = () => {
   
   /* ========================================
    * STORES & STATE
    * ======================================== */
   
   // Tile management
-  const initializeTiles = useTileStore((state) => state.initializeTiles);
+  const setTiles = useTileStore((state) => state.setTiles);
+  const initializeGameGrid = useTileStore((state) => state.initializeGameGrid);
   const tiles = useTileStore((state) => state.tiles); // Ajout pour forcer le re-rendu
   const getWalkableTiles = useTileStore((state) => state.getWalkableTiles);
   const getDepartTiles = useTileStore((state) => state.getDepartTiles);
@@ -76,16 +80,19 @@ const Scene = () => {
   useEffect(() => {
     if (!tilesInitialized) {
       fsmLogger.game("[Scene] Initializing tiles...");
-      initializeTiles();
-      markTilesAsInitialized();
+      const tileMap = initializeGameGrid(3, -0.2); //radius, spacing
+      if (tileMap && Object.keys(tileMap).length > 0) {
+        setTiles(tileMap);
+        markTilesAsInitialized();
+      }
     }
-  }, [tilesInitialized, initializeTiles, markTilesAsInitialized]);
+  }, [tilesInitialized, initializeGameGrid, setTiles, markTilesAsInitialized]);
 
 
   // Ajout du bot par défaut après initialisation des tuiles
   useEffect(() => {
-    if (tilesInitialized && !activeBots.includes('bot-0')) {
-      addBot('bot-0');
+    if (tilesInitialized && !activeBots.includes('bot-0' as VehicleId)) {
+      addBot('bot-0' as VehicleId);
     }
   }, [tilesInitialized, addBot, activeBots]);
 
@@ -107,38 +114,17 @@ const Scene = () => {
 
   return (
     <>
-      {/* ========================================
-       * SCENE SETUP
-       * ======================================== */}
-      
-      {/* Grid and lighting */}
-      <primitive object={new GridHelper(10, 10)} visible={true} />
+      {/* Scene setup - Grid and lighting */}
+      {/* @ts-ignore */}
+      <gridHelper args={[10, 10]} />
+      {/* @ts-ignore */}
       <ambientLight intensity={1} />
+      {/* @ts-ignore */}
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
+      {/* @ts-ignore */}
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
       
-      {/* ========================================
-       * PLAYERS & BOTS
-       * ======================================== */}
-      
-      {/* Human player (rendered as Bot component) */}
-      {/* Temporairement désactivé - Fleet component */}
-      {/* {Object.keys(tiles).length > 0 && (
-        <Fleet 
-          isHuman={true}
-          color="blue"
-        />
-      )} */}
-      
-
-      {/* Note: Les FSM State indicators sont maintenant automatiquement intégrés
-       * dans les tuiles de départ (Tile component avec isDepart=true)
-       */}
-
-      {/* ========================================
-       * WALKABLE TILES
-       * ======================================== */}
-      
+      {/* Walkable tiles */}
       {getWalkableTiles().map((tile) => (
         <Tile
           key={tile.coord}
@@ -149,79 +135,87 @@ const Scene = () => {
         />
       ))}
 
-      {/* ========================================
-       * PLAYER BASES (DEPART TILES) WITH FLEETS
-       * ======================================== */}
+      {/* Player bases (departure tiles) with fleets */}
       {getDepartTiles()
         .filter(tile => {
-          const hasPlayer = tile.playerId && activeBots.includes(tile.playerId);
+          const tileWithPlayer = tile as any;
+          const hasPlayer = tileWithPlayer.assignedToBot && activeBots.includes(tileWithPlayer.assignedToBot);
           return hasPlayer;
         })
         .map((tile) => {
-          const baseColor = getPlayerBaseColor(tile.playerIndex);
+          const tileWithPlayer = tile as any;
+          const botId = tileWithPlayer.assignedToBot;
+          const playerIndex = activeBots.indexOf(botId);
+          const baseColor = getPlayerBaseColor(playerIndex);
           const backgroundColor = getBackgroundColor(baseColor);
-          const labelText = tile.playerId;
+          const labelText = botId;
           
           return (
-            <group key={`depart-group-${tile.coord}`}>
-              {/* Render the departure tile */}
-              <Tile
-                key={`depart-tile-${tile.coord}`}
-                position={[tile.position.x, 0, tile.position.z]}
-                radius={1}
-                color={tile.color || "#888888"} // couleur de base si non définie
-                coord={tile.coord}
-                isDepart={true}
-                baseColor={baseColor}
-                backgroundColor={backgroundColor}
-                labelText={labelText}
-                playerIndex={tile.playerIndex}
-                showFSMIndicator={true} // Afficher l'indicateur FSM dans la tuile
-              />
-              
-              {/* Render the fleet at the same position with slight Y offset */}
-              <group position={[tile.position.x, 0.5, tile.position.z]}>
-                <Fleet
-                  botId={tile.playerId}
-                  botIndex={tile.playerIndex}
-                  color={getBotColor(tile.playerIndex)}
-                  shipPosition={{
-                    x: tile.position.x,
-                    y: 0.5,
-                    z: tile.position.z
-                  }}
-                  tileCoord={tile.coord}
+            <>
+              {/* @ts-ignore */}
+              <group key={`depart-group-${tile.coord}`}>
+                <Tile
+                  key={`depart-tile-${tile.coord}`}
+                  position={[tile.position.x, 0, tile.position.z]}
+                  radius={1}
+                  color={tile.color || "#888888"}
+                  coord={tile.coord}
+                  isDepart={true}
+                  baseColor={baseColor}
+                  backgroundColor={backgroundColor}
+                  labelText={labelText}
+                  playerIndex={playerIndex}
+                  showFSMIndicator={true}
                 />
+                
+                {/* @ts-ignore */}
+                <group position={[tile.position.x, 0.5, tile.position.z]}>
+                  <Fleet
+                    botId={botId}
+                    botIndex={playerIndex}
+                    color={getBotColor(playerIndex)}
+                    shipPosition={{
+                      x: tile.position.x,
+                      y: 0.5,
+                      z: tile.position.z
+                    }}
+                    tileCoord={tile.coord as any}
+                  />
+                  {/* @ts-ignore */}
+                </group>
+                {/* @ts-ignore */}
               </group>
-            </group>
+            </>
           );
         })}
 
-      {/* ========================================
-       * FUEL STATIONS
-       * ======================================== */}
-      
+      {/* Fuel stations */}
       {getFuelStations().map((tile) => (
+        // @ts-ignore
         <mesh
           key={`fuel-station-${tile.coord}`}
           position={[tile.position.x, 0.25, tile.position.z]}
         >
+          {/* @ts-ignore */}
           <boxGeometry args={[0.5, 0.5, 0.5]} />
+          {/* @ts-ignore */}
           <meshStandardMaterial color="orange" />
+        {/* @ts-ignore */}
         </mesh>
       ))}
 
-      {/* ========================================
-       * REPAIR STATIONS
-       * ======================================== */}
-      
+      {/* Repair stations */}
       {getRepairStations().map((tile) => (
+        // @ts-ignore
         <mesh
           key={`repair-station-${tile.coord}`}
           position={[tile.position.x, 0.25, tile.position.z]}
         >
+          {/* @ts-ignore */}
           <boxGeometry args={[0.5, 0.5, 0.5]} />
+          {/* @ts-ignore */}
           <meshStandardMaterial color="green" />
+        {/* @ts-ignore */}
         </mesh>
       ))}
     </>

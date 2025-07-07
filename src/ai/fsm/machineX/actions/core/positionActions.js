@@ -12,7 +12,7 @@
  */
 
 import fsmLogger from '../../../../../logger/fsmLogger';
-import { useTileStore } from '../../../../../stores/useTileStore';
+import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 
 // ============================================================================
 // ACTIONS DE POSITION DU VAISSEAU

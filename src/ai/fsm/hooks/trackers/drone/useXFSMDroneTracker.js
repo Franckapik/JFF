@@ -13,12 +13,11 @@
  * - returning : Drone retourne au vaisseau → DRONE_REACHES_BASE
  */
 
-import { useRef, useCallback, useEffect } from 'react';
-import { useEventDebounce } from '../../useEventDebounce';
+import { useCallback, useEffect, useRef } from 'react';
+import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants';
-import { useTileStore } from '../../../../../stores/useTileStore';
+import { useEventDebounce } from '../../useEventDebounce';
 import { processDronePosition } from './droneTrackerEngine';
-import fsmLogger from '../../../../../logger/fsmLogger';
 
 /**
  * Hook spécialisé pour le tracking des drones (XState)

@@ -188,7 +188,7 @@ let config = {
   enableConsole: true, // Activé pour voir les logs dans la console
   minLevel: 0, // Niveau minimum pour afficher un log
   enableBuffering: true, // Activer/désactiver le stockage des logs dans le buffer
-  visibleTypes: ['DEBUG'], // Activer seulement les logs DEBUG
+  visibleTypes: null, // Activer tous les types de logs
   enableDeduplication: true, // 🆕 Activer la déduplication
 };
 
