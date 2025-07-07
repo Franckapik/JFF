@@ -18,7 +18,7 @@
  * États principaux de la machine FSM - Version unifiée
  * ✅ Remplace XSTATE_STATES et BOT_STATES pour éviter la duplication
  * ✅ Utilisé dans XState pour les transitions et la définition de machine
- * ✅ Utilisé dans initialContext.js pour la compatibilité legacy
+ * ✅ Utilisé dans initialContext.ts pour la compatibilité
  */
 export const FSM_STATES = {
   // États principaux XState
@@ -67,7 +67,7 @@ export const EVALUATION_THRESHOLDS = {
 
 /**
  * Configuration du cycle d'exploration
- * ✅ Utilisé dans guards.all.js et initialContext.js
+ * ✅ Utilisé dans guards.all.js et initialContext.ts
  */
 export const EXPLORATION_CYCLE_CONFIG = {
   TILES_BEFORE_COLLECTION: 5,
@@ -124,7 +124,7 @@ export const DEFAULT_VEHICLE_STATE = {
 
 /**
  * Types d'entités supportés par XState
- * ✅ Utilisé dans initialContext.js
+ * ✅ Utilisé dans initialContext.ts
  */
 export const ENTITY_TYPES = {
   AUTO: 'auto',
@@ -241,7 +241,7 @@ export const POSITION_TRACKER_CONFIG = {
 
 /**
  * États visuels des drones pour l'animation R3F
- * ✅ Utilisé dans initialContext.js et droneExploringActions.js
+ * ✅ Utilisé dans initialContext.ts et droneExploringActions.js
  */
 export const DRONE_VISUAL_STATES = {
   docked: 'docked',

@@ -10,15 +10,15 @@
  * @version 1.0.0 - Architecture XState
  */
 
-import { createMachine, assign } from 'xstate';
+import { assign, createMachine } from 'xstate';
+import allActions from './actions/index.js';
+import { FSM_STATES } from './config/constants.js';
+import { createMachineContext } from './context/initialContext.ts';
+import * as allGuards from './guards/guards.all.js';
+import { collectingState } from './states/collecting.state.js';
 import { evaluatingState } from './states/evaluating.state.js';
 import { exploringState } from './states/exploring.state.js';
-import { collectingState } from './states/collecting.state.js';
 import { maintainingState } from './states/maintaining.state.js';
-import { FSM_STATES } from './config/constants.js';
-import * as allGuards from './guards/guards.all.js';
-import allActions from './actions/index.js';
-import { createMachineContext } from './context/initialContext.js';
 
 
 // États temporaires/simplifiés pour la structure

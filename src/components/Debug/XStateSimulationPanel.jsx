@@ -1,37 +1,37 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useXFSM } from '../../hooks/useXFSM';
+import { useEffect, useMemo, useState } from 'react';
 import { machineX } from '../../ai/fsm/machineX';
-import { createMachineContext } from '../../ai/fsm/machineX/context/initialContext';
-import { 
-  shouldExplore,
-  hasCapacityFor,
-  isAtMaxCapacity,
+import { createMachineContext } from '../../ai/fsm/machineX/context/initialContext.ts';
+import {
   canCollectResource,
-  canDepositResources,
-  isFullTank,
-  canRefuel,
-  isLowFuel,
-  shouldReturnForEfficiency,
-  isCollectionEfficient,
-  shouldCollectMore,
-  needsRefuelForEfficiency,
-  needsInventoryManagement,
-  hasBestTileForCollection,
-  hasExploredEnoughTiles,
-  shouldTransitionToCollection,
-  hasUnexploredAreas,
-  needsExploration,
-  isCriticalFuel,
-  isLowFuelSafety,
-  hasEnoughFuelForDistance,
   canConsumeFuel,
+  canContinueOperation,
+  canDepositResources,
+  canRefuel,
+  hasBestTileForCollection,
+  hasCapacityFor,
+  hasEnoughFuel,
+  hasEnoughFuelForDistance,
+  hasExploredEnoughTiles,
+  hasUnexploredAreas,
+  isAtMaxCapacity,
+  isCollectionEfficient,
+  isCriticalFuel,
+  isFullTank,
+  isLowFuel,
+  isLowFuelSafety,
+  isSafeToOperate,
   isVehicleCritical,
   isVehicleOperational,
-  hasEnoughFuel,
   needsEmergencyReturn,
-  isSafeToOperate,
-  canContinueOperation
+  needsExploration,
+  needsInventoryManagement,
+  needsRefuelForEfficiency,
+  shouldCollectMore,
+  shouldExplore,
+  shouldReturnForEfficiency,
+  shouldTransitionToCollection
 } from '../../ai/fsm/machineX/guards/guards.all.js';
+import { useXFSM } from '../../hooks/useXFSM';
 
 /**
  * Panneau de simulation XState dynamique qui s'adapte automatiquement à la machine

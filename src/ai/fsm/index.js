@@ -14,21 +14,15 @@
 // ============================================================================
 
 // Contexte principal
-export { 
-  createMachineContext, 
-  ENTITY_TYPES, 
-  isAutonomous,
-  canManualControl,
-  getMainVehicle,
-  isMoving,
-  updateStateHistory
-} from './machine/context/initialContext.js';
+export {
+    canManualControl, createMachineContext, ENTITY_TYPES, getMainVehicle, isAutonomous, isMoving,
+    updateStateHistory
+} from './machineX/context/initialContext.ts';
 
 // Hook principal (utilisé par Fleet.jsx)
-export { 
-  useBotMachine,
-  useBotMachineFixed,
-  useBotMachineSharedInstance,
-  clearBotMachineInstance,
-  clearAllBotMachineInstances
+export {
+    clearAllBotMachineInstances, clearBotMachineInstance, useBotMachine,
+    useBotMachineFixed,
+    useBotMachineSharedInstance
 } from './hooks/useBotMachine.js';
+

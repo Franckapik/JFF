@@ -1,8 +1,7 @@
-import { create } from 'zustand';
 import { createActor } from 'xstate';
+import { create } from 'zustand';
+import { createMachineContext } from '../../ai/fsm/machineX/context/initialContext.ts';
 import { machineX } from '../../ai/fsm/machineX/machine.xstate';
-import { createMachineContext } from '../../ai/fsm/machineX/context/initialContext';
-import zukeeper from 'zukeeper';
 import fsmLogger from '../../logger/fsmLogger';
 
 // Constante pour un état vide et stable, évite les undefined.
