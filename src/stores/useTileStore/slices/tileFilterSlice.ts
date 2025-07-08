@@ -23,13 +23,13 @@
  */
 
 import type {
-    GridCoordinate,
-    Tile,
-    TileWithDistance
+  GridCoordinate,
+  Tile,
+  TileType,
+  TileWithDistance
 } from '../../../types/index.js';
 
-import { DRONE_EXPLORATION_CONFIG } from '../../../ai/fsm/machineX/config/constants.js';
-import useXFSMStore from '../../useXFSMStore/index.js';
+import { DRONE_EXPLORATION_CONFIG, TILE_TYPES } from '../../../ai/fsm/machineX/config/constants.js';
 
 // =========================================================================
 // TYPES LOCAUX SIMPLIFIÉS
@@ -51,10 +51,7 @@ interface TileFilterSliceActions {
   ) => TileWithDistance[];
   selectRandomWalkableTile: () => Tile | null;
   getWalkableTiles: () => Tile[];
-  getDepartTiles: () => Tile[];
-  syncDepartTilesWithActiveBots: () => void;
-  getFuelStations: () => Tile[];
-  getRepairStations: () => Tile[];
+  getTilesByType: (tileType: TileType) => Tile[];
 }
 
 // =========================================================================
@@ -170,7 +167,7 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
         }
         
         // Filtrage par type (danger)
-        if (excludeDanger && tile.type === 'danger') {
+        if (excludeDanger && tile.type === (TILE_TYPES.DANGER as TileType)) {
           filteredByDanger++;
           continue;
         }
@@ -249,7 +246,7 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
       
       // Filtrage efficace pour obtenir uniquement les tuiles walkables et sûres
       const walkableTiles = Object.values(tiles).filter((tile: any): tile is Tile => 
-        tile && tile.walkable !== false && tile.type !== 'danger'
+        tile && tile.walkable !== false && tile.type !== (TILE_TYPES.DANGER as TileType)
       );
       
       if (walkableTiles.length === 0) {
@@ -279,63 +276,16 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
     },
     
     /**
-     * Récupère toutes les tuiles de départ existantes (render-safe)
+     * Récupère toutes les tuiles d'un type donné
      * 
-     * Cette fonction est entièrement render-safe et ne fait que lire l'état actuel.
-     * Aucune synchronisation ou accès à d'autres stores pendant le rendu.
-     * Le filtrage par bots actifs est fait au niveau du composant si nécessaire.
+     * Filtre générique pour n'importe quel type de tuile.
      * 
-     * @returns Liste des tuiles de départ existantes
+     * @param tileType - Type de tuile recherché
+     * @returns Liste des tuiles du type spécifié
      */
-    getDepartTiles: (): Tile[] => {
+    getTilesByType: (tileType: TileType): Tile[] => {
       const { tiles } = get();
-      // Récupérer uniquement les tuiles de départ existantes (lecture seule)
-      const departTiles = Object.values(tiles).filter((tile: any): tile is Tile => tile.type === "depart");
-      
-      // Retourner toutes les tuiles de départ avec leurs assignements actuels
-      return departTiles;
-    },
-
-    /**
-     * Force la synchronisation des tuiles de départ avec les bots actifs
-     * Cette fonction DOIT être appelée depuis un effet ou une action, pas pendant le rendu
-     * 
-     * @returns void
-     */
-    syncDepartTilesWithActiveBots: (): void => {
-      // Récupérer les bots actifs depuis le XFSMStore
-      const activeBots = useXFSMStore.getState().activeBots;
-      const activeBotIds = activeBots;
-      
-      // Note: syncStartingTilesWithFSMBots sera ajouté dans un autre slice
-      // Pour l'instant, on log simplement l'action
-      console.log('[syncDepartTilesWithActiveBots] Synchronisation avec les bots actifs:', activeBotIds);
-    },
-    
-    /**
-     * Récupère toutes les stations de carburant
-     * 
-     * Filtre spécialisé pour les tuiles de type "fuel",
-     * utilisé pour la logique de ravitaillement des véhicules.
-     * 
-     * @returns Liste de toutes les stations de carburant
-     */
-    getFuelStations: (): Tile[] => {
-      const { tiles } = get();
-      return Object.values(tiles).filter((tile: any): tile is Tile => tile.type === "fuel");
-    },
-    
-    /**
-     * Récupère toutes les stations de réparation
-     * 
-     * Filtre spécialisé pour les tuiles de type "repair",
-     * utilisé pour la logique de maintenance des véhicules.
-     * 
-     * @returns Liste de toutes les stations de réparation
-     */
-    getRepairStations: (): Tile[] => {
-      const { tiles } = get();
-      return Object.values(tiles).filter((tile: any): tile is Tile => tile.type === "repair");
+      return Object.values(tiles).filter((tile: any): tile is Tile => tile.type === tileType);
     },
   } as TileFilterSliceActions;
 };

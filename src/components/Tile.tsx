@@ -1,11 +1,14 @@
-import { Html } from "@react-three/drei";
 import React from "react";
 import { Mesh } from "three";
 import { useTileAnimation } from "../animations/useTileAnimation";
 import fsmLogger from "../logger/fsmLogger";
+import useGameStore from "../stores/useGameStore";
 import { useTileStore } from "../stores/useTileStore/index";
 import { isTileCompletelyCollected, isTilePartiallyCollected } from "../stores/useTileStore/slices/tileResourceSlice";
+import useXFSMStore from "../stores/useXFSMStore/index.ts";
+import type { BotId } from "../types/fsm";
 import type { TileProps } from "../types/tile";
+import TileHelpers from "./TileHelpers";
 
 /**
  * =================================================================
@@ -14,19 +17,13 @@ import type { TileProps } from "../types/tile";
  * Représente une tuile hexagonale sur la carte du jeu.
  * Gère l'affichage, les interactions et l'état des ressources.
  */
-const Tile: React.FC<TileProps> = React.memo(({ 
+const Tile: React.FC<TileProps> = ({ 
   position, 
   radius, 
   color, 
-  isHighTile = false, 
-  onClick, 
   coord,
-  isDepart = false,
-  baseColor,
-  backgroundColor,
-  labelText,
-  playerIndex,
-  showFSMIndicator = false
+  isHighTile = false, 
+  onClick
 }) => {
   /**
    * -----------------------------------------------------------------
@@ -38,6 +35,13 @@ const Tile: React.FC<TileProps> = React.memo(({
   
   // Sélecteurs pour les états de la tuile depuis le store
   const updateHoveredTile = useTileStore((state) => state.updateHoveredTile);
+  
+  // Sélecteurs pour les couleurs depuis le store de jeu
+  const getPlayerBaseColor = useGameStore((state) => state.getPlayerBaseColor);
+  const getBackgroundColor = useGameStore((state) => state.getBackgroundColor);
+  
+  // Sélecteur pour les bots actifs
+  const activeBots = useXFSMStore((state) => state.activeBots);
   
   const resourcePercentage = useTileStore((state) => 
     state.tiles[coord] ? (state.tiles[coord] as any).resourcePercentage : 0
@@ -62,25 +66,48 @@ const Tile: React.FC<TileProps> = React.memo(({
   
   /**
    * -----------------------------------------------------------------
-   * EFFETS
-   * -----------------------------------------------------------------
-   */
-  
-  // Log les tuiles explorées pour debugging
-  React.useEffect(() => {
-    if (isExplored && !isDepart) {
-      fsmLogger.info(`🗺️ Tile ${coord} is now marked as explored`);
-    }
-  }, [isExplored, coord, isDepart]);
-  
-  /**
-   * -----------------------------------------------------------------
    * ÉTATS DÉRIVÉS
    * -----------------------------------------------------------------
    */
   
   // Récupérer la tuile depuis le store pour utiliser les utilitaires
   const tile = useTileStore((state) => state.tiles[coord]);
+  
+  // Récupérer le type de tuile pour afficher les stations appropriées
+  const tileType = tile ? tile.type : null;
+  
+  // Déterminer si c'est une tuile de départ assignée
+  const isAssignedDepartTile = tile?.type === 'depart' && !!tile?.assignedToBot;
+  
+  // Calculer les propriétés pour les tuiles de départ assignées
+  const playerIndex = isAssignedDepartTile && tile?.assignedToBot 
+    ? activeBots.indexOf(tile.assignedToBot as BotId) 
+    : -1;
+  
+  const baseColor = isAssignedDepartTile && playerIndex >= 0 
+    ? getPlayerBaseColor(playerIndex) 
+    : undefined;
+  
+  const backgroundColor = baseColor 
+    ? getBackgroundColor(baseColor) 
+    : undefined;
+  
+  const labelText = isAssignedDepartTile && tile?.assignedToBot 
+    ? tile.assignedToBot 
+    : undefined;
+  
+  /**
+   * -----------------------------------------------------------------
+   * EFFETS
+   * -----------------------------------------------------------------
+   */
+  
+  // Log les tuiles explorées pour debugging
+  React.useEffect(() => {
+    if (isExplored && !isAssignedDepartTile) {
+      fsmLogger.info(`🗺️ Tile ${coord} is now marked as explored`);
+    }
+  }, [isExplored, coord, isAssignedDepartTile]);
   
   // Une tuile est partiellement collectée si le pourcentage est entre 1 et 99%
   const isPartiallyCollected = tile ? isTilePartiallyCollected(tile) : false;
@@ -148,180 +175,23 @@ const Tile: React.FC<TileProps> = React.memo(({
       {/* @ts-ignore */}
       </mesh>
 
-      {/* Pour les tuiles de départ (bases des joueurs) - élément de base */}
-
-      {/* Indicateur de pourcentage de ressources restantes */}
-      {shouldShowPercentage && (
-        <>
-          {/* Cercle rouge pour les tuiles complètement collectées */}
-          {isCompletelyCollected && (
-            // @ts-ignore
-            <mesh
-              position={[position[0], 0.05, position[2]]}
-              rotation={[-Math.PI / 2, 0, 0]}
-            >
-              {/* @ts-ignore */}
-              <circleGeometry args={[0.6, 32]} />
-              {/* @ts-ignore */}
-              <meshBasicMaterial 
-                color="#ff4444" 
-                transparent={true}
-                opacity={0.6}
-              />
-            {/* @ts-ignore */}
-            </mesh>
-          )}
-          
-          {/* Affichage du pourcentage */}
-          <Html
-            position={[position[0], 0.4, position[2]]}
-            center
-            distanceFactor={15}
-          >
-            <div style={{
-              background: isCompletelyCollected ? 'rgba(255, 68, 68, 0.8)' : 'rgba(0,0,0,0.7)',
-              color: isCompletelyCollected ? '#ffffff' : '#ff9933',
-              padding: '3px 6px',
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              userSelect: 'none',
-              pointerEvents: 'none',
-              border: isCompletelyCollected ? '2px solid #ff4444' : 'none',
-            }}>
-              {resourcePercentage}%
-            </div>
-          </Html>
-        </>
-      )}
-
-      {/* Indicateur de collecte récente */}
-      {isRecentlyCollected && (
-        <>
-          {/* Effet de pulsation lumineux */}
-          {/* @ts-ignore */}
-          <mesh
-            position={[position[0], 0.15, position[2]]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            {/* @ts-ignore */}
-            <circleGeometry args={[0.8, 32]} />
-            {/* @ts-ignore */}
-            <meshBasicMaterial 
-              color="#00ffff" 
-              transparent={true}
-              opacity={0.3}
-            />
-          {/* @ts-ignore */}
-          </mesh>
-          
-          {/* Label de collecte récente */}
-          <Html
-            position={[position[0], 0.6, position[2]]}
-            center
-            distanceFactor={20}
-          >
-            <div style={{
-              background: 'rgba(0,255,255,0.8)',
-              color: '#000',
-              padding: '2px 6px',
-              borderRadius: '4px',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              userSelect: 'none',
-              pointerEvents: 'none',
-              animation: 'pulse 1s infinite',
-            }}>
-              💎 Collecté !
-            </div>
-          </Html>
-        </>
-      )}
-
-      {/* Helper visuel pour les tuiles explorées */}
-      {isExplored && !isDepart && (
-        // @ts-ignore
-        <mesh
-          position={[position[0], 0.2, position[2]]}
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          {/* @ts-ignore */}
-          <circleGeometry args={[0.6, 16]} />
-          {/* @ts-ignore */}
-          <meshBasicMaterial 
-            color="#00ff88" 
-            transparent={true}
-            opacity={0.7}
-          />
-        {/* @ts-ignore */}
-        </mesh>
-      )}
-
-      {/* Tuile de départ (base joueur) */}
-      {isDepart && (
-        <>
-          {/* Base platform */}
-          {/* @ts-ignore */}
-          <mesh
-            position={[position[0], 0.2, position[2]]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            {/* @ts-ignore */}
-            <circleGeometry args={[0.5, 32]} />
-            {/* @ts-ignore */}
-            <meshStandardMaterial color={baseColor} />
-          {/* @ts-ignore */}
-          </mesh>
-                    
-          {/* Player identifier label */}
-          <Html
-            position={[position[0], 0.5, position[2]]}
-            center
-            distanceFactor={15}
-          >
-            <div style={{
-              background: backgroundColor,
-              color: 'white',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              userSelect: 'none',
-              pointerEvents: 'none',
-              whiteSpace: 'nowrap',
-              textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
-            }}>
-              {labelText}
-            </div>
-          </Html>
-        </>
-      )}
+      {/* Helpers visuels pour les tuiles */}
+      <TileHelpers
+        position={position}
+        tileType={tileType}
+        isAssignedDepartTile={!!isAssignedDepartTile}
+        baseColor={baseColor}
+        backgroundColor={backgroundColor}
+        labelText={labelText}
+        shouldShowPercentage={!!shouldShowPercentage}
+        isCompletelyCollected={!!isCompletelyCollected}
+        resourcePercentage={resourcePercentage}
+        isRecentlyCollected={!!isRecentlyCollected}
+        isExplored={!!isExplored}
+      />
     </>
   );
-}, 
-/**
- * Fonction de comparaison pour la mémoisation
- * Optimise les re-rendus en ne mettant à jour le composant que lorsque
- * les propriétés importantes changent
- */
-(prevProps: TileProps, nextProps: TileProps) => {
-  return (
-    prevProps.coord === nextProps.coord &&
-    prevProps.color === nextProps.color &&
-    prevProps.radius === nextProps.radius &&
-    prevProps.isHighTile === nextProps.isHighTile &&
-    prevProps.position[0] === nextProps.position[0] &&
-    prevProps.position[1] === nextProps.position[1] &&
-    prevProps.position[2] === nextProps.position[2] &&
-    prevProps.isDepart === nextProps.isDepart &&
-    prevProps.baseColor === nextProps.baseColor &&
-    prevProps.backgroundColor === nextProps.backgroundColor &&
-    prevProps.labelText === nextProps.labelText &&
-    prevProps.playerIndex === nextProps.playerIndex &&
-    prevProps.showFSMIndicator === nextProps.showFSMIndicator
-    // We don't compare onClick as it's a callback and should be memoized by the parent
-  );
-});
+};
 
 Tile.displayName = 'Tile';
 

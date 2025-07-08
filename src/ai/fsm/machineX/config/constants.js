@@ -171,6 +171,34 @@ export const FUEL_CONFIG = {
 };
 
 // ============================================================================
+// CONSTANTES DE TUILES
+// ============================================================================
+
+/**
+ * Types de tuiles utilisés dans le jeu
+ * ✅ Utilisé dans les slices de tuiles et les composants
+ */
+export const TILE_TYPES = {
+  FOOD: 'food',
+  FUEL: 'fuel',
+  REPAIR: 'repair',
+  DEPART: 'depart',
+  DANGER: 'danger'
+};
+
+/**
+ * Biomes de tuiles utilisés dans le jeu
+ * ✅ Utilisé dans la génération de tuiles
+ */
+export const TILE_BIOMES = {
+  GRASSLAND: 'grassland',
+  DESERT: 'desert',
+  SNOW: 'snow',
+  WATER: 'water',
+  ROCK: 'rock'
+};
+
+// ============================================================================
 // CONSTANTES DE RESSOURCES
 // ============================================================================
 
@@ -317,6 +345,8 @@ export default {
   ENTITY_TYPES,
   EMPTY_RESOURCES,
   FUEL_CONFIG,
+  TILE_TYPES,
+  TILE_BIOMES,
   RESOURCE_CONSTANTS,
   POSITION_TRACKER_CONFIG,
   DRONE_VISUAL_STATES,

@@ -205,10 +205,7 @@ export interface TileStoreActions {
   getWalkableTiles: () => Tile[];
   getWalkableTilesInRadius: (centerCoord: GridCoordinate, radius: number, options?: TileSearchOptions) => TileWithDistance[];
   selectRandomWalkableTile: () => Tile | null;
-  getDepartTiles: () => Tile[];
-  syncDepartTilesWithActiveBots: () => void;
-  getFuelStations: () => Tile[];
-  getRepairStations: () => Tile[];
+  getTilesByType: (tileType: TileType) => Tile[];
   
   // Coordonnées
   isValidGridCoord: (coord: any) => coord is GridCoordinate;
@@ -219,7 +216,7 @@ export interface TileStoreActions {
   
   // Génération
   initializeGameGrid: (radius: number, spacing: number) => TileMap;
-  syncStartingTilesWithFSMBots: (activeBotIds: string[]) => void;
+  assignStartingTiles: (activeBotIds: string[]) => void;
 }
 
 /** Type complet du store de tuiles */
@@ -271,22 +268,10 @@ export interface TileProps {
   radius: number;
   /** Couleur de la tuile */
   color: string;
+  /** Coordonnées de la tuile au format "x,z" */
+  coord: GridCoordinate;
   /** Indique si la tuile est surélevée */
   isHighTile?: boolean;
   /** Gestionnaire d'événement au clic */
   onClick?: () => void;
-  /** Coordonnées de la tuile au format "x,z" */
-  coord: GridCoordinate;
-  /** Indique si c'est une tuile de départ (base joueur) */
-  isDepart?: boolean;
-  /** Couleur de la base du joueur (pour les tuiles de départ) */
-  baseColor?: string;
-  /** Couleur de fond du label (pour les tuiles de départ) */
-  backgroundColor?: string;
-  /** Texte du label (pour les tuiles de départ) */
-  labelText?: string;
-  /** Indice du joueur (pour les tuiles de départ) */
-  playerIndex?: number;
-  /** Affiche un indicateur FSM au-dessus de la tuile de départ */
-  showFSMIndicator?: boolean;
 }

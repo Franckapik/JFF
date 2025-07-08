@@ -21,11 +21,11 @@
  */
 
 import type {
-    GridCoordinate,
-    Tile,
-    TileCoordinate,
-    TileMap,
-    WorldPosition
+  GridCoordinate,
+  Tile,
+  TileCoordinate,
+  TileMap,
+  WorldPosition
 } from '../../../types/index.js';
 
 
@@ -65,6 +65,7 @@ interface TilePathSliceActions {
     usePathfinding?: boolean, 
     detailed?: boolean
   ) => number;
+  calculate3DDistance: (from: WorldPosition, to: WorldPosition) => number;
   calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap) => number;
   findTileAtPosition: (position: WorldPosition, tiles?: TileMap) => Tile | null;
   calculatePath: (
@@ -179,6 +180,22 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
       
       return Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toZ - fromZ, 2));
     }
+  },
+
+  /**
+   * Calculate 3D Euclidean distance between two world positions
+   * @param from - Starting world position
+   * @param to - Target world position
+   * @returns 3D distance between the two positions
+   */
+  calculate3DDistance: (from: WorldPosition, to: WorldPosition): number => {
+    if (!from || !to) return Infinity;
+    
+    const dx = to.x - from.x;
+    const dy = (to.y || 0) - (from.y || 0);
+    const dz = to.z - from.z;
+    
+    return Math.sqrt(dx * dx + dy * dy + dz * dz);
   },
 
   /**

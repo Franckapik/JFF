@@ -6,6 +6,7 @@
 import React, { useEffect } from "react";
 
 // Three.js imports
+import { Html } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 
 // Components
@@ -15,14 +16,19 @@ import Tile from "./Tile.tsx";
 // Stores
 import useGameStore from "../stores/useGameStore";
 import { useTileStore } from "../stores/useTileStore/index";
-import useXFSMStore from "../stores/useXFSMStore";
+import useXFSMStore from "../stores/useXFSMStore/index.ts";
 
 // Types
-import type { VehicleId } from "../types";
 import "../types/r3f.d.ts"; // Import R3F global type declarations
 
 // Utils
+import { BotId } from "@/types/fsm.ts";
 import fsmLogger from "../logger/fsmLogger";
+
+// Constantes
+const TILE_TYPES = {
+  DEPART: 'depart' as const,
+};
 
 /* ========================================
  * MAIN COMPONENT
@@ -37,18 +43,12 @@ const Scene: React.FC = () => {
   // Tile management
   const setTiles = useTileStore((state) => state.setTiles);
   const initializeGameGrid = useTileStore((state) => state.initializeGameGrid);
-  const tiles = useTileStore((state) => state.tiles); // Ajout pour forcer le re-rendu
-  const getWalkableTiles = useTileStore((state) => state.getWalkableTiles);
-  const getDepartTiles = useTileStore((state) => state.getDepartTiles);
-  const getFuelStations = useTileStore((state) => state.getFuelStations);
-  const getRepairStations = useTileStore((state) => state.getRepairStations);
-  const syncStartingTilesWithFSMBots = useTileStore((state) => state.syncStartingTilesWithFSMBots);
+  const tiles = useTileStore((state) => state.tiles);
+  const assignStartingTiles = useTileStore((state) => state.assignStartingTiles);
   
  
-  // Game configuration
+  // Game configuration - seulement pour getBotColor maintenant
   const getBotColor = useGameStore((state) => state.getBotColor);
-  const getPlayerBaseColor = useGameStore((state) => state.getPlayerBaseColor);
-  const getBackgroundColor = useGameStore((state) => state.getBackgroundColor);
   
   // FSM Store - source de vérité pour les bots actifs (nouveau système XState)
   const activeBots = useXFSMStore((state) => state.activeBots);
@@ -57,20 +57,15 @@ const Scene: React.FC = () => {
   // Initialization state
   const {
     tilesInitialized,
-    markTilesAsInitialized
+    markTilesAsInitialized,
+    markBotsAsInitialized,
+    botsInitialized,
+    markPlayersAsInitialized,
+    playersInitialized
   } = useGameStore();
   
-  /* ========================================
-   * CONFIGURATION & CONSTANTS
-   * ======================================== */
+  const isGameInitialized = useGameStore((state) => state.isGameInitialized());
 
-  // Synchroniser les tuiles de départ avec les bots FSM actifs
-  useEffect(() => {
-    // Permettre la création initiale de tuiles de départ même s'il n'y en a pas encore
-    if (tilesInitialized && activeBots.length > 0) {
-      syncStartingTilesWithFSMBots(activeBots);
-    }
-  }, [activeBots, tilesInitialized, syncStartingTilesWithFSMBots]); 
 
   /* ========================================
    * INITIALIZATION EFFECTS
@@ -91,11 +86,31 @@ const Scene: React.FC = () => {
 
   // Ajout du bot par défaut après initialisation des tuiles
   useEffect(() => {
-    if (tilesInitialized && !activeBots.includes('bot-0' as VehicleId)) {
-      addBot('bot-0' as VehicleId);
+    if (tilesInitialized && !activeBots.includes('bot-0' as BotId)) {
+      addBot('bot-0' as BotId);
+      markBotsAsInitialized();
     }
   }, [tilesInitialized, addBot, activeBots]);
 
+  // Ajout du player par défaut après initialisation des tuiles EN ATTENTE DE L'IMPLEMENTATION D'UN JOUEUR
+  useEffect(() => {
+    if (botsInitialized && !playersInitialized) {
+      //logic to add player if needed
+      markPlayersAsInitialized();
+    }
+  }, [botsInitialized]);
+
+    /* ========================================
+   * CONFIGURATION & CONSTANTS
+   * ======================================== */
+
+  // Synchroniser les tuiles de départ avec les bots FSM actifs
+  useEffect(() => {
+    // Permettre la création initiale de tuiles de départ même s'il n'y en a pas encore
+    if (botsInitialized && activeBots.length > 0) {
+      assignStartingTiles(activeBots);
+    }
+  }, [activeBots, botsInitialized, assignStartingTiles]); 
 
   /* ========================================
    * CAMERA CONFIGURATION
@@ -112,6 +127,16 @@ const Scene: React.FC = () => {
    * RENDER
    * ======================================== */
 
+  if (!isGameInitialized) {
+    return (
+      <Html center>
+        <div style={{color: '#fff', textAlign: 'center', padding: '20px', backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: '8px'}}>
+          Chargement de la scène...
+        </div>
+      </Html>
+    );
+  }
+
   return (
     <>
       {/* Scene setup - Grid and lighting */}
@@ -123,101 +148,46 @@ const Scene: React.FC = () => {
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       {/* @ts-ignore */}
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
-      
-      {/* Walkable tiles */}
-      {getWalkableTiles().map((tile) => (
-        <Tile
-          key={tile.coord}
-          position={[tile.position.x, 0, tile.position.z]}
-          radius={1}
-          color={tile.color}
-          coord={tile.coord}
-        />
-      ))}
+      {/* All tiles rendering */}
+      {Object.values(tiles).map((tile) => {
+        // Vérifier si c'est une tuile de départ assignée à un bot actif
+        const isAssignedDepartTile = tile.type === TILE_TYPES.DEPART && 
+                                   tile.assignedToBot && 
+                                   activeBots.includes(tile.assignedToBot as BotId);
+        
+        // Calculer l'index du joueur pour le Fleet
+        const playerIndex = isAssignedDepartTile ? activeBots.indexOf(tile.assignedToBot as BotId) : -1;
 
-      {/* Player bases (departure tiles) with fleets */}
-      {getDepartTiles()
-        .filter(tile => {
-          const tileWithPlayer = tile as any;
-          const hasPlayer = tileWithPlayer.assignedToBot && activeBots.includes(tileWithPlayer.assignedToBot);
-          return hasPlayer;
-        })
-        .map((tile) => {
-          const tileWithPlayer = tile as any;
-          const botId = tileWithPlayer.assignedToBot;
-          const playerIndex = activeBots.indexOf(botId);
-          const baseColor = getPlayerBaseColor(playerIndex);
-          const backgroundColor = getBackgroundColor(baseColor);
-          const labelText = botId;
-          
-          return (
-            <>
-              {/* @ts-ignore */}
-              <group key={`depart-group-${tile.coord}`}>
-                <Tile
-                  key={`depart-tile-${tile.coord}`}
-                  position={[tile.position.x, 0, tile.position.z]}
-                  radius={1}
-                  color={tile.color || "#888888"}
-                  coord={tile.coord}
-                  isDepart={true}
-                  baseColor={baseColor}
-                  backgroundColor={backgroundColor}
-                  labelText={labelText}
-                  playerIndex={playerIndex}
-                  showFSMIndicator={true}
+        return (
+          <React.Fragment key={tile.coord}>
+            <Tile
+              position={[tile.position.x, 0, tile.position.z]}
+              radius={1}
+              color={tile.color || "#888888"}
+              coord={tile.coord}
+            />
+            
+            {/* Fleet pour les tuiles de départ assignées */}
+            {isAssignedDepartTile && (
+              // @ts-ignore
+              <group position={[tile.position.x, 0.5, tile.position.z]}>
+                <Fleet
+                  botId={tile.assignedToBot as BotId}
+                  botIndex={playerIndex}
+                  color={getBotColor(playerIndex)}
+                  shipPosition={{
+                    x: tile.position.x,
+                    y: 0.5,
+                    z: tile.position.z
+                  }}
+                  tileCoord={tile.coord as any}
                 />
-                
-                {/* @ts-ignore */}
-                <group position={[tile.position.x, 0.5, tile.position.z]}>
-                  <Fleet
-                    botId={botId}
-                    botIndex={playerIndex}
-                    color={getBotColor(playerIndex)}
-                    shipPosition={{
-                      x: tile.position.x,
-                      y: 0.5,
-                      z: tile.position.z
-                    }}
-                    tileCoord={tile.coord as any}
-                  />
-                  {/* @ts-ignore */}
-                </group>
-                {/* @ts-ignore */}
+              {/* @ts-ignore */}
               </group>
-            </>
-          );
-        })}
-
-      {/* Fuel stations */}
-      {getFuelStations().map((tile) => (
-        // @ts-ignore
-        <mesh
-          key={`fuel-station-${tile.coord}`}
-          position={[tile.position.x, 0.25, tile.position.z]}
-        >
-          {/* @ts-ignore */}
-          <boxGeometry args={[0.5, 0.5, 0.5]} />
-          {/* @ts-ignore */}
-          <meshStandardMaterial color="orange" />
-        {/* @ts-ignore */}
-        </mesh>
-      ))}
-
-      {/* Repair stations */}
-      {getRepairStations().map((tile) => (
-        // @ts-ignore
-        <mesh
-          key={`repair-station-${tile.coord}`}
-          position={[tile.position.x, 0.25, tile.position.z]}
-        >
-          {/* @ts-ignore */}
-          <boxGeometry args={[0.5, 0.5, 0.5]} />
-          {/* @ts-ignore */}
-          <meshStandardMaterial color="green" />
-        {/* @ts-ignore */}
-        </mesh>
-      ))}
+            )}
+          </React.Fragment>
+        );
+      })}
     </>
   );
 };

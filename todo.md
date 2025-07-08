@@ -1,3 +1,6 @@
+Du travail pour que tout tourne autours du type botId, et assignedBot. Le composant Tile doit etre nettoyé. Les meshs doivent etre affichés. Supprimer les fonctions manuellement si elle ne sont pas utilisées. Typer les constants.Contraindre au maximum.
+COntinuer d'écrire le fichier initialisation a la main.FInir par arriver à getWalkableTilesInRadius qui doit etre bien nettoyée et contrainte par les types
+
 Exploration du drone selon un radius. 
 Afficher dans un hud les tuiles explorées avec leur ressources. 
 Ajouter dans evaluating une nouvelle condition pour passer a la collecte.

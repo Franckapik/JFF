@@ -155,3 +155,41 @@ export interface FSMContext {
 export const isValidStateTransition = (from: string, to: string): boolean => {
   return typeof from === 'string' && typeof to === 'string' && from !== to;
 };
+
+/**
+ * Types pour le store XFSM (Zustand + XState)
+ */
+
+/** ID unique d'un bot dans le système */
+export type BotId = string;
+
+/** Snapshot d'état d'un bot XState */
+export type BotSnapshot = import('xstate').Snapshot<unknown>;
+
+/** État vide par défaut pour éviter les undefined */
+export interface EmptyBotState {
+  value: 'uninitialized';
+  context: Partial<FSMContext>;
+}
+
+/** Map des états de tous les bots actifs */
+export interface BotStatesMap {
+  [botId: BotId]: BotSnapshot | EmptyBotState;
+}
+
+/** Actions disponibles dans le store XFSM */
+export interface XFSMStoreActions {
+  send: (event: any, botId?: BotId) => void;
+  addBot: (botId: BotId) => void;
+  removeBot: (botId: BotId) => void;
+  getBotState: (botId?: BotId) => BotSnapshot | EmptyBotState;
+}
+
+/** État complet du store XFSM */
+export interface XFSMStoreState {
+  botStates: BotStatesMap;
+  activeBots: BotId[];
+}
+
+/** Store XFSM complet (état + actions) */
+export type XFSMStore = XFSMStoreState & XFSMStoreActions;

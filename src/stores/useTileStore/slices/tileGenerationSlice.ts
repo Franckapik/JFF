@@ -12,8 +12,8 @@
  * 
  * Fonctionnalités principales :
  * - initializeGameGrid : génération complète de la grille hexagonale
- * - placeGameStations, placeDangerTiles : placement des éléments de jeu
- * - syncStartingTilesWithFSMBots : synchronisation avec les bots FSM
+ * - placeGameStations, placeDangerTiles, placeStartingTiles : placement des éléments de jeu
+ * - assignStartingTiles : assignation des tuiles de départ aux bots actifs
  * 
  * Note : Les fonctions de pathfinding ont été déplacées vers tilePathSlice
  * pour une meilleure organisation du code.
@@ -22,10 +22,13 @@
 import type {
   GridCoordinate,
   Tile,
-  TileMap
+  TileBiome,
+  TileMap,
+  TileType
 } from '../../../types/index.js';
 import type { ResourceStats } from '../../../types/resources.js';
 
+import { RESOURCE_CONSTANTS, TILE_BIOMES, TILE_TYPES } from '../../../ai/fsm/machineX/config/constants.js';
 import fsmLogger from "../../../logger/fsmLogger.js";
 
 // =========================================================================
@@ -57,16 +60,16 @@ const tileConstants = {
   defaultY: 0,                     // Position Y par défaut (plan de jeu)
   maxNeighbors: 6,                 // Nombre maximum de voisins pour une tuile
   
-  // Génération de ressources (basé sur RESOURCE_CONSTANTS)
+  // Génération de ressources (utilise RESOURCE_CONSTANTS)
   foodMax: 100,                    // Quantité maximale de nourriture
   debrisMax: 1000,                 // Quantité maximale de débris
   specialMax: 2,                   // Quantité maximale de ressources spéciales
   
-  // Ressources des bases de départ
+  // Ressources des bases de départ (utilise les types de RESOURCE_CONSTANTS)
   startResources: {
-    food: 100,
-    debris: 100,
-    special: 50
+    [RESOURCE_CONSTANTS.FOOD]: 100,
+    [RESOURCE_CONSTANTS.DEBRIS]: 100,
+    [RESOURCE_CONSTANTS.SPECIAL]: 50
   },
   
   // Configuration des stations par rayon
@@ -99,7 +102,8 @@ interface TileGenerationSliceActions {
   initializeGameGrid: (radius: number, spacing: number) => TileMap;
   placeGameStations: (tiles: Tile[], radius: number) => void;
   placeDangerTiles: (tiles: Tile[], radius: number) => void;
-  syncStartingTilesWithFSMBots: (activeBotIds: string[]) => void;
+  placeStartingTiles: (tiles: Tile[], botCount: number) => void;
+  assignStartingTiles: (activeBotIds: string[]) => void;
 }
 
 // =========================================================================
@@ -171,8 +175,8 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
           coord: encodeHexCoord(q, r, radius),
           tileCoord: { x: q + radius, z: r + radius },
           position: { x, y: tileConstants.defaultY, z },
-          type: "food",
-          biome: "grassland",
+          type: TILE_TYPES.FOOD as TileType,
+          biome: TILE_BIOMES.GRASSLAND as TileBiome,
           walkable: true,
           explored: false,
           collected: false,
@@ -192,7 +196,10 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
     // 3. Placer les tuiles de danger
     get().placeDangerTiles(tiles, radius);
     
-    // 4. Convertir en TileMap
+    // 4. Placer les tuiles de départ (par défaut pour 1 bot)
+    get().placeStartingTiles(tiles, 1);
+    
+    // 5. Convertir en TileMap
     const tileMap: TileMap = tiles.reduce((acc, tile) => {
       return { ...acc, [tile.coord]: tile };
     }, {});
@@ -213,8 +220,8 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
     for (let i = 0; i < fuelCount; i++) {
       const randomIndex = Math.floor(Math.random() * tiles.length);
       const tile = tiles[randomIndex];
-      if (tile.type === "food") {
-        tile.type = "fuel";
+      if (tile.type === (TILE_TYPES.FOOD as TileType)) {
+        tile.type = TILE_TYPES.FUEL as TileType;
         tile.color = "orange";
         tile.hasResources = false;
         tile.resources = { food: 0, debris: 0, special: 0, total: 0 };
@@ -225,8 +232,8 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
     for (let i = 0; i < repairCount; i++) {
       const randomIndex = Math.floor(Math.random() * tiles.length);
       const tile = tiles[randomIndex];
-      if (tile.type === "food") {
-        tile.type = "repair";
+      if (tile.type === (TILE_TYPES.FOOD as TileType)) {
+        tile.type = TILE_TYPES.REPAIR as TileType;
         tile.color = "green";
         tile.hasResources = false;
         tile.resources = { food: 0, debris: 0, special: 0, total: 0 };
@@ -245,8 +252,8 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
     for (let i = 0; i < dangerCount; i++) {
       const randomIndex = Math.floor(Math.random() * tiles.length);
       const tile = tiles[randomIndex];
-      if (tile.type === "food") {
-        tile.type = "danger";
+      if (tile.type === (TILE_TYPES.FOOD as TileType)) {
+        tile.type = TILE_TYPES.DANGER as TileType;
         tile.color = "red";
         tile.walkable = false;
         tile.hasResources = false;
@@ -256,37 +263,58 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
   },
 
   /**
-   * Synchronise les tuiles de départ avec les bots FSM actifs
+   * Place les tuiles de départ dans la grille
+   * @param tiles - Tuiles de la grille
+   * @param botCount - Nombre de bots pour lesquels créer des tuiles de départ
+   */
+  placeStartingTiles: (tiles: Tile[], botCount: number): void => {
+    for (let i = 0; i < Math.min(botCount, tiles.length); i++) {
+      const tile = tiles[i];
+      if (tile.type === (TILE_TYPES.FOOD as TileType)) {
+        tile.type = TILE_TYPES.DEPART as TileType;
+        const startRes = tileConstants.startResources;
+        tile.resources = { 
+          food: startRes[RESOURCE_CONSTANTS.FOOD],
+          debris: startRes[RESOURCE_CONSTANTS.DEBRIS],
+          special: startRes[RESOURCE_CONSTANTS.SPECIAL],
+          total: startRes[RESOURCE_CONSTANTS.FOOD] + 
+                 startRes[RESOURCE_CONSTANTS.DEBRIS] + 
+                 startRes[RESOURCE_CONSTANTS.SPECIAL]
+        };
+        tile.hasResources = true;
+        tile.color = "#4CAF50"; // Vert pour les tuiles de départ
+      }
+    }
+  },
+
+  /**
+   * Assigne les tuiles de départ aux bots actifs
    * @param activeBotIds - IDs des bots actifs
    */
-  syncStartingTilesWithFSMBots: (activeBotIds: string[]): void => {
+  /**
+   * Assigne les tuiles de départ aux bots actifs
+   * @param activeBotIds - IDs des bots actifs
+   */
+  assignStartingTiles: (activeBotIds: string[]): void => {
     const tiles = get().tiles;
     
-    // Convertir les tuiles en tableau pour manipulation
-    const tileArray = Object.values(tiles);
+    // Récupérer les tuiles de départ via getTilesByType
+    const startingTiles = get().getTilesByType(TILE_TYPES.DEPART as TileType);
     
-    // Réinitialiser toutes les tuiles de départ existantes
-    tileArray.forEach((tile: any) => {
-      if (tile.type === "depart") {
-        tile.type = "food";
-        tile.assignedToBot = undefined;
-        tile.resources = tile.originalResources || { food: 50, debris: 50, special: 25, total: 125 };
-        tile.hasResources = true;
-      }
+    // Réinitialiser les assignations existantes
+    startingTiles.forEach((tile: any) => {
+      tile.assignedToBot = undefined;
     });
     
-    // Assigner de nouvelles tuiles de départ pour les bots actifs
+    // Assigner les tuiles aux bots actifs
     activeBotIds.forEach((botId, index) => {
-      if (index < tileArray.length) {
-        const tile = tileArray[index] as any;
-        tile.type = "depart";
+      if (index < startingTiles.length) {
+        const tile = startingTiles[index] as any;
         tile.assignedToBot = botId;
-        tile.resources = { ...tileConstants.startResources, total: 250 };
         tile.originalResources = { ...tile.resources };
-        tile.hasResources = true;
         tile.resourcePercentage = 100;
         
-        fsmLogger.info(`[TileGeneration] Tuile de départ assignée à ${botId}:`, tile.coord);
+        fsmLogger.game(`[TileGeneration] Tuile de départ assignée à ${botId}:`, tile.coord);
       }
     });
     
