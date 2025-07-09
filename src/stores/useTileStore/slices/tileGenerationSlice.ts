@@ -20,12 +20,12 @@
  */
 
 import type {
-  GridCoordinate,
-  Tile,
-  TileBiome,
-  TileMap,
-  TileType
-} from '../../../types/index.js';
+    GridCoordinate,
+    Tile,
+    TileBiome,
+    TileMap,
+    TileType
+} from '../../../types/index.ts';
 import type { ResourceStats } from '../../../types/resources.js';
 
 import fsmLogger from "../../../logger/fsmLogger.js";

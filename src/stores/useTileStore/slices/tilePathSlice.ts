@@ -27,7 +27,7 @@ import type {
   TileCoordinate,
   TileMap,
   WorldPosition
-} from '../../../types/index.js';
+} from '../../../types/index.ts';
 
 
 // =========================================================================

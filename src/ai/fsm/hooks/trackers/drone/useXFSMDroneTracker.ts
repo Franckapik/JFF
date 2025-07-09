@@ -14,12 +14,14 @@
  */
 
 import { useCallback, useEffect, useRef } from 'react';
+
 import { useTileStore } from '../../../../../stores/useTileStore/index';
 import type { DroneType, XStateSend } from '../../../../../types';
 import type { WorldPosition } from '../../../../../types/coordinates';
 import type { FSMContext } from '../../../../../types/fsm';
 import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants.ts';
 import { useEventDebounce } from '../../useEventDebounce';
+
 import { processDronePosition } from './droneTrackerEngine';
 
 /**

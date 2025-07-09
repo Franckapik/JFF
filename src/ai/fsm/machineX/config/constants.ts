@@ -15,13 +15,13 @@
 // ============================================================================
 
 export {
-    convertFSMToVisual, convertVisualToFSM, DRONE_STATES,
-    DRONE_TYPES, isDroneMoving
+  convertFSMToVisual, convertVisualToFSM, DRONE_STATES,
+  DRONE_TYPES, isDroneMoving
 } from '../../../../types/drone';
 
 export type {
-    DroneFSMState, DroneType,
-    DroneVisualState
+  DroneFSMState, DroneType,
+  DroneVisualState
 } from '../../../../types/drone';
 
 // ============================================================================
@@ -351,17 +351,33 @@ export const DRONE_EXPLORATION_CONFIG = {
 } as const;
 
 // ============================================================================
-// CONFIGURATION DU CARBURANT
+// CONFIGURATION DU CARBURANT - Version avec Types Union
 // ============================================================================
 
 /**
- * Configuration des seuils de carburant
+ * Configuration des seuils de carburant avec types union
  * ✅ Utilisé dans les guards pour les vérifications de carburant
+ * ✅ Type safety avec les FuelLevel union types
  */
 export const FUEL_CONFIG = {
   FULL: 100,        // Réservoir plein
   LOW: 30,          // Carburant bas
   CRITICAL: 10      // Carburant critique
+} as const;
+
+/**
+ * Type pour la configuration du carburant
+ */
+export type FuelConfigType = typeof FUEL_CONFIG;
+
+/**
+ * Mapping entre les valeurs numériques et les types union FuelLevel
+ */
+export const FUEL_LEVEL_MAPPING: Record<FuelLevel, number> = {
+  full: FUEL_CONFIG.FULL,
+  normal: 50, // Entre FULL et LOW
+  low: FUEL_CONFIG.LOW,
+  critical: FUEL_CONFIG.CRITICAL
 } as const;
 
 // ============================================================================

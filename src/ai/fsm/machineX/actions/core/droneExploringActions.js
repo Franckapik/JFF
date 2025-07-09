@@ -68,7 +68,6 @@ const selectTargetTileInRadiusForDrone = (context, range = 3) => {
   try {
     const tileStore = useTileStore.getState();
     const vehicle = context.vehicle || context.botVehicle;
-    console.log(vehicle)
     
     if (!vehicle || !vehicle.coord) {
       fsmLogger.debug('[selectTargetTileInRadiusForDrone] Vehicle or vehicle.coord not found in context');

@@ -1,5 +1,6 @@
 import React from "react";
 import { Mesh } from "three";
+
 import { useTileAnimation } from "../animations/useTileAnimation";
 import fsmLogger from "../logger/fsmLogger";
 import useGameStore from "../stores/useGameStore";
@@ -8,6 +9,7 @@ import { isTileCompletelyCollected, isTilePartiallyCollected } from "../stores/u
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
 import type { BotId } from "../types/fsm";
 import type { TileProps } from "../types/tile";
+
 import TileHelpers from "./TileHelpers";
 
 /**
@@ -139,7 +141,6 @@ const Tile: React.FC<TileProps> = ({
   return (
     <>
       {/* Mesh principal de la tuile hexagonale */}
-      {/* @ts-ignore */}
       <mesh 
         ref={meshRef as React.RefObject<Mesh>} 
         position={position} 
@@ -147,15 +148,12 @@ const Tile: React.FC<TileProps> = ({
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
       >
-        {/* @ts-ignore */}
         <cylinderGeometry args={[radius, radius, 0.2, 6]} />
-        {/* @ts-ignore */}
         <meshStandardMaterial
           color={color}
           metalness={0.1}
           roughness={0.7}
         />
-      {/* @ts-ignore */}
       </mesh>
 
       {/* Helpers visuels pour les tuiles */}

@@ -15,16 +15,17 @@
 
     // Mode strict progressif
     "strict": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
     // Paths pour vos imports
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@/ai/*": ["./src/ai/*"]
-    }
+      "@/ai/*": ["./src/ai/*"],
+    },
+    
   },
   "include": [
     "src/**/*.ts",
@@ -38,3 +39,4 @@
     "backup"
   ]
 }
+

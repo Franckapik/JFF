@@ -1,7 +1,6 @@
 import React from "react";
 
 // Types
-import type { VehicleId } from "../../types";
 import type { FSMContext } from "../../types/fsm";
 
 /**
@@ -10,8 +9,6 @@ import type { FSMContext } from "../../types/fsm";
 interface ShipMeshProps {
   /** Couleur du vaisseau */
   color: string;
-  /** ID du bot FSM */
-  botId: VehicleId;
   /** Contexte FSM pour l'état du vaisseau */
   context?: FSMContext;
   /** Action actuelle du vaisseau */
@@ -34,7 +31,6 @@ type ShipAction =
 
 const ShipMesh: React.FC<ShipMeshProps> = ({ 
   color, 
-  botId, 
   context, 
   currentAction, 
   isMoving = false 
@@ -83,11 +79,8 @@ const ShipMesh: React.FC<ShipMeshProps> = ({
     (currentResources.food > 0 || currentResources.debris > 0 || currentResources.special > 0);
   
   return (
-    // @ts-ignore - React Three Fiber elements
     <mesh position={[0, 0, 0]} castShadow>
-      {/* @ts-ignore - React Three Fiber elements */}
       <boxGeometry args={[0.5, 0.5, 0.5]} />
-      {/* @ts-ignore - React Three Fiber elements */}
       <meshStandardMaterial 
         color={color} 
         emissive={getEmissiveColor()}
@@ -96,7 +89,6 @@ const ShipMesh: React.FC<ShipMeshProps> = ({
         metalness={hasResources ? 0.3 : 0.1}
         roughness={hasResources ? 0.4 : 0.8}
       />
-    {/* @ts-ignore - React Three Fiber elements */}
     </mesh>
   );
 };

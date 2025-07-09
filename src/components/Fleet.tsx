@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect } from "react";
+
 import { useXFSMDroneTracker } from "../ai/fsm/hooks/trackers/drone/useXFSMDroneTracker";
 import { useXFSMShipTracker } from "../ai/fsm/hooks/trackers/ship/useXFSMShipTracker";
 import { useDroneAnimation } from "../animations/useDroneAnimation";
@@ -6,12 +7,15 @@ import { useShipAnimation } from "../animations/useShipAnimation.js";
 import fsmLogger from "../logger/fsmLogger.js";
 import useGameStore from "../stores/useGameStore";
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
+
+import type { VehicleId, WorldPosition } from "../types";
+
+import type { TileCoordinate } from "../types/coordinates";
+
 import DroneMesh from "./Vehicles/DroneMesh";
 import ShipMesh from "./Vehicles/ShipMesh";
 
 // Types
-import type { VehicleId, WorldPosition } from "../types";
-import type { TileCoordinate } from "../types/coordinates";
 import "../types/r3f.d.ts"; // Import R3F types
 
 /**
@@ -47,7 +51,7 @@ const Fleet: React.FC<FleetProps> = React.memo(({
   shipPosition = { x: 0, y: 0, z: 0 },
   dronePosition = { x: 0.5, y: 0.8, z: 0.5 },
   color = "red",
-  tileCoord
+  tileCoord: _tileCoord
 }) => {
   // ===================================================================
   // 🚀 ACCÈS DIRECT AU STORE XFSM
@@ -55,11 +59,11 @@ const Fleet: React.FC<FleetProps> = React.memo(({
   
   // Accès direct au context FSM et à la fonction send
   const botState = useXFSMStore((state) => state.botStates[botId]);
-  const context = (botState && 'context' in botState) ? (botState as any).context : undefined;
+  const context = (botState && 'context' in botState) ? (botState as { context: unknown }).context : undefined;
   const send = useXFSMStore((state) => state.send);
   
   // Fonction send spécifique au bot
-  const fsmSend = useCallback((event: any) => {
+  const fsmSend = useCallback((event: { type: string; [key: string]: unknown }) => {
     send(event, botId);
   }, [send, botId]);
   
@@ -115,7 +119,6 @@ const Fleet: React.FC<FleetProps> = React.memo(({
   return (
     <>
       {/* 🚢 VAISSEAU PRINCIPAL - Position relative au group parent */}
-      {/* @ts-ignore - React Three Fiber elements */}
       <group ref={shipRef}>
         <ShipMesh 
           color={color} 
@@ -124,11 +127,9 @@ const Fleet: React.FC<FleetProps> = React.memo(({
           currentAction={currentAction}
           isMoving={isMoving}
         />
-      {/* @ts-ignore */}
       </group>
 
       {/* 🚁 DRONE EXPLORATEUR - Position relative avec offset initial */}
-      {/* @ts-ignore - React Three Fiber elements */}
       <group 
         ref={droneRef}
         position={[
@@ -144,7 +145,6 @@ const Fleet: React.FC<FleetProps> = React.memo(({
           droneState={{ state: droneState }}
           droneType="explorer"
         />
-      {/* @ts-ignore */}
       </group>
     </>
   );

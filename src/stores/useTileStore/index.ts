@@ -42,15 +42,15 @@
 import { create } from 'zustand';
 
 // Import des slices spécialisés
-import createTileBaseSlice from './slices/tileBaseSlice.js';
-import createTileFilterSlice from './slices/tileFilterSlice.js';
-import createTileMarkSlice from './slices/tileMarkSlice.js';
-import createTilePathSlice from './slices/tilePathSlice.js';
-import createTileResourceSlice from './slices/tileResourceSlice.js';
+import createTileBaseSlice from './slices/tileBaseSlice.ts';
+import createTileFilterSlice from './slices/tileFilterSlice.ts';
+import createTileMarkSlice from './slices/tileMarkSlice.ts';
+import createTilePathSlice from './slices/tilePathSlice.ts';
+import createTileResourceSlice from './slices/tileResourceSlice.ts';
 
 // Import des nouveaux slices migrés depuis utils
-import createTileCoordinateSlice from './slices/tileCoordinateSlice.js';
-import createTileGenerationSlice from './slices/tileGenerationSlice.js';
+import createTileCoordinateSlice from './slices/tileCoordinateSlice.ts';
+import createTileGenerationSlice from './slices/tileGenerationSlice.ts';
 
 // =========================================================================
 // STORE PRINCIPAL
@@ -68,7 +68,7 @@ import createTileGenerationSlice from './slices/tileGenerationSlice.js';
  * 6. Coordinate : système de coordonnées (migré depuis utils/coordinateSystem)
  * 7. Generation : génération hexagonale (migré depuis utils/utils)
  */
-export const useTileStore = create((set: any, get: any) => ({
+export const useTileStore = create((set, get) => ({
   // =========================================================================
   // COMPOSITION DES SLICES
   // =========================================================================

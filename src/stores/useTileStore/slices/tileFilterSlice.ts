@@ -27,7 +27,7 @@ import type {
   Tile,
   TileType,
   TileWithDistance
-} from '../../../types/index.js';
+} from '../../../types/index.ts';
 
 import { DRONE_EXPLORATION_CONFIG } from '../../../ai/fsm/machineX/config/constants.ts';
 

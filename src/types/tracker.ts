@@ -8,6 +8,7 @@
  */
 
 import type { MutableRefObject } from 'react';
+
 import type { GridCoordinate, TileCoordinate, WorldPosition } from './coordinates';
 import type { DroneType } from './drone';
 import type { FSMContext } from './fsm';

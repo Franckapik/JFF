@@ -52,7 +52,6 @@ const DroneMesh: React.FC<DroneMeshProps> = ({
         rotation={[Math.PI, 0, 0]}
         castShadow
       >
-        {/* @ts-ignore - React Three Fiber elements */}
         <meshStandardMaterial 
           color={color}
           // État FSM → Couleur émissive

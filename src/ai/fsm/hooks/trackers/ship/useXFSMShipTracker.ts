@@ -13,11 +13,13 @@
  */
 
 import { useCallback, useEffect, useRef } from "react";
+
 import type { ShipType, XStateSend } from '../../../../../types';
 import type { WorldPosition } from '../../../../../types/coordinates';
 import type { FSMContext } from '../../../../../types/fsm';
 import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants.ts';
 import { useEventDebounce } from '../../useEventDebounce';
+
 import { processShipPosition } from './shipTrackerEngine';
 
 /**
@@ -64,7 +66,7 @@ export function useXFSMShipTracker(
     });
     
     lastPosition.current = { ...newPosition };
-  }, [fsmSend, botId, shipType, canSendEvent, markEventSent]);
+  }, [fsmSend, botId, shipType, canSendEvent, markEventSent, context]);
 
   // Reset lors du changement de botId
   useEffect(() => {

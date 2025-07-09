@@ -30,7 +30,7 @@
 import type {
     GridCoordinate,
     Tile
-} from '../../../types/index.js';
+} from '../../../types/index.ts';
 import type { ResourceStats } from '../../../types/resources.js';
 
 import fsmLogger from '../../../logger/fsmLogger.js';

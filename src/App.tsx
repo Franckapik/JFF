@@ -1,5 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import React from 'react';
+
 import Scene from "./components/Scene.tsx";
 import "./styles/App.css";
 

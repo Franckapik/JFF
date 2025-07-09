@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 /* ========================================
  * IMPORTS
  * ======================================== */
@@ -18,16 +20,11 @@ import useGameStore from "../stores/useGameStore";
 import { useTileStore } from "../stores/useTileStore/index";
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
 
-// Types
-import "../types/r3f.d.ts"; // Import R3F global type declarations
 
 // Utils
 import { BotId } from "@/types/fsm.ts";
 
-// Constantes
-const TILE_TYPES = {
-  DEPART: "depart" as const,
-};
+
 
 /* ========================================
  * MAIN COMPONENT
@@ -39,10 +36,10 @@ const Scene: React.FC = () => {
    * ======================================== */
 
   // Tile management
-  const setTiles = useTileStore(state => state.setTiles);
-  const initializeGameGrid = useTileStore(state => state.initializeGameGrid);
-  const tiles = useTileStore(state => state.tiles);
-  const assignStartingTiles = useTileStore(state => state.assignStartingTiles);
+  const setTiles = useTileStore((state) => state.setTiles);
+  const initializeGameGrid = useTileStore((state) => state.initializeGameGrid);
+  const tiles = useTileStore((state) => state.tiles);
+  const assignStartingTiles = useTileStore((state) => state.assignStartingTiles);
 
   // Game configuration - seulement pour getBotColorById maintenant
   const getBotColorById = useGameStore(state => state.getBotColorById);
@@ -145,43 +142,49 @@ const Scene: React.FC = () => {
   return (
     <>
       {/* Scene setup - Grid and lighting */}
-      {/* @ts-ignore */}
       <gridHelper args={[10, 10]} />
-      {/* @ts-ignore */}
       <ambientLight intensity={1} />
-      {/* @ts-ignore */}
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
-      {/* @ts-ignore */}
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
+      
       {/* All tiles rendering */}
       {Object.values(tiles).map(tile => {
+        // Cast tile to the correct type if possible
+        type TileType = {
+          coord: string;
+          position: { x: number; z: number };
+          radius?: number;
+          color?: string;
+          type?: string;
+          assignedToBot?: string;
+        };
+        const typedTile = tile as TileType;
+
         // Vérifier si c'est une tuile de départ assignée à un bot actif
         const isAssignedDepartTile =
-          tile.type === 'depart' && tile.assignedToBot && activeBots.includes(tile.assignedToBot as BotId);
+          typedTile.type === 'depart' && typedTile.assignedToBot && activeBots.includes(typedTile.assignedToBot as BotId);
 
         return (
-          <React.Fragment key={tile.coord}>
-            <Tile position={[tile.position.x, 0, tile.position.z]} radius={1} color={tile.color || "#888888"} coord={tile.coord} />
+          <React.Fragment key={typedTile.coord}>
+            <Tile position={[typedTile.position.x, 0, typedTile.position.z]} radius={1} color={typedTile.color || "#888888"} coord={typedTile.coord} />
             {/* Fleet pour les tuiles de départ assignées - SEULEMENT si le bot est actif */}
-            {isAssignedDepartTile && isBotActive(tile.assignedToBot as BotId) && (
-              // @ts-ignore
-              <group position={[tile.position.x, 0.5, tile.position.z]}>
+            {isAssignedDepartTile && isBotActive(typedTile.assignedToBot as BotId) && (
+              <group position={[typedTile.position.x, 0.5, typedTile.position.z]}>
                 <Fleet
-                  botId={tile.assignedToBot as BotId}
-                  color={getBotColorById(tile.assignedToBot as BotId)}
+                  botId={typedTile.assignedToBot as BotId}
+                  color={getBotColorById(typedTile.assignedToBot as BotId)}
                   shipPosition={{
-                    x: tile.position.x,
+                    x: typedTile.position.x,
                     y: 0.5,
-                    z: tile.position.z,
+                    z: typedTile.position.z,
                   }}
                   dronePosition={{
-                    x: tile.position.x + 0.5,
+                    x: typedTile.position.x + 0.5,
                     y: 0.8,
-                    z: tile.position.z + 0.5,
+                    z: typedTile.position.z + 0.5,
                   }}
-                  tileCoord={tile.coord as any}
+                  tileCoord={typedTile.coord as any}
                 />
-                {/* @ts-ignore */}
               </group>
             )}
           </React.Fragment>

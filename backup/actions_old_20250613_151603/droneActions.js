@@ -44,8 +44,8 @@
  * @version 2.0.0
  */
 
-import { DRONE_DEPLOYMENT_STATES, DRONE_TYPES, DRONE_VISUAL_STATES, DRONE_CONFIG } from '../../constants/constants.js';
-import { useTileStore } from '../../../../../stores/useTileStore/index.js';
+import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
+import { DRONE_CONFIG, DRONE_DEPLOYMENT_STATES, DRONE_TYPES, DRONE_VISUAL_STATES } from '../../constants/constants.js';
 
 // ============================================================================
 // CONSTANTS ET TYPES (réexportés pour compatibilité)

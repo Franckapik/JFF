@@ -28,12 +28,11 @@
  * - Découverte et stockage des ressources en une fois
  */
 
-import { useEffect, useRef, useCallback, useMemo } from 'react';
-import { MOVEMENT_EVENT_TYPES } from '../../../../src/ai/fsm/machine/events/movementEvents.js';
-import { POSITION_TRACKER_CONFIG } from '../../../../src/ai/fsm/machine/constants/constants.js';
-import { useTileStore } from '../../../../src/stores/useTileStore/index.js';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useEventDebounce } from '../../../../src/ai/fsm/hooks/useEventDebounce.js';
+import { POSITION_TRACKER_CONFIG } from '../../../../src/ai/fsm/machine/constants/constants.js';
 import fsmLogger from '../../../../src/logger/fsmLogger.js';
+import { useTileStore } from '../../../../src/stores/useTileStore/index.ts';
 
 /**
  * Hook spécialisé pour le tracking des drones

@@ -18,11 +18,12 @@
  */
 
 import { Vector3 } from "three";
+
 import type {
-    GridCoordinate,
-    TileCoordinate,
-    WorldPosition
-} from '../../../types/index.js';
+  GridCoordinate,
+  TileCoordinate,
+  WorldPosition
+} from '../../../types/index.ts';
 
 // =========================================================================
 // TYPES LOCAUX

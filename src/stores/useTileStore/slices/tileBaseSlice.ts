@@ -23,7 +23,7 @@ import type {
   GridCoordinate,
   Tile,
   TileMap
-} from '../../../types/index.js';
+} from '../../../types/index.ts';
 
 // =========================================================================
 // TYPES LOCAUX

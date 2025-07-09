@@ -10,8 +10,10 @@
  * @version 1.0.0 - Architecture XState
  */
 
-import fsmLogger from '../../../../logger/fsmLogger.js';
 import { assign } from 'xstate';
+
+import fsmLogger from '../../../../logger/fsmLogger.js';
+
 import { droneDeployForExploration } from './core/droneExploringActions.js';
 
 /**

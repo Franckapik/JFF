@@ -22,7 +22,7 @@
 
 import type {
     GridCoordinate
-} from '../../../types/index.js';
+} from '../../../types/index.ts';
 
 import { isTileCompletelyCollected } from './tileResourceSlice.js';
 

@@ -12,15 +12,15 @@
  * @version 2.0.0
  */
 
-import { useEffect, useRef, useMemo, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useMachine } from 'react-robot';
-import { createMachineContext } from '../machineX/context/initialContext.js';
-import { ENTITY_TYPES } from '../../../src/ai/fsm/machine/constants/constants.js';
-import { createBotMachine } from '../../../src/ai/fsm/machine/machineFactory.js';
-import { SYSTEM_EVENT_TYPES } from '../../../src/ai/fsm/machine/events/systemEvents.js';
-import { MOVEMENT_EVENT_TYPES, movementEvents } from '../../../src/ai/fsm/machine/events/movementEvents.js';
-import { useTileStore } from '../../../stores/useTileStore/index.js';
 import fsmLogger from '../../../logger/fsmLogger.js';
+import { ENTITY_TYPES } from '../../../src/ai/fsm/machine/constants/constants.js';
+import { movementEvents } from '../../../src/ai/fsm/machine/events/movementEvents.js';
+import { SYSTEM_EVENT_TYPES } from '../../../src/ai/fsm/machine/events/systemEvents.js';
+import { createBotMachine } from '../../../src/ai/fsm/machine/machineFactory.js';
+import { useTileStore } from '../../../stores/useTileStore/index.ts';
+import { createMachineContext } from '../machineX/context/initialContext.js';
 
 // Map globale pour les instances partagées (optionnel)
 const globalMachineInstances = new Map();

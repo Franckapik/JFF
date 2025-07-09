@@ -4,7 +4,7 @@
 
 // --- EFFICIENCY GUARDS & UTILS ---
 import fsmLogger from '../../../../logger/fsmLogger.js';
-import { FUEL_CONFIG } from '../config/constants';
+import { FUEL_CONFIG } from '../config/constants.ts';
 
 // Utils
 export const getMaxCapacity = (vehicle) => {

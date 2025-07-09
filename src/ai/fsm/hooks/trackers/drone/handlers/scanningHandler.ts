@@ -17,7 +17,7 @@ interface ScanningHandlerParams {
   markEventSent: (eventType: string, timeout?: number) => void;
   gridToHexCoord: GridToHexCoordFn;
   worldToGrid: WorldToGridFn;
-  useTileStore: any; // Type générique pour le store
+  useTileStore: () => any; // Type de fonction pour le hook useTileStore
 }
 
 /**

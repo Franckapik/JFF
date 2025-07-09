@@ -3,64 +3,7 @@
  * SHIP COLLECTING ACTIONS CORE - Actions de collecte des ships (SIMPLIFIÉ)
  * ============================================================================
  * 
- * Action  // 🔍 DEBUG: Synchroniser avec le TileStore pour permettre la collecte et l'affichage du statut
-  fsmLogger.resources(`[${context.entityId}] 🔍 DEBUG: Starting TileStore synchronization`, {
-    coord,
-    resourcesToCollect,
-    tileStoreAvailable: !!useTileStore
-  });
-  
-  try {
-    const tileStore = useTileStore.getState();
-    fsmLogger.resources(`[${context.entityId}] 🔍 DEBUG: TileStore state retrieved`, {
-      tilesCount: Object.keys(tileStore.tiles || {}).length,
-      tileExists: !!tileStore.tiles?.[coord],
-      tileHasResources: !!tileStore.tiles?.[coord]?.resources
-    });
-    
-    const syncSuccess = tileStore.deductTileResources(coord, resourcesToCollect);
-    
-    if (syncSuccess) {
-      // Vérifier le résultat de la déduction
-      const updatedTile = tileStore.tiles?.[coord];
-      fsmLogger.resources(`[${context.entityId}] ✅ DEBUG: TileStore synchronized - collection complete`, {
-        coord,
-        deductedResources: resourcesToCollect,
-        remainingResources: updatedTile?.resources,
-        resourcePercentage: updatedTile?.resourcePercentage,
-        isCompletelyCollected: isTileCompletelyCollected(useTileStore.getState().tiles[coord]),
-      });
-    } else {
-      fsmLogger.resources(`[${context.entityId}] ⚠️ DEBUG: TileStore sync failed - tile not found in store`, {
-        coord,
-        availableTiles: Object.keys(tileStore.tiles || {}).slice(0, 5) // Premier 5 coords pour debug
-      });
-    }
-  } catch (error) {
-    fsmLogger.resources(`[${context.entityId}] ⚠️ DEBUG: TileStore sync error (non-critical):`, {
-      errorMessage: error.message,
-      errorStack: error.stack
-    });
-  } la collecte de ressources par les ships.
- * Utilise la mémoire unifiée `knownTiles` au lieu des anciens systèmes.
- * 
- * 📋 ACTIONS PRINCIPALES:
- * =======================
- * 
- * 🚢 ACTION UNIFIÉE:
- * - shipCollectsFromTile(context, event) : Ship collecte ressources d'une tuile explorée
- * 
- * 🚢 ACTIONS MOUVEMENT:
- * - shipMoveToTile(context, event) : Initie mouvement ship vers tuile cible
- * - shipStopMovement(context) : Arrête le mouvement ship en cours
- * - shipUpdateProgress(context, event) : Met à jour progression ship (0-100)
- * - shipUpdatePosition(context, event) : Met à jour position ship + sync drones
- * - shipCompleteMovement(context) : Finalise un mouvement ship
- * 
- * 🚢 ACTIONS INVENTAIRE:
- * - shipCreateWithCapacities(context, event) : Crée ship avec capacités
- * - shipDepositResources(context, event) : Dépose ressources à la base
- * - shipUpdateInventory(context, event) : Met à jour l'inventaire ship
+
  * 
  * @author Migration FSM - Simplification Mémoire
  * @version 4.0.0
@@ -141,9 +84,9 @@ export const shipCollectsFromTile = (context, event) => {
     // Collection attempt started
     const collectionStartTime = Date.now();
     fsmLogger.info(`[${context.entityId}] Starting collection from tile ${event.coord}`);
-    
-    const { coord, resourceType } = event;
-    
+
+    const { coord } = event;
+     
     if (!coord) {
       fsmLogger.resources(`[${context.entityId}] ❌ FAILED: No coord in event`);
       return { 

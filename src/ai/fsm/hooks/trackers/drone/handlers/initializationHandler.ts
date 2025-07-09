@@ -21,7 +21,7 @@ interface InitHandlerParams {
  * @param params - Les paramètres nécessaires
  * @returns L'objet handler avec les méthodes
  */
-export const createInitializationHandler = ({ botId, droneType, send, canSendEvent, markEventSent }: InitHandlerParams) => {
+export const createInitializationHandler = ({ botId, droneType, send: _send, canSendEvent: _canSendEvent, markEventSent: _markEventSent }: InitHandlerParams) => {
   return {
     /**
      * Gère l'initialisation de la position du drone
