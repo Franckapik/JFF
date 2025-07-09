@@ -4,6 +4,7 @@ import { useXFSMDroneTracker } from "../ai/fsm/hooks/trackers/drone/useXFSMDrone
 import { useXFSMShipTracker } from "../ai/fsm/hooks/trackers/ship/useXFSMShipTracker";
 import { useDroneAnimation } from "../animations/useDroneAnimation";
 import { useShipAnimation } from "../animations/useShipAnimation.js";
+import fsmLogger from "../logger/fsmLogger.ts";
 import useGameStore from "../stores/useGameStore";
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
 
@@ -17,8 +18,10 @@ import ShipMesh from "./Vehicles/ShipMesh";
 import { GameStoreType, XFSMStoreType } from "@/types/index.js";
 
 
-const Fleet: React.FC<FleetProps> = ({ 
+const Fleet: React.FC<FleetProps> = React.memo(({ 
   botId, 
+  shipPosition = { x: 0, y: 0, z: 0 },
+  dronePosition = { x: 0.5, y: 0.8, z: 0.5 },
   color = "red",
   tileCoord: _tileCoord
 }) => {
@@ -46,33 +49,34 @@ const Fleet: React.FC<FleetProps> = ({
 
   // Initialisation automatique des positions au premier rendu
   useEffect(() => {
-    if (!isFleetPositionsInitialized && fsmSend) {
-      // Utilise la position du contexte FSM ou une valeur par défaut
-      const initialShipPosition = context?.vehicle?.position || { x: 0, y: 0.5, z: 0 };
+    if (!isFleetPositionsInitialized && shipPosition && dronePosition && fsmSend) {
+      // Envoyer les positions initiales au contexte FSM
       fsmSend({ 
         type: 'SHIP_POSITION_UPDATE', 
-        position: initialShipPosition,
+        position: shipPosition,
         shipType: 'ship'
       });
-      const initialDronePosition = context?.droneFleet?.drones?.explorer?.position || { x: 0.5, y: 0.8, z: 0.5 };
+      
       fsmSend({ 
         type: 'DRONE_POSITION_UPDATE', 
-        position: initialDronePosition,
+        position: dronePosition,
         droneType: 'explorer'
       });
+      
       markFleetPositionsAsInitialized(botId);
+      fsmLogger.game(`[Fleet] Initial positions set for ${botId}`);
     }
-  }, [isFleetPositionsInitialized, fsmSend, botId, markFleetPositionsAsInitialized, context]);
+  }, [isFleetPositionsInitialized, shipPosition, dronePosition, fsmSend, botId, markFleetPositionsAsInitialized]);
 
   // 🎯 TRACKERS ET ANIMATIONS - TOUJOURS ACTIFS
-  const dronePositionToTracker = useXFSMDroneTracker(context || {} as FSMContext, fsmSend, botId, 'explorer');
-  const shipPositionToTracker = useXFSMShipTracker(context || {} as FSMContext, fsmSend, botId, 'ship');
+  const updateDroneVisualPosition = useXFSMDroneTracker(context || {} as FSMContext, fsmSend, botId, 'explorer');
+  const updateShipVisualPosition = useXFSMShipTracker(context || {} as FSMContext, fsmSend, botId, 'ship');
   
   const { droneRef, initialPosition, droneState } = useDroneAnimation(
-    context || {} as FSMContext, context?.vehicle?.position || { x: 0, y: 0.5, z: 0 }, dronePositionToTracker, 'explorer', true
+    context || {} as FSMContext, shipPosition, updateDroneVisualPosition, 'explorer', true
   );
   const { shipRef, currentAction, isMoving } = useShipAnimation(
-    context || {} as FSMContext, context?.vehicle?.position || { x: 0, y: 0.5, z: 0 }, shipPositionToTracker, true
+    context || {} as FSMContext, shipPosition, updateShipVisualPosition, true
   );
 
   // ===================================================================
@@ -125,6 +129,20 @@ const Fleet: React.FC<FleetProps> = ({
       </group>
     </>
   );
-};
+}, (prevProps: FleetProps, nextProps: FleetProps) => {
+  // 🚀 OPTIMISATION MÉMOIRE - Évite les re-renders inutiles
+  return (
+    prevProps.botId === nextProps.botId &&
+    prevProps.color === nextProps.color &&
+    prevProps.shipPosition?.x === nextProps.shipPosition?.x &&
+    prevProps.shipPosition?.y === nextProps.shipPosition?.y &&
+    prevProps.shipPosition?.z === nextProps.shipPosition?.z &&
+    prevProps.dronePosition?.x === nextProps.dronePosition?.x &&
+    prevProps.dronePosition?.y === nextProps.dronePosition?.y &&
+    prevProps.dronePosition?.z === nextProps.dronePosition?.z
+  );
+});
+
+Fleet.displayName = 'Fleet';
 
 export default Fleet;
