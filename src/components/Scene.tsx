@@ -167,16 +167,7 @@ const Scene: React.FC = () => {
                 <Fleet
                   botId={typedTile.assignedToBot as BotId}
                   color={getBotColorById(typedTile.assignedToBot as BotId)}
-                  shipPosition={{
-                    x: typedTile.position.x,
-                    y: 0.5,
-                    z: typedTile.position.z,
-                  }}
-                  dronePosition={{
-                    x: typedTile.position.x + 0.5,
-                    y: 0.8,
-                    z: typedTile.position.z + 0.5,
-                  }}
+                  // shipPosition supprimé, la position est maintenant lue depuis le contexte FSM
                   tileCoord={typedTile.coord as any}
                 />
               </group>

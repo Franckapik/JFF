@@ -46,7 +46,7 @@ interface InitialPositions {
  * Hook d'animation spécialisé pour les drones
  * @param context - Contexte FSM
  * @param shipPosition - Position du vaisseau de référence
- * @param updateVisualPosition - Callback pour envoyer la position au tracker
+ * @param positionToTracker - Callback pour envoyer la position au tracker
  * @param droneType - Type de drone ('explorer', 'combat', 'special')
  * @param isActive - Si le bot est actif (animations complètes) ou non
  * @returns Ref du drone et données d'animation
@@ -54,7 +54,7 @@ interface InitialPositions {
 export const useDroneAnimation = (
   context: FSMContext | null,
   shipPosition: WorldPosition | null,
-  updateVisualPosition: (position: WorldPosition) => void,
+  positionToTracker: (position: WorldPosition) => void,
   droneType: DroneType = 'explorer',
   isActive: boolean = true
 ): DroneAnimationReturn => {
@@ -76,7 +76,7 @@ export const useDroneAnimation = (
   // ============================================================================
   
   useEffect(() => {
-    if (shipPosition && updateVisualPosition && !initialPositionSent.current) {
+    if (shipPosition && positionToTracker && !initialPositionSent.current) {
       const droneWorldPosition: WorldPosition = {
         x: shipPosition.x + initialPosition.x,
         y: shipPosition.y + initialPosition.y, 
@@ -84,10 +84,10 @@ export const useDroneAnimation = (
       };
       
       fsmLogger.mouvement(`🛸 [${droneType}] Transmitting initial drone position to FSM tracker:`, droneWorldPosition);
-      updateVisualPosition(droneWorldPosition);
+      positionToTracker(droneWorldPosition);
       initialPositionSent.current = true;
     }
-  }, [shipPosition, updateVisualPosition, droneType, initialPosition]);
+  }, [shipPosition, positionToTracker, droneType, initialPosition]);
 
   // ============================================================================
   // ANIMATION FRAME PRINCIPAL
@@ -177,7 +177,7 @@ export const useDroneAnimation = (
         });
         
         // Envoyer la position actuelle au tracker
-        updateVisualPosition(worldPosition);
+        positionToTracker(worldPosition);
       }
     }
     

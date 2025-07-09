@@ -30,7 +30,7 @@ import { processShipPosition } from './shipTrackerEngine';
  * @param fsmSend - Fonction pour envoyer des events FSM
  * @param botId - ID du bot
  * @param shipType - Type de ship (par défaut 'ship')
- * @returns updateShipVisualPosition - Callback pour MAJ la position visuelle
+ * @returns shipPositionToTracker - Callback pour MAJ la position visuelle
  */
 export function useXFSMShipTracker(
   context: FSMContext, 
@@ -50,7 +50,7 @@ export function useXFSMShipTracker(
    * Surveillance de la position du vaisseau avec debounce
    * Délégation complète au moteur de traitement des positions
    */
-  const updateShipVisualPosition = useCallback((newPosition: WorldPosition) => {
+  const shipPositionToTracker = useCallback((newPosition: WorldPosition) => {
     if (!newPosition) return;
 
     processShipPosition({
@@ -74,5 +74,5 @@ export function useXFSMShipTracker(
     initialPositionSent.current = false;
   }, [botId]);
 
-  return updateShipVisualPosition;
+  return shipPositionToTracker;
 }

@@ -2,7 +2,7 @@ import type { TileCoordinate } from "./coordinates.d";
 import type { FSMContext } from "./fsm.d.ts";
 import type { DroneState } from './vehicle.d';
 
-import type { VehicleId, WorldPosition } from "./index";
+import type { VehicleId } from "./index";
 
 /**
  * Props interface for Tile component (déplacé depuis tile.ts)
@@ -29,9 +29,7 @@ export interface FleetProps {
   /** ID du bot FSM (ex: 'bot-0') */
   botId: VehicleId;
   /** Position mondiale du vaisseau {x,y,z} */
-  shipPosition: WorldPosition;
   /** Position mondiale du drone {x,y,z} */
-  dronePosition: WorldPosition;
   /** Couleur des véhicules */
   color: string;
   /** Coordonnée de la tuile de départ */

@@ -54,7 +54,7 @@ export const useXFSMDroneTracker = (
    * Fonction pour que Fleet.jsx envoie les positions du drone
    * Délégation complète au moteur de traitement des positions
    */
-  const updateDroneVisualPosition = useCallback((position: WorldPosition) => {
+  const dronePositionToTracker = useCallback((position: WorldPosition) => {
     if (!position) return;
     
     currentVisualPosition.current = position;
@@ -87,7 +87,7 @@ export const useXFSMDroneTracker = (
     };
   }, [clearAllEvents]);
 
-  return updateDroneVisualPosition;
+  return dronePositionToTracker;
 };
 
 export default useXFSMDroneTracker;
