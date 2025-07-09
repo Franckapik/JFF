@@ -5,7 +5,7 @@ import { useTileAnimation } from "../animations/useTileAnimation";
 import fsmLogger from "../logger/fsmLogger";
 import useGameStore from "../stores/useGameStore";
 import { useTileStore } from "../stores/useTileStore/index";
-import { isTileCompletelyCollected, isTilePartiallyCollected } from "../stores/useTileStore/slices/tileResourceSlice";
+import { isTileCompletelyCollected } from "../stores/useTileStore/slices/tileResourceSlice";
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
 import type { BotId } from "../types/fsm";
 import type { TileProps } from "../types/tile";
@@ -111,8 +111,7 @@ const Tile: React.FC<TileProps> = ({
     }
   }, [isExplored, coord, isAssignedDepartTile]);
   
-  // Une tuile est partiellement collectée si le pourcentage est entre 1 et 99%
-  const isPartiallyCollected = tile ? isTilePartiallyCollected(tile) : false;
+
   
   // Une tuile est complètement collectée si le pourcentage est à 0%
   const isCompletelyCollected = tile ? isTileCompletelyCollected(tile) : false;

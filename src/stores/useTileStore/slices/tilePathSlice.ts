@@ -155,7 +155,6 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
     from: GridCoordinate | TileCoordinate | WorldPosition, 
     to: GridCoordinate | TileCoordinate | WorldPosition, 
     usePathfinding: boolean = false, 
-    detailed: boolean = false
   ): number => {
     const tiles = get().tiles;
     

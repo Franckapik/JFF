@@ -151,10 +151,22 @@ export interface FSMContext {
   droneFleet: DroneFleet;
 }
 
+
 // Fonction utilitaire de type uniquement pour validation d'état
 export const isValidStateTransition = (from: string, to: string): boolean => {
   return typeof from === 'string' && typeof to === 'string' && from !== to;
 };
+
+/**
+ * Type d'événement FSM générique (pour XState, actions, guards...)
+ * Peut être adapté selon la structure exacte des events dans le projet.
+ */
+export interface FSMEvent {
+  type: string;
+  // Ajoutez ici les propriétés attendues pour vos events
+  // Par exemple : payload?: Record<string, unknown>;
+  [key: string]: unknown;
+}
 
 /**
  * Types pour le store XFSM (Zustand + XState)
@@ -179,7 +191,7 @@ export interface BotStatesMap {
 
 /** Actions disponibles dans le store XFSM */
 export interface XFSMStoreActions {
-  send: (event: any, botId?: BotId) => void;
+  send: (event: FSMEvent, botId?: BotId) => void;
   addBot: (botId: BotId) => void;
   startBot: (botId: BotId) => void;
   removeBot: (botId: BotId) => void;

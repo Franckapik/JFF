@@ -119,7 +119,7 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
      */
     addBot: (botId: BotId): void => {
       if (!botId || actors.has(botId)) return;
-      const newActor = createBotActor(botId); // Créer sans démarrer
+      createBotActor(botId); // Créer sans démarrer
       const currentState = get();
       const newActiveBots = currentState.activeBots.includes(botId) 
         ? currentState.activeBots 

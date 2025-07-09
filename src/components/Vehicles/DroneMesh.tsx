@@ -2,8 +2,6 @@ import { Cone } from "@react-three/drei";
 import React from "react";
 
 // Types
-import type { VehicleId } from "../../types";
-import type { FSMContext } from "../../types/fsm";
 
 /**
  * Interface pour l'état du drone
@@ -19,31 +17,15 @@ interface DroneState {
 interface DroneMeshProps {
   /** Couleur du drone */
   color: string;
-  /** ID du bot FSM */
-  botId: VehicleId;
-  /** Contexte FSM pour l'état du drone */
-  context?: FSMContext;
   /** État du drone */
   droneState: DroneState;
-  /** Type de drone */
-  droneType?: string;
 }
 
-/**
- * Types d'états de drone
- */
-type DroneStateType = 
-  | 'exploring'
-  | 'returning'
-  | 'deploying'
-  | 'idle';
+
 
 const DroneMesh: React.FC<DroneMeshProps> = ({ 
   color, 
-  botId, 
-  context, 
   droneState, 
-  droneType = 'explorer' 
 }) => {
   return (
     <>

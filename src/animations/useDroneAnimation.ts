@@ -18,10 +18,10 @@ import * as THREE from 'three';
 import fsmLogger from '../logger/fsmLogger';
 import type { FSMContext, WorldPosition } from '../types';
 import {
-    DRONE_STATES,
-    DroneType,
-    DroneVisualState,
-    isDroneMoving
+  DRONE_STATES,
+  DroneType,
+  DroneVisualState,
+  isDroneMoving
 } from '../types/drone';
 
 // ============================================================================
@@ -210,11 +210,11 @@ export const useDroneAnimation = (
         
       case DRONE_STATES.VISUAL.FAILED:
         // Animation d'erreur - clignotement
-        const flicker = Math.sin(now * 10) > 0 ? 1 : 0.3;
+        {const flicker = Math.sin(now * 10) > 0 ? 1 : 0.3;
         if (droneRef.current.material && 'opacity' in droneRef.current.material) {
           (droneRef.current.material as THREE.Material & { opacity: number }).opacity = flicker;
         }
-        break;
+        break;}
         
       default:
         // État par défaut : rotation lente

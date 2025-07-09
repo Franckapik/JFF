@@ -158,14 +158,14 @@ export const useShipAnimation = (context, shipWorldPosition, updateVisualPositio
       case 'collecting':
       case 'resource_collection':
         // Animation de collecte intensive - oscillation rapide + rotation
-        const collectIntensity = Math.sin(now * 6) * 0.15;
+        {const collectIntensity = Math.sin(now * 6) * 0.15;
         shipRef.current.position.y = 0.5 + collectIntensity;
         shipRef.current.rotation.y += delta * 1.2;
         
         // Léger balancement pour simuler l'effort de collecte
         shipRef.current.rotation.x = Math.sin(now * 4) * 0.1;
         shipRef.current.rotation.z = Math.cos(now * 3) * 0.08;
-        break;
+        break;}
         
       case 'returning_to_base':
         // Animation de retour - mouvement plus stable mais avec urgence

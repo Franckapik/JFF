@@ -69,7 +69,7 @@ export interface ShipTrackerParams extends BaseTrackerParams {
 // ============================================================================
 
 /** Interface pour les handlers de traitement des positions */
-export interface PositionHandler<T = BaseTrackerParams> {
+export interface PositionHandler {
   process: (distance: number, position: WorldPosition) => boolean;
 }
 

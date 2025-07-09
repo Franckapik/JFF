@@ -15,13 +15,13 @@
 // ============================================================================
 
 export {
-  convertFSMToVisual, convertVisualToFSM, DRONE_STATES,
-  DRONE_TYPES, isDroneMoving
+    DRONE_STATES,
+    DRONE_TYPES, convertFSMToVisual, convertVisualToFSM, isDroneMoving
 } from '../../../../types/drone';
 
 export type {
-  DroneFSMState, DroneType,
-  DroneVisualState
+    DroneFSMState, DroneType,
+    DroneVisualState
 } from '../../../../types/drone';
 
 // ============================================================================
@@ -124,14 +124,17 @@ export const EXPLORATION_CYCLE_CONFIG = {
   FULL_CYCLE_DURATION: 15000,        // 15 secondes
   DRONE_DEPLOYMENT_DURATION: 3000,   // 3 secondes
   DRONE_RETURN_DURATION: 2000,       // 2 secondes
-  
+
   // Configuration des drones
   SIMULTANEOUS_DRONES: 2,             // Nombre de drones en simultané
   EXPLORATION_RADIUS: 3,              // Rayon d'exploration
-  
+
   // Gestion des resources
   FUEL_CONSUMPTION_RATE: 0.1,        // Consommation par cycle
-  DISCOVERY_BONUS: 10                 // Bonus de découverte
+  DISCOVERY_BONUS: 10,                // Bonus de découverte
+
+  // Ajout pour guards/all : nombre de tuiles à explorer avant collecte
+  TILES_BEFORE_COLLECTION: 10         // Valeur par défaut, à ajuster selon besoin
 } as const;
 
 // ============================================================================

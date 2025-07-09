@@ -20,11 +20,11 @@
  */
 
 import type {
-    GridCoordinate,
-    Tile,
-    TileBiome,
-    TileMap,
-    TileType
+  GridCoordinate,
+  Tile,
+  TileBiome,
+  TileMap,
+  TileType
 } from '../../../types/index.ts';
 import type { ResourceStats } from '../../../types/resources.js';
 
@@ -89,12 +89,6 @@ const tileConstants = {
 // =========================================================================
 // TYPES LOCAUX
 // =========================================================================
-
-/** Coordonnée hexagonale */
-interface HexCoordinate {
-  q: number;
-  r: number;
-}
 
 /** Actions du slice de génération */
 interface TileGenerationSliceActions {
@@ -259,7 +253,7 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
    * @param radius - Rayon de la grille
    * @returns Nouveau TileMap avec les tuiles de danger placées
    */
-  placeDangerTiles: (tileMap: TileMap, radius: number): TileMap => {
+  placeDangerTiles: (tileMap: TileMap): TileMap => {
     const tiles = Object.values(tileMap);
     const dangerCount = Math.max(1, Math.floor(tiles.length * 0.1));
     

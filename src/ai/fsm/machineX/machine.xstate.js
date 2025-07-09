@@ -14,7 +14,7 @@ import { assign, createMachine } from 'xstate';
 
 import allActions from './actions/index.js';
 import { createMachineContext } from './context/initialContext.ts';
-import * as allGuards from './guards/guards.all.js';
+import * as allGuards from './guards/guards.all.ts';
 import { collectingState } from './states/collecting.state.js';
 import { evaluatingState } from './states/evaluating.state.js';
 import { exploringState } from './states/exploring.state.js';

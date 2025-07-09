@@ -13,7 +13,7 @@
 export * from './actions/index.js';
 export * from './config/constants.ts';
 export * from './events/events.config.js';
-export * from './guards/guards.all.js';
+export * from './guards/guards.all.ts';
 export { machineX } from './machine.xstate.js';
 export * from './states/index.js';
 

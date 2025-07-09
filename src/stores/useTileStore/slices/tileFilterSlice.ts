@@ -30,6 +30,7 @@ import type {
 } from '../../../types/index.ts';
 
 import { DRONE_EXPLORATION_CONFIG } from '../../../ai/fsm/machineX/config/constants.ts';
+import fsmLogger from '../../../logger/fsmLogger.js';
 
 // =========================================================================
 // TYPES LOCAUX SIMPLIFIÉS
@@ -104,21 +105,20 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
       
       // Validation de la coordonnée centrale
       if (!centerCoord || typeof centerCoord !== 'string' || !centerCoord.includes(',')) {
-        console.warn('[getWalkableTilesInRadius] Coordonnée centrale invalide:', centerCoord);
+        fsmLogger.error('[getWalkableTilesInRadius] Coordonnée centrale invalide:', centerCoord);
         return [];
       }
       
       // Validation et contrainte du rayon
       const validRadius = Math.max(1, Math.min(radius, DRONE_EXPLORATION_CONFIG.MAX_EXPLORATION_RADIUS));
       if (validRadius !== radius) {
-        console.info(`[getWalkableTilesInRadius] Rayon ajusté de ${radius} à ${validRadius} (contraintes: 1-${DRONE_EXPLORATION_CONFIG.MAX_EXPLORATION_RADIUS})`);
+        fsmLogger.info(`[getWalkableTilesInRadius] Rayon ajusté de ${radius} à ${validRadius} (contraintes: 1-${DRONE_EXPLORATION_CONFIG.MAX_EXPLORATION_RADIUS})`);
       }
       
       // Extraction des options avec valeurs par défaut
       const {
         onlyUnexplored = false,
         excludeDanger = true,
-        maxRadius = DRONE_EXPLORATION_CONFIG.MAX_EXPLORATION_RADIUS
       } = options;
       
       // ===============================================================
@@ -128,7 +128,7 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
       const walkableTiles = get().getWalkableTiles();
       
       if (walkableTiles.length === 0) {
-        console.warn('[getWalkableTilesInRadius] Aucune tuile walkable disponible');
+        fsmLogger.error('[getWalkableTilesInRadius] Aucune tuile walkable disponible');
         return [];
       }
       
@@ -136,7 +136,7 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
       const [centerX, centerZ] = centerCoord.split(',').map(Number);
       
       if (isNaN(centerX) || isNaN(centerZ)) {
-        console.error('[getWalkableTilesInRadius] Coordonnées centrales non numériques:', centerCoord);
+        fsmLogger.error('[getWalkableTilesInRadius] Coordonnées centrales non numériques:', centerCoord);
         return [];
       }
       
@@ -195,7 +195,7 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
       const sortedResults = results.sort((a, b) => a.distance - b.distance);
       
       // Logs informatifs pour le debug
-      console.log(`[getWalkableTilesInRadius] Recherche terminée:`, {
+      fsmLogger.info(`[getWalkableTilesInRadius] Recherche terminée:`, {
         centerCoord,
         radius: validRadius,
         processed: processedCount,
@@ -210,7 +210,7 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
       
       // Log des premiers résultats pour vérification
       if (sortedResults.length > 0) {
-        console.log('[getWalkableTilesInRadius] Premiers résultats:', 
+        fsmLogger.info('[getWalkableTilesInRadius] Premiers résultats:', 
           sortedResults.slice(0, 3).map(r => ({
             coord: r.coord,
             distance: r.distance.toFixed(2),

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 import usePlayerStore from "../../stores/usePlayerStore"; // Import player store
 

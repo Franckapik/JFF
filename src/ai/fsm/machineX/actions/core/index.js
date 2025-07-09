@@ -35,12 +35,9 @@
  * @version 3.0.0 - Refactoring métier complet
  */
 
-// Import des actions core refactorisées
-import { shipCollectingActions } from './core/shipCollectingActions.js'; // NOUVEAU - Domaine métier collecting
-import { droneExploringActions } from './droneExploringActions.js'; // NOUVEAU - Domaine métier exploring
-import { fuelActions } from './fuelActions.js';
-import { resourceActions } from './resourcesActions.js';
-import { positionActions } from './positionActions.js'; // NOUVEAU - Actions liées à la position
+// Import des actions core refactorisées (après nettoyage)
+import { droneExploringActions } from './droneExploringActions.js';
+import { positionActions } from './positionActions.js';
 
 // ⚠️ ANCIENS IMPORTS SUPPRIMÉS - Fichiers supprimés lors du nettoyage
 // import movementCore from './movementActions.js'; // SUPPRIMÉ
@@ -51,50 +48,23 @@ import { positionActions } from './positionActions.js'; // NOUVEAU - Actions li�
 // EXPORTS INDIVIDUELS - NOUVELLES ACTIONS REFACTORISÉES
 // ============================================================================
 
-// 🚢 Ship Collecting Actions - NOUVEAU (Domaine métier: Collecting)
-export { shipCollectingActions } from './core/shipCollectingActions.js';
-
-// 🚁 Drone Exploring Actions - NOUVEAU (Domaine métier: Exploring) 
+//  Drone Exploring Actions - Domaine métier: Exploring
 export { droneExploringActions } from './droneExploringActions.js';
-
-// Autres Actions inchangées
-export { fuelActions } from './fuelActions.js';
-export { resourceActions } from './resourcesActions.js';
-export { positionActions } from './positionActions.js'; // NOUVEAU - Export des actions de position
+export { positionActions } from './positionActions.js';
 
 // ============================================================================
 // EXPORTS RÉTROCOMPATIBILITÉ - UTILISANT LES NOUVELLES ACTIONS
 // ============================================================================
 
-// Movement Actions - RÉTROCOMPATIBILITÉ (Redirige vers shipCollectingActions)
-export { 
-  movementActions, 
-  shipMovementActions, 
-  entityMovementActions 
-} from './core/shipCollectingActions.js';
-
-// Drone Actions - RÉTROCOMPATIBILITÉ (Redirige vers droneExploringActions)
-export { 
-  droneDeploymentActions, 
-  droneFleetActions 
-} from './droneExploringActions.js';
-
-// Exploration Actions - RÉTROCOMPATIBILITÉ (Redirige vers droneExploringActions)  
-export { 
-  explorationActions 
-} from './droneExploringActions.js';
+// (Rétrocompatibilité supprimée : shipCollecting/movement/fuel/resource n'existent plus)
 
 // ============================================================================
 // EXPORT GROUPÉ PAR DOMAINE MÉTIER - REFACTORISÉ
 // ============================================================================
 
-// Nouveaux domaines métier
-export const shipCollecting = shipCollectingActions; // NOUVEAU - Domaine collecting
-export const droneExploring = droneExploringActions; // NOUVEAU - Domaine exploring
-
-// Domaines inchangés
-export const fuel = fuelActions;
-export const resource = resourceActions;
+// Domaine métier restant
+export const droneExploring = droneExploringActions;
+export const position = positionActions;
 
 // ⚠️ ANCIENS EXPORTS SUPPRIMÉS - Remplacés par les nouveaux domaines métier
 // export const movement = movementCore; // SUPPRIMÉ - Utiliser shipCollecting
@@ -102,28 +72,15 @@ export const resource = resourceActions;
 // export const drone = droneCore; // SUPPRIMÉ - Utiliser droneExploring
 
 // ============================================================================
-// EXPORTS COLLECTIONS - ACTIONS REFACTORISÉES
+// EXPORTS COLLECTIONS - ACTIONS RESTANTES
 // ============================================================================
 
 /**
- * Toutes les actions regroupées par domaine métier
+ * Toutes les actions regroupées par domaine métier restant
  */
 export const coreActions = {
-  // Nouveaux domaines métier avec préfixes cohérents
-  shipCollecting: shipCollectingActions.actions, // NOUVEAU - Actions avec préfixe "ship"
-  droneExploring: droneExploringActions.actions, // NOUVEAU - Actions avec préfixe "drone"
-  
-  // Domaines inchangés
-  fuel: fuelActions.actions,
-  resource: resourceActions.actions,
-  
-  // ⚠️ RÉTROCOMPATIBILITÉ - Redirige vers les nouvelles actions
-  movement: shipCollectingActions.actions, // RÉTROCOMPATIBILITÉ - Redirige vers shipCollecting
-  shipMovement: shipCollectingActions.shipActions, // RÉTROCOMPATIBILITÉ - Redirige vers shipCollecting
-  entityMovement: shipCollectingActions.entityActions, // RÉTROCOMPATIBILITÉ - Redirige vers shipCollecting
-  drone: droneExploringActions.actions, // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
-  droneFleet: droneExploringActions.fleetActions, // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
-  exploration: droneExploringActions.actions // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
+  droneExploring: droneExploringActions.actions,
+  position: positionActions.actions
 };
 
 // ============================================================================
@@ -131,21 +88,7 @@ export const coreActions = {
 // ============================================================================
 
 export default {
-  // Nouveaux domaines métier
-  shipCollecting: shipCollectingActions, // NOUVEAU - Domaine collecting avec préfixe "ship"
-  droneExploring: droneExploringActions, // NOUVEAU - Domaine exploring avec préfixe "drone"
-  
-  // Domaines inchangés
-  fuel: fuelActions,
-  resource: resourceActions,
-  position: positionActions, // NOUVEAU - Domaine position
-  
-  // ⚠️ RÉTROCOMPATIBILITÉ - Redirige vers les nouvelles actions
-  // Les anciens noms pointent maintenant vers les nouveaux domaines
-  movement: shipCollectingActions, // RÉTROCOMPATIBILITÉ - Redirige vers shipCollecting
-  exploration: droneExploringActions, // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
-  drone: droneExploringActions, // RÉTROCOMPATIBILITÉ - Redirige vers droneExploring
-  
-  // Collection globale des actions
+  droneExploring: droneExploringActions,
+  position: positionActions,
   actions: coreActions
 };

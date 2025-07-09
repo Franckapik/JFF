@@ -19,7 +19,7 @@ import { droneDeployForExploration } from './core/droneExploringActions.js';
 /**
  * Action d'entrée de l'état exploring : log + initialisation éventuelle
  */
-export const action_exploring_entry = ({ context, self }) => {
+export const action_exploring_entry = ({ context }) => {
   fsmLogger.state(`🚀 [${context.entityId}] Entering exploring state`);
   // TODO: Initialisation du cycle d'exploration si besoin
 };
