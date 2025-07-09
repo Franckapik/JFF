@@ -4,7 +4,7 @@
  * ==========================================================================
  */
 
-import fsmLogger from '../../../../../logger/fsmLogger';
+import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index';
 import type { DroneTrackerParams } from '../../../../../types';
 import type { WorldPosition } from '../../../../../types/coordinates';

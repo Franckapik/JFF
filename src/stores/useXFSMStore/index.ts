@@ -11,15 +11,15 @@ import { create } from 'zustand';
 
 import { createMachineContext } from '../../ai/fsm/machineX/context/initialContext.ts';
 import { machineX } from '../../ai/fsm/machineX/machine.xstate';
-import fsmLogger from '../../logger/fsmLogger';
+import fsmLogger from '../../logger/fsmLogger.ts';
 import type {
-  BotId,
-  BotSnapshot,
-  BotStatesMap,
-  EmptyBotState,
-  XFSMStore,
-  XFSMStoreActions,
-  XFSMStoreState
+    BotId,
+    BotSnapshot,
+    BotStatesMap,
+    EmptyBotState,
+    XFSMStore,
+    XFSMStoreActions,
+    XFSMStoreState
 } from '../../types/fsm';
 
 // État vide par défaut pour un bot non initialisé

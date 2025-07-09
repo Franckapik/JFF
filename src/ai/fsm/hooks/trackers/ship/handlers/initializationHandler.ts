@@ -6,7 +6,7 @@
 
 import { MutableRefObject } from 'react';
 
-import fsmLogger from '../../../../../../logger/fsmLogger';
+import fsmLogger from '../../../../../../logger/fsmLogger.ts';
 import type { ShipType, XStateSend } from '../../../../../../types';
 import type { WorldPosition } from '../../../../../../types/coordinates';
 

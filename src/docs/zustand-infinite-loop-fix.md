@@ -286,7 +286,7 @@ const MyComponent = () => {
 
 ```jsx
 // ❌ AVANT (Incorrect)
-import { fsmLogger } from '../../logger/fsmLogger';
+import { fsmLogger } from '../../logger/fsmLogger.ts';
 
 // ✅ APRÈS (Correct)
 import fsmLogger from '../../logger/fsmLogger.ts';

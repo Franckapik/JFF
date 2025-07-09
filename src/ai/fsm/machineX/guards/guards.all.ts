@@ -2,7 +2,7 @@
 // Centralise toutes les fonctions guards ET utilitaires utilisées dans les guards
 // pour permettre un import unique et simplifier la maintenance.
 
-import fsmLogger from '../../../../logger/fsmLogger';
+import fsmLogger from '../../../../logger/fsmLogger.ts';
 
 export type FSMContext = import('../../../../types/fsm').FSMContext;
 export type FSMEvent = import('../../../../types/fsm').FSMEvent;

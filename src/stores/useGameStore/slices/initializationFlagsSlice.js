@@ -8,7 +8,7 @@
  * - État d'initialisation des bots
  * - Prévention des ré-initialisations
  */
-import fsmLogger from '../../../logger/fsmLogger';
+import fsmLogger from '../../../logger/fsmLogger.ts';
 
 const createInitializationFlagsSlice = (set, get) => ({
   

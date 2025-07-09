@@ -15,7 +15,7 @@ import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-import fsmLogger from '../logger/fsmLogger';
+import fsmLogger from '../logger/fsmLogger.ts';
 import type { FSMContext, WorldPosition } from '../types';
 import {
   DRONE_STATES,

@@ -4,7 +4,7 @@
  * ==========================================================================
  */
 
-import fsmLogger from '../../../../../../logger/fsmLogger';
+import fsmLogger from '../../../../../../logger/fsmLogger.ts';
 import type { DroneType, XStateSend } from '../../../../../../types';
 import type { WorldPosition } from '../../../../../../types/coordinates';
 import { POSITION_TRACKER_CONFIG } from '../../../../machineX/config/constants.ts';

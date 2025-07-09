@@ -81,7 +81,7 @@ const fsmLogger = {
 export default fsmLogger;
 
 // ✅ CORRECT - Import correspondant
-import fsmLogger from "../logger/fsmLogger";
+import fsmLogger from "../logger/fsmLogger.ts";
 ```
 
 ## 🛠️ Outils de Prévention

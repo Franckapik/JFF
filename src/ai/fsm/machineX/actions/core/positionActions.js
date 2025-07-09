@@ -11,7 +11,7 @@
  * @version 1.0.0
  */
 
-import fsmLogger from '../../../../../logger/fsmLogger';
+import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 
 // ============================================================================

@@ -2,7 +2,7 @@ import React from "react";
 import { Mesh } from "three";
 
 import { useTileAnimation } from "../animations/useTileAnimation";
-import fsmLogger from "../logger/fsmLogger";
+import fsmLogger from "../logger/fsmLogger.ts";
 import useGameStore from "../stores/useGameStore";
 import { useTileStore } from "../stores/useTileStore/index";
 import { isTileCompletelyCollected } from "../stores/useTileStore/slices/tileResourceSlice";
