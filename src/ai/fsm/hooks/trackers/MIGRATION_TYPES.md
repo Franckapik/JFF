@@ -3,13 +3,13 @@
 ## 📋 Résumé des Changements
 
 ### ✅ **Nouveaux Fichiers Créés**
-- `src/types/tracker.ts` - Types centralisés pour les trackers XState/FSM
+- `src/types/tracker.d.ts.ts` - Types centralisés pour les trackers XState/FSM
 
 ### 🔄 **Fichiers Modifiés**
 
 #### Types Centralisés
 - `src/types/index.ts` - Ajout des exports pour les types de tracker
-- `src/types/vehicle.ts` - Utilisation des types centralisés (`DroneType`, `DroneVisualState`)
+- `src/types/vehicle.d.ts.ts` - Utilisation des types centralisés (`DroneType`, `DroneVisualState`)
 
 #### Trackers
 - `src/ai/fsm/hooks/trackers/types.ts` - Conversion en réexports depuis `/types`

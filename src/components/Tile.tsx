@@ -7,10 +7,13 @@ import useGameStore from "../stores/useGameStore";
 import { useTileStore } from "../stores/useTileStore/index";
 import { isTileCompletelyCollected } from "../stores/useTileStore/slices/tileResourceSlice";
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
-import type { BotId } from "../types/fsm";
-import type { TileProps } from "../types/tile";
+
+import type { BotId } from "../types/fsm.d.ts";
+import type { TileProps } from "../types/r3f";
 
 import TileHelpers from "./TileHelpers";
+
+import type { GameStoreType, TileStoreType, XFSMStoreType } from "@/types/stores.d";
 
 /**
  * =================================================================
@@ -36,26 +39,26 @@ const Tile: React.FC<TileProps> = ({
   const meshRef = useTileAnimation(isHighTile);
   
   // Sélecteurs pour les états de la tuile depuis le store
-  const updateHoveredTile = useTileStore((state) => state.updateHoveredTile);
-  
+  const updateHoveredTile = useTileStore((state: TileStoreType) => state.updateHoveredTile);
+
   // Sélecteurs pour les couleurs depuis le store de jeu
-  const getPlayerBaseColor = useGameStore((state) => state.getPlayerBaseColor);
-  const getBackgroundColor = useGameStore((state) => state.getBackgroundColor);
-  
+  const getPlayerBaseColor = useGameStore((state: GameStoreType) => state.getPlayerBaseColor);
+  const getBackgroundColor = useGameStore((state: GameStoreType) => state.getBackgroundColor);
+
   // Sélecteur pour les bots actifs
-  const activeBots = useXFSMStore((state) => state.activeBots);
-  
-  const resourcePercentage = useTileStore((state) => 
-    state.tiles[coord] ? (state.tiles[coord] as any).resourcePercentage : 0
+  const activeBots = useXFSMStore((state: XFSMStoreType) => state.activeBots);
+
+  const resourcePercentage = useTileStore((state: TileStoreType) => 
+    state.tiles[coord] ? state.tiles[coord].resourcePercentage : 0
   );
-  
-  const isExplored = useTileStore((state) => 
+
+  const isExplored = useTileStore((state: TileStoreType) => 
     state.tiles[coord] ? state.tiles[coord].explored === true : false
   );
 
   // Nouveau sélecteur pour les tuiles récemment collectées
-  const lastCollectedTimestamp = useTileStore((state) => 
-    state.tiles[coord] ? (state.tiles[coord] as any).lastCollectedTimestamp : null
+  const lastCollectedTimestamp = useTileStore((state: TileStoreType) => 
+    state.tiles[coord] ? state.tiles[coord].lastCollectedTimestamp : null
   );
 
   // Une tuile est récemment collectée si elle l'a été dans les 10 dernières secondes
@@ -73,7 +76,7 @@ const Tile: React.FC<TileProps> = ({
    */
   
   // Récupérer la tuile depuis le store pour utiliser les utilitaires
-  const tile = useTileStore((state) => state.tiles[coord]);
+  const tile = useTileStore((state: TileStoreType) => state.tiles[coord]);
   
   // Récupérer le type de tuile pour afficher les stations appropriées
   const tileType = tile ? tile.type : null;

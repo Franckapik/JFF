@@ -1,8 +1,10 @@
 /**
- * Store principal pour la gestion du jeu
+ * Store principal pour la gestion du jeu - Version TypeScript
  * Combinaison de tous les slices avec leurs responsabilités séparées
  */
 import { create } from 'zustand';
+
+import type { GameStoreType } from '../../types/stores.d';
 
 // Import des slices
 import createClockSlice from './slices/clockSlice';
@@ -13,7 +15,7 @@ import createUiConfigSlice from './slices/uiConfigSlice';
 /**
  * Crée un store Zustand en combinant tous les slices
  */
-const useGameStore = create((set, get) => {
+const useGameStore = create<GameStoreType>((set, get) => {
   
   return {
     // Combine tous les slices pour former le store complet
@@ -21,7 +23,7 @@ const useGameStore = create((set, get) => {
     ...createPlayerCountSlice(set, get),
     ...createUiConfigSlice(set, get),
     ...createInitializationFlagsSlice(set, get),
-  };
+  } as GameStoreType;
 });
 
 export default useGameStore;

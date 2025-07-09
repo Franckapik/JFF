@@ -10,24 +10,16 @@
  * @version 3.0.0
  */
 
-import { DRONE_STATES } from '../../../../types/drone';
-import type { EntityType, FSMState } from '../config/constants.ts';
 
-// Import des types partagés
-import type {
-  DroneState,
-  FormationOffsets,
-  FSMConfig,
-  FSMContext,
-  ResourceStats,
-  TileCoordinate,
-  TypedTarget,
-  VehicleState,
-  WorldPosition
-} from '../../../../types/index.js';
+import type { DroneVisualState, EntityType, FSMState } from '../config/constants.ts';
 
-// Alias pour compatibilité avec le code existant
-type Resources = ResourceStats;
+import type { DroneType } from '@/types/drone.d.ts';
+
+
+import type { FSMContext } from '@/types/fsm.ts';
+
+import type { VehicleState } from '@/types/vehicle.js';
+
 
 // ============================================================================
 // FONCTION DE CRÉATION DU CONTEXTE TYPÉE
@@ -41,59 +33,20 @@ export const createMachineContext = (
   entityType: EntityType = 'auto'
 ): FSMContext => {
   const currentTimestamp = Date.now();
-  
-  // Valeurs par défaut
-  const defaultPosition: WorldPosition = { x: 0, y: 0.5, z: 0 };
-  const defaultTileCoord: TileCoordinate = { x: 0, z: 0 };
-  const emptyResources: Resources = { food: 0, debris: 0, special: 0, total: 0 };
-  const maxResources: Resources = { food: 200, debris: 1800, special: 3, total: 2003 };
-  
-  const defaultTypedTarget: TypedTarget = { x: 0, z: 0, type: 'explore' };
-  
-  // Configuration et offsets
-  const formationOffsets: FormationOffsets = {
-    explorer: { x: 0.5, z: 0.5, y: 0.3 },
-    combat: { x: -0.5, z: 0.5, y: 0.3 },
-    special: { x: 0, z: -0.7, y: 0.3 }
-  };
-  
-  const fsmConfig: FSMConfig = {
-    exploringRadius: 3,
-    fuelThreshold: 20,
-    capacityThreshold: 80,
-    movementSpeed: entityType === 'auto' ? 8 : 4,
-    explorationInterval: 1000,
-    enableLogging: true,
-    logLevel: 'info'
-  };
-  
-  // Création des drones
-  const createDrone = (type: 'explorer' | 'combat' | 'special'): DroneState => ({
-    id: `${entityId}-drone-${type}`,
-    type,
-    state: DRONE_STATES.VISUAL.DOCKED,
-    position: { ...defaultPosition },
-    targetPosition: { ...defaultPosition },
-    missionTarget: { ...defaultTypedTarget },
-    isActive: false,
-    lastUpdate: currentTimestamp
-  });
-
   return {
     entityId,
     entityType,
     autonomousMode: true,
-    
     vehicle: {
       id: `${entityId}-ship`,
       type: 'main-ship',
-      position: { ...defaultPosition },
-      basePosition: { ...defaultPosition },
-      coord: { ...defaultTileCoord },
+      position: { x: 0, y: 0.5, z: 0 },
+      basePosition: { x: 0, y: 0.5, z: 0 },
+      coord: { coord: '0,0', type: 'explore' },
       isMoving: false,
       progress: 0,
-      resources: { ...emptyResources },
-      targetTile: { position: null, coord: null },
+      resources: { food: 0, debris: 0, special: 0, total: 0 },
+      targetTile: { coord: '0,0', type: 'explore' },
       fuel: 100,
       damage: 0,
       totalDistance: 0,
@@ -102,9 +55,8 @@ export const createMachineContext = (
       isAtCapacity: false,
       maxSpeed: 1,
       currentSpeed: 0,
-      maxCapacity: { ...maxResources }
+      maxCapacity: { food: 200, debris: 1800, special: 3, total: 2003 }
     },
-    
     currentState: 'evaluating' as FSMState,
     currentTarget: null,
     explorationQueue: [],
@@ -115,9 +67,7 @@ export const createMachineContext = (
       lastMovement: null,
       lastCollection: null
     },
-    
-    score: { resources: { ...emptyResources } },
-    
+    score: { resources: { food: 0, debris: 0, special: 0, total: 0 } },
     memory: {
       knownTiles: new Map(),
       knownDangers: [],
@@ -135,26 +85,62 @@ export const createMachineContext = (
       stateHistory: ['evaluating' as FSMState],
       transitionHistory: []
     },
-    
     explorationCycle: {
       isActive: false,
-      targetTilesCount: 15, // Default value, was EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION
+      targetTilesCount: 15,
       exploredTiles: [],
       bestTileFound: null,
       startTime: null,
       phase: 'idle'
     },
-    
     selectedTileForCollection: null,
-    config: fsmConfig,
-    
+    config: {
+      exploringRadius: 3,
+      fuelThreshold: 20,
+      capacityThreshold: 80,
+      movementSpeed: entityType === 'auto' ? 8 : 4,
+      explorationInterval: 1000,
+      enableLogging: true,
+      logLevel: 'info'
+    },
     droneFleet: {
       drones: {
-        explorer: createDrone('explorer'),
-        combat: createDrone('combat'),
-        special: createDrone('special')
+        explorer: {
+          id: `${entityId}-drone-explorer`,
+          type: 'explorer' as DroneType,
+          state: 'docked' as DroneVisualState,
+          position: { x: 0, y: 0.5, z: 0 },
+          targetPosition: { x: 0, y: 0.5, z: 0 },
+          missionTarget: { coord: '0,0', type: 'explore' },
+          isActive: false,
+          lastUpdate: currentTimestamp
+        },
+        combat: {
+          id: `${entityId}-drone-combat`,
+          type: 'combat' as DroneType,
+          state: 'docked' as DroneVisualState,
+          position: { x: 0, y: 0.5, z: 0 },
+          targetPosition: { x: 0, y: 0.5, z: 0 },
+          missionTarget: { coord: '0,0', type: 'explore' },
+          isActive: false,
+          lastUpdate: currentTimestamp
+        },
+        special: {
+          id: `${entityId}-drone-special`,
+          type: 'special' as DroneType,
+          state: 'docked' as DroneVisualState,
+          position: { x: 0, y: 0.5, z: 0 },
+          targetPosition: { x: 0, y: 0.5, z: 0 },
+          missionTarget: { coord: '0,0', type: 'explore' },
+          isActive: false,
+          lastUpdate: currentTimestamp
+        }
       },
-      formationOffsets,
+      formationOffsets: {
+        explorer: { x: 0.5, z: 0.5, y: 0.3 },
+        combat: { x: -0.5, z: 0.5, y: 0.3 },
+        special: { x: 0, z: -0.7, y: 0.3 }
+      },
       currentMission: null,
       missionStartTime: null
     }
@@ -219,8 +205,6 @@ export const isMoving = (context: FSMContext): boolean => {
   return context?.vehicle?.isMoving ?? false;
 };
 
-// Import des validateurs de types partagés
-import { isValidResources, isValidTileCoordinate, isValidWorldPosition } from '../../../../types/index.js';
 
 // Re-export des constantes pour faciliter l'accès
 export type { EntityType } from '../config/constants.ts';
@@ -229,9 +213,6 @@ export type { EntityType } from '../config/constants.ts';
 export default {
   createMachineContext,
   updateStateHistory,
-  isValidWorldPosition,
-  isValidTileCoordinate,
-  isValidResources,
   canManualControl,
   getMainVehicle,
   isAutonomous,

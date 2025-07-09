@@ -21,7 +21,7 @@
  */
 
 import type {
-  DroneFSMState,
+  DroneVisualState,
   GridCoordinate,
   Tile,
   TileCoordinate,
@@ -78,7 +78,7 @@ interface TilePathSliceActions {
   isReachable: (from: GridCoordinate, to: GridCoordinate, tiles?: TileMap) => boolean;
   calculateDroneDistance: (
     dronePosition: WorldPosition,
-    droneState: DroneFSMState,
+    droneState: DroneVisualState,
     targetPosition?: WorldPosition,
     shipPosition?: WorldPosition
   ) => number;
@@ -316,22 +316,22 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
    * Calcule la distance appropriée pour un drone selon son état
    * Unifie la logique qui était dispersée dans droneTrackerEngine
    * @param dronePosition - Position actuelle du drone
-   * @param droneState - État actuel du drone FSM
+   * @param droneState - État visuel du drone (deploying, scanning, returning)
    * @param targetPosition - Position cible (pour deploying/scanning)
    * @param shipPosition - Position du vaisseau (pour returning)
    * @returns Distance appropriée selon l'état, Infinity si impossible
    */
   calculateDroneDistance: (
     dronePosition: WorldPosition,
-    droneState: DroneFSMState,
+    droneState: DroneVisualState,
     targetPosition?: WorldPosition,
     shipPosition?: WorldPosition
   ): number => {
     if (!dronePosition) return Infinity;
 
     switch (droneState) {
-      case 'drone_deploying':
-      case 'drone_scanning': {
+      case 'deploying':
+      case 'scanning': {
         if (!targetPosition) return Infinity;
         
         // Distance 2D (XZ) pour l'exploration - ignore la hauteur Y
@@ -340,7 +340,7 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
         return Math.sqrt(dx * dx + dz * dz);
       }
       
-      case 'drone_returning': {
+      case 'returning': {
         if (!shipPosition) return Infinity;
         
         // Distance 3D complète pour le retour au vaisseau

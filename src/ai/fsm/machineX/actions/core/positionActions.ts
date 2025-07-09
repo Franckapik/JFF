@@ -13,6 +13,34 @@
 
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
+import type { WorldPosition } from '../../../../../types/coordinates.d.ts';
+import type { DroneType } from '../../../../../types/drone.d.ts';
+import type { FSMContext, FSMEvent } from '../../../../../types/fsm.d.ts';
+
+// ============================================================================
+// INTERFACES D'ÉVÉNEMENTS
+// ============================================================================
+
+interface ShipPositionEvent extends FSMEvent {
+  position?: WorldPosition;
+  botId?: string;
+  shipType?: string;
+  timestamp?: number;
+}
+
+interface ShipBasePositionEvent extends FSMEvent {
+  basePosition?: WorldPosition;
+  botId?: string;
+  shipType?: string;
+  timestamp?: number;
+}
+
+interface DronePositionEvent extends FSMEvent {
+  position?: WorldPosition;
+  droneType?: DroneType;
+  botId?: string;
+  timestamp?: number;
+}
 
 // ============================================================================
 // ACTIONS DE POSITION DU VAISSEAU
@@ -20,11 +48,11 @@ import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 
 /**
  * Met à jour la position du vaisseau principal dans le contexte FSM
- * @param {Object} context - Contexte FSM actuel
- * @param {Object} event - Événement avec position, botId, shipType
- * @returns {Object} - Contexte mis à jour
+ * @param context - Contexte FSM actuel
+ * @param event - Événement avec position, botId, shipType
+ * @returns - Contexte mis à jour
  */
-export const updateShipPosition = (context, event) => {
+export const updateShipPosition = (context: FSMContext, event: ShipPositionEvent): FSMContext => {
   // Vérification de sécurité pour l'événement
   if (!event) {
     fsmLogger.info(`[${context?.entityId || 'unknown'}] Ship position update failed: event is undefined`);
@@ -40,7 +68,8 @@ export const updateShipPosition = (context, event) => {
 
   try {
     // Obtenir les coordonnées de tuile à partir de la position mondiale
-    const tileStore = useTileStore.getState();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tileStore = useTileStore.getState() as any;
     const coord = tileStore.worldToGrid ? tileStore.worldToGrid(position) : null;
     
     fsmLogger.context(`[${context.entityId || botId}] Updating ship position`, {
@@ -56,18 +85,21 @@ export const updateShipPosition = (context, event) => {
       vehicle: {
         ...context.vehicle,
         position: { ...position },
-        coord: coord,
-        lastPositionUpdate: timestamp || Date.now()
+        coord: coord || context.vehicle.coord
       },
-      explorationComplete: false, // Réinitialiser le flag d'exploration quand le vaisseau bouge
+      explorationCycle: {
+        ...context.explorationCycle,
+        isActive: false
+      },
       lastAction: 'updateShipPosition_success'
     };
     
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     fsmLogger.error(`[${context.entityId || botId}] Ship position update error:`, error);
     return {
       ...context,
-      error: error.message,
+      error: errorMessage,
       lastAction: 'updateShipPosition_failed'
     };
   }
@@ -75,11 +107,11 @@ export const updateShipPosition = (context, event) => {
 
 /**
  * Met à jour la position de base du vaisseau (position de départ)
- * @param {Object} context - Contexte FSM actuel
- * @param {Object} event - Événement avec basePosition, botId, shipType
- * @returns {Object} - Contexte mis à jour
+ * @param context - Contexte FSM actuel
+ * @param event - Événement avec basePosition, botId, shipType
+ * @returns - Contexte mis à jour
  */
-export const updateShipBasePosition = (context, event) => {
+export const updateShipBasePosition = (context: FSMContext, event: ShipBasePositionEvent): FSMContext => {
   const { basePosition, botId, shipType = 'ship', timestamp } = event;
   
   if (!basePosition) {
@@ -89,7 +121,8 @@ export const updateShipBasePosition = (context, event) => {
 
   try {
     // Obtenir les coordonnées de tuile à partir de la position mondiale
-    const tileStore = useTileStore.getState();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tileStore = useTileStore.getState() as any;
     const startCoord = tileStore.worldToGrid ? tileStore.worldToGrid(basePosition) : null;
     
     fsmLogger.context(`[${context.entityId || botId}] Updating ship base position`, {
@@ -104,17 +137,17 @@ export const updateShipBasePosition = (context, event) => {
       vehicle: {
         ...context.vehicle,
         basePosition: { ...basePosition },
-        startCoord: startCoord,
-        lastBasePositionUpdate: timestamp || Date.now()
+        startCoord: startCoord || context.vehicle.startCoord
       },
       lastAction: 'updateShipBasePosition_success'
     };
     
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     fsmLogger.error(`[${context.entityId || botId}] Ship base position update error:`, error);
     return {
       ...context,
-      error: error.message,
+      error: errorMessage,
       lastAction: 'updateShipBasePosition_failed'
     };
   }
@@ -126,18 +159,18 @@ export const updateShipBasePosition = (context, event) => {
 
 /**
  * Met à jour la position d'un drone dans le contexte FSM
- * @param {Object} context - Contexte FSM actuel
- * @param {Object} event - Événement avec position, droneType, botId
- * @returns {Object} - Contexte mis à jour
+ * @param context - Contexte FSM actuel
+ * @param event - Événement avec position, droneType, botId
+ * @returns - Contexte mis à jour
  */
-export const updateDronePosition = (context, event) => {
+export const updateDronePosition = (context: FSMContext, event: DronePositionEvent): FSMContext => {
   // Vérification de sécurité pour l'événement
   if (!event) {
     fsmLogger.info(`[${context?.entityId || 'unknown'}] Drone position update failed: event is undefined`);
     return context;
   }
 
-  const { position, droneType = 'explorer', botId, timestamp } = event;
+  const { position, droneType = 'explorer', botId, timestamp: _timestamp } = event;
   
   if (!position || !droneType) {
     fsmLogger.info(`[${context.entityId || botId}] Drone position update failed: missing position or droneType`);
@@ -160,8 +193,7 @@ export const updateDronePosition = (context, event) => {
           [droneType]: {
             ...context.droneFleet?.drones?.[droneType],
             position: { ...position },
-            targetPosition: currentDrone?.targetPosition || targetPosition,
-            lastPositionUpdate: timestamp || Date.now()
+            targetPosition: currentDrone?.targetPosition || targetPosition || position
           }
         }
       },
@@ -169,10 +201,11 @@ export const updateDronePosition = (context, event) => {
     };
     
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     fsmLogger.error(`[${context.entityId || botId}] Drone position update error:`, error);
     return {
       ...context,
-      error: error.message,
+      error: errorMessage,
       lastAction: 'updateDronePosition_failed'
     };
   }

@@ -1,11 +1,7 @@
-/**
- * Types de véhicules (extraits de initialContext.ts)
- */
-
-import type { MovementTarget, TileCoordinate, TypedTarget, WorldPosition } from './coordinates';
+import type { TileCoordinate, WorldPosition } from './coordinates';
 import type { DroneType, DroneVisualState } from './drone';
 import type { ResourceStats } from './resources';
-import { ShipType } from './tracker';
+import type { ShipType } from './tracker';
 
 export type VehicleId = string;
 
@@ -19,7 +15,7 @@ export interface VehicleState {
   isMoving: boolean;
   progress: number;
   resources: ResourceStats;
-  targetTile: MovementTarget;
+  targetTile: TileCoordinate;
   fuel: number;
   damage: number;
   totalDistance: number;
@@ -38,7 +34,7 @@ export interface DroneState {
   state: DroneVisualState;
   position: WorldPosition;
   targetPosition: WorldPosition;
-  missionTarget: TypedTarget;
+  missionTarget: TileCoordinate;
   isActive: boolean;
   lastUpdate: number;
 }
@@ -69,7 +65,3 @@ export interface DroneFleet {
   missionStartTime: number | null;
 }
 
-// Fonction utilitaire de type uniquement
-export const isVehicleId = (id: string): id is VehicleId => {
-  return typeof id === 'string' && id.length > 0;
-};

@@ -1,3 +1,10 @@
+Je souhaiterais ne plus avoir l'alias de compatibilité ligne 16 pour ne plus avoir de confusion et garder uniquement ResourceStats
+
+
+
+Le travail a effectuer est de s'assurer que la position initiale est donné qu'une suele fois et que l'animaiton n' a pas lieu avant que le bot soit actif veritablement.
+
+
 Il faut valider le commit. TRavailler pour que le tracker soit clair et s'assurer que les drones state et visuals states soient les bons. ENfin , il fautq ue el cycle soit correct pour le drone. COmprendre l'erreur actuelle dans le log. Le travail initial devait se porter sur une fonction d'un store : tileFilterSlice. Il faut que les fonctions utilisent les bons types et supprimer celles qui ne sont pas utiles ou alors complexes pour rien. Netooyer le projet des fichiers docs.
 
 

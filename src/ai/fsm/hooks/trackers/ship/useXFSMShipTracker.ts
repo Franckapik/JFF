@@ -15,8 +15,8 @@
 import { useCallback, useEffect, useRef } from "react";
 
 import type { ShipType, XStateSend } from '../../../../../types';
-import type { WorldPosition } from '../../../../../types/coordinates';
-import type { FSMContext } from '../../../../../types/fsm';
+import type { WorldPosition } from '../../../../../types/coordinates.d.ts';
+import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants.ts';
 import { useEventDebounce } from '../../useEventDebounce';
 

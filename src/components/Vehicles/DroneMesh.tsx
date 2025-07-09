@@ -1,31 +1,14 @@
 import { Cone } from "@react-three/drei";
 import React from "react";
 
-// Types
-
-/**
- * Interface pour l'état du drone
- */
-interface DroneState {
-  /** État actuel du drone */
-  state: string;
-}
-
-/**
- * Props interface for DroneMesh component
- */
-interface DroneMeshProps {
-  /** Couleur du drone */
-  color: string;
-  /** État du drone */
-  droneState: DroneState;
-}
-
-
+import type { DroneMeshProps } from '../../types/r3f';
 
 const DroneMesh: React.FC<DroneMeshProps> = ({ 
   color, 
-  droneState, 
+  botId: _botId,
+  context: _context,
+  droneState,
+  droneType: _droneType
 }) => {
   return (
     <>
@@ -38,11 +21,11 @@ const DroneMesh: React.FC<DroneMeshProps> = ({
           color={color}
           // État FSM → Couleur émissive
           emissive={
-            droneState.state === 'exploring' ? color : 
+            droneState.state === 'scanning' ? color : 
             "black"
           }
           emissiveIntensity={
-            droneState.state === 'exploring' ? 0.8 : 
+            droneState.state === 'scanning' ? 0.8 : 
             0.2
           }
         />

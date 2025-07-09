@@ -1,36 +1,10 @@
 import React from "react";
 
-// Types
-import type { FSMContext } from "../../types/fsm";
-
-/**
- * Props interface for ShipMesh component
- */
-interface ShipMeshProps {
-  /** Couleur du vaisseau */
-  color: string;
-  /** Contexte FSM pour l'état du vaisseau */
-  context?: FSMContext;
-  /** Action actuelle du vaisseau */
-  currentAction?: string;
-  /** Indique si le vaisseau est en mouvement */
-  isMoving?: boolean;
-}
-
-/**
- * Type pour les actions du vaisseau
- */
-type ShipAction = 
-  | 'moving_to_target'
-  | 'collecting'
-  | 'resource_collection'
-  | 'returning_to_base'
-  | 'refueling'
-  | 'fuel_maintenance'
-  | 'idling';
+import type { ShipAction, ShipMeshProps } from "../../types/r3f";
 
 const ShipMesh: React.FC<ShipMeshProps> = ({ 
   color, 
+  botId: _botId,
   context, 
   currentAction, 
   isMoving = false 

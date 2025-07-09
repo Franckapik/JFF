@@ -17,12 +17,13 @@ import Tile from "./Tile.tsx";
 
 // Stores
 import useGameStore from "../stores/useGameStore";
-import { useTileStore } from "../stores/useTileStore/index";
+import { useTileStore } from "../stores/useTileStore/index.ts";
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
 
-
-// Utils
-import { BotId } from "@/types/fsm.ts";
+// Types
+import type { BotId } from "@/types/fsm.d.ts";
+import type { SceneTileType } from "@/types/r3f";
+import { GameStoreType, TileStoreType, XFSMStoreType } from "@/types/stores.js";
 
 
 
@@ -36,25 +37,26 @@ const Scene: React.FC = () => {
    * ======================================== */
 
   // Tile management
-  const setTiles = useTileStore((state) => state.setTiles);
-  const initializeGameGrid = useTileStore((state) => state.initializeGameGrid);
-  const tiles = useTileStore((state) => state.tiles);
-  const assignStartingTiles = useTileStore((state) => state.assignStartingTiles);
+  const setTiles = useTileStore((state: TileStoreType) => state.setTiles);
+  const initializeGameGrid = useTileStore((state: TileStoreType) => state.initializeGameGrid);
+  const tiles = useTileStore((state: TileStoreType) => state.tiles);
+  const assignStartingTiles = useTileStore((state: TileStoreType) => state.assignStartingTiles);
 
-  // Game configuration - seulement pour getBotColorById maintenant
-  const getBotColorById = useGameStore(state => state.getBotColorById);
+  // Game configuration
+  const getBotColorById = useGameStore((state: GameStoreType) => state.getBotColorById);
+  const isGameInitialized = useGameStore((state: GameStoreType) => state.isGameInitialized());
 
-  // FSM Store - source de vérité pour les bots actifs (nouveau système XState)
-  const activeBots = useXFSMStore(state => state.activeBots);
-  const addBot = useXFSMStore(state => state.addBot);
-  const startBot = useXFSMStore(state => state.startBot);
-  const isBotActive = useXFSMStore(state => state.isBotActive);
+
+  // FSM Store
+  const activeBots = useXFSMStore((state: XFSMStoreType) => state.activeBots);
+  const addBot = useXFSMStore((state: XFSMStoreType) => state.addBot);
+  const startBot = useXFSMStore((state: XFSMStoreType) => state.startBot);
+  const isBotActive = useXFSMStore((state: XFSMStoreType) => state.isBotActive);
 
   // Initialization state
   const { tilesInitialized, markTilesAsInitialized, markBotsAsInitialized, botsInitialized, markPlayersAsInitialized, playersInitialized } =
     useGameStore();
 
-  const isGameInitialized = useGameStore(state => state.isGameInitialized());
 
   /* ========================================
    * INITIALIZATION EFFECTS
@@ -149,16 +151,8 @@ const Scene: React.FC = () => {
       
       {/* All tiles rendering */}
       {Object.values(tiles).map(tile => {
-        // Cast tile to the correct type if possible
-        type TileType = {
-          coord: string;
-          position: { x: number; z: number };
-          radius?: number;
-          color?: string;
-          type?: string;
-          assignedToBot?: string;
-        };
-        const typedTile = tile as TileType;
+        // Cast tile to the correct type
+        const typedTile = tile as SceneTileType;
 
         // Vérifier si c'est une tuile de départ assignée à un bot actif
         const isAssignedDepartTile =

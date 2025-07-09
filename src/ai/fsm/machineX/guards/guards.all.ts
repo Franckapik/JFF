@@ -4,8 +4,8 @@
 
 import fsmLogger from '../../../../logger/fsmLogger.ts';
 
-export type FSMContext = import('../../../../types/fsm').FSMContext;
-export type FSMEvent = import('../../../../types/fsm').FSMEvent;
+export type FSMContext = import('../../../../types/fsm.d.ts').FSMContext;
+export type FSMEvent = import('../../../../types/fsm.d.ts').FSMEvent;
 export type Guard = (context: FSMContext, event?: FSMEvent, ...args: any[]) => boolean;
 
 // --- EXPLORING GUARD ---

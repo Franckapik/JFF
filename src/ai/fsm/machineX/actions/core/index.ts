@@ -9,20 +9,20 @@
  * 📋 MODULES REFACTORISÉS - DOMAINES MÉTIER:
  * ==========================================
  * 
- * 🚢 SHIP COLLECTING (shipCollectingActions.js) - NOUVEAU:
+ * 🚢 SHIP COLLECTING (shipCollectingActions.ts) - NOUVEAU:
  * - Actions: shipMoveToTile, shipStopMovement, shipUpdatePosition, shipCollectResource, etc.
  * - Domaine métier: Transport et collecte de ressources
  * - Rétrocompatibilité: movementActions, shipMovementActions, entityMovementActions
  * 
- * 🚁 DRONE EXPLORING (droneExploringActions.js) - NOUVEAU:
+ * 🚁 DRONE EXPLORING (droneExploringActions.ts) - NOUVEAU:
  * - Actions: droneDeployForExploration, droneRecallToShip, droneStartExploration, droneMarkTileExplored, etc.
  * - Domaine métier: Exploration et découverte
  * - Rétrocompatibilité: droneFleetActions, droneDeploymentActions, explorationActions
  * 
- * ⛽ FUEL (fuelActions.js):
+ * ⛽ FUEL (fuelActions.ts):
  * - Actions: consumeFuel, refuelVehicle, addFuel, setFuelLevel, etc.
  * 
- * 📦 RESOURCES (resourcesActions.js):
+ * 📦 RESOURCES (resourcesActions.ts):
  * - Actions: collectResources, depositResources, addResources, etc.
  * 
  * 📊 EXPORTS ORGANISÉS:
@@ -36,21 +36,21 @@
  */
 
 // Import des actions core refactorisées (après nettoyage)
-import { droneExploringActions } from './droneExploringActions.js';
-import { positionActions } from './positionActions.js';
+import { droneExploringActions } from './droneExploringActions.ts';
+import { positionActions } from './positionActions.ts';
 
 // ⚠️ ANCIENS IMPORTS SUPPRIMÉS - Fichiers supprimés lors du nettoyage
-// import movementCore from './movementActions.js'; // SUPPRIMÉ
-// import explorationCore from './explorationActions.js'; // SUPPRIMÉ  
-// import droneCore from './droneActions.js'; // SUPPRIMÉ
+// import movementCore from './movementActions.ts'; // SUPPRIMÉ
+// import explorationCore from './explorationActions.ts'; // SUPPRIMÉ  
+// import droneCore from './droneActions.ts'; // SUPPRIMÉ
 
 // ============================================================================
 // EXPORTS INDIVIDUELS - NOUVELLES ACTIONS REFACTORISÉES
 // ============================================================================
 
 //  Drone Exploring Actions - Domaine métier: Exploring
-export { droneExploringActions } from './droneExploringActions.js';
-export { positionActions } from './positionActions.js';
+export { droneExploringActions } from './droneExploringActions.ts';
+export { positionActions } from './positionActions.ts';
 
 // ============================================================================
 // EXPORTS RÉTROCOMPATIBILITÉ - UTILISANT LES NOUVELLES ACTIONS
@@ -79,8 +79,8 @@ export const position = positionActions;
  * Toutes les actions regroupées par domaine métier restant
  */
 export const coreActions = {
-  droneExploring: droneExploringActions.actions,
-  position: positionActions.actions
+  droneExploring: droneExploringActions,
+  position: positionActions
 };
 
 // ============================================================================

@@ -196,7 +196,7 @@ export const debugAction = (context, event) => {
 1. **Import d'assign :** `import { createMachine, assign } from 'xstate'`
 2. **Event handlers globaux :** Utilisent `assign(({ context, event }) => ...)`
 3. **Actions :** Retournent un nouveau contexte
-4. **Export des actions :** Structure correcte dans `actions/index.js`
+4. **Export des actions :** Structure correcte dans `actions/index.ts`
 
 ### **Logs de diagnostic :**
 ```javascript

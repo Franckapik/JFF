@@ -8,44 +8,16 @@ import fsmLogger from "../logger/fsmLogger.ts";
 import useGameStore from "../stores/useGameStore";
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
 
-import type { VehicleId, WorldPosition } from "../types";
-
-import type { TileCoordinate } from "../types/coordinates";
+import type { FSMContext } from "../types/fsm.d";
+import type { FleetProps } from "../types/r3f";
 
 import DroneMesh from "./Vehicles/DroneMesh";
+
 import ShipMesh from "./Vehicles/ShipMesh";
 
-// Types
-import "../types/r3f.d.ts"; // Import R3F types
+import { GameStoreType, XFSMStoreType } from "@/types/index.js";
 
-/**
- * Props interface for Fleet component
- */
-interface FleetProps {
-  /** ID du bot FSM (ex: 'bot-0') */
-  botId: VehicleId;
-  /** Position mondiale du vaisseau {x,y,z} */
-  shipPosition: WorldPosition;
-  /** Position mondiale du drone {x,y,z} */
-  dronePosition: WorldPosition;
-  /** Couleur des véhicules */
-  color: string;
-  /** Coordonnée de la tuile de départ */
-  tileCoord: TileCoordinate;
-}
 
-/**
- * =================================================================
- * Composant Fleet - Architecture Simplifiée
- * =================================================================
- * 
- * ✅ LOGIQUE SIMPLIFIÉE :
- * - Scene conditionne l'affichage de Fleet quand le bot est actif
- * - Scene calcule et passe les positions ship et drone
- * - Fleet initialise automatiquement les positions au premier rendu (une seule fois)
- * - Trackers et animations toujours actifs
- * - Logging minimal
- */
 const Fleet: React.FC<FleetProps> = React.memo(({ 
   botId, 
   shipPosition = { x: 0, y: 0, z: 0 },
@@ -58,10 +30,10 @@ const Fleet: React.FC<FleetProps> = React.memo(({
   // ===================================================================
   
   // Accès direct au context FSM et à la fonction send
-  const botState = useXFSMStore((state) => state.botStates[botId]);
-  const context = (botState && 'context' in botState) ? (botState as { context: unknown }).context : undefined;
-  const send = useXFSMStore((state) => state.send);
-  
+  const botState = useXFSMStore((state : XFSMStoreType) => state.botStates[botId]);
+  const context = (botState && 'context' in botState) ? (botState as { context: FSMContext }).context : undefined;
+  const send = useXFSMStore((state: XFSMStoreType) => state.send);
+
   // Fonction send spécifique au bot
   const fsmSend = useCallback((event: { type: string; [key: string]: unknown }) => {
     send(event, botId);
@@ -72,8 +44,8 @@ const Fleet: React.FC<FleetProps> = React.memo(({
   // ===================================================================
   
   // Vérifier si les positions sont déjà initialisées via le store
-  const isFleetPositionsInitialized = useGameStore((state) => state.isFleetPositionsInitialized(botId));
-  const markFleetPositionsAsInitialized = useGameStore((state) => state.markFleetPositionsAsInitialized);
+  const isFleetPositionsInitialized = useGameStore((state: GameStoreType) => state.isFleetPositionsInitialized(botId));
+  const markFleetPositionsAsInitialized = useGameStore((state: GameStoreType) => state.markFleetPositionsAsInitialized);
 
   // Initialisation automatique des positions au premier rendu
   useEffect(() => {
@@ -97,14 +69,14 @@ const Fleet: React.FC<FleetProps> = React.memo(({
   }, [isFleetPositionsInitialized, shipPosition, dronePosition, fsmSend, botId, markFleetPositionsAsInitialized]);
 
   // 🎯 TRACKERS ET ANIMATIONS - TOUJOURS ACTIFS
-  const updateDroneVisualPosition = useXFSMDroneTracker(context, fsmSend, botId, 'explorer');
-  const updateShipVisualPosition = useXFSMShipTracker(context, fsmSend, botId, 'ship');
+  const updateDroneVisualPosition = useXFSMDroneTracker(context || {} as FSMContext, fsmSend, botId, 'explorer');
+  const updateShipVisualPosition = useXFSMShipTracker(context || {} as FSMContext, fsmSend, botId, 'ship');
   
   const { droneRef, initialPosition, droneState } = useDroneAnimation(
-    context, shipPosition, updateDroneVisualPosition, 'explorer', true
+    context || {} as FSMContext, shipPosition, updateDroneVisualPosition, 'explorer', true
   );
   const { shipRef, currentAction, isMoving } = useShipAnimation(
-    context, shipPosition, updateShipVisualPosition, true
+    context || {} as FSMContext, shipPosition, updateShipVisualPosition, true
   );
 
   // ===================================================================
@@ -142,7 +114,16 @@ const Fleet: React.FC<FleetProps> = React.memo(({
           color={color} 
           botId={botId} 
           context={context} 
-          droneState={{ state: droneState }}
+          droneState={{
+            id: `${botId}-explorer`,
+            type: 'explorer',
+            state: droneState,
+            position: { x: initialPosition.x, y: initialPosition.y, z: initialPosition.z },
+            targetPosition: { x: 0, y: 0, z: 0 },
+            missionTarget: { type: 'tile', coord: '0,0' },
+            isActive: true,
+            lastUpdate: Date.now()
+          }}
           droneType="explorer"
         />
       </group>

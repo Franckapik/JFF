@@ -14,15 +14,10 @@
 // IMPORTS DES TYPES DRONES (déjà unifiés)
 // ============================================================================
 
-export {
-    DRONE_STATES,
-    DRONE_TYPES, convertFSMToVisual, convertVisualToFSM, isDroneMoving
-} from '../../../../types/drone';
-
 export type {
-    DroneFSMState, DroneType,
-    DroneVisualState
-} from '../../../../types/drone';
+  DroneFSMState, DroneType,
+  DroneVisualState
+} from '../../../../types/drone.d.ts';
 
 // ============================================================================
 // TYPES UNION POUR LES ÉTATS FSM

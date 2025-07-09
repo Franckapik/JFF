@@ -7,7 +7,7 @@
 import fsmLogger from '../../../../../../logger/fsmLogger.ts';
 import { useTileStore } from '../../../../../../stores/useTileStore/index';
 import type { ShipType, XStateSend } from '../../../../../../types';
-import type { WorldPosition } from '../../../../../../types/coordinates';
+import type { WorldPosition } from '../../../../../../types/coordinates.d.ts';
 import { POSITION_TRACKER_CONFIG } from '../../../../machineX/config/constants.ts';
 
 interface PositionUpdateHandlerParams {

@@ -27,19 +27,32 @@
  */
 
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
-import {
-  DRONE_STATES,
-  DRONE_TYPES
-} from '../../config/constants.ts';
+import type { WorldPosition } from '../../../../../types/coordinates.d.ts';
+import type { DroneType, DroneVisualState } from '../../../../../types/drone.d.ts';
+import type { FSMContext, FSMEvent } from '../../../../../types/fsm.d.ts';
 
+// Type guards pour les événements
+interface DroneDeployEvent extends FSMEvent {
+  droneType?: DroneType;
+  range?: number;
+}
+
+/**
+ * Sélectionne une tuile cible dans un rayon donné pour le drone
+ */
+function selectTargetTileInRadiusForDrone(_context: FSMContext, _range: number): WorldPosition | null {
+  // Fonction utilitaire - implémentation à compléter selon la logique du tileStore
+  // Pour l'instant, on retourne null pour indiquer qu'aucune cible n'est trouvée
+  return null;
+}
 
 /**
  * Déploie un drone vers une zone cible pour exploration
  */
-export const droneDeployForExploration = (context, event) => {
+export const droneDeployForExploration = (context: FSMContext, event: DroneDeployEvent): FSMContext => {
   try {
     // Validation simple interne
-    const droneType = event.droneType || DRONE_TYPES.explorer;
+    const droneType: DroneType = event.droneType || 'explorer';
     const range = event.range || 3;
     
     // Vérifier si le drone existe dans la flotte
@@ -59,14 +72,19 @@ export const droneDeployForExploration = (context, event) => {
       fsmLogger.debug(`[droneDeployForExploration] No valid exploration targets within radius ${range}, area exploration complete`);
       return {
         ...context,
-        explorationComplete: true, // Flag pour indiquer que l'exploration locale est terminée
+        explorationCycle: {
+          ...context.explorationCycle,
+          isActive: false,
+          phase: 'idle'
+        },
         lastAction: 'droneDeployForExploration_noTargets'
       };
     }
 
+    const droneVisualState: DroneVisualState = 'deploying';
     const updatedDrone = {
       ...context.droneFleet.drones[droneType],
-      state: DRONE_STATES.VISUAL.deploying,
+      state: droneVisualState,
       targetPosition,
       isActive: true,
       lastUpdate: Date.now()
@@ -77,11 +95,9 @@ export const droneDeployForExploration = (context, event) => {
       droneFleet: {
         ...context.droneFleet,
         currentMission: {
-          type: 'exploration',
-          target: `${range}unit-radius`,
-          drone: droneType,
-          startTime: Date.now(),
-          estimatedReturn: Date.now() + (range * 2000)
+          type: 'explore',
+          target: context.vehicle.coord,
+          drones: [droneType]
         },
         missionStartTime: Date.now(),
         drones: {
@@ -89,13 +105,18 @@ export const droneDeployForExploration = (context, event) => {
           [droneType]: updatedDrone
         }
       },
-      explorationComplete: false, // Reset le flag si on trouve une cible
+      explorationCycle: {
+        ...context.explorationCycle,
+        isActive: true,
+        phase: 'exploring'
+      },
       lastAction: 'droneDeployForExploration_success'
     };
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return {
       ...context,
-      error: error.message,
+      error: errorMessage,
       lastAction: 'droneDeployForExploration_failed'
     };
   }
@@ -121,7 +142,7 @@ export default {
   
   // Constants
   constants: {
-    droneTypes: DRONE_TYPES,
-    droneVisualStates: DRONE_STATES.VISUAL,
+    droneTypes: ['explorer', 'combat', 'special'] as DroneType[],
+    droneVisualStates: ['docked', 'deploying', 'scanning', 'returning', 'failed'] as DroneVisualState[],
   }
 };

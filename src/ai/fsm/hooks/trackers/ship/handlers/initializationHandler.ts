@@ -8,7 +8,7 @@ import { MutableRefObject } from 'react';
 
 import fsmLogger from '../../../../../../logger/fsmLogger.ts';
 import type { ShipType, XStateSend } from '../../../../../../types';
-import type { WorldPosition } from '../../../../../../types/coordinates';
+import type { WorldPosition } from '../../../../../../types/coordinates.d.ts';
 
 interface ShipInitHandlerParams {
   fsmSend: XStateSend;

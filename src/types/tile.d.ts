@@ -41,28 +41,31 @@ export interface Tile {
   // Identification et positionnement
   coord: GridCoordinate;              // Coordonnée sous forme "x,z"
   position: WorldPosition;            // Position 3D dans le monde
-  tileCoord: TileCoordinate;          // Coordonnée objet {x, z}
+  tileCoord?: TileCoordinate;         // Coordonnée objet {x, z} (optionnelle pour compatibilité)
   
   // Type et propriétés visuelles
-  type: TileType;                     // Type de la tuile
-  biome: TileBiome;                   // Biome/environnement
+  type: TileType | string;            // Type de la tuile (string pour compatibilité)
+  biome: TileBiome | string;          // Biome/environnement (string pour compatibilité)
   color?: string;                     // Couleur personnalisée
   
   // État de navigation
-  walkable: boolean;                  // Peut-on marcher dessus ?
+  walkable?: boolean;                 // Peut-on marcher dessus ? (optionnel pour compatibilité)
+  isWalkable?: boolean;               // Alias pour compatibilité avec anciens types
   neighbors?: GridCoordinate[];       // Coordonnées des tuiles voisines
   
   // État d'exploration et collecte
-  explored: boolean;                  // A été explorée ?
+  explored?: boolean;                 // A été explorée ?
   exploredAt?: number;                // Timestamp d'exploration
   exploredBy?: string;                // ID de l'entité qui l'a explorée
-  collected: boolean;                 // A été collectée ?
+  collected?: boolean;                // A été collectée ?
   collectedAt?: number;               // Timestamp de collecte
   collectedBy?: string;               // ID de l'entité qui l'a collectée
   
   // Ressources
   resources: ResourceStats;           // Ressources disponibles
-  hasResources: boolean;              // Indicateur rapide de présence de ressources
+  hasResources?: boolean;             // Indicateur rapide de présence de ressources
+  resourcePercentage?: number;        // Pourcentage de ressources restantes
+  lastCollectedTimestamp?: number;    // Timestamp de dernière collecte
   
   // Assignation aux entités
   assignedToBot?: string;             // ID du bot assigné (pour tuiles de départ)
@@ -208,11 +211,11 @@ export interface TileStoreActions {
   getTilesByType: (tileType: TileType) => Tile[];
   
   // Coordonnées
-  isValidGridCoord: (coord: any) => coord is GridCoordinate;
-  isValidWorldPosition: (position: any) => position is WorldPosition;
+  isValidGridCoord: (coord: unknown) => coord is GridCoordinate;
+  isValidWorldPosition: (position: unknown) => position is WorldPosition;
   gridToWorld: (coord: TileCoordinate) => WorldPosition;
   worldToGrid: (position: WorldPosition) => TileCoordinate;
-  normalizeCoordinate: (coord: any) => GridCoordinate | null;
+  normalizeCoordinate: (coord: GridCoordinate | TileCoordinate | string) => GridCoordinate | null;
   
   // Génération
   initializeGameGrid: (radius: number, spacing: number) => TileMap;
@@ -227,51 +230,32 @@ export type TileStore = TileStoreState & TileStoreActions;
 // ============================================================================
 
 /** Vérifie qu'un objet est une tuile valide */
-export const isTile = (obj: any): obj is Tile => {
+export const isTile = (obj: unknown): obj is Tile => {
+  if (!obj || typeof obj !== 'object') return false;
+  const o = obj as Record<string, unknown>;
   return (
-    obj &&
-    typeof obj === 'object' &&
-    typeof obj.coord === 'string' &&
-    typeof obj.position === 'object' &&
-    typeof obj.tileCoord === 'object' &&
-    typeof obj.type === 'string' &&
-    typeof obj.biome === 'string' &&
-    typeof obj.walkable === 'boolean' &&
-    typeof obj.explored === 'boolean' &&
-    typeof obj.collected === 'boolean' &&
-    typeof obj.resources === 'object' &&
-    typeof obj.hasResources === 'boolean'
+    typeof o.coord === 'string' &&
+    typeof o.position === 'object' && o.position !== null &&
+    typeof o.type === 'string' &&
+    typeof o.biome === 'string' &&
+    typeof o.resources === 'object' && o.resources !== null
   );
 };
 
 /** Vérifie qu'un type de tuile est valide */
-export const isTileType = (type: any): type is TileType => {
+export const isTileType = (type: unknown): type is TileType => {
   const validTypes: TileType[] = ['depart', 'fuel', 'repair', 'food', 'debris', 'special', 'danger', 'empty', 'water'];
-  return validTypes.includes(type);
+  return typeof type === 'string' && validTypes.includes(type as TileType);
 };
 
 /** Vérifie qu'un biome est valide */
-export const isTileBiome = (biome: any): biome is TileBiome => {
+export const isTileBiome = (biome: unknown): biome is TileBiome => {
   const validBiomes: TileBiome[] = ['grassland', 'desert', 'snow', 'water', 'rock'];
-  return validBiomes.includes(biome);
+  return typeof biome === 'string' && validBiomes.includes(biome as TileBiome);
 };
 
 // ============================================================================
 // TYPES POUR LES COMPOSANTS
 // ============================================================================
 
-/** Interface pour les propriétés du composant Tile */
-export interface TileProps {
-  /** Position [x, y, z] de la tuile dans l'espace 3D */
-  position: [number, number, number];
-  /** Rayon de la tuile hexagonale */
-  radius: number;
-  /** Couleur de la tuile */
-  color: string;
-  /** Coordonnées de la tuile au format "x,z" */
-  coord: GridCoordinate;
-  /** Indique si la tuile est surélevée */
-  isHighTile?: boolean;
-  /** Gestionnaire d'événement au clic */
-  onClick?: () => void;
-}
+

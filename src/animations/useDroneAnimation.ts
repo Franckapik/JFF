@@ -7,7 +7,7 @@
  * Gère le mouvement, les rotations et les effets visuels par état.
  * 
  * ✅ Converti en TypeScript avec types unifiés
- * ✅ Utilise les constantes centralisées de /types/drone
+ * ✅ Utilise les constantes centralisées de /types/drone.d.ts
  */
 
 import { useFrame } from '@react-three/fiber';
@@ -17,12 +17,10 @@ import * as THREE from 'three';
 
 import fsmLogger from '../logger/fsmLogger.ts';
 import type { FSMContext, WorldPosition } from '../types';
-import {
-  DRONE_STATES,
+import type {
   DroneType,
-  DroneVisualState,
-  isDroneMoving
-} from '../types/drone';
+  DroneVisualState
+} from '../types/drone.d.ts';
 
 // ============================================================================
 // TYPES INTERNES
@@ -103,7 +101,7 @@ export const useDroneAnimation = (
     if (!drone) return;
 
     // État actuel du drone (utilisation des constantes unifiées)
-    const droneState: DroneVisualState = drone.state || DRONE_STATES.VISUAL.DOCKED;
+    const droneState: DroneVisualState = drone.state || 'docked';
 
     // Throttling des mises à jour (60 FPS max)
     const shouldUpdate = now - lastUpdateTime.current > 1/60;
@@ -143,8 +141,8 @@ export const useDroneAnimation = (
     // ANIMATION DE MOUVEMENT
     // ============================================================================
     
-    // Vérification des états de mouvement avec la fonction unifiée
-    const isMoving = isDroneMoving(droneState);
+    // Vérification des états de mouvement
+    const isMoving = droneState === 'deploying' || droneState === 'scanning' || droneState === 'returning';
     
     if (isMoving && droneRef.current) {
       if (shouldUpdate) {
@@ -188,27 +186,27 @@ export const useDroneAnimation = (
     // ============================================================================
     
     switch (droneState) {
-      case DRONE_STATES.VISUAL.DOCKED:
+      case 'docked':
         droneRef.current.rotation.y += delta * 0.5;
         droneRef.current.position.y = targetPosition.y + Math.sin(now * 2) * 0.1;
         break;
         
-      case DRONE_STATES.VISUAL.EXPLORING:
+      case 'scanning':
         droneRef.current.position.y = targetPosition.y + Math.sin(now * 3) * 0.2;
         droneRef.current.rotation.y += delta * 1.5;
         break;
         
-      case DRONE_STATES.VISUAL.RETURNING:
+      case 'returning':
         droneRef.current.position.y = targetPosition.y + Math.sin(now * 6) * 0.1;
         droneRef.current.rotation.y += delta * 2;
         break;
         
-      case DRONE_STATES.VISUAL.DEPLOYING:
+      case 'deploying':
         droneRef.current.rotation.y += delta * 1;
         droneRef.current.position.y = targetPosition.y + Math.sin(now * 4) * 0.15;
         break;
         
-      case DRONE_STATES.VISUAL.FAILED:
+      case 'failed':
         // Animation d'erreur - clignotement
         {const flicker = Math.sin(now * 10) > 0 ? 1 : 0.3;
         if (droneRef.current.material && 'opacity' in droneRef.current.material) {
@@ -229,7 +227,7 @@ export const useDroneAnimation = (
   
   return {
     droneRef,
-    droneState: context?.droneFleet?.drones?.[droneType]?.state || DRONE_STATES.VISUAL.DOCKED,
+    droneState: context?.droneFleet?.drones?.[droneType]?.state || 'docked',
     initialPosition
   };
 };

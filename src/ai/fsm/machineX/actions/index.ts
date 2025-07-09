@@ -14,11 +14,11 @@
 // IMPORTS ACTIONS
 // ============================================================================
 
-import * as evaluatingActions from './evaluating.actions.js';
-import * as exploringActions from './exploring.actions.js';
-import * as collectingActions from './collecting.actions.js';
-import * as maintainingActions from './maintaining.actions.js';
-import { positionActions } from './core/positionActions.js'; // Import position actions
+import * as collectingActions from './collecting.actions.ts';
+import { positionActions } from './core/positionActions.ts'; // Import position actions
+import * as evaluatingActions from './evaluating.actions.ts';
+import * as exploringActions from './exploring.actions.ts';
+import * as maintainingActions from './maintaining.actions.ts';
 
 // ============================================================================
 // EXPORT CENTRALISÉ

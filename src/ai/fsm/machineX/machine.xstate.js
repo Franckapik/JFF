@@ -12,7 +12,7 @@
 
 import { assign, createMachine } from 'xstate';
 
-import allActions from './actions/index.js';
+import allActions from './actions/index.ts';
 import { createMachineContext } from './context/initialContext.ts';
 import * as allGuards from './guards/guards.all.ts';
 import { collectingState } from './states/collecting.state.js';

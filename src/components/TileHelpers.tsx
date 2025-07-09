@@ -1,19 +1,7 @@
 import { Html } from "@react-three/drei";
 import React from "react";
 
-interface TileHelpersProps {
-  position: [number, number, number];
-  tileType: string | null;
-  isAssignedDepartTile: boolean;
-  baseColor?: string;
-  backgroundColor?: string;
-  labelText?: string;
-  shouldShowPercentage: boolean;
-  isCompletelyCollected: boolean;
-  resourcePercentage: number;
-  isRecentlyCollected: boolean;
-  isExplored: boolean;
-}
+import type { TileHelpersProps } from "../types/r3f";
 
 const TileHelpers: React.FC<TileHelpersProps> = ({
   position,

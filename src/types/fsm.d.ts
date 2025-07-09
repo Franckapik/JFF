@@ -4,7 +4,7 @@
 
 import type { GridCoordinate, TileCoordinate } from './coordinates';
 import type { ResourceStats } from './resources';
-import type { DroneFleet, VehicleState } from './vehicle';
+import type { DroneFleet, VehicleState } from './vehicle.d';
 
 /** Données d'une tuile connue en mémoire (extrait de initialContext.ts) */
 export interface KnownTileData {
@@ -122,55 +122,45 @@ export interface FSMContext {
   entityId: string;
   entityType: string;
   autonomousMode: boolean;
-  
+
   // Véhicule principal
   vehicle: VehicleState;
-  
+
   // État FSM
   currentState: string;
-  currentTarget: import('./coordinates').TypedTarget | null;
+  currentTarget: TileCoordinate | null;
   explorationQueue: TileCoordinate[];
   lastAction: string | null;
   error: string | null;
   timestamps: ContextTimestamps;
-  
+
   // Score et ressources
   score: EntityScore;
-  
+
   // Mémoire
   memory: EntityMemory;
-  
+
   // Cycle d'exploration
   explorationCycle: ExplorationCycle;
   selectedTileForCollection: SelectedTile | null;
-  
+
   // Configuration
   config: FSMConfig;
-  
+
   // Système de drones
   droneFleet: DroneFleet;
 }
 
-
-// Fonction utilitaire de type uniquement pour validation d'état
-export const isValidStateTransition = (from: string, to: string): boolean => {
-  return typeof from === 'string' && typeof to === 'string' && from !== to;
-};
+/** Fonction utilitaire de type uniquement pour validation d'état */
+export declare const isValidStateTransition: (from: string, to: string) => boolean;
 
 /**
  * Type d'événement FSM générique (pour XState, actions, guards...)
- * Peut être adapté selon la structure exacte des events dans le projet.
  */
 export interface FSMEvent {
   type: string;
-  // Ajoutez ici les propriétés attendues pour vos events
-  // Par exemple : payload?: Record<string, unknown>;
   [key: string]: unknown;
 }
-
-/**
- * Types pour le store XFSM (Zustand + XState)
- */
 
 /** ID unique d'un bot dans le système */
 export type BotId = string;

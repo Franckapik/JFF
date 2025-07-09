@@ -20,7 +20,7 @@ import type {
     XFSMStore,
     XFSMStoreActions,
     XFSMStoreState
-} from '../../types/fsm';
+} from '../../types/fsm.d.ts';
 
 // État vide par défaut pour un bot non initialisé
 const EMPTY_BOT_STATE: EmptyBotState = { 

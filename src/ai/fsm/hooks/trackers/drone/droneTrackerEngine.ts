@@ -4,17 +4,18 @@
  * ==========================================================================
  */
 
+
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index';
-import type { DroneTrackerParams } from '../../../../../types';
-import type { WorldPosition } from '../../../../../types/coordinates';
-import { convertVisualToFSM } from '../../../../../types/drone';
+import type { WorldPosition } from '../../../../../types/coordinates.d';
+import type { TileStoreType } from '../../../../../types/stores.d';
+import type { DroneTrackerParams } from '../../../../../types/tracker';
 
 import {
-    createDeployingHandler,
-    createInitializationHandler,
-    createReturningHandler,
-    createScanningHandler
+  createDeployingHandler,
+  createInitializationHandler,
+  createReturningHandler,
+  createScanningHandler
 } from './handlers';
 
 // Cache des dernières positions rapportées
@@ -97,38 +98,36 @@ export const processDronePosition = (params: DroneTrackerParams): void => {
   
   // 3. Gestion de l'initialisation
   handlers.init.handleInitialPosition(position);
-  
-  // 4. Traitement selon l'état du drone
+   // 4. Traitement selon l'état du drone
   const drone = context?.droneFleet?.drones?.[droneType];
   if (!drone?.isActive || !drone?.state) return;
-  
-  // 5. Conversion de l'état visuel vers état FSM avec fonction unifiée
-  const fsmState = convertVisualToFSM(drone.state);
-  if (!fsmState) {
+
+  // 5. Vérification si l'état nécessite un tracking FSM
+  if (drone.state === 'docked' || drone.state === 'failed') {
     // États comme 'docked' ou 'failed' ne nécessitent pas de tracking
     return;
   }
-  
+
   // 6. Calculer la distance via le tileStore
-  const tileStore = useTileStore.getState();
+  const tileStore = useTileStore.getState() as TileStoreType;
   const distance = tileStore.calculateDroneDistance(
     position, 
-    fsmState, 
+    drone.state, // Utilisation directe de l'état visuel
     drone.targetPosition, 
     context?.vehicle?.position || context?.vehicle?.basePosition
   );
-  
+
   if (distance === Infinity) return;
-  
-  // 6. Dispatcher vers le bon handler
-  switch (fsmState) {
-    case 'drone_deploying':
+
+  // 7. Dispatcher vers le bon handler selon l'état visuel
+  switch (drone.state) {
+    case 'deploying':
       handlers.deploying.process(distance, position);
       break;
-    case 'drone_scanning':
+    case 'scanning':
       handlers.scanning.process(distance, position);
       break;
-    case 'drone_returning':
+    case 'returning':
       handlers.returning.process(distance, position);
       break;
   }
