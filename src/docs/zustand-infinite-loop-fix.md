@@ -280,7 +280,7 @@ const MyComponent = () => {
 ### ✅ Problèmes Résolus dans cette Session
 
 #### 1. Correction d'Erreurs d'Import
-- **Problème** : Erreur `The requested module '/src/logger/fsmLogger.js' does not provide an export named 'fsmLogger'`
+- **Problème** : Erreur `The requested module '/src/logger/fsmLogger.ts' does not provide an export named 'fsmLogger'`
 - **Cause** : Import incorrect utilisant destructuring `{ fsmLogger }` au lieu d'import par défaut
 - **Solution** : Correction des imports dans tous les composants `*Fixed.jsx`
 
@@ -289,7 +289,7 @@ const MyComponent = () => {
 import { fsmLogger } from '../../logger/fsmLogger';
 
 // ✅ APRÈS (Correct)
-import fsmLogger from '../../logger/fsmLogger.js';
+import fsmLogger from '../../logger/fsmLogger.ts';
 ```
 
 #### 2. Composants Importés Manquants

@@ -33,7 +33,7 @@ import type {
 } from '../../../types/index.ts';
 import type { ResourceStats } from '../../../types/resources.js';
 
-import fsmLogger from '../../../logger/fsmLogger.js';
+import fsmLogger from '../../../logger/fsmLogger.ts';
 
 // =========================================================================
 // UTILITAIRES DE COLLECTE DES TUILES

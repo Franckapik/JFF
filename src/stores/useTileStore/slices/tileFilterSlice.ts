@@ -30,7 +30,7 @@ import type {
 } from '../../../types/index.ts';
 
 import { DRONE_EXPLORATION_CONFIG } from '../../../ai/fsm/machineX/config/constants.ts';
-import fsmLogger from '../../../logger/fsmLogger.js';
+import fsmLogger from '../../../logger/fsmLogger.ts';
 
 // =========================================================================
 // TYPES LOCAUX SIMPLIFIÉS

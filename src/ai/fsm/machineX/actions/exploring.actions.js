@@ -12,7 +12,7 @@
 
 import { assign } from 'xstate';
 
-import fsmLogger from '../../../../logger/fsmLogger.js';
+import fsmLogger from '../../../../logger/fsmLogger.ts';
 
 import { droneDeployForExploration } from './core/droneExploringActions.js';
 

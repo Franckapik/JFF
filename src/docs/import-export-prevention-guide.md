@@ -73,7 +73,7 @@ import Scene from "../components/Scene";
 ### 4. Utilitaires/Loggers : Export Default
 
 ```javascript
-// ✅ CORRECT - logger/fsmLogger.js
+// ✅ CORRECT - logger/fsmLogger.ts
 const fsmLogger = {
   // ...
 };

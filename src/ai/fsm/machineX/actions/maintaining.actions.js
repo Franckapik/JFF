@@ -9,7 +9,7 @@
  * @version 1.0.0
  */
 
-import fsmLogger from '../../../../logger/fsmLogger.js';
+import fsmLogger from '../../../../logger/fsmLogger.ts';
 
 export const action_maintaining_entry = () => fsmLogger.state('action_maintaining_entry');
 export const action_maintaining_exit = () => fsmLogger.state('action_maintaining_exit');

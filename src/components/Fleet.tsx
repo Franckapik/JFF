@@ -4,7 +4,7 @@ import { useXFSMDroneTracker } from "../ai/fsm/hooks/trackers/drone/useXFSMDrone
 import { useXFSMShipTracker } from "../ai/fsm/hooks/trackers/ship/useXFSMShipTracker";
 import { useDroneAnimation } from "../animations/useDroneAnimation";
 import { useShipAnimation } from "../animations/useShipAnimation.js";
-import fsmLogger from "../logger/fsmLogger.js";
+import fsmLogger from "../logger/fsmLogger.ts";
 import useGameStore from "../stores/useGameStore";
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
 

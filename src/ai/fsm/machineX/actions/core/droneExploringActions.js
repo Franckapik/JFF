@@ -26,7 +26,7 @@
  * @version 4.0.0
  */
 
-import fsmLogger from '../../../../../logger/fsmLogger.js';
+import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import {
   DRONE_STATES,
   DRONE_TYPES

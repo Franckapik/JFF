@@ -11,7 +11,7 @@
  * @version 1.0.0 - Architecture XState
  */
 
-import fsmLogger from '../../../../logger/fsmLogger.js';
+import fsmLogger from '../../../../logger/fsmLogger.ts';
 
 /**
  * Action d'entrée de l'état evaluating : logique de décision prioritaire
