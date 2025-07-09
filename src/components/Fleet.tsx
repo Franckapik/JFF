@@ -1,10 +1,11 @@
-import React, { useEffect, useRef } from "react";
-import { useXFSMDroneTracker } from "../ai/fsm/hooks/trackers/drone/useXFSMDroneTracker.js";
-import { useXFSMShipTracker } from "../ai/fsm/hooks/trackers/ship/useXFSMShipTracker.js";
-import { useDroneAnimation } from "../animations/useDroneAnimation.js";
+import React, { useCallback, useEffect } from "react";
+import { useXFSMDroneTracker } from "../ai/fsm/hooks/trackers/drone/useXFSMDroneTracker";
+import { useXFSMShipTracker } from "../ai/fsm/hooks/trackers/ship/useXFSMShipTracker";
+import { useDroneAnimation } from "../animations/useDroneAnimation";
 import { useShipAnimation } from "../animations/useShipAnimation.js";
-import { useXFSM } from "../hooks/useXFSM";
 import fsmLogger from "../logger/fsmLogger.js";
+import useGameStore from "../stores/useGameStore";
+import useXFSMStore from "../stores/useXFSMStore/index.ts";
 import DroneMesh from "./Vehicles/DroneMesh";
 import ShipMesh from "./Vehicles/ShipMesh";
 
@@ -19,10 +20,10 @@ import "../types/r3f.d.ts"; // Import R3F types
 interface FleetProps {
   /** ID du bot FSM (ex: 'bot-0') */
   botId: VehicleId;
-  /** Index du bot pour la compatibilité */
-  botIndex: number;
   /** Position mondiale du vaisseau {x,y,z} */
   shipPosition: WorldPosition;
+  /** Position mondiale du drone {x,y,z} */
+  dronePosition: WorldPosition;
   /** Couleur des véhicules */
   color: string;
   /** Coordonnée de la tuile de départ */
@@ -30,129 +31,76 @@ interface FleetProps {
 }
 
 /**
- * Référence pour le contexte précédent de logging
- */
-interface LoggingContext {
-  fsmState?: string;
-  lastAction?: string;
-  droneState?: string;
-}
-
-/**
  * =================================================================
- * Composant Fleet - Architecture Refactorisée avec Hooks Spécialisés
+ * Composant Fleet - Architecture Simplifiée
  * =================================================================
  * 
- * ✅ ARCHITECTURE FINALE (Post-Refactorisation) :
- * 
- * 📁 STRUCTURE DES FICHIERS :
- * - Fleet.tsx : Coordination des véhicules et intégration FSM
- * - /ai/fsm/hooks/useFSMDroneTracker.js : Tracking spécialisé drones
- * - /ai/fsm/hooks/useFSMShipTracker.js : Tracking spécialisé vaisseaux
- * - /animations/useDroneAnimation.js : Animation des drones
- * - /animations/useShipAnimation.js : Animation des vaisseaux
- * 
- * 🔄 FLUX DE DONNÉES :
- * 1. Fleet.tsx reçoit shipPosition mondiale de Scene.tsx
- * 2. Hooks d'animation calculent positions locales (relatives au parent group)
- * 3. Trackers reçoivent positions mondiales pour événements FSM
- * 4. FSM met à jour le contexte selon les événements reçus
- * 
- * 🎯 RESPONSABILITÉS :
- * - useFSMDroneTracker : Surveillance des distances drone → événements FSM
- * - useFSMShipTracker : Surveillance des distances vaisseau → événements FSM  
- * - useDroneAnimation : Interpolation visuelle + feedback états drones
- * - useShipAnimation : Interpolation visuelle + feedback actions vaisseaux
- * - Fleet.tsx : Coordination, positionnement relatif, rendu final
- * 
- * ⚡ OPTIMISATIONS :
- * - Positionnement relatif (évite double transformation)
- * - Hooks spécialisés par type de véhicule
- * - Séparation animation/tracking pour clarté
+ * ✅ LOGIQUE SIMPLIFIÉE :
+ * - Scene conditionne l'affichage de Fleet quand le bot est actif
+ * - Scene calcule et passe les positions ship et drone
+ * - Fleet initialise automatiquement les positions au premier rendu (une seule fois)
+ * - Trackers et animations toujours actifs
+ * - Logging minimal
  */
 const Fleet: React.FC<FleetProps> = React.memo(({ 
   botId, 
-  botIndex,
   shipPosition = { x: 0, y: 0, z: 0 },
+  dronePosition = { x: 0.5, y: 0.8, z: 0.5 },
   color = "red",
   tileCoord
 }) => {
   // ===================================================================
-  // 🚀 INTÉGRATION FSM AVEC ARCHITECTURE SPÉCIALISÉE
+  // 🚀 ACCÈS DIRECT AU STORE XFSM
   // ===================================================================
   
-  const { fsmState, context, send: fsmSend } = useXFSM(botId);
-
-  // 🐛 DIAGNOSTIC : Log limité du contexte FSM lors de changements significatifs
-  const lastLoggedContext = useRef<LoggingContext>({});
+  // Accès direct au context FSM et à la fonction send
+  const botState = useXFSMStore((state) => state.botStates[botId]);
+  const context = (botState && 'context' in botState) ? (botState as any).context : undefined;
+  const send = useXFSMStore((state) => state.send);
   
+  // Fonction send spécifique au bot
+  const fsmSend = useCallback((event: any) => {
+    send(event, botId);
+  }, [send, botId]);
+  
+  // ===================================================================
+  // 🚀 INITIALISATION AUTOMATIQUE DES POSITIONS - UNE SEULE FOIS
+  // ===================================================================
+  
+  // Vérifier si les positions sont déjà initialisées via le store
+  const isFleetPositionsInitialized = useGameStore((state) => state.isFleetPositionsInitialized(botId));
+  const markFleetPositionsAsInitialized = useGameStore((state) => state.markFleetPositionsAsInitialized);
+
+  // Initialisation automatique des positions au premier rendu
   useEffect(() => {
-    // Ne logger que lors d'un changement d'état ou d'action
-    const hasStateChanged = fsmState !== lastLoggedContext.current.fsmState;
-    const hasActionChanged = context?.lastAction !== lastLoggedContext.current.lastAction;
-    const droneState = context?.droneFleet?.drones?.explorer?.state;
-    const hasDroneStateChanged = droneState !== lastLoggedContext.current.droneState;
-    
-    if (hasStateChanged || hasActionChanged || hasDroneStateChanged) {
-      fsmLogger.info(`🛸 [Fleet] Context update for ${botId}:`, {
-        fsmState,
-        lastAction: context?.lastAction,
-        vehiclePosition: context?.vehicle?.position ? 
-          `(${context.vehicle.position.x.toFixed(1)}, ${context.vehicle.position.y.toFixed(1)}, ${context.vehicle.position.z.toFixed(1)})` : 
-          'none',
-        droneActive: context?.droneFleet?.drones?.explorer?.isActive,
-        droneState,
-        hasTargetPosition: !!context?.droneFleet?.drones?.explorer?.targetPosition,
-        targetPosition: context?.droneFleet?.drones?.explorer?.targetPosition ? 
-          `(${context.droneFleet.drones.explorer.targetPosition.x.toFixed(1)}, ${context.droneFleet.drones.explorer.targetPosition.y.toFixed(1)}, ${context.droneFleet.drones.explorer.targetPosition.z.toFixed(1)})` : 
-          'none'
+    if (!isFleetPositionsInitialized && shipPosition && dronePosition && fsmSend) {
+      // Envoyer les positions initiales au contexte FSM
+      fsmSend({ 
+        type: 'SHIP_POSITION_UPDATE', 
+        position: shipPosition,
+        shipType: 'ship'
       });
       
-      // Sauvegarder l'état actuel pour comparaison future
-      lastLoggedContext.current = {
-        fsmState,
-        lastAction: context?.lastAction,
-        droneState
-      };
-    }
-  }, [context, fsmState, botId, shipPosition]);
-  
-  // 🔄 NOUVEAU - Log spécifique pour les changements d'état de drone
-  const prevDroneState = useRef<string | null>(null);
-  
-  useEffect(() => {
-    const currentDroneState = context?.droneFleet?.drones?.explorer?.state;
-    if (currentDroneState && currentDroneState !== prevDroneState.current) {
-      fsmLogger.info(`🚨 [Fleet] DRONE STATE CHANGE for ${botId}:`, {
-        from: prevDroneState.current,
-        to: currentDroneState,
-        position: context?.droneFleet?.drones?.explorer?.position,
-        targetPosition: context?.droneFleet?.drones?.explorer?.targetPosition
+      fsmSend({ 
+        type: 'DRONE_POSITION_UPDATE', 
+        position: dronePosition,
+        droneType: 'explorer'
       });
-      prevDroneState.current = currentDroneState;
+      
+      markFleetPositionsAsInitialized(botId);
+      fsmLogger.game(`[Fleet] Initial positions set for ${botId}`);
     }
-  }, [context?.droneFleet?.drones?.explorer?.state, botId, context]);
+  }, [isFleetPositionsInitialized, shipPosition, dronePosition, fsmSend, botId, markFleetPositionsAsInitialized]);
 
-  // 🎯 TRACKERS SPÉCIALISÉS : Surveillance distance → événements FSM
-  // - useXFSMDroneTracker : Gère deploying, exploring, returning (XState)
-  // - useFSMShipTracker : Gère movement, collecting, refueling
+  // 🎯 TRACKERS ET ANIMATIONS - TOUJOURS ACTIFS
   const updateDroneVisualPosition = useXFSMDroneTracker(context, fsmSend, botId, 'explorer');
   const updateShipVisualPosition = useXFSMShipTracker(context, fsmSend, botId, 'ship');
-
-  // 🎭 ANIMATIONS SPÉCIALISÉES : Interpolation visuelle + feedback d'état
-  // - useDroneAnimation : Position relative + animations par état drone
-  // - useShipAnimation : Position relative + animations par action vaisseau
-  const { droneRef, initialPosition, droneState } = useDroneAnimation(
-    context, 
-    shipPosition, // Position mondiale pour calculs de coordonnées
-    updateDroneVisualPosition, 
-    'explorer'
-  );
   
+  const { droneRef, initialPosition, droneState } = useDroneAnimation(
+    context, shipPosition, updateDroneVisualPosition, 'explorer', true
+  );
   const { shipRef, currentAction, isMoving } = useShipAnimation(
-    context, 
-    shipPosition, // Position mondiale pour calculs de tracking
-    updateShipVisualPosition
+    context, shipPosition, updateShipVisualPosition, true
   );
 
   // ===================================================================
@@ -168,7 +116,7 @@ const Fleet: React.FC<FleetProps> = React.memo(({
     <>
       {/* 🚢 VAISSEAU PRINCIPAL - Position relative au group parent */}
       {/* @ts-ignore - React Three Fiber elements */}
-      <group ref={shipRef} position={[0, 0, 0]}>
+      <group ref={shipRef}>
         <ShipMesh 
           color={color} 
           botId={botId} 
@@ -202,13 +150,15 @@ const Fleet: React.FC<FleetProps> = React.memo(({
   );
 }, (prevProps: FleetProps, nextProps: FleetProps) => {
   // 🚀 OPTIMISATION MÉMOIRE - Évite les re-renders inutiles
-  // Comparaison des props critiques pour les performances
   return (
     prevProps.botId === nextProps.botId &&
     prevProps.color === nextProps.color &&
     prevProps.shipPosition?.x === nextProps.shipPosition?.x &&
     prevProps.shipPosition?.y === nextProps.shipPosition?.y &&
-    prevProps.shipPosition?.z === nextProps.shipPosition?.z
+    prevProps.shipPosition?.z === nextProps.shipPosition?.z &&
+    prevProps.dronePosition?.x === nextProps.dronePosition?.x &&
+    prevProps.dronePosition?.y === nextProps.dronePosition?.y &&
+    prevProps.dronePosition?.z === nextProps.dronePosition?.z
   );
 });
 

@@ -4,14 +4,12 @@
  * ==========================================================================
  */
 
-import { createInitializationHandler } from './initializationHandler';
 import { createDeployingHandler } from './deployingHandler';
-import { createScanningHandler } from './scanningHandler';
+import { createInitializationHandler } from './initializationHandler';
 import { createReturningHandler } from './returningHandler';
+import { createScanningHandler } from './scanningHandler';
 
 export {
-  createInitializationHandler,
-  createDeployingHandler,
-  createScanningHandler,
-  createReturningHandler
+    createDeployingHandler, createInitializationHandler, createReturningHandler, createScanningHandler
 };
+

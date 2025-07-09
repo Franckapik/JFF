@@ -5,23 +5,33 @@
  */
 
 import fsmLogger from '../../../../../../logger/fsmLogger';
-import { useTileStore } from '../../../../../../stores/useTileStore/index.ts';
-import { POSITION_TRACKER_CONFIG } from '../../../../machineX/config/constants';
+import { useTileStore } from '../../../../../../stores/useTileStore/index';
+import type { ShipType, XStateSend } from '../../../../../../types';
+import type { WorldPosition } from '../../../../../../types/coordinates';
+import { POSITION_TRACKER_CONFIG } from '../../../../machineX/config/constants.ts';
+
+interface PositionUpdateHandlerParams {
+  fsmSend: XStateSend;
+  botId: string;
+  shipType: ShipType;
+  canSendEvent: (eventType: string) => boolean;
+  markEventSent: (eventType: string, timeout?: number) => void;
+}
 
 /**
  * Création d'un handler pour les mises à jour de position du vaisseau
- * @param {Object} params - Les paramètres nécessaires
- * @returns {Object} - L'objet handler avec les méthodes
+ * @param params - Les paramètres nécessaires
+ * @returns L'objet handler avec les méthodes
  */
-export const createPositionUpdateHandler = ({ fsmSend, botId, shipType, canSendEvent, markEventSent }) => {
+export const createPositionUpdateHandler = ({ fsmSend, botId, shipType, canSendEvent, markEventSent }: PositionUpdateHandlerParams) => {
   return {
     /**
      * Traite une mise à jour de position du vaisseau
-     * @param {Object} newPosition - Nouvelle position du vaisseau
-     * @param {Object} lastPosition - Dernière position connue
-     * @returns {boolean} - True si un événement a été envoyé
+     * @param newPosition - Nouvelle position du vaisseau
+     * @param lastPosition - Dernière position connue
+     * @returns True si un événement a été envoyé
      */
-    process(newPosition, lastPosition) {
+    process(newPosition: WorldPosition, lastPosition: WorldPosition): boolean {
       if (!lastPosition) return false;
       
       // Utilise calculate3DDistance depuis le TileStore

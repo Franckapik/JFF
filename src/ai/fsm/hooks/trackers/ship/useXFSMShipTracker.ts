@@ -12,24 +12,32 @@
  * - Intégration avec le système de debounce
  */
 
-import { useEffect, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import type { ShipType, XStateSend } from '../../../../../types';
+import type { WorldPosition } from '../../../../../types/coordinates';
+import type { FSMContext } from '../../../../../types/fsm';
+import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants.ts';
 import { useEventDebounce } from '../../useEventDebounce';
-import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants';
 import { processShipPosition } from './shipTrackerEngine';
 
 /**
  * useXFSMShipTracker
  * Tracker XState adapté pour le vaisseau principal (ship).
  * Surveille la position du ship et déclenche des événements FSM XState selon la logique ship.
- * @param {Object} context - Contexte FSM du bot
- * @param {Function} fsmSend - Fonction pour envoyer des events FSM
- * @param {string} botId - ID du bot
- * @param {string} [shipType='ship'] - Type de ship (par défaut 'ship')
- * @returns {Function} updateShipVisualPosition - Callback pour MAJ la position visuelle
+ * @param context - Contexte FSM du bot
+ * @param fsmSend - Fonction pour envoyer des events FSM
+ * @param botId - ID du bot
+ * @param shipType - Type de ship (par défaut 'ship')
+ * @returns updateShipVisualPosition - Callback pour MAJ la position visuelle
  */
-export function useXFSMShipTracker(context, fsmSend, botId, shipType = 'ship') {
-  const lastPosition = useRef(null);
-  const initialPositionSent = useRef(false);
+export function useXFSMShipTracker(
+  context: FSMContext, 
+  fsmSend: XStateSend, 
+  botId: string, 
+  shipType: ShipType = 'ship'
+) {
+  const lastPosition = useRef<WorldPosition | null>(null);
+  const initialPositionSent = useRef<boolean>(false);
 
   // Hook de debounce pour éviter les mises à jour trop fréquentes
   const { canSendEvent, markEventSent } = useEventDebounce(
@@ -40,15 +48,16 @@ export function useXFSMShipTracker(context, fsmSend, botId, shipType = 'ship') {
    * Surveillance de la position du vaisseau avec debounce
    * Délégation complète au moteur de traitement des positions
    */
-  const updateShipVisualPosition = useCallback((newPosition) => {
+  const updateShipVisualPosition = useCallback((newPosition: WorldPosition) => {
     if (!newPosition) return;
 
     processShipPosition({
-      newPosition,
-      lastPosition: lastPosition.current,
-      fsmSend,
+      position: newPosition,
+      context,
+      send: fsmSend,
       botId,
       shipType,
+      lastPosition: lastPosition.current,
       initialPositionSent,
       canSendEvent,
       markEventSent

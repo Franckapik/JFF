@@ -118,23 +118,6 @@ const Tile: React.FC<TileProps> = ({
   // Afficher le pourcentage seulement si la tuile a été collectée (pour voir 0%)
   const shouldShowPercentage = isCompletelyCollected && resourcePercentage !== undefined;
   
-  // 🔍 DEBUG: Log pour tracer l'affichage du pourcentage de ressources (toutes valeurs)
-  React.useEffect(() => {
-    if (resourcePercentage !== undefined && resourcePercentage !== null) {
-      fsmLogger.resources(`🔍 DEBUG: Tile ${coord} resource percentage update`, {
-        coord,
-        resourcePercentage,
-        isPartiallyCollected,
-        isCompletelyCollected,
-        shouldShowPercentage,
-        willShowRedCircle: isCompletelyCollected,
-        tileExists: !!useTileStore.getState().tiles[coord],
-        tileResources: useTileStore.getState().tiles[coord]?.resources,
-        tileCollected: tile ? (tile as any).resourcePercentage : undefined
-      });
-    }
-  }, [resourcePercentage, coord, isPartiallyCollected, isCompletelyCollected, shouldShowPercentage, tile]);
-  
   /**
    * -----------------------------------------------------------------
    * GESTIONNAIRES D'ÉVÉNEMENTS

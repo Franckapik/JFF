@@ -34,6 +34,18 @@ const createUiConfigSlice = (set, get) => ({
     const { botColors } = get();
     return botColors[botIndex % botColors.length];
   },
+
+  /**
+   * Récupère la couleur d'un bot par son ID
+   * @param {string} botId - ID du bot (ex: 'bot-0', 'bot-1')
+   * @returns {string} Couleur du bot
+   */
+  getBotColorById: (botId) => {
+    const { botColors } = get();
+    // Extraire l'index numérique du botId (ex: 'bot-0' -> 0)
+    const botIndex = parseInt(botId.split('-')[1] || '0', 10);
+    return botColors[botIndex % botColors.length];
+  },
   
   /**
    * Récupère la couleur de base d'un joueur

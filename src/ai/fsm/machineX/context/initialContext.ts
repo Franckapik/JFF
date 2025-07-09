@@ -10,7 +10,8 @@
  * @version 3.0.0
  */
 
-import { DRONE_VISUAL_STATES, ENTITY_TYPES, EXPLORATION_CYCLE_CONFIG, FSM_STATES } from '../config/constants.js';
+import { DRONE_STATES } from '../../../../types/drone';
+import type { EntityType, FSMState } from '../config/constants.ts';
 
 // Import des types partagés
 import type {
@@ -37,7 +38,7 @@ type Resources = ResourceStats;
  */
 export const createMachineContext = (
   entityId: string, 
-  entityType: string = ENTITY_TYPES.auto
+  entityType: EntityType = 'auto'
 ): FSMContext => {
   const currentTimestamp = Date.now();
   
@@ -60,7 +61,7 @@ export const createMachineContext = (
     exploringRadius: 3,
     fuelThreshold: 20,
     capacityThreshold: 80,
-    movementSpeed: entityType === ENTITY_TYPES.auto ? 8 : 4,
+    movementSpeed: entityType === 'auto' ? 8 : 4,
     explorationInterval: 1000,
     enableLogging: true,
     logLevel: 'info'
@@ -70,7 +71,7 @@ export const createMachineContext = (
   const createDrone = (type: 'explorer' | 'combat' | 'special'): DroneState => ({
     id: `${entityId}-drone-${type}`,
     type,
-    state: DRONE_VISUAL_STATES.docked,
+    state: DRONE_STATES.VISUAL.DOCKED,
     position: { ...defaultPosition },
     targetPosition: { ...defaultPosition },
     missionTarget: { ...defaultTypedTarget },
@@ -85,7 +86,7 @@ export const createMachineContext = (
     
     vehicle: {
       id: `${entityId}-ship`,
-      type: 'main_ship',
+      type: 'main-ship',
       position: { ...defaultPosition },
       basePosition: { ...defaultPosition },
       coord: { ...defaultTileCoord },
@@ -104,7 +105,7 @@ export const createMachineContext = (
       maxCapacity: { ...maxResources }
     },
     
-    currentState: FSM_STATES.EVALUATING,
+    currentState: 'evaluating' as FSMState,
     currentTarget: null,
     explorationQueue: [],
     lastAction: null,
@@ -131,13 +132,13 @@ export const createMachineContext = (
         tilesExploredInCycle: 0,
         bestTileInCycle: null
       },
-      stateHistory: [FSM_STATES.EVALUATING],
+      stateHistory: ['evaluating' as FSMState],
       transitionHistory: []
     },
     
     explorationCycle: {
       isActive: false,
-      targetTilesCount: EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION,
+      targetTilesCount: 15, // Default value, was EXPLORATION_CYCLE_CONFIG.TILES_BEFORE_COLLECTION
       exploredTiles: [],
       bestTileFound: null,
       startTime: null,
@@ -222,7 +223,7 @@ export const isMoving = (context: FSMContext): boolean => {
 import { isValidResources, isValidTileCoordinate, isValidWorldPosition } from '../../../../types/index.js';
 
 // Re-export des constantes pour faciliter l'accès
-export { ENTITY_TYPES } from '../config/constants.js';
+export type { EntityType } from '../config/constants.ts';
 
 // Export par défaut
 export default {

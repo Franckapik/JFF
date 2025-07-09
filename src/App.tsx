@@ -1,6 +1,5 @@
 import { Canvas } from "@react-three/fiber";
 import React from 'react';
-import XStateSimulationPanel from "./components/Debug/XStateSimulationPanel";
 import Scene from "./components/Scene.tsx";
 import "./styles/App.css";
 
@@ -17,8 +16,8 @@ const App: React.FC = () => {
         </div>
         
         {/* Panneau de simulation XState */}
-        <XStateSimulationPanel botId="bot-0" />
-      </div>
+{/*         <XStateSimulationPanel botId="bot-0" />
+ */}      </div>
   );
 };
 

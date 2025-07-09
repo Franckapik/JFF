@@ -181,8 +181,10 @@ export interface BotStatesMap {
 export interface XFSMStoreActions {
   send: (event: any, botId?: BotId) => void;
   addBot: (botId: BotId) => void;
+  startBot: (botId: BotId) => void;
   removeBot: (botId: BotId) => void;
   getBotState: (botId?: BotId) => BotSnapshot | EmptyBotState;
+  isBotActive: (botId: BotId) => boolean;
 }
 
 /** État complet du store XFSM */

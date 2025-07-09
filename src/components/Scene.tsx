@@ -23,11 +23,10 @@ import "../types/r3f.d.ts"; // Import R3F global type declarations
 
 // Utils
 import { BotId } from "@/types/fsm.ts";
-import fsmLogger from "../logger/fsmLogger";
 
 // Constantes
 const TILE_TYPES = {
-  DEPART: 'depart' as const,
+  DEPART: "depart" as const,
 };
 
 /* ========================================
@@ -35,37 +34,30 @@ const TILE_TYPES = {
  * ======================================== */
 
 const Scene: React.FC = () => {
-  
   /* ========================================
    * STORES & STATE
    * ======================================== */
-  
-  // Tile management
-  const setTiles = useTileStore((state) => state.setTiles);
-  const initializeGameGrid = useTileStore((state) => state.initializeGameGrid);
-  const tiles = useTileStore((state) => state.tiles);
-  const assignStartingTiles = useTileStore((state) => state.assignStartingTiles);
-  
- 
-  // Game configuration - seulement pour getBotColor maintenant
-  const getBotColor = useGameStore((state) => state.getBotColor);
-  
-  // FSM Store - source de vérité pour les bots actifs (nouveau système XState)
-  const activeBots = useXFSMStore((state) => state.activeBots);
-  const addBot = useXFSMStore((state) => state.addBot);
-  
-  // Initialization state
-  const {
-    tilesInitialized,
-    markTilesAsInitialized,
-    markBotsAsInitialized,
-    botsInitialized,
-    markPlayersAsInitialized,
-    playersInitialized
-  } = useGameStore();
-  
-  const isGameInitialized = useGameStore((state) => state.isGameInitialized());
 
+  // Tile management
+  const setTiles = useTileStore(state => state.setTiles);
+  const initializeGameGrid = useTileStore(state => state.initializeGameGrid);
+  const tiles = useTileStore(state => state.tiles);
+  const assignStartingTiles = useTileStore(state => state.assignStartingTiles);
+
+  // Game configuration - seulement pour getBotColorById maintenant
+  const getBotColorById = useGameStore(state => state.getBotColorById);
+
+  // FSM Store - source de vérité pour les bots actifs (nouveau système XState)
+  const activeBots = useXFSMStore(state => state.activeBots);
+  const addBot = useXFSMStore(state => state.addBot);
+  const startBot = useXFSMStore(state => state.startBot);
+  const isBotActive = useXFSMStore(state => state.isBotActive);
+
+  // Initialization state
+  const { tilesInitialized, markTilesAsInitialized, markBotsAsInitialized, botsInitialized, markPlayersAsInitialized, playersInitialized } =
+    useGameStore();
+
+  const isGameInitialized = useGameStore(state => state.isGameInitialized());
 
   /* ========================================
    * INITIALIZATION EFFECTS
@@ -74,7 +66,6 @@ const Scene: React.FC = () => {
   // Initialize game tiles on component mount
   useEffect(() => {
     if (!tilesInitialized) {
-      fsmLogger.game("[Scene] Initializing tiles...");
       const tileMap = initializeGameGrid(3, -0.2); //radius, spacing
       if (tileMap && Object.keys(tileMap).length > 0) {
         setTiles(tileMap);
@@ -83,11 +74,10 @@ const Scene: React.FC = () => {
     }
   }, [tilesInitialized, initializeGameGrid, setTiles, markTilesAsInitialized]);
 
-
   // Ajout du bot par défaut après initialisation des tuiles
   useEffect(() => {
-    if (tilesInitialized && !activeBots.includes('bot-0' as BotId)) {
-      addBot('bot-0' as BotId);
+    if (tilesInitialized && !activeBots.includes("bot-0" as BotId)) {
+      addBot("bot-0" as BotId);
       markBotsAsInitialized();
     }
   }, [tilesInitialized, addBot, activeBots]);
@@ -100,17 +90,32 @@ const Scene: React.FC = () => {
     }
   }, [botsInitialized]);
 
-    /* ========================================
-   * CONFIGURATION & CONSTANTS
-   * ======================================== */
+  // Démarrer les bots une fois que les tuiles de départ sont assignées
+  // ⚠️ LOGIQUE CRITIQUE : Respecter l'ordre d'initialisation pour éviter les meshes invisibles
+  const startingTilesAssigned = useGameStore(state => state.startingTilesAssigned);
+  const markStartingTilesAsAssigned = useGameStore(state => state.markStartingTilesAsAssigned);
 
-  // Synchroniser les tuiles de départ avec les bots FSM actifs
+  // 🎯 PHASE 1 : Assignment des tuiles de départ AVANT le démarrage des acteurs
   useEffect(() => {
-    // Permettre la création initiale de tuiles de départ même s'il n'y en a pas encore
-    if (botsInitialized && activeBots.length > 0) {
+    if (botsInitialized && activeBots.length > 0 && !startingTilesAssigned) {
       assignStartingTiles(activeBots);
+      markStartingTilesAsAssigned(true);
     }
-  }, [activeBots, botsInitialized, assignStartingTiles]); 
+  }, [botsInitialized, activeBots, assignStartingTiles, startingTilesAssigned, markStartingTilesAsAssigned]);
+
+  // 🎯 PHASE 2 : Démarrage des acteurs APRÈS assignment des tuiles
+  useEffect(() => {
+    if (isGameInitialized && activeBots.length > 0) {
+      // Démarrage immédiat - Fleet se chargera de l'initialisation des positions
+      activeBots.forEach(botId => {
+        startBot(botId);
+      });
+    }
+  }, [isGameInitialized, activeBots, startBot]);
+
+  /* ========================================
+   * CONFIGURATION & CONSTANTS
+   * ========================================*/
 
   /* ========================================
    * CAMERA CONFIGURATION
@@ -122,7 +127,6 @@ const Scene: React.FC = () => {
     camera.lookAt(0, 0, 0);
   }, [camera]);
 
-
   /* ========================================
    * RENDER
    * ======================================== */
@@ -130,8 +134,9 @@ const Scene: React.FC = () => {
   if (!isGameInitialized) {
     return (
       <Html center>
-        <div style={{color: '#fff', textAlign: 'center', padding: '20px', backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: '8px'}}>
-          Chargement de la scène...
+        <div style={{ color: "#fff", textAlign: "center", padding: "20px", backgroundColor: "rgba(0,0,0,0.7)", borderRadius: "8px" }}>
+          <h3>Initializing Game...</h3>
+          <p>{!startingTilesAssigned ? "Assigning starting positions..." : "Setting up game components..."}</p>
         </div>
       </Html>
     );
@@ -149,40 +154,34 @@ const Scene: React.FC = () => {
       {/* @ts-ignore */}
       <pointLight position={[-5, 10, -5]} intensity={0.8} />
       {/* All tiles rendering */}
-      {Object.values(tiles).map((tile) => {
+      {Object.values(tiles).map(tile => {
         // Vérifier si c'est une tuile de départ assignée à un bot actif
-        const isAssignedDepartTile = tile.type === TILE_TYPES.DEPART && 
-                                   tile.assignedToBot && 
-                                   activeBots.includes(tile.assignedToBot as BotId);
-        
-        // Calculer l'index du joueur pour le Fleet
-        const playerIndex = isAssignedDepartTile ? activeBots.indexOf(tile.assignedToBot as BotId) : -1;
+        const isAssignedDepartTile =
+          tile.type === 'depart' && tile.assignedToBot && activeBots.includes(tile.assignedToBot as BotId);
 
         return (
           <React.Fragment key={tile.coord}>
-            <Tile
-              position={[tile.position.x, 0, tile.position.z]}
-              radius={1}
-              color={tile.color || "#888888"}
-              coord={tile.coord}
-            />
-            
-            {/* Fleet pour les tuiles de départ assignées */}
-            {isAssignedDepartTile && (
+            <Tile position={[tile.position.x, 0, tile.position.z]} radius={1} color={tile.color || "#888888"} coord={tile.coord} />
+            {/* Fleet pour les tuiles de départ assignées - SEULEMENT si le bot est actif */}
+            {isAssignedDepartTile && isBotActive(tile.assignedToBot as BotId) && (
               // @ts-ignore
               <group position={[tile.position.x, 0.5, tile.position.z]}>
                 <Fleet
                   botId={tile.assignedToBot as BotId}
-                  botIndex={playerIndex}
-                  color={getBotColor(playerIndex)}
+                  color={getBotColorById(tile.assignedToBot as BotId)}
                   shipPosition={{
                     x: tile.position.x,
                     y: 0.5,
-                    z: tile.position.z
+                    z: tile.position.z,
+                  }}
+                  dronePosition={{
+                    x: tile.position.x + 0.5,
+                    y: 0.8,
+                    z: tile.position.z + 0.5,
                   }}
                   tileCoord={tile.coord as any}
                 />
-              {/* @ts-ignore */}
+                {/* @ts-ignore */}
               </group>
             )}
           </React.Fragment>

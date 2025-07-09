@@ -8,6 +8,6 @@ import { createShipInitializationHandler } from './initializationHandler';
 import { createPositionUpdateHandler } from './positionUpdateHandler';
 
 export {
-  createShipInitializationHandler,
-  createPositionUpdateHandler
+    createPositionUpdateHandler, createShipInitializationHandler
 };
+

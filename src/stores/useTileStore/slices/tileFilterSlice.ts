@@ -29,7 +29,7 @@ import type {
   TileWithDistance
 } from '../../../types/index.js';
 
-import { DRONE_EXPLORATION_CONFIG, TILE_TYPES } from '../../../ai/fsm/machineX/config/constants.js';
+import { DRONE_EXPLORATION_CONFIG } from '../../../ai/fsm/machineX/config/constants.ts';
 
 // =========================================================================
 // TYPES LOCAUX SIMPLIFIÉS
@@ -167,7 +167,7 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
         }
         
         // Filtrage par type (danger)
-        if (excludeDanger && tile.type === (TILE_TYPES.DANGER as TileType)) {
+        if (excludeDanger && tile.type === 'danger') {
           filteredByDanger++;
           continue;
         }
@@ -246,7 +246,7 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
       
       // Filtrage efficace pour obtenir uniquement les tuiles walkables et sûres
       const walkableTiles = Object.values(tiles).filter((tile: any): tile is Tile => 
-        tile && tile.walkable !== false && tile.type !== (TILE_TYPES.DANGER as TileType)
+        tile && tile.walkable !== false && tile.type !== 'danger'
       );
       
       if (walkableTiles.length === 0) {

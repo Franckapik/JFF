@@ -10,9 +10,10 @@
  * @version 1.0.0
  */
 
-export { machineX } from './machine.xstate.js';
 export * from './actions/index.js';
-export * from './guards/guards.all.js';
-export * from './states/index.js';
-export * from './config/constants.js';
+export * from './config/constants.ts';
 export * from './events/events.config.js';
+export * from './guards/guards.all.js';
+export { machineX } from './machine.xstate.js';
+export * from './states/index.js';
+

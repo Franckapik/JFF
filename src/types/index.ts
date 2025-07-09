@@ -67,3 +67,16 @@ export type {
 export {
   isTile, isTileBiome, isTileType
 } from './tile';
+
+// ============================================================================
+// TYPES UNIFIÉS POUR LES DRONES - SOURCE UNIQUE DE VÉRITÉ
+// ============================================================================
+export { convertFSMToVisual, convertVisualToFSM, DRONE_STATES, DRONE_TYPES, FSM_TO_VISUAL_MAPPING, isDroneMoving, isValidDroneType, isValidFSMState, isValidVisualState, VISUAL_TO_FSM_MAPPING } from './drone';
+export type { DroneFSMState, DroneType, DroneVisualState } from './drone';
+
+// ============================================================================
+// TRACKERS ET SYSTÈME DE POSITION
+// ============================================================================
+export type {
+  BaseTrackerParams, CanSendEventFn, DroneProcessorFunction, DroneTrackerParams, GridToHexCoordFn, InitializationHandler, MarkEventSentFn, PositionHandler, ShipProcessorFunction, ShipTrackerParams, ShipType, WorldToGridFn, XStateSend
+} from './tracker';

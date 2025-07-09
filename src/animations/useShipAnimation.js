@@ -7,8 +7,8 @@
  * Gère les animations visuelles basées sur l'état FSM du vaisseau.
  */
 
-import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import fsmLogger from '../logger/fsmLogger';
 
@@ -17,9 +17,10 @@ import fsmLogger from '../logger/fsmLogger';
  * @param {Object} context - Contexte FSM
  * @param {Object} shipWorldPosition - Position mondiale du vaisseau (pour les trackers)
  * @param {Function} updateVisualPosition - Callback pour envoyer la position au tracker
+ * @param {boolean} isActive - Si le bot est actif (animations complètes) ou non
  * @returns {Object} - Ref du vaisseau et données d'animation
  */
-export const useShipAnimation = (context, shipWorldPosition, updateVisualPosition) => {
+export const useShipAnimation = (context, shipWorldPosition, updateVisualPosition, isActive = true) => {
   const shipRef = useRef();
   const lastUpdateTime = useRef(0);
   const initialPositionSent = useRef(false); // 🆕 Flag pour éviter duplications
@@ -35,7 +36,7 @@ export const useShipAnimation = (context, shipWorldPosition, updateVisualPositio
   }, [shipWorldPosition, updateVisualPosition]);
 
   useFrame((state, delta) => {
-    if (!shipRef.current || !context) return;
+    if (!shipRef.current || !context || !isActive) return; // 🆕 Sortir si inactif
     
     const now = state.clock.elapsedTime;
     const currentAction = context.currentAction || 'idling';

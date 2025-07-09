@@ -7,9 +7,10 @@
  */
 
 // === VEHICLE ANIMATIONS ===
-export { useDroneAnimation } from './useDroneAnimation.js';
+export { useDroneAnimation } from './useDroneAnimation';
 export { useShipAnimation } from './useShipAnimation.js';
 
 // === OTHER ANIMATIONS ===
 export { useFloatingAnimation } from './useFloatingAnimation.js';
 export { useTileAnimation } from './useTileAnimation.js';
+

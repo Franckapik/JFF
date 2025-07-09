@@ -14,23 +14,31 @@
  */
 
 import { useCallback, useEffect, useRef } from 'react';
-import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
-import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants';
+import { useTileStore } from '../../../../../stores/useTileStore/index';
+import type { DroneType, XStateSend } from '../../../../../types';
+import type { WorldPosition } from '../../../../../types/coordinates';
+import type { FSMContext } from '../../../../../types/fsm';
+import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants.ts';
 import { useEventDebounce } from '../../useEventDebounce';
 import { processDronePosition } from './droneTrackerEngine';
 
 /**
  * Hook spécialisé pour le tracking des drones (XState)
- * @param {Object} context - Contexte XState/FSM
- * @param {Function} send - Fonction d'envoi d'événements XState/FSM
- * @param {string} botId - ID du bot
- * @param {string} droneType - Type de drone ('explorer', 'combat', 'special')
- * @returns {Function} - Fonction pour mettre à jour les positions depuis R3F
+ * @param context - Contexte XState/FSM
+ * @param send - Fonction d'envoi d'événements XState/FSM
+ * @param botId - ID du bot
+ * @param droneType - Type de drone ('explorer', 'combat', 'special')
+ * @returns Fonction pour mettre à jour les positions depuis R3F
  */
-export const useXFSMDroneTracker = (context, send, botId, droneType = 'explorer') => {
+export const useXFSMDroneTracker = (
+  context: FSMContext, 
+  send: XStateSend, 
+  botId: string, 
+  droneType: DroneType = 'explorer'
+) => {
   // Références pour la position visuelle et les flags d'initialisation
-  const currentVisualPosition = useRef(null);
-  const initialPositionSent = useRef(false);
+  const currentVisualPosition = useRef<WorldPosition | null>(null);
+  const initialPositionSent = useRef<boolean>(false);
 
   // Hook de debounce personnalisé pour éviter les événements en rafale
   const { canSendEvent, markEventSent, clearAllEvents } = useEventDebounce(
@@ -44,7 +52,7 @@ export const useXFSMDroneTracker = (context, send, botId, droneType = 'explorer'
    * Fonction pour que Fleet.jsx envoie les positions du drone
    * Délégation complète au moteur de traitement des positions
    */
-  const updateDroneVisualPosition = useCallback((position) => {
+  const updateDroneVisualPosition = useCallback((position: WorldPosition) => {
     if (!position) return;
     
     currentVisualPosition.current = position;

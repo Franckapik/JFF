@@ -5,23 +5,33 @@
  */
 
 import fsmLogger from '../../../../../../logger/fsmLogger';
-import { POSITION_TRACKER_CONFIG } from '../../../../machineX/config/constants';
+import type { DroneType, XStateSend } from '../../../../../../types';
+import type { WorldPosition } from '../../../../../../types/coordinates';
+import { POSITION_TRACKER_CONFIG } from '../../../../machineX/config/constants.ts';
+
+interface DeployingHandlerParams {
+  botId: string;
+  droneType: DroneType;
+  send: XStateSend;
+  canSendEvent: (eventType: string) => boolean;
+  markEventSent: (eventType: string, timeout?: number) => void;
+}
 
 /**
  * Création d'un handler pour l'état drone_deploying
- * @param {Object} params - Les paramètres nécessaires
- * @returns {Object} - L'objet handler avec les méthodes
+ * @param params - Les paramètres nécessaires
+ * @returns L'objet handler avec les méthodes
  */
-export const createDeployingHandler = ({ botId, droneType, send, canSendEvent, markEventSent }) => {
+export const createDeployingHandler = ({ botId, droneType, send, canSendEvent, markEventSent }: DeployingHandlerParams) => {
 
   return {
     /**
      * Traite une position lors de l'état de déploiement
-     * @param {number} distance - Distance à la cible
-     * @param {Object} position - Position actuelle du drone
-     * @returns {boolean} - True si un événement a été envoyé
+     * @param distance - Distance à la cible
+     * @param position - Position actuelle du drone
+     * @returns True si un événement a été envoyé
      */
-    process(distance, position) {
+    process(distance: number, position: WorldPosition): boolean {
       const eventKey = `drone_deploying_reached_${botId}_${droneType}`;
       
       // Vérifier si le drone a atteint sa cible

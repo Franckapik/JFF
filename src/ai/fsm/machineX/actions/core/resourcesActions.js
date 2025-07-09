@@ -32,7 +32,7 @@
  * @version 1.0.0
  */
 
-import { EMPTY_RESOURCES, DEFAULT_CAPACITIES, VEHICLE_TYPES } from '../../config/constants.js';
+import { DEFAULT_CAPACITIES, EMPTY_RESOURCES, VEHICLE_TYPES } from '../../config/constants.ts';
 
 // ============================================================================
 // UTILITAIRES INTERNES

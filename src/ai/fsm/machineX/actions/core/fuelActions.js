@@ -33,7 +33,7 @@
  * @version 1.0.0
  */
 
-import { FUEL_CONFIG } from '../../config/constants.js';
+import { FUEL_CONFIG } from '../../config/constants.ts';
 
 // ============================================================================
 // UTILITAIRES INTERNES

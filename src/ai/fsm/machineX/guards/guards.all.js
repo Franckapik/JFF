@@ -4,7 +4,7 @@
 
 // --- EFFICIENCY GUARDS & UTILS ---
 import fsmLogger from '../../../../logger/fsmLogger.js';
-import { FUEL_CONFIG, RESOURCE_CONSTANTS, DEFAULT_CAPACITIES, VEHICLE_TYPES } from '../config/constants.js';
+import { FUEL_CONFIG } from '../config/constants';
 
 // Utils
 export const getMaxCapacity = (vehicle) => {
@@ -12,7 +12,7 @@ export const getMaxCapacity = (vehicle) => {
   if (maxCapacity && typeof maxCapacity === 'object') {
     return Object.values(maxCapacity).reduce((total, cap) => total + (cap || 0), 0);
   }
-  const defaultCapacities = DEFAULT_CAPACITIES[VEHICLE_TYPES.MAIN_SHIP] || { food: 200, debris: 1800, special: 3 };
+  const defaultCapacities = { food: 200, debris: 1800, special: 3 };
   return Object.values(defaultCapacities).reduce((total, cap) => total + cap, 0);
 };
 
@@ -167,11 +167,11 @@ export const canContinueOperation = (context, event) => {
 
 // --- EXPLORING GUARD ---
 export function shouldExplore(context, event) {
-  fsmLogger.info('[shouldExplore]', { context, event });
+  fsmLogger.condition('[shouldExplore]', { context, event });
   
   // Si l'exploration locale est terminée (aucune tuile dans un rayon de 3), ne pas explorer
   if (context.explorationComplete) {
-    fsmLogger.info('[shouldExplore] Local exploration complete - no valid targets within radius 3');
+    fsmLogger.condition('[shouldExplore] Local exploration complete - no valid targets within radius 3');
     return false;
   }
   

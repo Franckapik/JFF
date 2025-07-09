@@ -5,22 +5,44 @@
  */
 
 import fsmLogger from '../../../../../../logger/fsmLogger';
-import { POSITION_TRACKER_CONFIG } from '../../../../machineX/config/constants';
+import type { DroneType, GridToHexCoordFn, WorldToGridFn, XStateSend } from '../../../../../../types';
+import type { WorldPosition } from '../../../../../../types/coordinates';
+import { POSITION_TRACKER_CONFIG } from '../../../../machineX/config/constants.ts';
+
+interface ScanningHandlerParams {
+  botId: string;
+  droneType: DroneType;
+  send: XStateSend;
+  canSendEvent: (eventType: string) => boolean;
+  markEventSent: (eventType: string, timeout?: number) => void;
+  gridToHexCoord: GridToHexCoordFn;
+  worldToGrid: WorldToGridFn;
+  useTileStore: any; // Type générique pour le store
+}
 
 /**
  * Création d'un handler pour l'état drone_scanning
- * @param {Object} params - Les paramètres nécessaires
- * @returns {Object} - L'objet handler avec les méthodes
+ * @param params - Les paramètres nécessaires
+ * @returns L'objet handler avec les méthodes
  */
-export const createScanningHandler = ({ botId, droneType, send, canSendEvent, markEventSent, gridToHexCoord, worldToGrid, useTileStore }) => {
+export const createScanningHandler = ({ 
+  botId, 
+  droneType, 
+  send, 
+  canSendEvent, 
+  markEventSent, 
+  gridToHexCoord, 
+  worldToGrid, 
+  useTileStore 
+}: ScanningHandlerParams) => {
   return {
     /**
      * Traite une position lors de l'état de scan
-     * @param {number} distance - Distance à la cible
-     * @param {Object} position - Position actuelle du drone
-     * @returns {boolean} - True si un événement a été envoyé
+     * @param distance - Distance à la cible
+     * @param position - Position actuelle du drone
+     * @returns True si un événement a été envoyé
      */
-    process(distance, position) {
+    process(distance: number, position: WorldPosition): boolean {
       const eventKey = `drone_scanning_complete_${botId}_${droneType}`;
       
       if (distance < POSITION_TRACKER_CONFIG.THRESHOLDS.TARGET_REACH && canSendEvent(eventKey)) {
@@ -30,7 +52,8 @@ export const createScanningHandler = ({ botId, droneType, send, canSendEvent, ma
         try {
           // Conversion de la position en coordonnées de tuile
           const gridCoord = worldToGrid(position);
-          const tileCoord = gridToHexCoord(gridCoord);
+          const gridCoordString = `${gridCoord.x},${gridCoord.z}`;
+          const tileCoord = gridToHexCoord(gridCoordString);
           
           // Marquer la tuile comme explorée et récupérer ses ressources
           const { markTileAsExplored, getTile } = useTileStore.getState();

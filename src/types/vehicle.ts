@@ -3,14 +3,16 @@
  */
 
 import type { MovementTarget, TileCoordinate, TypedTarget, WorldPosition } from './coordinates';
+import type { DroneType, DroneVisualState } from './drone';
 import type { ResourceStats } from './resources';
+import { ShipType } from './tracker';
 
 export type VehicleId = string;
 
 /** État du véhicule principal (extrait de initialContext.ts) */
 export interface VehicleState {
   id: string;
-  type: 'main_ship';
+  type: ShipType;
   position: WorldPosition;
   basePosition: WorldPosition;
   coord: TileCoordinate;
@@ -32,8 +34,8 @@ export interface VehicleState {
 /** État d'un drone individuel (extrait de initialContext.ts) */
 export interface DroneState {
   id: string;
-  type: 'explorer' | 'combat' | 'special';
-  state: string; // DRONE_VISUAL_STATES
+  type: DroneType;
+  state: DroneVisualState;
   position: WorldPosition;
   targetPosition: WorldPosition;
   missionTarget: TypedTarget;
@@ -52,7 +54,7 @@ export interface FormationOffsets {
 export interface DroneMission {
   type: 'explore' | 'collect' | 'defend' | 'special';
   target: TileCoordinate;
-  drones: ('explorer' | 'combat' | 'special')[];
+  drones: DroneType[];
 }
 
 /** Flotte de drones (extrait de initialContext.ts) */

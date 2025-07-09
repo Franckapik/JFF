@@ -1,1 +1,0 @@
-// Fichier supprimé : utiliser uniquement index.ts

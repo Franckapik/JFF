@@ -29,10 +29,9 @@
 import fsmLogger from '../../../../../logger/fsmLogger.js';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import {
-  DRONE_CONFIG,
-  DRONE_TYPES,
-  DRONE_VISUAL_STATES
-} from '../../config/constants.js';
+  DRONE_STATES,
+  DRONE_TYPES
+} from '../../config/constants.ts';
 
 // ============================================================================
 // UTILITAIRES INTERNES
@@ -232,7 +231,7 @@ export const droneDeployForExploration = (context, event) => {
 
     const updatedDrone = {
       ...context.droneFleet.drones[droneType],
-      state: DRONE_VISUAL_STATES.deploying,
+      state: DRONE_STATES.VISUAL.deploying,
       targetPosition,
       isActive: true,
       lastUpdate: Date.now()
@@ -289,7 +288,7 @@ export const droneRecallToShip = (context, event = {}) => {
         ...context.droneFleet.drones,
         [droneType]: {
           ...context.droneFleet.drones[droneType],
-          state: DRONE_VISUAL_STATES.returning,
+          state: DRONE_STATES.VISUAL.returning,
           targetPosition: context.vehicle?.position || null,
           lastUpdate: Date.now()
         }
@@ -323,7 +322,7 @@ export const droneDockToShip = (context, event = {}) => {
         ...context.droneFleet.drones,
         [droneType]: {
           ...context.droneFleet.drones[droneType],
-          state: DRONE_VISUAL_STATES.docked,
+          state: DRONE_STATES.VISUAL.docked,
           position: context.vehicle?.position || null,
           targetPosition: null,
           missionTarget: null,
@@ -395,7 +394,6 @@ export default {
   // Constants
   constants: {
     droneTypes: DRONE_TYPES,
-    droneVisualStates: DRONE_VISUAL_STATES,
-    droneConfig: DRONE_CONFIG
+    droneVisualStates: DRONE_STATES.VISUAL,
   }
 };

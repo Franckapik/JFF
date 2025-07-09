@@ -5,3 +5,6 @@ Les tuiles sont marquées comme initialisées dans le game store avec markTilesA
 Si les tuiles sont initialisées, un bot de type botId:string est ajouté au nom de bot-0.
 Si le nombre de activesBots change et est supérieur à 0, la fonction assignStartingTiles est appelée avec le nombre de bots pour mettre a jour les tuiles en placant des tuiles de départ.
 Les tuiles sont mappées et le display est différent en fonction du type et de l'assignedBot.
+Un marqueur de tuile de depart est mis à true permetant de declancher l'activation des bots (running) et l'affichage des tuiles. 
+Lorsque le bot est démarré (running), le composant fleet est affiché.
+

@@ -20,6 +20,9 @@ const createInitializationFlagsSlice = (set, get) => ({
   playersInitialized: false,
   botsInitialized: false,
   tilesInitialized: false,
+  startingTilesAssigned: false,
+  fleetPositionsInitialized: {},
+
   
   /* ========================================
    * ACTIONS D'INITIALISATION
@@ -48,20 +51,51 @@ const createInitializationFlagsSlice = (set, get) => ({
     fsmLogger.game('Tiles initialized');
     set({ tilesInitialized: true });
   },
+
+  /**
+   * Marque les tuiles de départ comme assignées
+   */
+  markStartingTilesAsAssigned: () => {
+    fsmLogger.game('Starting tiles assigned');
+    set({ startingTilesAssigned: true });
+  },
+
+  /**
+   * Marque les positions de fleet comme initialisées pour un bot donné
+   */
+  markFleetPositionsAsInitialized: (botId) => {
+    const { fleetPositionsInitialized } = get();
+    fsmLogger.game(`Fleet positions initialized for ${botId}`);
+    set({ 
+      fleetPositionsInitialized: {
+        ...fleetPositionsInitialized,
+        [botId]: true
+      }
+    });
+  },
+
+  /**
+   * Vérifie si les positions de fleet sont initialisées pour un bot
+   */
+  isFleetPositionsInitialized: (botId) => {
+    const { fleetPositionsInitialized } = get();
+    return fleetPositionsInitialized[botId] || false;
+  },  
   
   /**
    * Vérifie si le jeu est complètement initialisé
    * @returns {boolean} True si tout est initialisé
    */
   isGameInitialized: () => {
-    const { playersInitialized, botsInitialized, tilesInitialized } = get();
-    const isInitialized = playersInitialized && botsInitialized && tilesInitialized;
+    const { playersInitialized, botsInitialized, tilesInitialized, startingTilesAssigned } = get();
+    const isInitialized = playersInitialized && botsInitialized && tilesInitialized && startingTilesAssigned;
     
     if (isInitialized) {
       fsmLogger.game('Game fully initialized', { 
         players: playersInitialized,
         bots: botsInitialized,
-        tiles: tilesInitialized
+        tiles: tilesInitialized,
+        startingTiles: startingTilesAssigned
       });
     }
     

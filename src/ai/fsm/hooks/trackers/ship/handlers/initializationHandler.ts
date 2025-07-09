@@ -4,21 +4,31 @@
  * ==========================================================================
  */
 
+import { MutableRefObject } from 'react';
 import fsmLogger from '../../../../../../logger/fsmLogger';
+import type { ShipType, XStateSend } from '../../../../../../types';
+import type { WorldPosition } from '../../../../../../types/coordinates';
+
+interface ShipInitHandlerParams {
+  fsmSend: XStateSend;
+  botId: string;
+  shipType: ShipType;
+  initialPositionSent: MutableRefObject<boolean>;
+}
 
 /**
  * Création d'un handler pour l'initialisation du vaisseau
- * @param {Object} params - Les paramètres nécessaires
- * @returns {Object} - L'objet handler avec les méthodes
+ * @param params - Les paramètres nécessaires
+ * @returns L'objet handler avec les méthodes
  */
-export const createShipInitializationHandler = ({ fsmSend, botId, shipType, initialPositionSent }) => {
+export const createShipInitializationHandler = ({ fsmSend, botId, shipType, initialPositionSent }: ShipInitHandlerParams) => {
   return {
     /**
      * Gère l'initialisation de la position du vaisseau
-     * @param {Object} position - La position visuelle actuelle
-     * @returns {boolean} - True si l'initialisation a été effectuée
+     * @param position - La position visuelle actuelle
+     * @returns True si l'initialisation a été effectuée
      */
-    handleInitialPosition(position) {
+    handleInitialPosition(position: WorldPosition): boolean {
       if (!initialPositionSent.current && position) {
         fsmLogger.debug('🚢 [SHIP TRACKER] About to send SHIP_POSITION_UPDATE event:', {
           position,

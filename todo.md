@@ -1,3 +1,6 @@
+Il faut valider le commit. TRavailler pour que le tracker soit clair et s'assurer que les drones state et visuals states soient les bons. ENfin , il fautq ue el cycle soit correct pour le drone. COmprendre l'erreur actuelle dans le log. Le travail initial devait se porter sur une fonction d'un store : tileFilterSlice. Il faut que les fonctions utilisent les bons types et supprimer celles qui ne sont pas utiles ou alors complexes pour rien. Netooyer le projet des fichiers docs.
+
+
 Du travail pour que tout tourne autours du type botId, et assignedBot. Le composant Tile doit etre nettoyé. Les meshs doivent etre affichés. Supprimer les fonctions manuellement si elle ne sont pas utilisées. Typer les constants.Contraindre au maximum.
 COntinuer d'écrire le fichier initialisation a la main.FInir par arriver à getWalkableTilesInRadius qui doit etre bien nettoyée et contrainte par les types
 
