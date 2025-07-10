@@ -1,77 +1,83 @@
-import React, { useCallback, useEffect } from "react";
+/**
+ * Fleet
+ * -----
+ * Affiche et anime le vaisseau principal et le drone explorateur pour un bot donné.
+ * Utilise le contexte FSM comme source de vérité pour les positions et états.
+ *
+ * Architecture :
+ * - Scene.tsx place <Fleet /> dans un <group position={[tileX, 0.5, tileZ]}>
+ * - Fleet utilise des positions relatives [0,0,0] (pas de double transformation)
+ * - Les animations calculent les coordonnées locales puis mettent à jour le store FSM
+ */
 
-import { useXFSMDroneTracker } from "../ai/fsm/hooks/trackers/drone/useXFSMDroneTracker";
+import React, { useCallback, useEffect, useRef } from "react";
+
+// === Hooks & Store Imports ===
+import { useDroneTracker } from "../ai/fsm/hooks/trackers/drone/useDroneTracker";
 import { useXFSMShipTracker } from "../ai/fsm/hooks/trackers/ship/useXFSMShipTracker";
 import { useDroneAnimation } from "../animations/useDroneAnimation";
 import { useShipAnimation } from "../animations/useShipAnimation.js";
-import fsmLogger from "../logger/fsmLogger.ts";
 import useGameStore from "../stores/useGameStore";
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
 
+// === Logger ===
+import fsmLogger from "../logger/fsmLogger.ts";
+
+// === Types ===
 import type { FSMContext } from "../types/fsm.d";
 import type { FleetProps } from "../types/r3f";
 
+// === Mesh Components ===
 import DroneMesh from "./Vehicles/DroneMesh";
-
 import ShipMesh from "./Vehicles/ShipMesh";
 
 import { GameStoreType, XFSMStoreType } from "@/types/index.js";
 
-
-const Fleet: React.FC<FleetProps> = React.memo(({ 
-  botId, 
-  shipPosition = { x: 0, y: 0, z: 0 },
-  dronePosition = { x: 0.5, y: 0.8, z: 0.5 },
+const Fleet: React.FC<FleetProps> = React.memo(({
+  botId,
+  shipPosition ,
+  dronePosition ,
   color = "red",
   tileCoord: _tileCoord
 }) => {
-  // ===================================================================
-  // 🚀 ACCÈS DIRECT AU STORE XFSM
-  // ===================================================================
-  
-  // Accès direct au context FSM et à la fonction send
-  const botState = useXFSMStore((state : XFSMStoreType) => state.botStates[botId]);
+  // === FSM Context & Send ===
+  const botState = useXFSMStore((state: XFSMStoreType) => state.botStates[botId]);
   const context = (botState && 'context' in botState) ? (botState as { context: FSMContext }).context : undefined;
   const send = useXFSMStore((state: XFSMStoreType) => state.send);
 
-  // Fonction send spécifique au bot
+  if (typeof send !== 'function') {
+    throw new Error('Invalid send function provided to Fleet');
+  }
+
   const fsmSend = useCallback((event: { type: string; [key: string]: unknown }) => {
     send(event, botId);
   }, [send, botId]);
-  
-  // ===================================================================
-  // 🚀 INITIALISATION AUTOMATIQUE DES POSITIONS - UNE SEULE FOIS
-  // ===================================================================
-  
-  // Vérifier si les positions sont déjà initialisées via le store
+
+  // === Initialisation automatique des positions (une seule fois) ===
   const isFleetPositionsInitialized = useGameStore((state: GameStoreType) => state.isFleetPositionsInitialized(botId));
   const markFleetPositionsAsInitialized = useGameStore((state: GameStoreType) => state.markFleetPositionsAsInitialized);
-
-  // Initialisation automatique des positions au premier rendu
   useEffect(() => {
     if (!isFleetPositionsInitialized && shipPosition && dronePosition && fsmSend) {
-      // Envoyer les positions initiales au contexte FSM
-      fsmSend({ 
-        type: 'SHIP_POSITION_UPDATE', 
-        position: shipPosition,
-        shipType: 'ship'
-      });
-      
-      fsmSend({ 
-        type: 'DRONE_POSITION_UPDATE', 
-        position: dronePosition,
-        droneType: 'explorer'
-      });
-      
+      fsmSend({ type: 'SHIP_POSITION_UPDATE', position: shipPosition, shipType: 'ship' });
+      fsmSend({ type: 'DRONE_POSITION_UPDATE', position: dronePosition, droneType: 'explorer' });
       markFleetPositionsAsInitialized(botId);
       fsmLogger.game(`[Fleet] Initial positions set for ${botId}`);
     }
   }, [isFleetPositionsInitialized, shipPosition, dronePosition, fsmSend, botId, markFleetPositionsAsInitialized]);
 
-  // 🎯 TRACKERS ET ANIMATIONS - TOUJOURS ACTIFS
-  const updateDroneVisualPosition = useXFSMDroneTracker(context || {} as FSMContext, fsmSend, botId, 'explorer');
+  // === Trackers & Animations ===
+  //Le tracker transofrme la logique FSM en logique R3F et retourne une position visuelle
+  const updateDroneVisualPosition = useDroneTracker({
+    context: context || {} as FSMContext,
+    send: fsmSend,
+    botId,
+    droneType: 'explorer',
+    position: dronePosition || { x: 0, y: 0, z: 0 },
+    initialPositionSent: useRef(false)
+  });
   const updateShipVisualPosition = useXFSMShipTracker(context || {} as FSMContext, fsmSend, botId, 'ship');
-  
+
+  //La position visuelle est utilisée par l'animation et est retournée via useRef
   const { droneRef, initialPosition, droneState } = useDroneAnimation(
     context || {} as FSMContext, shipPosition, updateDroneVisualPosition, 'explorer', true
   );
@@ -79,41 +85,33 @@ const Fleet: React.FC<FleetProps> = React.memo(({
     context || {} as FSMContext, shipPosition, updateShipVisualPosition, true
   );
 
-  // ===================================================================
-  // 🎨 RENDU VISUEL - POSITIONNEMENT RELATIF OPTIMISÉ
-  // ===================================================================
-  // 
-  // ⚡ ARCHITECTURE DE POSITIONNEMENT :
-  // - Scene.tsx place Fleet dans un <group position={[tileX, 0.5, tileZ]}>
-  // - Fleet utilise des positions relatives [0,0,0] pour éviter double transformation
-  // - Animations calculent coordonnées locales puis envoient coordonnées mondiales aux trackers
-  
+  // === Render ===
   return (
     <>
-      {/* 🚢 VAISSEAU PRINCIPAL - Position relative au group parent */}
+      {/* Ship (main vessel) - relative to parent group */}
       <group ref={shipRef}>
-        <ShipMesh 
-          color={color} 
-          botId={botId} 
+        <ShipMesh
+          color={color}
+          botId={botId}
           context={context}
           currentAction={currentAction}
           isMoving={isMoving}
         />
       </group>
 
-      {/* 🚁 DRONE EXPLORATEUR - Position relative avec offset initial */}
-      <group 
+      {/* Drone explorer - relative position with initial offset */}
+      <group
         ref={droneRef}
         position={[
-          initialPosition.x, // Offset relatif : explorer = [0.5, 0.3, 0.5]
-          initialPosition.y, 
+          initialPosition.x, // explorer offset: [0.5, 0.3, 0.5]
+          initialPosition.y,
           initialPosition.z
         ]}
       >
-        <DroneMesh 
-          color={color} 
-          botId={botId} 
-          context={context} 
+        <DroneMesh
+          color={color}
+          botId={botId}
+          context={context}
           droneState={{
             id: `${botId}-explorer`,
             type: 'explorer',
@@ -130,7 +128,7 @@ const Fleet: React.FC<FleetProps> = React.memo(({
     </>
   );
 }, (prevProps: FleetProps, nextProps: FleetProps) => {
-  // 🚀 OPTIMISATION MÉMOIRE - Évite les re-renders inutiles
+  // === Mémo : évite les re-renders inutiles ===
   return (
     prevProps.botId === nextProps.botId &&
     prevProps.color === nextProps.color &&
@@ -144,5 +142,4 @@ const Fleet: React.FC<FleetProps> = React.memo(({
 });
 
 Fleet.displayName = 'Fleet';
-
 export default Fleet;

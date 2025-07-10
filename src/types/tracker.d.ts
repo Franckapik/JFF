@@ -12,6 +12,7 @@ import type { MutableRefObject } from 'react';
 import type { GridCoordinate, TileCoordinate, WorldPosition } from './coordinates';
 import type { DroneType } from './drone';
 import type { FSMContext } from './fsm';
+import type { TileStoreType } from './stores';
 
 // ============================================================================
 // TYPES D'ENTITÉS TRACKÉES
@@ -25,7 +26,7 @@ export type ShipType = 'ship' | 'main-ship';
 // ============================================================================
 
 /** Type pour la fonction send de XState */
-export type XStateSend = (event: any) => void;
+export type XStateSend = (event: Record<string, unknown>) => void;
 
 /** Type pour les fonctions de debounce des événements */
 export type CanSendEventFn = (eventType: string) => boolean;
@@ -39,29 +40,25 @@ export type WorldToGridFn = (position: WorldPosition) => TileCoordinate;
 // INTERFACES POUR LES PARAMÈTRES DES TRACKERS
 // ============================================================================
 
-/** Paramètres de base partagés par tous les trackers */
-export interface BaseTrackerParams {
+export interface DroneTrackerParams {
   position: WorldPosition;
   context: FSMContext;
+  droneType: DroneType;
   send: XStateSend;
   botId: string;
   initialPositionSent: MutableRefObject<boolean>;
-  canSendEvent: CanSendEventFn;
-  markEventSent: MarkEventSentFn;
 }
 
-/** Paramètres spécifiques aux trackers de drones */
-export interface DroneTrackerParams extends BaseTrackerParams {
-  droneType: DroneType;
+export interface ShipTrackerParams {
+  position: WorldPosition;
+  context: FSMContext;
+  shipType: ShipType;
+  send: XStateSend;
+  botId: string;
+  initialPositionSent: MutableRefObject<boolean>;
   gridToHexCoord: GridToHexCoordFn;
   worldToGrid: WorldToGridFn;
-  useTileStore: any; // Type générique pour le store Zustand
-}
-
-/** Paramètres spécifiques aux trackers de vaisseaux */
-export interface ShipTrackerParams extends BaseTrackerParams {
-  shipType: ShipType;
-  lastPosition: WorldPosition | null;
+  useTileStore: TileStoreType;
 }
 
 // ============================================================================
@@ -76,6 +73,24 @@ export interface PositionHandler {
 /** Interface pour les handlers d'initialisation */
 export interface InitializationHandler {
   handleInitialPosition: (position: WorldPosition) => boolean;
+}
+
+/** Paramètres génériques pour les handlers */
+export interface HandlerParams {
+  /**
+   * Identifiant unique du bot.
+   */
+  botId: string;
+
+  /**
+   * Type de drone utilisé.
+   */
+  droneType: DroneType;
+
+  /**
+   * Fonction pour envoyer des événements XState.
+   */
+  send: XStateSend;
 }
 
 // ============================================================================

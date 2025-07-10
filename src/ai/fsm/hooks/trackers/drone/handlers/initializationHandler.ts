@@ -1,42 +1,16 @@
-/**
- * ==========================================================================
- * INITIALIZATION HANDLER - Handler pour l'initialisation du drone
- * ==========================================================================
- */
-
 import fsmLogger from '../../../../../../logger/fsmLogger.ts';
-import type { DroneType, XStateSend } from '../../../../../../types';
 import type { WorldPosition } from '../../../../../../types/coordinates.d.ts';
+import type { HandlerParams } from '../../../../../../types/tracker.d.ts';
 
-interface InitHandlerParams {
-  botId: string;
-  droneType: DroneType;
-  send: XStateSend;
-  canSendEvent: (eventType: string) => boolean;
-  markEventSent: (eventType: string, timeout?: number) => void;
-}
-
-/**
- * Création d'un handler pour l'initialisation du drone
- * @param params - Les paramètres nécessaires
- * @returns L'objet handler avec les méthodes
- */
-export const createInitializationHandler = ({ botId, droneType, send: _send, canSendEvent: _canSendEvent, markEventSent: _markEventSent }: InitHandlerParams) => {
+export const createInitializationHandler = ({ botId, droneType, send }: HandlerParams) => {
   return {
-    /**
-     * Gère l'initialisation de la position du drone
-     * @param position - La position visuelle actuelle
-     * @returns True si l'initialisation a été effectuée
-     */
     handleInitialPosition(position: WorldPosition): boolean {
       if (position) {
         fsmLogger.context(`🛸 [${botId}] Setting initial ${droneType} drone position`, {
           position,
           droneType
         });
-        
-        // L'initialisation est maintenant gérée par le droneTrackerEngine
-        // qui envoie l'événement de position
+        send({ type: 'DRONE_INITIALIZED', botId, droneType });
         return true;
       }
       return false;

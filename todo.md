@@ -1,6 +1,4 @@
-Je souhaiterais ne plus avoir l'alias de compatibilité ligne 16 pour ne plus avoir de confusion et garder uniquement ResourceStats
-
-
+Travailler sur les handlers et les fichiers d'animations pour remettre le bon cycle. 
 
 Le travail a effectuer est de s'assurer que la position initiale est donné qu'une suele fois et que l'animaiton n' a pas lieu avant que le bot soit actif veritablement.
 

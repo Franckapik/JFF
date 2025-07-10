@@ -58,6 +58,12 @@ export type TileStoreType = {
     usePathfinding?: boolean,
     detailed?: boolean
   ) => number;
+  calculateDroneDistance: (
+    position: WorldPosition,
+    droneState: string,
+    targetPosition: WorldPosition | undefined,
+    vehiclePosition: WorldPosition | undefined
+  ) => number;
   calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap) => number;
   findTileAtPosition: (position: WorldPosition, tiles?: TileMap) => Tile | null;
   isReachable: (from: GridCoordinate, to: GridCoordinate, tiles?: TileMap) => boolean;
@@ -74,6 +80,7 @@ export type TileStoreType = {
   // --- Coordonnées ---
   isValidGridCoord: (coord: unknown) => coord is GridCoordinate;
   isValidWorldPosition: (position: unknown) => position is WorldPosition;
+  gridToHexCoord: (coord: GridCoordinate) => string | null;
   gridToWorld: (coord: GridCoordinate | TileCoordinate) => WorldPosition;
   worldToGrid: (position: WorldPosition) => GridCoordinate | TileCoordinate;
   normalizeCoordinate: (coord: GridCoordinate | TileCoordinate | string) => GridCoordinate | null;

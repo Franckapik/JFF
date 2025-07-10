@@ -12,6 +12,4 @@ export interface ResourceStats {
   total: number;
 }
 
-// Alias pour compatibilité avec le code existant (utilisé dans initialContext.ts)
-export type Resources = ResourceStats;
 

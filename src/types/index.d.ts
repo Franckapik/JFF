@@ -11,7 +11,7 @@ export type { GridCoordinate, TileCoordinate, WorldPosition } from './coordinate
 // ============================================================================
 // TYPES DE RESSOURCES
 // ============================================================================
-export type { ResourceStats, ResourceType, Resources } from './resources.d';
+export type { ResourceStats, ResourceType } from './resources.d';
 
 // ============================================================================
 // TYPES DE VÉHICULES
