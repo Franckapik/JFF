@@ -108,30 +108,30 @@ export const createMachineContext = (
         explorer: {
           id: `${entityId}-drone-explorer`,
           type: 'explorer' as DroneType,
-          state: 'docked' as DroneVisualState,
+          state: 'uninitialized' as DroneVisualState,
           position: { x: 0, y: 0.5, z: 0 },
           targetPosition: { x: 0, y: 0.5, z: 0 },
-          missionTarget: { coord: '0,0', type: 'explore' },
+          isMoving: false,
           isActive: false,
           lastUpdate: currentTimestamp
         },
         combat: {
           id: `${entityId}-drone-combat`,
           type: 'combat' as DroneType,
-          state: 'docked' as DroneVisualState,
+          state: 'uninitialized' as DroneVisualState,
           position: { x: 0, y: 0.5, z: 0 },
           targetPosition: { x: 0, y: 0.5, z: 0 },
-          missionTarget: { coord: '0,0', type: 'explore' },
+          isMoving: false,
           isActive: false,
           lastUpdate: currentTimestamp
         },
         special: {
           id: `${entityId}-drone-special`,
           type: 'special' as DroneType,
-          state: 'docked' as DroneVisualState,
+          state: 'uninitialized' as DroneVisualState,
           position: { x: 0, y: 0.5, z: 0 },
           targetPosition: { x: 0, y: 0.5, z: 0 },
-          missionTarget: { coord: '0,0', type: 'explore' },
+          isMoving: false,
           isActive: false,
           lastUpdate: currentTimestamp
         }

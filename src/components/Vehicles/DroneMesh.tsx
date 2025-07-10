@@ -1,37 +1,39 @@
 import { Cone } from "@react-three/drei";
-import React from "react";
+import { forwardRef } from "react";
+import * as THREE from "three";
+
+import DroneHelper from "../Helpers/DroneHelper";
 
 import type { DroneMeshProps } from '../../types/r3f';
 
-const DroneMesh: React.FC<DroneMeshProps> = ({ 
-  color, 
-  botId: _botId,
-  context: _context,
-  droneState,
-  droneType: _droneType
-}) => {
-  return (
-    <>
-      <Cone 
-        args={[0.15, 0.4, 8]} 
-        rotation={[Math.PI, 0, 0]}
-        castShadow
-      >
-        <meshStandardMaterial 
-          color={color}
-          // État FSM → Couleur émissive
-          emissive={
-            droneState.state === 'scanning' ? color : 
-            "black"
-          }
-          emissiveIntensity={
-            droneState.state === 'scanning' ? 0.8 : 
-            0.2
-          }
-        />
-      </Cone>
-    </>
-  );
-};
 
+const DroneMesh = forwardRef<THREE.Mesh, DroneMeshProps>(
+  ({ color, botId: _botId, context: _context, droneVisualState, droneType: _droneType, meshRef }, ref) => {
+    return (
+      <>
+        <Cone 
+          ref={meshRef || ref}
+          args={[0.15, 0.4, 8]} 
+          rotation={[Math.PI, 0, 0]}
+          castShadow
+        >
+          <meshStandardMaterial 
+            color={color}
+            emissive={
+              droneVisualState === 'scanning' ? color : 
+              "black"
+            }
+            emissiveIntensity={
+              droneVisualState === 'scanning' ? 0.8 : 
+              0.2
+            }
+          />
+        </Cone>
+        {/* Helper visuel pour l'état du drone */}
+        <DroneHelper position={[0, 0, 0]} droneVisualState={droneVisualState} />
+      </>
+    );
+  }
+);
+DroneMesh.displayName = "DroneMesh";
 export default DroneMesh;

@@ -11,7 +11,7 @@ import useXFSMStore from "../stores/useXFSMStore/index.ts";
 import type { BotId } from "../types/fsm.d.ts";
 import type { TileProps } from "../types/r3f";
 
-import TileHelpers from "./TileHelpers";
+import TileHelpers from "./Helpers/TileHelpers.tsx";
 
 import type { GameStoreType, TileStoreType, XFSMStoreType } from "@/types/stores.d";
 

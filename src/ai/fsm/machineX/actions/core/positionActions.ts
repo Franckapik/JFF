@@ -184,6 +184,13 @@ export const updateDronePosition = (context: FSMContext, event: DronePositionEve
 
     fsmLogger.context(`🛸 [${context.entityId || botId}] ${droneType} position: (${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})`);
 
+    // Déterminer si le drone doit être considéré comme "en mouvement"
+    // On considère qu'il est en mouvement si la position diffère de la target ET qu'il est dans un état de déplacement
+    const isMoving = currentDrone?.state === 'deploying' || currentDrone?.state === 'scanning' || currentDrone?.state === 'returning';
+    const atTarget = position.x === (currentDrone?.targetPosition?.x ?? position.x)
+      && position.y === (currentDrone?.targetPosition?.y ?? position.y)
+      && position.z === (currentDrone?.targetPosition?.z ?? position.z);
+
     return {
       ...context,
       droneFleet: {
@@ -193,7 +200,8 @@ export const updateDronePosition = (context: FSMContext, event: DronePositionEve
           [droneType]: {
             ...context.droneFleet?.drones?.[droneType],
             position: { ...position },
-            targetPosition: currentDrone?.targetPosition || targetPosition || position
+            targetPosition: currentDrone?.targetPosition || targetPosition || position,
+            isMoving: isMoving && !atTarget
           }
         }
       },
@@ -212,6 +220,95 @@ export const updateDronePosition = (context: FSMContext, event: DronePositionEve
 };
 
 // ============================================================================
+// ACTIONS D'INITIALISATION DES DRONES
+// ============================================================================
+
+interface DroneInitRequestEvent extends FSMEvent {
+  droneType?: DroneType;
+  botId?: string;
+}
+
+/**
+ * Traite une demande d'initialisation de drone et calcule sa position
+ * Cette action est déclenchée par DRONE_INITIALIZE_REQUEST
+ * @param context - Contexte FSM actuel
+ * @param event - Événement avec droneType, botId
+ * @returns - Contexte mis à jour avec le drone initialisé
+ */
+export const processDroneInitRequest = (context: FSMContext, event: DroneInitRequestEvent): FSMContext => {
+  if (!event) {
+    fsmLogger.info(`[${context?.entityId || 'unknown'}] Drone init request failed: event is undefined`);
+    return context;
+  }
+
+  const { droneType = 'explorer', botId } = event;
+  
+  // ✅ ATTENDRE QUE LE VAISSEAU AIT UNE POSITION VALIDE
+  if (!context?.vehicle?.position || (context.vehicle.position.x === 0 && context.vehicle.position.y === 0 && context.vehicle.position.z === 0)) {
+    fsmLogger.debug(`[${context.entityId || botId}] Drone init request deferred: waiting for ship position`);
+    // Retourner le contexte inchangé pour que l'init soit retentée
+    return context;
+  }
+
+  try {
+    const shipPosition = context.vehicle.position;
+    
+    // Calcul de la position initiale selon le type de drone
+    const initialOffsets = {
+      explorer: { x: 0.5, y: 0.3, z: 0.5 },
+      combat: { x: -0.5, y: 0.3, z: 0.5 },
+      special: { x: 0, y: 0.3, z: -0.7 }
+    };
+
+    const offset = initialOffsets[droneType] || initialOffsets.explorer;
+    const initialPosition: WorldPosition = {
+      x: shipPosition.x + offset.x,
+      y: shipPosition.y + offset.y,
+      z: shipPosition.z + offset.z
+    };
+
+    fsmLogger.context(`🛸 [${context.entityId || botId}] Processing ${droneType} drone init request`, {
+      shipPosition,
+      initialPosition,
+      droneType
+    });
+
+    // Initialiser le drone avec la position calculée
+    const initializedDrone = {
+      id: `${context.entityId || botId}-${droneType}`,
+      type: droneType,
+      state: 'docked' as const, // Passer directement à 'docked' après calcul
+      position: { ...initialPosition },
+      targetPosition: { ...initialPosition },
+      isActive: true,
+      isMoving: false,
+      lastUpdate: Date.now()
+    };
+
+    return {
+      ...context,
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet?.drones,
+          [droneType]: initializedDrone
+        }
+      },
+      lastAction: 'processDroneInitRequest_success'
+    };
+    
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    fsmLogger.error(`[${context.entityId || botId}] Drone init request error:`, error);
+    return {
+      ...context,
+      error: errorMessage,
+      lastAction: 'processDroneInitRequest_failed'
+    };
+  }
+};
+
+// ============================================================================
 // EXPORTS ORGANISÉS
 // ============================================================================
 
@@ -221,7 +318,8 @@ export const updateDronePosition = (context: FSMContext, event: DronePositionEve
 export const positionActions = {
   updateShipPosition,
   updateShipBasePosition,
-  updateDronePosition
+  updateDronePosition,
+  processDroneInitRequest
 };
 
 /**

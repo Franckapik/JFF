@@ -1,7 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 
 // === Store Imports ===
 import { useTileStore } from '../../../../../stores/useTileStore/index';
+
+// === Logger Import ===
+import fsmLogger from '../../../../../logger/fsmLogger.ts';
 
 // === Type Imports ===
 import type { WorldPosition } from '../../../../../types/coordinates.d.ts';
@@ -16,12 +19,23 @@ export const useDroneTracker = ({
     send,
     botId,
     droneType = 'explorer'
-}: DroneTrackerParams): WorldPosition | null => {
+}: DroneTrackerParams): ((position: WorldPosition) => void) => {
     const currentVisualPosition = useRef<WorldPosition | null>(null);
 
     const { calculateDroneDistance } = useTileStore() as TileStoreType;
 
-    useEffect(() => {
+    // Fonction pour mettre à jour la position depuis l'animation
+    const updatePosition = useCallback((position: WorldPosition) => {
+        currentVisualPosition.current = position;
+        
+        // Debug: Log les mises à jour de position
+        if (context?.droneFleet?.drones?.[droneType]?.state === 'deploying') {
+            fsmLogger.debug(`🎯 [${botId}] ${droneType} tracker received position update:`, { 
+                position, 
+                droneState: context?.droneFleet?.drones?.[droneType]?.state 
+            });
+        }
+        
         const handlers = createDroneHandlers({
             botId,
             droneType,
@@ -29,10 +43,9 @@ export const useDroneTracker = ({
         } as HandlerParams);
 
         const drone = context?.droneFleet?.drones?.[droneType];
-        if (!drone?.isActive || !drone?.state) return;
-
-        const position = currentVisualPosition.current;
-        if (!position) return;
+        
+        // Si le drone n'existe pas dans le contexte, attendre la prochaine mise à jour
+        if (!drone) return;
 
         const distance = calculateDroneDistance(
             position,
@@ -41,20 +54,45 @@ export const useDroneTracker = ({
             context?.vehicle?.position || context?.vehicle?.basePosition
         );
 
-        if (distance !== Infinity) {
-            switch (drone.state) {
-                case 'deploying':
+        // Switch unifié pour tous les états du drone avec interface unifiée
+        switch (drone.state) {
+            case 'uninitialized':
+                handlers.init.process(); 
+                break;
+                
+            case 'deploying':
+                if (distance !== Infinity) {
+                    fsmLogger.debug(`🛸 [${botId}] ${droneType} deploying - distance: ${distance.toFixed(2)}`, { position, drone: drone.state });
                     handlers.deploying.process(distance, position);
-                    break;
-                case 'scanning':
+                }
+                break;
+                
+            case 'scanning':
+                if (distance !== Infinity) {
                     handlers.scanning.process(distance, position);
-                    break;
-                case 'returning':
+                }
+                break;
+                
+            case 'returning':
+                if (distance !== Infinity) {
+                    fsmLogger.debug(`🛸 [${botId}] ${droneType} returning - distance: ${distance.toFixed(2)}`, { position, drone: drone.state });
                     handlers.returning.process(distance, position);
-                    break;
-            }
+                }
+                break;
+                
+            case 'docked':
+                // Le drone est au repos, pas d'action nécessaire
+                break;
+                
+            case 'failed':
+                // Gérer les échecs de mission si nécessaire
+                fsmLogger.error(`🛸 [${botId}] ${droneType} drone in failed state`, { position, distance });
+                break;
+                
+            default:
+                fsmLogger.debug(`🛸 [${botId}] ${droneType} drone in unhandled state: ${drone.state}`);
         }
     }, [context, send, botId, droneType, calculateDroneDistance]);
 
-    return currentVisualPosition.current;
+    return updatePosition;
 };

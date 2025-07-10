@@ -1,12 +1,10 @@
-Travailler sur les handlers et les fichiers d'animations pour remettre le bon cycle. 
-
-Le travail a effectuer est de s'assurer que la position initiale est donné qu'une suele fois et que l'animaiton n' a pas lieu avant que le bot soit actif veritablement.
+Je dois m'assurer que les actions envoyées soit sur les bons fichiers pour tout les handlers. La modification du contexte par l'établissement d'une nouvelle target position doit etre dans les fichiers.actions.
 
 
-Il faut valider le commit. TRavailler pour que le tracker soit clair et s'assurer que les drones state et visuals states soient les bons. ENfin , il fautq ue el cycle soit correct pour le drone. COmprendre l'erreur actuelle dans le log. Le travail initial devait se porter sur une fonction d'un store : tileFilterSlice. Il faut que les fonctions utilisent les bons types et supprimer celles qui ne sont pas utiles ou alors complexes pour rien. Netooyer le projet des fichiers docs.
+Le travail dans scanning doit etre de marquer la tuile, transferer les ressources au vaisseau, etc... Je ne sais pas si l'IA peut regarder le backup pour remettre cela en place rapidement ? La logique est simple a demander, et l'on doit utiliser la bonne syntaxe et les types. Elle doit utiliser un radius. ce radisu devrait etre définis dans initial Context comme d'autres valeurs inhérentes au joueur. 
 
+la tuile prise au hasard doit etre une tuile visible. La fonction associée doit etre bien étudiée.
 
-Du travail pour que tout tourne autours du type botId, et assignedBot. Le composant Tile doit etre nettoyé. Les meshs doivent etre affichés. Supprimer les fonctions manuellement si elle ne sont pas utilisées. Typer les constants.Contraindre au maximum.
 COntinuer d'écrire le fichier initialisation a la main.FInir par arriver à getWalkableTilesInRadius qui doit etre bien nettoyée et contrainte par les types
 
 Exploration du drone selon un radius. 

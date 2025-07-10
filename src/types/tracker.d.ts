@@ -38,7 +38,6 @@ export type WorldToGridFn = (position: WorldPosition) => TileCoordinate;
 // ============================================================================
 
 export interface DroneTrackerParams {
-  position: WorldPosition;
   context: FSMContext;
   droneType: DroneType;
   send: XStateSend;

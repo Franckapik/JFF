@@ -32,10 +32,10 @@ export interface DroneState {
   id: string;
   type: DroneType;
   state: DroneVisualState;
-  position: WorldPosition;
+  position?: WorldPosition;
   targetPosition: WorldPosition;
-  missionTarget: TileCoordinate;
   isActive: boolean;
+  isMoving: boolean;
   lastUpdate: number;
 }
 

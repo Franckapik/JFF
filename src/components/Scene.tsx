@@ -22,7 +22,7 @@ import useXFSMStore from "../stores/useXFSMStore/index.ts";
 
 // Types
 import type { BotId } from "@/types/fsm.d.ts";
-import type { SceneTileType } from "@/types/r3f";
+import type { TileProps } from "@/types/r3f";
 import { GameStoreType, TileStoreType, XFSMStoreType } from "@/types/stores.js";
 
 
@@ -43,7 +43,6 @@ const Scene: React.FC = () => {
   const assignStartingTiles = useTileStore((state: TileStoreType) => state.assignStartingTiles);
 
   // Game configuration
-  const getBotColorById = useGameStore((state: GameStoreType) => state.getBotColorById);
   const isGameInitialized = useGameStore((state: GameStoreType) => state.isGameInitialized());
 
 
@@ -151,8 +150,14 @@ const Scene: React.FC = () => {
       
       {/* All tiles rendering */}
       {Object.values(tiles).map(tile => {
-        // Cast tile to the correct type
-        const typedTile = tile as SceneTileType;
+        const typedTile = tile as TileProps;
+        // Normalisation de la position pour Fleet et Tile
+        let pos: [number, number, number];
+        if (Array.isArray(typedTile.position)) {
+          pos = typedTile.position as [number, number, number];
+        } else {
+          pos = [typedTile.position.x, 0, typedTile.position.z];
+        }
 
         // Vérifier si c'est une tuile de départ assignée à un bot actif
         const isAssignedDepartTile =
@@ -160,22 +165,23 @@ const Scene: React.FC = () => {
 
         return (
           <React.Fragment key={typedTile.coord}>
-            <Tile position={[typedTile.position.x, 0, typedTile.position.z]} radius={1} color={typedTile.color || "#888888"} coord={typedTile.coord} />
+            <Tile
+              position={pos}
+              radius={typedTile.radius ?? 1}
+              color={typedTile.color || "#888888"}
+              coord={typedTile.coord}
+              isHighTile={typedTile.isHighTile}
+              onClick={typedTile.onClick}
+            />
             {/* Fleet pour les tuiles de départ assignées - SEULEMENT si le bot est actif */}
             {isAssignedDepartTile && isBotActive(typedTile.assignedToBot as BotId) && (
-              <group position={[typedTile.position.x, 0.5, typedTile.position.z]}>
+              <group position={[pos[0], 0.5, pos[2]]}>
                 <Fleet
                   botId={typedTile.assignedToBot as BotId}
-                  color={getBotColorById(typedTile.assignedToBot as BotId)}
-                  shipPosition={{
-                    x: typedTile.position.x,
-                    y: 0.5,
-                    z: typedTile.position.z,
-                  }}
-                  dronePosition={{
-                    x: typedTile.position.x + 0.5,
-                    y: 0.8,
-                    z: typedTile.position.z + 0.5,
+                  fleetPosition={{
+                    x: 0,
+                    y: 0,
+                    z: 0,
                   }}
                   tileCoord={typedTile.coord as any}
                 />

@@ -50,6 +50,11 @@ export const machineX = createMachine({
       actions: assign(({ context, event }) => {
         return allActions.updateDronePosition(context, event);
       })
+    },
+    DRONE_INITIALIZE_REQUEST: {
+      actions: assign(({ context, event }) => {
+        return allActions.processDroneInitRequest(context, event);
+      })
     }
   },
   states: {

@@ -196,6 +196,13 @@ export const action_drone_returning_entry = assign(({ context }: XStateAction) =
   // Mettre à jour l'état du drone dans le contexte pour synchroniser avec la FSM
   if (context.droneFleet?.drones?.explorer) {
     const droneState: DroneVisualState = 'returning';
+    
+    // ✅ IMPORTANT: Définir la targetPosition vers le vaisseau pour le retour
+    const shipPosition = context.vehicle?.position || context.vehicle?.basePosition;
+    if (!shipPosition) {
+      fsmLogger.error(`🚨 [${context.entityId}] Cannot set drone return target: no ship position found`);
+    }
+    
     return {
       ...context,
       droneFleet: {
@@ -205,6 +212,7 @@ export const action_drone_returning_entry = assign(({ context }: XStateAction) =
           explorer: {
             ...context.droneFleet.drones.explorer,
             state: droneState,
+            targetPosition: shipPosition || context.droneFleet.drones.explorer.targetPosition, // ✅ Définir la cible de retour
             lastUpdate: Date.now()
           }
         }

@@ -1,21 +1,50 @@
-import type { TileCoordinate } from "./coordinates.d";
-import type { FSMContext } from "./fsm.d.ts";
-import type { DroneState } from './vehicle.d';
+// Types pour le hook d'animation des drones
 
-import type { VehicleId, WorldPosition } from "./index";
+
+import type { MutableRefObject } from 'react';
+import type * as THREE from 'three';
+
+import type { DroneType, DroneVisualState } from './drone.d';
+
+// import type { FSMContext } from './fsm.d.ts';
+import type { TileCoordinate } from "./coordinates.d";
+
+import type { FSMContext } from "./fsm.d.ts";
+
+import type { VehicleId, WorldPosition } from './index';
+
+export interface DroneAnimationReturn {
+  droneRef: MutableRefObject<THREE.Mesh | undefined>;
+  droneState: DroneVisualState;
+  initialPosition: WorldPosition;
+}
+
+export interface DroneAnimationProps {
+  context: FSMContext | null;
+  fleetPosition: WorldPosition | null;
+  updateVisualPosition: (position: WorldPosition) => void;
+  droneType?: DroneType;
+  isActive?: boolean;
+  isMoving?: boolean;
+}
+
 
 /**
  * Props interface for Tile component (déplacé depuis tile.ts)
  */
 export interface TileProps {
-  /** Position [x, y, z] de la tuile dans l'espace 3D */
-  position: [number, number, number];
-  /** Rayon de la tuile hexagonale */
-  radius: number;
-  /** Couleur de la tuile */
-  color: string;
   /** Coordonnées de la tuile au format "x,z" */
   coord: import("./coordinates").GridCoordinate;
+  /** Position de la tuile dans l'espace 3D */
+  position: [number, number, number] | { x: number; z: number };
+  /** Rayon de la tuile hexagonale */
+  radius?: number;
+  /** Couleur de la tuile */
+  color?: string;
+  /** Type de la tuile (ex: 'depart', 'normal', etc.) */
+  type?: string;
+  /** Bot assigné à la tuile */
+  assignedToBot?: string;
   /** Indique si la tuile est surélevée */
   isHighTile?: boolean;
   /** Gestionnaire d'événement au clic */
@@ -28,12 +57,8 @@ export interface TileProps {
 export interface FleetProps {
   /** ID du bot FSM (ex: 'bot-0') */
   botId: VehicleId;
-  /** Position mondiale du vaisseau {x,y,z} */
-  shipPosition: WorldPosition;
-  /** Position mondiale du drone {x,y,z} */
-  dronePosition: WorldPosition;
-  /** Couleur des véhicules */
-  color: string;
+  /** Position mondiale de la flotte (vaisseau + drone) */
+  fleetPosition: WorldPosition;
   /** Coordonnée de la tuile de départ */
   tileCoord: TileCoordinate;
 }
@@ -48,10 +73,12 @@ export interface DroneMeshProps {
   botId?: string;
   /** Contexte FSM pour l'état du drone */
   context?: FSMContext;
-  /** État du drone */
-  droneState: DroneState;
+  /** État visuel du drone (pour l'affichage/animation) */
+  droneVisualState: import('./drone').DroneVisualState;
   /** Type du drone */
   droneType?: string;
+  /** Référence mesh pour animation/position */
+  meshRef?: import('react').Ref<import('three').Mesh>;
 }
 
 /**
@@ -102,11 +129,4 @@ export interface TileHelpersProps {
 /**
  * Type pour les tuiles utilisées dans Scene.tsx
  */
-export interface SceneTileType {
-  coord: import("./coordinates").GridCoordinate;
-  position: { x: number; z: number };
-  radius?: number;
-  color?: string;
-  type?: string;
-  assignedToBot?: string;
-}
+

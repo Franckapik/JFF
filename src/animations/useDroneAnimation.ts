@@ -11,14 +11,15 @@
  */
 
 import { useFrame } from '@react-three/fiber';
-import type { MutableRefObject } from 'react';
+
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
+import type { DroneAnimationProps, DroneAnimationReturn } from '../types/r3f';
+
 import fsmLogger from '../logger/fsmLogger.ts';
-import type { FSMContext, WorldPosition } from '../types';
+import type { WorldPosition } from '../types';
 import type {
-  DroneType,
   DroneVisualState
 } from '../types/drone.d.ts';
 
@@ -26,75 +27,74 @@ import type {
 // TYPES INTERNES
 // ============================================================================
 
-interface DroneAnimationReturn {
-  droneRef: MutableRefObject<THREE.Mesh | undefined>;
-  droneState: DroneVisualState;
-  initialPosition: WorldPosition;
-}
 
-interface InitialPositions {
-  explorer: WorldPosition;
-  combat: WorldPosition;
-  special: WorldPosition;
-}
+
+// ============================================================================
+// TYPES DE PROPS POUR LE HOOK
+// ============================================================================
+
+
 
 // ============================================================================
 // HOOK D'ANIMATION PRINCIPAL
 // ============================================================================
 
-/**
- * Hook d'animation spécialisé pour les drones
- * @param context - Contexte FSM
- * @param shipPosition - Position du vaisseau de référence
- * @param updateVisualPosition - Callback pour envoyer la position au tracker
- * @param droneType - Type de drone ('explorer', 'combat', 'special')
- * @param isActive - Si le bot est actif (animations complètes) ou non
- * @returns Ref du drone et données d'animation
- */
-export const useDroneAnimation = (
-  context: FSMContext | null,
-  shipPosition: WorldPosition | null,
-  updateVisualPosition: (position: WorldPosition) => void,
-  droneType: DroneType = 'explorer',
-  isActive: boolean = true
-): DroneAnimationReturn => {
+export const useDroneAnimation = ({
+  context,
+  fleetPosition,
+  updateVisualPosition,
+  droneType,
+  isActive,
+  isMoving
+}: DroneAnimationProps): DroneAnimationReturn => {
   const droneRef = useRef<THREE.Mesh>(null!);
   const lastUpdateTime = useRef<number>(0);
-  const initialPositionSent = useRef<boolean>(false);
-
-  // Positions initiales des drones (coordonnées locales au vaisseau)
-  const initialPositions: InitialPositions = {
-    explorer: { x: 0.5, y: 0.3, z: 0.5 },
-    combat: { x: -0.5, y: 0.3, z: 0.5 },
-    special: { x: 0, y: 0.3, z: -0.7 }
-  };
-
-  const initialPosition = initialPositions[droneType];
+  const currentLocalPosition = useRef<WorldPosition>({ x: 0, y: 0, z: 0 });
 
   // ============================================================================
-  // TRANSMISSION DE LA POSITION INITIALE (UNE SEULE FOIS)
+  // RÉCUPÉRATION DE LA POSITION DEPUIS LE CONTEXTE FSM
+  // ============================================================================
+  
+  // La position initiale vient maintenant du contexte FSM (initialisée par le handler)
+  const droneFromContext = context?.droneFleet?.drones?.[droneType];
+  const initialPosition = droneFromContext?.position || { x: 0, y: 0, z: 0 };
+
+  // IMPORTANT: fleetPosition peut être {0,0,0} si le Fleet est dans un groupe positionné
+  // Dans ce cas, nous devons utiliser la position absolue du vaisseau depuis le contexte FSM
+  const shipPosition = context?.vehicle?.position || { x: 0, y: 0, z: 0 };
+  const actualFleetPosition = (fleetPosition.x === 0 && fleetPosition.y === 0 && fleetPosition.z === 0) 
+    ? shipPosition 
+    : fleetPosition;
+
+  // Initialiser la position locale au premier rendu
+  useEffect(() => {
+    if (droneFromContext?.position && actualFleetPosition) {
+      currentLocalPosition.current = {
+        x: droneFromContext.position.x - actualFleetPosition.x,
+        y: droneFromContext.position.y - actualFleetPosition.y,
+        z: droneFromContext.position.z - actualFleetPosition.z
+      };
+    }
+  }, [droneFromContext?.position, actualFleetPosition]);
+
+  // ============================================================================
+  // SYNCHRONISATION AVEC LE TRACKER (position depuis FSM)
   // ============================================================================
   
   useEffect(() => {
-    if (shipPosition && updateVisualPosition && !initialPositionSent.current) {
-      const droneWorldPosition: WorldPosition = {
-        x: shipPosition.x + initialPosition.x,
-        y: shipPosition.y + initialPosition.y, 
-        z: shipPosition.z + initialPosition.z
-      };
-      
-      fsmLogger.mouvement(`🛸 [${droneType}] Transmitting initial drone position to FSM tracker:`, droneWorldPosition);
-      updateVisualPosition(droneWorldPosition);
-      initialPositionSent.current = true;
+    // Synchroniser la position du contexte FSM avec le tracker
+    if (droneFromContext?.position && updateVisualPosition) {
+      fsmLogger.mouvement(`🛸 [${droneType}] Syncing FSM position to visual tracker:`, droneFromContext.position);
+      updateVisualPosition(droneFromContext.position);
     }
-  }, [shipPosition, updateVisualPosition, droneType, initialPosition]);
+  }, [droneFromContext?.position, updateVisualPosition, droneType]);
 
   // ============================================================================
   // ANIMATION FRAME PRINCIPAL
   // ============================================================================
   
   useFrame((state, delta) => {
-    if (!droneRef.current || !shipPosition || !isActive || !context) return;
+    if (!droneRef.current || !actualFleetPosition || !isActive || !context) return;
 
     const now = state.clock.getElapsedTime();
     const drone = context.droneFleet?.drones?.[droneType];
@@ -111,113 +111,171 @@ export const useDroneAnimation = (
         state: droneState,
         dronePosition: drone.position,
         droneTarget: drone.targetPosition,
-        shipPosition,
+        fleetPosition: actualFleetPosition,
         deltaTime: delta
       });
       lastUpdateTime.current = now;
     }
 
     // ============================================================================
-    // CALCUL DE LA POSITION CIBLE
+    // CALCUL DE LA POSITION CIBLE ET INTERPOLATION
     // ============================================================================
     
     const targetPosition = (() => {
-      // Si le drone a une position cible définie
-      if (drone.targetPosition && 
-          (drone.targetPosition.x !== 0 || drone.targetPosition.y !== 0 || drone.targetPosition.z !== 0)) {
-        const droneTargetPos = drone.targetPosition;
+      // Position cible pour l'interpolation selon l'état du drone
+      if (drone.targetPosition && (droneState === 'deploying' || droneState === 'scanning' || droneState === 'returning')) {
+        // Convertir la position cible absolue en position relative
         return {
-          x: droneTargetPos.x - shipPosition.x,
-          y: droneTargetPos.y - shipPosition.y,
-          z: droneTargetPos.z - shipPosition.z
+          x: drone.targetPosition.x - actualFleetPosition.x,
+          y: drone.targetPosition.y - actualFleetPosition.y,
+          z: drone.targetPosition.z - actualFleetPosition.z
+        };
+      } else if (drone.position) {
+        // Position de repos (relative à la flotte)
+        return {
+          x: drone.position.x - actualFleetPosition.x,
+          y: drone.position.y - actualFleetPosition.y,
+          z: drone.position.z - actualFleetPosition.z
         };
       } else {
-        // Fallback : position initiale relative
-        return initialPosition;
+        // Fallback : position initiale relative à la flotte
+        return { x: 0, y: 0, z: 0 };
       }
     })();
+
+    // Interpolation vers la position cible si en mouvement
+    if (isMoving && (droneState === 'deploying' || droneState === 'scanning' || droneState === 'returning')) {
+      const speed = droneState === 'deploying' ? 1.5 : droneState === 'returning' ? 2.0 : 1.0;
+      const lerpFactor = Math.min(1.0, delta * speed);
+      
+      currentLocalPosition.current.x = THREE.MathUtils.lerp(currentLocalPosition.current.x, targetPosition.x, lerpFactor);
+      currentLocalPosition.current.y = THREE.MathUtils.lerp(currentLocalPosition.current.y, targetPosition.y, lerpFactor);
+      currentLocalPosition.current.z = THREE.MathUtils.lerp(currentLocalPosition.current.z, targetPosition.z, lerpFactor);
+      
+      if (shouldUpdate) {
+        fsmLogger.mouvement(`🛸 [${droneType}] Interpolating to target:`, {
+          currentLocal: currentLocalPosition.current,
+          targetLocal: targetPosition,
+          lerpFactor,
+          speed,
+          droneState,
+          isMoving
+        });
+      }
+    } else {
+      // Si pas en mouvement, aller directement à la position cible
+      currentLocalPosition.current = { ...targetPosition };
+    }
+
+    if (shouldUpdate) {
+      fsmLogger.mouvement(`🛸 [${droneType}] Position calculation:`, {
+        droneAbsolutePosition: drone.position,
+        droneTargetPosition: drone.targetPosition,
+        fleetAbsolutePosition: actualFleetPosition,
+        targetRelativePosition: targetPosition,
+        currentLocalPosition: currentLocalPosition.current,
+        droneState,
+        isMoving,
+        isActive
+      });
+    }
     
     // ============================================================================
     // ANIMATION DE MOUVEMENT
     // ============================================================================
     
-    // Vérification des états de mouvement
-    const isMoving = droneState === 'deploying' || droneState === 'scanning' || droneState === 'returning';
+    // ============================================================================
+    // SYNCHRONISATION DE LA POSITION DU MESH
+    // ============================================================================
     
-    if (isMoving && droneRef.current) {
-      if (shouldUpdate) {
-        fsmLogger.error(`⚠️ [Drone ${droneType}] État ${droneState} mais pas en mouvement`);
-      }
-      
-      // Animation fluide vers la position cible
-      const lerpFactor = delta * 2; // Vitesse d'interpolation
-      droneRef.current.position.lerp(
-        new THREE.Vector3(targetPosition.x, targetPosition.y, targetPosition.z),
-        lerpFactor
+    if (droneRef.current) {
+      // Utiliser la position locale interpolée
+      droneRef.current.position.set(
+        currentLocalPosition.current.x, 
+        currentLocalPosition.current.y, 
+        currentLocalPosition.current.z
       );
       
-      // Calcul de la position mondiale pour le tracker
       if (shouldUpdate) {
-        const worldPosition: WorldPosition = {
-          x: shipPosition.x + droneRef.current.position.x,
-          y: shipPosition.y + droneRef.current.position.y,
-          z: shipPosition.z + droneRef.current.position.z
-        };
-        
-        fsmLogger.mouvement(`🛸 [${droneType}] Sending updated position to tracker:`, {
-          localPosition: {
+        fsmLogger.mouvement(`🛸 [${droneType}] Mesh position updated:`, {
+          meshExists: !!droneRef.current,
+          newMeshPosition: {
             x: droneRef.current.position.x,
             y: droneRef.current.position.y,
             z: droneRef.current.position.z
           },
-          worldPosition,
-          targetPosition,
-          droneState,
-          deltaTime: delta
+          currentLocalPosition: currentLocalPosition.current,
+          targetPosition
         });
-        
-        // Envoyer la position actuelle au tracker
-        updateVisualPosition(worldPosition);
       }
+    } else {
+      if (shouldUpdate) {
+        fsmLogger.error(`🛸 [${droneType}] Mesh ref is null! Cannot update position`);
+      }
+    }
+    
+    // Calcul de la position mondiale pour le tracker
+    if (shouldUpdate && droneRef.current) {
+      const worldPosition: WorldPosition = {
+        x: actualFleetPosition.x + currentLocalPosition.current.x,
+        y: actualFleetPosition.y + currentLocalPosition.current.y,
+        z: actualFleetPosition.z + currentLocalPosition.current.z
+      };
+      
+      fsmLogger.mouvement(`🛸 [${droneType}] Sending updated position to tracker:`, {
+        localPosition: currentLocalPosition.current,
+        worldPosition,
+        targetPosition,
+        droneState,
+        deltaTime: delta
+      });
+      
+      // Envoyer la position actuelle au tracker
+      updateVisualPosition(worldPosition);
     }
     
     // ============================================================================
     // ANIMATIONS PAR ÉTAT (VISUEL UNIQUEMENT)
     // ============================================================================
     
-    switch (droneState) {
-      case 'docked':
-        droneRef.current.rotation.y += delta * 0.5;
-        droneRef.current.position.y = targetPosition.y + Math.sin(now * 2) * 0.1;
-        break;
-        
-      case 'scanning':
-        droneRef.current.position.y = targetPosition.y + Math.sin(now * 3) * 0.2;
-        droneRef.current.rotation.y += delta * 1.5;
-        break;
-        
-      case 'returning':
-        droneRef.current.position.y = targetPosition.y + Math.sin(now * 6) * 0.1;
-        droneRef.current.rotation.y += delta * 2;
-        break;
-        
-      case 'deploying':
-        droneRef.current.rotation.y += delta * 1;
-        droneRef.current.position.y = targetPosition.y + Math.sin(now * 4) * 0.15;
-        break;
-        
-      case 'failed':
-        // Animation d'erreur - clignotement
-        {const flicker = Math.sin(now * 10) > 0 ? 1 : 0.3;
-        if (droneRef.current.material && 'opacity' in droneRef.current.material) {
-          (droneRef.current.material as THREE.Material & { opacity: number }).opacity = flicker;
+    if (droneRef.current) {
+      const baseY = currentLocalPosition.current.y;
+      
+      switch (droneState) {
+        case 'docked':
+          droneRef.current.rotation.y += delta * 0.5;
+          droneRef.current.position.y = baseY + Math.sin(now * 2) * 0.1;
+          break;
+          
+        case 'scanning':
+          droneRef.current.position.y = baseY + Math.sin(now * 3) * 0.2;
+          droneRef.current.rotation.y += delta * 1.5;
+          break;
+          
+        case 'returning':
+          droneRef.current.position.y = baseY + Math.sin(now * 6) * 0.1;
+          droneRef.current.rotation.y += delta * 2;
+          break;
+          
+        case 'deploying':
+          droneRef.current.rotation.y += delta * 1;
+          droneRef.current.position.y = baseY + Math.sin(now * 4) * 0.15;
+          break;
+          
+        case 'failed': {
+          // Animation d'erreur - clignotement
+          const flicker = Math.sin(now * 10) > 0 ? 1 : 0.3;
+          if (droneRef.current.material && 'opacity' in droneRef.current.material) {
+            (droneRef.current.material as THREE.Material & { opacity: number }).opacity = flicker;
+          }
+          break;
         }
-        break;}
-        
-      default:
-        // État par défaut : rotation lente
-        droneRef.current.rotation.y += delta * 0.2;
-        break;
+          
+        default:
+          // État par défaut : rotation lente
+          droneRef.current.rotation.y += delta * 0.2;
+          break;
+      }
     }
   });
 

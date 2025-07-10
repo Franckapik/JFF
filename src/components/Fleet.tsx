@@ -23,88 +23,85 @@ import useXFSMStore from "../stores/useXFSMStore/index.ts";
 import type { FSMContext } from "../types/fsm.d";
 import type { FleetProps } from "../types/r3f";
 
+import useGameStore from "../stores/useGameStore";
+
 import DroneMesh from "./Vehicles/DroneMesh";
 import ShipMesh from "./Vehicles/ShipMesh";
 
 import { XFSMStoreType } from "@/types/index.js";
 
-const Fleet: React.FC<FleetProps> = React.memo(({ botId, shipPosition, color = "red", tileCoord: _tileCoord }) => {
+
+const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tileCoord: _tileCoord }) => {
+  // Récupérer la couleur du bot ici
+  const getBotColorById = useGameStore(state => state.getBotColorById);
+  const color = getBotColorById(botId);
   // === FSM Context & Send ===
   const botState = useXFSMStore((state: XFSMStoreType) => state.botStates[botId]);
   const context = (botState && 'context' in botState) ? (botState as { context: FSMContext }).context : undefined;
   const send = useXFSMStore((state: XFSMStoreType) => state.send);
 
-  const fsmSend = useCallback((event: { type: string; [key: string]: unknown }) => {
+
+  const fsmSend = useCallback((event: { type: string;[key: string]: unknown }) => {
     send(event, botId);
   }, [send, botId]);
 
-  // === Trackers & Animations ===
-  const dronePosition = useDroneTracker({
+  // === Trackers & Animations pilotées par le contexte FSM ===
+  // Le tracker gère uniquement les handlers/événements FSM
+  const updateDronePosition = useDroneTracker({
     context: context || {} as FSMContext,
     send: fsmSend,
     botId,
-    droneType: 'explorer',
-    position: { x: 0, y: 0, z: 0 }
+    droneType: 'explorer'
   });
   const updateShipVisualPosition = useXFSMShipTracker(context || {} as FSMContext, fsmSend, botId, 'ship');
 
-  const { droneRef, droneState } = useDroneAnimation(
-    context || {} as FSMContext, shipPosition, () => dronePosition, 'explorer', true
-  );
+  const droneType = 'explorer';
+  const isDroneActive = !!context?.droneFleet?.drones?.[droneType]?.isActive;
+  const isDroneMoving = !!context?.droneFleet?.drones?.[droneType]?.isMoving;
+
+  const { droneRef, droneState } = useDroneAnimation({
+    context: context || {} as FSMContext,
+    fleetPosition: fleetPosition,
+    updateVisualPosition: updateDronePosition,
+    droneType,
+    isActive: isDroneActive,
+    isMoving: isDroneMoving,
+  });
   const { shipRef, currentAction, isMoving } = useShipAnimation(
-    context || {} as FSMContext, shipPosition, updateShipVisualPosition, true
+    context || {} as FSMContext, fleetPosition, updateShipVisualPosition, true
   );
 
   // === Render ===
   return (
     <>
-      {/* Ship (main vessel) - relative to parent group */}
-      <group ref={shipRef}>
-        <ShipMesh
-          color={color}
-          botId={botId}
-          context={context}
-          currentAction={currentAction}
-          isMoving={isMoving}
-        />
-      </group>
+      {/* Ship (main vessel) - position pilotée par le contexte FSM */}
+      <ShipMesh
+        color={color}
+        botId={botId}
+        context={context}
+        currentAction={currentAction}
+        isMoving={isMoving}
+        meshRef={shipRef}
+      />
 
-      {/* Drone explorer - relative position with initial offset */}
-      <group
-        ref={droneRef}
-        position={[
-          dronePosition?.x || 0,
-          dronePosition?.y || 0,
-          dronePosition?.z || 0
-        ]}
-      >
-        <DroneMesh
-          color={color}
-          botId={botId}
-          context={context}
-          droneState={{
-            id: `${botId}-explorer`,
-            type: 'explorer',
-            state: droneState,
-            position: dronePosition || { x: 0, y: 0, z: 0 },
-            targetPosition: { x: 0, y: 0, z: 0 },
-            missionTarget: { type: 'tile', coord: '0,0' },
-            isActive: true,
-            lastUpdate: Date.now()
-          }}
-          droneType="explorer"
-        />
-      </group>
+      {/* Drone explorer - position pilotée par le contexte FSM */}
+      <DroneMesh
+        color={color}
+        botId={botId}
+        context={context}
+        droneVisualState={droneState}
+        droneType="explorer"
+        meshRef={droneRef}
+      />
     </>
   );
 }, (prevProps: FleetProps, nextProps: FleetProps) => {
   // === Mémo : évite les re-renders inutiles ===
   return (
     prevProps.botId === nextProps.botId &&
-    prevProps.color === nextProps.color &&
-    prevProps.shipPosition?.x === nextProps.shipPosition?.x &&
-    prevProps.shipPosition?.y === nextProps.shipPosition?.y &&
-    prevProps.shipPosition?.z === nextProps.shipPosition?.z
+    prevProps.fleetPosition?.x === nextProps.fleetPosition?.x &&
+    prevProps.fleetPosition?.y === nextProps.fleetPosition?.y &&
+    prevProps.fleetPosition?.z === nextProps.fleetPosition?.z
   );
 });
 
