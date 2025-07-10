@@ -7,12 +7,9 @@
  * Ces types unifient la logique de tracking entre XState et React Three Fiber.
  */
 
-import type { MutableRefObject } from 'react';
-
 import type { GridCoordinate, TileCoordinate, WorldPosition } from './coordinates';
 import type { DroneType } from './drone';
 import type { FSMContext } from './fsm';
-import type { TileStoreType } from './stores';
 
 // ============================================================================
 // TYPES D'ENTITÉS TRACKÉES
@@ -46,7 +43,6 @@ export interface DroneTrackerParams {
   droneType: DroneType;
   send: XStateSend;
   botId: string;
-  initialPositionSent: MutableRefObject<boolean>;
 }
 
 export interface ShipTrackerParams {
@@ -55,10 +51,8 @@ export interface ShipTrackerParams {
   shipType: ShipType;
   send: XStateSend;
   botId: string;
-  initialPositionSent: MutableRefObject<boolean>;
   gridToHexCoord: GridToHexCoordFn;
   worldToGrid: WorldToGridFn;
-  useTileStore: TileStoreType;
 }
 
 // ============================================================================

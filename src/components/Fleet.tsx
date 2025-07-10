@@ -10,76 +10,46 @@
  * - Les animations calculent les coordonnées locales puis mettent à jour le store FSM
  */
 
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback } from "react";
 
 // === Hooks & Store Imports ===
 import { useDroneTracker } from "../ai/fsm/hooks/trackers/drone/useDroneTracker";
 import { useXFSMShipTracker } from "../ai/fsm/hooks/trackers/ship/useXFSMShipTracker";
 import { useDroneAnimation } from "../animations/useDroneAnimation";
 import { useShipAnimation } from "../animations/useShipAnimation.js";
-import useGameStore from "../stores/useGameStore";
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
-
-// === Logger ===
-import fsmLogger from "../logger/fsmLogger.ts";
 
 // === Types ===
 import type { FSMContext } from "../types/fsm.d";
 import type { FleetProps } from "../types/r3f";
 
-// === Mesh Components ===
 import DroneMesh from "./Vehicles/DroneMesh";
 import ShipMesh from "./Vehicles/ShipMesh";
 
-import { GameStoreType, XFSMStoreType } from "@/types/index.js";
+import { XFSMStoreType } from "@/types/index.js";
 
-const Fleet: React.FC<FleetProps> = React.memo(({
-  botId,
-  shipPosition ,
-  dronePosition ,
-  color = "red",
-  tileCoord: _tileCoord
-}) => {
+const Fleet: React.FC<FleetProps> = React.memo(({ botId, shipPosition, color = "red", tileCoord: _tileCoord }) => {
   // === FSM Context & Send ===
   const botState = useXFSMStore((state: XFSMStoreType) => state.botStates[botId]);
   const context = (botState && 'context' in botState) ? (botState as { context: FSMContext }).context : undefined;
   const send = useXFSMStore((state: XFSMStoreType) => state.send);
 
-  if (typeof send !== 'function') {
-    throw new Error('Invalid send function provided to Fleet');
-  }
-
   const fsmSend = useCallback((event: { type: string; [key: string]: unknown }) => {
     send(event, botId);
   }, [send, botId]);
 
-  // === Initialisation automatique des positions (une seule fois) ===
-  const isFleetPositionsInitialized = useGameStore((state: GameStoreType) => state.isFleetPositionsInitialized(botId));
-  const markFleetPositionsAsInitialized = useGameStore((state: GameStoreType) => state.markFleetPositionsAsInitialized);
-  useEffect(() => {
-    if (!isFleetPositionsInitialized && shipPosition && dronePosition && fsmSend) {
-      fsmSend({ type: 'SHIP_POSITION_UPDATE', position: shipPosition, shipType: 'ship' });
-      fsmSend({ type: 'DRONE_POSITION_UPDATE', position: dronePosition, droneType: 'explorer' });
-      markFleetPositionsAsInitialized(botId);
-      fsmLogger.game(`[Fleet] Initial positions set for ${botId}`);
-    }
-  }, [isFleetPositionsInitialized, shipPosition, dronePosition, fsmSend, botId, markFleetPositionsAsInitialized]);
-
   // === Trackers & Animations ===
-  //Le tracker transofrme la logique FSM en logique R3F et retourne une position visuelle
-  const updateDroneVisualPosition = useDroneTracker({
+  const dronePosition = useDroneTracker({
     context: context || {} as FSMContext,
     send: fsmSend,
     botId,
     droneType: 'explorer',
-    position: dronePosition || { x: 0, y: 0, z: 0 },
-    initialPositionSent: useRef(false)
+    position: { x: 0, y: 0, z: 0 }
   });
   const updateShipVisualPosition = useXFSMShipTracker(context || {} as FSMContext, fsmSend, botId, 'ship');
 
-  //La position visuelle est utilisée par l'animation et est retournée via useRef
-  const { droneRef, initialPosition, droneState } = useDroneAnimation(
-    context || {} as FSMContext, shipPosition, updateDroneVisualPosition, 'explorer', true
+  const { droneRef, droneState } = useDroneAnimation(
+    context || {} as FSMContext, shipPosition, () => dronePosition, 'explorer', true
   );
   const { shipRef, currentAction, isMoving } = useShipAnimation(
     context || {} as FSMContext, shipPosition, updateShipVisualPosition, true
@@ -103,9 +73,9 @@ const Fleet: React.FC<FleetProps> = React.memo(({
       <group
         ref={droneRef}
         position={[
-          initialPosition.x, // explorer offset: [0.5, 0.3, 0.5]
-          initialPosition.y,
-          initialPosition.z
+          dronePosition?.x || 0,
+          dronePosition?.y || 0,
+          dronePosition?.z || 0
         ]}
       >
         <DroneMesh
@@ -116,7 +86,7 @@ const Fleet: React.FC<FleetProps> = React.memo(({
             id: `${botId}-explorer`,
             type: 'explorer',
             state: droneState,
-            position: { x: initialPosition.x, y: initialPosition.y, z: initialPosition.z },
+            position: dronePosition || { x: 0, y: 0, z: 0 },
             targetPosition: { x: 0, y: 0, z: 0 },
             missionTarget: { type: 'tile', coord: '0,0' },
             isActive: true,
@@ -134,10 +104,7 @@ const Fleet: React.FC<FleetProps> = React.memo(({
     prevProps.color === nextProps.color &&
     prevProps.shipPosition?.x === nextProps.shipPosition?.x &&
     prevProps.shipPosition?.y === nextProps.shipPosition?.y &&
-    prevProps.shipPosition?.z === nextProps.shipPosition?.z &&
-    prevProps.dronePosition?.x === nextProps.dronePosition?.x &&
-    prevProps.dronePosition?.y === nextProps.dronePosition?.y &&
-    prevProps.dronePosition?.z === nextProps.dronePosition?.z
+    prevProps.shipPosition?.z === nextProps.shipPosition?.z
   );
 });
 

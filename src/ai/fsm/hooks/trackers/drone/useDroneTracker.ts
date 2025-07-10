@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 // === Store Imports ===
 import { useTileStore } from '../../../../../stores/useTileStore/index';
@@ -16,30 +16,23 @@ export const useDroneTracker = ({
     send,
     botId,
     droneType = 'explorer'
-}: DroneTrackerParams): ((position: WorldPosition) => void) => {
-    // === Constants ===
+}: DroneTrackerParams): WorldPosition | null => {
     const currentVisualPosition = useRef<WorldPosition | null>(null);
-    const initialPositionSent = useRef<boolean>(false);
 
-    const tileStore = useTileStore() as TileStoreType;
-    const { calculateDroneDistance } = tileStore;
+    const { calculateDroneDistance } = useTileStore() as TileStoreType;
 
-    // === Core Logic ===
-    const updateDroneVisualPosition = useCallback((position: WorldPosition) => {
-        if (!position) return;
-        currentVisualPosition.current = position;
-
+    useEffect(() => {
         const handlers = createDroneHandlers({
             botId,
             droneType,
             send
         } as HandlerParams);
-        handlers.init.handleInitialPosition(position);
 
         const drone = context?.droneFleet?.drones?.[droneType];
         if (!drone?.isActive || !drone?.state) return;
 
-        if (['docked', 'failed'].includes(drone.state)) return;
+        const position = currentVisualPosition.current;
+        if (!position) return;
 
         const distance = calculateDroneDistance(
             position,
@@ -48,28 +41,20 @@ export const useDroneTracker = ({
             context?.vehicle?.position || context?.vehicle?.basePosition
         );
 
-        if (distance === Infinity) return;
-
-        switch (drone.state) {
-            case 'deploying':
-                handlers.deploying.process(distance, position);
-                break;
-            case 'scanning':
-                handlers.scanning.process(distance, position);
-                break;
-            case 'returning':
-                handlers.returning.process(distance, position);
-                break;
+        if (distance !== Infinity) {
+            switch (drone.state) {
+                case 'deploying':
+                    handlers.deploying.process(distance, position);
+                    break;
+                case 'scanning':
+                    handlers.scanning.process(distance, position);
+                    break;
+                case 'returning':
+                    handlers.returning.process(distance, position);
+                    break;
+            }
         }
     }, [context, send, botId, droneType, calculateDroneDistance]);
 
-    // === Cleanup ===
-    useEffect(() => {
-        return () => {
-            currentVisualPosition.current = null;
-            initialPositionSent.current = false;
-        };
-    }, []);
-
-    return updateDroneVisualPosition;
+    return currentVisualPosition.current;
 };
