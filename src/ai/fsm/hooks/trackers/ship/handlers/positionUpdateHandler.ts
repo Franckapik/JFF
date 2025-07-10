@@ -8,7 +8,6 @@ import fsmLogger from '../../../../../../logger/fsmLogger.ts';
 import { useTileStore } from '../../../../../../stores/useTileStore/index';
 import type { ShipType, XStateSend } from '../../../../../../types';
 import type { WorldPosition } from '../../../../../../types/coordinates.d.ts';
-import { POSITION_TRACKER_CONFIG } from '../../../../machineX/config/constants.ts';
 
 interface PositionUpdateHandlerParams {
   fsmSend: XStateSend;
@@ -40,7 +39,7 @@ export const createPositionUpdateHandler = ({ fsmSend, botId, shipType, canSendE
       
       // Seulement envoyer des mises à jour pour des mouvements significatifs
       const eventKey = `ship_position_update_${botId}`;
-      if (distance > POSITION_TRACKER_CONFIG.THRESHOLDS.MIN_MOVEMENT && canSendEvent(eventKey)) {
+      if (distance > 2 && canSendEvent(eventKey)) {
         fsmLogger.mouvement(`🚢 [${botId}] Ship position updated - distance moved: ${distance.toFixed(2)}`);
         
         fsmSend({ 
@@ -52,7 +51,7 @@ export const createPositionUpdateHandler = ({ fsmSend, botId, shipType, canSendE
           timestamp: Date.now()
         });
         
-        markEventSent(eventKey, POSITION_TRACKER_CONFIG.TIMINGS.MOVEMENT_RESET);
+        markEventSent(eventKey, 2000);
         return true;
       }
       

@@ -197,3 +197,11 @@ export interface XFSMStoreState {
 
 /** Store XFSM complet (état + actions) */
 export type XFSMStore = XFSMStoreState & XFSMStoreActions;
+
+/** États possibles de la FSM (déplacé depuis constants.ts) */
+export type FSMState = 
+  | 'exploring_deploying'
+  | 'exploring_returning'
+  | 'collecting_moving_to_target'
+  | 'collecting_returning_to_base'
+  | 'idleAtBase';

@@ -17,7 +17,6 @@ import { useCallback, useEffect, useRef } from "react";
 import type { ShipType, XStateSend } from '../../../../../types';
 import type { WorldPosition } from '../../../../../types/coordinates.d.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
-import { POSITION_TRACKER_CONFIG } from '../../../machineX/config/constants.ts';
 import { useEventDebounce } from '../../useEventDebounce';
 
 import { processShipPosition } from './shipTrackerEngine';
@@ -43,7 +42,7 @@ export function useXFSMShipTracker(
 
   // Hook de debounce pour éviter les mises à jour trop fréquentes
   const { canSendEvent, markEventSent } = useEventDebounce(
-    POSITION_TRACKER_CONFIG.TIMINGS.EVENT_COOLDOWN
+    2000
   );
 
   /**

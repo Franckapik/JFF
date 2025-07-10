@@ -1,7 +1,3 @@
-/**
- * Types de ressources (extraits de initialContext.ts)
- */
-
 export type ResourceType = 'food' | 'debris' | 'special';
 
 /** Structure de ressources (extrait de initialContext.ts) */

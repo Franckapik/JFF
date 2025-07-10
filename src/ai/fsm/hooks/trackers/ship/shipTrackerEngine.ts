@@ -7,8 +7,8 @@
 import type { ShipTrackerParams } from '../../../../../types';
 
 import {
-    createPositionUpdateHandler,
-    createShipInitializationHandler
+  createPositionUpdateHandler,
+  createShipInitializationHandler
 } from './handlers';
 
 /**

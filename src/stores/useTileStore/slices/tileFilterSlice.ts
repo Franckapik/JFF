@@ -29,7 +29,6 @@ import type {
   TileWithDistance
 } from '../../../types/index.ts';
 
-import { DRONE_EXPLORATION_CONFIG } from '../../../ai/fsm/machineX/config/constants.ts';
 import fsmLogger from '../../../logger/fsmLogger.ts';
 
 // =========================================================================
@@ -110,9 +109,9 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
       }
       
       // Validation et contrainte du rayon
-      const validRadius = Math.max(1, Math.min(radius, DRONE_EXPLORATION_CONFIG.MAX_EXPLORATION_RADIUS));
+      const validRadius = Math.max(1, Math.min(radius, 3));
       if (validRadius !== radius) {
-        fsmLogger.info(`[getWalkableTilesInRadius] Rayon ajusté de ${radius} à ${validRadius} (contraintes: 1-${DRONE_EXPLORATION_CONFIG.MAX_EXPLORATION_RADIUS})`);
+        fsmLogger.info(`[getWalkableTilesInRadius] Rayon ajusté de ${radius} à ${validRadius} (contraintes: 1-${3})`);
       }
       
       // Extraction des options avec valeurs par défaut

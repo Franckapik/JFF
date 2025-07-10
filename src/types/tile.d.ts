@@ -19,18 +19,24 @@ import type { ResourceStats } from './resources';
 
 /** Types de tuiles disponibles dans le jeu */
 export type TileType = 
-  | 'depart'     // Tuile de départ des joueurs
-  | 'fuel'       // Station de carburant
-  | 'repair'     // Station de réparation
-  | 'food'       // Tuile avec ressources alimentaires
-  | 'debris'     // Tuile avec débris/matériaux
-  | 'special'    // Tuile avec ressources spéciales
-  | 'danger'     // Tuile dangereuse
-  | 'empty'      // Tuile vide
-  | 'water';     // Tuile d'eau (non praticable)
+  | 'empty'
+  | 'resource'
+  | 'obstacle'
+  | 'explored'
+  | 'scanning'
+  | 'danger'
+  | 'food'
+  | 'fuel'
+  | 'repair'
+  | 'depart';
 
 /** Biome/environnement de la tuile */
-export type TileBiome = 'grassland' | 'desert' | 'snow' | 'water' | 'rock';
+export type TileBiome = 
+  | 'space'
+  | 'asteroid'
+  | 'nebula'
+  | 'station'
+  | 'grassland';
 
 // ============================================================================
 // INTERFACE PRINCIPALE DES TUILES
