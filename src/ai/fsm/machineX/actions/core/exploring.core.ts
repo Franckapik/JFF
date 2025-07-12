@@ -28,11 +28,11 @@
 
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
-import type { WorldPosition } from '../../../../../types/coordinates.d.ts';
-import type { DroneType, DroneVisualState } from '../../../../../types/drone.d.ts';
-import type { FSMContext, FSMEvent } from '../../../../../types/fsm.d.ts';
-import type { TileStoreType } from '../../../../../types/stores.d.ts';
-import type { Tile } from '../../../../../types/tile.d.ts';
+import type { WorldPosition } from '../../../../../types/coordinates';
+import type { DroneType, DroneVisualState } from '../../../../../types/drone';
+import type { FSMContext, FSMEvent } from '../../../../../types/fsm';
+import type { TileStoreType } from '../../../../../types/stores';
+import type { Tile } from '../../../../../types/tile';
 
 // Type guards pour les événements
 interface DroneDeployEvent extends FSMEvent {

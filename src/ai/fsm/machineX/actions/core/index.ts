@@ -36,8 +36,8 @@
  */
 
 // Import des actions core refactorisées (après nettoyage)
-import { droneExploringActions } from './droneExploringActions.ts';
-import { positionActions } from './positionActions.ts';
+import { droneExploringActions } from './exploring.core.ts';
+import { positionActions } from './global.core.ts';
 
 // ⚠️ ANCIENS IMPORTS SUPPRIMÉS - Fichiers supprimés lors du nettoyage
 // import movementCore from './movementActions.ts'; // SUPPRIMÉ
@@ -49,8 +49,8 @@ import { positionActions } from './positionActions.ts';
 // ============================================================================
 
 //  Drone Exploring Actions - Domaine métier: Exploring
-export { droneExploringActions } from './droneExploringActions.ts';
-export { positionActions } from './positionActions.ts';
+export { droneExploringActions } from './exploring.core.ts';
+export { positionActions } from './global.core.ts';
 
 // ============================================================================
 // EXPORTS RÉTROCOMPATIBILITÉ - UTILISANT LES NOUVELLES ACTIONS

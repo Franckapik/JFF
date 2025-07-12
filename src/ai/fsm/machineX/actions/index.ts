@@ -15,7 +15,7 @@
 // ============================================================================
 
 import * as collectingActions from './collecting.actions.ts';
-import { positionActions } from './core/positionActions.ts'; // Import position actions
+import { positionActions } from './core/global.core.ts'; // Import position actions
 import * as evaluatingActions from './evaluating.actions.ts';
 import * as exploringActions from './exploring.actions.ts';
 import * as maintainingActions from './maintaining.actions.ts';

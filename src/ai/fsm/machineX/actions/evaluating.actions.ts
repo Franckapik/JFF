@@ -18,7 +18,7 @@ import fsmLogger from '../../../../logger/fsmLogger.ts';
 
 import type { FSMContext, FSMEvent } from '../../../../types/fsm.d.ts';
 
-import { droneDeployForExploration } from './core/droneExploringActions.ts';
+import { droneDeployForExploration } from './core/exploring.core.ts';
 
 import { DroneVisualState } from '@/types/drone.js';
 

@@ -1,5 +1,3 @@
-import { MACHINE_EVENT_TYPES } from '../../../types/events.d.ts';
-
 /**
  * ==========================================================================
  * XSTATE MAINTAINING STATE - Structure conforme au modèle machine.xstate.js
@@ -19,6 +17,8 @@ import { MACHINE_EVENT_TYPES } from '../../../types/events.d.ts';
  * @version 1.0.0
  */
 
+import { createTypedTransitions } from '../utils/stateHelpers.ts';
+
 export const maintainingState = {
   entry: { type: 'action_maintaining_entry' },
   exit: { type: 'action_maintaining_exit' },
@@ -27,32 +27,32 @@ export const maintainingState = {
     ship_on_base: {
       entry: { type: 'action_ship_on_base_entry' },
       exit: { type: 'action_ship_on_base_exit' },
-      on: {
-        [MACHINE_EVENT_TYPES.SHIP_START_DEPOSIT]: 'depositing',
-        [MACHINE_EVENT_TYPES.SHIP_START_REPAIR]: 'repairing',
-        [MACHINE_EVENT_TYPES.SHIP_START_REFUEL]: 'refueling'
-      }
+      on: createTypedTransitions({
+        'SHIP_START_DEPOSIT': 'depositing',
+        'SHIP_START_REPAIR': 'repairing',
+        'SHIP_START_REFUEL': 'refueling'
+      })
     },
     depositing: {
       entry: { type: 'action_ship_depositing_entry' },
       exit: { type: 'action_ship_depositing_exit' },
-      on: {
-        [MACHINE_EVENT_TYPES.SHIP_DEPOSIT_COMPLETE]: '#machineX.evaluating'
-      }
+      on: createTypedTransitions({
+        'SHIP_DEPOSIT_COMPLETE': '#machineX.evaluating'
+      })
     },
     repairing: {
       entry: { type: 'action_ship_repairing_entry' },
       exit: { type: 'action_ship_repairing_exit' },
-      on: {
-        [MACHINE_EVENT_TYPES.SHIP_REPAIR_COMPLETE]: '#machineX.evaluating'
-      }
+      on: createTypedTransitions({
+        'SHIP_REPAIR_COMPLETE': '#machineX.evaluating'
+      })
     },
     refueling: {
       entry: { type: 'action_ship_refueling_entry' },
       exit: { type: 'action_ship_refueling_exit' },
-      on: {
-        [MACHINE_EVENT_TYPES.SHIP_REFUEL_COMPLETE]: '#machineX.evaluating'
-      }
+      on: createTypedTransitions({
+        'SHIP_REFUEL_COMPLETE': '#machineX.evaluating'
+      })
     }
   }
-};
+} as const;

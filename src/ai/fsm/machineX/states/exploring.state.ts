@@ -1,5 +1,3 @@
-import { MACHINE_EVENT_TYPES } from '../../../types/events.d.ts';
-
 /**
  * ==========================================================================
  * XSTATE EXPLORING STATE - Structure conforme au modèle machine.xstate.js
@@ -16,6 +14,8 @@ import { MACHINE_EVENT_TYPES } from '../../../types/events.d.ts';
  * @version 1.0.0
  */
 
+import { createTypedTransitions } from '../utils/stateHelpers.ts';
+
 export const exploringState = {
   entry: { type: 'action_exploring_entry' },
   exit: { type: 'action_exploring_exit' },
@@ -24,23 +24,23 @@ export const exploringState = {
     drone_deploying: {
       entry: { type: 'action_drone_deploying_entry' },
       exit: { type: 'action_drone_deploying_exit' },
-      on: {
-        [MACHINE_EVENT_TYPES.DRONE_REACHES_TILE]: 'drone_scanning'
-      }
+      on: createTypedTransitions({
+        'DRONE_REACHES_TILE': 'drone_scanning'
+      })
     },
     drone_scanning: {
       entry: { type: 'action_drone_scanning_entry' },
       exit: { type: 'action_drone_scanning_exit' },
-      on: {
-        [MACHINE_EVENT_TYPES.DRONE_SCANS_TILE]: 'drone_returning'
-      }
+      on: createTypedTransitions({
+        'DRONE_SCANS_TILE': 'drone_returning'
+      })
     },
     drone_returning: {
       entry: { type: 'action_drone_returning_entry' },
       exit: { type: 'action_drone_returning_exit' },
-      on: {
-        [MACHINE_EVENT_TYPES.DRONE_REACHES_BASE]: '#machineX.evaluating'
-      }
+      on: createTypedTransitions({
+        'DRONE_REACHES_BASE': '#machineX.evaluating'
+      })
     }
   }
-};
+} as const;

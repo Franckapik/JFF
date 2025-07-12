@@ -1,4 +1,3 @@
-import { MACHINE_EVENT_TYPES } from '../../../types/events.d.ts';
 /**
  * ==========================================================================
  * XSTATE COLLECTING STATE - Structure conforme au modèle machine.xstate.js
@@ -15,6 +14,8 @@ import { MACHINE_EVENT_TYPES } from '../../../types/events.d.ts';
  * @version 1.0.0
  */
 
+import { createTypedTransitions } from '../utils/stateHelpers.ts';
+
 export const collectingState = {
   entry: { type: 'action_collecting_entry' },
   exit: { type: 'action_collecting_exit' },
@@ -23,23 +24,23 @@ export const collectingState = {
     ship_moving_to_tile: {
       entry: { type: 'action_ship_moving_to_tile_entry' },
       exit: { type: 'action_ship_moving_to_tile_exit' },
-      on: {
-        [MACHINE_EVENT_TYPES.SHIP_REACHES_TILE]: 'ship_collecting'
-      }
+      on: createTypedTransitions({
+        'SHIP_REACHES_TILE': 'ship_collecting'
+      })
     },
     ship_collecting: {
       entry: { type: 'action_ship_collecting_entry' },
       exit: { type: 'action_ship_collecting_exit' },
-      on: {
-        [MACHINE_EVENT_TYPES.SHIP_LOAD_RESOURCES]: 'ship_returning'
-      }
+      on: createTypedTransitions({
+        'SHIP_LOAD_RESOURCES': 'ship_returning'
+      })
     },
     ship_returning: {
       entry: { type: 'action_ship_returning_entry' },
       exit: { type: 'action_ship_returning_exit' },
-      on: {
-        [MACHINE_EVENT_TYPES.SHIP_REACHES_BASE]: '#machineX.evaluating'
-      }
+      on: createTypedTransitions({
+        'SHIP_REACHES_BASE': '#machineX.evaluating'
+      })
     }
   }
-};
+} as const;

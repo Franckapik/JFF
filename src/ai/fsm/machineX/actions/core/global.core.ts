@@ -13,9 +13,9 @@
 
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
-import type { WorldPosition } from '../../../../../types/coordinates.d.ts';
-import type { DroneType } from '../../../../../types/drone.d.ts';
-import type { FSMContext, FSMEvent } from '../../../../../types/fsm.d.ts';
+import type { WorldPosition } from '../../../../../types/coordinates';
+import type { DroneType } from '../../../../../types/drone';
+import type { FSMContext, FSMEvent } from '../../../../../types/fsm';
 
 // ============================================================================
 // INTERFACES D'ÉVÉNEMENTS
