@@ -11,8 +11,16 @@
  * @version 1.0.0 - Architecture XState
  */
 
+
+import { assign } from 'xstate';
+
 import fsmLogger from '../../../../logger/fsmLogger.ts';
-import type { FSMContext } from '../../../../types/fsm.d.ts';
+
+import type { FSMContext, FSMEvent } from '../../../../types/fsm.d.ts';
+
+import { droneDeployForExploration } from './core/droneExploringActions.ts';
+
+import { DroneVisualState } from '@/types/drone.js';
 
 // Types pour les actions XState v5
 interface XStateActionWithSelf {
@@ -20,6 +28,12 @@ interface XStateActionWithSelf {
   self: {
     send: (event: { type: string; reason?: string }) => void;
   };
+}
+
+// Types pour les actions XState v5
+interface XStateAction {
+  context: FSMContext;
+  event?: FSMEvent;
 }
 
 /**
@@ -38,6 +52,7 @@ export const action_evaluating_entry = ({ context, self }: XStateActionWithSelf)
 
   // Vérifier si maintenance nécessaire (priorité 1)
   const needsMaintenance = fuel < 30 || damage > 50;
+  
 
   // Vérifier si collecte possible (priorité 2)
   const knownTiles = context.memory?.knownTiles || new Map();
@@ -79,6 +94,63 @@ export const action_evaluating_entry = ({ context, self }: XStateActionWithSelf)
   }, 1000); // Délai de 1s pour permettre à l'état de s'initialiser
 };
 
+export const updateContext = assign(({ context, event }: XStateAction) => {
+  fsmLogger.info(`🔄 [${context?.entityId || 'unknown'}] updateContext called with:`, {
+    hasContext: !!context,
+    hasEvent: !!event,
+    eventType: event?.type,
+    event: event,
+    contextKeys: Object.keys(context || {})
+  });
+  
+  // Vérification de sécurité pour l'événement
+  if (!event || !event.type) {
+    fsmLogger.info(`⚠️ [${context?.entityId || 'unknown'}] updateContext called with invalid event`);
+    return context || {}; // ✅ CORRECTION: Ne pas retourner un objet vide, préserver le contexte
+  }
+  
+  fsmLogger.info(`🔄 [${context.entityId}] Updating context for transition: ${event.type}`);
+  
+  if (event.type === 'needExploring') {
+    // Déployer le drone pour l'exploration
+    fsmLogger.info(`🚁 [${context.entityId}] Deploying drone for exploration`);
+    
+    const deploymentResult = droneDeployForExploration(context, {
+      type: 'droneDeployForExploration',
+      range: 3,
+      droneType: 'explorer'
+    });
+    
+    fsmLogger.info(`✅ [${context.entityId}] Drone deployment result:`, {
+      hasDroneFleet: !!deploymentResult.droneFleet,
+      explorer: deploymentResult.droneFleet?.drones?.explorer,
+      targetPosition: deploymentResult.droneFleet?.drones?.explorer?.targetPosition
+    });
+    
+    const droneState: DroneVisualState = 'deploying';
+    const newContext: FSMContext = {
+      ...deploymentResult,
+      droneFleet: {
+        ...deploymentResult.droneFleet,
+        drones: {
+          ...deploymentResult.droneFleet.drones,
+          explorer: {
+            ...deploymentResult.droneFleet.drones.explorer,
+            state: droneState,
+            lastUpdate: Date.now(),
+            isActive: true
+          }
+        }
+      }
+    };
+    
+    return newContext;
+  }
+  
+  // Pour les autres événements, retourner le contexte tel quel
+  return context;
+});
+
 /**
  * Action de sortie de l'état evaluating : simple log
  */
@@ -88,5 +160,6 @@ export const action_evaluating_exit = () => {
 
 export default {
   action_evaluating_entry,
-  action_evaluating_exit
+  action_evaluating_exit,
+  updateContext
 };

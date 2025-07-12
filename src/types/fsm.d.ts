@@ -205,3 +205,6 @@ export type FSMState =
   | 'collecting_moving_to_target'
   | 'collecting_returning_to_base'
   | 'idleAtBase';
+
+/** Type d'entité (déplacé depuis constants.ts) */
+export type EntityType = 'auto' | 'player';

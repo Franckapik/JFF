@@ -11,10 +11,8 @@
  */
 
 
-import type { DroneVisualState, EntityType, FSMState } from '../config/constants.ts';
-
-import type { DroneType } from '@/types/drone.d.ts';
-
+import type { DroneType, DroneVisualState } from '../../../../types/drone.d.ts';
+import type { EntityType, FSMState } from '../../../../types/fsm.d.ts';
 
 import type { FSMContext } from '@/types/fsm.ts';
 
@@ -204,10 +202,6 @@ export const isAutonomous = (context: FSMContext): boolean => {
 export const isMoving = (context: FSMContext): boolean => {
   return context?.vehicle?.isMoving ?? false;
 };
-
-
-// Re-export des constantes pour faciliter l'accès
-export type { EntityType } from '../config/constants.ts';
 
 // Export par défaut
 export default {

@@ -28,7 +28,7 @@ const maintainingStateRef = maintainingState;
  * Machine XState principale (modulaire)
  */
 export const machineX = createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5gF8A0IB2B7CdGgFsBDAYwAsBLDMADXxAActYKAXCrDegD0QFoAbOgCe-AcjQhi5KrQB0YbgwA2WAE5Uo9Ji3aceiACwBOOQGYzARgBMAVmvGz9swAYA7JZGJrls+Zu2LvbWhmaGbtYS6NKU1DRyJFjKymAk7BhaSIzMbBxcWbwI4XLGAnYulqGWlu62niCiCGGGJYEuLgAcLtZutrZmblFSpLHyxFSsRFSa2jl6+aCFhtZeCB2WcgK97SE+lS4CHRISQA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QFsCGBjAFgSwHZgA0BiAZQAkBJABQH0qB5EigFQvoDkaBVKgEQEFmAUQDaABgC6iUAAcA9rGwAXbHNzSQAD0QAmHQFYAdAYDsADgCMBgDQgAnogAsYk4YCcYgGwGAvj9toWHiERLwAShxCdIwsbJw8AsLiUkgg8ooqahraCBYmYoYAzPpuhSb6tg4IBW76hVb6fgEYOPjE4ZE0FOyx-AAyFABaUWFCAIpcQiTMyRrpyqrqqTkAtBZmnpWIa55+-iC4chBwGoGthHMKC1nLiGaOhhbOnnllXmL6jiZbCIViD2YSmVGnsgA */
   id: 'machineX',
   initial: 'evaluating',
   context: ({ input }) => {

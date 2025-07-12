@@ -16,7 +16,6 @@ import fsmLogger from '../../../../logger/fsmLogger.ts';
 import type { DroneVisualState } from '../../../../types/drone.d.ts';
 import type { FSMContext, FSMEvent } from '../../../../types/fsm.d.ts';
 
-import { droneDeployForExploration } from './core/droneExploringActions.ts';
 
 // Types pour les actions XState v5
 interface XStateAction {
@@ -47,62 +46,7 @@ export const action_exploring_exit = ({ context }: XStateAction) => {
  * Action de mise à jour du contexte avec déploiement de drone pour l'exploration
  * 🆕 CORRECTION: Utiliser assign avec la bonne signature XState v5
  */
-export const updateContext = assign(({ context, event }: XStateAction) => {
-  fsmLogger.info(`🔄 [${context?.entityId || 'unknown'}] updateContext called with:`, {
-    hasContext: !!context,
-    hasEvent: !!event,
-    eventType: event?.type,
-    event: event,
-    contextKeys: Object.keys(context || {})
-  });
-  
-  // Vérification de sécurité pour l'événement
-  if (!event || !event.type) {
-    fsmLogger.info(`⚠️ [${context?.entityId || 'unknown'}] updateContext called with invalid event`);
-    return context || {}; // ✅ CORRECTION: Ne pas retourner un objet vide, préserver le contexte
-  }
-  
-  fsmLogger.info(`🔄 [${context.entityId}] Updating context for transition: ${event.type}`);
-  
-  if (event.type === 'needExploring') {
-    // Déployer le drone pour l'exploration
-    fsmLogger.info(`🚁 [${context.entityId}] Deploying drone for exploration`);
-    
-    const deploymentResult = droneDeployForExploration(context, {
-      type: 'droneDeployForExploration',
-      range: 3,
-      droneType: 'explorer'
-    });
-    
-    fsmLogger.info(`✅ [${context.entityId}] Drone deployment result:`, {
-      hasDroneFleet: !!deploymentResult.droneFleet,
-      explorer: deploymentResult.droneFleet?.drones?.explorer,
-      targetPosition: deploymentResult.droneFleet?.drones?.explorer?.targetPosition
-    });
-    
-    const droneState: DroneVisualState = 'deploying';
-    const newContext: FSMContext = {
-      ...deploymentResult,
-      droneFleet: {
-        ...deploymentResult.droneFleet,
-        drones: {
-          ...deploymentResult.droneFleet.drones,
-          explorer: {
-            ...deploymentResult.droneFleet.drones.explorer,
-            state: droneState,
-            lastUpdate: Date.now(),
-            isActive: true
-          }
-        }
-      }
-    };
-    
-    return newContext;
-  }
-  
-  // Pour les autres événements, retourner le contexte tel quel
-  return context;
-});
+
 
 // ============================================================================
 // ACTIONS SOUS-ÉTATS : DRONE DEPLOYING
@@ -261,5 +205,4 @@ export default {
   action_drone_scanning_exit,
   action_drone_returning_entry,
   action_drone_returning_exit,
-  updateContext  // ✅ Action de déploiement pour les transitions
 };
