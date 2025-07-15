@@ -10,17 +10,17 @@ import { createActor, type Actor } from 'xstate';
 import { create } from 'zustand';
 
 import { createMachineContext } from '../../ai/fsm/machineX/context/initialContext.ts';
-import machineXV5 from '../../ai/fsm/machineX/machine.xstate.v5.ts';
+import type { MachineEvents } from '../../ai/fsm/machineX/events.pure.v5';
+import { machineXV5Pure } from '../../ai/fsm/machineX/machine.pure.v5';
 import fsmLogger from '../../logger/fsmLogger.ts';
-import type { MachineEvents } from '../../types/events.d.ts';
 import type {
-  BotId,
-  BotSnapshot,
-  BotStatesMap,
-  EmptyBotState,
-  XFSMStore,
-  XFSMStoreActions,
-  XFSMStoreState
+    BotId,
+    BotSnapshot,
+    BotStatesMap,
+    EmptyBotState,
+    XFSMStore,
+    XFSMStoreActions,
+    XFSMStoreState
 } from '../../types/fsm.d.ts';
 
 // État vide par défaut pour un bot non initialisé
@@ -31,8 +31,8 @@ const EMPTY_BOT_STATE: EmptyBotState = {
 
 // Store principal Zustand pour la gestion des bots XState
 const useXFSMStore = create<XFSMStore>((set, get) => {
-  // Map interne des acteurs XState par botId (now using v5)
-  const actors = new Map<BotId, Actor<typeof machineXV5>>();
+  // Map interne des acteurs XState par botId (now using v5 pure)
+  const actors = new Map<BotId, Actor<typeof machineXV5Pure>>();
   // Cache des derniers snapshots XState par botId
   const snapshotCache = new Map<BotId, BotSnapshot>();
 
@@ -40,10 +40,10 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
    * Crée et enregistre un nouvel acteur XState pour un bot donné
    * (ou retourne l'acteur existant si déjà créé)
    */
-  const createBotActor = (botId: BotId): Actor<typeof machineXV5> => {
+  const createBotActor = (botId: BotId): Actor<typeof machineXV5Pure> => {
     if (actors.has(botId)) return actors.get(botId)!;
     const botContext = createMachineContext(botId, 'auto');
-    const actor = createActor(machineXV5, { input: botContext });
+    const actor = createActor(machineXV5Pure, { input: botContext });
     
     // Vérifier le statut et l'état initial de l'acteur
     const initialSnapshot = actor.getSnapshot();
