@@ -32,7 +32,12 @@ export type MachineEventType =
   | 'SHIP_START_REFUEL'
   | 'SHIP_DEPOSIT_COMPLETE'
   | 'SHIP_REPAIR_COMPLETE'
-  | 'SHIP_REFUEL_COMPLETE';
+  | 'SHIP_REFUEL_COMPLETE'
+  
+  // Événements de transitions d'état (evaluating)
+  | 'needExploring'
+  | 'needCollecting'
+  | 'needMaintenance';
 
 /**
  * Types d'événements avec payload pour XState v5
@@ -52,7 +57,13 @@ export type MachineEvents =
   | { type: 'SHIP_START_REFUEL' }
   | { type: 'SHIP_DEPOSIT_COMPLETE' }
   | { type: 'SHIP_REPAIR_COMPLETE' }
-  | { type: 'SHIP_REFUEL_COMPLETE' };
+  | { type: 'SHIP_REFUEL_COMPLETE' }
+  | { type: 'RESOURCE_DEPLETED' }
+  | { type: 'EMERGENCY_STOP' }
+  | { type: 'LOW_FUEL_WARNING' }
+  | { type: 'needExploring' }
+  | { type: 'needCollecting' }
+  | { type: 'needMaintenance' };
 
 /**
  * Constantes d'événements pour usage dans les machines XState
@@ -79,5 +90,15 @@ export const MACHINE_EVENT_TYPES: Record<Uppercase<MachineEventType>, MachineEve
   SHIP_START_REFUEL: 'SHIP_START_REFUEL',
   SHIP_DEPOSIT_COMPLETE: 'SHIP_DEPOSIT_COMPLETE',
   SHIP_REPAIR_COMPLETE: 'SHIP_REPAIR_COMPLETE',
-  SHIP_REFUEL_COMPLETE: 'SHIP_REFUEL_COMPLETE'
+  SHIP_REFUEL_COMPLETE: 'SHIP_REFUEL_COMPLETE',
+  
+  // Événements d'urgence et d'alerte
+  RESOURCE_DEPLETED: 'RESOURCE_DEPLETED',
+  EMERGENCY_STOP: 'EMERGENCY_STOP',
+  LOW_FUEL_WARNING: 'LOW_FUEL_WARNING',
+  
+  // Événements de transition
+  NEEDEXPLORING: 'needExploring',
+  NEEDCOLLECTING: 'needCollecting',
+  NEEDMAINTENANCE: 'needMaintenance'
 } as const;

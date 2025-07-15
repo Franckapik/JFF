@@ -10,16 +10,17 @@ import { createActor, type Actor } from 'xstate';
 import { create } from 'zustand';
 
 import { createMachineContext } from '../../ai/fsm/machineX/context/initialContext.ts';
-import { machineX } from '../../ai/fsm/machineX/machine.xstate';
+import machineXV5 from '../../ai/fsm/machineX/machine.xstate.v5.ts';
 import fsmLogger from '../../logger/fsmLogger.ts';
+import type { MachineEvents } from '../../types/events.d.ts';
 import type {
-    BotId,
-    BotSnapshot,
-    BotStatesMap,
-    EmptyBotState,
-    XFSMStore,
-    XFSMStoreActions,
-    XFSMStoreState
+  BotId,
+  BotSnapshot,
+  BotStatesMap,
+  EmptyBotState,
+  XFSMStore,
+  XFSMStoreActions,
+  XFSMStoreState
 } from '../../types/fsm.d.ts';
 
 // État vide par défaut pour un bot non initialisé
@@ -30,8 +31,8 @@ const EMPTY_BOT_STATE: EmptyBotState = {
 
 // Store principal Zustand pour la gestion des bots XState
 const useXFSMStore = create<XFSMStore>((set, get) => {
-  // Map interne des acteurs XState par botId
-  const actors = new Map<BotId, Actor<any>>();
+  // Map interne des acteurs XState par botId (now using v5)
+  const actors = new Map<BotId, Actor<typeof machineXV5>>();
   // Cache des derniers snapshots XState par botId
   const snapshotCache = new Map<BotId, BotSnapshot>();
 
@@ -39,10 +40,10 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
    * Crée et enregistre un nouvel acteur XState pour un bot donné
    * (ou retourne l'acteur existant si déjà créé)
    */
-  const createBotActor = (botId: BotId): Actor<any> => {
+  const createBotActor = (botId: BotId): Actor<typeof machineXV5> => {
     if (actors.has(botId)) return actors.get(botId)!;
     const botContext = createMachineContext(botId, 'auto');
-    const actor = createActor(machineX, { input: botContext });
+    const actor = createActor(machineXV5, { input: botContext });
     
     // Vérifier le statut et l'état initial de l'acteur
     const initialSnapshot = actor.getSnapshot();
@@ -67,7 +68,7 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
     const snapshot = actor.getSnapshot();
     
     // Vérifier si l'acteur n'est pas déjà démarré
-    if (snapshot.status !== 'running') {
+    if (snapshot && 'status' in snapshot && snapshot.status !== 'active') {
       
       // S'abonner aux changements avant de démarrer l'acteur
       actor.subscribe((snapshot: BotSnapshot) => {
@@ -91,7 +92,7 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
         fsmLogger.game(`[XFSMStore] Failed to start actor for ${botId}: ${error}`);
       }
     } else {
-      fsmLogger.game(`[XFSMStore] Actor ${botId} already running (status: ${snapshot.status})`);
+      fsmLogger.game(`[XFSMStore] Actor ${botId} already running (status: active)`);
     }
   };
 
@@ -102,7 +103,7 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
     /**
      * Envoie un événement à un bot XState
      */
-    send: (event: any, botId: BotId = 'bot-0'): void => {
+    send: (event: MachineEvents, botId: BotId = 'bot-0'): void => {
       const actor = actors.get(botId);
       if (actor) {
         const botState = snapshotCache.get(botId) || EMPTY_BOT_STATE;

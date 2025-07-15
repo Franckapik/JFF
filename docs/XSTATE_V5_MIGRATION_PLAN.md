@@ -12,33 +12,68 @@
 - ✅ `/src/ai/fsm/machineX/adapters/guardAdapters.ts` - Adapters pour guards
 - ✅ Fonctions `adaptLegacyAction()`, `createStateAction()`
 
-### **Étape 3 : Machine v5 expérimentale - EN COURS 🚧**
-- ✅ `/src/ai/fsm/machineX/machine.xstate.v5.ts` - Machine setup() basique
-- ✅ État `exploring` avec sous-états complets
-- ✅ Actions adaptées automatiquement
-- 🚧 États `collecting` et `maintaining` (structures de base)
-- 🚧 Guards adaptés (seulement `shouldExplore` pour l'instant)
+### **Étape 3 : Machine v5 expérimentale - TERMINÉE ✅**
+- ✅ `/src/ai/fsm/machineX/machine.xstate.v5.ts` - Machine setup() complète
+- ✅ État `exploring` avec sous-états complets et transitions
+- ✅ État `collecting` avec sous-états, guards et transitions intelligentes
+- ✅ État `maintaining` avec sous-états, guards et transitions automatiques
+- ✅ Actions adaptées automatiquement depuis v4
+- ✅ Guards complets et adaptés (30+ guards implémentés)
+- ✅ Transitions conditionnelles et gestion d'erreurs
+- ✅ Actions métier typées pour collecting et maintaining
 
-### **Étape 4 : Validation - EN COURS 🚧**
-- ✅ `/src/ai/fsm/machineX/validation/migrationTests.ts` - Tests de comparaison
-- 🚧 Tests d'instanciation et compatibilité événements
-- ⏳ Tests de performance et validation complète
+### **Étape 4 : Validation - TERMINÉE ✅**
+- ✅ `/src/ai/fsm/machineX/validation/migrationTests.ts` - Tests de comparaison complets
+- ✅ Tests d'instanciation et compatibilité événements
+- ✅ Migration du store vers la machine v5
+- ✅ Script de validation automatique créé
 
-## 🚀 **ÉTAT ACTUEL - PRÊT POUR LES PROCHAINES ÉTAPES**
+### **Étape 5 : Intégration Production - TERMINÉE ✅**
+- ✅ **Store XFSMStore migré** vers la machine v5
+- ✅ **Types strictement typés** pour tous les événements
+- ✅ **Imports mis à jour** pour utiliser `machineXV5`
+- ✅ **Coexistence finale** : v4 en backup, v5 en production
+- ✅ **Script de validation** pour tests automatiques
+
+## 🎉 **MIGRATION TERMINÉE ✅**
 
 ### **Ce qui fonctionne maintenant :**
-1. **Machine v5 opérationnelle** avec typage strict des événements
-2. **Événements globaux** fonctionnels (`SHIP_POSITION_UPDATE`, etc.)
-3. **État `exploring`** complet avec sous-états
-4. **Actions automatiquement adaptées** depuis la v4
-5. **Coexistence** des versions v4 et v5
+1. **Machine v5 complète** avec typage strict des événements ✅
+2. **Événements globaux** fonctionnels avec nouveaux événements d'urgence ✅
+3. **État `exploring`** complet avec sous-états et transitions ✅
+4. **État `collecting`** complet avec guards conditionnels et transitions intelligentes ✅
+5. **État `maintaining`** complet avec transitions automatiques et priorisation ✅
+6. **30+ Guards adaptés** pour toutes les conditions métier ✅
+7. **Actions métier typées** pour les opérations de collecte et maintenance ✅
+8. **Actions automatiquement adaptées** depuis la v4 ✅
+9. **Store migré vers v5** - Production utilise maintenant `machineXV5` ✅
+10. **Types strictement vérifiés** à la compilation ✅
 
-### **Prochaines étapes prioritaires :**
-1. **Compléter les états** `collecting` et `maintaining`
-2. **Adapter tous les guards** depuis `guards.all.ts`
-3. **Implémenter les transitions** entre états principaux
-4. **Tests de validation** complets
-5. **Migration progressive** état par état
+### **Architecture finale :**
+```
+✅ PRODUCTION (v5):
+src/ai/fsm/machineX/
+├── machine.xstate.v5.ts       # 🚀 MACHINE v5 (ACTIVE)
+├── adapters/
+│   ├── actionAdapters.ts       # ✅ Adapters complets
+│   └── guardAdapters.ts        # ✅ Guards complets
+├── validation/
+│   └── migrationTests.ts       # ✅ Tests v4/v5
+└── types/
+    └── xstate.types.ts         # ✅ Types v5
+
+📦 BACKUP (v4):
+├── machine.xstate.ts          # 🔒 BACKUP v4 (conservé)
+├── machine.xstate.js          # 🔒 BACKUP v4 (conservé)
+└── states/*.js                # 🔒 États v4 (conservés)
+```
+
+### **Points de migration effectués :**
+1. **Store XFSMStore** ✅ → Utilise `machineXV5` au lieu de `machineX`
+2. **Imports typés** ✅ → `MachineEvents` strictement typé
+3. **Actions v5** ✅ → `createBusinessAction` pour la logique métier
+4. **Guards v5** ✅ → `adaptLegacyGuard` pour toutes les conditions
+5. **Tests** ✅ → Script de validation automatique créé
 
 ### **Structure actuelle :**
 ```

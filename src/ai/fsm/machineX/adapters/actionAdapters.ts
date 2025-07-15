@@ -84,3 +84,37 @@ export function createStateAction(
     };
   };
 }
+
+/**
+ * Helper pour créer des actions métier spécifiques
+ * 
+ * @param actionName - Nom de l'action pour les logs
+ * @param contextUpdater - Fonction optionnelle pour modifier le contexte
+ * @returns Action v5 avec log et modification optionnelle du contexte
+ */
+export function createBusinessAction(
+  actionName: string,
+  contextUpdater?: (context: FSMContext) => Partial<FSMContext>
+): XStateAction {
+  return ({ context }: XStateActionArgs) => {
+    // eslint-disable-next-line no-console
+    console.log(`[${context.entityId}] Executing ${actionName}`);
+    
+    const baseUpdate = {
+      timestamps: {
+        ...context.timestamps,
+        stateChange: Date.now()
+      },
+      lastAction: actionName
+    };
+    
+    if (contextUpdater) {
+      return {
+        ...baseUpdate,
+        ...contextUpdater(context)
+      };
+    }
+    
+    return baseUpdate;
+  };
+}
