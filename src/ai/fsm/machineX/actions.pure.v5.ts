@@ -208,7 +208,7 @@ const refuelVehicle: XStateV5Action = ({ context }) => {
  */
 const createStateAction = (stateName: string, phase: 'entry' | 'exit'): XStateV5Action => {
   return ({ context: _context }) => {
-    fsmLogger.state(`action_${stateName}_${phase}`);
+    fsmLogger.action(`action_${stateName}_${phase}`);
     
     if (phase === 'entry') {
       return { currentState: stateName };

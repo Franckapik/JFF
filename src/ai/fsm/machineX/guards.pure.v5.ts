@@ -4,36 +4,49 @@
  * ==========================================================================
  */
 
+
+import fsmLogger from '../../../logger/fsmLogger';
 import type { XStateV5Guard } from '../../../types/xstate.v5.types';
+
+/**
+ * Générateur de guards typés avec log automatique
+ */
+function createGuard(
+  name: string,
+  fn: (args: Parameters<XStateV5Guard>[0]) => boolean
+): XStateV5Guard {
+  return (args) => {
+    const result = fn(args);
+    fsmLogger.condition(`[GUARD] ${name}: ${result}`, { context: args.context, event: args.event });
+    return result;
+  };
+}
 
 /**
  * Guard principal pour déterminer si l'exploration est nécessaire
  */
-const shouldExplore: XStateV5Guard = ({ context }) => {
-  // Vérifier si le véhicule est opérationnel
+
+export const shouldExplore = createGuard('shouldExplore', ({ context }) => {
   if (context.vehicle.fuel < context.config.fuelThreshold) return false;
   if (context.vehicle.damage > 80) return false;
   if (context.vehicle.isAtCapacity) return false;
-
-  // Vérifier s'il y a des tuiles à explorer
   const hasUnexploredTiles = context.explorationQueue && context.explorationQueue.length > 0;
   const isDroneAvailable = context.droneFleet?.drones?.explorer?.state === 'docked';
-
   return hasUnexploredTiles && isDroneAvailable;
-};
+});
 
-const shouldCollect: XStateV5Guard = ({ context }) => {
+export const shouldCollect = createGuard('shouldCollect', ({ context }) => {
   return context.selectedTileForCollection !== null && 
          !context.vehicle.isAtCapacity &&
          context.vehicle.fuel > context.config.fuelThreshold;
-};
+});
 
-const canCollectTile: XStateV5Guard = ({ context }) => {
+export const canCollectTile = createGuard('canCollectTile', ({ context }) => {
   const tile = context.selectedTileForCollection;
   return tile !== null && tile.resources.total > 0 && !context.vehicle.isAtCapacity;
-};
+});
 
-const isAtTargetTile: XStateV5Guard = ({ context }) => {
+export const isAtTargetTile = createGuard('isAtTargetTile', ({ context }) => {
   const target = context.selectedTileForCollection;
   if (!target) return false;
   const currentPos = context.vehicle.position;
@@ -43,47 +56,47 @@ const isAtTargetTile: XStateV5Guard = ({ context }) => {
     Math.pow(currentPos.z - targetZ, 2)
   );
   return distance < 1.5;
-};
+});
 
-const shouldMaintain: XStateV5Guard = ({ context }) => {
+export const shouldMaintain = createGuard('shouldMaintain', ({ context }) => {
   const needsRefuel = context.vehicle.fuel < context.config.fuelThreshold;
   const needsRepair = context.vehicle.damage > 50;
   const shouldDeposit = context.vehicle.isAtCapacity;
   return needsRefuel || needsRepair || shouldDeposit;
-};
+});
 
-const needsDeposit: XStateV5Guard = ({ context }) => {
+export const needsDeposit = createGuard('needsDeposit', ({ context }) => {
   return context.vehicle.isAtCapacity;
-};
+});
 
-const needsRefuel: XStateV5Guard = ({ context }) => {
+export const needsRefuel = createGuard('needsRefuel', ({ context }) => {
   return context.vehicle.fuel < context.config.fuelThreshold;
-};
+});
 
-const needsRepair: XStateV5Guard = ({ context }) => {
+export const needsRepair = createGuard('needsRepair', ({ context }) => {
   return context.vehicle.damage > 50;
-};
+});
 
-const isDroneAvailable: XStateV5Guard = ({ context }) => {
+export const isDroneAvailable = createGuard('isDroneAvailable', ({ context }) => {
   return context.droneFleet?.drones?.explorer?.state === 'docked' || 
          context.droneFleet?.drones?.explorer?.state === 'returning';
-};
+});
 
-const isDroneDeployed: XStateV5Guard = ({ context }) => {
+export const isDroneDeployed = createGuard('isDroneDeployed', ({ context }) => {
   const droneState = context.droneFleet?.drones?.explorer?.state;
   return droneState === 'deploying' || droneState === 'scanning';
-};
+});
 
-const isDroneScanComplete: XStateV5Guard = ({ context }) => {
+export const isDroneScanComplete = createGuard('isDroneScanComplete', ({ context }) => {
   const drone = context.droneFleet?.drones?.explorer;
   return drone?.state === 'returning';
-};
+});
 
-const hasValidTarget: XStateV5Guard = ({ context }) => {
+export const hasValidTarget = createGuard('hasValidTarget', ({ context }) => {
   return context.currentTarget !== null;
-};
+});
 
-const isAtBase: XStateV5Guard = ({ context }) => {
+export const isAtBase = createGuard('isAtBase', ({ context }) => {
   const basePosition = context.vehicle.basePosition;
   const currentPosition = context.vehicle.position;
   const distance = Math.sqrt(
@@ -91,9 +104,9 @@ const isAtBase: XStateV5Guard = ({ context }) => {
     Math.pow(currentPosition.z - basePosition.z, 2)
   );
   return distance < 2;
-};
+});
 
-const isAtTarget: XStateV5Guard = ({ context }) => {
+export const isAtTarget = createGuard('isAtTarget', ({ context }) => {
   const target = context.currentTarget;
   if (!target) return false;
   const currentPos = context.vehicle.position;
@@ -103,41 +116,41 @@ const isAtTarget: XStateV5Guard = ({ context }) => {
     Math.pow(currentPos.z - targetZ, 2)
   );
   return distance < 1.5;
-};
+});
 
-const hasPendingTargets: XStateV5Guard = ({ context }) => {
+export const hasPendingTargets = createGuard('hasPendingTargets', ({ context }) => {
   return context.explorationQueue && context.explorationQueue.length > 0;
-};
+});
 
-const isExplorationComplete: XStateV5Guard = ({ context }) => {
+export const isExplorationComplete = createGuard('isExplorationComplete', ({ context }) => {
   return context.explorationCycle.phase === 'evaluating' || 
          context.explorationCycle.phase === 'collecting';
-};
+});
 
-const hasDiscoveredTiles: XStateV5Guard = ({ context }) => {
+export const hasDiscoveredTiles = createGuard('hasDiscoveredTiles', ({ context }) => {
   return context.explorationCycle.exploredTiles && 
          context.explorationCycle.exploredTiles.length > 0;
-};
+});
 
-const isVehicleOperational: XStateV5Guard = ({ context }) => {
+export const isVehicleOperational = createGuard('isVehicleOperational', ({ context }) => {
   return context.vehicle.fuel > 10 && context.vehicle.damage < 80;
-};
+});
 
-const isVehicleOverloaded: XStateV5Guard = ({ context }) => {
+export const isVehicleOverloaded = createGuard('isVehicleOverloaded', ({ context }) => {
   return context.vehicle.isAtCapacity;
-};
+});
 
-const hasResourcesToDeposit: XStateV5Guard = ({ context }) => {
+export const hasResourcesToDeposit = createGuard('hasResourcesToDeposit', ({ context }) => {
   return context.vehicle.isAtCapacity || 
          (context.vehicle.resources && context.vehicle.resources.total > 0);
-};
+});
 
-const isMaintenanceTime: XStateV5Guard = ({ context }) => {
+export const isMaintenanceTime = createGuard('isMaintenanceTime', ({ context }) => {
   const needsFuel = context.vehicle.fuel < context.config.fuelThreshold;
   const needsRepair = context.vehicle.damage > 50;
   const needsDeposit = context.vehicle.isAtCapacity;
   return needsFuel || needsRepair || needsDeposit;
-};
+});
 
 // Export des guards pour XState v5
 export const guards = {
