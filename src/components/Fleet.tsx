@@ -82,6 +82,7 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tileCoor
         currentAction={currentAction}
         isMoving={isMoving}
         meshRef={shipRef}
+        botStateValue={context?.currentState ?? "unknown"}
       />
 
       {/* Drone explorer - position pilotée par le contexte FSM */}

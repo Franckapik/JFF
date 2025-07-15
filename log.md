@@ -1,3 +1,28 @@
+--APRES
+
+VM34:1  Console Ninja extension is connected to Vite, see https://tinyurl.com/2vt8jxzw for more info.
+fsmLogger.ts:207 🎮 GAME [21:52:24] Tiles initialized
+fsmLogger.ts:207 🎮 GAME [21:52:24] [XFSMStore] Creation bot-0 - Status: active, State: evaluating
+fsmLogger.ts:207 🎮 GAME [21:52:24] Bots initialized
+fsmLogger.ts:207 🎮 GAME [21:52:24] Players initialized
+fsmLogger.ts:207 🎮 GAME [21:52:24] [TileGeneration] Tuile de départ assignée à bot-0:6,3
+fsmLogger.ts:207 🎮 GAME [21:52:24] Starting tiles assigned
+fsmLogger.ts:199 🎮 GAME [21:52:24] Game fully initialized {players: true, bots: true, tiles: true, startingTiles: true}
+fsmLogger.ts:207 🔧 CONTEXT [21:52:24] 🛸 [bot-0] Processing explorer drone initialization
+fsmLogger.ts:199 ⚡ EVENT [21:52:24] DRONE_INITIALIZE_REQUEST {event: {…}, botId: 'bot-0', currentState: 'uninitialized'}
+fsmLogger.ts:199 🚀 MOUVEMENT [21:52:24] 🏠 [Ship] Transmitting initial position to FSM tracker: {x: 0, y: 0, z: 0}
+fsmLogger.ts:199 🐛 DEBUG [21:52:24] 🚢 [SHIP TRACKER] About to send SHIP_POSITION_UPDATE event: {position: {…}, shipType: 'ship', botId: 'bot-0'}
+fsmLogger.ts:199 🔧 CONTEXT [21:52:24] 🚢 [bot-0] Setting initial ship position {position: {…}, shipType: 'ship'}
+fsmLogger.ts:199 ⚡ EVENT [21:52:24] SHIP_POSITION_UPDATE {event: {…}, botId: 'bot-0', currentState: 'uninitialized'}
+fsmLogger.ts:207 🐛 DEBUG [21:52:24] 🚢 [SHIP TRACKER] SHIP_POSITION_UPDATE event sent successfully
+fsmLogger.ts:207 🎮 GAME [21:52:24] [XFSMStore] Actor bot-0 already running (status: active)
+fsmLogger.ts:199 🎮 GAME [21:52:25] Game fully initialized {players: true, bots: true, tiles: true, startingTiles: true}
+
+
+--AVANT
+
+
+
 VM49075:1  Console Ninja extension is connected to Vite, see https://tinyurl.com/2vt8jxzw for more info.
 fsmLogger.ts:207 🎮 GAME [14:24:28] Tiles initialized
 fsmLogger.ts:207 🎮 GAME [14:24:28] [XFSMStore] Creation bot-0 - Status: active, State: evaluating

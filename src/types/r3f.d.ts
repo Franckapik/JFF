@@ -95,6 +95,10 @@ export interface ShipMeshProps {
   currentAction?: string;
   /** Indique si le vaisseau est en mouvement */
   isMoving?: boolean;
+  /** Référence mesh pour animation/position */
+  meshRef?: import('react').Ref<import('three').Mesh>;
+  /** Valeur d'état XState du bot */
+  botStateValue?: string;
 }
 
 /**
