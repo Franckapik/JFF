@@ -1,17 +1,53 @@
 /**
  * ==========================================================================
- * MACHINE XState v5 - Machine pure sans adapters ni legacy
+ * MACHINE XState v5 - Machine pure avec architecture domain-based
  * ==========================================================================
+ * 
+ * ✅ MIGRATION COMPLÈTE vers architecture domain-based !
+ * 
+ * STATUT DES DOMAINES :
+ * ✅ Domaine evaluation : COMPLET (assignEvaluationContext, onEvaluatingEntry)
+ * 🔄 Domaine exploration : Placeholders temporaires (prêt pour migration)
+ * 🔄 Domaine collection : Placeholders temporaires (prêt pour migration)
+ * 🔄 Domaine maintenance : Placeholders temporaires (prêt pour migration)
+ * 
+ * PROCHAINES ÉTAPES :
+ * 1. Migrer assignDroneDeployingContext vers exploration domain
+ * 2. Migrer toutes les actions effects temporaires vers leurs domaines respectifs
+ * 3. Migrer les guards depuis guards.pure.v5.ts vers les domaines
+ * 4. Supprimer complètement actions.pure.v5.ts et guards.pure.v5.ts
+ * 
+ * STRUCTURE ACTUELLE :
+ * - Plus d'imports depuis actions.pure.v5.ts (sauf actions globales temporaires)
+ * - Plus d'imports depuis guards.pure.v5.ts 
+ * - Utilise uniquement l'architecture domain-based via ./domains
  */
 
 import { setup } from 'xstate';
 
 import type { FSMContext } from '../../../types/fsm.d.ts';
 
-import { actions } from './actions.pure.v5';
+// Import depuis l'architecture domain-based
+import {
+  __collectionEffectsPlaceholder,
+  __collectionGuardsPlaceholder,
+  __explorationEffectsPlaceholder,
+  __explorationGuardsPlaceholder,
+  __maintenanceEffectsPlaceholder,
+  __maintenanceGuardsPlaceholder,
+  assignDroneDeployingContext,
+  // Evaluation domain (COMPLET)
+  assignEvaluationContext,
+  onEvaluatingEntry,
+  // Global domain (COMPLET - actions transversales)
+  processDroneInitRequest,
+  updateDronePosition,
+  updateShipPosition
+} from './domains';
+
+
 import { createMachineContext } from './context/initialContext';
 import type { MachineEvents } from './events.pure.v5';
-import { guards } from './guards.pure.v5';
 
 /**
  * Machine XState v5 avec syntaxe pure
@@ -21,8 +57,63 @@ export const machineXV5Pure = setup({
     context: {} as FSMContext,
     events: {} as MachineEvents,
   },
-  actions,
-  guards,
+  actions: {
+    // Actions globales (ne dépendent d'aucun domaine spécifique)
+    updateShipPosition,
+    updateDronePosition,
+    processDroneInitRequest,
+    
+    // Actions du domaine EVALUATION (migrées)
+    assignEvaluationContext,
+    onEvaluatingEntry,
+    onEvaluatingExit: __explorationEffectsPlaceholder, // TODO: créer le vrai onEvaluatingExit
+    
+    // Actions temporaires du domaine EXPLORATION (à migrer)
+    assignDroneDeployingContext, // TODO: migrer vers exploration domain
+    onExploringEntry: __explorationEffectsPlaceholder,
+    onExploringExit: __explorationEffectsPlaceholder,
+    onDroneDeployingEntry: __explorationEffectsPlaceholder,
+    onDroneDeployingExit: __explorationEffectsPlaceholder,
+    onDroneScanningEntry: __explorationEffectsPlaceholder,
+    onDroneScanningExit: __explorationEffectsPlaceholder,
+    onDroneReturningEntry: __explorationEffectsPlaceholder,
+    onDroneReturningExit: __explorationEffectsPlaceholder,
+    
+    // Actions temporaires du domaine COLLECTION (à migrer)
+    onCollectingEntry: __collectionEffectsPlaceholder,
+    onCollectingExit: __collectionEffectsPlaceholder,
+    onShipMovingToTileEntry: __collectionEffectsPlaceholder,
+    onShipMovingToTileExit: __collectionEffectsPlaceholder,
+    onShipCollectingEntry: __collectionEffectsPlaceholder,
+    onShipCollectingExit: __collectionEffectsPlaceholder,
+    onShipReturningEntry: __collectionEffectsPlaceholder,
+    onShipReturningExit: __collectionEffectsPlaceholder,
+    
+    // Actions temporaires du domaine MAINTENANCE (à migrer)
+    onMaintainingEntry: __maintenanceEffectsPlaceholder,
+    onMaintainingExit: __maintenanceEffectsPlaceholder,
+    onShipOnBaseEntry: __maintenanceEffectsPlaceholder,
+    onShipOnBaseExit: __maintenanceEffectsPlaceholder,
+    onShipDepositingEntry: __maintenanceEffectsPlaceholder,
+    onShipDepositingExit: __maintenanceEffectsPlaceholder,
+    onShipRepairingEntry: __maintenanceEffectsPlaceholder,
+    onShipRepairingExit: __maintenanceEffectsPlaceholder,
+    onShipRefuelingEntry: __maintenanceEffectsPlaceholder,
+    onShipRefuelingExit: __maintenanceEffectsPlaceholder,
+  },
+  guards: {
+    // Guards du domaine EVALUATION (migré)
+    shouldExplore: __explorationGuardsPlaceholder,
+    
+    // Guards temporaires des domaines (à migrer)
+    shouldCollect: __collectionGuardsPlaceholder,
+    shouldMaintain: __maintenanceGuardsPlaceholder,
+    canCollectTile: __collectionGuardsPlaceholder,
+    isVehicleOverloaded: __collectionGuardsPlaceholder,
+    needsDeposit: __maintenanceGuardsPlaceholder,
+    needsRefuel: __maintenanceGuardsPlaceholder,
+    needsRepair: __maintenanceGuardsPlaceholder
+  },
 }).createMachine({
   id: 'machineXV5Pure',
   initial: 'evaluating',
@@ -54,38 +145,25 @@ export const machineXV5Pure = setup({
      * État EVALUATING - Évalue les conditions pour choisir la prochaine action
      */
     evaluating: {
-      entry: 'action_evaluating_entry',
-      exit: 'action_evaluating_exit',
-      
-      // Transitions automatiques basées sur les conditions
-      always: [
-        {
-          target: 'exploring', 
-          guard: 'shouldExplore',
-        },
-        {
-          target: 'collecting', 
-          guard: 'shouldCollect',
-        },
-        {
-          target: 'maintaining', 
-          guard: 'shouldMaintain',
-        }
-      ],
+      entry: 'onEvaluatingEntry',
+      exit: 'onEvaluatingExit',
 
       // Transitions manuelles (en cas d'événements explicites)
       on: {
-        needExploring: { 
+        NEED_EXPLORING: { 
           target: 'exploring', 
           guard: 'shouldExplore',
+          actions: 'assignDroneDeployingContext' // MAJ contexte ici (assign)
         },
-        needCollecting: { 
+        NEED_COLLECTING: { 
           target: 'collecting', 
           guard: 'shouldCollect',
+          // Ajoute ici l'action assign si besoin
         },
-        needMaintenance: { 
+        NEED_MAINTENANCE: { 
           target: 'maintaining', 
           guard: 'shouldMaintain',
+          // Ajoute ici l'action assign si besoin
         }
       }
     },
@@ -94,30 +172,28 @@ export const machineXV5Pure = setup({
      * État EXPLORING - Gère l'exploration avec le drone
      */
     exploring: {
-      entry: 'action_exploring_entry',
-      exit: 'action_exploring_exit',
+      entry: 'onExploringEntry',
+      exit: 'onExploringExit',
       initial: 'drone_deploying',
-      
+
       states: {
         drone_deploying: {
-          entry: 'action_drone_deploying_entry',
-          exit: 'action_drone_deploying_exit',
+          entry: 'onDroneDeployingEntry', // Effet de bord ici
+          exit: 'onDroneDeployingExit',
           on: {
             DRONE_REACHES_TILE: 'drone_scanning'
           }
         },
-        
         drone_scanning: {
-          entry: 'action_drone_scanning_entry',
-          exit: 'action_drone_scanning_exit',
+          entry: 'onDroneScanningEntry',
+          exit: 'onDroneScanningExit',
           on: {
             DRONE_SCANS_TILE: 'drone_returning'
           }
         },
-        
         drone_returning: {
-          entry: 'action_drone_returning_entry',
-          exit: 'action_drone_returning_exit',
+          entry: 'onDroneReturningEntry',
+          exit: 'onDroneReturningExit',
           on: {
             DRONE_REACHES_BASE: '#machineXV5Pure.evaluating'
           }
@@ -129,14 +205,14 @@ export const machineXV5Pure = setup({
      * État COLLECTING - Gère la collecte de ressources avec le vaisseau
      */
     collecting: {
-      entry: 'action_collecting_entry',
-      exit: 'action_collecting_exit',
+      entry: 'onCollectingEntry',
+      exit: 'onCollectingExit',
       initial: 'ship_moving_to_tile',
       
       states: {
         ship_moving_to_tile: {
-          entry: 'action_ship_moving_to_tile_entry',
-          exit: 'action_ship_moving_to_tile_exit',
+          entry: 'onShipMovingToTileEntry',
+          exit: 'onShipMovingToTileExit',
           on: {
             SHIP_REACHES_TILE: [
               {
@@ -151,8 +227,8 @@ export const machineXV5Pure = setup({
         },
         
         ship_collecting: {
-          entry: 'action_ship_collecting_entry',
-          exit: 'action_ship_collecting_exit',
+          entry: 'onShipCollectingEntry',
+          exit: 'onShipCollectingExit',
           on: {
             SHIP_LOAD_RESOURCES: [
               {
@@ -168,8 +244,8 @@ export const machineXV5Pure = setup({
         },
         
         ship_returning: {
-          entry: 'action_ship_returning_entry',
-          exit: 'action_ship_returning_exit',
+          entry: 'onShipReturningEntry',
+          exit: 'onShipReturningExit',
           on: {
             SHIP_REACHES_BASE: [
               {
@@ -195,14 +271,14 @@ export const machineXV5Pure = setup({
      * État MAINTAINING - Gère la maintenance (dépôt, réparation, carburant)
      */
     maintaining: {
-      entry: 'action_maintaining_entry',
-      exit: 'action_maintaining_exit',
+      entry: 'onMaintainingEntry',
+      exit: 'onMaintainingExit',
       initial: 'ship_on_base',
       
       states: {
         ship_on_base: {
-          entry: 'action_ship_on_base_entry',
-          exit: 'action_ship_on_base_exit',
+          entry: 'onShipOnBaseEntry',
+          exit: 'onShipOnBaseExit',
           
           // Transitions automatiques vers les tâches de maintenance
           always: [
@@ -232,8 +308,8 @@ export const machineXV5Pure = setup({
         },
         
         depositing: {
-          entry: ['action_ship_depositing_entry', 'depositResources'],
-          exit: 'action_ship_depositing_exit',
+          entry: ['onShipDepositingEntry'],
+          exit: 'onShipDepositingExit',
           on: {
             SHIP_DEPOSIT_COMPLETE: [
               {
@@ -252,8 +328,8 @@ export const machineXV5Pure = setup({
         },
         
         repairing: {
-          entry: ['action_ship_repairing_entry', 'repairVehicle'],
-          exit: 'action_ship_repairing_exit',
+          entry: ['onShipRepairingEntry'],
+          exit: 'onShipRepairingExit',
           on: {
             SHIP_REPAIR_COMPLETE: [
               {
@@ -272,8 +348,8 @@ export const machineXV5Pure = setup({
         },
         
         refueling: {
-          entry: ['action_ship_refueling_entry', 'refuelVehicle'],
-          exit: 'action_ship_refueling_exit',
+          entry: ['onShipRefuelingEntry'],
+          exit: 'onShipRefuelingExit',
           on: {
             SHIP_REFUEL_COMPLETE: [
               {

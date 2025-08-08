@@ -1,6 +1,6 @@
 import { assign } from 'xstate';
 
-import allActions from '../actions/index.ts';
+import allActions from '../actionsold/index.ts';
 
 export const globalEventHandlers = {
   'SHIP_POSITION_UPDATE': {

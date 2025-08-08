@@ -13,8 +13,8 @@
 import { assign } from 'xstate';
 
 import fsmLogger from '../../../../logger/fsmLogger.ts';
-import type { DroneVisualState } from '../../../../types/drone.d.ts';
-import type { FSMContext, FSMEvent } from '../../../../types/fsm.d.ts';
+import type { DroneVisualState } from '../../../../types/drone';
+import type { FSMContext, FSMEvent } from '../../../../types/fsm';
 
 
 // Types pour les actions XState v5

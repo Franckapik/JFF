@@ -16,7 +16,7 @@ import { assign } from 'xstate';
 
 import fsmLogger from '../../../../logger/fsmLogger.ts';
 
-import type { FSMContext, FSMEvent } from '../../../../types/fsm.d.ts';
+import type { FSMContext, FSMEvent } from '../../../../types/fsm';
 
 import { droneDeployForExploration } from './core/exploring.core.ts';
 
@@ -79,17 +79,17 @@ export const action_evaluating_entry = ({ context, self }: XStateActionWithSelf)
   // Décision basée sur les priorités
   setTimeout(() => {
     if (needsMaintenance) {
-      fsmLogger.info('[Evaluating] → needMaintenance (fuel/damage critical)');
-      self.send({ type: 'needMaintenance', reason: 'critical_condition' });
+      fsmLogger.info('[Evaluating] → NEED_MAINTENANCE (fuel/damage critical)');
+      self.send({ type: 'NEED_MAINTENANCE', reason: 'critical_condition' });
     } else if (hasCollectibleTiles && isShipNotFull) {
-      fsmLogger.info('[Evaluating] → needCollecting (resources available)');
-      self.send({ type: 'needCollecting', reason: 'resources_available' });
+      fsmLogger.info('[Evaluating] → NEED_COLLECTING (resources available)');
+      self.send({ type: 'NEED_COLLECTING', reason: 'resources_available' });
     } else if (needsExploration) {
-      fsmLogger.info('[Evaluating] → needExploring (need more exploration)');
-      self.send({ type: 'needExploring', reason: 'insufficient_exploration' });
+      fsmLogger.info('[Evaluating] → NEED_EXPLORING (need more exploration)');
+      self.send({ type: 'NEED_EXPLORING', reason: 'insufficient_exploration' });
     } else {
-      fsmLogger.info('[Evaluating] → needMaintenance (nothing to do)');
-      self.send({ type: 'needMaintenance', reason: 'idle_time' });
+      fsmLogger.info('[Evaluating] → NEED_MAINTENANCE (nothing to do)');
+      self.send({ type: 'NEED_MAINTENANCE', reason: 'idle_time' });
     }
   }, 1000); // Délai de 1s pour permettre à l'état de s'initialiser
 };
@@ -111,7 +111,7 @@ export const updateContext = assign(({ context, event }: XStateAction) => {
   
   fsmLogger.info(`🔄 [${context.entityId}] Updating context for transition: ${event.type}`);
   
-  if (event.type === 'needExploring') {
+  if (event.type === 'NEED_EXPLORING') {
     // Déployer le drone pour l'exploration
     fsmLogger.info(`🚁 [${context.entityId}] Deploying drone for exploration`);
     

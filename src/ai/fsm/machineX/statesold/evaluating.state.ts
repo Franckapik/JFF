@@ -4,7 +4,7 @@
  * ============================================================================
  * 
  * État evaluating migré depuis la logique machine.xstate.js (XState natif).
- * - Transitions : needExploring, needCollecting, needMaintenance
+ * - Transitions : NEED_EXPLORING, NEED_COLLECTING, NEED_MAINTENANCE
  * - Actions : action_evaluating_entry, action_evaluating_exit, updateContext
  * - Guards : shouldExplore, shouldCollect, shouldMaintain
  * 
@@ -20,17 +20,17 @@ export const evaluatingState = {
   entry: 'action_evaluating_entry',
   exit: 'action_evaluating_exit',
   on: {
-    needExploring: {
+    NEED_EXPLORING: {
       target: 'exploring',
       guard: 'shouldExplore', // Ajout du guard pour contrôler la transition
       actions: 'updateContext'
     },
-    needCollecting: {
+    NEED_COLLECTING: {
       target: 'collecting',
       guard: 'shouldCollect',
       actions: 'updateContext'
     },
-    needMaintenance: {
+    NEED_MAINTENANCE: {
       target: 'maintaining',
       guard: 'shouldMaintain',
       actions: 'updateContext'
