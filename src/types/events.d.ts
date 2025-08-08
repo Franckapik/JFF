@@ -35,9 +35,9 @@ export type MachineEventType =
   | 'SHIP_REFUEL_COMPLETE'
   
   // Événements de transitions d'état (evaluating)
-  | 'needExploring'
-  | 'needCollecting'
-  | 'needMaintenance';
+  | 'NEED_EXPLORING'
+  | 'NEED_COLLECTING'
+  | 'NEED_MAINTENANCE';
 
 /**
  * Types d'événements avec payload pour XState v5
@@ -61,9 +61,9 @@ export type MachineEvents =
   | { type: 'RESOURCE_DEPLETED' }
   | { type: 'EMERGENCY_STOP' }
   | { type: 'LOW_FUEL_WARNING' }
-  | { type: 'needExploring' }
-  | { type: 'needCollecting' }
-  | { type: 'needMaintenance' };
+  | { type: 'NEED_EXPLORING' }
+  | { type: 'NEED_COLLECTING' }
+  | { type: 'NEED_MAINTENANCE' };
 
 /**
  * Constantes d'événements pour usage dans les machines XState
@@ -98,7 +98,7 @@ export const MACHINE_EVENT_TYPES: Record<Uppercase<MachineEventType>, MachineEve
   LOW_FUEL_WARNING: 'LOW_FUEL_WARNING',
   
   // Événements de transition
-  NEEDEXPLORING: 'needExploring',
-  NEEDCOLLECTING: 'needCollecting',
-  NEEDMAINTENANCE: 'needMaintenance'
+  NEED_EXPLORING: 'NEED_EXPLORING',
+  NEED_COLLECTING: 'NEED_COLLECTING',
+  NEED_MAINTENANCE: 'NEED_MAINTENANCE'
 } as const;

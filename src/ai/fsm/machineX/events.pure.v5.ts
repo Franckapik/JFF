@@ -41,9 +41,9 @@ export type MachineEvents =
   | { type: 'RESOURCE_DEPLETED' }
   | { type: 'EMERGENCY_STOP' }
   | { type: 'LOW_FUEL_WARNING' }
-  | { type: 'needExploring' }
-  | { type: 'needCollecting' }
-  | { type: 'needMaintenance' };
+  | { type: 'NEED_EXPLORING' }
+  | { type: 'NEED_COLLECTING' }
+  | { type: 'NEED_MAINTENANCE' };
 
 /**
  * Type guard pour vérifier le type d'un événement

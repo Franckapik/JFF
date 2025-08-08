@@ -1,3 +1,7 @@
+IA arrétée. Reprendre le travail selon historique. Import des actions dans la machine avec untype qui respecte.
+
+APres cete migrtaion en v5, la logique de depart est encore cassée. L'utilisation de always dans evaluating serait peut etre interessante. COmprendre comment le dorne passe de initialised a docked pour le debut. S'assurer que les actions sont bien lancées. 
+
 L'action udpateContext doit avoir un autre nom pour l'evaluation et doit etre située sur le fichier action de evaluating ? Cette fonction permet d'évaluer et d'envoyer un event needQqchose en fonciton des conditions diverses. Ces conditions ne pourraient-elles pas figurer dans les guards de la machine par ailleurs ? Chaque fonction action entry exit devrait etre un .service.ts composés de plusieurs fonctions actions définies dans les actions cores .actions.ts. Chaque service doit juste mettre a jour le contexte pour faire une nouvelle target qui declanche les animations. 
 
 Je dois m'assurer que les actions envoyées soit sur les bons fichiers pour tout les handlers. La modification du contexte par l'établissement d'une nouvelle target position doit etre dans les fichiers.actions.

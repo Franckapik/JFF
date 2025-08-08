@@ -14,13 +14,13 @@ import type { MachineEvents } from '../../ai/fsm/machineX/events.pure.v5';
 import { machineXV5Pure } from '../../ai/fsm/machineX/machine.pure.v5';
 import fsmLogger from '../../logger/fsmLogger.ts';
 import type {
-    BotId,
-    BotSnapshot,
-    BotStatesMap,
-    EmptyBotState,
-    XFSMStore,
-    XFSMStoreActions,
-    XFSMStoreState
+  BotId,
+  BotSnapshot,
+  BotStatesMap,
+  EmptyBotState,
+  XFSMStore,
+  XFSMStoreActions,
+  XFSMStoreState
 } from '../../types/fsm.d.ts';
 
 // État vide par défaut pour un bot non initialisé
@@ -35,6 +35,8 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
   const actors = new Map<BotId, Actor<typeof machineXV5Pure>>();
   // Cache des derniers snapshots XState par botId
   const snapshotCache = new Map<BotId, BotSnapshot>();
+  // Track des acteurs démarrés (XState v5 fix)
+  const startedActors = new Set<BotId>();
 
   /**
    * Crée et enregistre un nouvel acteur XState pour un bot donné
@@ -47,7 +49,11 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
     
     // Vérifier le statut et l'état initial de l'acteur
     const initialSnapshot = actor.getSnapshot();
-    fsmLogger.game(`[XFSMStore] Creation ${botId} - Status: ${initialSnapshot.status}, State: ${initialSnapshot.value}`);
+    
+    // Debug: afficher le type et le contenu de value
+    const stateValue = initialSnapshot.value;
+    const stateDisplay = typeof stateValue === 'string' ? stateValue : JSON.stringify(stateValue);
+    fsmLogger.game(`[XFSMStore] Creation ${botId} - Status: ${initialSnapshot.status}, State: ${stateDisplay}, StateType: ${typeof stateValue}`);
     
     // Enregistrer l'acteur (créé mais pas démarré)
     actors.set(botId, actor);
@@ -65,10 +71,9 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
       return;
     }
 
-    const snapshot = actor.getSnapshot();
-    
-    // Vérifier si l'acteur n'est pas déjà démarré
-    if (snapshot && 'status' in snapshot && snapshot.status !== 'active') {
+    // Vérifier si l'acteur n'est pas déjà démarré (XState v5 fix)
+    if (!startedActors.has(botId)) {
+      startedActors.add(botId);
       
       // S'abonner aux changements avant de démarrer l'acteur
       actor.subscribe((snapshot: BotSnapshot) => {
@@ -87,12 +92,16 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
         actor.start();
         const initialSnapshot = actor.getSnapshot();
         snapshotCache.set(botId, initialSnapshot);
-        fsmLogger.game(`[XFSMStore] Demarrage ${botId} - New Status: ${initialSnapshot.status}, State: ${initialSnapshot.value}`);
+        
+        // Debug: afficher le type et le contenu de value après démarrage
+        const stateValue = initialSnapshot.value;
+        const stateDisplay = typeof stateValue === 'string' ? stateValue : JSON.stringify(stateValue);
+        fsmLogger.game(`[XFSMStore] Demarrage ${botId} - New Status: ${initialSnapshot.status}, State: ${stateDisplay}, StateType: ${typeof stateValue}`);
       } catch (error) {
         fsmLogger.game(`[XFSMStore] Failed to start actor for ${botId}: ${error}`);
       }
     } else {
-      fsmLogger.game(`[XFSMStore] Actor ${botId} already running (status: active)`);
+      fsmLogger.game(`[XFSMStore] Actor ${botId} already started`);
     }
   };
 
@@ -163,6 +172,7 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
       if (actor) actor.stop();
       actors.delete(botId);
       snapshotCache.delete(botId);
+      startedActors.delete(botId); // Nettoyer le flag de démarrage
       const currentState = get();
       const { [botId]: _, ...rest } = currentState.botStates;
       const newActiveBots = currentState.activeBots.filter(id => id !== botId);

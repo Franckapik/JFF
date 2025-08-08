@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "@typescript-eslint/naming-convention": [
+      "error",
+      {
+        "selector": "function",
+        "filter": {
+          "regex": "createAction\\(",
+          "match": false
+        },
+        "format": ["camelCase"],
+        "custom": {
+          "regex": "^(assign[A-Z][a-zA-Z]*Context|on[A-Z][a-zA-Z]*(Entry|Exit))$",
+          "match": true
+        }
+      }
+    ]
+  }
+}
