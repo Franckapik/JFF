@@ -14,7 +14,7 @@ import React, { useCallback } from "react";
 
 // === Hooks & Store Imports ===
 import { useDroneTracker } from "../ai/fsm/hooks/trackers/drone/useDroneTracker";
-import { useXFSMShipTracker } from "../ai/fsm/hooks/trackers/ship/useXFSMShipTracker";
+import { useShipTracker } from "../ai/fsm/hooks/trackers/ship/useShipTracker";
 import { useDroneAnimation } from "../animations/useDroneAnimation";
 import { useShipAnimation } from "../animations/useShipAnimation.js";
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
@@ -53,7 +53,13 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tileCoor
     botId,
     droneType: 'explorer'
   });
-  const updateShipVisualPosition = useXFSMShipTracker(context || {} as FSMContext, fsmSend, botId, 'ship');
+    // === Ship Tracker ===
+  const updateShipVisualPosition = useShipTracker({ 
+    context: context || {} as FSMContext, 
+    send: fsmSend, 
+    botId, 
+    shipType: 'ship' as const 
+  });
 
   const droneType = 'explorer';
   const isDroneActive = !!context?.droneFleet?.drones?.[droneType]?.isActive;
