@@ -38,11 +38,17 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
     if (fuel < 30 || damage > 50) {
       fsmLogger.info(`[Evaluating] → NEED_MAINTENANCE (maintenance needed)`);
       self.send({ type: 'NEED_MAINTENANCE' } as MachineEvents);
-    //} else if (isDroneAvailable && !context.vehicle?.isAtCapacity) { TODO : l'état du drone reste à uninitialized
-    } else if (1) {
-      fsmLogger.info(`[Evaluating] → NEED_EXPLORING (need more exploration)`);
-      self.send({ type: 'NEED_EXPLORING' } as MachineEvents);
     } else {
+      // Tester d'abord l'exploration avec le guard shouldExplore
+      fsmLogger.info(`[Evaluating] → Testing NEED_EXPLORING`);
+      self.send({ type: 'NEED_EXPLORING' } as MachineEvents);
+      
+      // Si shouldExplore échoue, la machine restera en evaluating
+      // On teste alors la collecte après un délai
+      setTimeout(() => {
+        fsmLogger.info(`[Evaluating] → Testing NEED_COLLECTING (exploration may be complete)`);
+        self.send({ type: 'NEED_COLLECTING' } as MachineEvents);
+      }, 50);
     }
   }, 100);
 };

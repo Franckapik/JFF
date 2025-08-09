@@ -34,6 +34,7 @@ import {
   __maintenanceEffectsPlaceholder,
   __maintenanceGuardsPlaceholder,
   assignDroneDeployingContext,
+  assignDroneDockedContext,
   assignDroneReturningContext,
   assignDroneScanningContext,
   // Evaluation domain (COMPLET)
@@ -51,6 +52,7 @@ import {
   onExploringExit,
   // Global domain (COMPLET - actions transversales)
   processDroneInitRequest,
+  shouldCollect,
   shouldExplore,
   updateDronePosition,
   updateShipPosition
@@ -83,6 +85,7 @@ export const machineXV5Pure = setup({
     assignDroneDeployingContext,
     assignDroneScanningContext,
     assignDroneReturningContext,
+    assignDroneDockedContext,
     onExploringEntry,
     onExploringExit,
     onDroneDeployingEntry,
@@ -119,7 +122,7 @@ export const machineXV5Pure = setup({
   shouldExplore,
     
     // Guards temporaires des domaines (à migrer)
-    shouldCollect: __collectionGuardsPlaceholder,
+    shouldCollect,
     shouldMaintain: __maintenanceGuardsPlaceholder,
     canCollectTile: __collectionGuardsPlaceholder,
     isVehicleOverloaded: __collectionGuardsPlaceholder,
@@ -214,7 +217,10 @@ export const machineXV5Pure = setup({
           entry: 'onDroneReturningEntry',
           exit: 'onDroneReturningExit',
           on: {
-            DRONE_REACHES_BASE: '#machineXV5Pure.evaluating'
+            DRONE_REACHES_BASE: {
+              target: '#machineXV5Pure.evaluating',
+              actions: 'assignDroneDockedContext' // MAJ contexte du drone à 'docked' et currentState à 'evaluating'
+            }
           }
         }
       }

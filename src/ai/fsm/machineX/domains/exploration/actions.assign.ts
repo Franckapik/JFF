@@ -236,8 +236,47 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
   };
 });
 
-// Placeholder pour éviter les erreurs d'import
-export const __explorationAssignPlaceholder = createAssignAction(({ context }) => {
-  fsmLogger.info(`🔄 [${context.entityId}] Exploration assign actions placeholder`);
-  return {};
+/**
+ 
+/**
+ * Action assign pour remettre le contexte en évaluation après le retour du drone
+ */
+export const assignDroneDockedContext = createAssignAction(({ context, event }) => {
+  fsmLogger.info(`🔄 [${context?.entityId || 'unknown'}] assignDroneDockedContext called with:`, {
+    hasContext: !!context,
+    hasEvent: !!event,
+    eventType: event?.type,
+    currentDroneState: context.droneFleet?.drones?.explorer?.state
+  });
+  
+  if (!context.droneFleet?.drones?.explorer) {
+    fsmLogger.info(`⚠️ [${context.entityId}] No explorer drone found in context`);
+    return {};
+  }
+  
+  fsmLogger.info(`🏠 [${context.entityId}] Updating drone state to docked and context to evaluating`);
+  
+  const droneState: DroneVisualState = 'docked';
+  
+  return {
+    droneFleet: {
+      ...context.droneFleet,
+      drones: {
+        ...context.droneFleet.drones,
+        explorer: {
+          ...context.droneFleet.drones.explorer,
+          state: droneState,
+          isActive: false,
+          isMoving: false,
+          lastUpdate: Date.now()
+        }
+      }
+    },
+    explorationCycle: {
+      ...context.explorationCycle,
+      isActive: false,
+      phase: 'idle' as const
+    },
+    currentState: 'evaluating', // 🟢 Retour à l'état global evaluating
+  };
 });
