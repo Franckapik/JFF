@@ -41,8 +41,8 @@ export const assignDroneDeployingContext = createAssignAction(({ context, event 
   fsmLogger.info(`🔄 [${context.entityId}] Updating context for drone deployment: ${event.type}`);
   
   if (event.type === 'NEED_EXPLORING') {
-    const droneType: DroneType = 'explorer';
-    const range = 3;
+  const droneType: DroneType = 'explorer';
+  const range = context.config?.exploringRadius ?? 2;
     
     // Vérifier si le drone existe dans la flotte
     if (!context.droneFleet?.drones[droneType]) {
@@ -66,7 +66,7 @@ export const assignDroneDeployingContext = createAssignAction(({ context, event 
     // Utiliser la fonction du tileStore pour sélectionner une tuile cible
     const tileStore = useTileStore.getState() as TileStoreType;
     const targetPosition = tileStore.selectTargetTileInRadiusForDrone(shipPosition, range);
-
+    
     // Si aucune cible valide dans le rayon autorisé, déclencher un retour en évaluation
     if (!targetPosition) {
       fsmLogger.debug(`[${context.entityId}] No valid exploration targets within radius ${range}, area exploration complete`);

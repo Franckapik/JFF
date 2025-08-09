@@ -93,7 +93,7 @@ export const createMachineContext = (
     },
     selectedTileForCollection: null,
     config: {
-      exploringRadius: 3,
+      exploringRadius: 2,
       fuelThreshold: 20,
       capacityThreshold: 80,
       movementSpeed: entityType === 'auto' ? 8 : 4,
