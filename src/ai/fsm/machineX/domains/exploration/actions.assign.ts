@@ -81,6 +81,76 @@ export const assignDroneDeployingContext = createAssignAction(({ context, event 
   return {};
 });
 
+/**
+ * Action assign pour mettre à jour l'état du drone lors du passage en scanning
+ */
+export const assignDroneScanningContext = createAssignAction(({ context, event }) => {
+  fsmLogger.info(`🔄 [${context?.entityId || 'unknown'}] assignDroneScanningContext called with:`, {
+    hasContext: !!context,
+    hasEvent: !!event,
+    eventType: event?.type,
+    currentDroneState: context.droneFleet?.drones?.explorer?.state
+  });
+  
+  if (!context.droneFleet?.drones?.explorer) {
+    fsmLogger.info(`⚠️ [${context.entityId}] No explorer drone found in context`);
+    return {};
+  }
+  
+  fsmLogger.info(`📡 [${context.entityId}] Updating drone state to scanning`);
+  
+  const droneState: DroneVisualState = 'scanning';
+  
+  return {
+    droneFleet: {
+      ...context.droneFleet,
+      drones: {
+        ...context.droneFleet.drones,
+        explorer: {
+          ...context.droneFleet.drones.explorer,
+          state: droneState,
+          lastUpdate: Date.now()
+        }
+      }
+    }
+  };
+});
+
+/**
+ * Action assign pour mettre à jour l'état du drone lors du passage en returning
+ */
+export const assignDroneReturningContext = createAssignAction(({ context, event }) => {
+  fsmLogger.info(`🔄 [${context?.entityId || 'unknown'}] assignDroneReturningContext called with:`, {
+    hasContext: !!context,
+    hasEvent: !!event,
+    eventType: event?.type,
+    currentDroneState: context.droneFleet?.drones?.explorer?.state
+  });
+  
+  if (!context.droneFleet?.drones?.explorer) {
+    fsmLogger.info(`⚠️ [${context.entityId}] No explorer drone found in context`);
+    return {};
+  }
+  
+  fsmLogger.info(`🔙 [${context.entityId}] Updating drone state to returning`);
+  
+  const droneState: DroneVisualState = 'returning';
+  
+  return {
+    droneFleet: {
+      ...context.droneFleet,
+      drones: {
+        ...context.droneFleet.drones,
+        explorer: {
+          ...context.droneFleet.drones.explorer,
+          state: droneState,
+          lastUpdate: Date.now()
+        }
+      }
+    }
+  };
+});
+
 // Placeholder pour éviter les erreurs d'import
 export const __explorationAssignPlaceholder = createAssignAction(({ context }) => {
   fsmLogger.info(`🔄 [${context.entityId}] Exploration assign actions placeholder`);

@@ -6,21 +6,21 @@
  * ✅ MIGRATION COMPLÈTE vers architecture domain-based !
  * 
  * STATUT DES DOMAINES :
+ * ✅ Domaine global : COMPLET (updateShipPosition, updateDronePosition, processDroneInitRequest)
  * ✅ Domaine evaluation : COMPLET (assignEvaluationContext, onEvaluatingEntry)
- * 🔄 Domaine exploration : Placeholders temporaires (prêt pour migration)
+ * ✅ Domaine exploration : COMPLET (assignDroneDeployingContext + toutes les actions effects)
  * 🔄 Domaine collection : Placeholders temporaires (prêt pour migration)
  * 🔄 Domaine maintenance : Placeholders temporaires (prêt pour migration)
  * 
- * PROCHAINES ÉTAPES :
- * 1. Migrer assignDroneDeployingContext vers exploration domain
- * 2. Migrer toutes les actions effects temporaires vers leurs domaines respectifs
- * 3. Migrer les guards depuis guards.pure.v5.ts vers les domaines
- * 4. Supprimer complètement actions.pure.v5.ts et guards.pure.v5.ts
+ * ACTIONS MIGRÉES :
+ * - Global: updateShipPosition, updateDronePosition, processDroneInitRequest
+ * - Evaluation: assignEvaluationContext, onEvaluatingEntry
+ * - Exploration: assignDroneDeployingContext, onExploringEntry/Exit, onDroneDeployingEntry/Exit, 
+ *   onDroneScanningEntry/Exit, onDroneReturningEntry/Exit
  * 
  * STRUCTURE ACTUELLE :
- * - Plus d'imports depuis actions.pure.v5.ts (sauf actions globales temporaires)
- * - Plus d'imports depuis guards.pure.v5.ts 
- * - Utilise uniquement l'architecture domain-based via ./domains
+ * - Imports uniquement depuis l'architecture domain-based via ./domains
+ * - Actions organisées par domaine métier pour une meilleure maintenabilité
  */
 
 import { setup } from 'xstate';
@@ -31,14 +31,25 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 import {
   __collectionEffectsPlaceholder,
   __collectionGuardsPlaceholder,
-  __explorationEffectsPlaceholder,
   __explorationGuardsPlaceholder,
   __maintenanceEffectsPlaceholder,
   __maintenanceGuardsPlaceholder,
   assignDroneDeployingContext,
+  assignDroneReturningContext,
+  assignDroneScanningContext,
   // Evaluation domain (COMPLET)
   assignEvaluationContext,
+  // Exploration domain (COMPLET - actions effects migrées)
+  onDroneDeployingEntry,
+  onDroneDeployingExit,
+  onDroneReturningEntry,
+  onDroneReturningExit,
+  onDroneScanningEntry,
+  onDroneScanningExit,
   onEvaluatingEntry,
+  onEvaluatingExit,
+  onExploringEntry,
+  onExploringExit,
   // Global domain (COMPLET - actions transversales)
   processDroneInitRequest,
   updateDronePosition,
@@ -66,18 +77,20 @@ export const machineXV5Pure = setup({
     // Actions du domaine EVALUATION (migrées)
     assignEvaluationContext,
     onEvaluatingEntry,
-    onEvaluatingExit: __explorationEffectsPlaceholder, // TODO: créer le vrai onEvaluatingExit
+    onEvaluatingExit, 
     
-    // Actions temporaires du domaine EXPLORATION (à migrer)
-    assignDroneDeployingContext, // TODO: migrer vers exploration domain
-    onExploringEntry: __explorationEffectsPlaceholder,
-    onExploringExit: __explorationEffectsPlaceholder,
-    onDroneDeployingEntry: __explorationEffectsPlaceholder,
-    onDroneDeployingExit: __explorationEffectsPlaceholder,
-    onDroneScanningEntry: __explorationEffectsPlaceholder,
-    onDroneScanningExit: __explorationEffectsPlaceholder,
-    onDroneReturningEntry: __explorationEffectsPlaceholder,
-    onDroneReturningExit: __explorationEffectsPlaceholder,
+    // Actions du domaine EXPLORATION (migrées)
+    assignDroneDeployingContext,
+    assignDroneScanningContext,
+    assignDroneReturningContext,
+    onExploringEntry,
+    onExploringExit,
+    onDroneDeployingEntry,
+    onDroneDeployingExit,
+    onDroneScanningEntry,
+    onDroneScanningExit,
+    onDroneReturningEntry,
+    onDroneReturningExit,
     
     // Actions temporaires du domaine COLLECTION (à migrer)
     onCollectingEntry: __collectionEffectsPlaceholder,
@@ -181,14 +194,20 @@ export const machineXV5Pure = setup({
           entry: 'onDroneDeployingEntry', // Effet de bord ici
           exit: 'onDroneDeployingExit',
           on: {
-            DRONE_REACHES_TILE: 'drone_scanning'
+            DRONE_REACHES_TILE: {
+              target: 'drone_scanning',
+              actions: 'assignDroneScanningContext' // MAJ contexte du drone à 'scanning'
+            }
           }
         },
         drone_scanning: {
           entry: 'onDroneScanningEntry',
           exit: 'onDroneScanningExit',
           on: {
-            DRONE_SCANS_TILE: 'drone_returning'
+              DRONE_HAS_SCANNED: {
+                target: 'drone_returning',
+                actions: 'assignDroneReturningContext' // MAJ contexte du drone à 'returning'
+              }
           }
         },
         drone_returning: {

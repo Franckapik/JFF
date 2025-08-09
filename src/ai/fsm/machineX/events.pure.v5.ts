@@ -27,7 +27,7 @@ export type MachineEvents =
       initialPosition: WorldPosition;
     }
   | { type: 'DRONE_REACHES_TILE' }
-  | { type: 'DRONE_SCANS_TILE' }
+  | { type: 'DRONE_HAS_SCANNED' }
   | { type: 'DRONE_REACHES_BASE' }
   | { type: 'SHIP_REACHES_TILE' }
   | { type: 'SHIP_LOAD_RESOURCES' }
