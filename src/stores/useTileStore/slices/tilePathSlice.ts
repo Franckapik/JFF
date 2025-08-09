@@ -82,6 +82,11 @@ interface TilePathSliceActions {
     targetPosition?: WorldPosition,
     shipPosition?: WorldPosition
   ) => number;
+  selectTargetTileInRadiusForDrone: (
+    shipPosition: WorldPosition,
+    range: number,
+    tiles?: TileMap
+  ) => WorldPosition | null;
 }
 
 // =========================================================================
@@ -349,6 +354,103 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
       
       default:
         return Infinity;
+    }
+  },
+
+  // =========================================================================
+  // TILE SELECTION FUNCTIONS - Sélection de tuiles pour drones
+  // =========================================================================
+
+  /**
+   * Sélectionne une tuile cible dans un rayon donné pour le drone
+   * Migré depuis exploring.core.ts pour centraliser la logique de sélection
+   * @param shipPosition - Position du vaisseau (base de calcul)
+   * @param range - Rayon de recherche en unités de grille
+   * @param tiles - Map des tuiles (optionnel, utilise get().tiles par défaut)
+   * @returns Position cible ou null si aucune cible valide
+   */
+  selectTargetTileInRadiusForDrone: (
+    shipPosition: WorldPosition,
+    range: number,
+    tiles?: TileMap
+  ): WorldPosition | null => {
+    try {
+      if (!shipPosition) {
+        return null;
+      }
+      
+      // Utiliser les tuiles fournies ou récupérer du store
+      const tilesMap = tiles || get().tiles;
+      
+      if (!tilesMap || Object.keys(tilesMap).length === 0) {
+        // Fallback : générer une position aléatoire dans le rayon
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * range + 1;
+        return {
+          x: shipPosition.x + Math.cos(angle) * distance,
+          y: shipPosition.y + 0.5,
+          z: shipPosition.z + Math.sin(angle) * distance
+        };
+      }
+      
+      // Filtrer les tuiles dans le rayon spécifié
+      const tilesInRange = Object.values(tilesMap).filter((tile: Tile) => {
+        let tilePos: WorldPosition;
+        if (Array.isArray(tile.position)) {
+          tilePos = { x: tile.position[0], y: tile.position[1], z: tile.position[2] };
+        } else {
+          tilePos = { x: tile.position.x, y: tile.position.y || 0, z: tile.position.z };
+        }
+        
+        const distance = Math.sqrt(
+          Math.pow(tilePos.x - shipPosition.x, 2) +
+          Math.pow(tilePos.z - shipPosition.z, 2)
+        );
+        
+        return distance > 0.5 && distance <= range; // Exclure la tuile du vaisseau
+      });
+      
+      if (tilesInRange.length === 0) {
+        // Fallback : générer une position aléatoire dans le rayon
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * range + 1;
+        return {
+          x: shipPosition.x + Math.cos(angle) * distance,
+          y: shipPosition.y + 0.5,
+          z: shipPosition.z + Math.sin(angle) * distance
+        };
+      }
+      
+      // Sélectionner une tuile au hasard
+      const randomTile: Tile = tilesInRange[Math.floor(Math.random() * tilesInRange.length)];
+      let targetPosition: WorldPosition;
+      
+      if (Array.isArray(randomTile.position)) {
+        targetPosition = { 
+          x: randomTile.position[0], 
+          y: randomTile.position[1] + 0.5, // Légèrement au-dessus de la tuile
+          z: randomTile.position[2] 
+        };
+      } else {
+        targetPosition = { 
+          x: randomTile.position.x, 
+          y: (randomTile.position.y || 0) + 0.5,
+          z: randomTile.position.z 
+        };
+      }
+      
+      return targetPosition;
+      
+    } catch (_error) {
+      // Fallback en cas d'erreur
+      if (shipPosition) {
+        return {
+          x: shipPosition.x + 2,
+          y: shipPosition.y + 0.5,
+          z: shipPosition.z + 2
+        };
+      }
+      return null;
     }
   },
 });

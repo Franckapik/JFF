@@ -67,6 +67,11 @@ export type TileStoreType = {
   calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap) => number;
   findTileAtPosition: (position: WorldPosition, tiles?: TileMap) => Tile | null;
   isReachable: (from: GridCoordinate, to: GridCoordinate, tiles?: TileMap) => boolean;
+  selectTargetTileInRadiusForDrone: (
+    shipPosition: WorldPosition,
+    range: number,
+    tiles?: TileMap
+  ) => WorldPosition | null;
 
   // --- Marquage ---
   markTileAsExplored: (coord: GridCoordinate, explorer?: string) => void;
