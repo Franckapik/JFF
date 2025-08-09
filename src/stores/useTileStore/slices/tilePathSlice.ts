@@ -441,7 +441,6 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
       }
       
       const randomTile = candidateTiles[Math.floor(Math.random() * candidateTiles.length)];
-      console.log(randomTile);
 
       // 4. Convertir la position de la tuile en WorldPosition
       let targetPosition: WorldPosition;

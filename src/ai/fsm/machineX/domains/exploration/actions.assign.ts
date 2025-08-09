@@ -41,8 +41,8 @@ export const assignDroneDeployingContext = createAssignAction(({ context, event 
   fsmLogger.info(`🔄 [${context.entityId}] Updating context for drone deployment: ${event.type}`);
   
   if (event.type === 'NEED_EXPLORING') {
-    const droneType: DroneType = 'explorer';
-    const range = 3;
+  const droneType: DroneType = 'explorer';
+  const range = context.config?.exploringRadius ?? 2;
     
     // Vérifier si le drone existe dans la flotte
     if (!context.droneFleet?.drones[droneType]) {
