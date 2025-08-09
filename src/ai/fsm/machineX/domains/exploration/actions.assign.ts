@@ -116,7 +116,8 @@ export const assignDroneDeployingContext = createAssignAction(({ context, event 
         isActive: true,
         phase: 'exploring' as const
       },
-      lastAction: 'droneDeployForExploration_success'
+      lastAction: 'droneDeployForExploration_success',
+      currentState: 'exploring_deploying', // 🟢 Mise à jour de l'état global FSM
     };
     
     fsmLogger.info(`✅ [${context.entityId}] Drone deployment result:`, {
@@ -181,7 +182,8 @@ export const assignDroneScanningContext = createAssignAction(({ context, event }
           hasResources: false // Sera mis à jour lors de DRONE_HAS_SCANNED
         }
       }
-    }
+    },
+    currentState: 'exploring_scanning', // 🟢 Mise à jour de l'état global FSM
   };
 });
 
@@ -229,7 +231,8 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
           lastUpdate: Date.now()
         }
       }
-    }
+    },
+    currentState: 'exploring_returning', // 🟢 Mise à jour de l'état global FSM
   };
 });
 
