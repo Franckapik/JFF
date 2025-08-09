@@ -29,7 +29,6 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 
 // Import depuis l'architecture domain-based
 import {
-  __collectionEffectsPlaceholder,
   __collectionGuardsPlaceholder,
   __maintenanceEffectsPlaceholder,
   __maintenanceGuardsPlaceholder,
@@ -39,7 +38,12 @@ import {
   assignDroneScanningContext,
   // Evaluation domain (COMPLET)
   assignEvaluationContext,
+  assignShipCollectingContext,
+  assignShipMovingToTileContext,
+  assignShipReturningContext,
   // Exploration domain (COMPLET - actions effects migrées)
+  onCollectingEntry,
+  onCollectingExit,
   onDroneDeployingEntry,
   onDroneDeployingExit,
   onDroneReturningEntry,
@@ -50,6 +54,12 @@ import {
   onEvaluatingExit,
   onExploringEntry,
   onExploringExit,
+  onShipCollectingEntry,
+  onShipCollectingExit,
+  onShipMovingToTileEntry,
+  onShipMovingToTileExit,
+  onShipReturningEntry,
+  onShipReturningExit,
   // Global domain (COMPLET - actions transversales)
   processDroneInitRequest,
   shouldCollect,
@@ -95,15 +105,18 @@ export const machineXV5Pure = setup({
     onDroneReturningEntry,
     onDroneReturningExit,
     
-    // Actions temporaires du domaine COLLECTION (à migrer)
-    onCollectingEntry: __collectionEffectsPlaceholder,
-    onCollectingExit: __collectionEffectsPlaceholder,
-    onShipMovingToTileEntry: __collectionEffectsPlaceholder,
-    onShipMovingToTileExit: __collectionEffectsPlaceholder,
-    onShipCollectingEntry: __collectionEffectsPlaceholder,
-    onShipCollectingExit: __collectionEffectsPlaceholder,
-    onShipReturningEntry: __collectionEffectsPlaceholder,
-    onShipReturningExit: __collectionEffectsPlaceholder,
+    // Actions du domaine COLLECTION (migrées)
+    assignShipMovingToTileContext,
+    assignShipCollectingContext,
+    assignShipReturningContext,
+    onCollectingEntry,
+    onCollectingExit,
+    onShipMovingToTileEntry,
+    onShipMovingToTileExit,
+    onShipCollectingEntry,
+    onShipCollectingExit,
+    onShipReturningEntry,
+    onShipReturningExit,
     
     // Actions temporaires du domaine MAINTENANCE (à migrer)
     onMaintainingEntry: __maintenanceEffectsPlaceholder,
@@ -174,7 +187,7 @@ export const machineXV5Pure = setup({
         NEED_COLLECTING: { 
           target: 'collecting', 
           guard: 'shouldCollect',
-          // Ajoute ici l'action assign si besoin
+          actions: 'assignShipMovingToTileContext' // MAJ contexte ici (assign)
         },
         NEED_MAINTENANCE: { 
           target: 'maintaining', 
@@ -242,7 +255,8 @@ export const machineXV5Pure = setup({
             SHIP_REACHES_TILE: [
               {
                 target: 'ship_collecting',
-                guard: 'canCollectTile'
+                guard: 'canCollectTile',
+                actions: 'assignShipCollectingContext'
               },
               {
                 target: '#machineXV5Pure.evaluating'
@@ -258,7 +272,8 @@ export const machineXV5Pure = setup({
             SHIP_LOAD_RESOURCES: [
               {
                 target: 'ship_returning',
-                guard: 'isVehicleOverloaded'
+                guard: 'isVehicleOverloaded',
+                actions: 'assignShipReturningContext'
               },
               {
                 target: 'ship_moving_to_tile'
