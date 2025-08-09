@@ -153,6 +153,11 @@ export const assignDroneScanningContext = createAssignAction(({ context, event }
   
   const droneState: DroneVisualState = 'scanning';
   
+  // Incrémenter les stats d'exploration en même temps
+  const currentTilesExploredInCycle = context.memory?.stats?.tilesExploredInCycle || 0;
+  const newCount = currentTilesExploredInCycle + 1;
+  fsmLogger.info(`📊 [${context.entityId}] Incrémentation exploration: ${currentTilesExploredInCycle} → ${newCount}`);
+  
   return {
     droneFleet: {
       ...context.droneFleet,
@@ -162,6 +167,18 @@ export const assignDroneScanningContext = createAssignAction(({ context, event }
           ...context.droneFleet.drones.explorer,
           state: droneState,
           lastUpdate: Date.now()
+        }
+      }
+    },
+    memory: {
+      ...context.memory,
+      stats: {
+        ...context.memory.stats,
+        tilesExploredInCycle: newCount,
+        lastExploration: {
+          coord: { coord: '0,0', type: 'explore' }, // Coordonnée temporaire, sera mise à jour lors de DRONE_HAS_SCANNED
+          timestamp: Date.now(),
+          hasResources: false // Sera mis à jour lors de DRONE_HAS_SCANNED
         }
       }
     }

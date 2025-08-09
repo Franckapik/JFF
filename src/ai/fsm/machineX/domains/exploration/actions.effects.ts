@@ -5,11 +5,10 @@
  */
 
 
-import type { ActorRef } from 'xstate';
 
 import fsmLogger from '../../../../../logger/fsmLogger';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
-import type { MachineEvents } from '../../events.pure.v5';
+
 
 /**
  * Action d'entrée de l'état exploring
@@ -42,9 +41,9 @@ export const onDroneDeployingExit = ({ context }: { context: FSMContext }) => {
 /**
  * Action d'entrée de l'état drone_scanning
  */
-
-export const onDroneScanningEntry = ({ context, self }: { context: FSMContext, self: ActorRef<any, MachineEvents> }) => {
+export const onDroneScanningEntry = ({ context, self }: { context: FSMContext, self: any }) => {
   fsmLogger.action(`📡 [${context.entityId}] Entrée dans l'état DRONE_SCANNING`);
+  
   // Simule un scan de 2 secondes (à adapter selon la logique métier)
   setTimeout(() => {
     fsmLogger.action(`📡 [${context.entityId}] Scan terminé, envoi de DRONE_HAS_SCANNED`);

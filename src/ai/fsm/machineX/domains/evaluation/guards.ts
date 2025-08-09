@@ -26,19 +26,37 @@ function createGuard(
 
 /**
  * Guard principal pour déterminer si l'exploration est nécessaire
+ * Nouvelle logique : Si plus de 2 explorations dans le cycle courant, on ne propose plus d'exploration
  */
 export const shouldExplore = createGuard('shouldExplore', ({ context }) => {
+  // Nouvelle logique : on limite à 2 explorations par cycle
+  const exploredThisCycle = context.memory?.stats?.tilesExploredInCycle ?? 0;
+  
+  if (exploredThisCycle > 2) {
+    fsmLogger.info(`[${context.entityId}] shouldExplore: false - déjà ${exploredThisCycle} explorations dans ce cycle (limite: 2)`);
+    return false;
+  }
+
   if (context.vehicle.fuel < context.config.fuelThreshold) return false;
   if (context.vehicle.damage > 80) return false;
   if (context.vehicle.isAtCapacity) return false;
-  const isDroneAvailable = context.droneFleet?.drones?.explorer?.state === 'docked';
-  return isDroneAvailable;
+  return true;
 });
 
 /**
  * Guard pour déterminer si la collecte est nécessaire
+ * Nouvelle logique : Si plus de 2 explorations par drone, le vaisseau doit explorer/collecter
  */
 export const shouldCollect = createGuard('shouldCollect', ({ context }) => {
+  const exploredThisCycle = context.memory?.stats?.tilesExploredInCycle ?? 0;
+  
+  // Si plus de 2 explorations par drone, le vaisseau prend le relais
+  if (exploredThisCycle > 2) {
+    fsmLogger.info(`[${context.entityId}] shouldCollect: true - Vaisseau prend le relais après ${exploredThisCycle} explorations par drone`);
+    return !context.vehicle.isAtCapacity && context.vehicle.fuel > context.config.fuelThreshold;
+  }
+  
+  // Logique classique : collecte des tuiles déjà explorées
   return context.selectedTileForCollection !== null && 
          !context.vehicle.isAtCapacity &&
          context.vehicle.fuel > context.config.fuelThreshold;

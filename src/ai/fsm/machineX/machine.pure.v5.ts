@@ -31,7 +31,6 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 import {
   __collectionEffectsPlaceholder,
   __collectionGuardsPlaceholder,
-  __explorationGuardsPlaceholder,
   __maintenanceEffectsPlaceholder,
   __maintenanceGuardsPlaceholder,
   assignDroneDeployingContext,
@@ -52,6 +51,7 @@ import {
   onExploringExit,
   // Global domain (COMPLET - actions transversales)
   processDroneInitRequest,
+  shouldExplore,
   updateDronePosition,
   updateShipPosition
 } from './domains';
@@ -115,8 +115,8 @@ export const machineXV5Pure = setup({
     onShipRefuelingExit: __maintenanceEffectsPlaceholder,
   },
   guards: {
-    // Guards du domaine EVALUATION (migré)
-    shouldExplore: __explorationGuardsPlaceholder,
+  // Guards du domaine EVALUATION (migré)
+  shouldExplore,
     
     // Guards temporaires des domaines (à migrer)
     shouldCollect: __collectionGuardsPlaceholder,
