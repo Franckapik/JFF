@@ -179,9 +179,9 @@ const Scene: React.FC = () => {
                 <Fleet
                   botId={typedTile.assignedToBot as BotId}
                   fleetPosition={{
-                    x: 0,
-                    y: 0,
-                    z: 0,
+                    x: pos[0], // ✅ Vraies coordonnées mondiales
+                    y: 0.5,
+                    z: pos[2],
                   }}
                   tileCoord={typedTile.coord as any}
                 />

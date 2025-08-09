@@ -66,7 +66,7 @@ export const assignDroneDeployingContext = createAssignAction(({ context, event 
     // Utiliser la fonction du tileStore pour sélectionner une tuile cible
     const tileStore = useTileStore.getState() as TileStoreType;
     const targetPosition = tileStore.selectTargetTileInRadiusForDrone(shipPosition, range);
-
+    
     // Si aucune cible valide dans le rayon autorisé, déclencher un retour en évaluation
     if (!targetPosition) {
       fsmLogger.debug(`[${context.entityId}] No valid exploration targets within radius ${range}, area exploration complete`);

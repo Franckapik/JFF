@@ -28,12 +28,8 @@ export const useDroneTracker = ({
     const updatePosition = useCallback((position: WorldPosition) => {
         currentVisualPosition.current = position;
         
-        // Debug: Log les mises à jour de position
         if (context?.droneFleet?.drones?.[droneType]?.state === 'deploying') {
-            fsmLogger.debug(`🎯 [${botId}] ${droneType} tracker received position update:`, { 
-                position, 
-                droneState: context?.droneFleet?.drones?.[droneType]?.state 
-            });
+        // ...
         }
         
         const handlers = createDroneHandlers({
@@ -62,7 +58,6 @@ export const useDroneTracker = ({
                 
             case 'deploying':
                 if (distance !== Infinity) {
-                    fsmLogger.debug(`🛸 [${botId}] ${droneType} deploying - distance: ${distance.toFixed(2)}`, { position, drone: drone.state });
                     handlers.deploying.process(distance, position);
                 }
                 break;
@@ -75,7 +70,6 @@ export const useDroneTracker = ({
                 
             case 'returning':
                 if (distance !== Infinity) {
-                    fsmLogger.debug(`🛸 [${botId}] ${droneType} returning - distance: ${distance.toFixed(2)}`, { position, drone: drone.state });
                     handlers.returning.process(distance, position);
                 }
                 break;
@@ -90,7 +84,7 @@ export const useDroneTracker = ({
                 break;
                 
             default:
-                fsmLogger.debug(`🛸 [${botId}] ${droneType} drone in unhandled state: ${drone.state}`);
+            // ...
         }
     }, [context, send, botId, droneType, calculateDroneDistance]);
 

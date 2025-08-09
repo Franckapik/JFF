@@ -363,9 +363,10 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
 
   /**
    * Sélectionne une tuile cible dans un rayon donné pour le drone
-   * Migré depuis exploring.core.ts pour centraliser la logique de sélection
+   * Utilise un algorithme BFS basé sur les GridCoordinate et le système de voisins
+   * pour garantir que seules les tuiles existantes du plateau sont sélectionnées
    * @param shipPosition - Position du vaisseau (base de calcul)
-   * @param range - Rayon de recherche en unités de grille
+   * @param range - Rayon de recherche en nombre de tuiles (distance hexagonale)
    * @param tiles - Map des tuiles (optionnel, utilise get().tiles par défaut)
    * @returns Position cible ou null si aucune cible valide
    */
@@ -375,7 +376,7 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
     tiles?: TileMap
   ): WorldPosition | null => {
     try {
-      if (!shipPosition) {
+      if (!shipPosition || range <= 0) {
         return null;
       }
       
@@ -383,48 +384,67 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
       const tilesMap = tiles || get().tiles;
       
       if (!tilesMap || Object.keys(tilesMap).length === 0) {
-        // Fallback : générer une position aléatoire dans le rayon
-        const angle = Math.random() * Math.PI * 2;
-        const distance = Math.random() * range + 1;
-        return {
-          x: shipPosition.x + Math.cos(angle) * distance,
-          y: shipPosition.y + 0.5,
-          z: shipPosition.z + Math.sin(angle) * distance
-        };
+        return null; // Pas de fallback aléatoire - retourner null si pas de tuiles
       }
       
-      // Filtrer les tuiles dans le rayon spécifié
-      const tilesInRange = Object.values(tilesMap).filter((tile: Tile) => {
-        let tilePos: WorldPosition;
-        if (Array.isArray(tile.position)) {
-          tilePos = { x: tile.position[0], y: tile.position[1], z: tile.position[2] };
-        } else {
-          tilePos = { x: tile.position.x, y: tile.position.y || 0, z: tile.position.z };
+      // 1. Trouver la tuile actuelle du vaisseau
+      const currentTile = get().findTileAtPosition(shipPosition, tilesMap);
+      if (!currentTile) {
+        return null; // Impossible de localiser le vaisseau sur le plateau
+      }
+      
+      // 2. Recherche BFS pour collecter toutes les tuiles dans le rayon
+      const candidateTiles: Tile[] = [];
+      const visited = new Set<GridCoordinate>();
+      const queue: { coord: GridCoordinate; distance: number }[] = [
+        { coord: currentTile.coord, distance: 0 }
+      ];
+      
+      while (queue.length > 0) {
+        const { coord, distance } = queue.shift()!;
+        
+        // Si on a dépassé le rayon, on arrête cette branche
+        if (distance > range) {
+          continue;
         }
         
-        const distance = Math.sqrt(
-          Math.pow(tilePos.x - shipPosition.x, 2) +
-          Math.pow(tilePos.z - shipPosition.z, 2)
-        );
+        // Si déjà visité, on passe
+        if (visited.has(coord)) {
+          continue;
+        }
         
-        return distance > 0.5 && distance <= range; // Exclure la tuile du vaisseau
-      });
-      
-      if (tilesInRange.length === 0) {
-        // Fallback : générer une position aléatoire dans le rayon
-        const angle = Math.random() * Math.PI * 2;
-        const distance = Math.random() * range + 1;
-        return {
-          x: shipPosition.x + Math.cos(angle) * distance,
-          y: shipPosition.y + 0.5,
-          z: shipPosition.z + Math.sin(angle) * distance
-        };
+        visited.add(coord);
+        const tile = tilesMap[coord];
+        
+        if (!tile) {
+          continue; // Tuile inexistante (ne devrait pas arriver)
+        }
+        
+        // Ajouter à la liste des candidats si c'est une tuile valide et pas la tuile de départ
+        if (distance > 0 && tile.walkable && !tile.collected) {
+          candidateTiles.push(tile);
+        }
+        
+        // Ajouter les voisins à la queue pour la prochaine itération
+        if (distance < range && tile.neighbors) {
+          for (const neighborCoord of tile.neighbors) {
+            if (!visited.has(neighborCoord)) {
+              queue.push({ coord: neighborCoord, distance: distance + 1 });
+            }
+          }
+        }
       }
       
-      // Sélectionner une tuile au hasard
-      const randomTile: Tile = tilesInRange[Math.floor(Math.random() * tilesInRange.length)];
-      let targetPosition: WorldPosition;
+      // 3. Sélectionner une tuile candidate au hasard
+      if (candidateTiles.length === 0) {
+        return null; // Aucune tuile valide trouvée dans le rayon
+      }
       
+      const randomTile = candidateTiles[Math.floor(Math.random() * candidateTiles.length)];
+      console.log(randomTile);
+
+      // 4. Convertir la position de la tuile en WorldPosition
+      let targetPosition: WorldPosition;
       if (Array.isArray(randomTile.position)) {
         targetPosition = { 
           x: randomTile.position[0], 
@@ -442,14 +462,7 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
       return targetPosition;
       
     } catch (_error) {
-      // Fallback en cas d'erreur
-      if (shipPosition) {
-        return {
-          x: shipPosition.x + 2,
-          y: shipPosition.y + 0.5,
-          z: shipPosition.z + 2
-        };
-      }
+      // En cas d'erreur, retourner null plutôt qu'une position aléatoire
       return null;
     }
   },
