@@ -1,4 +1,9 @@
 --TODO
+
+La logique de déplacement du vaisseau doit se refaire par la suppression des ancines fichiers d'animation (js). Il faut redemander de faire un deplacement selon BFS, en utilisant le store, pour atteindre la tuile cible lors de l'état correpondant. Le fonctionnement des drones pour certains aspects doit etre pris en référence. Mais peut-etre pas le systeme de position car pour le drone il depend de fleet ou surtout du vaisseau. On doit s'inspirer probableùent de selectTargetTileInRadiusForDrone qui Utilise un algorithme BFS basé sur les GridCoordinate et le système de voisins.
+
+
+
 Les handlers pour le ship viennent d'etre créés. Il faut mainetannt que l'animation corresponde bien. Pour cela, les events doivent etre envoyés depuis le tracker et non pas par des timeout d'action d'effets. 
 Il faut comprendre pourquoi le vaisseau ne bouge pas tout d'abord vers la position target lors de movetotile.
 Ensuite , la reflexion devra porter sur l'utilisation des fonctions importées des actions d'effets utilisant les sends depuis les trackers pour que cela soit plus judicieux d'avoir les send que du meme coté. 
