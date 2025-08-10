@@ -5,11 +5,13 @@
  */
 
 import { createShipCollectingHandler } from './collectingHandler';
+import { createShipInitializeHandler } from './initializeHandler';
 import { createShipMovingToTileHandler } from './movingToTileHandler';
 import { createShipReturningHandler } from './returningHandler';
 
 export {
     createShipCollectingHandler,
+    createShipInitializeHandler,
     createShipMovingToTileHandler,
     createShipReturningHandler
 };
@@ -29,6 +31,7 @@ export const createShipHandlers = ({ fsmSend, botId, shipType }: ShipHandlerPara
   const send = fsmSend;
   
   return {
+    initializeHandler: createShipInitializeHandler({ botId, shipType, send }),
     movingToTileHandler: createShipMovingToTileHandler({ botId, shipType, send }),
     collectingHandler: createShipCollectingHandler({ botId, shipType, send }),
     returningHandler: createShipReturningHandler({ botId, shipType, send })

@@ -8,7 +8,7 @@
 
 // === VEHICLE ANIMATIONS ===
 export { useDroneAnimation } from './useDroneAnimation';
-// export { useShipAnimation } from './useShipAnimation.js'; // TODO: Étape 5
+export { useShipAnimation } from './useShipAnimation'; // ✅ Étape 5 - Hook d'animation vaisseau
 
 // === OTHER ANIMATIONS ===
 export { useFloatingAnimation } from './useFloatingAnimation.js';
