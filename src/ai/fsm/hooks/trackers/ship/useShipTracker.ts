@@ -47,29 +47,41 @@ export const useShipTracker = ({
         // Si le véhicule n'existe pas dans le contexte, attendre la prochaine mise à jour
         if (!vehicle) return;
 
-        // Switch unifié pour tous les sous-états de collecting avec interface unifiée
+        // Switch unifié pour tous les sous-états de collecting avec logique basée sur la distance
         switch (currentState) {
-            case 'collecting_ship_moving_to_tile':
+            case 'collecting_ship_moving_to_tile': {
                 if (context?.selectedTileForCollection?.coord) {
-                    // Pour l'instant, utiliser une position simplifiée pour le test
+                    // Pour simplifier, utiliser la position fixe (0,0,0) comme dans les actions.assign.ts
                     const targetPosition = { x: 0, y: 0.5, z: 0 };
-                    handlers.movingToTile.handleTileReached(position, targetPosition);
+                    const distance = Math.sqrt(
+                        Math.pow(position.x - targetPosition.x, 2) +
+                        Math.pow(position.z - targetPosition.z, 2)
+                    );
+                    handlers.movingToTileHandler.process(distance, position);
                 }
                 break;
+            }
                 
-            case 'collecting_ship_collecting':
-                handlers.collecting.processResourceCollection(position);
+            case 'collecting_ship_collecting': {
+                // Pour la collecte, la distance n'est pas pertinente (simulation par timer)
+                handlers.collectingHandler.process(0, position);
                 break;
+            }
                 
-            case 'collecting_ship_returning':
+            case 'collecting_ship_returning': {
                 if (vehicle?.basePosition) {
-                    handlers.returning.handleBaseReached(position, vehicle.basePosition);
+                    const basePosition = vehicle.basePosition;
+                    const distance = Math.sqrt(
+                        Math.pow(position.x - basePosition.x, 2) +
+                        Math.pow(position.z - basePosition.z, 2)
+                    );
+                    handlers.returningHandler.process(distance, position);
                 }
                 break;
+            }
                 
             default:
-                // Pour les autres états, utiliser le handler d'initialisation
-                handlers.init.handleInitialPosition(position);
+                // Pour les autres états, pas de traitement spécifique
                 break;
         }
     }, [context, send, botId, shipType]);

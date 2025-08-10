@@ -6,71 +6,42 @@
 
 import fsmLogger from '../../../../../../logger/fsmLogger.ts';
 import type { WorldPosition } from '../../../../../../types/coordinates.d.ts';
+import { TILE_DETECTION_THRESHOLD } from '../../../../machineX/config/constants';
 
-interface ShipMovingToTileHandlerParams {
-  fsmSend: (event: Record<string, unknown>) => void;
+interface ShipHandlerParams {
   botId: string;
   shipType: 'ship' | 'main-ship';
+  send: (event: Record<string, unknown>) => void;
 }
 
 /**
  * Création d'un handler pour le déplacement du vaisseau vers une tuile
- * @param params - Les paramètres nécessaires
- * @returns L'objet handler avec les méthodes
+ * Suit la même logique que les handlers de drone
  */
-export const createShipMovingToTileHandler = ({ fsmSend, botId, shipType }: ShipMovingToTileHandlerParams) => {
+export const createShipMovingToTileHandler = ({ botId, shipType, send }: ShipHandlerParams) => {
   return {
-    /**
-     * Gère l'arrivée du vaisseau sur la tuile cible
-     * @param position - La position visuelle actuelle
-     * @param targetPosition - La position cible
-     * @returns True si le vaisseau est arrivé
-     */
-    handleTileReached(position: WorldPosition, targetPosition: WorldPosition): boolean {
-      const distance = Math.sqrt(
-        Math.pow(position.x - targetPosition.x, 2) +
-        Math.pow(position.z - targetPosition.z, 2)
-      );
+    process(distance: number, position: WorldPosition): boolean {
+      // Utilise le même seuil de détection que les drones
+      const isCloseEnough = distance < TILE_DETECTION_THRESHOLD;
       
-      // Tolérance pour considérer que le vaisseau est arrivé
-      const tolerance = 0.2;
-      
-      if (distance <= tolerance) {
-        fsmLogger.info(`🚢 [${botId}] Ship reached target tile`, {
-          currentPosition: position,
-          targetPosition,
-          distance
+      if (isCloseEnough) {
+        fsmLogger.mouvement(`🚢 [${botId}] Ship reached target tile (threshold: ${TILE_DETECTION_THRESHOLD})`, { 
+          position, 
+          distance, 
+          TILE_DETECTION_THRESHOLD,
+          shipType
         });
         
-        fsmSend({
-          type: 'SHIP_REACHES_TILE',
-          botId,
-          shipType,
-          position
+        send({ 
+          type: 'SHIP_REACHES_TILE', 
+          botId, 
+          shipType 
         });
         
         return true;
       }
       
       return false;
-    },
-
-    /**
-     * Met à jour la position du vaisseau en mouvement
-     * @param position - La position visuelle actuelle
-     */
-    updateMovingPosition(position: WorldPosition): void {
-      fsmLogger.debug(`🚢 [${botId}] Ship moving to tile position update`, {
-        position,
-        shipType
-      });
-      
-      fsmSend({
-        type: 'SHIP_POSITION_UPDATE',
-        botId,
-        shipType,
-        position
-      });
     }
   };
 };

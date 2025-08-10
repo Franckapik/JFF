@@ -6,107 +6,42 @@
 
 import fsmLogger from '../../../../../../logger/fsmLogger.ts';
 import type { WorldPosition } from '../../../../../../types/coordinates.d.ts';
+import { TILE_DETECTION_THRESHOLD } from '../../../../machineX/config/constants';
 
-interface ShipReturningHandlerParams {
-  fsmSend: (event: Record<string, unknown>) => void;
+interface ShipHandlerParams {
   botId: string;
   shipType: 'ship' | 'main-ship';
+  send: (event: Record<string, unknown>) => void;
 }
 
 /**
  * Création d'un handler pour le retour du vaisseau à la base
- * @param params - Les paramètres nécessaires
- * @returns L'objet handler avec les méthodes
+ * Suit la même logique que les handlers de drone
  */
-export const createShipReturningHandler = ({ fsmSend, botId, shipType }: ShipReturningHandlerParams) => {
+export const createShipReturningHandler = ({ botId, shipType, send }: ShipHandlerParams) => {
   return {
-    /**
-     * Gère l'arrivée du vaisseau à la base
-     * @param position - La position visuelle actuelle
-     * @param basePosition - La position de la base
-     * @returns True si le vaisseau est arrivé à la base
-     */
-    handleBaseReached(position: WorldPosition, basePosition: WorldPosition): boolean {
-      const distance = Math.sqrt(
-        Math.pow(position.x - basePosition.x, 2) +
-        Math.pow(position.z - basePosition.z, 2)
-      );
+    process(distance: number, position: WorldPosition): boolean {
+      // Utilise le même seuil de détection que les drones
+      const isCloseEnough = distance < TILE_DETECTION_THRESHOLD;
       
-      // Tolérance pour considérer que le vaisseau est arrivé à la base
-      const tolerance = 0.3;
-      
-      if (distance <= tolerance) {
-        fsmLogger.info(`🏠 [${botId}] Ship reached base`, {
-          currentPosition: position,
-          basePosition,
-          distance
+      if (isCloseEnough) {
+        fsmLogger.mouvement(`🏠 [${botId}] Ship reached base (threshold: ${TILE_DETECTION_THRESHOLD})`, { 
+          position, 
+          distance, 
+          TILE_DETECTION_THRESHOLD,
+          shipType
         });
         
-        fsmSend({
-          type: 'SHIP_REACHES_BASE',
-          botId,
-          shipType,
-          position
+        send({ 
+          type: 'SHIP_REACHES_BASE', 
+          botId, 
+          shipType 
         });
         
         return true;
       }
       
       return false;
-    },
-
-    /**
-     * Met à jour la position du vaisseau en retour vers la base
-     * @param position - La position visuelle actuelle
-     */
-    updateReturningPosition(position: WorldPosition): void {
-      fsmLogger.debug(`🔙 [${botId}] Ship returning to base position update`, {
-        position,
-        shipType
-      });
-      
-      fsmSend({
-        type: 'SHIP_POSITION_UPDATE',
-        botId,
-        shipType,
-        position
-      });
-    },
-
-    /**
-     * Gère les situations d'urgence pendant le retour
-     * @param position - La position visuelle actuelle
-     */
-    handleEmergencyStop(position: WorldPosition): void {
-      fsmLogger.error(`🚨 [${botId}] Emergency stop during return`, {
-        position,
-        shipType
-      });
-      
-      fsmSend({
-        type: 'EMERGENCY_STOP',
-        botId,
-        shipType,
-        position
-      });
-    },
-
-    /**
-     * Gère l'alerte de carburant faible pendant le retour
-     * @param position - La position visuelle actuelle
-     */
-    handleLowFuelWarning(position: WorldPosition): void {
-      fsmLogger.error(`⛽ [${botId}] Low fuel warning during return`, {
-        position,
-        shipType
-      });
-      
-      fsmSend({
-        type: 'LOW_FUEL_WARNING',
-        botId,
-        shipType,
-        position
-      });
     }
   };
 };

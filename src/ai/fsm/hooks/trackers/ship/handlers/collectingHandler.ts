@@ -7,72 +7,43 @@
 import fsmLogger from '../../../../../../logger/fsmLogger.ts';
 import type { WorldPosition } from '../../../../../../types/coordinates.d.ts';
 
-interface ShipCollectingHandlerParams {
-  fsmSend: (event: Record<string, unknown>) => void;
+interface ShipHandlerParams {
   botId: string;
   shipType: 'ship' | 'main-ship';
+  send: (event: Record<string, unknown>) => void;
 }
 
 /**
  * Création d'un handler pour la collecte de ressources du vaisseau
- * @param params - Les paramètres nécessaires
- * @returns L'objet handler avec les méthodes
+ * Suit la même logique que les handlers de drone pour le scanning
  */
-export const createShipCollectingHandler = ({ fsmSend, botId, shipType }: ShipCollectingHandlerParams) => {
+export const createShipCollectingHandler = ({ botId, shipType, send }: ShipHandlerParams) => {
+  let collectionStarted = false;
+  
   return {
-    /**
-     * Traite la collecte de ressources sur la tuile
-     * @param position - La position visuelle actuelle
-     */
-    processResourceCollection(position: WorldPosition): void {
-      fsmLogger.info(`📦 [${botId}] Ship collecting resources`, {
-        position,
-        shipType
-      });
+    process(_distance: number, position: WorldPosition): boolean {
+      // Pour la collecte, on démarre le timer une seule fois quand on entre dans cet état
+      if (!collectionStarted) {
+        collectionStarted = true;
+        
+        fsmLogger.info(`📦 [${botId}] Starting resource collection`, {
+          position,
+          shipType
+        });
+        
+        // Simulation de la collecte de ressources (comme dans les actions.effects.ts)
+        setTimeout(() => {
+          fsmLogger.action(`📦 [${botId}] Collection completed, sending SHIP_LOAD_RESOURCES`);
+          send({ 
+            type: 'SHIP_LOAD_RESOURCES', 
+            botId, 
+            shipType 
+          });
+        }, 2000); // 2 secondes de collecte simulée
+      }
       
-      // Met à jour la position pendant la collecte
-      fsmSend({
-        type: 'SHIP_POSITION_UPDATE',
-        botId,
-        shipType,
-        position
-      });
-    },
-
-    /**
-     * Déclenche la fin de la collecte
-     * @param position - La position visuelle actuelle
-     */
-    triggerCollectionComplete(position: WorldPosition): void {
-      fsmLogger.info(`✅ [${botId}] Ship collection complete, loading resources`, {
-        position,
-        shipType
-      });
-      
-      fsmSend({
-        type: 'SHIP_LOAD_RESOURCES',
-        botId,
-        shipType,
-        position
-      });
-    },
-
-    /**
-     * Gère l'épuisement des ressources sur la tuile
-     * @param position - La position visuelle actuelle
-     */
-    handleResourceDepletion(position: WorldPosition): void {
-      fsmLogger.info(`⚠️ [${botId}] Resources depleted on tile`, {
-        position,
-        shipType
-      });
-      
-      fsmSend({
-        type: 'RESOURCE_DEPLETED',
-        botId,
-        shipType,
-        position
-      });
+      // Pour la collecte, la logique de fin est gérée par le timer, pas par la position
+      return false;
     }
   };
 };
