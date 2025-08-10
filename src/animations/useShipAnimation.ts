@@ -15,18 +15,18 @@ import { useFrame } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-import type { WorldPosition, GridCoordinate } from '../types';
-import type { ShipVisualState } from '../types/r3f.d.ts';
+import type { GridCoordinate, WorldPosition } from '../types';
 import type { ShipAnimationProps, ShipAnimationReturn } from '../types/r3f';
+import type { ShipVisualState } from '../types/r3f.d.ts';
 
 import fsmLogger from '../logger/fsmLogger.ts';
 
 import { applyShipVisualAnimations } from './utils/shipAnimationUtils';
 import {
-  calculateShipPath,
-  getShipSpeed,
-  shouldAnimateShip,
-  isPathCompleted
+    calculateShipPath,
+    getShipSpeed,
+    isPathCompleted,
+    shouldAnimateShip
 } from './utils/shipPositionUtils';
 
 export const useShipAnimation = ({
@@ -61,13 +61,8 @@ export const useShipAnimation = ({
   // ============================================================================
   
   useEffect(() => {
-    if (!isActive || !vehicle) {
+    if (!isActive) {
       animationEnabled.current = false;
-      fsmLogger.mouvement(`🚢 [${shipType}] Animation disabled`, { 
-        isActive, 
-        hasVehicle: !!vehicle,
-        shipState 
-      });
       return;
     }
 
@@ -75,16 +70,8 @@ export const useShipAnimation = ({
     
     if (needsAnimation !== animationEnabled.current) {
       animationEnabled.current = needsAnimation;
-      
-      fsmLogger.mouvement(`🚢 [${shipType}] Animation ${needsAnimation ? 'enabled' : 'disabled'}`, {
-        shipState,
-        shipVisualState,
-        isMoving,
-        isActive,
-        needsAnimation
-      });
     }
-  }, [shipState, shipVisualState, isMoving, isActive, shipType, vehicle]);
+  }, [shipState, isMoving, isActive]);
 
   // ============================================================================
   // CALCUL DE CHEMIN LORS DU CHANGEMENT DE CIBLE
@@ -96,7 +83,7 @@ export const useShipAnimation = ({
     }
 
     // Éviter les recalculs inutiles
-    const tileKey = selectedTile.coord.coord; // selectedTile.coord.coord est un GridCoordinate (string)
+    const tileKey = selectedTile.coord.coord;
     if (lastTargetTile.current === tileKey) {
       return;
     }
@@ -114,35 +101,24 @@ export const useShipAnimation = ({
         if (currentWorldPosition.current.x === 0 && currentWorldPosition.current.y === 0 && currentWorldPosition.current.z === 0) {
           currentWorldPosition.current = { ...newPath[0] };
         }
-        
-        fsmLogger.mouvement(`🚢 [${shipType}] New path calculated`, {
-          targetTile: selectedTile.coord.coord,
-          pathLength: newPath.length,
-          startPosition: vehicle.basePosition,
-          firstWaypoint: newPath[0],
-          lastWaypoint: newPath[newPath.length - 1]
-        });
       }
     } catch (error) {
-      fsmLogger.error(`🚢 [${shipType}] Error calculating path`, { error, selectedTile: selectedTile.coord, basePosition: vehicle.basePosition });
+      // Log d'erreur seulement, pas de log de succès pour éviter les spams
+      fsmLogger.error(`🚢 [${shipType}] Error calculating path`, { error });
     }
   }, [selectedTile, vehicle?.basePosition, shipType]);
 
   // ============================================================================
-  // SYNCHRONISATION INITIALE DE POSITION
+  // SYNCHRONISATION INITIALE DE POSITION (UNE SEULE FOIS)
   // ============================================================================
   
   useEffect(() => {
-    if (vehicle?.basePosition && updateVisualPosition) {
-      // Initialiser la position du vaisseau à sa base
+    if (vehicle?.basePosition && updateVisualPosition && currentWorldPosition.current.x === 0) {
+      // Initialiser la position du vaisseau à sa base (une seule fois)
       currentWorldPosition.current = { ...vehicle.basePosition };
       updateVisualPosition(vehicle.basePosition);
-      
-      fsmLogger.mouvement(`🚢 [${shipType}] Initial position synchronized`, {
-        basePosition: vehicle.basePosition
-      });
     }
-  }, [vehicle?.basePosition, updateVisualPosition, shipType]);
+  }, [vehicle?.basePosition, updateVisualPosition]);
 
   // ============================================================================
   // ANIMATION FRAME OPTIMISÉE - INTERPOLATION TUILE PAR TUILE
@@ -235,17 +211,6 @@ export const useShipAnimation = ({
     // ============================================================================
     
     updateVisualPosition(currentWorldPosition.current);
-
-    // Log périodique de debug (toutes les 60 frames ~1 seconde)
-    if (Math.floor(state.clock.getElapsedTime() * 60) % 60 === 0) {
-      fsmLogger.mouvement(`🚢 [${shipType}] Animation progress`, {
-        shipState,
-        currentWaypoint: `${currentIndex + 1}/${path.length}`,
-        position: currentWorldPosition.current,
-        speed,
-        distance: distance.toFixed(2)
-      });
-    }
   });
 
   return {

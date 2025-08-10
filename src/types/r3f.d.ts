@@ -10,6 +10,7 @@ import type { DroneType, DroneVisualState } from './drone.d';
 import type { TileCoordinate } from "./coordinates.d";
 
 import type { FSMContext } from "./fsm.d.ts";
+import type { XStateSend } from "./tracker.d.ts";
 
 import type { VehicleId, WorldPosition } from './index';
 
@@ -130,6 +131,8 @@ export interface ShipMeshProps {
   botId?: string;
   /** Contexte FSM pour l'état du vaisseau */
   context?: FSMContext;
+  /** Fonction send de XState pour les événements */
+  send?: XStateSend;
   /** Action actuelle du vaisseau */
   currentAction?: string;
   /** Indique si le vaisseau est en mouvement */

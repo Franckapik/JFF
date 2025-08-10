@@ -14,9 +14,9 @@ import React, { useCallback } from "react";
 
 // === Hooks & Store Imports ===
 import { useDroneTracker } from "../ai/fsm/hooks/trackers/drone/useDroneTracker";
-// import { useShipTracker } from "../ai/fsm/hooks/trackers/ship/useShipTracker"; // TODO: Étape 5
+import { useShipTracker } from "../ai/fsm/hooks/trackers/ship/useShipTracker";
 import { useDroneAnimation } from "../animations/useDroneAnimation";
-// import { useShipAnimation } from "../animations/useShipAnimation.js"; // TODO: Étape 5
+import { useShipAnimation } from "../animations/useShipAnimation";
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
 
 // === Types ===
@@ -55,13 +55,12 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tileCoor
   });
   
   // === Ship Tracker ===
-  // TODO: Étape 5 - Réactiver le tracker pour l'animation
-  // const _updateShipVisualPosition = useShipTracker({
-  //   context,
-  //   send,
-  //   botId,
-  //   shipType: 'main-ship',
-  // });
+  const updateShipVisualPosition = useShipTracker({
+    context,
+    send: fsmSend,
+    botId,
+    shipType: 'main-ship',
+  });
   
   // === Drone Animation ===
   const droneType = 'explorer';
@@ -77,15 +76,12 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tileCoor
     isMoving: isDroneMoving,
   });
   
-  // TODO: Étape 5 - Réactiver useShipAnimation
-  // const { shipRef, currentAction, isMoving } = useShipAnimation(
-  //   context || {} as FSMContext, fleetPosition, updateShipVisualPosition, true
-  // );
-  
-  // Valeurs temporaires en attendant useShipAnimation
-  const shipRef = null;
-  const currentAction = 'idle';
-  const isMoving = false;
+  // === Ship Animation ===
+  const { shipRef, shipState } = useShipAnimation({
+    context: context || {} as FSMContext,
+    updateVisualPosition: updateShipVisualPosition,
+    isActive: true,
+  });
 
   // === Render ===
   return (
@@ -95,8 +91,8 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tileCoor
         color={color}
         botId={botId}
         context={context}
-        currentAction={currentAction}
-        isMoving={isMoving}
+        send={fsmSend}
+        currentAction={shipState}
         meshRef={shipRef}
         botStateValue={context?.currentState ?? "unknown"}
       />

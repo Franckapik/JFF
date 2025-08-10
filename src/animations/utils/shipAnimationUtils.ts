@@ -13,8 +13,8 @@
 
 import * as THREE from 'three';
 
-import type { ShipVisualState } from '../../types/r3f.d.ts';
 import type { WorldPosition } from '../../types/coordinates.d.ts';
+import type { ShipVisualState } from '../../types/r3f.d.ts';
 
 /**
  * Applique les animations visuelles selon l'état du vaisseau
