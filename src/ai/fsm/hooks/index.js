@@ -16,7 +16,7 @@ export { useFSMShipTracker } from './useFSMShipTracker.js';
 
 // === ANIMATIONS SPÉCIALISÉES ===
 export { useDroneAnimation } from '../../animations/useDroneAnimation';
-export { useShipAnimation } from '../../animations/useShipAnimation.js';
+// export { useShipAnimation } from '../../animations/useShipAnimation.js'; // TODO: Étape 5
 
 // === LEGACY SUPPORT (DEPRECATED) ===
 // ⚠️ Déprécié : Utiliser useFSMDroneTracker + useFSMShipTracker à la place

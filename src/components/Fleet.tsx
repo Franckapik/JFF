@@ -14,9 +14,9 @@ import React, { useCallback } from "react";
 
 // === Hooks & Store Imports ===
 import { useDroneTracker } from "../ai/fsm/hooks/trackers/drone/useDroneTracker";
-import { useShipTracker } from "../ai/fsm/hooks/trackers/ship/useShipTracker";
+// import { useShipTracker } from "../ai/fsm/hooks/trackers/ship/useShipTracker"; // TODO: Étape 5
 import { useDroneAnimation } from "../animations/useDroneAnimation";
-import { useShipAnimation } from "../animations/useShipAnimation.js";
+// import { useShipAnimation } from "../animations/useShipAnimation.js"; // TODO: Étape 5
 import useXFSMStore from "../stores/useXFSMStore/index.ts";
 
 // === Types ===
@@ -53,14 +53,17 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tileCoor
     botId,
     droneType: 'explorer'
   });
-    // === Ship Tracker ===
-  const updateShipVisualPosition = useShipTracker({ 
-    context: context || {} as FSMContext, 
-    send: fsmSend, 
-    botId, 
-    shipType: 'ship' as const 
-  });
-
+  
+  // === Ship Tracker ===
+  // TODO: Étape 5 - Réactiver le tracker pour l'animation
+  // const _updateShipVisualPosition = useShipTracker({
+  //   context,
+  //   send,
+  //   botId,
+  //   shipType: 'main-ship',
+  // });
+  
+  // === Drone Animation ===
   const droneType = 'explorer';
   const isDroneActive = !!context?.droneFleet?.drones?.[droneType]?.isActive;
   const isDroneMoving = !!context?.droneFleet?.drones?.[droneType]?.isMoving;
@@ -73,9 +76,16 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tileCoor
     isActive: isDroneActive,
     isMoving: isDroneMoving,
   });
-  const { shipRef, currentAction, isMoving } = useShipAnimation(
-    context || {} as FSMContext, fleetPosition, updateShipVisualPosition, true
-  );
+  
+  // TODO: Étape 5 - Réactiver useShipAnimation
+  // const { shipRef, currentAction, isMoving } = useShipAnimation(
+  //   context || {} as FSMContext, fleetPosition, updateShipVisualPosition, true
+  // );
+  
+  // Valeurs temporaires en attendant useShipAnimation
+  const shipRef = null;
+  const currentAction = 'idle';
+  const isMoving = false;
 
   // === Render ===
   return (

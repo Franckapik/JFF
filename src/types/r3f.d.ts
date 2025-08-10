@@ -13,6 +13,15 @@ import type { FSMContext } from "./fsm.d.ts";
 
 import type { VehicleId, WorldPosition } from './index';
 
+/**
+ * État visuel du vaisseau pour l'animation
+ */
+export type ShipVisualState = 
+  | 'moving_to_tile'
+  | 'collecting'
+  | 'returning'
+  | 'docked';
+
 export interface DroneAnimationReturn {
   droneRef: MutableRefObject<THREE.Mesh | undefined>;
   droneState: DroneVisualState;
@@ -26,6 +35,36 @@ export interface DroneAnimationProps {
   droneType?: DroneType;
   isActive?: boolean;
   isMoving?: boolean;
+}
+
+/**
+ * Props interface for Ship animation hook
+ */
+export interface ShipAnimationProps {
+  /** Contexte FSM pour l'état du vaisseau */
+  context: FSMContext | null;
+  /** Fonction de mise à jour de la position visuelle */
+  updateVisualPosition: (position: WorldPosition) => void;
+  /** Type du vaisseau */
+  shipType?: 'ship' | 'main-ship';
+  /** Indique si l'animation est active */
+  isActive?: boolean;
+  /** Indique si le vaisseau est en mouvement */
+  isMoving?: boolean;
+}
+
+/**
+ * Return interface for Ship animation hook
+ */
+export interface ShipAnimationReturn {
+  /** Référence au mesh du vaisseau */
+  shipRef: MutableRefObject<THREE.Mesh | undefined>;
+  /** État actuel du vaisseau */
+  shipState: string;
+  /** Chemin actuel du vaisseau (positions monde) */
+  currentPath: WorldPosition[];
+  /** Index actuel dans le chemin */
+  pathIndex: number;
 }
 
 
