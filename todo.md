@@ -1,5 +1,7 @@
 --TODO
 
+Peut tu desormais corriger, refondre le calcul de chemin pour que ce dernier se fasse de tuile en tuile vers une position cible selectionnée au hasard parmis les tuiles walkables. Tu peux retirer toutes les solutions temporaires, ou les corrections simplifiées pour donner un code plus réel/dynamique. Le décalage de position du mesh lors de l'animation est toujours visible actuellement. Tu peux implementer le retour à la base pour le mode returning également. 
+
 Pour que copilot puisse etudier un git diff :
 
 git diff a9fd96bcf02b355d1fa77645ad78051549f48319...HEAD > old_vs_new.patch

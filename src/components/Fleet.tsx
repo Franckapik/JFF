@@ -60,6 +60,7 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tileCoor
     send: fsmSend,
     botId,
     shipType: 'main-ship',
+    fleetPosition: fleetPosition, // 🆕 Position initiale du vaisseau depuis Scene
   });
   
   // === Drone Animation ===
@@ -79,8 +80,11 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tileCoor
   // === Ship Animation ===
   const { shipRef, shipState } = useShipAnimation({
     context: context || {} as FSMContext,
+    fleetPosition: fleetPosition, // Position mondiale du vaisseau pour l'initialisation
     updateVisualPosition: updateShipVisualPosition,
+    shipType: 'main-ship',
     isActive: true,
+    isMoving: context?.vehicle?.isMoving || false,
   });
 
   // === Render ===

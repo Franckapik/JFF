@@ -57,7 +57,7 @@ export const shouldCollect = createGuard('shouldCollect', ({ context }) => {
   }
   
   // Logique classique : collecte des tuiles déjà explorées
-  return context.selectedTileForCollection !== null && 
+  return context.vehicle?.targetTile !== null && 
          !context.vehicle.isAtCapacity &&
          context.vehicle.fuel > context.config.fuelThreshold;
 });

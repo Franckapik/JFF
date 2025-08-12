@@ -2,7 +2,7 @@
  * Types FSM (extraits de initialContext.ts)
  */
 
-import type { GridCoordinate, TileCoordinate } from './coordinates';
+import type { GridCoordinate } from './coordinates';
 import type { ResourceStats } from './resources';
 import type { DroneFleet, VehicleState } from './vehicle.d';
 
@@ -27,14 +27,14 @@ export interface KnownDanger {
 
 /** Exploration récente (extrait de initialContext.ts) */
 export interface ExplorationRecord {
-  coord: TileCoordinate;
+  coord: GridCoordinate;
   timestamp: number;
   hasResources: boolean;
 }
 
 /** Collecte récente (extrait de initialContext.ts) */
 export interface CollectionRecord {
-  coord: TileCoordinate;
+  coord: GridCoordinate;
   timestamp: number;
   shipId: string;
 }
@@ -77,7 +77,7 @@ export interface ContextTimestamps {
 
 /** Tuile explorée dans un cycle (extrait de initialContext.ts) */
 export interface ExploredTile {
-  coord: TileCoordinate;
+  coord: GridCoordinate;
   resources: ResourceStats;
   value: number;
   exploredAt: number;
@@ -95,7 +95,7 @@ export interface ExplorationCycle {
 
 /** Tuile sélectionnée pour collecte (extrait de initialContext.ts) */
 export interface SelectedTile {
-  coord: TileCoordinate;
+  coord: GridCoordinate;
   resources: ResourceStats;
   value: number;
 }
@@ -128,8 +128,8 @@ export interface FSMContext {
 
   // État FSM
   currentState: string;
-  currentTarget: TileCoordinate | null;
-  explorationQueue: TileCoordinate[];
+  currentTarget: GridCoordinate | null;
+  explorationQueue: GridCoordinate[];
   lastAction: string | null;
   error: string | null;
   timestamps: ContextTimestamps;

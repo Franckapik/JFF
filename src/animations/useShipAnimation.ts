@@ -15,7 +15,7 @@ import { useFrame } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-import type { GridCoordinate, WorldPosition } from '../types';
+import type { WorldPosition } from '../types';
 import type { ShipAnimationProps, ShipAnimationReturn } from '../types/r3f';
 import type { ShipVisualState } from '../types/r3f.d.ts';
 
@@ -23,14 +23,15 @@ import fsmLogger from '../logger/fsmLogger.ts';
 
 import { applyShipVisualAnimations } from './utils/shipAnimationUtils';
 import {
-    calculateShipPath,
-    getShipSpeed,
-    isPathCompleted,
-    shouldAnimateShip
+  calculateShipPath,
+  getShipSpeed,
+  isPathCompleted,
+  shouldAnimateShip
 } from './utils/shipPositionUtils';
 
 export const useShipAnimation = ({
   context,
+  fleetPosition,
   updateVisualPosition,
   shipType = 'main-ship',
   isActive,
@@ -45,16 +46,29 @@ export const useShipAnimation = ({
   const currentPath = useRef<WorldPosition[]>([]);
   const pathIndex = useRef<number>(0);
   const animationEnabled = useRef<boolean>(false);
-  const lastTargetTile = useRef<GridCoordinate | null>(null);
+  const lastTargetTile = useRef<string | null>(null);
+  const initialPositionSent = useRef<boolean>(false);
 
   // ============================================================================
   // DONNÉES DÉRIVÉES DU CONTEXTE
   // ============================================================================
   
   const vehicle = context?.vehicle;
-  const selectedTile = context?.selectedTileForCollection;
   const shipState = context?.currentState || '';
   const shipVisualState: ShipVisualState = getShipVisualState(shipState);
+
+  // ============================================================================
+  // INITIALISATION DE POSITION AVEC FLEETPOSITION
+  // ============================================================================
+  
+  useEffect(() => {
+    if (fleetPosition && updateVisualPosition && !initialPositionSent.current) {
+      fsmLogger.mouvement(`🚢 [${shipType}] Transmitting initial fleet position to FSM tracker:`, fleetPosition);
+      updateVisualPosition(fleetPosition);
+      currentWorldPosition.current = { ...fleetPosition };
+      initialPositionSent.current = true;
+    }
+  }, [fleetPosition, updateVisualPosition, shipType]);
 
   // ============================================================================
   // CONTRÔLE D'ACTIVATION DE L'ANIMATION
@@ -85,30 +99,78 @@ export const useShipAnimation = ({
   // ============================================================================
   
   useEffect(() => {
-    if (!selectedTile || !vehicle?.basePosition) {
-      fsmLogger.debug(`🚢 [${shipType}] No path calculation: selectedTile=${!!selectedTile}, basePosition=${!!vehicle?.basePosition}`);
+    if (!vehicle) {
+      fsmLogger.debug(`🚢 [${shipType}] No path calculation: vehicle=${!!vehicle}`);
+      return;
+    }
+
+    // Utiliser la position actuelle du vaisseau comme point de départ
+    const startPosition = vehicle.position || vehicle.basePosition || currentWorldPosition.current;
+    if (!startPosition) {
+      fsmLogger.debug(`🚢 [${shipType}] No valid start position available`);
+      return;
+    }
+
+    // Déterminer la cible selon l'état du vaisseau
+    let targetCoord: WorldPosition | string | null = null;
+    let targetKey: string = '';
+    
+    if (shipState === 'collecting_ship_returning') {
+      // En état de retour, toujours cibler la base
+      if (vehicle.basePosition) {
+        targetCoord = vehicle.basePosition;
+        targetKey = `base_${vehicle.basePosition.x}_${vehicle.basePosition.z}`;
+        fsmLogger.mouvement(`🚢 [${shipType}] Targeting base for return`, { 
+          basePosition: vehicle.basePosition,
+          hasTargetTile: !!vehicle.targetTile
+        });
+      }
+    } else if (vehicle.targetTile) {
+      // Utiliser la tuile cible du véhicule pour la navigation
+      targetCoord = vehicle.targetTile;
+      targetKey = vehicle.targetTile;
+    }
+    
+    if (!targetCoord) {
+      fsmLogger.debug(`🚢 [${shipType}] No valid target: targetTile=${!!vehicle.targetTile}, returning=${shipState === 'collecting_ship_returning'}`);
       return;
     }
 
     // Éviter les recalculs inutiles
-    const tileKey = selectedTile.coord.coord;
-    if (lastTargetTile.current === tileKey) {
+    if (lastTargetTile.current === targetKey) {
       return;
     }
 
     try {
-      // Calculer le nouveau chemin BFS
-      const newPath = calculateShipPath(vehicle.basePosition, selectedTile.coord.coord);
+      let newPath: WorldPosition[] = [];
+      
+      if (shipState === 'collecting_ship_returning') {
+        // Pour le retour à la base, créer un chemin direct
+        newPath = [
+          startPosition,
+          {
+            x: (targetCoord as WorldPosition).x,
+            y: (targetCoord as WorldPosition).y + 0.5,
+            z: (targetCoord as WorldPosition).z
+          }
+        ];
+        fsmLogger.mouvement(`🚢 [${shipType}] Direct path to base created`, { newPath });
+      } else {
+        // Calculer le nouveau chemin BFS vers la tuile
+        newPath = calculateShipPath(startPosition, targetCoord);
+      }
+
       
       if (newPath.length > 0) {
         currentPath.current = newPath;
         pathIndex.current = 0;
-        lastTargetTile.current = tileKey;
+        lastTargetTile.current = targetKey;
         
         fsmLogger.mouvement(`🚢 [${shipType}] New path calculated`, {
-          from: vehicle.basePosition,
-          to: selectedTile.coord.coord,
+          from: startPosition,
+          to: targetCoord,
           pathLength: newPath.length,
+          isReturning: shipState === 'collecting_ship_returning',
           path: newPath
         });
         
@@ -118,15 +180,16 @@ export const useShipAnimation = ({
         }
       } else {
         fsmLogger.error(`🚢 [${shipType}] No path found`, {
-          from: vehicle.basePosition,
-          to: selectedTile.coord.coord
+          from: startPosition,
+          to: targetCoord,
+          isReturning: shipState === 'collecting_ship_returning'
         });
       }
     } catch (error) {
       // Log d'erreur seulement, pas de log de succès pour éviter les spams
-      fsmLogger.error(`🚢 [${shipType}] Error calculating path`, { error });
+      fsmLogger.error(`🚢 [${shipType}] Error calculating path`, { error, targetCoord });
     }
-  }, [selectedTile, vehicle?.basePosition, shipType]);
+  }, [vehicle, shipType, shipState]);
 
   // ============================================================================
   // SYNCHRONISATION INITIALE DE POSITION (UNE SEULE FOIS)

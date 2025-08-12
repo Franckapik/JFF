@@ -1,4 +1,4 @@
-import type { TileCoordinate, WorldPosition } from './coordinates';
+import type { GridCoordinate, WorldPosition } from './coordinates';
 import type { DroneType, DroneVisualState } from './drone';
 import type { ResourceStats } from './resources';
 import type { ShipType } from './tracker';
@@ -11,16 +11,16 @@ export interface VehicleState {
   type: ShipType;
   position: WorldPosition;
   basePosition: WorldPosition;
-  coord: TileCoordinate;
+  coord: GridCoordinate;
   isMoving: boolean;
   progress: number;
   resources: ResourceStats;
-  targetTile: TileCoordinate;
+  targetTile: GridCoordinate;
   fuel: number;
   damage: number;
   totalDistance: number;
-  path: TileCoordinate[];
-  startCoord: TileCoordinate | null;
+  path: GridCoordinate[];
+  startCoord: GridCoordinate | null;
   isAtCapacity: boolean;
   maxSpeed: number;
   currentSpeed: number;
@@ -49,7 +49,7 @@ export interface FormationOffsets {
 /** Mission active pour les drones (extrait de initialContext.ts) */
 export interface DroneMission {
   type: 'explore' | 'collect' | 'defend' | 'special';
-  target: TileCoordinate;
+  target: GridCoordinate;
   drones: DroneType[];
 }
 

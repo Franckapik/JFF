@@ -6,7 +6,7 @@
 // ============================================================================
 // TYPES DE COORDONNÉES ET POSITIONS
 // ============================================================================
-export type { GridCoordinate, TileCoordinate, WorldPosition } from './coordinates.d';
+export type { GridCoordinate, WorldPosition } from './coordinates.d';
 
 // ============================================================================
 // TYPES DE RESSOURCES

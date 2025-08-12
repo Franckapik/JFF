@@ -1,77 +1,86 @@
 import { useCallback, useEffect, useRef } from 'react';
 
+// === Store Imports ===
+import { useTileStore } from '../../../../../stores/useTileStore/index';
+
 // === Type Imports ===
 import type { WorldPosition } from '../../../../../types/coordinates.d.ts';
-import type { FSMContext, SelectedTile } from '../../../../../types/fsm.d.ts';
+import type { FSMContext } from '../../../../../types/fsm.d.ts';
+import type { TileStoreType } from '../../../../../types/stores.d.ts';
 import type { XStateSend } from '../../../../../types/tracker.d.ts';
+
+// === Logger ===
+import fsmLogger from '../../../../../logger/fsmLogger.ts';
 
 // === Handlers ===
 import { createShipHandlers } from './handlers';
-
-// ============================================================================
-// CONVERSION UTILITAIRE LOCALE
-// ============================================================================
-
-/**
- * Conversion simplifiée de coordonnées de tuile vers position mondiale
- * Utilise la logique hexagonale standard pour éviter les dépendances de store
- */
-function selectedTileToWorldPosition(selectedTile: SelectedTile): WorldPosition {
-  const HEX_SIZE = 1.0;
-  const spacing = 0.0;
-  
-  // Parser la string coord "x,z" depuis SelectedTile
-  const [x, z] = selectedTile.coord.coord.split(',').map(Number);
-  
-  // Conversion hex vers monde (formule hexagonale standard)
-  const worldX = x * HEX_SIZE * (1 + spacing);
-  const worldZ = z * HEX_SIZE * (1 + spacing);
-  
-  return { x: worldX, y: 0.5, z: worldZ };
-}
 
 interface ShipTrackerParams {
   context: FSMContext;
   send: XStateSend;
   botId: string;
   shipType?: 'ship' | 'main-ship';
+  fleetPosition?: WorldPosition | null; // 🆕 Position initiale du vaisseau
 }
 
 export const useShipTracker = ({
     context,
     send,
     botId,
-    shipType = 'main-ship'
+    shipType = 'main-ship',
+    fleetPosition // 🆕 Position Fleet pour l'initialisation
 }: ShipTrackerParams): ((position: WorldPosition) => void) => {
     const currentVisualPosition = useRef<WorldPosition | null>(null);
     const lastBasePosition = useRef<string>('');
     const contextRef = useRef(context);
+    const initialPositionSent = useRef<boolean>(false); // 🆕 Flag pour éviter duplications
     
     // Update ref when context changes
     contextRef.current = context;
 
     // ============================================================================
-    // INITIALIZATION AVEC initializeHandler (UNE SEULE FOIS PAR POSITION)
+    // INITIALIZATION AVEC FLEETPOSITION (PRIORITAIRE SUR BASEPOSITION)
     // ============================================================================
     
     useEffect(() => {
-        const basePosition = contextRef.current?.vehicle?.basePosition;
-        const hasValidContext = contextRef.current && contextRef.current.vehicle && send && typeof send === 'function';
-        const basePositionKey = basePosition ? `${basePosition.x},${basePosition.y},${basePosition.z}` : '';
+        const hasValidContext = contextRef.current && send && typeof send === 'function';
         
-        // Initialiser seulement si position valide et différente de la dernière
-        if (hasValidContext && basePosition && basePositionKey !== lastBasePosition.current) {
+        // 🆕 PRIORITÉ 1: Utiliser fleetPosition si disponible (position du monde réel)
+        if (hasValidContext && fleetPosition && !initialPositionSent.current) {
             const handlers = createShipHandlers({
                 fsmSend: send,
                 botId,
                 shipType
             });
             
+            fsmLogger.mouvement(`🚢 [${botId}] Initializing ship with fleet position`, { fleetPosition, shipType });
+            
+            // Utiliser le initializeHandler pour l'envoi initial de SHIP_POSITION_UPDATE
+            handlers.initializeHandler.process(fleetPosition);
+            initialPositionSent.current = true;
+            return;
+        }
+        
+        // PRIORITÉ 2: Fallback sur basePosition du contexte si pas de fleetPosition
+        const basePosition = contextRef.current?.vehicle?.basePosition;
+        const basePositionKey = basePosition ? `${basePosition.x},${basePosition.y},${basePosition.z}` : '';
+        
+        // Initialiser seulement si position valide et différente de la dernière (et pas déjà initialisé)
+        if (hasValidContext && basePosition && basePositionKey !== lastBasePosition.current && !initialPositionSent.current) {
+            const handlers = createShipHandlers({
+                fsmSend: send,
+                botId,
+                shipType
+            });
+            
+            fsmLogger.mouvement(`🚢 [${botId}] Initializing ship with context base position`, { basePosition, shipType });
+            
             // Utiliser le initializeHandler pour l'envoi initial de SHIP_POSITION_UPDATE
             handlers.initializeHandler.process(basePosition);
             lastBasePosition.current = basePositionKey;
+            initialPositionSent.current = true;
         }
-    }, [send, botId, shipType]); // Pas de context dans les dépendances
+    }, [fleetPosition, send, botId, shipType]); // 🆕 fleetPosition dans les dépendances
 
     // ============================================================================
     // FONCTION DE CONTRÔLE D'ENVOI DE POSITION
@@ -132,13 +141,17 @@ export const useShipTracker = ({
         // Switch unifié pour tous les sous-états de collecting avec logique basée sur la distance
         switch (currentState) {
             case 'collecting_ship_moving_to_tile': {
-                if (contextRef.current?.selectedTileForCollection?.coord) {
-                    // Convertir les coordonnées de tuile en position mondiale
-                    const selectedTile = contextRef.current.selectedTileForCollection;
-                    const targetPosition = selectedTileToWorldPosition(selectedTile);
+                if (vehicle?.targetTile) {
+                    // Utiliser vehicle.targetTile pour la navigation (coordonnée de grille)
+                    const targetCoord = vehicle.targetTile;
+                    
+                    // Convertir les coordonnées de grille en position mondiale
+                    const tileStore = useTileStore.getState() as TileStoreType;
+                    const targetWorldPos = tileStore.gridToWorld(targetCoord);
+                    
                     const distance = Math.sqrt(
-                        Math.pow(position.x - targetPosition.x, 2) +
-                        Math.pow(position.z - targetPosition.z, 2)
+                        Math.pow(position.x - targetWorldPos.x, 2) +
+                        Math.pow(position.z - targetWorldPos.z, 2)
                     );
                     handlers.movingToTileHandler.process(distance, position);
                 }
@@ -146,6 +159,11 @@ export const useShipTracker = ({
             }
                 
             case 'collecting_ship_collecting': {
+                fsmLogger.action(`📦 [${botId}] Ship collecting tracker called`, {
+                  position,
+                  vehicle: !!vehicle,
+                  shipType
+                });
                 // Pour la collecte, la distance n'est pas pertinente (simulation par timer)
                 handlers.collectingHandler.process(0, position);
                 break;

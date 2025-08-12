@@ -35,8 +35,11 @@ import fsmLogger from '../../logger/fsmLogger.ts';
  */
 export const calculateShipPath = (
   startPosition: WorldPosition,
-  targetCoord: GridCoordinate
+  targetCoord: GridCoordinate | any
 ): WorldPosition[] => {
+  // Extraire la coordonnée si c'est un objet
+  const coord = typeof targetCoord === 'string' ? targetCoord : targetCoord.coord;
+  
   try {
     // Récupérer l'état du store avec le bon typage
     const tileStore = useTileStore.getState() as TileStoreType;
@@ -47,24 +50,46 @@ export const calculateShipPath = (
     }
 
     // Convertir la position de départ en coordonnée de grille
-    const startGridResult = tileStore.worldToGrid(startPosition);
+    const startGridCoord = tileStore.worldToGrid(startPosition);
     
-    if (!startGridResult) {
+    if (!startGridCoord) {
       fsmLogger.error('🚢 calculateShipPath: Could not convert start position to grid', { startPosition });
       return [startPosition];
     }
 
-    // Extraire la GridCoordinate selon le type retourné
-    const startGridCoord: GridCoordinate = typeof startGridResult === 'string' 
-      ? startGridResult 
-      : startGridResult.coord;
-
     // Calculer le chemin BFS
-    const gridPath = tileStore.findPath(startGridCoord, targetCoord);
+    const gridPath = tileStore.findPath(startGridCoord, coord);
+    
+    // Debug: vérifier les tuiles de départ et d'arrivée
+    const startTile = tileStore.tiles[startGridCoord];
+    const targetTile = tileStore.tiles[coord];
+    
+    fsmLogger.info('🚢 calculateShipPath: Tile verification', {
+      startGridCoord,
+      targetCoord: coord,
+      startTileExists: !!startTile,
+      targetTileExists: !!targetTile,
+      startTileWalkable: startTile?.walkable,
+      targetTileWalkable: targetTile?.walkable,
+      startTileNeighbors: startTile?.neighbors?.length || 0,
+      targetTileNeighbors: targetTile?.neighbors?.length || 0,
+      gridPathLength: gridPath?.length || 0
+    });
     
     if (!gridPath || gridPath.length === 0) {
-      fsmLogger.info('🚢 calculateShipPath: No valid path found', { startGridCoord, targetCoord });
-      return [startPosition];
+      fsmLogger.info('🚢 calculateShipPath: No valid path found, creating direct path', { startGridCoord, targetCoord: coord });
+      
+      // Créer un chemin direct si aucun chemin BFS n'est trouvé
+      const targetTilePos = tileStore.gridToWorld(coord);
+      
+      return [
+        startPosition,
+        {
+          x: targetTilePos.x,
+          y: targetTilePos.y + 0.5,
+          z: targetTilePos.z
+        }
+      ];
     }
 
     // Convertir le chemin en positions monde
@@ -88,7 +113,7 @@ export const calculateShipPath = (
 
     fsmLogger.mouvement('🚢 calculateShipPath: Path calculated successfully', {
       startGridCoord,
-      targetCoord,
+      targetCoord: coord,
       pathLength: worldPath.length,
       worldPath: worldPath.slice(0, 3) // Log seulement les 3 premières positions
     });
@@ -96,7 +121,7 @@ export const calculateShipPath = (
     return worldPath;
     
   } catch (error) {
-    fsmLogger.error('🚢 calculateShipPath: Error calculating path', { error, startPosition, targetCoord });
+    fsmLogger.error('🚢 calculateShipPath: Error calculating path', { error, startPosition, targetCoord: coord });
     return [startPosition];
   }
 };

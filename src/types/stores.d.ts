@@ -2,7 +2,7 @@
  * Types pour les stores Zustand du projet
  */
 
-import type { GridCoordinate, TileCoordinate, WorldPosition } from './coordinates.d';
+import type { GridCoordinate, WorldPosition } from './coordinates.d';
 import type { BotSnapshot, EmptyBotState, FSMEvent } from './fsm.d';
 import type { ResourceStats } from './resources.d';
 import type { Tile, TileMap } from './tile.d';
@@ -53,8 +53,8 @@ export type TileStoreType = {
   // --- Pathfinding ---
   findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap) => GridCoordinate[];
   calculateDistance: (
-    from: GridCoordinate | TileCoordinate | WorldPosition,
-    to: GridCoordinate | TileCoordinate | WorldPosition,
+    from: GridCoordinate | WorldPosition,
+    to: GridCoordinate | WorldPosition,
     usePathfinding?: boolean,
     detailed?: boolean
   ) => number;
@@ -86,9 +86,9 @@ export type TileStoreType = {
   isValidGridCoord: (coord: unknown) => coord is GridCoordinate;
   isValidWorldPosition: (position: unknown) => position is WorldPosition;
   gridToHexCoord: (coord: GridCoordinate) => string | null;
-  gridToWorld: (coord: GridCoordinate | TileCoordinate) => WorldPosition;
-  worldToGrid: (position: WorldPosition) => GridCoordinate | TileCoordinate;
-  normalizeCoordinate: (coord: GridCoordinate | TileCoordinate | string) => GridCoordinate | null;
+  gridToWorld: (coord: GridCoordinate) => WorldPosition;
+  worldToGrid: (position: WorldPosition) => GridCoordinate;
+  normalizeCoordinate: (coord: GridCoordinate | string) => GridCoordinate | null;
 
   // --- Génération ---
   initializeGameGrid: (radius: number, spacing: number) => TileMap;

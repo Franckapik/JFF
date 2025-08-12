@@ -10,7 +10,7 @@
  * @version 1.0.0
  */
 
-import type { GridCoordinate, TileCoordinate, WorldPosition } from './coordinates';
+import type { GridCoordinate, WorldPosition } from './coordinates';
 import type { ResourceStats } from './resources';
 
 // ============================================================================
@@ -47,7 +47,6 @@ export interface Tile {
   // Identification et positionnement
   coord: GridCoordinate;              // Coordonnée sous forme "x,z"
   position: WorldPosition;            // Position 3D dans le monde
-  tileCoord?: TileCoordinate;         // Coordonnée objet {x, z} (optionnelle pour compatibilité)
   
   // Type et propriétés visuelles
   type: TileType | string;            // Type de la tuile (string pour compatibilité)
@@ -125,7 +124,7 @@ export interface TileGenerationConfig {
 export interface HexPosition {
   x: number;
   z: number;
-  coord: TileCoordinate;
+  coord: GridCoordinate;
   position: WorldPosition;
 }
 
@@ -198,8 +197,8 @@ export interface TileStoreActions {
   // Pathfinding
   findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap) => GridCoordinate[];
   calculateDistance: (
-    from: GridCoordinate | TileCoordinate | WorldPosition, 
-    to: GridCoordinate | TileCoordinate | WorldPosition, 
+    from: GridCoordinate | WorldPosition, 
+    to: GridCoordinate | WorldPosition, 
     usePathfinding?: boolean, 
     detailed?: boolean
   ) => number;
@@ -219,9 +218,9 @@ export interface TileStoreActions {
   // Coordonnées
   isValidGridCoord: (coord: unknown) => coord is GridCoordinate;
   isValidWorldPosition: (position: unknown) => position is WorldPosition;
-  gridToWorld: (coord: TileCoordinate) => WorldPosition;
-  worldToGrid: (position: WorldPosition) => TileCoordinate;
-  normalizeCoordinate: (coord: GridCoordinate | TileCoordinate | string) => GridCoordinate | null;
+  gridToWorld: (coord: GridCoordinate) => WorldPosition;
+  worldToGrid: (position: WorldPosition) => GridCoordinate;
+  normalizeCoordinate: (coord: GridCoordinate | string) => GridCoordinate | null;
   
   // Génération
   initializeGameGrid: (radius: number, spacing: number) => TileMap;

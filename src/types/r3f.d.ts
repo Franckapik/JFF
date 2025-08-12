@@ -7,7 +7,7 @@ import type * as THREE from 'three';
 import type { DroneType, DroneVisualState } from './drone.d';
 
 // import type { FSMContext } from './fsm.d.ts';
-import type { TileCoordinate } from "./coordinates.d";
+import type { GridCoordinate } from "./coordinates.d";
 
 import type { FSMContext } from "./fsm.d.ts";
 import type { XStateSend } from "./tracker.d.ts";
@@ -44,6 +44,8 @@ export interface DroneAnimationProps {
 export interface ShipAnimationProps {
   /** Contexte FSM pour l'état du vaisseau */
   context: FSMContext | null;
+  /** Position mondiale du vaisseau (pour l'initialisation) */
+  fleetPosition?: WorldPosition | null;
   /** Fonction de mise à jour de la position visuelle */
   updateVisualPosition: (position: WorldPosition) => void;
   /** Type du vaisseau */
@@ -100,7 +102,7 @@ export interface FleetProps {
   /** Position mondiale de la flotte (vaisseau + drone) */
   fleetPosition: WorldPosition;
   /** Coordonnée de la tuile de départ */
-  tileCoord: TileCoordinate;
+  tileCoord: GridCoordinate;
 }
 
 /**

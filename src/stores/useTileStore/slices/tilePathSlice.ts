@@ -24,7 +24,6 @@ import type {
   DroneVisualState,
   GridCoordinate,
   Tile,
-  TileCoordinate,
   TileMap,
   WorldPosition
 } from '../../../types/index.ts';
@@ -61,8 +60,8 @@ interface PathResult {
 interface TilePathSliceActions {
   findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap) => GridCoordinate[];
   calculateDistance: (
-    from: GridCoordinate | TileCoordinate | WorldPosition, 
-    to: GridCoordinate | TileCoordinate | WorldPosition, 
+    from: GridCoordinate | WorldPosition, 
+    to: GridCoordinate | WorldPosition, 
     usePathfinding?: boolean, 
     detailed?: boolean
   ) => number;
@@ -157,8 +156,8 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
    * @returns Distance calculée
    */
   calculateDistance: (
-    from: GridCoordinate | TileCoordinate | WorldPosition, 
-    to: GridCoordinate | TileCoordinate | WorldPosition, 
+    from: GridCoordinate | WorldPosition, 
+    to: GridCoordinate | WorldPosition, 
     usePathfinding: boolean = false, 
   ): number => {
     const tiles = get().tiles;

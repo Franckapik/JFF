@@ -29,7 +29,6 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 
 // Import depuis l'architecture domain-based
 import {
-  __collectionGuardsPlaceholder,
   __maintenanceEffectsPlaceholder,
   __maintenanceGuardsPlaceholder,
   assignDroneDeployingContext,
@@ -39,7 +38,9 @@ import {
   // Evaluation domain (COMPLET)
   assignEvaluationContext,
   assignShipCollectingContext,
+  assignShipLoadResourcesContext,
   assignShipMovingToTileContext,
+  assignShipReachedBaseContext,
   assignShipReturningContext,
   // Exploration domain (COMPLET - actions effects migrées)
   onCollectingEntry,
@@ -67,6 +68,13 @@ import {
   updateDronePosition,
   updateShipPosition
 } from './domains';
+
+// Import des guards de collection
+import {
+  canCollectTile,
+  hasMoreCollectibleTiles,
+  isVehicleOverloaded
+} from './domains/collection/guards';
 
 
 import { createMachineContext } from './context/initialContext';
@@ -109,6 +117,8 @@ export const machineXV5Pure = setup({
     assignShipMovingToTileContext,
     assignShipCollectingContext,
     assignShipReturningContext,
+    assignShipReachedBaseContext,
+    assignShipLoadResourcesContext,
     onCollectingEntry,
     onCollectingExit,
     onShipMovingToTileEntry,
@@ -137,8 +147,9 @@ export const machineXV5Pure = setup({
     // Guards temporaires des domaines (à migrer)
     shouldCollect,
     shouldMaintain: __maintenanceGuardsPlaceholder,
-    canCollectTile: __collectionGuardsPlaceholder,
-    isVehicleOverloaded: __collectionGuardsPlaceholder,
+    canCollectTile,
+    isVehicleOverloaded,
+    hasMoreCollectibleTiles,
     needsDeposit: __maintenanceGuardsPlaceholder,
     needsRefuel: __maintenanceGuardsPlaceholder,
     needsRepair: __maintenanceGuardsPlaceholder
@@ -273,10 +284,16 @@ export const machineXV5Pure = setup({
               {
                 target: 'ship_returning',
                 guard: 'isVehicleOverloaded',
-                actions: 'assignShipReturningContext'
+                actions: ['assignShipLoadResourcesContext', 'assignShipReturningContext']
               },
               {
-                target: 'ship_moving_to_tile'
+                target: 'ship_moving_to_tile',
+                guard: 'hasMoreCollectibleTiles',
+                actions: 'assignShipLoadResourcesContext'
+              },
+              {
+                target: 'ship_returning',
+                actions: ['assignShipLoadResourcesContext', 'assignShipReturningContext']
               }
             ],
             RESOURCE_DEPLETED: '#machineXV5Pure.evaluating'
@@ -290,10 +307,12 @@ export const machineXV5Pure = setup({
             SHIP_REACHES_BASE: [
               {
                 target: '#machineXV5Pure.maintaining',
-                guard: 'shouldMaintain'
+                guard: 'shouldMaintain',
+                actions: 'assignShipReachedBaseContext'
               },
               {
-                target: '#machineXV5Pure.evaluating'
+                target: '#machineXV5Pure.evaluating',
+                actions: 'assignShipReachedBaseContext'
               }
             ]
           }

@@ -11,9 +11,3 @@ export interface WorldPosition {
 
 /** Coordonnées grille en x,z */
 export type GridCoordinate = `${number},${number}`;
-
-/** Coordonnées tuile avec type d'affectation */
-export interface TileCoordinate {
-  coord: GridCoordinate;
-  type: string;
-}

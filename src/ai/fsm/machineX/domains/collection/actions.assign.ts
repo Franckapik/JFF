@@ -7,7 +7,9 @@
 import { assign } from 'xstate';
 
 import fsmLogger from '../../../../../logger/fsmLogger';
+import { useTileStore } from '../../../../../stores/useTileStore';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
+import type { TileStoreType } from '../../../../../types/stores.d.ts';
 import type { MachineEvents } from '../../events.pure.v5';
 
 // Helper pour typage assign compatible XState v5
@@ -38,28 +40,44 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
   fsmLogger.info(`🔄 [${context.entityId}] Updating context for ship movement: ${event.type}`);
   
   if (event.type === 'NEED_COLLECTING') {
-    // Position cible simplifiée (0,0,0) pour les tests
-    const targetPosition = { x: 0, y: 0.5, z: 0 };
-    const targetCoord = { coord: '0,0' as const, type: 'collect' as const };
+    // Utiliser selectTargetTileInRadiusForDrone pour sélectionner une vraie tuile cible
+    const tileStore = useTileStore.getState() as TileStoreType;
+    const shipPosition = context.vehicle?.position || context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0 };
+    
+    // Sélectionner une tuile aléatoire dans un rayon pour la collecte
+    const targetWorldPos = tileStore.selectTargetTileInRadiusForDrone(shipPosition, 3);
+    
+    if (!targetWorldPos) {
+      fsmLogger.error(`🚢 [${context.entityId}] No target tile found for collection`);
+      return {};
+    }
+    
+    // Convertir la position mondiale en coordonnée de grille
+    const targetGridCoord = tileStore.worldToGrid(targetWorldPos);
+    if (!targetGridCoord) {
+      fsmLogger.error(`🚢 [${context.entityId}] Could not convert target position to grid coordinate`);
+      return {};
+    }
     
     fsmLogger.info(`🚢 [${context.entityId}] Setting ship target for collection:`, {
-      targetPosition,
-      targetCoord,
-      currentPosition: context.vehicle?.position
+      targetPosition: targetWorldPos,
+      targetGridCoord,
+      currentPosition: shipPosition
     });
     
     // Mise à jour complète du contexte en une seule fois
     const updatedContext = {
       vehicle: {
         ...context.vehicle,
-        targetTile: targetCoord,
+        position: shipPosition,
+        targetTile: targetGridCoord, // Utiliser la coordonnée de grille pour la navigation
         isMoving: true, // ✅ IMPORTANT: Le vaisseau est en mouvement vers sa cible
         progress: 0, // Reset du progrès
         currentSpeed: context.vehicle?.maxSpeed || 1
       },
       selectedTileForCollection: {
-        coord: targetCoord,
-        position: targetPosition,
+        coord: targetGridCoord,
+        position: targetWorldPos,
         resources: { food: 10, debris: 5, special: 1, total: 16 } // Ressources simulées
       },
       lastAction: 'shipMovingToTile_success',
@@ -139,12 +157,102 @@ export const assignShipReturningContext = createAssignAction(({ context, event }
   return {
     vehicle: {
       ...context.vehicle,
-      targetTile: baseCoord,
+      targetTile: baseCoord.coord, // Fix: assign only the string coordinate
       isMoving: true, // ✅ IMPORTANT: Le vaisseau doit bouger vers la base
       progress: 0, // Reset du progrès pour le retour
       currentSpeed: context.vehicle?.maxSpeed || 1
     },
     currentState: 'collecting_ship_returning', // 🟢 Mise à jour de l'état global FSM
+  };
+});
+
+/**
+ * Action assign pour gérer l'arrivée du vaisseau à la base après collecte
+ * Dépose les ressources et prépare le retour à l'évaluation
+ */
+export const assignShipReachedBaseContext = createAssignAction(({ context, event }) => {
+  fsmLogger.action(`🔄 [${context?.entityId || 'unknown'}] assignShipReachedBaseContext called with:`, {
+    hasContext: !!context,
+    hasEvent: !!event,
+    eventType: event?.type,
+    currentVehicleState: context.vehicle?.isMoving
+  });
+  
+  if (!context.vehicle) {
+    fsmLogger.info(`⚠️ [${context.entityId}] No vehicle found in context for base arrival`);
+    return {};
+  }
+  
+  fsmLogger.action(`🏠 [${context.entityId}] Ship reached base - depositing resources and resetting`);
+  
+  return {
+    vehicle: {
+      ...context.vehicle,
+      isMoving: false, // ✅ IMPORTANT: Le vaisseau s'arrête à la base
+      progress: 100, // Arrivé à la base
+      currentSpeed: 0,
+      targetTile: null, // Plus de cible active
+      resources: { food: 0, debris: 0, special: 0, total: 0 } // Ressources déposées
+    },
+    selectedTileForCollection: null, // Réinitialise la tuile de collecte
+    lastAction: 'shipReachedBase_success',
+    currentState: 'evaluating', // 🟢 Retour à l'évaluation après dépose
+  };
+});
+
+/**
+ * Action assign pour traiter le chargement des ressources collectées
+ * Mise à jour des ressources du vaisseau après collecte
+ */
+export const assignShipLoadResourcesContext = createAssignAction(({ context, event }) => {
+  fsmLogger.action(`🔄 [${context?.entityId || 'unknown'}] assignShipLoadResourcesContext called with:`, {
+    hasContext: !!context,
+    hasEvent: !!event,
+    eventType: event?.type
+  });
+  
+  if (!context.vehicle) {
+    fsmLogger.error(`⚠️ [${context.entityId}] No vehicle found in context for resource loading`);
+    return {};
+  }
+  
+  // Récupérer les ressources collectées depuis l'événement ou utiliser des valeurs par défaut
+  const resourcesCollected = (event as Record<string, unknown>)?.resourcesCollected as {
+    food?: number;
+    debris?: number;
+    special?: number;
+  } || {
+    food: Math.floor(Math.random() * 3) + 1,
+    debris: Math.floor(Math.random() * 2) + 1,
+    special: Math.random() > 0.7 ? 1 : 0
+  };
+  
+  // Mettre à jour les ressources du véhicule
+  const currentResources = context.vehicle.resources || { food: 0, debris: 0, special: 0 };
+  const newResources = {
+    food: (currentResources.food || 0) + (resourcesCollected.food || 0),
+    debris: (currentResources.debris || 0) + (resourcesCollected.debris || 0),
+    special: (currentResources.special || 0) + (resourcesCollected.special || 0)
+  };
+  
+  const totalResources = Object.values(newResources).reduce((sum, val) => sum + (val || 0), 0);
+  
+  fsmLogger.action(`📦 [${context.entityId}] Resources loaded onto ship:`, {
+    collected: resourcesCollected,
+    previous: currentResources,
+    new: newResources,
+    total: totalResources
+  });
+  
+  return {
+    vehicle: {
+      ...context.vehicle,
+      resources: {
+        ...newResources,
+        total: totalResources
+      }
+    },
+    lastAction: 'shipLoadResources_success'
   };
 });
 

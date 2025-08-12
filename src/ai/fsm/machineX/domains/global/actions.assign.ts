@@ -26,11 +26,23 @@ function createAssignAction(
  */
 export const updateShipPosition = createAssignAction(({ context, event }) => {
   if (event.type !== 'SHIP_POSITION_UPDATE') return context;
-  fsmLogger.context(`🚢 [${context.entityId}] Setting ship position`, { position: event.position, shipType: event.shipType });
+  
+  const { position } = event;
+  fsmLogger.context(`🚢 [${context.entityId}] Setting ship position`, { position, shipType: event.shipType });
+  
+  // Si c'est la première position réelle (différente de la position par défaut), mettre à jour basePosition aussi
+  const isInitialization = !context.vehicle?.position || 
+    (context.vehicle.position.x === 0 && context.vehicle.position.y === 0.5 && context.vehicle.position.z === 0);
+  
+  if (isInitialization) {
+    fsmLogger.context(`🚢 [${context.entityId}] First ship position update - setting as base position`);
+  }
+  
   return {
     vehicle: {
       ...context.vehicle,
-      position: event.position,
+      position: position,
+      basePosition: isInitialization ? position : context.vehicle?.basePosition,
     },
   };
 });

@@ -21,7 +21,6 @@ import { Vector3 } from "three";
 
 import type {
   GridCoordinate,
-  TileCoordinate,
   WorldPosition
 } from '../../../types/index.ts';
 
@@ -31,16 +30,27 @@ import type {
 
 /** Actions du slice de coordonnées */
 interface TileCoordinateSliceActions {
-  isValidGridCoord: (coord: any) => coord is GridCoordinate;
-  isValidWorldPosition: (position: any) => position is WorldPosition;
+  // === Validateurs ===
+  isValidGridCoord: (coord: unknown) => coord is GridCoordinate;
+  isValidWorldPosition: (position: unknown) => position is WorldPosition;
+  
+  // === Conversions entre formats ===
   hexToGridCoord: (hexCoord: string) => GridCoordinate | null;
-  gridToHexCoord: (gridCoord: GridCoordinate) => string | null;
-  gridToWorld: (coord: TileCoordinate) => WorldPosition;
-  worldToGrid: (position: WorldPosition) => TileCoordinate;
-  toVector3: (position: WorldPosition) => Vector3;
-  fromVector3: (vector: Vector3) => WorldPosition;
+  gridToHexCoord: (coord: GridCoordinate) => string | null;
+  
+  // === Conversions position/grille ===
+  gridToWorld: (coord: GridCoordinate) => WorldPosition;
+  worldToGrid: (position: WorldPosition) => GridCoordinate;
+  
+  // === Utilitaires ===
+  normalizeCoordinate: (coord: GridCoordinate | string) => GridCoordinate | null;
+  
+  // === Vector3 ===
+  toVector3: (position: WorldPosition) => any;
+  fromVector3: (vector: any) => WorldPosition;
+  
+  // === Distance ===
   hasReachedTarget: (current: WorldPosition, target: WorldPosition, threshold?: number) => boolean;
-  normalizeCoordinate: (coord: any) => GridCoordinate | null;
 }
 
 // =========================================================================
@@ -57,7 +67,7 @@ const createTileCoordinateSlice = (set: any, get: any): TileCoordinateSliceActio
    * @param coord - Coordonnée au format "x,z"
    * @returns True si valide
    */
-  isValidGridCoord: (coord: any): coord is GridCoordinate => {
+  isValidGridCoord: (coord: unknown): coord is GridCoordinate => {
     if (coord === null || coord === undefined) return false;
     if (typeof coord !== 'string') return false;
     return /^-?\d+,-?\d+$/.test(coord);
@@ -68,7 +78,7 @@ const createTileCoordinateSlice = (set: any, get: any): TileCoordinateSliceActio
    * @param position - Position avec propriétés x, y, z
    * @returns True si valide
    */
-  isValidWorldPosition: (position: any): position is WorldPosition => {
+  isValidWorldPosition: (position: unknown): position is WorldPosition => {
     if (!position || typeof position !== 'object' || Array.isArray(position)) return false;
     return (
       'x' in position &&
@@ -131,31 +141,36 @@ const createTileCoordinateSlice = (set: any, get: any): TileCoordinateSliceActio
 
   /**
    * Convertit une coordonnée de grille vers une position mondiale
-   * @param coord - Coordonnée de tuile {x, z}
+   * @param coord - Coordonnée de grille sous forme "x,z"
    * @returns Position mondiale {x, y, z}
    */
-  gridToWorld: (coord: TileCoordinate): WorldPosition => {
+  gridToWorld: (coord: GridCoordinate): WorldPosition => {
     const spacing = get().spacing || 0.1;
     
+    // Parsing de la GridCoordinate "x,z"
+    const parts = coord.split(',').map(Number);
+    const x = parts[0];
+    const z = parts[1];
+    
     return {
-      x: coord.x * (1 + spacing),
+      x: x * (1 + spacing),
       y: 0.5, // Hauteur standard des tuiles
-      z: coord.z * (1 + spacing)
+      z: z * (1 + spacing)
     };
   },
 
   /**
    * Convertit une position mondiale vers une coordonnée de grille
    * @param position - Position mondiale {x, y, z}
-   * @returns Coordonnée de tuile {x, z}
+   * @returns Coordonnée de grille "x,z"
    */
-  worldToGrid: (position: WorldPosition): TileCoordinate => {
+  worldToGrid: (position: WorldPosition): GridCoordinate => {
     const spacing = get().spacing || 0.1;
     
-    return {
-      x: Math.round(position.x / (1 + spacing)),
-      z: Math.round(position.z / (1 + spacing))
-    };
+    const x = Math.round(position.x / (1 + spacing));
+    const z = Math.round(position.z / (1 + spacing));
+    
+    return `${x},${z}`;
   },
 
   // =========================================================================
@@ -217,17 +232,14 @@ const createTileCoordinateSlice = (set: any, get: any): TileCoordinateSliceActio
    * @param coord - Coordonnée à normaliser
    * @returns GridCoordinate normalisée ou null
    */
-  normalizeCoordinate: (coord: any): GridCoordinate | null => {
+  normalizeCoordinate: (coord: GridCoordinate | string): GridCoordinate | null => {
     if (get().isValidGridCoord(coord)) {
-      return coord;
+      return coord as GridCoordinate;
     }
     
     if (typeof coord === 'string') {
+      // Essayer de convertir depuis format hex
       return get().hexToGridCoord(coord);
-    }
-    
-    if (coord && typeof coord === 'object' && 'x' in coord && 'z' in coord) {
-      return `${coord.x},${coord.z}` as GridCoordinate;
     }
     
     return null;
