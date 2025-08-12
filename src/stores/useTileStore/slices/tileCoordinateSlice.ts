@@ -152,11 +152,18 @@ const createTileCoordinateSlice = (set: any, get: any): TileCoordinateSliceActio
     const x = parts[0];
     const z = parts[1];
     
-    return {
+    const worldPos = {
       x: x * (1 + spacing),
       y: 0.5, // Hauteur standard des tuiles
       z: z * (1 + spacing)
     };
+    
+    // Log pour debug des conversions avec fsmLogger si disponible
+    if (typeof window !== 'undefined' && (window as any).fsmLogger) {
+      (window as any).fsmLogger.mouvement(`🔄 gridToWorld: ${coord} -> {x: ${worldPos.x}, y: ${worldPos.y}, z: ${worldPos.z}} (spacing: ${spacing})`);
+    }
+    
+    return worldPos;
   },
 
   /**

@@ -82,6 +82,17 @@ export const calculateShipPath = (
       // Créer un chemin direct si aucun chemin BFS n'est trouvé
       const targetTilePos = tileStore.gridToWorld(coord);
       
+      fsmLogger.info('🚢 calculateShipPath: Direct path creation', {
+        coord,
+        targetTilePos,
+        startPosition,
+        conversionCheck: {
+          gridCoord: coord,
+          calculatedWorldPos: targetTilePos,
+          expectedFormula: `x: ${coord.split(',')[0]} * 1.1 = ${Number(coord.split(',')[0]) * 1.1}, z: ${coord.split(',')[1]} * 1.1 = ${Number(coord.split(',')[1]) * 1.1}`
+        }
+      });
+      
       return [
         startPosition,
         {
@@ -115,7 +126,16 @@ export const calculateShipPath = (
       startGridCoord,
       targetCoord: coord,
       pathLength: worldPath.length,
-      worldPath: worldPath.slice(0, 3) // Log seulement les 3 premières positions
+      worldPath: worldPath.slice(0, 3), // Log seulement les 3 premières positions
+      startPosition,
+      firstWaypointTransform: {
+        original: startPosition,
+        calculated: worldPath[0]
+      },
+      lastWaypointTransform: worldPath.length > 1 ? {
+        targetCoord: coord,
+        calculated: worldPath[worldPath.length - 1]
+      } : null
     });
 
     return worldPath;

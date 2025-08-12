@@ -40,11 +40,11 @@ export const createMachineContext = (
       type: 'main-ship',
       position: { x: 0, y: 0.5, z: 0 },
       basePosition: { x: 0, y: 0.5, z: 0 },
-      coord: { coord: '0,0', type: 'explore' },
+  coord: '0,0',
       isMoving: false,
       progress: 0,
       resources: { food: 0, debris: 0, special: 0, total: 0 },
-      targetTile: { coord: '0,0', type: 'explore' },
+  targetTile: '0,0',
       fuel: 100,
       damage: 0,
       totalDistance: 0,
@@ -91,7 +91,7 @@ export const createMachineContext = (
       startTime: null,
       phase: 'idle'
     },
-    selectedTileForCollection: null,
+  // selectedTileForCollection supprimé
     config: {
       exploringRadius: 2,
       fuelThreshold: 20,

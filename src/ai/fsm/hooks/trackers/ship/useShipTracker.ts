@@ -53,7 +53,11 @@ export const useShipTracker = ({
                 shipType
             });
             
-            fsmLogger.mouvement(`🚢 [${botId}] Initializing ship with fleet position`, { fleetPosition, shipType });
+            fsmLogger.mouvement(`🚢 [${botId}] 🔧 TRACKER: Initializing ship with fleet position`, { 
+                fleetPosition, 
+                shipType,
+                previousPosition: currentVisualPosition.current 
+            });
             
             // Utiliser le initializeHandler pour l'envoi initial de SHIP_POSITION_UPDATE
             handlers.initializeHandler.process(fleetPosition);
@@ -107,6 +111,9 @@ export const useShipTracker = ({
         
         currentVisualPosition.current = position;
         
+        // Log détaillé de position toutes les 120 frames (environ 1 fois toutes les 2 secondes)
+        const shouldLogPosition = Math.floor(Date.now() / 2000) % 2 === 0;
+        
         // ============================================================================
         // ENVOI CONDITIONNEL DE SHIP_POSITION_UPDATE
         // ============================================================================
@@ -115,6 +122,18 @@ export const useShipTracker = ({
         
         // Envoi conditionnel selon l'état pour éviter les envois répétés pendant l'animation
         if (shouldSendPositionUpdate(currentState)) {
+            if (shouldLogPosition) {
+                fsmLogger.mouvement(`🚢 [${botId}] 📨 TRACKER: Sending SHIP_POSITION_UPDATE`, {
+                    position,
+                    currentState,
+                    vehicle: contextRef.current?.vehicle ? {
+                        targetTile: contextRef.current.vehicle.targetTile,
+                        basePosition: contextRef.current.vehicle.basePosition,
+                        isMoving: contextRef.current.vehicle.isMoving
+                    } : null
+                });
+            }
+            
             send({
                 type: 'SHIP_POSITION_UPDATE',
                 botId,

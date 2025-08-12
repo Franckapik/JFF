@@ -1,4 +1,6 @@
 --TODO
+Refondre la fonction permettant de calculer le chemin en fonction des tuiles pour essayer de resoudre ce probleme de decalage et eviter de donner la possibilité de faire du direct path mais plutot une erreur bloquante.
+
 
 Peut tu desormais corriger, refondre le calcul de chemin pour que ce dernier se fasse de tuile en tuile vers une position cible selectionnée au hasard parmis les tuiles walkables. Tu peux retirer toutes les solutions temporaires, ou les corrections simplifiées pour donner un code plus réel/dynamique. Le décalage de position du mesh lors de l'animation est toujours visible actuellement. Tu peux implementer le retour à la base pour le mode returning également. 
 

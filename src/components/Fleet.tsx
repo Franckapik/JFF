@@ -23,6 +23,7 @@ import useXFSMStore from "../stores/useXFSMStore/index.ts";
 import type { FSMContext } from "../types/fsm.d";
 import type { FleetProps } from "../types/r3f";
 
+import fsmLogger from "../logger/fsmLogger";
 import useGameStore from "../stores/useGameStore";
 
 import DroneMesh from "./Vehicles/DroneMesh";
@@ -35,6 +36,15 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tileCoor
   // Récupérer la couleur du bot ici
   const getBotColorById = useGameStore(state => state.getBotColorById);
   const color = getBotColorById(botId);
+  
+  // Log de la position Fleet pour debug
+  React.useEffect(() => {
+    fsmLogger.mouvement(`🚢 [${botId}] 🌐 FLEET: Position received`, {
+      fleetPosition,
+      tileCoord: _tileCoord
+    });
+  }, [fleetPosition, botId, _tileCoord]);
+  
   // === FSM Context & Send ===
   const botState = useXFSMStore((state: XFSMStoreType) => state.botStates[botId]);
   const context = (botState && 'context' in botState) ? (botState as { context: FSMContext }).context : undefined;

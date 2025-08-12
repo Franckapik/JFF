@@ -63,14 +63,32 @@ export const useShipAnimation = ({
   
   useEffect(() => {
     if (fleetPosition && updateVisualPosition && !initialPositionSent.current) {
-      fsmLogger.mouvement(`🚢 [${shipType}] Transmitting initial fleet position to FSM tracker:`, fleetPosition);
-      updateVisualPosition(fleetPosition);
+      fsmLogger.logFullObject('MOUVEMENT', `🚢 [${shipType}] 🔧 INIT: Fleet position analysis`, {
+        fleetPosition,
+        shipType,
+        currentWorldPositionBefore: { ...currentWorldPosition.current },
+        fleetPositionGridCoord: fleetPosition ? `${Math.round(fleetPosition.x / 1.1)},${Math.round(fleetPosition.z / 1.1)}` : null,
+        gridCalculation: fleetPosition ? {
+          x: `${fleetPosition.x} / 1.1 = ${fleetPosition.x / 1.1}`,
+          z: `${fleetPosition.z} / 1.1 = ${fleetPosition.z / 1.1}`,
+          roundedX: Math.round(fleetPosition.x / 1.1),
+          roundedZ: Math.round(fleetPosition.z / 1.1)
+        } : null
+      });
+      
+      // Initialiser la position du vaisseau avec la position de la flotte
       currentWorldPosition.current = { ...fleetPosition };
+      
+      fsmLogger.mouvement(`🚢 [${shipType}] 🔧 INIT: Position initialized`, {
+        currentWorldPositionAfter: { ...currentWorldPosition.current },
+        shipType
+      });
+      
+      // Envoyer la position initiale au tracker
+      updateVisualPosition(currentWorldPosition.current);
       initialPositionSent.current = true;
     }
-  }, [fleetPosition, updateVisualPosition, shipType]);
-
-  // ============================================================================
+  }, [fleetPosition, updateVisualPosition, shipType]);  // ============================================================================
   // CONTRÔLE D'ACTIVATION DE L'ANIMATION
   // ============================================================================
   
@@ -166,17 +184,21 @@ export const useShipAnimation = ({
         pathIndex.current = 0;
         lastTargetTile.current = targetKey;
         
-        fsmLogger.mouvement(`🚢 [${shipType}] New path calculated`, {
+        fsmLogger.mouvement(`🚢 [${shipType}] 🛤️  PATH: New path calculated`, {
           from: startPosition,
           to: targetCoord,
           pathLength: newPath.length,
           isReturning: shipState === 'collecting_ship_returning',
-          path: newPath
+          path: newPath,
+          currentWorldPositionBefore: { ...currentWorldPosition.current }
         });
         
         // Initialiser la position si c'est le premier calcul
         if (currentWorldPosition.current.x === 0 && currentWorldPosition.current.y === 0 && currentWorldPosition.current.z === 0) {
           currentWorldPosition.current = { ...newPath[0] };
+          fsmLogger.mouvement(`🚢 [${shipType}] 🛤️  PATH: Position initialized from path`, {
+            initializedPosition: { ...currentWorldPosition.current }
+          });
         }
       } else {
         fsmLogger.error(`🚢 [${shipType}] No path found`, {
@@ -279,6 +301,22 @@ export const useShipAnimation = ({
       currentWorldPosition.current.y,
       currentWorldPosition.current.z
     );
+
+    // Log de position toutes les 60 frames (environ 1 fois par seconde)
+    if (Math.floor(state.clock.getElapsedTime() * 60) % 60 === 0) {
+      fsmLogger.mouvement(`🚢 [${shipType}] 📍 MESH: Position update`, {
+        currentWorldPosition: { ...currentWorldPosition.current },
+        meshPosition: {
+          x: shipRef.current.position.x,
+          y: shipRef.current.position.y,
+          z: shipRef.current.position.z
+        },
+        currentTarget: currentTarget ? { ...currentTarget } : null,
+        pathIndex: currentIndex,
+        pathLength: path.length,
+        shipState
+      });
+    }
 
     // Appliquer les animations visuelles selon l'état
     applyShipVisualAnimations(

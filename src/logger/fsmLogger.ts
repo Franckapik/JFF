@@ -185,6 +185,28 @@ const log = (type: LogType, message: string, data: any = null, playerId: string 
     if (config.visibleTypes && !config.visibleTypes.includes(type)) {
       return logEntry;
     }
+    
+    // Fonction pour formater les objets de manière lisible
+    const formatObject = (obj: unknown): string => {
+      if (obj === null || obj === undefined) return String(obj);
+      if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') return String(obj);
+      
+      try {
+        return JSON.stringify(obj, (_key, value) => {
+          // Gérer les références circulaires
+          if (value instanceof HTMLElement) return '[HTMLElement]';
+          if (value instanceof Function) return '[Function]';
+          if (value instanceof Error) return `[Error: ${value.message}]`;
+          if (typeof value === 'object' && value !== null && value.constructor && value.constructor.name !== 'Object' && value.constructor.name !== 'Array') {
+            return `[${value.constructor.name}]`;
+          }
+          return value;
+        }, 2); // Indentation de 2 espaces
+      } catch (_error) {
+        return '[Object - Could not stringify]';
+      }
+    };
+    
     if (message === 'Info message') {
       // eslint-disable-next-line no-console
       console.log(typeConfig.prefix, message);
@@ -193,14 +215,15 @@ const log = (type: LogType, message: string, data: any = null, playerId: string 
       console.log(typeConfig.prefix, message);
     } else if (message === 'First argument' && additionalArgs.length > 0) {
       // eslint-disable-next-line no-console
-      console.log(typeConfig.prefix, message, data, ...additionalArgs);
+      console.log(typeConfig.prefix, message, formatObject(data), ...additionalArgs.map(formatObject));
     } else if (data !== null) {
+      // Version avec objet formaté pour faciliter la copie
+      const formattedData = formatObject(data);
       // eslint-disable-next-line no-console
       console.log(
-        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}`,
+        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}\n${formattedData}`,
         typeConfig.style,
-        'color: inherit',
-        data
+        'color: inherit'
       );
     } else {
       // eslint-disable-next-line no-console
@@ -356,6 +379,61 @@ const fsmLogger = {
   },
   cleanupDeduplication: () => {
     deduplicationSystem.cleanup();
+  },
+  
+  // Méthode spéciale pour logger des objets complètement dépliés et copiables
+  logFullObject: (type: LogType, message: string, obj: unknown, playerId: string | null = null) => {
+    if (!config.enableConsole) return;
+    
+    const typeConfig = LOG_LEVEL[type] || LOG_LEVEL.INFO;
+    const enhancedMessage = playerId ? `[${playerId}] ${message}` : message;
+    
+    try {
+      const fullObjectString = JSON.stringify(obj, (_key, value) => {
+        // Gérer les références circulaires et types spéciaux
+        if (value instanceof HTMLElement) return '[HTMLElement]';
+        if (value instanceof Function) return `[Function: ${value.name || 'anonymous'}]`;
+        if (value instanceof Error) return `[Error: ${value.message}]`;
+        if (value instanceof Date) return value.toISOString();
+        if (typeof value === 'object' && value !== null && value.constructor && 
+            value.constructor.name !== 'Object' && value.constructor.name !== 'Array') {
+          return `[${value.constructor.name}]`;
+        }
+        return value;
+      }, 2);
+      
+      // eslint-disable-next-line no-console
+      console.log(
+        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}\n\n--- FULL OBJECT (COPY-READY) ---\n${fullObjectString}\n--- END OBJECT ---`,
+        typeConfig.style,
+        'color: inherit; font-family: monospace;'
+      );
+    } catch (_error) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}\n[Object could not be stringified]`,
+        typeConfig.style,
+        'color: inherit'
+      );
+    }
+  },
+  
+  // Méthode pour afficher les objets sous forme de table (idéal pour les arrays d'objets)
+  logTable: (type: LogType, message: string, data: unknown, playerId: string | null = null) => {
+    if (!config.enableConsole) return;
+    
+    const typeConfig = LOG_LEVEL[type] || LOG_LEVEL.INFO;
+    const enhancedMessage = playerId ? `[${playerId}] ${message}` : message;
+    
+    // eslint-disable-next-line no-console
+    console.log(
+      `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}`,
+      typeConfig.style,
+      'color: inherit'
+    );
+    
+    // eslint-disable-next-line no-console
+    console.table(data);
   }
 };
 

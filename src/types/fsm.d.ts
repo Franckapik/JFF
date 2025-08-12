@@ -93,12 +93,6 @@ export interface ExplorationCycle {
   phase: 'idle' | 'exploring' | 'evaluating' | 'collecting';
 }
 
-/** Tuile sélectionnée pour collecte (extrait de initialContext.ts) */
-export interface SelectedTile {
-  coord: GridCoordinate;
-  resources: ResourceStats;
-  value: number;
-}
 
 /** Configuration FSM (extrait de initialContext.ts) */
 export interface FSMConfig {
@@ -142,7 +136,7 @@ export interface FSMContext {
 
   // Cycle d'exploration
   explorationCycle: ExplorationCycle;
-  selectedTileForCollection: SelectedTile | null;
+  // selectedTileForCollection supprimé
 
   // Configuration
   config: FSMConfig;

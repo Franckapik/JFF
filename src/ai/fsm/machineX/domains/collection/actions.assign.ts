@@ -59,10 +59,19 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
       return {};
     }
     
+    // 🔧 FIX: Utiliser gridToWorld pour s'assurer que la position est cohérente avec le pathfinding
+    const consistentTargetPos = tileStore.gridToWorld(targetGridCoord);
+    
     fsmLogger.info(`🚢 [${context.entityId}] Setting ship target for collection:`, {
       targetPosition: targetWorldPos,
+      consistentTargetPos,
       targetGridCoord,
-      currentPosition: shipPosition
+      currentPosition: shipPosition,
+      coordinateCheck: {
+        original: targetWorldPos,
+        recalculated: consistentTargetPos,
+        areConsistent: Math.abs(targetWorldPos.x - consistentTargetPos.x) < 0.1 && Math.abs(targetWorldPos.z - consistentTargetPos.z) < 0.1
+      }
     });
     
     // Mise à jour complète du contexte en une seule fois
@@ -75,11 +84,6 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
         progress: 0, // Reset du progrès
         currentSpeed: context.vehicle?.maxSpeed || 1
       },
-      selectedTileForCollection: {
-        coord: targetGridCoord,
-        position: targetWorldPos,
-        resources: { food: 10, debris: 5, special: 1, total: 16 } // Ressources simulées
-      },
       lastAction: 'shipMovingToTile_success',
       currentState: 'collecting_ship_moving_to_tile', // 🟢 Mise à jour de l'état global FSM
     };
@@ -87,8 +91,7 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     fsmLogger.info(`✅ [${context.entityId}] Ship movement setup result:`, {
       hasVehicle: !!updatedContext.vehicle,
       targetTile: updatedContext.vehicle?.targetTile,
-      isMoving: updatedContext.vehicle?.isMoving,
-      selectedTile: updatedContext.selectedTileForCollection
+      isMoving: updatedContext.vehicle?.isMoving
     });
     
     return updatedContext;
@@ -194,7 +197,6 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
       targetTile: null, // Plus de cible active
       resources: { food: 0, debris: 0, special: 0, total: 0 } // Ressources déposées
     },
-    selectedTileForCollection: null, // Réinitialise la tuile de collecte
     lastAction: 'shipReachedBase_success',
     currentState: 'evaluating', // 🟢 Retour à l'évaluation après dépose
   };
