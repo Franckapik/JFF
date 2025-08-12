@@ -4,13 +4,13 @@ import { forwardRef } from "react";
 
 import type * as THREE from "three";
 
-import type { ShipMeshProps } from "../../types/r3f";
 import type { FSMContext } from "../../types/fsm";
+import type { ShipMeshProps } from "../../types/r3f";
 import ShipHelper from "../Helpers/ShipHelper";
 
 // === Animation et Tracking ===
-import { useShipAnimation } from "../../animations/useShipAnimation";
 import { useShipTracker } from "../../ai/fsm/hooks/trackers/ship/useShipTracker";
+import { useShipAnimation } from "../../animations/useShipAnimation";
 
 /**
  * Détecte si le vaisseau est dans un état de mouvement

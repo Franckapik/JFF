@@ -63,6 +63,7 @@ export const useShipAnimation = ({
   useEffect(() => {
     if (!isActive) {
       animationEnabled.current = false;
+      fsmLogger.debug(`🚢 [${shipType}] Animation disabled: not active`);
       return;
     }
 
@@ -70,8 +71,14 @@ export const useShipAnimation = ({
     
     if (needsAnimation !== animationEnabled.current) {
       animationEnabled.current = needsAnimation;
+      fsmLogger.mouvement(`🚢 [${shipType}] Animation ${needsAnimation ? 'ENABLED' : 'DISABLED'}`, {
+        shipState,
+        isMoving,
+        isActive,
+        needsAnimation
+      });
     }
-  }, [shipState, isMoving, isActive]);
+  }, [shipState, isMoving, isActive, shipType]);
 
   // ============================================================================
   // CALCUL DE CHEMIN LORS DU CHANGEMENT DE CIBLE
@@ -79,6 +86,7 @@ export const useShipAnimation = ({
   
   useEffect(() => {
     if (!selectedTile || !vehicle?.basePosition) {
+      fsmLogger.debug(`🚢 [${shipType}] No path calculation: selectedTile=${!!selectedTile}, basePosition=${!!vehicle?.basePosition}`);
       return;
     }
 
@@ -97,10 +105,22 @@ export const useShipAnimation = ({
         pathIndex.current = 0;
         lastTargetTile.current = tileKey;
         
+        fsmLogger.mouvement(`🚢 [${shipType}] New path calculated`, {
+          from: vehicle.basePosition,
+          to: selectedTile.coord.coord,
+          pathLength: newPath.length,
+          path: newPath
+        });
+        
         // Initialiser la position si c'est le premier calcul
         if (currentWorldPosition.current.x === 0 && currentWorldPosition.current.y === 0 && currentWorldPosition.current.z === 0) {
           currentWorldPosition.current = { ...newPath[0] };
         }
+      } else {
+        fsmLogger.error(`🚢 [${shipType}] No path found`, {
+          from: vehicle.basePosition,
+          to: selectedTile.coord.coord
+        });
       }
     } catch (error) {
       // Log d'erreur seulement, pas de log de succès pour éviter les spams

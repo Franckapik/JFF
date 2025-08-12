@@ -156,7 +156,7 @@ let config = {
   enableConsole: true,
   minLevel: 0,
   enableBuffering: true,
-  visibleTypes: ['EVENT', 'ACTION', 'DEBUG', 'CONTEXT'] as LogType[],
+  visibleTypes: Object.keys(LOG_LEVEL) as LogType[],
   enableDeduplication: true,
 };
 

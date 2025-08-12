@@ -1,5 +1,12 @@
 --TODO
 
+Pour que copilot puisse etudier un git diff :
+
+git diff a9fd96bcf02b355d1fa77645ad78051549f48319...HEAD > old_vs_new.patch
+
+L'animation ne se lance pas car il semblerait que le vaisseau ne met plus à jour sa position de depart dans le context. 
+Log au survol de la souris sur la scene.
+
 La logique de déplacement du vaisseau doit se refaire par la suppression des ancines fichiers d'animation (js). Il faut redemander de faire un deplacement selon BFS, en utilisant le store, pour atteindre la tuile cible lors de l'état correpondant. Le fonctionnement des drones pour certains aspects doit etre pris en référence. Mais peut-etre pas le systeme de position car pour le drone il depend de fleet ou surtout du vaisseau. On doit s'inspirer probableùent de selectTargetTileInRadiusForDrone qui Utilise un algorithme BFS basé sur les GridCoordinate et le système de voisins.
 
 

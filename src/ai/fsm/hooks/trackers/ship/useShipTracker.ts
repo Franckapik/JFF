@@ -1,12 +1,34 @@
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 // === Type Imports ===
 import type { WorldPosition } from '../../../../../types/coordinates.d.ts';
-import type { FSMContext } from '../../../../../types/fsm.d.ts';
+import type { FSMContext, SelectedTile } from '../../../../../types/fsm.d.ts';
 import type { XStateSend } from '../../../../../types/tracker.d.ts';
 
 // === Handlers ===
 import { createShipHandlers } from './handlers';
+
+// ============================================================================
+// CONVERSION UTILITAIRE LOCALE
+// ============================================================================
+
+/**
+ * Conversion simplifiée de coordonnées de tuile vers position mondiale
+ * Utilise la logique hexagonale standard pour éviter les dépendances de store
+ */
+function selectedTileToWorldPosition(selectedTile: SelectedTile): WorldPosition {
+  const HEX_SIZE = 1.0;
+  const spacing = 0.0;
+  
+  // Parser la string coord "x,z" depuis SelectedTile
+  const [x, z] = selectedTile.coord.coord.split(',').map(Number);
+  
+  // Conversion hex vers monde (formule hexagonale standard)
+  const worldX = x * HEX_SIZE * (1 + spacing);
+  const worldZ = z * HEX_SIZE * (1 + spacing);
+  
+  return { x: worldX, y: 0.5, z: worldZ };
+}
 
 interface ShipTrackerParams {
   context: FSMContext;
@@ -111,8 +133,9 @@ export const useShipTracker = ({
         switch (currentState) {
             case 'collecting_ship_moving_to_tile': {
                 if (contextRef.current?.selectedTileForCollection?.coord) {
-                    // Pour simplifier, utiliser la position fixe (0,0,0) comme dans les actions.assign.ts
-                    const targetPosition = { x: 0, y: 0.5, z: 0 };
+                    // Convertir les coordonnées de tuile en position mondiale
+                    const selectedTile = contextRef.current.selectedTileForCollection;
+                    const targetPosition = selectedTileToWorldPosition(selectedTile);
                     const distance = Math.sqrt(
                         Math.pow(position.x - targetPosition.x, 2) +
                         Math.pow(position.z - targetPosition.z, 2)
