@@ -23,11 +23,14 @@
 import type {
   DroneVisualState,
   GridCoordinate,
+  Path,
   Tile,
   TileMap,
   WorldPosition
 } from '../../../types/index.ts';
 import type { TilePathSliceActions } from '../../../types/stores.d.ts';
+
+import fsmLogger from '@/logger/fsmLogger.ts';
 
 
 // =========================================================================
@@ -63,37 +66,62 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
    * @param startCoord - Starting coordinate (e.g., "A1")
    * @param targetCoord - Target coordinate (e.g., "B2")
    * @param tiles - Map of all tiles (optionnel, utilise get().tiles par défaut)
-   * @returns Array of coordinates representing the path
+   * @returns Path representing the route from start to target
    */
-  findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap): GridCoordinate[] => {
+  findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap): Path => {
+    // Récupère la map des tuiles à utiliser (paramètre ou store)
     const tilesMap = tiles || get().tiles;
     
-    if (!startCoord || !targetCoord || startCoord === targetCoord) {
-      return startCoord === targetCoord ? [startCoord] : [];
+    // Vérifie la validité des coordonnées de départ et d'arrivée
+    // Si elles sont identiques, retourne le point de départ comme chemin
+    if (!startCoord || !targetCoord) {
+      fsmLogger.error('findPath: Invalid coordinates provided', { startCoord, targetCoord });
+      return [];
     }
     
-    const queue: GridCoordinate[][] = [[startCoord]];
+    if (startCoord === targetCoord) {
+      fsmLogger.info('findPath: Start and target coordinates are identical', { startCoord, targetCoord });
+      return [startCoord];
+    }
+    
+    // Initialisation de la file pour BFS : chaque élément est un chemin (array de coordonnées)
+    const queue: Path[] = [[startCoord]];
+    // Set pour garder les coordonnées déjà visitées et éviter les boucles
     const visited = new Set<GridCoordinate>();
 
+    // Boucle principale BFS : explore les chemins possibles
     while (queue.length > 0) {
+      // Récupère le chemin courant à explorer
       const path = queue.shift()!;
+      // Dernière coordonnée du chemin (noeud courant)
       const currentCoord = path[path.length - 1];
 
+      // Si on a atteint la cible, retourne le chemin trouvé
       if (currentCoord === targetCoord) {
+        fsmLogger.info('findPath: Path found successfully', { 
+          startCoord, 
+          targetCoord, 
+          pathLength: path.length,
+          path: path.slice(0, 5) // Log seulement les 5 premiers éléments pour éviter le spam
+        });
         return path;
       }
 
+      // Ignore les coordonnées déjà visitées
       if (visited.has(currentCoord)) {
         continue;
       }
 
+      // Marque la coordonnée comme visitée
       visited.add(currentCoord);
+      // Récupère la tuile courante
       const currentTile = tilesMap[currentCoord];
 
+      // Si la tuile a des voisins, explore chaque voisin
       if (currentTile && 'neighbors' in currentTile && Array.isArray(currentTile.neighbors)) {
         for (const neighborCoord of currentTile.neighbors) {
           const neighborTile = tilesMap[neighborCoord];
-          
+          // Ajoute le voisin à la file si il est walkable et non visité
           if (neighborTile && neighborTile.walkable && !visited.has(neighborCoord)) {
             queue.push([...path, neighborCoord]);
           }
@@ -101,7 +129,14 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
       }
     }
 
-    return []; // Aucun chemin trouvé
+    // Aucun chemin trouvé : retourne un tableau vide et log l'échec
+    fsmLogger.warn('findPath: No path found between coordinates', { 
+      startCoord, 
+      targetCoord, 
+      visitedNodes: visited.size,
+      availableTiles: Object.keys(tilesMap).length
+    });
+    return [];
   },
 
   /**
@@ -122,11 +157,11 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
 
   /**
    * Calculate the total distance of a path
-   * @param path - Array of coordinates representing the path
+   * @param path - Path representing the route
    * @param tiles - Map of all tiles (optionnel)
    * @returns Total distance of the path
    */
-  calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap): number => {
+  calculatePathDistance: (path: Path, tiles?: TileMap): number => {
     if (!path || path.length < 2) return 0;
     
     const tilesMap = tiles || get().tiles;

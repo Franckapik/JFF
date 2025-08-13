@@ -7,7 +7,7 @@ import type { GridCoordinate, WorldPosition } from './coordinates.d';
 import type { DroneVisualState } from './drone.d';
 import type { BotSnapshot, EmptyBotState, FSMEvent } from './fsm.d';
 import type { ResourceStats } from './resources.d';
-import type { Tile, TileMap, TileType, TileWithDistance } from './tile.d';
+import type { Path, Tile, TileMap, TileType, TileWithDistance } from './tile.d';
 
 // ============================================================================
 // SLICE INTERFACES - Actions et état pour chaque slice
@@ -62,11 +62,11 @@ export interface TileCoordinateSliceActions {
 /** Interface pour le slice de pathfinding */
 export interface TilePathSliceActions {
   // Pathfinding principal
-  findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap) => GridCoordinate[];
+  findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap) => Path;
   
   // Calculs de distance
   calculateDistance: (from: WorldPosition, to: WorldPosition) => number;
-  calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap) => number;
+  calculatePathDistance: (path: Path, tiles?: TileMap) => number;
   
   // Recherche et analyse
   findTileAtPosition: (position: WorldPosition, tiles?: TileMap) => Tile | null;

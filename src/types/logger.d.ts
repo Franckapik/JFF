@@ -4,6 +4,7 @@ export type LogType =
   | "INFO"
   | "STATE"
   | "ACTION"
+  | "WARN"
   | "CONDITION"
   | "MOUVEMENT"
   | "PLAYER"

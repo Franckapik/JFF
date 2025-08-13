@@ -132,6 +132,9 @@ export interface HexPosition {
 // TYPES POUR LE PATHFINDING
 // ============================================================================
 
+/** Chemin représenté par une séquence de coordonnées de grille */
+export type Path = GridCoordinate[];
+
 /** Nœud pour le calcul de chemin */
 export interface PathNode {
   coord: GridCoordinate;
@@ -145,84 +148,9 @@ export interface PathNode {
 /** Résultat d'un calcul de distance */
 export interface DistanceResult {
   distance: number;
-  path?: GridCoordinate[];    // Chemin si calculé par pathfinding
+  path?: Path;                // Chemin si calculé par pathfinding
   isReachable: boolean;       // La destination est-elle atteignable ?
 }
-
-// ============================================================================
-// TYPES POUR LE STORE
-// ============================================================================
-
-/** État du store de tuiles */
-export interface TileStoreState {
-  // Données principales
-  tiles: TileMap;
-  radius: number;
-  spacing: number;
-  
-  // État d'interaction
-  hoveredTile: GridCoordinate | null;
-  selectedTile: GridCoordinate | null;
-  
-  // Configuration
-  autoExploreEnabled: boolean;
-  debugMode: boolean;
-}
-
-/** Actions du store de tuiles */
-export interface TileStoreActions {
-  // Base
-  updateHoveredTile: (coord: GridCoordinate | null) => void;
-  setTiles: (tiles: TileMap) => void;
-  getTile: (coord: GridCoordinate) => Tile | undefined;
-  getNeighbors: (coord: GridCoordinate) => Tile[];
-  updateTile: (coord: GridCoordinate, updates: Partial<Tile>) => void;
-  updateTileState: (coord: GridCoordinate, updates: Partial<Tile>) => void;
-  clearTiles: () => void;
-  
-  // Ressources
-  collectResources: (coord: GridCoordinate, collector: string) => ResourceStats;
-  deductResources: (coord: GridCoordinate, amount: Partial<ResourceStats>) => boolean;
-  hasResources: (coord: GridCoordinate, minimum?: Partial<ResourceStats>) => boolean;
-  markTileAsCollected: (coord: GridCoordinate, collector?: string) => boolean;
-  resetTileResources: (coord: GridCoordinate) => void;
-  resetAllTileResources: () => void;
-  analyzeResourcesNearPosition: (source: GridCoordinate | { coord: GridCoordinate }, radius?: number) => Array<{
-    coord: GridCoordinate;
-    position: { x: number; y: number; z: number };
-    resources: ResourceStats;
-    distance: number;
-  }>;
-  
-  // Pathfinding
-  findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap) => GridCoordinate[];
-  calculateDistance: (from: WorldPosition, to: WorldPosition) => number;
-  calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap) => number;
-  findTileAtPosition: (position: WorldPosition, tiles?: TileMap) => Tile | null;
-  
-  // Marquage
-  markTileAsExplored: (coord: GridCoordinate, explorer?: string) => void;
-  
-  // Filtrage
-  getWalkableTiles: () => Tile[];
-  getWalkableTilesInRadius: (centerCoord: GridCoordinate, radius: number, options?: TileSearchOptions) => TileWithDistance[];
-  selectRandomWalkableTile: () => Tile | null;
-  getTilesByType: (tileType: TileType) => Tile[];
-  
-  // Coordonnées
-  isValidGridCoord: (coord: unknown) => coord is GridCoordinate;
-  isValidWorldPosition: (position: unknown) => position is WorldPosition;
-  gridToWorld: (coord: GridCoordinate) => WorldPosition;
-  worldToGrid: (position: WorldPosition) => GridCoordinate;
-  normalizeCoordinate: (coord: GridCoordinate | string) => GridCoordinate | null;
-  
-  // Génération
-  initializeGameGrid: (radius: number, spacing: number) => TileMap;
-  assignStartingTiles: (activeBotIds: string[]) => void;
-}
-
-/** Type complet du store de tuiles */
-export type TileStore = TileStoreState & TileStoreActions;
 
 // ============================================================================
 // TYPES GUARDS ET VALIDATEURS

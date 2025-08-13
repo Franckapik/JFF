@@ -2,22 +2,20 @@
  * ============================================================================
  * CONTEXTE FSM INITIAL - Store unifié pour Bots et futur Player (TypeScript)
  * ============================================================================
- * 
+ *
  * Version TypeScript du contexte FSM avec types stricts et sécurisés.
  * Utilise les types partagés du dossier src/types/ pour la cohérence.
- * 
+ *
  * @author Migration TypeScript Phase 2
  * @version 3.0.0
  */
 
+import type { DroneType, DroneVisualState } from "../../../../types/drone.d.ts";
+import type { EntityType, FSMState } from "../../../../types/fsm.d.ts";
 
-import type { DroneType, DroneVisualState } from '../../../../types/drone.d.ts';
-import type { EntityType, FSMState } from '../../../../types/fsm.d.ts';
+import type { FSMContext } from "@/types/fsm.ts";
 
-import type { FSMContext } from '@/types/fsm.ts';
-
-import type { VehicleState } from '@/types/vehicle.js';
-
+import type { VehicleState } from "@/types/vehicle.js";
 
 // ============================================================================
 // FONCTION DE CRÉATION DU CONTEXTE TYPÉE
@@ -26,10 +24,7 @@ import type { VehicleState } from '@/types/vehicle.js';
 /**
  * Crée le contexte FSM initial pour une entité avec types stricts
  */
-export const createMachineContext = (
-  entityId: string, 
-  entityType: EntityType = 'auto'
-): FSMContext => {
+export const createMachineContext = (entityId: string, entityType: EntityType = "auto"): FSMContext => {
   const currentTimestamp = Date.now();
   return {
     entityId,
@@ -37,14 +32,14 @@ export const createMachineContext = (
     autonomousMode: true,
     vehicle: {
       id: `${entityId}-ship`,
-      type: 'main-ship',
+      type: "main-ship",
       position: { x: 0, y: 0.5, z: 0 },
       basePosition: { x: 0, y: 0.5, z: 0 },
-  coord: '0,0',
+      coord: "0,0",
       isMoving: false,
       progress: 0,
       resources: { food: 0, debris: 0, special: 0, total: 0 },
-  targetTile: '0,0',
+      targetTile: "0,0",
       fuel: 100,
       damage: 0,
       totalDistance: 0,
@@ -53,9 +48,9 @@ export const createMachineContext = (
       isAtCapacity: false,
       maxSpeed: 1,
       currentSpeed: 0,
-      maxCapacity: { food: 200, debris: 1800, special: 3, total: 2003 }
+      maxCapacity: { food: 200, debris: 1800, special: 3, total: 2003 },
     },
-    currentState: 'evaluating' as FSMState,
+    currentState: "evaluating" as FSMState,
     currentTarget: null,
     explorationQueue: [],
     lastAction: null,
@@ -63,7 +58,7 @@ export const createMachineContext = (
     timestamps: {
       stateChange: currentTimestamp,
       lastMovement: null,
-      lastCollection: null
+      lastCollection: null,
     },
     score: { resources: { food: 0, debris: 0, special: 0, total: 0 } },
     memory: {
@@ -78,10 +73,10 @@ export const createMachineContext = (
         explorationCycles: 0,
         currentCycleStartTime: null,
         tilesExploredInCycle: 0,
-        bestTileInCycle: null
+        bestTileInCycle: null,
       },
-      stateHistory: ['evaluating' as FSMState],
-      transitionHistory: []
+      stateHistory: ["evaluating" as FSMState],
+      transitionHistory: [],
     },
     explorationCycle: {
       isActive: false,
@@ -89,59 +84,59 @@ export const createMachineContext = (
       exploredTiles: [],
       bestTileFound: null,
       startTime: null,
-      phase: 'idle'
+      phase: "idle",
     },
-  // selectedTileForCollection supprimé
+    // selectedTileForCollection supprimé
     config: {
       exploringRadius: 2,
       fuelThreshold: 20,
       capacityThreshold: 80,
-      movementSpeed: entityType === 'auto' ? 8 : 4,
+      movementSpeed: entityType === "auto" ? 8 : 4,
       explorationInterval: 1000,
       enableLogging: true,
-      logLevel: 'info'
+      logLevel: "info",
     },
     droneFleet: {
       drones: {
         explorer: {
           id: `${entityId}-drone-explorer`,
-          type: 'explorer' as DroneType,
-          state: 'uninitialized' as DroneVisualState,
+          type: "explorer" as DroneType,
+          state: "uninitialized" as DroneVisualState,
           position: { x: 0, y: 0.5, z: 0 },
           targetPosition: { x: 0, y: 0.5, z: 0 },
           isMoving: false,
           isActive: false,
-          lastUpdate: currentTimestamp
+          lastUpdate: currentTimestamp,
         },
         combat: {
           id: `${entityId}-drone-combat`,
-          type: 'combat' as DroneType,
-          state: 'uninitialized' as DroneVisualState,
+          type: "combat" as DroneType,
+          state: "uninitialized" as DroneVisualState,
           position: { x: 0, y: 0.5, z: 0 },
           targetPosition: { x: 0, y: 0.5, z: 0 },
           isMoving: false,
           isActive: false,
-          lastUpdate: currentTimestamp
+          lastUpdate: currentTimestamp,
         },
         special: {
           id: `${entityId}-drone-special`,
-          type: 'special' as DroneType,
-          state: 'uninitialized' as DroneVisualState,
+          type: "special" as DroneType,
+          state: "uninitialized" as DroneVisualState,
           position: { x: 0, y: 0.5, z: 0 },
           targetPosition: { x: 0, y: 0.5, z: 0 },
           isMoving: false,
           isActive: false,
-          lastUpdate: currentTimestamp
-        }
+          lastUpdate: currentTimestamp,
+        },
       },
       formationOffsets: {
         explorer: { x: 0.5, z: 0.5, y: 0.3 },
         combat: { x: -0.5, z: 0.5, y: 0.3 },
-        special: { x: 0, z: -0.7, y: 0.3 }
+        special: { x: 0, z: -0.7, y: 0.3 },
       },
       currentMission: null,
-      missionStartTime: null
-    }
+      missionStartTime: null,
+    },
   };
 };
 
@@ -155,7 +150,7 @@ export const createMachineContext = (
 export const updateStateHistory = (context: FSMContext, newState: string): FSMContext => {
   const now = Date.now();
   const maxHistory = 10;
-  
+
   return {
     ...context,
     currentState: newState,
@@ -165,9 +160,9 @@ export const updateStateHistory = (context: FSMContext, newState: string): FSMCo
       stateHistory: [newState, ...context.memory.stateHistory.slice(0, maxHistory - 1)],
       transitionHistory: [
         { from: context.currentState, to: newState, timestamp: now },
-        ...context.memory.transitionHistory.slice(0, maxHistory - 1)
-      ]
-    }
+        ...context.memory.transitionHistory.slice(0, maxHistory - 1),
+      ],
+    },
   };
 };
 
@@ -210,5 +205,5 @@ export default {
   canManualControl,
   getMainVehicle,
   isAutonomous,
-  isMoving
+  isMoving,
 };

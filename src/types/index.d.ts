@@ -52,7 +52,7 @@ export type {
 // ============================================================================
 // TYPES DE TUILES (DÉTAILLÉS)
 // ============================================================================
-export type { DistanceResult, HexPosition, PathNode, TileBiome, TileGenerationConfig, TileSearchOptions, TileStore, TileStoreActions, TileStoreState, TileType, TileWithDistance } from './tile.d';
+export type { DistanceResult, HexPosition, Path, PathNode, TileBiome, TileGenerationConfig, TileSearchOptions, TileType, TileWithDistance } from './tile.d';
 
 // ============================================================================
 // TYPES POUR REACT THREE FIBER (PROPS)

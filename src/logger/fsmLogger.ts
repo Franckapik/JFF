@@ -14,10 +14,14 @@ const LOG_TYPE_STYLES = {
     prefix: '🟢 STATE',
     style: 'color: #4CAF50; font-weight: bold'
   },
-  ACTION: {
-    prefix: '🟠 ACTION',
-    style: 'color: #FF9800; font-weight: bold'
-  },
+    ACTION: {
+      prefix: '🟠 ACTION',
+      style: 'color: #cfee1fff; font-weight: bold' // orange clair
+    },
+    WARN: {
+      prefix: '⚠️ WARN',
+      style: 'color: #FF9800; font-weight: bold' // orange vif
+    },
   CONDITION: {
     prefix: '🟣 CONDITION',
     style: 'color: #9C27B0; font-weight: bold'
@@ -258,7 +262,8 @@ const fsmLogger = {
   // Génération automatique des méthodes de log pour chaque type
   info: createLogger('INFO'),
   state: createLogger('STATE'),
-  action: createLogger('ACTION'),
+    action: createLogger('ACTION'),
+    warn: createLogger('WARN'),
   condition: createLogger('CONDITION'),
   mouvement: createLogger('MOUVEMENT'),
   resources: createLogger('RESOURCES'),
