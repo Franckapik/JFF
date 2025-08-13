@@ -117,7 +117,8 @@ export const useDroneAnimation = ({
     if (!drone) return;
 
     const droneState: DroneVisualState = drone.visualState || 'docked';
-    const targetPosition = calculateTargetPosition(drone, droneState, actualFleetPosition);
+    const formationOffset = context.droneFleet?.formationOffsets?.[droneType];
+    const targetPosition = calculateTargetPosition(drone, droneState, actualFleetPosition, formationOffset);
 
     // ============================================================================
     // INTERPOLATION DE POSITION

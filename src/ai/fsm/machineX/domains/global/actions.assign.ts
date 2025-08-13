@@ -89,9 +89,18 @@ export const processDroneInitRequest = createAssignAction(({ context, event }) =
   if (event.type !== 'DRONE_INITIALIZE_REQUEST') return context;
   fsmLogger.context(`🛸 [${context.entityId}] Processing ${event.droneType} drone init request`, {
     shipPosition: context.vehicle.position,
-    initialPosition: event.initialPosition,
     droneType: event.droneType,
   });
+  
+  // Calculer la position initiale du drone avec l'offset de formation
+  const formationOffset = context.droneFleet?.formationOffsets?.[event.droneType] || { x: 0, y: 0, z: 0 };
+  const shipPosition = context.vehicle.position;
+  const droneInitialPosition = {
+    x: shipPosition.x + formationOffset.x,
+    y: shipPosition.y + formationOffset.y,
+    z: shipPosition.z + formationOffset.z
+  };
+  
   return {
     droneFleet: {
       ...context.droneFleet,
@@ -99,7 +108,8 @@ export const processDroneInitRequest = createAssignAction(({ context, event }) =
         ...context.droneFleet?.drones,
         [event.droneType]: {
           ...context.droneFleet?.drones?.[event.droneType],
-          position: event.initialPosition,
+          position: droneInitialPosition,
+          targetPosition: droneInitialPosition,
           isActive: true,
           visualState: 'docked',
         },
@@ -121,10 +131,31 @@ export const processShipInitRequest = createAssignAction(({ context, event }) =>
     shipType: event.shipType,
   });
   
-  // Créer une WorldGridPosition pour basePosition
+  // Trouver la tuile la plus proche au lieu d'utiliser worldToGrid
   const tileStore = useTileStore.getState();
-  const coord = tileStore.worldToGrid(event.initialPosition);
-  const basePosition = { ...event.initialPosition, coord };
+  const nearestTile = tileStore.findTileAtPosition(event.initialPosition);
+  
+  let basePosition;
+  if (nearestTile) {
+    // Utiliser la coordonnée de la tuile trouvée
+    basePosition = { 
+      ...event.initialPosition, 
+      coord: nearestTile.position.coord 
+    };
+    fsmLogger.context(`🚢 [${context.entityId}] Found nearest tile`, {
+      initialPosition: event.initialPosition,
+      tileCoord: nearestTile.position.coord,
+      tileWorldPos: { x: nearestTile.position.x, y: nearestTile.position.y, z: nearestTile.position.z }
+    });
+  } else {
+    // Fallback à l'ancienne méthode si aucune tuile trouvée
+    const coord = tileStore.worldToGrid(event.initialPosition);
+    basePosition = { ...event.initialPosition, coord };
+    fsmLogger.warn(`🚢 [${context.entityId}] No tile found at position, using worldToGrid fallback`, {
+      initialPosition: event.initialPosition,
+      calculatedCoord: coord
+    });
+  }
   
   return {
     vehicle: {

@@ -19,9 +19,30 @@ interface DroneData {
 export const calculateTargetPosition = (
   drone: DroneData,
   droneState: DroneVisualState,
-  actualFleetPosition: WorldPosition
+  actualFleetPosition: WorldPosition,
+  formationOffset?: { x: number; y: number; z: number }
 ): WorldPosition => {
-  if (drone.targetPosition && (droneState === 'deploying' || droneState === 'scanning' || droneState === 'returning')) {
+  // Pour l'état "returning", retourner à la position du vaisseau (targetPosition relative)
+  if (droneState === 'returning' && drone.targetPosition) {
+    // Le drone retourne au vaisseau : utiliser la targetPosition en coordonnées relatives
+    return {
+      x: drone.targetPosition.x - actualFleetPosition.x,
+      y: drone.targetPosition.y - actualFleetPosition.y,
+      z: drone.targetPosition.z - actualFleetPosition.z
+    };
+  }
+  
+  // Si le drone est docked, utiliser l'offset de formation
+  if (droneState === 'docked' && formationOffset) {
+    return {
+      x: formationOffset.x,
+      y: formationOffset.y,
+      z: formationOffset.z
+    };
+  }
+  
+  // Pour les autres états, utiliser la position cible ou la position actuelle
+  if (drone.targetPosition && (droneState === 'deploying' || droneState === 'scanning')) {
     return {
       x: drone.targetPosition.x - actualFleetPosition.x,
       y: drone.targetPosition.y - actualFleetPosition.y,
@@ -34,7 +55,9 @@ export const calculateTargetPosition = (
       z: drone.position.z - actualFleetPosition.z
     };
   }
-  return { x: 0, y: 0, z: 0 };
+  
+  // Par défaut, utiliser l'offset de formation si disponible
+  return formationOffset || { x: 0, y: 0, z: 0 };
 };
 
 /**

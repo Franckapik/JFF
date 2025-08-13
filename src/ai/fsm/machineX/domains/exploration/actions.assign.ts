@@ -219,6 +219,10 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
   
   const droneState: DroneVisualState = 'returning';
   
+  // Important: Récupérer la position actuelle réelle du drone (pas la position de formation)
+  // depuis son targetPosition actuelle (sa dernière position d'exploration)
+  const actualDronePosition = context.droneFleet.drones.explorer.targetPosition || context.droneFleet.drones.explorer.position;
+  
   return {
     droneFleet: {
       ...context.droneFleet,
@@ -227,6 +231,7 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
         explorer: {
           ...context.droneFleet.drones.explorer,
           visualState: droneState,
+          position: actualDronePosition, // ✅ Position actuelle mise à jour
           targetPosition: shipPosition, // ✅ IMPORTANT: Cible mise à jour vers la base
           isMoving: true, // ✅ IMPORTANT: Le drone doit bouger vers la base
           lastUpdate: Date.now()

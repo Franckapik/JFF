@@ -171,10 +171,19 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
       const tileA = tilesMap[path[i]];
       const tileB = tilesMap[path[i + 1]];
       if (tileA && tileB) {
-        const distance = get().calculateDistance(
-          { x: tileA.position.x, y: tileA.position.y || 0, z: tileA.position.z },
-          { x: tileB.position.x, y: tileB.position.y || 0, z: tileB.position.z }
-        );
+        // Adapter à la nouvelle structure WorldGridPosition
+        const positionA: WorldPosition = {
+          x: tileA.position.x,
+          y: tileA.position.y,
+          z: tileA.position.z
+        };
+        const positionB: WorldPosition = {
+          x: tileB.position.x,
+          y: tileB.position.y,
+          z: tileB.position.z
+        };
+        
+        const distance = get().calculateDistance(positionA, positionB);
         totalDistance += distance;
       }
     }
@@ -199,12 +208,20 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
     const foundTile = Object.values(tilesMap).find((tile: Tile) => {
       if (!tile || !tile.position) return false;
       
-      const distance = get().calculateDistance(
-        position,
-        { x: tile.position.x, y: tile.position.y || 0, z: tile.position.z }
+      // Adapter à la nouvelle structure WorldGridPosition
+      const tileWorldPosition: WorldPosition = {
+        x: tile.position.x,
+        y: tile.position.y,
+        z: tile.position.z
+      };
+      
+      // Calculer distance 2D (XZ seulement) pour l'assignation de tuiles
+      const distance2D = Math.sqrt(
+        Math.pow(position.x - tileWorldPosition.x, 2) + 
+        Math.pow(position.z - tileWorldPosition.z, 2)
       );
       
-      return distance < pathConstants.thresholds.positionMatch;
+      return distance2D < pathConstants.thresholds.positionMatch;
     });
     
     return foundTile as Tile || null;
@@ -287,8 +304,39 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
       // 1. Trouver la tuile actuelle du vaisseau
       const currentTile = get().findTileAtPosition(shipPosition, tilesMap);
       if (!currentTile) {
+        // Diagnostic approfondi : trouver la tuile la plus proche
+        const allTiles = Object.values(tilesMap) as Tile[];
+        const tilesWithDistance = allTiles.map(tile => {
+          const tileWorldPosition = {
+            x: tile.position.x,
+            y: tile.position.y,
+            z: tile.position.z
+          };
+          const distance = get().calculateDistance(shipPosition, tileWorldPosition);
+          return {
+            coord: tile.position.coord,
+            distance,
+            tilePosition: tileWorldPosition
+          };
+        }).sort((a, b) => a.distance - b.distance).slice(0, 3); // Top 3 closest
+        
+        // eslint-disable-next-line no-console
+        console.log(`❌ [selectTargetTileInRadiusForDrone] Cannot locate ship on tile:`, {
+          shipPosition,
+          totalTilesAvailable: Object.keys(tilesMap).length,
+          thresholdUsed: pathConstants.thresholds.positionMatch,
+          closestTiles: tilesWithDistance
+        });
         return null; // Impossible de localiser le vaisseau sur le plateau
       }
+      
+      // eslint-disable-next-line no-console
+      console.log(`✅ [selectTargetTileInRadiusForDrone] Ship located on tile:`, {
+        shipPosition,
+        currentTileCoord: currentTile.position.coord,
+        currentTileWorldPos: { x: currentTile.position.x, y: currentTile.position.y, z: currentTile.position.z },
+        neighborsCount: currentTile.neighbors?.length || 0
+      });
       
       // 2. Recherche BFS pour collecter toutes les tuiles dans le rayon
       const candidateTiles: Tile[] = [];
@@ -334,26 +382,36 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
       
       // 3. Sélectionner une tuile candidate au hasard
       if (candidateTiles.length === 0) {
+        // Log diagnostic pour comprendre pourquoi aucune tuile n'est trouvée
+        const totalTiles = Object.keys(tilesMap).length;
+        const allTiles = Object.values(tilesMap) as Tile[];
+        const walkableTiles = allTiles.filter(t => t.walkable).length;
+        const uncollectedTiles = allTiles.filter(t => t.walkable && !t.collected).length;
+        
+        // eslint-disable-next-line no-console
+        console.log(`🔍 [selectTargetTileInRadiusForDrone] Diagnostic:`, {
+          shipPosition,
+          range,
+          currentTileCoord: currentTile?.position?.coord,
+          totalTiles,
+          walkableTiles,
+          uncollectedTiles,
+          candidateTilesFound: candidateTiles.length,
+          visitedCount: visited.size
+        });
+        
         return null; // Aucune tuile valide trouvée dans le rayon
       }
       
       const randomTile = candidateTiles[Math.floor(Math.random() * candidateTiles.length)];
 
       // 4. Convertir la position de la tuile en WorldPosition
-      let targetPosition: WorldPosition;
-      if (Array.isArray(randomTile.position)) {
-        targetPosition = { 
-          x: randomTile.position[0], 
-          y: randomTile.position[1] + 0.5, // Légèrement au-dessus de la tuile
-          z: randomTile.position[2] 
-        };
-      } else {
-        targetPosition = { 
-          x: randomTile.position.x, 
-          y: (randomTile.position.y || 0) + 0.5,
-          z: randomTile.position.z 
-        };
-      }
+      // Avec WorldGridPosition, la structure est maintenant fixe
+      const targetPosition: WorldPosition = { 
+        x: randomTile.position.x, 
+        y: randomTile.position.y + 0.5, // Légèrement au-dessus de la tuile
+        z: randomTile.position.z 
+      };
       
       return targetPosition;
       

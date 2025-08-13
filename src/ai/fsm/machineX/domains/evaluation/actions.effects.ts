@@ -43,12 +43,18 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
       fsmLogger.info(`[Evaluating] → Testing NEED_EXPLORING`);
       self.send({ type: 'NEED_EXPLORING' } as MachineEvents);
       
-      // Si shouldExplore échoue, la machine restera en evaluating
-      // On teste alors la collecte après un délai
-      setTimeout(() => {
-        fsmLogger.info(`[Evaluating] → Testing NEED_COLLECTING (exploration may be complete)`);
-        self.send({ type: 'NEED_COLLECTING' } as MachineEvents);
-      }, 50);
+      // Si shouldExplore échoue ET que le drone n'est pas en cours d'exploration,
+      // alors tester la collecte après un délai
+      const isDroneExploring = context.droneFleet?.drones?.explorer?.visualState === 'deploying' || 
+                              context.droneFleet?.drones?.explorer?.visualState === 'scanning' ||
+                              context.droneFleet?.drones?.explorer?.visualState === 'returning';
+      
+      if (!isDroneExploring) {
+        setTimeout(() => {
+          fsmLogger.info(`[Evaluating] → Testing NEED_COLLECTING (exploration may be complete)`);
+          self.send({ type: 'NEED_COLLECTING' } as MachineEvents);
+        }, 50);
+      }
     }
   }, 100);
 };

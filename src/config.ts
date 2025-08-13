@@ -23,8 +23,6 @@ export const config: AppConfig = window.appConfig || {
     "INFO",
     "STATE",
     "ACTION",
-    "CONDITION",
-    "MOUVEMENT",
     "PLAYER",
     "GAME",
     "EVENT",
