@@ -39,7 +39,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
       isMoving: false,
       progress: 0,
       resources: { food: 0, debris: 0, special: 0, total: 0 },
-      targetTile: "0,0",
+      targetTile: null,
       fuel: 100,
       damage: 0,
       totalDistance: 0,

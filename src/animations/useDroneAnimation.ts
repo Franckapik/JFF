@@ -29,13 +29,12 @@ import {
 
 export const useDroneAnimation = ({
   context,
-  fleetPosition,
   updateVisualPosition,
   droneType,
   isActive,
   isMoving
 }: DroneAnimationProps): DroneAnimationReturn => {
-  const droneRef = useRef<THREE.Mesh>(null!);
+  const droneRef = useRef<THREE.Group>(null!);
   const currentLocalPosition = useRef<WorldPosition>({ x: 0, y: 0, z: 0 });
   const lastTargetPosition = useRef<WorldPosition | null>(null);
   const animationEnabled = useRef<boolean>(false);
@@ -47,9 +46,9 @@ export const useDroneAnimation = ({
   const droneFromContext = context?.droneFleet?.drones?.[droneType];
   const initialPosition = droneFromContext?.position || { x: 0, y: 0, z: 0 };
   const shipPosition = context?.vehicle?.position || { x: 0, y: 0, z: 0 };
-  const actualFleetPosition = (fleetPosition?.x === 0 && fleetPosition?.y === 0 && fleetPosition?.z === 0) 
+  const actualFleetPosition = (initialPosition?.x === 0 && initialPosition?.y === 0 && initialPosition?.z === 0) 
     ? shipPosition 
-    : (fleetPosition || shipPosition);
+    : (initialPosition || shipPosition);
 
   // ============================================================================
   // CONTRÔLE D'ACTIVATION DE L'ANIMATION
@@ -145,14 +144,17 @@ export const useDroneAnimation = ({
       currentLocalPosition.current.z
     );
 
-    // Appliquer les animations visuelles selon l'état
-    applyDroneVisualAnimations(
-      droneRef.current,
-      droneState,
-      currentLocalPosition.current.y,
-      state.clock.getElapsedTime(),
-      delta
-    );
+    // Appliquer les animations visuelles selon l'état sur le premier mesh enfant
+    const droneMesh = droneRef.current.children.find(child => child.type === 'Mesh') as THREE.Mesh;
+    if (droneMesh) {
+      applyDroneVisualAnimations(
+        droneMesh,
+        droneState,
+        currentLocalPosition.current.y,
+        state.clock.getElapsedTime(),
+        delta
+      );
+    }
 
     // ============================================================================
     // ENVOI DE LA POSITION AU TRACKER

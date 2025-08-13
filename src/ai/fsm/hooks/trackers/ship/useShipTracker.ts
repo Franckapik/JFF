@@ -52,7 +52,7 @@ export const useShipTracker = ({
           break;
         case "moving":
           if (vehicle.targetTile) {
-            distance = calculateDistance(position, gridToWorld(vehicle.targetTile));
+            distance = calculateDistance(position, gridToWorld(vehicle.targetTile.coord));
             if (distance !== Infinity) {
               handlers.movingToTileHandler.process(distance, position);
             }

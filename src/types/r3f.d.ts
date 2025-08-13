@@ -24,14 +24,14 @@ export type ShipVisualState =
   | 'docked';
 
 export interface DroneAnimationReturn {
-  droneRef: MutableRefObject<THREE.Mesh | undefined>;
+  droneRef: MutableRefObject<THREE.Group | undefined>;
   droneState: DroneVisualState;
   initialPosition: WorldPosition;
 }
 
 export interface DroneAnimationProps {
   context: FSMContext | null;
-  fleetPosition: WorldPosition | null;
+  initialPosition: WorldPosition | null;
   updateVisualPosition: (position: WorldPosition) => void;
   droneType?: DroneType;
   isActive?: boolean;
@@ -45,7 +45,7 @@ export interface ShipAnimationProps {
   /** Contexte FSM pour l'état du vaisseau */
   context: FSMContext | null;
   /** Position mondiale du vaisseau depuis Scene/Fleet (source de vérité) */
-  fleetPosition: WorldPosition | null;
+  initialPosition: WorldPosition | null;
   /** Fonction de mise à jour de la position visuelle */
   updateVisualPosition: (position: WorldPosition) => void;
   /** Type du vaisseau */
@@ -60,8 +60,8 @@ export interface ShipAnimationProps {
  * Return interface for Ship animation hook
  */
 export interface ShipAnimationReturn {
-  /** Référence au mesh du vaisseau */
-  shipRef: MutableRefObject<THREE.Mesh | undefined>;
+  /** Référence au groupe du vaisseau */
+  shipRef: MutableRefObject<THREE.Group | undefined>;
   /** État actuel du vaisseau */
   shipState: string;
   /** Chemin actuel du vaisseau (positions monde) */
@@ -96,7 +96,7 @@ export interface FleetProps {
   /** ID du bot FSM (ex: 'bot-0') */
   botId: VehicleId;
   /** Position mondiale de la flotte (vaisseau + drone) */
-  fleetPosition: WorldPosition;
+  initialPosition: WorldPosition;
   /** Position de départ de la tuile (remplace tileCoord) */
   tilePosition: WorldPosition;
 }
@@ -116,7 +116,7 @@ export interface DroneMeshProps {
   /** Type du drone */
   droneType?: string;
   /** Référence mesh pour animation/position */
-  meshRef?: import('react').Ref<import('three').Mesh>;
+  meshRef?: import('react').Ref<import('three').Group>;
 }
 
 /**
@@ -132,13 +132,13 @@ export interface ShipMeshProps {
   /** Fonction send de XState pour les événements */
   send?: XStateSend;
   /** Position de la flotte (source de vérité depuis Scene/Fleet) */
-  fleetPosition?: WorldPosition | null;
+  initialPosition?: WorldPosition | null;
   /** Action actuelle du vaisseau */
   currentAction?: string;
   /** Indique si le vaisseau est en mouvement */
   isMoving?: boolean;
   /** Référence mesh pour animation/position */
-  meshRef?: import('react').Ref<import('three').Mesh>;
+  meshRef?: import('react').Ref<import('three').Group>;
   /** Valeur d'état XState du bot */
   botStateValue?: string;
 }

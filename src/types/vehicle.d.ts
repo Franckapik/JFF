@@ -1,4 +1,4 @@
-import type { GridCoordinate, Path, WorldGridPosition, WorldPosition } from './coordinates';
+import type { Path, WorldGridPosition, WorldPosition } from './coordinates';
 import type { ResourceStats } from './resources';
 import type { ShipType } from './tracker';
 
@@ -12,6 +12,7 @@ export type VehicleId = string;
 export type VehicleVisualState = 
   | 'uninitialized'
   | 'moving' 
+  | 'moving_to_tile'
   | 'collecting' 
   | 'returning'
   | 'docked' 
@@ -31,7 +32,7 @@ export interface VehicleState {
   isMoving: boolean;
   progress: number;
   resources: ResourceStats;
-  targetTile: GridCoordinate;
+  targetTile: WorldGridPosition | null;
   fuel: number;
   damage: number;
   totalDistance: number;

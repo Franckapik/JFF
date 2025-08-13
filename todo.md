@@ -1,4 +1,8 @@
 --TODO
+La logique est fortement cassée. Je n'y arrive pas !!
+Il faut absolument que l'initialisation du vaisseau se fasse normalement. La position de fleet doit etre envoyée jusqu'au handler, puis que ce dernier change l'état du vaisseau.
+
+
 Refondre la fonction permettant de calculer le chemin en fonction des tuiles pour essayer de resoudre ce probleme de decalage et eviter de donner la possibilité de faire du direct path mais plutot une erreur bloquante.
 
 

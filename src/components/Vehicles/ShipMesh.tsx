@@ -25,8 +25,8 @@ const isShipMoving = (currentState?: string): boolean => {
   return movementStates.includes(currentState || '');
 };
 
-const ShipMesh = forwardRef<THREE.Mesh, ShipMeshProps>(
-  ({ color, botId = "defaultBot", context, send, fleetPosition, meshRef, botStateValue = "unknown", isMoving }, ref) => {
+const ShipMesh = forwardRef<THREE.Group, ShipMeshProps>(
+  ({ color, botId = "defaultBot", context, send, initialPosition, meshRef, botStateValue = "unknown", isMoving }, ref) => {
     
     // ============================================================================
     // HOOKS D'ANIMATION ET DE TRACKING (TOUJOURS APPELÉS)
@@ -46,7 +46,7 @@ const ShipMesh = forwardRef<THREE.Mesh, ShipMeshProps>(
     // Hook d'animation principal
     const { shipRef, shipState } = useShipAnimation({
       context,
-      fleetPosition: fleetPosition || null, // Source de vérité depuis Scene/Fleet
+      initialPosition: initialPosition || null, // Source de vérité depuis Scene/Fleet
       updateVisualPosition: updateShipPosition,
       shipType: 'main-ship',
       isActive: !!(context && send && context.vehicle),
@@ -60,10 +60,12 @@ const ShipMesh = forwardRef<THREE.Mesh, ShipMeshProps>(
     // Si pas de contexte ou send valides, rendu simple sans helper
     if (!context || !send || !context.vehicle) {
       return (
-        <mesh ref={meshRef || ref} position={[0, 0, 0]} castShadow>
-          <boxGeometry args={[0.5, 0.5, 0.5]} />
-          <meshStandardMaterial color={color} />
-        </mesh>
+        <group ref={ref}>
+          <mesh ref={meshRef} position={[0, 0, 0]} castShadow>
+            <boxGeometry args={[0.5, 0.5, 0.5]} />
+            <meshStandardMaterial color={color} />
+          </mesh>
+        </group>
       );
     }
     
@@ -77,9 +79,8 @@ const ShipMesh = forwardRef<THREE.Mesh, ShipMeshProps>(
       (currentResources.food > 0 || currentResources.debris > 0 || currentResources.special > 0);
       
     return (
-      <>
+      <group ref={meshRef || ref || shipRef}>
         <mesh 
-          ref={meshRef || ref || shipRef} 
           position={[0, 0, 0]} 
           castShadow
         >
@@ -92,10 +93,10 @@ const ShipMesh = forwardRef<THREE.Mesh, ShipMeshProps>(
         </mesh>
         {/* Helper visuel pour l'état du vaisseau */}
         <ShipHelper 
-          position={[0, 0, 0]} 
           botState={shipState || botStateValue} 
+          logicalPosition={context?.vehicle?.position || { x: 0, y: 0, z: 0 }}
         />
-      </>
+      </group>
     );
   }
 );

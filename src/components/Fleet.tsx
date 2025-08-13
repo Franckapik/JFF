@@ -23,7 +23,6 @@ import useXFSMStore from "../stores/useXFSMStore/index.ts";
 import type { FSMContext } from "../types/fsm.d";
 import type { FleetProps } from "../types/r3f";
 
-import fsmLogger from "../logger/fsmLogger";
 import useGameStore from "../stores/useGameStore";
 
 import DroneMesh from "./Vehicles/DroneMesh";
@@ -32,19 +31,11 @@ import ShipMesh from "./Vehicles/ShipMesh";
 import { XFSMStoreType } from "@/types/index.js";
 
 
-const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tilePosition }) => {
+const Fleet: React.FC<FleetProps> = React.memo(({ botId, initialPosition }) => {
   // Récupérer la couleur du bot ici
   const getBotColorById = useGameStore(state => state.getBotColorById);
   const color = getBotColorById(botId);
-  
-  // Log de la position Fleet pour debug
-  React.useEffect(() => {
-    fsmLogger.mouvement(`🚢 [${botId}] 🌐 FLEET: Position received`, {
-      fleetPosition,
-      tilePosition
-    });
-  }, [fleetPosition, botId, tilePosition]);
-  
+    
   // === FSM Context & Send ===
   const botState = useXFSMStore((state: XFSMStoreType) => state.botStates[botId]);
   const context = (botState && 'context' in botState) ? (botState as { context: FSMContext }).context : undefined;
@@ -79,7 +70,7 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tilePosi
 
   const { droneRef, droneState } = useDroneAnimation({
     context: context || {} as FSMContext,
-    fleetPosition: fleetPosition,
+    initialPosition: initialPosition,
     updateVisualPosition: updateDronePosition,
     droneType,
     isActive: isDroneActive,
@@ -89,7 +80,7 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tilePosi
   // === Ship Animation ===
   const { shipRef, shipState } = useShipAnimation({
     context: context || {} as FSMContext,
-    fleetPosition: fleetPosition, // Source de vérité depuis Scene
+    initialPosition: initialPosition, // Transmission de la position initiale du vaisseau
     updateVisualPosition: updateShipPosition,
     shipType: 'main-ship',
     isActive: true,
@@ -105,7 +96,7 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tilePosi
         botId={botId}
         context={context}
         send={fsmSend}
-        fleetPosition={fleetPosition} // Source de vérité pour l'initialisation
+        initialPosition={initialPosition} // Source de vérité pour l'initialisation
         currentAction={shipState}
         meshRef={shipRef}
         botStateValue={context?.fsmState ?? "unknown"}
@@ -126,9 +117,9 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tilePosi
   // === Mémo : évite les re-renders inutiles ===
   return (
     prevProps.botId === nextProps.botId &&
-    prevProps.fleetPosition?.x === nextProps.fleetPosition?.x &&
-    prevProps.fleetPosition?.y === nextProps.fleetPosition?.y &&
-    prevProps.fleetPosition?.z === nextProps.fleetPosition?.z
+    prevProps.initialPosition?.x === nextProps.initialPosition?.x &&
+    prevProps.initialPosition?.y === nextProps.initialPosition?.y &&
+    prevProps.initialPosition?.z === nextProps.initialPosition?.z
   );
 });
 

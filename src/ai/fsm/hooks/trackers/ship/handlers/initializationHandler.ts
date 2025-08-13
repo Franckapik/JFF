@@ -10,7 +10,6 @@
  * Similaire au handler d'initialisation des drones mais pour le vaisseau.
  */
 
-import fsmLogger from '../../../../../../logger/fsmLogger.ts';
 import type { WorldPosition, XStateSend } from '../../../../../../types/index.ts';
 
 interface ShipInitHandlerParams {
@@ -19,7 +18,7 @@ interface ShipInitHandlerParams {
   send: XStateSend;
 }
 
-export const createShipInitializationHandler = ({ botId, shipType, send }: ShipInitHandlerParams) => {
+export const createShipInitializationHandler = ({ shipType, send }: ShipInitHandlerParams) => {
 
   return {
     /**
@@ -30,10 +29,6 @@ export const createShipInitializationHandler = ({ botId, shipType, send }: ShipI
      * @returns true si l'événement a été envoyé
      */
     process(position: WorldPosition): boolean {
-      fsmLogger.context(`🚢 [${botId}] [Handler] Processing ship initialization`, {
-        position,
-        shipType
-      });
       
       // Envoyer l'événement d'initialisation qui établira la basePosition dans le contexte
       send({ 

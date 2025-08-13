@@ -13,6 +13,7 @@ import { useThree } from "@react-three/fiber";
 
 // Components
 import Fleet from "./Fleet";
+import SceneHelper from "./Helpers/SceneHelper";
 import Tile from "./Tile.tsx";
 
 // Stores
@@ -144,6 +145,9 @@ const Scene: React.FC = () => {
 
   return (
     <>
+      {/* Scene FSM State Helper */}
+      <SceneHelper />
+      
       {/* Scene setup - Grid and lighting */}
       <gridHelper args={[10, 10]} />
       <ambientLight intensity={1} />
@@ -168,7 +172,7 @@ const Scene: React.FC = () => {
               <group position={[tile.position.x, 0.5, tile.position.z]}>
                 <Fleet
                   botId={tile.assignedToBot as BotId}
-                  fleetPosition={{
+                  initialPosition={{
                     x: tile.position.x, // ✅ Vraies coordonnées mondiales  
                     y: 0.5,
                     z: tile.position.z,

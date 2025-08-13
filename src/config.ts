@@ -8,6 +8,7 @@ interface AppConfig {
     drone: boolean;
     ship: boolean;
     tile: boolean;
+    scene: boolean;
   };
   // logLevel?: string;
 }
@@ -23,6 +24,8 @@ export const config: AppConfig = window.appConfig || {
     "INFO",
     "STATE",
     "ACTION",
+    "CONDITION",
+    "MOUVEMENT",
     "PLAYER",
     "GAME",
     "EVENT",
@@ -37,6 +40,7 @@ export const config: AppConfig = window.appConfig || {
     drone: true,
     ship: true,
     tile: true,
+    scene: true,
   },
   // logLevel: "debug", // Si tu veux gérer un vrai niveau de log, décommente et utilise
 };

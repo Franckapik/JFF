@@ -87,9 +87,9 @@ export const shouldAnimateDrone = (
  */
 export const calculateWorldPosition = (
   localPosition: WorldPosition,
-  fleetPosition: WorldPosition
+  initialPosition: WorldPosition
 ): WorldPosition => ({
-  x: fleetPosition.x + localPosition.x,
-  y: fleetPosition.y + localPosition.y,
-  z: fleetPosition.z + localPosition.z
+  x: initialPosition.x + localPosition.x,
+  y: initialPosition.y + localPosition.y,
+  z: initialPosition.z + localPosition.z
 });

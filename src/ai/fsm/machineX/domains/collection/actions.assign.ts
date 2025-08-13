@@ -151,19 +151,17 @@ export const assignShipReturningContext = createAssignAction(({ context, event }
   }
   
   // Position de base (pour simplifier, retour à la position initiale)
-  const basePosition = context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0 };
-  const baseCoord = { coord: '0,0' as const, type: 'base' as const };
+  const basePosition = context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0, coord: '0,0' };
   
   fsmLogger.info(`🔙 [${context.entityId}] Updating vehicle state to returning with target:`, {
     basePosition,
-    baseCoord,
     currentPosition: context.vehicle.position
   });
   
   return {
     vehicle: {
       ...context.vehicle,
-      targetTile: baseCoord.coord, // Fix: assign only the string coordinate
+      targetTile: basePosition, // Utiliser basePosition qui est un WorldGridPosition
       isMoving: true, // ✅ IMPORTANT: Le vaisseau doit bouger vers la base
       progress: 0, // Reset du progrès pour le retour
       currentSpeed: context.vehicle?.maxSpeed || 1,
