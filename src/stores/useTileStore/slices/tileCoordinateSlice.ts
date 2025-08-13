@@ -195,10 +195,7 @@ const createTileCoordinateSlice = (_set: unknown, get: () => any): TileCoordinat
       return false;
     }
     
-    const distance = Math.sqrt(
-      Math.pow(target.x - current.x, 2) + 
-      Math.pow(target.z - current.z, 2)
-    );
+    const distance = get().calculateDistance(current, target);
     
     return distance <= threshold;
   },

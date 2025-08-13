@@ -136,9 +136,9 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
       const tileA = tilesMap[path[i]];
       const tileB = tilesMap[path[i + 1]];
       if (tileA && tileB) {
-        const distance = Math.sqrt(
-          Math.pow(tileB.position.x - tileA.position.x, 2) + 
-          Math.pow(tileB.position.z - tileA.position.z, 2)
+        const distance = get().calculateDistance(
+          { x: tileA.position.x, y: tileA.position.y || 0, z: tileA.position.z },
+          { x: tileB.position.x, y: tileB.position.y || 0, z: tileB.position.z }
         );
         totalDistance += distance;
       }
@@ -164,9 +164,9 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
     const foundTile = Object.values(tilesMap).find((tile: Tile) => {
       if (!tile || !tile.position) return false;
       
-      const distance = Math.sqrt(
-        Math.pow(tile.position.x - position.x, 2) + 
-        Math.pow(tile.position.z - position.z, 2)
+      const distance = get().calculateDistance(
+        position,
+        { x: tile.position.x, y: tile.position.y || 0, z: tile.position.z }
       );
       
       return distance < pathConstants.thresholds.positionMatch;
@@ -202,9 +202,9 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
         if (!targetPosition) return Infinity;
         
         // Distance 2D (XZ) pour l'exploration - ignore la hauteur Y
-        const dx = dronePosition.x - targetPosition.x;
-        const dz = dronePosition.z - targetPosition.z;
-        return Math.sqrt(dx * dx + dz * dz);
+        const target2D = { x: targetPosition.x, y: 0, z: targetPosition.z };
+        const drone2D = { x: dronePosition.x, y: 0, z: dronePosition.z };
+        return get().calculateDistance(drone2D, target2D);
       }
       
       case 'returning': {

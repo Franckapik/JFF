@@ -7,6 +7,7 @@
  */
 
 import fsmLogger from '../../../../../logger/fsmLogger';
+import { useTileStore } from '../../../../../stores/useTileStore/index';
 import type { XStateV5Guard } from '../../../../../types/xstate.v5.types';
 
 /**
@@ -116,9 +117,10 @@ export const hasMoreCollectibleTiles = createGuard('hasMoreCollectibleTiles', ({
       // Approximation de distance (les tuiles n'ont pas forcément de position exacte)
       // On peut utiliser la coord pour estimer la distance
       const [tileX, tileZ] = tile.coord.split(',').map(Number);
-      const distance = Math.sqrt(
-        Math.pow(tileX * 2 - shipPosition.x, 2) +
-        Math.pow(tileZ * 2 - shipPosition.z, 2)
+      const tileStore = useTileStore.getState();
+      const distance = tileStore.calculateDistance(
+        shipPosition,
+        { x: tileX * 2, y: 0, z: tileZ * 2 }
       );
       
       if (distance <= maxDistance) {

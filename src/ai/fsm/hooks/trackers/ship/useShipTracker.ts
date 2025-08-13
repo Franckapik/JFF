@@ -168,10 +168,7 @@ export const useShipTracker = ({
                     const tileStore = useTileStore.getState() as TileStoreType;
                     const targetWorldPos = tileStore.gridToWorld(targetCoord);
                     
-                    const distance = Math.sqrt(
-                        Math.pow(position.x - targetWorldPos.x, 2) +
-                        Math.pow(position.z - targetWorldPos.z, 2)
-                    );
+                    const distance = tileStore.calculateDistance(position, targetWorldPos);
                     handlers.movingToTileHandler.process(distance, position);
                 }
                 break;
@@ -191,10 +188,8 @@ export const useShipTracker = ({
             case 'collecting_ship_returning': {
                 if (vehicle?.basePosition) {
                     const basePosition = vehicle.basePosition;
-                    const distance = Math.sqrt(
-                        Math.pow(position.x - basePosition.x, 2) +
-                        Math.pow(position.z - basePosition.z, 2)
-                    );
+                    const tileStore = useTileStore.getState() as TileStoreType;
+                    const distance = tileStore.calculateDistance(position, basePosition);
                     handlers.returningHandler.process(distance, position);
                 }
                 break;

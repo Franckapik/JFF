@@ -146,9 +146,9 @@ const createTileFilterSlice = (_set: unknown, get: () => TileStoreType): TileFil
         
         // Calcul de distance euclidienne optimisé
         const [tileX, tileZ] = tile.coord.split(',').map(Number);
-        const distance = Math.sqrt(
-          Math.pow(tileX - centerX, 2) + 
-          Math.pow(tileZ - centerZ, 2)
+        const distance = get().calculateDistance(
+          { x: centerX, y: 0, z: centerZ },
+          { x: tileX, y: 0, z: tileZ }
         );
         
         // Filtrage par rayon

@@ -318,12 +318,15 @@ const createTileResourceSlice = (_set: unknown, get: () => TileStoreType): TileR
           // Vérifie si la tuile contient des ressources non collectées
           if (tile && !isTileCompletelyCollected(tile) && tile.resources && 
               (tile.resources.food > 0 || tile.resources.debris > 0 || tile.resources.special > 0)) {
+            const distance = get().calculateDistance(
+              { x: vX, y: 0, z: vY },
+              { x: x, y: 0, z: y }
+            );
             resources.push({
               coord: tileCoord,
               position: tile.position,
               resources: tile.resources,
-              // Calcule la distance euclidienne pour le tri
-              distance: Math.sqrt(Math.pow(x - vX, 2) + Math.pow(y - vY, 2)),
+              distance,
             });
           }
         }
