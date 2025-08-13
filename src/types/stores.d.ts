@@ -65,24 +65,11 @@ export interface TilePathSliceActions {
   findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap) => GridCoordinate[];
   
   // Calculs de distance
-  calculateDistance: (
-    from: GridCoordinate | WorldPosition, 
-    to: GridCoordinate | WorldPosition, 
-    usePathfinding?: boolean, 
-    detailed?: boolean
-  ) => number;
-  calculate3DDistance: (from: WorldPosition, to: WorldPosition) => number;
+  calculateDistance: (from: WorldPosition, to: WorldPosition) => number;
   calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap) => number;
   
   // Recherche et analyse
   findTileAtPosition: (position: WorldPosition, tiles?: TileMap) => Tile | null;
-  calculatePath: (
-    currentPosition: WorldPosition, 
-    targetCoord: GridCoordinate, 
-    tiles?: TileMap, 
-    fallbackCoord?: GridCoordinate
-  ) => PathResult;
-  isReachable: (from: GridCoordinate, to: GridCoordinate, tiles?: TileMap) => boolean;
   
   // Calculs spécialisés pour drones
   calculateDroneDistance: (
@@ -199,17 +186,6 @@ export interface ClockSliceActions {
   
   // Actions
   setClockRunning: (isRunning: boolean) => void;
-}
-
-// ============================================================================
-// TYPES UTILITAIRES POUR PATHFINDING
-// ============================================================================
-
-/** Résultat d'un calcul de chemin */
-export interface PathResult {
-  path: GridCoordinate[];
-  totalDistance: number;
-  isReachable: boolean;
 }
 
 // ============================================================================

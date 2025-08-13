@@ -196,15 +196,9 @@ export interface TileStoreActions {
   
   // Pathfinding
   findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap) => GridCoordinate[];
-  calculateDistance: (
-    from: GridCoordinate | WorldPosition, 
-    to: GridCoordinate | WorldPosition, 
-    usePathfinding?: boolean, 
-    detailed?: boolean
-  ) => number;
+  calculateDistance: (from: WorldPosition, to: WorldPosition) => number;
   calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap) => number;
   findTileAtPosition: (position: WorldPosition, tiles?: TileMap) => Tile | null;
-  isReachable: (from: GridCoordinate, to: GridCoordinate, tiles?: TileMap) => boolean;
   
   // Marquage
   markTileAsExplored: (coord: GridCoordinate, explorer?: string) => void;

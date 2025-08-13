@@ -20,6 +20,7 @@ import type { ShipAnimationProps, ShipAnimationReturn } from '../types/r3f';
 import type { ShipVisualState } from '../types/r3f.d.ts';
 
 import fsmLogger from '../logger/fsmLogger.ts';
+import { useTileStore } from '../stores/useTileStore/index.ts';
 
 import { applyShipVisualAnimations } from './utils/shipAnimationUtils';
 import {
@@ -281,6 +282,7 @@ export const useShipAnimation = ({
     // DÉTECTION D'ARRIVÉE SUR TUILE
     // ============================================================================
     
+    const { calculateDistance } = useTileStore.getState();
     const distance = calculateDistance(currentWorldPosition.current, currentTarget);
     if (distance < 0.1) { // Seuil de détection d'arrivée sur tuile
       pathIndex.current++;
@@ -354,14 +356,4 @@ function getShipVisualState(shipState: string): ShipVisualState {
   if (shipState.includes('collecting')) return 'collecting';
   if (shipState.includes('returning')) return 'returning';
   return 'docked';
-}
-
-/**
- * Calcule la distance entre deux positions
- */
-function calculateDistance(pos1: WorldPosition, pos2: WorldPosition): number {
-  const dx = pos1.x - pos2.x;
-  const dy = pos1.y - pos2.y;
-  const dz = pos1.z - pos2.z;
-  return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }

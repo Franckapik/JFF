@@ -11,7 +11,7 @@
  * 
  * Fonctionnalités consolidées depuis :
  * - tileCalculationSlice : calculateDistance
- * - tileGenerationSlice : findPath, calculatePathDistance, findTileAtPosition, calculatePath
+ * - tileGenerationSlice : findPath, calculatePathDistance, findTileAtPosition
  * 
  * Types de calculs disponibles :
  * - Distance euclidienne : distance en ligne droite entre deux points
@@ -27,7 +27,7 @@ import type {
   TileMap,
   WorldPosition
 } from '../../../types/index.ts';
-import type { PathResult, TilePathSliceActions } from '../../../types/stores.d.ts';
+import type { TilePathSliceActions } from '../../../types/stores.d.ts';
 
 
 // =========================================================================
@@ -105,59 +105,12 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
   },
 
   /**
-   * Calcule la distance entre deux positions ou coordonnées
-   * Supporte plusieurs formats d'entrée et types de calcul
-   * 
-   * @param from - Position/coordonnée de départ
-   * @param to - Position/coordonnée d'arrivée
-   * @param usePathfinding - Si true, utilise le pathfinding, sinon distance euclidienne
-   * @param detailed - Si true, retourne des informations détaillées
-   * @returns Distance calculée
-   */
-  calculateDistance: (
-    from: GridCoordinate | WorldPosition, 
-    to: GridCoordinate | WorldPosition, 
-    usePathfinding: boolean = false, 
-  ): number => {
-    const tiles = get().tiles;
-    
-    // Conversion des entrées vers GridCoordinate
-    const fromCoord = typeof from === 'string' 
-      ? from 
-      : typeof from === 'object' && 'x' in from && 'z' in from 
-        ? `${from.x},${from.z}` 
-        : null;
-        
-    const toCoord = typeof to === 'string' 
-      ? to 
-      : typeof to === 'object' && 'x' in to && 'z' in to 
-        ? `${to.x},${to.z}` 
-        : null;
-    
-    if (!fromCoord || !toCoord) {
-      return Infinity;
-    }
-    
-    if (usePathfinding) {
-      // Calcul via pathfinding
-      const path = get().findPath(fromCoord, toCoord, tiles);
-      return path.length > 0 ? path.length - 1 : Infinity;
-    } else {
-      // Calcul euclidien
-      const [fromX, fromZ] = fromCoord.split(',').map(Number);
-      const [toX, toZ] = toCoord.split(',').map(Number);
-      
-      return Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toZ - fromZ, 2));
-    }
-  },
-
-  /**
    * Calculate 3D Euclidean distance between two world positions
    * @param from - Starting world position
    * @param to - Target world position
    * @returns 3D distance between the two positions
    */
-  calculate3DDistance: (from: WorldPosition, to: WorldPosition): number => {
+  calculateDistance: (from: WorldPosition, to: WorldPosition): number => {
     if (!from || !to) return Infinity;
     
     const dx = to.x - from.x;
@@ -222,55 +175,6 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
     return foundTile as Tile || null;
   },
 
-  /**
-   * Calculate path from current position to target
-   * @param currentPosition - Current position {x, y, z}
-   * @param targetCoord - Target coordinate
-   * @param tiles - Map of all tiles (optionnel)
-   * @param fallbackCoord - Fallback coordinate if current position doesn't match a tile
-   * @returns Path data {path, totalDistance, isReachable}
-   */
-  calculatePath: (
-    currentPosition: WorldPosition, 
-    targetCoord: GridCoordinate, 
-    tiles?: TileMap, 
-    fallbackCoord?: GridCoordinate
-  ): PathResult => {
-    const tilesMap = tiles || get().tiles;
-    
-    // Find the tile at current position
-    const currentTile = get().findTileAtPosition(currentPosition, tilesMap);
-    
-    let path: GridCoordinate[] = [];
-    if (currentTile) {
-      path = get().findPath(currentTile.coord, targetCoord, tilesMap);
-    } else if (fallbackCoord) {
-      // Use fallback coordinate if we can't find a tile at current position
-      path = get().findPath(fallbackCoord, targetCoord, tilesMap);
-    }
-    
-    const totalDistance = get().calculatePathDistance(path, tilesMap);
-    const isReachable = path.length > 0;
-    
-    return {
-      path,
-      totalDistance,
-      isReachable
-    };
-  },
-
-  /**
-   * Vérifie si une destination est atteignable depuis une position
-   * @param from - Coordonnée de départ
-   * @param to - Coordonnée d'arrivée
-   * @param tiles - Map des tuiles (optionnel)
-   * @returns true si la destination est atteignable
-   */
-  isReachable: (from: GridCoordinate, to: GridCoordinate, tiles?: TileMap): boolean => {
-    const path = get().findPath(from, to, tiles);
-    return path.length > 0;
-  },
-
   // =========================================================================
   // DRONE DISTANCE CALCULATION - Calcul spécialisé pour les drones
   // =========================================================================
@@ -307,7 +211,7 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
         if (!shipPosition) return Infinity;
         
         // Distance 3D complète pour le retour au vaisseau
-        return get().calculate3DDistance(dronePosition, shipPosition);
+        return get().calculateDistance(dronePosition, shipPosition);
       }
       
       default:

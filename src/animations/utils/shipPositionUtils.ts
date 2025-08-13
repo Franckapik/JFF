@@ -219,6 +219,7 @@ export const isPathCompleted = (
   
   // Vérifier la distance à la destination finale
   const finalTarget = path[path.length - 1];
+  const { calculateDistance } = useTileStore.getState() as TileStoreType;
   const distance = calculateDistance(currentPosition, finalTarget);
   
   const completed = distance < TILE_DETECTION_THRESHOLD;
@@ -238,23 +239,6 @@ export const isPathCompleted = (
 };
 
 /**
- * Calcule la distance euclidienne entre deux positions
- * @param pos1 - Première position
- * @param pos2 - Seconde position
- * @returns Distance euclidienne
- */
-export const calculateDistance = (
-  pos1: WorldPosition,
-  pos2: WorldPosition
-): number => {
-  return Math.sqrt(
-    Math.pow(pos2.x - pos1.x, 2) +
-    Math.pow(pos2.y - pos1.y, 2) +
-    Math.pow(pos2.z - pos1.z, 2)
-  );
-};
-
-/**
  * Vérifie si le vaisseau a atteint la prochaine tuile dans le chemin
  * @param currentPosition - Position actuelle du vaisseau
  * @param targetPosition - Position de la tuile cible
@@ -264,6 +248,7 @@ export const hasReachedNextTile = (
   currentPosition: WorldPosition,
   targetPosition: WorldPosition
 ): boolean => {
+  const { calculateDistance } = useTileStore.getState() as TileStoreType;
   const distance = calculateDistance(currentPosition, targetPosition);
   return distance < TILE_DETECTION_THRESHOLD;
 };
