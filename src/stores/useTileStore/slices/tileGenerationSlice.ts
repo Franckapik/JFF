@@ -20,11 +20,11 @@
  */
 
 import type {
-    GridCoordinate,
-    Tile,
-    TileBiome,
-    TileMap,
-    TileType
+  GridCoordinate,
+  Tile,
+  TileBiome,
+  TileMap,
+  TileType
 } from '../../../types/index.ts';
 import type { ResourceStats } from '../../../types/resources.js';
 import type { TileGenerationSliceActions, TileStoreType } from '../../../types/stores.d.ts';
@@ -98,17 +98,6 @@ const tileConstants = {
 // =========================================================================
 
 /**
- * Encode une coordonnée hexagonale en string
- * @param q - Coordonnée q
- * @param r - Coordonnée r
- * @param radius - Rayon de la grille
- * @returns Coordonnée encodée
- */
-const encodeHexCoord = (q: number, r: number, radius: number): GridCoordinate => {
-  return `${q + radius},${r + radius}` as GridCoordinate;
-};
-
-/**
  * Génère une couleur aléatoire
  * @returns Couleur hexadécimale
  */
@@ -146,7 +135,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
             Math.abs(neighbor.r) <= radius &&
             Math.abs(-neighbor.q - neighbor.r) <= radius
           )
-          .map((neighbor) => encodeHexCoord(neighbor.q, neighbor.r, radius));
+          .map((neighbor) => get().encodeHexCoord(neighbor.q, neighbor.r, radius));
 
         // Génération des ressources
         const resources: ResourceStats = {
@@ -159,9 +148,12 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
 
         // Création de la tuile typée
         const tile: Tile = {
-          coord: encodeHexCoord(q, r, radius),
-          tileCoord: { x: q + radius, z: r + radius },
-          position: { x, y: tileConstants.defaultY, z },
+          position: { 
+            x, 
+            y: tileConstants.defaultY, 
+            z, 
+            coord: get().encodeHexCoord(q, r, radius) 
+          },
           type: 'food' as TileType,
           biome: 'grassland' as TileBiome,
           walkable: true,
@@ -179,7 +171,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
     
     // Convertir en TileMap initial
     const tileMap: TileMap = tiles.reduce((acc, tile) => {
-      return { ...acc, [tile.coord]: tile };
+      return { ...acc, [tile.position.coord]: tile };
     }, {});
     
     // 2. Placer les stations
@@ -218,7 +210,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
           hasResources: false,
           resources: { food: 0, debris: 0, special: 0, total: 0 }
         };
-        newTileMap[tile.coord] = updatedTile;
+        newTileMap[tile.position.coord] = updatedTile;
       }
     }
     
@@ -234,7 +226,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
           hasResources: false,
           resources: { food: 0, debris: 0, special: 0, total: 0 }
         };
-        newTileMap[tile.coord] = updatedTile;
+        newTileMap[tile.position.coord] = updatedTile;
       }
     }
     
@@ -266,7 +258,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
           hasResources: false,
           resources: { food: 0, debris: 0, special: 0, total: 0 }
         };
-        newTileMap[tile.coord] = updatedTile;
+        newTileMap[tile.position.coord] = updatedTile;
       }
     }
     
@@ -312,7 +304,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
         hasResources: true,
         color: "#4CAF50" // Vert pour les tuiles de départ
       };
-      newTileMap[tile.coord] = updatedTile;
+      newTileMap[tile.position.coord] = updatedTile;
     }
 
     return newTileMap;
@@ -345,9 +337,9 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
           ...tile,
           assignedToBot: botId
         };
-        finalTileMap[tile.coord] = updatedTile;
+        finalTileMap[tile.position.coord] = updatedTile;
         
-        fsmLogger.game(`[TileGeneration] Tuile de départ assignée à ${botId}:${tile.coord}`);
+        fsmLogger.game(`[TileGeneration] Tuile de départ assignée à ${botId}:${tile.position.coord}`);
       }
     });
     

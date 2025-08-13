@@ -10,6 +10,7 @@
 import { assign } from 'xstate';
 
 import fsmLogger from '../../../../../logger/fsmLogger';
+import { useTileStore } from '../../../../../stores/useTileStore';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5';
 
@@ -36,13 +37,25 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
   
   if (isInitialization) {
     fsmLogger.context(`🚢 [${context.entityId}] First ship position update - setting as base position`);
+    
+    // Créer une WorldGridPosition pour basePosition
+    const tileStore = useTileStore.getState();
+    const coord = tileStore.worldToGrid(position);
+    const basePosition = { ...position, coord };
+    
+    return {
+      vehicle: {
+        ...context.vehicle,
+        position: position,
+        basePosition: basePosition,
+      },
+    };
   }
   
   return {
     vehicle: {
       ...context.vehicle,
       position: position,
-      basePosition: isInitialization ? position : context.vehicle?.basePosition,
     },
   };
 });

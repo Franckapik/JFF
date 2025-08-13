@@ -10,7 +10,7 @@
  * @version 1.0.0
  */
 
-import type { GridCoordinate, WorldPosition } from './coordinates';
+import type { GridCoordinate, Path, WorldGridPosition, WorldPosition } from './coordinates';
 import type { ResourceStats } from './resources';
 
 // ============================================================================
@@ -44,9 +44,8 @@ export type TileBiome =
 
 /** Interface complète d'une tuile du jeu */
 export interface Tile {
-  // Identification et positionnement
-  coord: GridCoordinate;              // Coordonnée sous forme "x,z"
-  position: WorldPosition;            // Position 3D dans le monde
+  // Identification et positionnement unifié
+  position: WorldGridPosition;        // Position 3D + coordonnée de grille
   
   // Type et propriétés visuelles
   type: TileType | string;            // Type de la tuile (string pour compatibilité)
@@ -131,9 +130,6 @@ export interface HexPosition {
 // ============================================================================
 // TYPES POUR LE PATHFINDING
 // ============================================================================
-
-/** Chemin représenté par une séquence de coordonnées de grille */
-export type Path = GridCoordinate[];
 
 /** Nœud pour le calcul de chemin */
 export interface PathNode {

@@ -112,7 +112,7 @@ export const calculateShipPath = (
       }
       
       // Convertir la position de la tuile en WorldPosition
-      const worldPos = tileStore.gridToWorld(tile.coord);
+      const worldPos = tileStore.gridToWorld(tile.position.coord);
       
       // Ajouter une légère élévation pour que le vaisseau ne soit pas au niveau du sol
       return {

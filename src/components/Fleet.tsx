@@ -32,7 +32,7 @@ import ShipMesh from "./Vehicles/ShipMesh";
 import { XFSMStoreType } from "@/types/index.js";
 
 
-const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tileCoord: _tileCoord }) => {
+const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tilePosition }) => {
   // Récupérer la couleur du bot ici
   const getBotColorById = useGameStore(state => state.getBotColorById);
   const color = getBotColorById(botId);
@@ -41,9 +41,9 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tileCoor
   React.useEffect(() => {
     fsmLogger.mouvement(`🚢 [${botId}] 🌐 FLEET: Position received`, {
       fleetPosition,
-      tileCoord: _tileCoord
+      tilePosition
     });
-  }, [fleetPosition, botId, _tileCoord]);
+  }, [fleetPosition, botId, tilePosition]);
   
   // === FSM Context & Send ===
   const botState = useXFSMStore((state: XFSMStoreType) => state.botStates[botId]);

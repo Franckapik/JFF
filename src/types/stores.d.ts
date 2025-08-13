@@ -40,16 +40,12 @@ export interface TileCoordinateSliceActions {
   isValidGridCoord: (coord: unknown) => coord is GridCoordinate;
   isValidWorldPosition: (position: unknown) => position is WorldPosition;
   
-  // Conversions entre formats
-  hexToGridCoord: (hexCoord: string) => GridCoordinate | null;
-  gridToHexCoord: (coord: GridCoordinate) => string | null;
+  // Encodage hexagonal
+  encodeHexCoord: (q: number, r: number, radius: number) => GridCoordinate;
   
   // Conversions position/grille
   gridToWorld: (coord: GridCoordinate) => WorldPosition;
   worldToGrid: (position: WorldPosition) => GridCoordinate;
-  
-  // Utilitaires
-  normalizeCoordinate: (coord: GridCoordinate | string) => GridCoordinate | null;
   
   // Vector3 (retour unknown pour éviter dépendance Three.js dans les types)
   toVector3: (position: WorldPosition) => unknown;

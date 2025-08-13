@@ -7,7 +7,6 @@ import type * as THREE from 'three';
 import type { DroneType, DroneVisualState } from './drone.d';
 
 // import type { FSMContext } from './fsm.d.ts';
-import type { GridCoordinate } from "./coordinates.d";
 
 import type { FSMContext } from "./fsm.d.ts";
 import type { XStateSend } from "./tracker.d.ts";
@@ -75,12 +74,8 @@ export interface ShipAnimationReturn {
  * Props interface for Tile component (déplacé depuis tile.ts)
  */
 export interface TileProps {
-  /** Coordonnées de la tuile au format "x,z" */
-  coord: import("./coordinates").GridCoordinate;
-  /** Position de la tuile dans l'espace 3D */
-  position: WorldPosition;
-  /** Rayon de la tuile hexagonale */
-  radius?: number;
+  /** Position unifiée de la tuile (3D + coordonnée) */
+  position: import("./coordinates").WorldGridPosition;
   /** Couleur de la tuile */
   color?: string;
   /** Type de la tuile (ex: 'depart', 'normal', etc.) */
@@ -101,8 +96,8 @@ export interface FleetProps {
   botId: VehicleId;
   /** Position mondiale de la flotte (vaisseau + drone) */
   fleetPosition: WorldPosition;
-  /** Coordonnée de la tuile de départ */
-  tileCoord: GridCoordinate;
+  /** Position de départ de la tuile (remplace tileCoord) */
+  tilePosition: WorldPosition;
 }
 
 /**

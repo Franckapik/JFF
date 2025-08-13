@@ -1,4 +1,4 @@
-import type { GridCoordinate, WorldPosition } from './coordinates';
+import type { GridCoordinate, Path, WorldGridPosition, WorldPosition } from './coordinates';
 import type { DroneType, DroneVisualState } from './drone';
 import type { ResourceStats } from './resources';
 import type { ShipType } from './tracker';
@@ -10,8 +10,7 @@ export interface VehicleState {
   id: string;
   type: ShipType;
   position: WorldPosition;
-  basePosition: WorldPosition;
-  coord: GridCoordinate;
+  basePosition: WorldGridPosition;
   isMoving: boolean;
   progress: number;
   resources: ResourceStats;
@@ -19,8 +18,7 @@ export interface VehicleState {
   fuel: number;
   damage: number;
   totalDistance: number;
-  path: GridCoordinate[];
-  startCoord: GridCoordinate | null;
+  path: Path;
   isAtCapacity: boolean;
   maxSpeed: number;
   currentSpeed: number;

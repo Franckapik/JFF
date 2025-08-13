@@ -20,9 +20,9 @@
  */
 
 import type {
-    GridCoordinate,
-    Tile,
-    TileMap
+  GridCoordinate,
+  Tile,
+  TileMap
 } from '../../../types/index.ts';
 import type { TileBaseSliceActions, TileStoreType } from '../../../types/stores.d.ts';
 
@@ -51,7 +51,7 @@ const createTileBaseSlice = (set: any, get: () => TileStoreType): TileBaseSliceA
     /**
      * Espacement entre les tuiles hexagonales
      */
-    spacing: 0.1,
+    spacing: -0.2,
     
     /**
      * Coordonnée de la tuile actuellement survolée

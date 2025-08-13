@@ -145,7 +145,7 @@ const createTileFilterSlice = (_set: unknown, get: () => TileStoreType): TileFil
         processedCount++;
         
         // Calcul de distance euclidienne optimisé
-        const [tileX, tileZ] = tile.coord.split(',').map(Number);
+        const [tileX, tileZ] = tile.position.coord.split(',').map(Number);
         const distance = get().calculateDistance(
           { x: centerX, y: 0, z: centerZ },
           { x: tileX, y: 0, z: tileZ }
@@ -171,7 +171,7 @@ const createTileFilterSlice = (_set: unknown, get: () => TileStoreType): TileFil
         
         // Ajout du résultat valide
         results.push({
-          coord: tile.coord,
+          coord: tile.position.coord,
           position: tile.position,
           tile,
           distance

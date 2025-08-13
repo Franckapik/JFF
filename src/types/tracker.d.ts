@@ -30,7 +30,6 @@ export type CanSendEventFn = (eventType: string) => boolean;
 export type MarkEventSentFn = (eventType: string, timeout?: number) => void;
 
 /** Type pour les fonctions de conversion de coordonnées */
-export type GridToHexCoordFn = (coord: GridCoordinate) => string | null;
 export type WorldToGridFn = (position: WorldPosition) => GridCoordinate;
 
 // ============================================================================
@@ -50,7 +49,6 @@ export interface ShipTrackerParams {
   shipType: ShipType;
   send: XStateSend;
   botId: string;
-  gridToHexCoord: GridToHexCoordFn;
   worldToGrid: WorldToGridFn;
 }
 

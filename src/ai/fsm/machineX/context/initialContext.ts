@@ -34,8 +34,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
       id: `${entityId}-ship`,
       type: "main-ship",
       position: { x: 0, y: 0.5, z: 0 },
-      basePosition: { x: 0, y: 0.5, z: 0 },
-      coord: "0,0",
+      basePosition: { x: 0, y: 0.5, z: 0, coord: "0,0" },
       isMoving: false,
       progress: 0,
       resources: { food: 0, debris: 0, special: 0, total: 0 },
@@ -44,7 +43,6 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
       damage: 0,
       totalDistance: 0,
       path: [],
-      startCoord: null,
       isAtCapacity: false,
       maxSpeed: 1,
       currentSpeed: 0,
@@ -94,7 +92,6 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
       movementSpeed: entityType === "auto" ? 8 : 4,
       explorationInterval: 1000,
       enableLogging: true,
-      logLevel: "info",
     },
     droneFleet: {
       drones: {

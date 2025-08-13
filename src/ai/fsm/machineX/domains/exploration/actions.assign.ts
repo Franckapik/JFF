@@ -103,7 +103,7 @@ export const assignDroneDeployingContext = createAssignAction(({ context, event 
         ...context.droneFleet,
         currentMission: {
           type: 'explore' as const,
-          target: context.vehicle.coord,
+          target: context.vehicle.basePosition.coord,
           drones: [droneType] as DroneType[]
         },
         missionStartTime: Date.now(),

@@ -6,7 +6,7 @@
 // ============================================================================
 // TYPES DE COORDONNÉES ET POSITIONS
 // ============================================================================
-export type { GridCoordinate, WorldPosition } from './coordinates.d';
+export type { GridCoordinate, HexCoordinate, Path, WorldGridPosition, WorldPosition } from './coordinates.d';
 
 // ============================================================================
 // TYPES DE RESSOURCES
@@ -62,5 +62,5 @@ export type { DroneMeshProps, FleetProps, TileProps } from './r3f.d';
 // ============================================================================
 // TYPES POUR LES TRACKERS FSM
 // ============================================================================
-export type { BaseTrackerParams, CanSendEventFn, DroneProcessorFunction, DroneTrackerParams, GridToHexCoordFn, InitializationHandler, MarkEventSentFn, PositionHandler, ShipProcessorFunction, ShipTrackerParams, ShipType, WorldToGridFn, XStateSend } from './tracker.d';
+export type { BaseTrackerParams, CanSendEventFn, DroneProcessorFunction, DroneTrackerParams, InitializationHandler, MarkEventSentFn, PositionHandler, ShipProcessorFunction, ShipTrackerParams, ShipType, WorldToGridFn, XStateSend } from './tracker.d';
 

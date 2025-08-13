@@ -30,7 +30,7 @@ import type {
 } from '../../../types/index.ts';
 import type { TilePathSliceActions } from '../../../types/stores.d.ts';
 
-import fsmLogger from '@/logger/fsmLogger.ts';
+import fsmLogger from '../../../logger/fsmLogger.ts';
 
 
 // =========================================================================
@@ -294,7 +294,7 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
       const candidateTiles: Tile[] = [];
       const visited = new Set<GridCoordinate>();
       const queue: { coord: GridCoordinate; distance: number }[] = [
-        { coord: currentTile.coord, distance: 0 }
+        { coord: currentTile.position.coord, distance: 0 }
       ];
       
       while (queue.length > 0) {

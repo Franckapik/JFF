@@ -102,7 +102,6 @@ export interface FSMConfig {
   movementSpeed: number;
   explorationInterval: number;
   enableLogging: boolean;
-  logLevel: 'info' | 'debug' | 'warn' | 'error';
 }
 
 /** Score de l'entité (extrait de initialContext.ts) */

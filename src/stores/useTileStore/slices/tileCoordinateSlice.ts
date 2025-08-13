@@ -11,7 +11,6 @@
  * 
  * Fonctionnalités migrées depuis utils/coordinateSystem.js :
  * - isValidGridCoord, isValidWorldPosition
- * - hexToGridCoord, gridToHexCoord
  * - gridToWorld, worldToGrid
  * - toVector3, fromVector3
  * - hasReachedTarget
@@ -71,45 +70,15 @@ const createTileCoordinateSlice = (_set: unknown, get: () => any): TileCoordinat
   // =========================================================================
 
   /**
-   * Convertit format lettre-numéro vers format x,z (ex: "B5" vers "1,5")
-   * @param hexCoord - Coordonnée hex (ex: "B5")
-   * @returns Coordonnée grille ou null si invalide
+   * Encode les coordonnées hexagonales q,r en coordonnée de grille
+   * Migré depuis tileGenerationSlice.ts pour centraliser les coordonnées
+   * @param q - Coordonnée q du système hexagonal
+   * @param r - Coordonnée r du système hexagonal  
+   * @param radius - Rayon de la grille hexagonale
+   * @returns Coordonnée encodée au format GridCoordinate
    */
-  hexToGridCoord: (hexCoord: string): GridCoordinate | null => {
-    if (hexCoord === null || hexCoord === undefined || hexCoord === '') return null;
-    if (typeof hexCoord !== 'string') return null;
-    
-    // Check if it's already in grid format
-    if (hexCoord.match(/^-?\d+,-?\d+$/)) return hexCoord as GridCoordinate;
-    
-    const match = hexCoord.match(/^([A-Za-z])(\d+)$/i);
-    if (!match) return null;
-    
-    const letter = match[1].toUpperCase();
-    const number = parseInt(match[2]);
-    
-    // Convert letter to number (A=0, B=1, etc.)
-    const x = letter.charCodeAt(0) - 'A'.charCodeAt(0);
-    
-    return `${x},${number}` as GridCoordinate;
-  },
-
-  /**
-   * Convertit format x,z vers format lettre-numéro (ex: "1,5" vers "B5")
-   * @param gridCoord - Coordonnée grille (ex: "1,5")
-   * @returns Coordonnée hex ou null si invalide
-   */
-  gridToHexCoord: (gridCoord: GridCoordinate): string | null => {
-    if (!get().isValidGridCoord(gridCoord)) return null;
-    
-    const [x, z] = gridCoord.split(',').map(Number);
-    
-    // Convert number to letter (0=A, 1=B, etc.)
-    if (x < 0 || x > 25) return null; // Only support A-Z
-    
-    const letter = String.fromCharCode('A'.charCodeAt(0) + x);
-    
-    return `${letter}${z}`;
+  encodeHexCoord: (q: number, r: number, radius: number): GridCoordinate => {
+    return `${q + radius},${r + radius}` as GridCoordinate;
   },
 
   /**
@@ -204,23 +173,6 @@ const createTileCoordinateSlice = (_set: unknown, get: () => any): TileCoordinat
   // UTILITY FUNCTIONS
   // =========================================================================
 
-  /**
-   * Normalise une coordonnée vers le format GridCoordinate
-   * @param coord - Coordonnée à normaliser
-   * @returns GridCoordinate normalisée ou null
-   */
-  normalizeCoordinate: (coord: GridCoordinate | string): GridCoordinate | null => {
-    if (get().isValidGridCoord(coord)) {
-      return coord as GridCoordinate;
-    }
-    
-    if (typeof coord === 'string') {
-      // Essayer de convertir depuis format hex
-      return get().hexToGridCoord(coord);
-    }
-    
-    return null;
-  }
 });
 
 export default createTileCoordinateSlice;

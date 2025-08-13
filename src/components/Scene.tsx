@@ -22,7 +22,6 @@ import useXFSMStore from "../stores/useXFSMStore/index.ts";
 
 // Types
 import type { BotId } from "@/types/fsm.d.ts";
-import type { TileProps } from "@/types/r3f";
 import { GameStoreType, TileStoreType, XFSMStoreType } from "@/types/stores.js";
 
 
@@ -41,6 +40,9 @@ const Scene: React.FC = () => {
   const initializeGameGrid = useTileStore((state: TileStoreType) => state.initializeGameGrid);
   const tiles = useTileStore((state: TileStoreType) => state.tiles);
   const assignStartingTiles = useTileStore((state: TileStoreType) => state.assignStartingTiles);
+  // Import radius and spacing from tileBaseSlice
+  const radius = useTileStore((state: TileStoreType) => state.radius);
+  const spacing = useTileStore((state: TileStoreType) => state.spacing);
 
   // Game configuration
   const isGameInitialized = useGameStore((state: GameStoreType) => state.isGameInitialized());
@@ -64,7 +66,7 @@ const Scene: React.FC = () => {
   // Initialize game tiles on component mount
   useEffect(() => {
     if (!tilesInitialized) {
-      const tileMap = initializeGameGrid(3, -0.2); //radius, spacing
+      const tileMap = initializeGameGrid(radius, spacing); // Utilise les valeurs du slice
       if (tileMap && Object.keys(tileMap).length > 0) {
         setTiles(tileMap);
         markTilesAsInitialized();
@@ -150,36 +152,32 @@ const Scene: React.FC = () => {
       
       {/* All tiles rendering */}
       {Object.values(tiles).map(tile => {
-        const typedTile = tile as TileProps;
-        // Utiliser WorldPosition pour Tile, array pour primitives Three.js
-        const posObj = typedTile.position;
-  // (supprimé : variable non utilisée)
-
         // Vérifier si c'est une tuile de départ assignée à un bot actif
         const isAssignedDepartTile =
-          typedTile.type === 'depart' && typedTile.assignedToBot && activeBots.includes(typedTile.assignedToBot as BotId);
+          tile.type === 'depart' && tile.assignedToBot && activeBots.includes(tile.assignedToBot as BotId);
 
         return (
-          <React.Fragment key={typedTile.coord}>
+          <React.Fragment key={tile.position.coord}>
             <Tile
-              position={posObj}
-              radius={typedTile.radius ?? 1}
-              color={typedTile.color || "#888888"}
-              coord={typedTile.coord}
-              isHighTile={typedTile.isHighTile}
-              onClick={typedTile.onClick}
+              position={tile.position}
+              color={tile.color || "#888888"}
+              isHighTile={false}
             />
             {/* Fleet pour les tuiles de départ assignées - SEULEMENT si le bot est actif */}
-            {isAssignedDepartTile && isBotActive(typedTile.assignedToBot as BotId) && (
-              <group position={[posObj.x, 0.5, posObj.z]}>
+            {isAssignedDepartTile && isBotActive(tile.assignedToBot as BotId) && (
+              <group position={[tile.position.x, 0.5, tile.position.z]}>
                 <Fleet
-                  botId={typedTile.assignedToBot as BotId}
+                  botId={tile.assignedToBot as BotId}
                   fleetPosition={{
-                    x: posObj.x, // ✅ Vraies coordonnées mondiales
+                    x: tile.position.x, // ✅ Vraies coordonnées mondiales  
                     y: 0.5,
-                    z: posObj.z,
+                    z: tile.position.z,
                   }}
-                  tileCoord={typedTile.coord as any}
+                  tilePosition={{
+                    x: tile.position.x,
+                    y: tile.position.y,
+                    z: tile.position.z,
+                  }}
                 />
               </group>
             )}
