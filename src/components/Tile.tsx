@@ -1,6 +1,8 @@
 import React from "react";
 import { Mesh } from "three";
 
+import { config } from '../config';
+
 import { useTileAnimation } from "../animations/useTileAnimation";
 import fsmLogger from "../logger/fsmLogger.ts";
 import useGameStore from "../stores/useGameStore";
@@ -159,19 +161,22 @@ const Tile: React.FC<TileProps> = ({
       </mesh>
 
       {/* Helpers visuels pour les tuiles */}
-      <TileHelpers
-        position={[position.x, position.y, position.z]}
-        tileType={tileType}
-        isAssignedDepartTile={!!isAssignedDepartTile}
-        baseColor={baseColor}
-        backgroundColor={backgroundColor}
-        labelText={labelText}
-        shouldShowPercentage={!!shouldShowPercentage}
-        isCompletelyCollected={!!isCompletelyCollected}
-        resourcePercentage={resourcePercentage}
-        isRecentlyCollected={!!isRecentlyCollected}
-        isExplored={!!isExplored}
-      />
+      {config.showHelpers.tile && (
+        <TileHelpers
+          position={[position.x, position.y, position.z]}
+          tileType={tileType}
+          isAssignedDepartTile={!!isAssignedDepartTile}
+          baseColor={baseColor}
+          backgroundColor={backgroundColor}
+          labelText={labelText}
+          shouldShowPercentage={!!shouldShowPercentage}
+          isCompletelyCollected={!!isCompletelyCollected}
+          resourcePercentage={resourcePercentage}
+          isRecentlyCollected={!!isRecentlyCollected}
+          isExplored={!!isExplored}
+          coord={coord}
+        />
+      )}
     </>
   );
 };

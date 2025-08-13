@@ -151,13 +151,9 @@ const Scene: React.FC = () => {
       {/* All tiles rendering */}
       {Object.values(tiles).map(tile => {
         const typedTile = tile as TileProps;
-        // Normalisation de la position pour Fleet et Tile
-        let pos: [number, number, number];
-        if (Array.isArray(typedTile.position)) {
-          pos = typedTile.position as [number, number, number];
-        } else {
-          pos = [typedTile.position.x, 0, typedTile.position.z];
-        }
+        // Utiliser WorldPosition pour Tile, array pour primitives Three.js
+        const posObj = typedTile.position;
+  // (supprimé : variable non utilisée)
 
         // Vérifier si c'est une tuile de départ assignée à un bot actif
         const isAssignedDepartTile =
@@ -166,7 +162,7 @@ const Scene: React.FC = () => {
         return (
           <React.Fragment key={typedTile.coord}>
             <Tile
-              position={pos}
+              position={posObj}
               radius={typedTile.radius ?? 1}
               color={typedTile.color || "#888888"}
               coord={typedTile.coord}
@@ -175,13 +171,13 @@ const Scene: React.FC = () => {
             />
             {/* Fleet pour les tuiles de départ assignées - SEULEMENT si le bot est actif */}
             {isAssignedDepartTile && isBotActive(typedTile.assignedToBot as BotId) && (
-              <group position={[pos[0], 0.5, pos[2]]}>
+              <group position={[posObj.x, 0.5, posObj.z]}>
                 <Fleet
                   botId={typedTile.assignedToBot as BotId}
                   fleetPosition={{
-                    x: pos[0], // ✅ Vraies coordonnées mondiales
+                    x: posObj.x, // ✅ Vraies coordonnées mondiales
                     y: 0.5,
-                    z: pos[2],
+                    z: posObj.z,
                   }}
                   tileCoord={typedTile.coord as any}
                 />

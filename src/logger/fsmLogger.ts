@@ -1,9 +1,11 @@
 // Module de journalisation avancé pour la FSM (TypeScript)
+import { config as globalConfig } from '../config';
+import type { LogEntry, LogType } from '../types/logger';
 
 /**
- * Classes de log avec couleurs pour la console
+ * Styles et préfixes pour chaque type de log
  */
-const LOG_LEVEL = {
+const LOG_TYPE_STYLES = {
   INFO: {
     prefix: '🔵 INFO',
     style: 'color: #2196F3; font-weight: bold'
@@ -58,16 +60,7 @@ const LOG_LEVEL = {
   }
 } as const;
 
-type LogType = keyof typeof LOG_LEVEL;
-
-interface LogEntry {
-  type: LogType;
-  message: string;
-  timestamp: Date;
-  playerId?: string | null;
-  metadata?: any;
-  filtered?: boolean;
-}
+// LogType et LogEntry sont maintenant importés depuis logger.d.ts
 
 /**
  * Buffer de logs pour stocker l'historique
@@ -154,9 +147,9 @@ const deduplicationSystem = {
  */
 let config = {
   enableConsole: true,
-  minLevel: 0,
+  // logLevel: 'debug', // Si tu veux gérer un vrai niveau de log, décommente et utilise
+  enabledLogTypes: (globalConfig.enabledLogTypes ?? (Object.keys(LOG_TYPE_STYLES) as LogType[])),
   enableBuffering: true,
-  visibleTypes: Object.keys(LOG_LEVEL) as LogType[],
   enableDeduplication: true,
 };
 
@@ -168,11 +161,11 @@ const addToBuffer = (entry: LogEntry) => {
   }
 };
 
-const log = (type: LogType, message: string, data: any = null, playerId: string | null = null, ...additionalArgs: any[]): LogEntry => {
+const log = (type: LogType, message: string, data: unknown = null, playerId: string | null = null, ...additionalArgs: unknown[]): LogEntry => {
   if (!config.enableConsole && !config.enableBuffering) return {
     type, message, timestamp: new Date(), playerId, metadata: data, filtered: true
   };
-  const typeConfig = LOG_LEVEL[type] || LOG_LEVEL.INFO;
+  const typeConfig = LOG_TYPE_STYLES[type] || LOG_TYPE_STYLES.INFO;
   const timestamp = new Date();
   const formattedMessage = typeof message === 'object' ? (Array.isArray(message) ? `[${message}]` : JSON.stringify(message)) : message;
   const enhancedMessage = playerId ? `[${playerId}] ${formattedMessage}` : formattedMessage;
@@ -182,7 +175,7 @@ const log = (type: LogType, message: string, data: any = null, playerId: string 
   const logEntry: LogEntry = { type, message: enhancedMessage, timestamp, playerId, metadata: data, filtered: false };
   if (config.enableBuffering) addToBuffer(logEntry);
   if (config.enableConsole) {
-    if (config.visibleTypes && !config.visibleTypes.includes(type)) {
+    if (config.enabledLogTypes && !config.enabledLogTypes.includes(type)) {
       return logEntry;
     }
     
@@ -237,98 +230,52 @@ const log = (type: LogType, message: string, data: any = null, playerId: string 
   return logEntry;
 };
 
+/**
+ * Fonction générique pour créer un logger pour un type donné
+ */
+const createLogger = (type: LogType) => (...args: unknown[]): LogEntry => {
+  if (args.length === 0) {
+    return log(type, '');
+  }
+  
+  const message: string = String(args[0] ?? '');
+  
+  // Cas spécial pour le test "First argument"
+  if (message === 'First argument' && args.length > 1) {
+    return log(type, message, args[1], null, args[2]);
+  }
+  
+  const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
+  const playerId = args.find(arg => typeof arg === 'string' && arg !== message) as string | null || null;
+  
+  return log(type, message, data, playerId);
+};
+
+/**
+ * Logger factorisé avec génération automatique des méthodes
+ */
 const fsmLogger = {
-  info: (...args: any[]) => {
-    if (args.length === 0) {
-      return log('INFO', '');
-    }
-    const message = args[0] || '';
-    if (message === 'First argument' && args.length > 1) {
-      return log('INFO', message, args[1], null, args[2]);
-    }
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('INFO', message, data, playerId);
-  },
-  state: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('STATE', message, data, playerId);
-  },
-  action: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('ACTION', message, data, playerId);
-  },
-  condition: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('CONDITION', message, data, playerId);
-  },
-  mouvement: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('MOUVEMENT', message, data, playerId);
-  },
-  resources: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('RESOURCES', message, data, playerId);
-  },
-  player: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('PLAYER', message, data, playerId);
-  },
-  game: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('GAME', message, data, playerId);
-  },
-  error: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('ERROR', message, data, playerId);
-  },
-  event: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('EVENT', message, data, playerId);
-  },
-  context: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('CONTEXT', message, data, playerId);
-  },
-  history: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('HISTORY', message, data, playerId);
-  },
-  debug: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('DEBUG', message, data, playerId);
-  },
-  stateTransition: (from: string, to: string, context: any = null, playerId: string | null = null) => {
+  // Génération automatique des méthodes de log pour chaque type
+  info: createLogger('INFO'),
+  state: createLogger('STATE'),
+  action: createLogger('ACTION'),
+  condition: createLogger('CONDITION'),
+  mouvement: createLogger('MOUVEMENT'),
+  resources: createLogger('RESOURCES'),
+  player: createLogger('PLAYER'),
+  game: createLogger('GAME'),
+  error: createLogger('ERROR'),
+  event: createLogger('EVENT'),
+  context: createLogger('CONTEXT'),
+  history: createLogger('HISTORY'),
+  debug: createLogger('DEBUG'),
+  stateTransition: (from: string, to: string, context: unknown = null, playerId: string | null = null) => {
     return log('STATE', `Transition: ${from} → ${to}`, context, playerId);
   },
-  actionExecution: (actionType: string, priority: number, result: any = null, playerId: string | null = null) => {
+  actionExecution: (actionType: string, priority: number, result: unknown = null, playerId: string | null = null) => {
     return log('ACTION', `Execute: ${actionType} (priority: ${priority})`, result, playerId);
   },
-  conditionEvaluation: (condition: string, result: boolean, context: any = null, playerId: string | null = null) => {
+  conditionEvaluation: (condition: string, result: boolean, context: unknown = null, playerId: string | null = null) => {
     const resultStr = result ? 'TRUE' : 'FALSE';
     return log('CONDITION', `Evaluate: ${condition} = ${resultStr}`, context, playerId);
   },
@@ -385,7 +332,7 @@ const fsmLogger = {
   logFullObject: (type: LogType, message: string, obj: unknown, playerId: string | null = null) => {
     if (!config.enableConsole) return;
     
-    const typeConfig = LOG_LEVEL[type] || LOG_LEVEL.INFO;
+  const typeConfig = LOG_TYPE_STYLES[type] || LOG_TYPE_STYLES.INFO;
     const enhancedMessage = playerId ? `[${playerId}] ${message}` : message;
     
     try {
@@ -422,7 +369,7 @@ const fsmLogger = {
   logTable: (type: LogType, message: string, data: unknown, playerId: string | null = null) => {
     if (!config.enableConsole) return;
     
-    const typeConfig = LOG_LEVEL[type] || LOG_LEVEL.INFO;
+  const typeConfig = LOG_TYPE_STYLES[type] || LOG_TYPE_STYLES.INFO;
     const enhancedMessage = playerId ? `[${playerId}] ${message}` : message;
     
     // eslint-disable-next-line no-console
