@@ -8,6 +8,7 @@ import { assign } from 'xstate';
 
 import fsmLogger from '../../../../../logger/fsmLogger';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
+import type { GridCoordinate } from '../../../../../types/coordinates.d.ts';
 import type { DroneType, DroneVisualState } from '../../../../../types/drone';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { TileStoreType } from '../../../../../types/stores';
@@ -177,7 +178,7 @@ export const assignDroneScanningContext = createAssignAction(({ context, event }
         ...context.memory.stats,
         tilesExploredInCycle: newCount,
         lastExploration: {
-          coord: { coord: '0,0', type: 'explore' }, // Coordonnée temporaire, sera mise à jour lors de DRONE_HAS_SCANNED
+          coord: '0,0' as GridCoordinate, // Coordonnée temporaire, sera mise à jour lors de DRONE_HAS_SCANNED
           timestamp: Date.now(),
           hasResources: false // Sera mis à jour lors de DRONE_HAS_SCANNED
         }

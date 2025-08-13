@@ -23,41 +23,14 @@ import type {
   GridCoordinate,
   WorldPosition
 } from '../../../types/index.ts';
-
-// =========================================================================
-// TYPES LOCAUX
-// =========================================================================
-
-/** Actions du slice de coordonnées */
-interface TileCoordinateSliceActions {
-  // === Validateurs ===
-  isValidGridCoord: (coord: unknown) => coord is GridCoordinate;
-  isValidWorldPosition: (position: unknown) => position is WorldPosition;
-  
-  // === Conversions entre formats ===
-  hexToGridCoord: (hexCoord: string) => GridCoordinate | null;
-  gridToHexCoord: (coord: GridCoordinate) => string | null;
-  
-  // === Conversions position/grille ===
-  gridToWorld: (coord: GridCoordinate) => WorldPosition;
-  worldToGrid: (position: WorldPosition) => GridCoordinate;
-  
-  // === Utilitaires ===
-  normalizeCoordinate: (coord: GridCoordinate | string) => GridCoordinate | null;
-  
-  // === Vector3 ===
-  toVector3: (position: WorldPosition) => any;
-  fromVector3: (vector: any) => WorldPosition;
-  
-  // === Distance ===
-  hasReachedTarget: (current: WorldPosition, target: WorldPosition, threshold?: number) => boolean;
-}
+import type { TileCoordinateSliceActions } from '../../../types/stores.d.ts';
 
 // =========================================================================
 // SLICE FACTORY - COORDINATE UTILITIES
 // =========================================================================
 
-const createTileCoordinateSlice = (set: any, get: any): TileCoordinateSliceActions => ({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const createTileCoordinateSlice = (_set: unknown, get: () => any): TileCoordinateSliceActions => ({
   // =========================================================================
   // VALIDATION FUNCTIONS
   // =========================================================================
@@ -159,8 +132,8 @@ const createTileCoordinateSlice = (set: any, get: any): TileCoordinateSliceActio
     };
     
     // Log pour debug des conversions avec fsmLogger si disponible
-    if (typeof window !== 'undefined' && (window as any).fsmLogger) {
-      (window as any).fsmLogger.mouvement(`🔄 gridToWorld: ${coord} -> {x: ${worldPos.x}, y: ${worldPos.y}, z: ${worldPos.z}} (spacing: ${spacing})`);
+    if (typeof window !== 'undefined' && 'fsmLogger' in window && window.fsmLogger) {
+      (window.fsmLogger as { mouvement: (msg: string) => void }).mouvement(`🔄 gridToWorld: ${coord} -> {x: ${worldPos.x}, y: ${worldPos.y}, z: ${worldPos.z}} (spacing: ${spacing})`);
     }
     
     return worldPos;

@@ -97,7 +97,7 @@ const Scene: React.FC = () => {
   useEffect(() => {
     if (botsInitialized && activeBots.length > 0 && !startingTilesAssigned) {
       assignStartingTiles(activeBots);
-      markStartingTilesAsAssigned(true);
+      markStartingTilesAsAssigned();
     }
   }, [botsInitialized, activeBots, assignStartingTiles, startingTilesAssigned, markStartingTilesAsAssigned]);
 

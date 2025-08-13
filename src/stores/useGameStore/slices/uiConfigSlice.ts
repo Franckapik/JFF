@@ -8,8 +8,9 @@
  * - Configuration des couleurs de bases
  * - Autres éléments de configuration UI
  */
+import type { GameStoreType, UiConfigSliceActions } from '../../../types/stores.d.ts';
 
-const createUiConfigSlice = (set, get) => ({
+const createUiConfigSlice = (_set: unknown, get: () => GameStoreType): UiConfigSliceActions => ({
   
   /* ========================================
    * CONFIGURATION DES COULEURS
@@ -27,20 +28,20 @@ const createUiConfigSlice = (set, get) => ({
   
   /**
    * Récupère la couleur d'un bot par son index
-   * @param {number} botIndex - Index du bot
-   * @returns {string} Couleur du bot
+   * @param botIndex - Index du bot
+   * @returns Couleur du bot
    */
-  getBotColor: (botIndex) => {
+  getBotColor: (botIndex: number): string => {
     const { botColors } = get();
     return botColors[botIndex % botColors.length];
   },
 
   /**
    * Récupère la couleur d'un bot par son ID
-   * @param {string} botId - ID du bot (ex: 'bot-0', 'bot-1')
-   * @returns {string} Couleur du bot
+   * @param botId - ID du bot (ex: 'bot-0', 'bot-1')
+   * @returns Couleur du bot
    */
-  getBotColorById: (botId) => {
+  getBotColorById: (botId: string): string => {
     const { botColors } = get();
     // Extraire l'index numérique du botId (ex: 'bot-0' -> 0)
     const botIndex = parseInt(botId.split('-')[1] || '0', 10);
@@ -49,21 +50,21 @@ const createUiConfigSlice = (set, get) => ({
   
   /**
    * Récupère la couleur de base d'un joueur
-   * @param {number} playerIndex - Index du joueur (0 = humain)
-   * @returns {string} Couleur de la base
+   * @param playerIndex - Index du joueur (0 = humain)
+   * @returns Couleur de la base
    */
-  getPlayerBaseColor: (playerIndex) => {
+  getPlayerBaseColor: (playerIndex: number): string => {
     const { humanPlayerColor, getBotColor } = get();
     return playerIndex === 0 ? humanPlayerColor : getBotColor(playerIndex - 1);
   },
   
   /**
    * Convert color name to RGBA background color
-   * @param {string} color - Color name
-   * @returns {string} RGBA color string
+   * @param color - Color name
+   * @returns RGBA color string
    */
-  getBackgroundColor: (color) => {
-    const colorMap = {
+  getBackgroundColor: (color: string): string => {
+    const colorMap: Record<string, string> = {
       'red': 'rgba(200,50,0,0.8)',
       'orange': 'rgba(255,140,0,0.8)',
       'green': 'rgba(0,150,50,0.8)',

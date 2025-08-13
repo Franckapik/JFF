@@ -41,6 +41,8 @@
 // =========================================================================
 import { create } from 'zustand';
 
+import type { TileStoreType } from '../../types/stores.d.ts';
+
 // Import des slices spécialisés
 import createTileBaseSlice from './slices/tileBaseSlice.ts';
 import createTileFilterSlice from './slices/tileFilterSlice.ts';
@@ -68,7 +70,7 @@ import createTileGenerationSlice from './slices/tileGenerationSlice.ts';
  * 6. Coordinate : système de coordonnées (migré depuis utils/coordinateSystem)
  * 7. Generation : génération hexagonale (migré depuis utils/utils)
  */
-export const useTileStore = create((set, get) => ({
+export const useTileStore = create<TileStoreType>((set, get) => ({
   // =========================================================================
   // COMPOSITION DES SLICES
   // =========================================================================

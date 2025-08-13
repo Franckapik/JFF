@@ -145,7 +145,7 @@ const Tile: React.FC<TileProps> = ({
       {/* Mesh principal de la tuile hexagonale */}
       <mesh 
         ref={meshRef as React.RefObject<Mesh>} 
-        position={position} 
+        position={[position.x, position.y, position.z]}
         onClick={onClick}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
@@ -160,7 +160,7 @@ const Tile: React.FC<TileProps> = ({
 
       {/* Helpers visuels pour les tuiles */}
       <TileHelpers
-        position={position}
+        position={[position.x, position.y, position.z]}
         tileType={tileType}
         isAssignedDepartTile={!!isAssignedDepartTile}
         baseColor={baseColor}

@@ -27,6 +27,7 @@ import type {
   TileMap,
   WorldPosition
 } from '../../../types/index.ts';
+import type { PathResult, TilePathSliceActions } from '../../../types/stores.d.ts';
 
 
 // =========================================================================
@@ -46,53 +47,11 @@ const pathConstants = {
 };
 
 // =========================================================================
-// TYPES LOCAUX
-// =========================================================================
-
-/** Résultat d'un calcul de chemin */
-interface PathResult {
-  path: GridCoordinate[];
-  totalDistance: number;
-  isReachable: boolean;
-}
-
-/** Actions du slice de pathfinding */
-interface TilePathSliceActions {
-  findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap) => GridCoordinate[];
-  calculateDistance: (
-    from: GridCoordinate | WorldPosition, 
-    to: GridCoordinate | WorldPosition, 
-    usePathfinding?: boolean, 
-    detailed?: boolean
-  ) => number;
-  calculate3DDistance: (from: WorldPosition, to: WorldPosition) => number;
-  calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap) => number;
-  findTileAtPosition: (position: WorldPosition, tiles?: TileMap) => Tile | null;
-  calculatePath: (
-    currentPosition: WorldPosition, 
-    targetCoord: GridCoordinate, 
-    tiles?: TileMap, 
-    fallbackCoord?: GridCoordinate
-  ) => PathResult;
-  isReachable: (from: GridCoordinate, to: GridCoordinate, tiles?: TileMap) => boolean;
-  calculateDroneDistance: (
-    dronePosition: WorldPosition,
-    droneState: DroneVisualState,
-    targetPosition?: WorldPosition,
-    shipPosition?: WorldPosition
-  ) => number;
-  selectTargetTileInRadiusForDrone: (
-    shipPosition: WorldPosition,
-    range: number,
-    tiles?: TileMap
-  ) => WorldPosition | null;
-}
-
-// =========================================================================
 // SLICE FACTORY - TILE PATH UTILITIES
 // =========================================================================
 
-const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceActions => ({
   
   // =========================================================================
   // PATHFINDING FUNCTIONS - Algorithmes de recherche de chemin
@@ -131,8 +90,8 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
       visited.add(currentCoord);
       const currentTile = tilesMap[currentCoord];
 
-      if (currentTile && (currentTile as any).neighbors) {
-        for (const neighborCoord of (currentTile as any).neighbors) {
+      if (currentTile && 'neighbors' in currentTile && Array.isArray(currentTile.neighbors)) {
+        for (const neighborCoord of currentTile.neighbors) {
           const neighborTile = tilesMap[neighborCoord];
           
           if (neighborTile && neighborTile.walkable && !visited.has(neighborCoord)) {
@@ -249,7 +208,7 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
     }
     
     // Recherche de la tuile la plus proche dans le seuil
-    const foundTile = Object.values(tilesMap).find((tile: any) => {
+    const foundTile = Object.values(tilesMap).find((tile: Tile) => {
       if (!tile || !tile.position) return false;
       
       const distance = Math.sqrt(

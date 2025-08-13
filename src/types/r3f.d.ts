@@ -78,7 +78,7 @@ export interface TileProps {
   /** Coordonnées de la tuile au format "x,z" */
   coord: import("./coordinates").GridCoordinate;
   /** Position de la tuile dans l'espace 3D */
-  position: [number, number, number] | { x: number; z: number };
+  position: WorldPosition;
   /** Rayon de la tuile hexagonale */
   radius?: number;
   /** Couleur de la tuile */

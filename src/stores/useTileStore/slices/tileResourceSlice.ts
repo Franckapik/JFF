@@ -32,6 +32,7 @@ import type {
     Tile
 } from '../../../types/index.ts';
 import type { ResourceStats } from '../../../types/resources.js';
+import type { TileResourceSliceActions, TileStoreType } from '../../../types/stores.d.ts';
 
 import fsmLogger from '../../../logger/fsmLogger.ts';
 
@@ -46,7 +47,7 @@ import fsmLogger from '../../../logger/fsmLogger.ts';
  * @param tile - Objet tuile
  * @returns true si la tuile est complètement collectée
  */
-export const isTileCompletelyCollected = (tile: Tile | any): boolean => {
+export const isTileCompletelyCollected = (tile: Tile | unknown): boolean => {
   if (!tile || tile.resourcePercentage === undefined || tile.resourcePercentage === null) {
     return false;
   }
@@ -60,7 +61,7 @@ export const isTileCompletelyCollected = (tile: Tile | any): boolean => {
  * @param tile - Objet tuile
  * @returns true si la tuile est partiellement collectée
  */
-export const isTilePartiallyCollected = (tile: Tile | any): boolean => {
+export const isTilePartiallyCollected = (tile: Tile | unknown): boolean => {
   if (!tile || tile.resourcePercentage === undefined || tile.resourcePercentage === null) {
     return false;
   }
@@ -74,7 +75,7 @@ export const isTilePartiallyCollected = (tile: Tile | any): boolean => {
  * @param tile - Objet tuile
  * @returns true si la tuile n'a jamais été collectée
  */
-export const isTileUncollected = (tile: Tile | any): boolean => {
+export const isTileFullyCollected = (tile: Tile | unknown): boolean => {
   if (!tile || tile.resourcePercentage === undefined || tile.resourcePercentage === null) {
     return true; // Les tuiles sans pourcentage défini sont considérées comme non collectées
   }
@@ -97,21 +98,12 @@ interface ResourceWithLocation {
 type ResourceSearchSource = GridCoordinate | { coord: GridCoordinate };
 
 /** Actions du slice des ressources */
-interface TileResourceSliceActions {
-  collectResources: (coord: GridCoordinate, collector: string) => ResourceStats;
-  deductResources: (coord: GridCoordinate, amount: Partial<ResourceStats>) => boolean;
-  hasResources: (coord: GridCoordinate, minimum?: Partial<ResourceStats>) => boolean;
-  markTileAsCollected: (coord: GridCoordinate, collector: string) => void;
-  resetTileResources: (coord: GridCoordinate) => void;
-  resetAllTileResources: () => void;
-  analyzeResourcesNearPosition: (source: ResourceSearchSource, radius?: number) => ResourceWithLocation[];
-}
 
 // =========================================================================
 // SLICE PRINCIPAL
 // =========================================================================
 
-const createTileResourceSlice = (set: any, get: any): TileResourceSliceActions => {
+const createTileResourceSlice = (_set: unknown, get: () => TileStoreType): TileResourceSliceActions => {
   return {
     
     /**
@@ -195,8 +187,9 @@ const createTileResourceSlice = (set: any, get: any): TileResourceSliceActions =
       };
       newResources.total = newResources.food + newResources.debris + newResources.special;
       
-      // Calculer le nouveau pourcentage
-      const originalTotal = tile.originalResources?.total ?? tile.resources.total;
+      // Calculer le nouveau pourcentage  
+      // Note: On utilise les ressources actuelles comme base originale
+      const originalTotal = tile.resources.total;
       const newPercentage = originalTotal > 0 ? Math.floor((newResources.total / originalTotal) * 100) : 0;
       
       get().updateTile(coord, {
@@ -258,17 +251,22 @@ const createTileResourceSlice = (set: any, get: any): TileResourceSliceActions =
     resetTileResources: (coord: GridCoordinate): void => {
       const tile = get().tiles[coord];
       
-      if (!tile || !tile.originalResources) {
+      if (!tile) {
         return;
       }
+
+      // Réinitialise les ressources à des valeurs par défaut selon le type de tuile
+      const defaultResources: ResourceStats = tile.type === 'resource' || tile.hasResources
+        ? { food: 100, debris: 50, special: 25, total: 175 }
+        : { food: 0, debris: 0, special: 0, total: 0 };
       
       get().updateTile(coord, {
-        resources: { ...tile.originalResources },
-        resourcePercentage: 100,
+        resources: defaultResources,
+        resourcePercentage: defaultResources.total > 0 ? 100 : 0,
         collected: false,
         collectedAt: undefined,
         collectedBy: undefined,
-        hasResources: tile.originalResources.total > 0
+        hasResources: defaultResources.total > 0
       });
     },
 
@@ -279,7 +277,7 @@ const createTileResourceSlice = (set: any, get: any): TileResourceSliceActions =
       const tiles = get().tiles;
       
       Object.keys(tiles).forEach(coord => {
-        get().resetTileResources(coord);
+        get().resetTileResources(coord as GridCoordinate);
       });
     },
 
@@ -314,7 +312,7 @@ const createTileResourceSlice = (set: any, get: any): TileResourceSliceActions =
       // Parcourt les tuiles dans un rayon donné
       for (let x = vX - radius; x <= vX + radius; x++) {
         for (let y = vY - radius; y <= vY + radius; y++) {
-          const tileCoord = `${x},${y}`;
+          const tileCoord = `${x},${y}` as GridCoordinate;
           const tile = tiles[tileCoord];
           
           // Vérifie si la tuile contient des ressources non collectées

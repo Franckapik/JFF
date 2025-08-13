@@ -28,6 +28,7 @@ import type {
   TileType,
   TileWithDistance
 } from '../../../types/index.ts';
+import type { TileFilterSliceActions, TileStoreType } from '../../../types/stores.d.ts';
 
 import fsmLogger from '../../../logger/fsmLogger.ts';
 
@@ -43,22 +44,13 @@ interface TileSearchOptions {
 }
 
 /** Actions du slice de filtrage */
-interface TileFilterSliceActions {
-  getWalkableTilesInRadius: (
-    centerCoord: GridCoordinate,
-    radius: number,
-    options?: TileSearchOptions
-  ) => TileWithDistance[];
-  selectRandomWalkableTile: () => Tile | null;
-  getWalkableTiles: () => Tile[];
-  getTilesByType: (tileType: TileType) => Tile[];
-}
+/** Actions du slice des filtres et recherche */
 
 // =========================================================================
 // SLICE PRINCIPAL
 // =========================================================================
 
-const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
+const createTileFilterSlice = (_set: unknown, get: () => TileStoreType): TileFilterSliceActions => {
   return {
     
     // =====================================================================
@@ -244,8 +236,10 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
       const tiles = get().tiles;
       
       // Filtrage efficace pour obtenir uniquement les tuiles walkables et sûres
-      const walkableTiles = Object.values(tiles).filter((tile: any): tile is Tile => 
-        tile && tile.walkable !== false && tile.type !== 'danger'
+      const walkableTiles = Object.values(tiles).filter((tile: unknown): tile is Tile =>
+        tile !== null && typeof tile === 'object' && 
+        'walkable' in tile && (tile as Tile).walkable !== false && 
+        'type' in tile && (tile as Tile).type !== 'danger'
       );
       
       if (walkableTiles.length === 0) {
@@ -271,7 +265,9 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
      */
     getWalkableTiles: (): Tile[] => {
       const { tiles } = get();
-      return Object.values(tiles).filter((tile: any): tile is Tile => tile.walkable);
+      return Object.values(tiles).filter((tile: unknown): tile is Tile => 
+        tile !== null && typeof tile === 'object' && 'walkable' in tile && (tile as Tile).walkable
+      );
     },
     
     /**
@@ -284,7 +280,9 @@ const createTileFilterSlice = (set: any, get: any): TileFilterSliceActions => {
      */
     getTilesByType: (tileType: TileType): Tile[] => {
       const { tiles } = get();
-      return Object.values(tiles).filter((tile: any): tile is Tile => tile.type === tileType);
+      return Object.values(tiles).filter((tile: unknown): tile is Tile => 
+        tile !== null && typeof tile === 'object' && 'type' in tile && (tile as Tile).type === tileType
+      );
     },
   } as TileFilterSliceActions;
 };
