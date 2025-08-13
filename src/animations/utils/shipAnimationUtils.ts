@@ -14,7 +14,7 @@
 import * as THREE from 'three';
 
 import type { WorldPosition } from '../../types/coordinates.d.ts';
-import type { ShipVisualState } from '../../types/r3f.d.ts';
+import type { VehicleVisualState } from '../../types/vehicle.d.ts';
 
 /**
  * Applique les animations visuelles selon l'état du vaisseau
@@ -27,7 +27,7 @@ import type { ShipVisualState } from '../../types/r3f.d.ts';
  */
 export const applyShipVisualAnimations = (
   mesh: THREE.Mesh,
-  shipState: ShipVisualState,
+  shipState: VehicleVisualState,
   baseY: number,
   elapsedTime: number,
   deltaTime: number,
@@ -150,7 +150,7 @@ export const calculateMovementDirection = (
  */
 export const applyShipEffects = (
   _mesh: THREE.Mesh,
-  shipState: ShipVisualState,
+  shipState: VehicleVisualState,
   _elapsedTime: number,
   _deltaTime: number
 ): void => {
@@ -187,8 +187,8 @@ export const applyShipEffects = (
  */
 export const applyShipStateTransition = (
   mesh: THREE.Mesh,
-  previousState: ShipVisualState,
-  currentState: ShipVisualState,
+  previousState: VehicleVisualState,
+  currentState: VehicleVisualState,
   transitionProgress: number
 ): void => {
   // Interpolation douce entre les états
@@ -212,7 +212,7 @@ export const applyShipStateTransition = (
  * @param shipState - État visuel du vaisseau
  * @returns Paramètres d'animation (vitesses, amplitudes, etc.)
  */
-export const getShipAnimationParams = (shipState: ShipVisualState) => {
+export const getShipAnimationParams = (shipState: VehicleVisualState) => {
   switch (shipState) {
     case 'docked':
       return {

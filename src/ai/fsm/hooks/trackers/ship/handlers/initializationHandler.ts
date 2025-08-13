@@ -1,39 +1,50 @@
-import fsmLogger from '../../../../../../logger/fsmLogger.ts';
-import type { WorldPosition } from '../../../../../../types/coordinates.d.ts';
-import type { ShipType, XStateSend } from '../../../../../../types/tracker.d.ts';
+/**
+ * =========================================================================
+ * SHIP INITIALIZATION HANDLER 
+ * =========================================================================
+ * 
+ * Handler d'initialisation pour le vaisseau principal.
+ * Envoie SHIP_INITIALIZE_REQUEST lors de la première initialisation 
+ * pour établir la position de base du vaisseau dans le contexte FSM.
+ * 
+ * Similaire au handler d'initialisation des drones mais pour le vaisseau.
+ */
 
-interface ShipHandlerParams {
+import fsmLogger from '../../../../../../logger/fsmLogger.ts';
+import type { WorldPosition, XStateSend } from '../../../../../../types/index.ts';
+
+interface ShipInitHandlerParams {
   botId: string;
-  shipType: ShipType;
+  shipType: string;
   send: XStateSend;
 }
 
-export const createInitializationHandler = ({ botId, shipType, send }: ShipHandlerParams) => {
+export const createShipInitializationHandler = ({ botId, shipType, send }: ShipInitHandlerParams) => {
 
   return {
     /**
-     * Interface unifiée avec les autres handlers : process(distance, position)
-     * Pour l'initialisation, on ignore distance et utilise position pour mettre à jour le contexte
+     * Traite l'initialisation du vaisseau
+     * Envoie SHIP_INITIALIZE_REQUEST avec la position initiale
+     * 
+     * @param position - Position initiale du vaisseau
+     * @returns true si l'événement a été envoyé
      */
-    process(_distance?: number, position?: WorldPosition): boolean {
-      if (!position) {
-        fsmLogger.debug(`🚢 [${botId}] No position available for ${shipType} ship initialization`);
-        return false;
-      }
-
-      fsmLogger.context(`🚢 [${botId}] Processing ${shipType} ship initialization`, { position });
-      
-      // Envoyer l'événement d'initialisation avec la position
-      send({ 
-        type: 'SHIP_POSITION_UPDATE', 
-        botId, 
-        shipType,
-        position
+    process(position: WorldPosition): boolean {
+      fsmLogger.context(`🚢 [${botId}] [Handler] Processing ship initialization`, {
+        position,
+        shipType
       });
       
+      // Envoyer l'événement d'initialisation qui établira la basePosition dans le contexte
+      send({ 
+        type: 'SHIP_INITIALIZE_REQUEST', 
+        shipType,
+        initialPosition: position
+      });
+            
       return true;
     }
   };
 };
 
-export default createInitializationHandler;
+export default createShipInitializationHandler;

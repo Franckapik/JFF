@@ -7,6 +7,8 @@
  * Version simplifiée avec des types union pour une meilleure lisibilité.
  */
 
+import type { GridCoordinate, WorldPosition } from './coordinates';
+
 // ============================================================================
 // TYPES UNION PRINCIPAUX
 // ============================================================================
@@ -19,6 +21,48 @@ export type DroneFSMState = 'drone_deploying' | 'drone_scanning' | 'drone_return
 
 /** Types de drones supportés par le système */
 export type DroneType = 'explorer' | 'combat' | 'special';
+
+// ============================================================================
+// INTERFACES DRONES
+// ============================================================================
+
+/** État d'un drone individuel */
+export interface DroneState {
+  id: string;
+  type: DroneType;
+  visualState: DroneVisualState;
+  position?: WorldPosition;
+  targetPosition: WorldPosition;
+  isActive: boolean;
+  isMoving: boolean;
+  lastUpdate: number;
+}
+
+/** Offsets de formation des drones */
+export interface FormationOffsets {
+  explorer: WorldPosition;
+  combat: WorldPosition;
+  special: WorldPosition;
+}
+
+/** Mission active pour les drones */
+export interface DroneMission {
+  type: 'explore' | 'collect' | 'defend' | 'special';
+  target: GridCoordinate;
+  drones: DroneType[];
+}
+
+/** Flotte de drones */
+export interface DroneFleet {
+  drones: {
+    explorer: DroneState;
+    combat: DroneState;
+    special: DroneState;
+  };
+  formationOffsets: FormationOffsets;
+  currentMission: DroneMission | null;
+  missionStartTime: number | null;
+}
 
 // ============================================================================
 // TYPES UTILITAIRES
@@ -42,9 +86,6 @@ export declare function isDroneMoving(state: DroneVisualState): boolean;
 
 /** Vérifie si un état visuel est valide */
 export declare function isValidVisualState(state: string): state is DroneVisualState;
-
-/** Vérifie si un état FSM est valide */
-export declare function isValidFSMState(state: string): state is DroneFSMState;
 
 /** Vérifie si un type de drone est valide */
 export declare function isValidDroneType(type: string): type is DroneType;

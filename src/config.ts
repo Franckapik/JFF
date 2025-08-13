@@ -20,7 +20,20 @@ declare global {
 
 export const config: AppConfig = window.appConfig || {
   enabledLogTypes: [
-    "INFO"
+    "INFO",
+    "STATE",
+    "ACTION",
+    "CONDITION",
+    "MOUVEMENT",
+    "PLAYER",
+    "GAME",
+    "EVENT",
+    "CONTEXT",
+    "HISTORY",
+    "RESOURCES",
+    "DEBUG",
+    "ERROR",
+    "WARN"
   ] as LogType[],
   showHelpers: {
     drone: true,

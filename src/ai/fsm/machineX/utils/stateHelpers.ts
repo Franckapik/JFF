@@ -27,6 +27,7 @@ export function createTypedTransitions<T extends Record<MachineEventType, string
 export function validateEvent(eventType: string): eventType is MachineEventType {
   const validEvents: MachineEventType[] = [
     'SHIP_POSITION_UPDATE',
+    'SHIP_INITIALIZE_REQUEST',
     'DRONE_POSITION_UPDATE', 
     'DRONE_INITIALIZE_REQUEST',
     'DRONE_REACHES_TILE',

@@ -12,6 +12,7 @@
 
 import type { DroneType, DroneVisualState } from "../../../../types/drone.d.ts";
 import type { EntityType, FSMState } from "../../../../types/fsm.d.ts";
+import type { VehicleVisualState } from "../../../../types/vehicle.d.ts";
 
 import type { FSMContext } from "@/types/fsm.ts";
 
@@ -47,8 +48,9 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
       maxSpeed: 1,
       currentSpeed: 0,
       maxCapacity: { food: 200, debris: 1800, special: 3, total: 2003 },
+      visualState: "uninitialized" as VehicleVisualState,
     },
-    currentState: "evaluating" as FSMState,
+    fsmState: "evaluating" as FSMState,
     currentTarget: null,
     explorationQueue: [],
     lastAction: null,
@@ -73,7 +75,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
         tilesExploredInCycle: 0,
         bestTileInCycle: null,
       },
-      stateHistory: ["evaluating" as FSMState],
+      stateHistory: ["uninitialized" as FSMState],
       transitionHistory: [],
     },
     explorationCycle: {
@@ -98,7 +100,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
         explorer: {
           id: `${entityId}-drone-explorer`,
           type: "explorer" as DroneType,
-          state: "uninitialized" as DroneVisualState,
+          visualState: "uninitialized" as DroneVisualState,
           position: { x: 0, y: 0.5, z: 0 },
           targetPosition: { x: 0, y: 0.5, z: 0 },
           isMoving: false,
@@ -108,7 +110,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
         combat: {
           id: `${entityId}-drone-combat`,
           type: "combat" as DroneType,
-          state: "uninitialized" as DroneVisualState,
+          visualState: "uninitialized" as DroneVisualState,
           position: { x: 0, y: 0.5, z: 0 },
           targetPosition: { x: 0, y: 0.5, z: 0 },
           isMoving: false,
@@ -118,7 +120,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
         special: {
           id: `${entityId}-drone-special`,
           type: "special" as DroneType,
-          state: "uninitialized" as DroneVisualState,
+          visualState: "uninitialized" as DroneVisualState,
           position: { x: 0, y: 0.5, z: 0 },
           targetPosition: { x: 0, y: 0.5, z: 0 },
           isMoving: false,
@@ -150,13 +152,13 @@ export const updateStateHistory = (context: FSMContext, newState: string): FSMCo
 
   return {
     ...context,
-    currentState: newState,
+    fsmState: newState,
     timestamps: { ...context.timestamps, stateChange: now },
     memory: {
       ...context.memory,
       stateHistory: [newState, ...context.memory.stateHistory.slice(0, maxHistory - 1)],
       transitionHistory: [
-        { from: context.currentState, to: newState, timestamp: now },
+        { from: context.fsmState, to: newState, timestamp: now },
         ...context.memory.transitionHistory.slice(0, maxHistory - 1),
       ],
     },

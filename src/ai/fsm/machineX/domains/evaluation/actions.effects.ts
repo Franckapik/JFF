@@ -23,7 +23,7 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
   const vehicle = context?.vehicle;
   const fuel = vehicle?.fuel || 100;
   const damage = vehicle?.damage || 0;
-  const isDroneAvailable = context.droneFleet?.drones?.explorer?.state === 'docked';
+  const isDroneAvailable = context.droneFleet?.drones?.explorer?.visualState === 'docked';
   fsmLogger.info(`[Evaluating] Conditions`, {
     fuel,
     damage,
@@ -32,7 +32,7 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
     isShipNotFull: !context.vehicle?.isAtCapacity,
     isDroneAvailable,
     explorationQueueLength: context.explorationQueue?.length,
-    droneState: context.droneFleet?.drones?.explorer?.state
+    droneState: context.droneFleet?.drones?.explorer?.visualState
   });
   setTimeout(() => {
     if (fuel < 30 || damage > 50) {

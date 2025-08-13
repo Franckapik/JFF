@@ -17,7 +17,7 @@ import * as THREE from 'three';
 
 import type { WorldPosition } from '../types';
 import type { ShipAnimationProps, ShipAnimationReturn } from '../types/r3f';
-import type { ShipVisualState } from '../types/r3f.d.ts';
+import type { VehicleVisualState } from '../types/vehicle.d.ts';
 
 import fsmLogger from '../logger/fsmLogger.ts';
 import { useTileStore } from '../stores/useTileStore/index.ts';
@@ -48,48 +48,36 @@ export const useShipAnimation = ({
   const pathIndex = useRef<number>(0);
   const animationEnabled = useRef<boolean>(false);
   const lastTargetTile = useRef<string | null>(null);
-  const initialPositionSent = useRef<boolean>(false);
+  const lastSentPosition = useRef<WorldPosition>({ x: 0, y: 0, z: 0 });
+
+  // Store reference
+  const { calculateDistance } = useTileStore();
 
   // ============================================================================
-  // DONNÉES DÉRIVÉES DU CONTEXTE
+  // DONNÉES DÉRIVÉES DU CONTEXTE (COMME LE DRONE)
   // ============================================================================
   
   const vehicle = context?.vehicle;
-  const shipState = context?.currentState || '';
-  const shipVisualState: ShipVisualState = getShipVisualState(shipState);
+  const shipState = context?.fsmState || '';
+  const shipVisualState: VehicleVisualState = vehicle?.visualState || getShipVisualState(shipState);
 
   // ============================================================================
-  // INITIALISATION DE POSITION AVEC FLEETPOSITION
+  // SYNCHRONISATION INITIALE DEPUIS FLEETPOSITION (SOURCE DE VÉRITÉ)
   // ============================================================================
   
+  const hasInitialized = useRef<boolean>(false);
+  
   useEffect(() => {
-    if (fleetPosition && updateVisualPosition && !initialPositionSent.current) {
-      fsmLogger.logFullObject('MOUVEMENT', `🚢 [${shipType}] 🔧 INIT: Fleet position analysis`, {
-        fleetPosition,
-        shipType,
-        currentWorldPositionBefore: { ...currentWorldPosition.current },
-        fleetPositionGridCoord: fleetPosition ? `${Math.round(fleetPosition.x / 1.1)},${Math.round(fleetPosition.z / 1.1)}` : null,
-        gridCalculation: fleetPosition ? {
-          x: `${fleetPosition.x} / 1.1 = ${fleetPosition.x / 1.1}`,
-          z: `${fleetPosition.z} / 1.1 = ${fleetPosition.z / 1.1}`,
-          roundedX: Math.round(fleetPosition.x / 1.1),
-          roundedZ: Math.round(fleetPosition.z / 1.1)
-        } : null
+    // fleetPosition est la vraie source de vérité depuis Scene/Fleet
+    // Envoyer seulement UNE FOIS au début pour éviter les boucles infinies
+    if (fleetPosition && updateVisualPosition && !hasInitialized.current) {
+      hasInitialized.current = true;
+      fsmLogger.mouvement(`🚢 [${shipType}] INITIAL SYNC from fleetPosition (source of truth)`, {
+        fleetPosition
       });
-      
-      // Initialiser la position du vaisseau avec la position de la flotte
-      currentWorldPosition.current = { ...fleetPosition };
-      
-      fsmLogger.mouvement(`🚢 [${shipType}] 🔧 INIT: Position initialized`, {
-        currentWorldPositionAfter: { ...currentWorldPosition.current },
-        shipType
-      });
-      
-      // Envoyer la position initiale au tracker
-      updateVisualPosition(currentWorldPosition.current);
-      initialPositionSent.current = true;
+      updateVisualPosition(fleetPosition);
     }
-  }, [fleetPosition, updateVisualPosition, shipType]);  // ============================================================================
+  }, [fleetPosition, updateVisualPosition, shipType]); // Volontairement pas vehicle?.position pour éviter les boucles  // ============================================================================
   // CONTRÔLE D'ACTIVATION DE L'ANIMATION
   // ============================================================================
   
@@ -194,13 +182,7 @@ export const useShipAnimation = ({
           currentWorldPositionBefore: { ...currentWorldPosition.current }
         });
         
-        // Initialiser la position si c'est le premier calcul
-        if (currentWorldPosition.current.x === 0 && currentWorldPosition.current.y === 0 && currentWorldPosition.current.z === 0) {
-          currentWorldPosition.current = { ...newPath[0] };
-          fsmLogger.mouvement(`🚢 [${shipType}] 🛤️  PATH: Position initialized from path`, {
-            initializedPosition: { ...currentWorldPosition.current }
-          });
-        }
+
       } else {
         fsmLogger.error(`🚢 [${shipType}] No path found`, {
           from: startPosition,
@@ -213,18 +195,6 @@ export const useShipAnimation = ({
       fsmLogger.error(`🚢 [${shipType}] Error calculating path`, { error, targetCoord });
     }
   }, [vehicle, shipType, shipState]);
-
-  // ============================================================================
-  // SYNCHRONISATION INITIALE DE POSITION (UNE SEULE FOIS)
-  // ============================================================================
-  
-  useEffect(() => {
-    if (vehicle?.basePosition && updateVisualPosition && currentWorldPosition.current.x === 0) {
-      // Initialiser la position du vaisseau à sa base (une seule fois)
-      currentWorldPosition.current = { ...vehicle.basePosition };
-      updateVisualPosition(vehicle.basePosition);
-    }
-  }, [vehicle?.basePosition, updateVisualPosition]);
 
   // ============================================================================
   // ANIMATION FRAME OPTIMISÉE - INTERPOLATION TUILE PAR TUILE
@@ -282,7 +252,6 @@ export const useShipAnimation = ({
     // DÉTECTION D'ARRIVÉE SUR TUILE
     // ============================================================================
     
-    const { calculateDistance } = useTileStore.getState();
     const distance = calculateDistance(currentWorldPosition.current, currentTarget);
     if (distance < 0.1) { // Seuil de détection d'arrivée sur tuile
       pathIndex.current++;
@@ -330,10 +299,17 @@ export const useShipAnimation = ({
     );
 
     // ============================================================================
-    // ENVOI DE LA POSITION AU TRACKER
+    // ENVOI DE LA POSITION AU TRACKER (SEULEMENT SI CHANGEMENT SIGNIFICATIF)
     // ============================================================================
     
-    updateVisualPosition(currentWorldPosition.current);
+    // Éviter d'envoyer la position à chaque frame pour éviter les boucles infinies
+    // Envoyer seulement si la position a changé de manière significative
+    const positionChangeDelta = calculateDistance(currentWorldPosition.current, lastSentPosition.current);
+    
+    if (positionChangeDelta > 0.05) { // Seuil de changement significatif
+      lastSentPosition.current = { ...currentWorldPosition.current };
+      updateVisualPosition(currentWorldPosition.current);
+    }
   });
 
   return {
@@ -351,7 +327,7 @@ export const useShipAnimation = ({
 /**
  * Convertit l'état FSM en état visuel du vaisseau
  */
-function getShipVisualState(shipState: string): ShipVisualState {
+function getShipVisualState(shipState: string): VehicleVisualState {
   if (shipState.includes('moving_to_tile')) return 'moving_to_tile';
   if (shipState.includes('collecting')) return 'collecting';
   if (shipState.includes('returning')) return 'returning';

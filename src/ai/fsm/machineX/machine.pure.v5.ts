@@ -63,6 +63,7 @@ import {
   onShipReturningExit,
   // Global domain (COMPLET - actions transversales)
   processDroneInitRequest,
+  processShipInitRequest,
   shouldCollect,
   shouldExplore,
   updateDronePosition,
@@ -93,6 +94,7 @@ export const machineXV5Pure = setup({
     updateShipPosition,
     updateDronePosition,
     processDroneInitRequest,
+    processShipInitRequest,
     
     // Actions du domaine EVALUATION (migrées)
     assignEvaluationContext,
@@ -171,6 +173,10 @@ export const machineXV5Pure = setup({
   on: {
     SHIP_POSITION_UPDATE: {
       actions: 'updateShipPosition'
+    },
+    SHIP_INITIALIZE_REQUEST: {
+      actions: 'processShipInitRequest',
+      target: '.evaluating' // Transition vers evaluating après l'initialisation
     },
     DRONE_POSITION_UPDATE: {
       actions: 'updateDronePosition'

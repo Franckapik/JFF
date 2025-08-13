@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 
 // === Store Imports ===
 import { useTileStore } from '../../../../../stores/useTileStore/index';
@@ -20,15 +20,15 @@ export const useDroneTracker = ({
     botId,
     droneType = 'explorer'
 }: DroneTrackerParams): ((position: WorldPosition) => void) => {
-    const currentVisualPosition = useRef<WorldPosition | null>(null);
+    // Suppression de currentVisualPosition : non utilisée
 
     const { calculateDroneDistance } = useTileStore() as TileStoreType;
 
     // Fonction pour mettre à jour la position depuis l'animation
     const updatePosition = useCallback((position: WorldPosition) => {
-        currentVisualPosition.current = position;
+    // Suppression de l'affectation à currentVisualPosition
         
-        if (context?.droneFleet?.drones?.[droneType]?.state === 'deploying') {
+        if (context?.droneFleet?.drones?.[droneType]?.visualState === 'deploying') {
         // ...
         }
         
@@ -45,13 +45,13 @@ export const useDroneTracker = ({
 
         const distance = calculateDroneDistance(
             position,
-            drone.state,
+            drone.visualState,
             drone.targetPosition,
             context?.vehicle?.position || context?.vehicle?.basePosition
         );
 
         // Switch unifié pour tous les états du drone avec interface unifiée
-        switch (drone.state) {
+        switch (drone.visualState) {
             case 'uninitialized':
                 handlers.init.process(); 
                 break;

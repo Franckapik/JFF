@@ -90,7 +90,7 @@ export const assignDroneDeployingContext = createAssignAction(({ context, event 
     const droneState: DroneVisualState = 'deploying';
     const updatedDrone = {
       ...context.droneFleet.drones[droneType],
-      state: droneState,
+      visualState: droneState,
       targetPosition,
       isActive: true,
       isMoving: true, // ✅ IMPORTANT: Le drone est en mouvement vers sa cible
@@ -118,7 +118,7 @@ export const assignDroneDeployingContext = createAssignAction(({ context, event 
         phase: 'exploring' as const
       },
       lastAction: 'droneDeployForExploration_success',
-      currentState: 'exploring_deploying', // 🟢 Mise à jour de l'état global FSM
+      fsmState: 'exploring_deploying', // 🟢 Mise à jour de l'état global FSM
     };
     
     fsmLogger.info(`✅ [${context.entityId}] Drone deployment result:`, {
@@ -143,7 +143,7 @@ export const assignDroneScanningContext = createAssignAction(({ context, event }
     hasContext: !!context,
     hasEvent: !!event,
     eventType: event?.type,
-    currentDroneState: context.droneFleet?.drones?.explorer?.state
+    currentDroneState: context.droneFleet?.drones?.explorer?.visualState
   });
   
   if (!context.droneFleet?.drones?.explorer) {
@@ -167,7 +167,7 @@ export const assignDroneScanningContext = createAssignAction(({ context, event }
         ...context.droneFleet.drones,
         explorer: {
           ...context.droneFleet.drones.explorer,
-          state: droneState,
+          visualState: droneState,
           lastUpdate: Date.now()
         }
       }
@@ -184,7 +184,7 @@ export const assignDroneScanningContext = createAssignAction(({ context, event }
         }
       }
     },
-    currentState: 'exploring_scanning', // 🟢 Mise à jour de l'état global FSM
+    fsmState: 'exploring_scanning', // 🟢 Mise à jour de l'état global FSM
   };
 });
 
@@ -197,7 +197,7 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
     hasContext: !!context,
     hasEvent: !!event,
     eventType: event?.type,
-    currentDroneState: context.droneFleet?.drones?.explorer?.state
+    currentDroneState: context.droneFleet?.drones?.explorer?.visualState
   });
   
   if (!context.droneFleet?.drones?.explorer) {
@@ -226,14 +226,14 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
         ...context.droneFleet.drones,
         explorer: {
           ...context.droneFleet.drones.explorer,
-          state: droneState,
+          visualState: droneState,
           targetPosition: shipPosition, // ✅ IMPORTANT: Cible mise à jour vers la base
           isMoving: true, // ✅ IMPORTANT: Le drone doit bouger vers la base
           lastUpdate: Date.now()
         }
       }
     },
-    currentState: 'exploring_returning', // 🟢 Mise à jour de l'état global FSM
+    fsmState: 'exploring_returning', // 🟢 Mise à jour de l'état global FSM
   };
 });
 
@@ -247,7 +247,7 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
     hasContext: !!context,
     hasEvent: !!event,
     eventType: event?.type,
-    currentDroneState: context.droneFleet?.drones?.explorer?.state
+    currentDroneState: context.droneFleet?.drones?.explorer?.visualState
   });
   
   if (!context.droneFleet?.drones?.explorer) {
@@ -266,7 +266,7 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
         ...context.droneFleet.drones,
         explorer: {
           ...context.droneFleet.drones.explorer,
-          state: droneState,
+          visualState: droneState,
           isActive: false,
           isMoving: false,
           lastUpdate: Date.now()
@@ -278,6 +278,6 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
       isActive: false,
       phase: 'idle' as const
     },
-    currentState: 'evaluating', // 🟢 Retour à l'état global evaluating
+    fsmState: 'evaluating', // 🟢 Retour à l'état global evaluating
   };
 });

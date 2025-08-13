@@ -61,7 +61,7 @@ export const useDroneAnimation = ({
       return;
     }
 
-    const droneState: DroneVisualState = droneFromContext.state || 'docked';
+    const droneState: DroneVisualState = droneFromContext.visualState || 'docked';
     const targetPosition = droneFromContext.targetPosition;
     
     // Activer l'animation si :
@@ -116,7 +116,7 @@ export const useDroneAnimation = ({
     const drone = context.droneFleet?.drones?.[droneType];
     if (!drone) return;
 
-    const droneState: DroneVisualState = drone.state || 'docked';
+    const droneState: DroneVisualState = drone.visualState || 'docked';
     const targetPosition = calculateTargetPosition(drone, droneState, actualFleetPosition);
 
     // ============================================================================
@@ -168,7 +168,7 @@ export const useDroneAnimation = ({
 
   return {
     droneRef,
-    droneState: droneFromContext?.state || 'docked',
+    droneState: droneFromContext?.visualState || 'docked',
     initialPosition
   };
 };

@@ -17,15 +17,18 @@ export type { ResourceStats, ResourceType } from './resources.d';
 // TYPES DE VÉHICULES
 // ============================================================================
 export type {
-    DroneFleet, DroneMission, DroneState,
-    FormationOffsets, VehicleId, VehicleState
+    VehicleId, VehicleState, VehicleVisualState
 } from './vehicle.d';
 
 // ============================================================================
 // TYPES DE DRONES (SIMPLIFIÉS AVEC TYPES UNION)
 // ============================================================================
 export type {
-    DroneFSMState,
+    DroneFleet, DroneMission, DroneState,
+    FormationOffsets
+} from './drone.d';
+// ============================================================================
+export type {
     DroneType,
     DroneVisualState, NonTrackableDroneVisualState, TrackableDroneVisualState
 } from './drone.d';

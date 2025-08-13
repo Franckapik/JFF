@@ -17,6 +17,11 @@ export type MachineEvents =
       shipType: string;
     }
   | {
+      type: 'SHIP_INITIALIZE_REQUEST';
+      shipType: string;
+      initialPosition: WorldPosition;
+    }
+  | {
       type: 'DRONE_POSITION_UPDATE';
       position: WorldPosition;
       droneType: DroneType;

@@ -101,9 +101,37 @@ export const processDroneInitRequest = createAssignAction(({ context, event }) =
           ...context.droneFleet?.drones?.[event.droneType],
           position: event.initialPosition,
           isActive: true,
-          state: 'docked',
+          visualState: 'docked',
         },
       },
+    },
+  };
+});
+
+/**
+ * Action assign pour traiter les demandes d'initialisation de vaisseau
+ * Similaire à processDroneInitRequest mais pour le vaisseau principal
+ */
+export const processShipInitRequest = createAssignAction(({ context, event }) => {
+  if (event.type !== 'SHIP_INITIALIZE_REQUEST') return context;
+  
+  fsmLogger.context(`🚢 [${context.entityId}] Processing ship init request`, {
+    currentPosition: context.vehicle.position,
+    initialPosition: event.initialPosition,
+    shipType: event.shipType,
+  });
+  
+  // Créer une WorldGridPosition pour basePosition
+  const tileStore = useTileStore.getState();
+  const coord = tileStore.worldToGrid(event.initialPosition);
+  const basePosition = { ...event.initialPosition, coord };
+  
+  return {
+    vehicle: {
+      ...context.vehicle,
+      position: event.initialPosition,
+      basePosition: basePosition,
+      type: event.shipType as "main-ship", // Cast vers le type ShipType
     },
   };
 });

@@ -3,8 +3,9 @@
  */
 
 import type { GridCoordinate } from './coordinates';
+import type { DroneFleet } from './drone.d';
 import type { ResourceStats } from './resources';
-import type { DroneFleet, VehicleState } from './vehicle.d';
+import type { VehicleState } from './vehicle.d';
 
 /** Données d'une tuile connue en mémoire (extrait de initialContext.ts) */
 export interface KnownTileData {
@@ -120,7 +121,7 @@ export interface FSMContext {
   vehicle: VehicleState;
 
   // État FSM
-  currentState: string;
+  fsmState: string;
   currentTarget: GridCoordinate | null;
   explorationQueue: GridCoordinate[];
   lastAction: string | null;
@@ -193,6 +194,7 @@ export type XFSMStore = XFSMStoreState & XFSMStoreActions;
 
 /** États possibles de la FSM (déplacé depuis constants.ts) */
 export type FSMState = 
+  | 'uninitialized'
   | 'exploring_deploying'
   | 'exploring_returning'
   | 'collecting_moving_to_target'

@@ -26,7 +26,7 @@ const isShipMoving = (currentState?: string): boolean => {
 };
 
 const ShipMesh = forwardRef<THREE.Mesh, ShipMeshProps>(
-  ({ color, botId = "defaultBot", context, send, meshRef, botStateValue = "unknown", isMoving }, ref) => {
+  ({ color, botId = "defaultBot", context, send, fleetPosition, meshRef, botStateValue = "unknown", isMoving }, ref) => {
     
     // ============================================================================
     // HOOKS D'ANIMATION ET DE TRACKING (TOUJOURS APPELÉS)
@@ -41,11 +41,12 @@ const ShipMesh = forwardRef<THREE.Mesh, ShipMeshProps>(
     });
     
     // Détection automatique du mouvement si pas explicitement fourni
-    const shipIsMoving = isMoving ?? isShipMoving(context?.currentState);
+    const shipIsMoving = isMoving ?? isShipMoving(context?.fsmState);
     
     // Hook d'animation principal
     const { shipRef, shipState } = useShipAnimation({
       context,
+      fleetPosition: fleetPosition || null, // Source de vérité depuis Scene/Fleet
       updateVisualPosition: updateShipPosition,
       shipType: 'main-ship',
       isActive: !!(context && send && context.vehicle),

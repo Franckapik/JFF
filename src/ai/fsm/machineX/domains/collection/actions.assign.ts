@@ -10,6 +10,7 @@ import fsmLogger from '../../../../../logger/fsmLogger';
 import { useTileStore } from '../../../../../stores/useTileStore';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { TileStoreType } from '../../../../../types/stores.d.ts';
+import type { VehicleVisualState } from '../../../../../types/vehicle.d.ts';
 import type { MachineEvents } from '../../events.pure.v5';
 
 // Helper pour typage assign compatible XState v5
@@ -82,10 +83,11 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
         targetTile: targetGridCoord, // Utiliser la coordonnée de grille pour la navigation
         isMoving: true, // ✅ IMPORTANT: Le vaisseau est en mouvement vers sa cible
         progress: 0, // Reset du progrès
-        currentSpeed: context.vehicle?.maxSpeed || 1
+        currentSpeed: context.vehicle?.maxSpeed || 1,
+        visualState: 'moving_to_tile' as VehicleVisualState
       },
       lastAction: 'shipMovingToTile_success',
-      currentState: 'collecting_ship_moving_to_tile', // 🟢 Mise à jour de l'état global FSM
+      fsmState: 'collecting_ship_moving_to_tile', // 🟢 Mise à jour de l'état global FSM
     };
     
     fsmLogger.info(`✅ [${context.entityId}] Ship movement setup result:`, {
@@ -125,9 +127,10 @@ export const assignShipCollectingContext = createAssignAction(({ context, event 
       ...context.vehicle,
       isMoving: false, // ✅ IMPORTANT: Le vaisseau s'arrête pour collecter
       progress: 100, // Arrivé à destination
-      currentSpeed: 0
+      currentSpeed: 0,
+      visualState: 'collecting' as VehicleVisualState
     },
-    currentState: 'collecting_ship_collecting', // 🟢 Mise à jour de l'état global FSM
+    fsmState: 'collecting_ship_collecting', // 🟢 Mise à jour de l'état global FSM
   };
 });
 
@@ -163,9 +166,10 @@ export const assignShipReturningContext = createAssignAction(({ context, event }
       targetTile: baseCoord.coord, // Fix: assign only the string coordinate
       isMoving: true, // ✅ IMPORTANT: Le vaisseau doit bouger vers la base
       progress: 0, // Reset du progrès pour le retour
-      currentSpeed: context.vehicle?.maxSpeed || 1
+      currentSpeed: context.vehicle?.maxSpeed || 1,
+      visualState: 'returning' as VehicleVisualState
     },
-    currentState: 'collecting_ship_returning', // 🟢 Mise à jour de l'état global FSM
+    fsmState: 'collecting_ship_returning', // 🟢 Mise à jour de l'état global FSM
   };
 });
 
@@ -195,10 +199,11 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
       progress: 100, // Arrivé à la base
       currentSpeed: 0,
       targetTile: null, // Plus de cible active
-      resources: { food: 0, debris: 0, special: 0, total: 0 } // Ressources déposées
+      resources: { food: 0, debris: 0, special: 0, total: 0 }, // Ressources déposées
+      visualState: 'docked' as VehicleVisualState
     },
     lastAction: 'shipReachedBase_success',
-    currentState: 'evaluating', // 🟢 Retour à l'évaluation après dépose
+    fsmState: 'evaluating', // 🟢 Retour à l'évaluation après dépose
   };
 });
 

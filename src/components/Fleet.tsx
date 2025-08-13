@@ -65,12 +65,11 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tilePosi
   });
   
   // === Ship Tracker ===
-  const updateShipVisualPosition = useShipTracker({
+  const updateShipPosition = useShipTracker({
     context,
     send: fsmSend,
     botId,
-    shipType: 'main-ship',
-    fleetPosition: fleetPosition, // 🆕 Position initiale du vaisseau depuis Scene
+    shipType: 'main-ship'
   });
   
   // === Drone Animation ===
@@ -90,8 +89,8 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tilePosi
   // === Ship Animation ===
   const { shipRef, shipState } = useShipAnimation({
     context: context || {} as FSMContext,
-    fleetPosition: fleetPosition, // Position mondiale du vaisseau pour l'initialisation
-    updateVisualPosition: updateShipVisualPosition,
+    fleetPosition: fleetPosition, // Source de vérité depuis Scene
+    updateVisualPosition: updateShipPosition,
     shipType: 'main-ship',
     isActive: true,
     isMoving: context?.vehicle?.isMoving || false,
@@ -106,9 +105,10 @@ const Fleet: React.FC<FleetProps> = React.memo(({ botId, fleetPosition, tilePosi
         botId={botId}
         context={context}
         send={fsmSend}
+        fleetPosition={fleetPosition} // Source de vérité pour l'initialisation
         currentAction={shipState}
         meshRef={shipRef}
-        botStateValue={context?.currentState ?? "unknown"}
+        botStateValue={context?.fsmState ?? "unknown"}
       />
 
       {/* Drone explorer - position pilotée par le contexte FSM */}

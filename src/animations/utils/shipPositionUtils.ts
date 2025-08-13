@@ -14,8 +14,8 @@
 
 import type { WorldPosition } from '../../types/coordinates.d.ts';
 import type { GridCoordinate } from '../../types/index.d.ts';
-import type { ShipVisualState } from '../../types/r3f.d.ts';
 import type { TileStoreType } from '../../types/stores.d.ts';
+import type { VehicleVisualState } from '../../types/vehicle.d.ts';
 
 // Import du store de tiles pour les calculs BFS
 import { useTileStore } from '../../stores/useTileStore/index.ts';
@@ -275,7 +275,7 @@ export const getNextTargetPosition = (
  * @param fsmState - État de la machine FSM
  * @returns État visuel pour l'animation
  */
-export const mapFSMStateToVisualState = (fsmState: string): ShipVisualState => {
+export const mapFSMStateToVisualState = (fsmState: string): VehicleVisualState => {
   switch (fsmState) {
     case 'collecting_ship_moving_to_tile':
       return 'moving_to_tile';

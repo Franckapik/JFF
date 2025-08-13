@@ -15,6 +15,7 @@ import type { VehicleId, WorldPosition } from './index';
 
 /**
  * État visuel du vaisseau pour l'animation
+ * @deprecated Utiliser VehicleVisualState à la place
  */
 export type ShipVisualState = 
   | 'moving_to_tile'
@@ -43,8 +44,8 @@ export interface DroneAnimationProps {
 export interface ShipAnimationProps {
   /** Contexte FSM pour l'état du vaisseau */
   context: FSMContext | null;
-  /** Position mondiale du vaisseau (pour l'initialisation) */
-  fleetPosition?: WorldPosition | null;
+  /** Position mondiale du vaisseau depuis Scene/Fleet (source de vérité) */
+  fleetPosition: WorldPosition | null;
   /** Fonction de mise à jour de la position visuelle */
   updateVisualPosition: (position: WorldPosition) => void;
   /** Type du vaisseau */
@@ -130,6 +131,8 @@ export interface ShipMeshProps {
   context?: FSMContext;
   /** Fonction send de XState pour les événements */
   send?: XStateSend;
+  /** Position de la flotte (source de vérité depuis Scene/Fleet) */
+  fleetPosition?: WorldPosition | null;
   /** Action actuelle du vaisseau */
   currentAction?: string;
   /** Indique si le vaisseau est en mouvement */

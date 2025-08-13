@@ -13,6 +13,7 @@
 export type MachineEventType = 
   // Événements globaux (position updates, init)
   | 'SHIP_POSITION_UPDATE'
+  | 'SHIP_INITIALIZE_REQUEST'
   | 'DRONE_POSITION_UPDATE'
   | 'DRONE_INITIALIZE_REQUEST'
   
@@ -44,6 +45,7 @@ export type MachineEventType =
  */
 export type MachineEvents = 
   | { type: 'SHIP_POSITION_UPDATE'; payload?: unknown }
+  | { type: 'SHIP_INITIALIZE_REQUEST'; payload?: unknown }
   | { type: 'DRONE_POSITION_UPDATE'; payload?: unknown }
   | { type: 'DRONE_INITIALIZE_REQUEST'; payload?: unknown }
   | { type: 'DRONE_REACHES_TILE' }
@@ -71,6 +73,7 @@ export type MachineEvents =
 export const MACHINE_EVENT_TYPES: Record<Uppercase<MachineEventType>, MachineEventType> = {
   // Événements globaux
   SHIP_POSITION_UPDATE: 'SHIP_POSITION_UPDATE',
+  SHIP_INITIALIZE_REQUEST: 'SHIP_INITIALIZE_REQUEST',
   DRONE_POSITION_UPDATE: 'DRONE_POSITION_UPDATE', 
   DRONE_INITIALIZE_REQUEST: 'DRONE_INITIALIZE_REQUEST',
   

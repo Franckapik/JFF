@@ -339,7 +339,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
         };
         finalTileMap[tile.position.coord] = updatedTile;
         
-        fsmLogger.game(`[TileGeneration] Tuile de départ assignée à ${botId}:${tile.position.coord}`);
+        fsmLogger.game(`[TileGeneration] Tuile de départ assignée à ${botId}:${tile.position.coord + "|" + [tile.position.x, tile.position.z]}`);
       }
     });
     
