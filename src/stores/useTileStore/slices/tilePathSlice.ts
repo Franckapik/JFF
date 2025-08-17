@@ -320,8 +320,8 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
           };
         }).sort((a, b) => a.distance - b.distance).slice(0, 3); // Top 3 closest
         
-        // eslint-disable-next-line no-console
-        console.log(`❌ [selectTargetTileInRadiusForDrone] Cannot locate ship on tile:`, {
+         
+        fsmLogger.info(`❌ [selectTargetTileInRadiusForDrone] Cannot locate ship on tile:`, {
           shipPosition,
           totalTilesAvailable: Object.keys(tilesMap).length,
           thresholdUsed: pathConstants.thresholds.positionMatch,
@@ -330,8 +330,8 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
         return null; // Impossible de localiser le vaisseau sur le plateau
       }
       
-      // eslint-disable-next-line no-console
-      console.log(`✅ [selectTargetTileInRadiusForDrone] Ship located on tile:`, {
+       
+      fsmLogger.info(`✅ [selectTargetTileInRadiusForDrone] Ship located on tile:`, {
         shipPosition,
         currentTileCoord: currentTile.position.coord,
         currentTileWorldPos: { x: currentTile.position.x, y: currentTile.position.y, z: currentTile.position.z },
@@ -388,8 +388,8 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
         const walkableTiles = allTiles.filter(t => t.walkable).length;
         const uncollectedTiles = allTiles.filter(t => t.walkable && !t.collected).length;
         
-        // eslint-disable-next-line no-console
-        console.log(`🔍 [selectTargetTileInRadiusForDrone] Diagnostic:`, {
+         
+        fsmLogger.info(`🔍 [selectTargetTileInRadiusForDrone] Diagnostic:`, {
           shipPosition,
           range,
           currentTileCoord: currentTile?.position?.coord,

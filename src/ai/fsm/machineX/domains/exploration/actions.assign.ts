@@ -70,7 +70,7 @@ export const assignDroneDeployingContext = createAssignAction(({ context, event 
     
     // Si aucune cible valide dans le rayon autorisé, déclencher un retour en évaluation
     if (!targetPosition) {
-      fsmLogger.debug(`[${context.entityId}] No valid exploration targets within radius ${range}, area exploration complete`);
+      fsmLogger.info(`[${context.entityId}] No valid exploration targets within radius ${range}, area exploration complete`);
       return {
         explorationCycle: {
           ...context.explorationCycle,

@@ -6,12 +6,14 @@
  *   - addBot, removeBot, send, getBotState
  *   - Synchronisation automatique des snapshots XState
  */
+import { createBrowserInspector } from '@statelyai/inspect';
 import { createActor, type Actor } from 'xstate';
 import { create } from 'zustand';
 
 import { createMachineContext } from '../../ai/fsm/machineX/context/initialContext.ts';
 import type { MachineEvents } from '../../ai/fsm/machineX/events.pure.v5';
 import { machineXV5Pure } from '../../ai/fsm/machineX/machine.pure.v5';
+import { config } from '../../config.ts';
 import fsmLogger from '../../logger/fsmLogger.ts';
 import type {
   BotId,
@@ -29,6 +31,15 @@ const EMPTY_BOT_STATE: EmptyBotState = {
   context: {} 
 };
 
+const inspector = config.enableXStateInspection ? createBrowserInspector() : null;
+
+// Log du statut de l'inspection
+if (config.enableXStateInspection) {
+  fsmLogger.game('[XFSMStore] XState inspection activée');
+} else {
+  fsmLogger.game('[XFSMStore] XState inspection désactivée');
+}
+
 // Store principal Zustand pour la gestion des bots XState
 const useXFSMStore = create<XFSMStore>((set, get) => {
   // Map interne des acteurs XState par botId (now using v5 pure)
@@ -45,7 +56,14 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
   const createBotActor = (botId: BotId): Actor<typeof machineXV5Pure> => {
     if (actors.has(botId)) return actors.get(botId)!;
     const botContext = createMachineContext(botId, 'auto');
-    const actor = createActor(machineXV5Pure, { input: botContext });
+    
+    // Configuration conditionnelle de l'inspection
+    const actorConfig = { 
+      input: botContext,
+      ...(inspector && { inspect: inspector.inspect })
+    };
+    
+    const actor = createActor(machineXV5Pure, actorConfig);
     
     // Vérifier le statut et l'état initial de l'acteur
     const initialSnapshot = actor.getSnapshot();

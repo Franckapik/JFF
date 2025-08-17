@@ -10,6 +10,7 @@ interface AppConfig {
     tile: boolean;
     scene: boolean;
   };
+  enableXStateInspection: boolean;
   // logLevel?: string;
 }
 
@@ -21,20 +22,7 @@ declare global {
 
 export const config: AppConfig = window.appConfig || {
   enabledLogTypes: [
-    "INFO",
-    "STATE",
-    "ACTION",
-    "CONDITION",
-    "MOUVEMENT",
-    "PLAYER",
-    "GAME",
-    "EVENT",
-    "CONTEXT",
-    "HISTORY",
-    "RESOURCES",
-    "DEBUG",
-    "ERROR",
-    "WARN"
+"DEBUG"
   ] as LogType[],
   showHelpers: {
     drone: true,
@@ -42,6 +30,7 @@ export const config: AppConfig = window.appConfig || {
     tile: true,
     scene: true,
   },
+  enableXStateInspection: false,
   // logLevel: "debug", // Si tu veux gérer un vrai niveau de log, décommente et utilise
 };
 
@@ -49,3 +38,4 @@ export const config: AppConfig = window.appConfig || {
 // window.appConfig.showHelpers.tile = false
 // window.appConfig.showHelpers.drone = false
 // window.appConfig.showHelpers.ship = false
+// window.appConfig.enableXStateInspection = false // Désactive l'inspection XState

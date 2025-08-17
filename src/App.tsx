@@ -4,6 +4,7 @@ import React from 'react';
 import Scene from "./components/Scene.tsx";
 import "./styles/App.css";
 
+
 const App: React.FC = () => {
   return (
       <div className="app-container">

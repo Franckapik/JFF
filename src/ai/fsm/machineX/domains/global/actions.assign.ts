@@ -125,7 +125,7 @@ export const processDroneInitRequest = createAssignAction(({ context, event }) =
 export const processShipInitRequest = createAssignAction(({ context, event }) => {
   if (event.type !== 'SHIP_INITIALIZE_REQUEST') return context;
   
-  fsmLogger.context(`🚢 [${context.entityId}] Processing ship init request`, {
+  fsmLogger.debug(`🚢 [${context.entityId}] Processing ship init request`, {
     currentPosition: context.vehicle.position,
     initialPosition: event.initialPosition,
     shipType: event.shipType,
