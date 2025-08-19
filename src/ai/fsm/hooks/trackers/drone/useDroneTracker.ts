@@ -46,7 +46,7 @@ export const useDroneTracker = ({
         const distance = calculateDroneDistance(
             position,
             drone.visualState,
-            drone.targetPosition,
+            drone.targetDroneTile ?? null,
             context?.vehicle?.position || context?.vehicle?.basePosition
         );
 
