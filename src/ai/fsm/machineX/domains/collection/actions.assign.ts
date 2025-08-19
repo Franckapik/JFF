@@ -41,46 +41,35 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
   fsmLogger.info(`🔄 [${context.entityId}] Updating context for ship movement: ${event.type}`);
   
   if (event.type === 'NEED_COLLECTING') {
-    // Utiliser selectTargetTileInRadiusForDrone pour sélectionner une vraie tuile cible
+  // Utiliser selectTargetTileInRadiusForDrone pour sélectionner une vraie tuile cible (targetVehicleTile)
     const tileStore = useTileStore.getState() as TileStoreType;
     const shipPosition = context.vehicle?.position || context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0 };
     
     // Sélectionner une tuile aléatoire dans un rayon pour la collecte
-    const targetWorldPos = tileStore.selectTargetTileInRadiusForDrone(shipPosition, 3);
-    
-    if (!targetWorldPos) {
+    const targetVehicleTile = tileStore.tileInRadius(shipPosition, 3);
+    if (!targetVehicleTile) {
       fsmLogger.error(`🚢 [${context.entityId}] No target tile found for collection`);
       return {};
     }
-    
-    // Convertir la position mondiale en coordonnée de grille
-    const targetGridCoord = tileStore.worldToGrid(targetWorldPos);
-    if (!targetGridCoord) {
-      fsmLogger.error(`🚢 [${context.entityId}] Could not convert target position to grid coordinate`);
-      return {};
-    }
-    
-    // 🔧 FIX: Utiliser gridToWorld pour s'assurer que la position est cohérente avec le pathfinding
-    const consistentTargetPos = tileStore.gridToWorld(targetGridCoord);
-    
+    const targetGridCoord = targetVehicleTile.coord;
+    const consistentTargetPos = targetVehicleTile.position;
     fsmLogger.info(`🚢 [${context.entityId}] Setting ship target for collection:`, {
-      targetPosition: targetWorldPos,
-      consistentTargetPos,
+      targetPosition: consistentTargetPos,
       targetGridCoord,
       currentPosition: shipPosition,
       coordinateCheck: {
-        original: targetWorldPos,
+        original: consistentTargetPos,
         recalculated: consistentTargetPos,
-        areConsistent: Math.abs(targetWorldPos.x - consistentTargetPos.x) < 0.1 && Math.abs(targetWorldPos.z - consistentTargetPos.z) < 0.1
+        areConsistent: true
       }
     });
-    
     // Mise à jour complète du contexte en une seule fois
+    const targetVehicleTileObj = targetVehicleTile;
     const updatedContext = {
       vehicle: {
         ...context.vehicle,
         position: shipPosition,
-        targetTile: targetGridCoord, // Utiliser la coordonnée de grille pour la navigation
+        targetVehicleTile: targetVehicleTileObj, // Utiliser l'objet Tile complet
         isMoving: true, // ✅ IMPORTANT: Le vaisseau est en mouvement vers sa cible
         progress: 0, // Reset du progrès
         currentSpeed: context.vehicle?.maxSpeed || 1,
@@ -92,7 +81,7 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     
     fsmLogger.info(`✅ [${context.entityId}] Ship movement setup result:`, {
       hasVehicle: !!updatedContext.vehicle,
-      targetTile: updatedContext.vehicle?.targetTile,
+  targetVehicleTile: updatedContext.vehicle?.targetVehicleTile,
       isMoving: updatedContext.vehicle?.isMoving
     });
     
@@ -152,16 +141,24 @@ export const assignShipReturningContext = createAssignAction(({ context, event }
   
   // Position de base (pour simplifier, retour à la position initiale)
   const basePosition = context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0, coord: '0,0' };
-  
+  const baseTile = {
+    position: basePosition,
+    coord: basePosition.coord ?? '0,0',
+    type: 'depart',
+    biome: 'station',
+    resources: { food: 0, debris: 0, special: 0, total: 0 },
+    hasResources: false
+  };
+
   fsmLogger.info(`🔙 [${context.entityId}] Updating vehicle state to returning with target:`, {
     basePosition,
     currentPosition: context.vehicle.position
   });
-  
+
   return {
     vehicle: {
       ...context.vehicle,
-      targetTile: basePosition, // Utiliser basePosition qui est un WorldGridPosition
+  targetVehicleTile: baseTile, // Utiliser un objet Tile complet pour la base
       isMoving: true, // ✅ IMPORTANT: Le vaisseau doit bouger vers la base
       progress: 0, // Reset du progrès pour le retour
       currentSpeed: context.vehicle?.maxSpeed || 1,
@@ -196,7 +193,7 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
       isMoving: false, // ✅ IMPORTANT: Le vaisseau s'arrête à la base
       progress: 100, // Arrivé à la base
       currentSpeed: 0,
-      targetTile: null, // Plus de cible active
+  targetVehicleTile: null, // Plus de cible active
       resources: { food: 0, debris: 0, special: 0, total: 0 }, // Ressources déposées
       visualState: 'docked' as VehicleVisualState
     },

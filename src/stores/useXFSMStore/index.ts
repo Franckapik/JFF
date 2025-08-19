@@ -10,6 +10,7 @@ import { createBrowserInspector } from '@statelyai/inspect';
 import { createActor, type Actor } from 'xstate';
 import { create } from 'zustand';
 
+import { createBroadcastChannel } from '../../ai/fsm/broadcast.ts';
 import { createMachineContext } from '../../ai/fsm/machineX/context/initialContext.ts';
 import type { MachineEvents } from '../../ai/fsm/machineX/events.pure.v5';
 import { machineXV5Pure } from '../../ai/fsm/machineX/machine.pure.v5';
@@ -48,6 +49,9 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
   const snapshotCache = new Map<BotId, BotSnapshot>();
   // Track des acteurs démarrés (XState v5 fix)
   const startedActors = new Set<BotId>();
+  
+  // Broadcast channel pour diffuser les états XState
+  const broadcast = createBroadcastChannel();
 
   /**
    * Crée et enregistre un nouvel acteur XState pour un bot donné
@@ -98,12 +102,26 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
         const previousSnapshot = snapshotCache.get(botId);
         if (snapshot === previousSnapshot) return;
         snapshotCache.set(botId, snapshot);
+        
+        // Mise à jour du store Zustand
         set((state) => ({
           botStates: {
             ...(state?.botStates ?? {}),
             [botId]: snapshot,
           },
         }));
+
+        // Broadcast du snapshot pour le viewer
+        const snapshotData = snapshot as { value?: unknown; context?: Record<string, unknown> };
+        broadcast?.post({
+          type: 'STATE_UPDATE',
+          botId,
+          snapshot: {
+            value: snapshotData.value ?? 'unknown',
+            context: snapshotData.context ?? {},
+            status: snapshot.status
+          }
+        });
       });
       
       try {
@@ -218,7 +236,29 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
     }
   };
 
-   
+  // Gestionnaire pour les requêtes du viewer (REQUEST_SYNC)
+  if (broadcast?.channel) {
+    broadcast.channel.onmessage = (ev: MessageEvent) => {
+      const data = ev.data;
+      if (!data || data.type !== 'REQUEST_SYNC') return;
+      
+      const targetBot = data.botId ?? 'bot-0';
+      const snapshot = snapshotCache.get(targetBot);
+      
+      if (snapshot) {
+        const snapshotData = snapshot as { value?: unknown; context?: Record<string, unknown> };
+        broadcast.post({
+          type: 'STATE_UPDATE',
+          botId: targetBot,
+          snapshot: {
+            value: snapshotData.value ?? 'unknown',
+            context: snapshotData.context ?? {},
+            status: snapshot.status
+          }
+        });
+      }
+    };
+  }
 
   // État initial conforme au type XFSMStoreState
   const initialState: XFSMStoreState = {

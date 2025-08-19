@@ -32,7 +32,7 @@ export interface VehicleState {
   isMoving: boolean;
   progress: number;
   resources: ResourceStats;
-  targetTile: WorldGridPosition | null;
+  targetVehicleTile: import('./tile').Tile | null;
   fuel: number;
   damage: number;
   totalDistance: number;

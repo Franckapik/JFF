@@ -109,7 +109,7 @@ export const processDroneInitRequest = createAssignAction(({ context, event }) =
         [event.droneType]: {
           ...context.droneFleet?.drones?.[event.droneType],
           position: droneInitialPosition,
-          targetPosition: droneInitialPosition,
+          targetDroneTile: droneInitialPosition,
           isActive: true,
           visualState: 'docked',
         },

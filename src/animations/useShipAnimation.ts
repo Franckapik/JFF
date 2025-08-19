@@ -30,7 +30,7 @@ export const useShipAnimation = ({ context, updateVisualPosition, shipType = "ma
   const vehicle = context?.vehicle;
   const shipVisualState: VehicleVisualState = vehicle?.visualState || "uninitialized";
   const currentWorldPosition = useRef<WorldPosition>(initialPosition ?? { x: 0, y: 0.5, z: 0 });
-  const targetTile = vehicle?.targetTile ?? null;
+  const targetVehicleTile = vehicle?.targetVehicleTile ?? null;
 
   // ============================================================================
   // SYNCHRONISATION INITIALE - Une seule fois au montage
@@ -52,8 +52,10 @@ export const useShipAnimation = ({ context, updateVisualPosition, shipType = "ma
 
     // Utiliser position du contexte dès qu'elle existe, sinon garder position actuelle
     if (vehicle?.position && shipVisualState !== "uninitialized") {
-      const target = targetTile ?? vehicle.position;
-      
+      let target: WorldPosition = vehicle.position;
+      if (targetVehicleTile && typeof targetVehicleTile === 'object' && 'position' in targetVehicleTile) {
+        target = targetVehicleTile.position;
+      }
       if (shipVisualState === "moving" || shipVisualState === "collecting") {
         // Animation interpolée pour les états de mouvement
         const lerpFactor = Math.min(1.0, delta);

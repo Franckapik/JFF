@@ -71,14 +71,14 @@ export interface TilePathSliceActions {
   calculateDroneDistance: (
     dronePosition: WorldPosition,
     droneState: DroneVisualState,
-    targetPosition?: WorldPosition,
+    targetPosition?: Tile | null,
     shipPosition?: WorldPosition
   ) => number;
-  selectTargetTileInRadiusForDrone: (
-    shipPosition: WorldPosition,
+  tileInRadius: (
+    shipPosition: import('./index').WorldPosition,
     range: number,
-    tiles?: TileMap
-  ) => WorldPosition | null;
+    tiles?: import('./index').TileMap
+  ) => import('./index').Tile | null;
 }
 
 /** Interface pour le slice de ressources */

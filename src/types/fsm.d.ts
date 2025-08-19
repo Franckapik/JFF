@@ -1,3 +1,4 @@
+import type { Tile } from './tile.d.ts';
 /**
  * Types FSM (extraits de initialContext.ts)
  */
@@ -62,7 +63,7 @@ export interface StateTransition {
 
 /** Mémoire de l'entité (extrait de initialContext.ts) */
 export interface EntityMemory {
-  knownTiles: Map<GridCoordinate, KnownTileData>;
+  knownTiles: Tile[];
   knownDangers: KnownDanger[];
   stats: EntityStats;
   stateHistory: string[];
@@ -122,7 +123,6 @@ export interface FSMContext {
 
   // État FSM
   fsmState: string;
-  currentTarget: GridCoordinate | null;
   explorationQueue: GridCoordinate[];
   lastAction: string | null;
   error: string | null;

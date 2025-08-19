@@ -236,14 +236,14 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
    * Unifie la logique qui était dispersée dans droneTrackerEngine
    * @param dronePosition - Position actuelle du drone
    * @param droneState - État visuel du drone (deploying, scanning, returning)
-   * @param targetPosition - Position cible (pour deploying/scanning)
+   * @param targetDroneTile - Tuile cible (pour deploying/scanning)
    * @param shipPosition - Position du vaisseau (pour returning)
    * @returns Distance appropriée selon l'état, Infinity si impossible
    */
   calculateDroneDistance: (
     dronePosition: WorldPosition,
     droneState: DroneVisualState,
-    targetPosition?: WorldPosition,
+    targetDroneTile?: Tile | null,
     shipPosition?: WorldPosition
   ): number => {
     if (!dronePosition) return Infinity;
@@ -251,21 +251,18 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
     switch (droneState) {
       case 'deploying':
       case 'scanning': {
-        if (!targetPosition) return Infinity;
-        
+        if (!targetDroneTile || !targetDroneTile.position) return Infinity;
+        const targetPosition = targetDroneTile.position;
         // Distance 2D (XZ) pour l'exploration - ignore la hauteur Y
         const target2D = { x: targetPosition.x, y: 0, z: targetPosition.z };
         const drone2D = { x: dronePosition.x, y: 0, z: dronePosition.z };
         return get().calculateDistance(drone2D, target2D);
       }
-      
       case 'returning': {
         if (!shipPosition) return Infinity;
-        
         // Distance 3D complète pour le retour au vaisseau
         return get().calculateDistance(dronePosition, shipPosition);
       }
-      
       default:
         return Infinity;
     }
@@ -277,100 +274,40 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
 
   /**
    * Sélectionne une tuile cible dans un rayon donné pour le drone
-   * Utilise un algorithme BFS basé sur les GridCoordinate et le système de voisins
-   * pour garantir que seules les tuiles existantes du plateau sont sélectionnées
-   * @param shipPosition - Position du vaisseau (base de calcul)
-   * @param range - Rayon de recherche en nombre de tuiles (distance hexagonale)
-   * @param tiles - Map des tuiles (optionnel, utilise get().tiles par défaut)
-   * @returns Position cible ou null si aucune cible valide
+   * Retourne directement la tuile (Tile) au lieu de la position
    */
-  selectTargetTileInRadiusForDrone: (
+  tileInRadius: (
     shipPosition: WorldPosition,
     range: number,
     tiles?: TileMap
-  ): WorldPosition | null => {
+  ): Tile | null => {
     try {
       if (!shipPosition || range <= 0) {
         return null;
       }
-      
-      // Utiliser les tuiles fournies ou récupérer du store
       const tilesMap = tiles || get().tiles;
-      
       if (!tilesMap || Object.keys(tilesMap).length === 0) {
-        return null; // Pas de fallback aléatoire - retourner null si pas de tuiles
+        return null;
       }
-      
-      // 1. Trouver la tuile actuelle du vaisseau
       const currentTile = get().findTileAtPosition(shipPosition, tilesMap);
       if (!currentTile) {
-        // Diagnostic approfondi : trouver la tuile la plus proche
-        const allTiles = Object.values(tilesMap) as Tile[];
-        const tilesWithDistance = allTiles.map(tile => {
-          const tileWorldPosition = {
-            x: tile.position.x,
-            y: tile.position.y,
-            z: tile.position.z
-          };
-          const distance = get().calculateDistance(shipPosition, tileWorldPosition);
-          return {
-            coord: tile.position.coord,
-            distance,
-            tilePosition: tileWorldPosition
-          };
-        }).sort((a, b) => a.distance - b.distance).slice(0, 3); // Top 3 closest
-        
-         
-        fsmLogger.info(`❌ [selectTargetTileInRadiusForDrone] Cannot locate ship on tile:`, {
-          shipPosition,
-          totalTilesAvailable: Object.keys(tilesMap).length,
-          thresholdUsed: pathConstants.thresholds.positionMatch,
-          closestTiles: tilesWithDistance
-        });
-        return null; // Impossible de localiser le vaisseau sur le plateau
+        return null;
       }
-      
-       
-      fsmLogger.info(`✅ [selectTargetTileInRadiusForDrone] Ship located on tile:`, {
-        shipPosition,
-        currentTileCoord: currentTile.position.coord,
-        currentTileWorldPos: { x: currentTile.position.x, y: currentTile.position.y, z: currentTile.position.z },
-        neighborsCount: currentTile.neighbors?.length || 0
-      });
-      
-      // 2. Recherche BFS pour collecter toutes les tuiles dans le rayon
       const candidateTiles: Tile[] = [];
       const visited = new Set<GridCoordinate>();
       const queue: { coord: GridCoordinate; distance: number }[] = [
         { coord: currentTile.position.coord, distance: 0 }
       ];
-      
       while (queue.length > 0) {
         const { coord, distance } = queue.shift()!;
-        
-        // Si on a dépassé le rayon, on arrête cette branche
-        if (distance > range) {
-          continue;
-        }
-        
-        // Si déjà visité, on passe
-        if (visited.has(coord)) {
-          continue;
-        }
-        
+        if (distance > range) continue;
+        if (visited.has(coord)) continue;
         visited.add(coord);
         const tile = tilesMap[coord];
-        
-        if (!tile) {
-          continue; // Tuile inexistante (ne devrait pas arriver)
-        }
-        
-        // Ajouter à la liste des candidats si c'est une tuile valide et pas la tuile de départ
+        if (!tile) continue;
         if (distance > 0 && tile.walkable && !tile.collected) {
           candidateTiles.push(tile);
         }
-        
-        // Ajouter les voisins à la queue pour la prochaine itération
         if (distance < range && tile.neighbors) {
           for (const neighborCoord of tile.neighbors) {
             if (!visited.has(neighborCoord)) {
@@ -379,44 +316,12 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
           }
         }
       }
-      
-      // 3. Sélectionner une tuile candidate au hasard
       if (candidateTiles.length === 0) {
-        // Log diagnostic pour comprendre pourquoi aucune tuile n'est trouvée
-        const totalTiles = Object.keys(tilesMap).length;
-        const allTiles = Object.values(tilesMap) as Tile[];
-        const walkableTiles = allTiles.filter(t => t.walkable).length;
-        const uncollectedTiles = allTiles.filter(t => t.walkable && !t.collected).length;
-        
-         
-        fsmLogger.info(`🔍 [selectTargetTileInRadiusForDrone] Diagnostic:`, {
-          shipPosition,
-          range,
-          currentTileCoord: currentTile?.position?.coord,
-          totalTiles,
-          walkableTiles,
-          uncollectedTiles,
-          candidateTilesFound: candidateTiles.length,
-          visitedCount: visited.size
-        });
-        
-        return null; // Aucune tuile valide trouvée dans le rayon
+        return null;
       }
-      
       const randomTile = candidateTiles[Math.floor(Math.random() * candidateTiles.length)];
-
-      // 4. Convertir la position de la tuile en WorldPosition
-      // Avec WorldGridPosition, la structure est maintenant fixe
-      const targetPosition: WorldPosition = { 
-        x: randomTile.position.x, 
-        y: randomTile.position.y + 0.5, // Légèrement au-dessus de la tuile
-        z: randomTile.position.z 
-      };
-      
-      return targetPosition;
-      
+      return randomTile;
     } catch (_error) {
-      // En cas d'erreur, retourner null plutôt qu'une position aléatoire
       return null;
     }
   },

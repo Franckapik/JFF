@@ -111,7 +111,7 @@ export const calculateShipTargetPosition = (
   vehicle: { 
     position?: WorldPosition; 
     basePosition?: WorldPosition; 
-    targetTile?: WorldPosition | string;
+  targetVehicleTile?: import('../../types/tile').Tile | null;
   } | undefined, 
   shipState: string
 ): WorldPosition | null => {
@@ -137,29 +137,16 @@ export const calculateShipTargetPosition = (
   }
 
   // Pour les autres états de collection, utiliser la tuile cible si disponible
-  if (vehicle.targetTile) {
-    if (typeof vehicle.targetTile === 'object') {
-      fsmLogger.mouvement('🚢 calculateShipTargetPosition: Targeting tile object', {
-        targetTile: vehicle.targetTile,
-        shipState
-      });
-      
-      return {
-        x: vehicle.targetTile.x,
-        y: vehicle.targetTile.y || 0.5,
-        z: vehicle.targetTile.z
-      };
-    } else {
-      // Si c'est une string coord, on ne peut pas la convertir sans le store
-      // Dans ce cas, rester à la position actuelle
-      fsmLogger.mouvement('🚢 calculateShipTargetPosition: Target tile is string coord, staying at current position', {
-        targetTile: vehicle.targetTile,
-        currentPosition: vehicle.position,
-        shipState
-      });
-      
-      return vehicle.position || { x: 0, y: 0.5, z: 0 };
-    }
+  if (vehicle.targetVehicleTile && typeof vehicle.targetVehicleTile === 'object' && vehicle.targetVehicleTile.position) {
+    fsmLogger.mouvement('🚢 calculateShipTargetPosition: Targeting tile object', {
+  targetVehicleTile: vehicle.targetVehicleTile,
+      shipState
+    });
+    return {
+  x: vehicle.targetVehicleTile.position.x,
+  y: vehicle.targetVehicleTile.position.y ?? 0.5,
+  z: vehicle.targetVehicleTile.position.z
+    };
   }
 
   // Fallback sur la position actuelle

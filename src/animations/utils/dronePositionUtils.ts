@@ -9,7 +9,7 @@ import type { DroneVisualState } from '../../types/drone.d.ts';
 
 interface DroneData {
   position?: WorldPosition;
-  targetPosition?: WorldPosition;
+  targetDroneTile?: import('../../types/tile').Tile | WorldPosition | null;
   state?: DroneVisualState;
 }
 
@@ -22,14 +22,18 @@ export const calculateTargetPosition = (
   actualFleetPosition: WorldPosition,
   formationOffset?: { x: number; y: number; z: number }
 ): WorldPosition => {
-  // Pour l'état "returning", retourner à la position du vaisseau (targetPosition relative)
-  if (droneState === 'returning' && drone.targetPosition) {
-    // Le drone retourne au vaisseau : utiliser la targetPosition en coordonnées relatives
-    return {
-      x: drone.targetPosition.x - actualFleetPosition.x,
-      y: drone.targetPosition.y - actualFleetPosition.y,
-      z: drone.targetPosition.z - actualFleetPosition.z
-    };
+  // Pour l'état "returning", retourner à la position du vaisseau (targetDroneTile relative)
+  if (droneState === 'returning' && drone.targetDroneTile) {
+    const pos = (typeof drone.targetDroneTile === 'object' && 'position' in drone.targetDroneTile)
+      ? drone.targetDroneTile.position
+      : drone.targetDroneTile;
+    if (pos) {
+      return {
+        x: pos.x - actualFleetPosition.x,
+        y: pos.y - actualFleetPosition.y,
+        z: pos.z - actualFleetPosition.z
+      };
+    }
   }
   
   // Si le drone est docked, utiliser l'offset de formation
@@ -42,13 +46,19 @@ export const calculateTargetPosition = (
   }
   
   // Pour les autres états, utiliser la position cible ou la position actuelle
-  if (drone.targetPosition && (droneState === 'deploying' || droneState === 'scanning')) {
-    return {
-      x: drone.targetPosition.x - actualFleetPosition.x,
-      y: drone.targetPosition.y - actualFleetPosition.y,
-      z: drone.targetPosition.z - actualFleetPosition.z
-    };
-  } else if (drone.position) {
+  if (drone.targetDroneTile && (droneState === 'deploying' || droneState === 'scanning')) {
+    const pos = (typeof drone.targetDroneTile === 'object' && 'position' in drone.targetDroneTile)
+      ? drone.targetDroneTile.position
+      : drone.targetDroneTile;
+    if (pos) {
+      return {
+        x: pos.x - actualFleetPosition.x,
+        y: pos.y - actualFleetPosition.y,
+        z: pos.z - actualFleetPosition.z
+      };
+    }
+  }
+  if (drone.position) {
     return {
       x: drone.position.x - actualFleetPosition.x,
       y: drone.position.y - actualFleetPosition.y,

@@ -32,7 +32,7 @@ export interface DroneState {
   type: DroneType;
   visualState: DroneVisualState;
   position?: WorldPosition;
-  targetPosition: WorldPosition;
+  targetDroneTile: import('./tile').Tile | null;
   isActive: boolean;
   isMoving: boolean;
   lastUpdate: number;

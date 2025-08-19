@@ -99,46 +99,43 @@ export const isVehicleOverloaded = createGuard('isVehicleOverloaded', ({ context
  * Guard pour vérifier s'il y a encore des tuiles collectibles disponibles
  */
 export const hasMoreCollectibleTiles = createGuard('hasMoreCollectibleTiles', ({ context }) => {
-  // Vérifier s'il y a des tuiles avec des ressources dans un rayon accessible
-  const knownTiles = context.memory?.knownTiles || new Map();
+  // knownTiles est maintenant un tableau de Tile
+  const knownTiles = context.memory?.knownTiles || [];
   const shipPosition = context.vehicle?.position;
-  
+
   if (!shipPosition) {
     fsmLogger.error(`[hasMoreCollectibleTiles] No ship position found`);
     return false;
   }
-  
-  // Chercher des tuiles avec des ressources dans un rayon raisonnable
+
   let collectibleTilesCount = 0;
-  const maxDistance = 5; // Rayon de recherche
-  
-  for (const [, tile] of knownTiles) {
+  const maxDistance = 5;
+
+  for (const tile of knownTiles) {
     if (tile?.resources && tile.resources.total > 0 && !tile.collected) {
-      // Approximation de distance (les tuiles n'ont pas forcément de position exacte)
-      // On peut utiliser la coord pour estimer la distance
-      const [tileX, tileZ] = tile.coord.split(',').map(Number);
+      // Approximation de distance
+      const [tileX, tileZ] = tile.position?.coord?.split(',').map(Number) || [0,0];
       const tileStore = useTileStore.getState();
       const distance = tileStore.calculateDistance(
         shipPosition,
         { x: tileX * 2, y: 0, z: tileZ * 2 }
       );
-      
       if (distance <= maxDistance) {
         collectibleTilesCount++;
       }
     }
   }
-  
+
   const hasMore = collectibleTilesCount > 0;
-  
+
   fsmLogger.info(`🔍 [hasMoreCollectibleTiles] Collectible tiles status:`, {
     shipPosition,
     collectibleTilesCount,
     maxDistance,
     hasMore,
-    totalKnownTiles: knownTiles.size
+    totalKnownTiles: knownTiles.length
   });
-  
+
   return hasMore;
 });
 

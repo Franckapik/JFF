@@ -61,7 +61,8 @@ export const useDroneAnimation = ({
     }
 
     const droneState: DroneVisualState = droneFromContext.visualState || 'docked';
-    const targetPosition = droneFromContext.targetPosition;
+  const targetTile = droneFromContext.targetDroneTile;
+  const targetPosition = targetTile ? targetTile.position : null;
     
     // Activer l'animation si :
     // 1. La target position a changé
