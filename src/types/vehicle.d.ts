@@ -1,4 +1,4 @@
-import type { Path, WorldGridPosition, WorldPosition } from './coordinates';
+import type { Path, WorldGridPosition } from './coordinates';
 import type { ResourceStats } from './resources';
 import type { ShipType } from './tracker';
 
@@ -27,7 +27,7 @@ export type VehicleVisualState =
 export interface VehicleState {
   id: string;
   type: ShipType;
-  position: WorldPosition;
+  position: WorldGridPosition;
   basePosition: WorldGridPosition;
   isMoving: boolean;
   progress: number;

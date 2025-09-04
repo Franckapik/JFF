@@ -406,6 +406,8 @@
         const spacing = typeof context.spacing === 'number' ? context.spacing : -0.2;
         if (!data.vehiclePosition || typeof data.vehiclePosition !== 'object' || typeof data.vehiclePosition.x !== 'number' || typeof data.vehiclePosition.z !== 'number') {
           vehiclePositionCoordEl.textContent = '[Position véhicule invalide]';
+        } else if (data.vehiclePosition.coord === null || data.vehiclePosition.coord === undefined) {
+          vehiclePositionCoordEl.textContent = 'en déplacement (performance)';
         } else if (data.vehiclePosition.coord && typeof data.vehiclePosition.coord === 'string') {
           vehiclePositionCoordEl.textContent = data.vehiclePosition.coord + ' (contexte)';
         } else {

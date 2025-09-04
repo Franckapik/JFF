@@ -53,16 +53,20 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
     return {
       vehicle: {
         ...context.vehicle,
-        position: position,
+        position: { ...position, coord },
         basePosition: basePosition,
       },
     };
   }
   
+  // Calculer coord pour position normale
+  const tileStore = useTileStore.getState();
+  const coord = tileStore.worldToGrid(position);
+  
   return {
     vehicle: {
       ...context.vehicle,
-      position: position,
+      position: { ...position, coord },
     },
   };
 });

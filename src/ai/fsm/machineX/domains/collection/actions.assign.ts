@@ -65,10 +65,15 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     });
     // Mise à jour complète du contexte en une seule fois
     const targetVehicleTileObj = targetVehicleTile;
+    
+    // Calculer coord pour la position pendant le mouvement
+    // Ici coord=null pour optimiser pendant le déplacement
+    const positionWithCoord = { ...shipPosition, coord: null as string | null };
+    
     const updatedContext = {
       vehicle: {
         ...context.vehicle,
-        position: shipPosition,
+        position: positionWithCoord,
         targetVehicleTile: targetVehicleTileObj, // Utiliser l'objet Tile complet
         isMoving: true, // ✅ IMPORTANT: Le vaisseau est en mouvement vers sa cible
         progress: 0, // Reset du progrès

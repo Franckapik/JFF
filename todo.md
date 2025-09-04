@@ -1,10 +1,13 @@
 --TODO
 L'initialisation se fait dpeuis la scene avec un guard de controle avant de passer à evaluating.
+Le travail en cours est la position du vehicle en WorldGridPosition. Cela permet une comprehension dans le viewer des deplacements. Attention a bien surveiller les perf.
 
-
-
-Il faut absolument que l'initialisation du vaisseau se fasse normalement. La position de fleet doit etre envoyée jusqu'au handler, puis que ce dernier change l'état du vaisseau.
-
+A faire : 
+- recherche d etuiles pour l'explorzation en fonction d'un radius réel indiqué depuis le store. 
+- regarder le systeme de comptage de tuiles explorées. A indiquer dans le viewzer. 
+- permettre la collection en fonction du compte d'exploration selon un chiffre deifnis dans le store.
+- s'assurer que le score soit bien en place et visible depuis le viwer egalement.
+- le chemin doit ensuite vraiment se faire de tuiles en tuile pour le vehicle.
 
 Refondre la fonction permettant de calculer le chemin en fonction des tuiles pour essayer de resoudre ce probleme de decalage et eviter de donner la possibilité de faire du direct path mais plutot une erreur bloquante.
 

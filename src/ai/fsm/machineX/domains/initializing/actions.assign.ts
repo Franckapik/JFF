@@ -64,7 +64,7 @@ export const processShipInitRequest = createAssignAction(({ context, event }) =>
 	} else {
 		const coord = tileStore.worldToGrid(event.initialPosition);
 		basePosition = { ...event.initialPosition, coord };
-		
+
 		fsmLogger.warn(`🚢 [${context.entityId}] No tile found at position, using worldToGrid fallback`, {
 			initialPosition: event.initialPosition,
 			calculatedCoord: coord
@@ -76,7 +76,7 @@ export const processShipInitRequest = createAssignAction(({ context, event }) =>
 	return {
 		vehicle: {
 			...context.vehicle,
-			position: event.initialPosition,
+			position: { ...event.initialPosition, coord: basePosition.coord },
 			basePosition: basePosition,
 			type: event.shipType as "main-ship",
 		},
