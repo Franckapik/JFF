@@ -138,6 +138,9 @@ export interface FSMContext {
   explorationCycle: ExplorationCycle;
   // selectedTileForCollection supprimé
 
+  /** Compteur de tuiles explorées (pour stats et viewer) */
+  explorationCount?: number;
+
   // Configuration
   config: FSMConfig;
 

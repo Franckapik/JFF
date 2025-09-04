@@ -93,6 +93,9 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
     return {};
   }
   fsmLogger.info(`[${context.entityId}] assignDroneScanningContext: Pushed targetDroneTile to memory.knownTiles`, { targetDroneTile });
+  // Incrémentation des compteurs d'exploration (global et par cycle)
+  const currentCount = typeof context.explorationCount === 'number' ? context.explorationCount : 0;
+  const currentCycleCount = context.memory?.stats?.tilesExploredInCycle ?? 0;
   return {
     droneFleet: {
       ...context.droneFleet,
@@ -106,8 +109,19 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
     },
     memory: {
       ...context.memory,
-      knownTiles: [...(context.memory?.knownTiles ?? []), targetDroneTile]
-    }
+      knownTiles: [...(context.memory?.knownTiles ?? []), targetDroneTile],
+      stats: {
+        ...context.memory?.stats,
+        tilesExplored: (context.memory?.stats?.tilesExplored ?? 0) + 1,
+        tilesExploredInCycle: currentCycleCount + 1,
+        lastExploration: {
+          coord: targetDroneTile.position.coord,
+          timestamp: Date.now(),
+          hasResources: targetDroneTile.hasResources
+        }
+      }
+    },
+    explorationCount: currentCount + 1
   };
 });
 

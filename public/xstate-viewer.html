@@ -221,6 +221,8 @@
       <h3>🗺️ Exploration Memory</h3>
       <div style="font-size:12px; color:#6b7280;">
         <div>Last Exploration: <strong id="lastExploration">—</strong></div>
+        <div>Exploration Count: <strong id="explorationCount">—</strong></div>
+        <div>This Cycle: <strong id="explorationCycleCount">—</strong></div>
         <div style="margin-top:8px;">Recent Tiles:</div>
         <div id="recentTiles" style="margin-top:6px; max-height:200px; overflow-y:auto;"></div>
       </div>
@@ -347,6 +349,20 @@
 
       // lastExploration is stored under memory.stats.lastExploration per initialContext
       const lastExploration = memory?.stats?.lastExploration ?? memory?.lastExploration ?? null;
+      // explorationCount: try context.explorationCount, then memory.stats.tilesExplored, then memory.exploredTiles.length
+      let explorationCount = context.explorationCount;
+      if (explorationCount === undefined) {
+        explorationCount = memory?.stats?.tilesExplored;
+      }
+      if (explorationCount === undefined && Array.isArray(memory.exploredTiles)) {
+        explorationCount = memory.exploredTiles.length;
+      }
+      if (explorationCount === undefined && Array.isArray(memory.knownTiles)) {
+        explorationCount = memory.knownTiles.length;
+      }
+      if (explorationCount === undefined) {
+        explorationCount = 0;
+      }
 
       // recent tiles: handle several possible shapes after migration
       let recentTiles = [];
@@ -385,7 +401,9 @@
         mode,
         memory: {
           lastExploration,
-          recentTiles
+          recentTiles,
+          explorationCount,
+          explorationCycleCount: memory?.stats?.tilesExploredInCycle ?? 0
         }
       };
     }
@@ -429,9 +447,15 @@
       // Exploration memory
       const lastExp = data.memory?.lastExploration;
       const recent = data.memory?.recentTiles ?? [];
+      const explorationCount = data.memory?.explorationCount ?? 0;
+      const explorationCycleCount = data.memory?.explorationCycleCount ?? 0;
       const lastExpEl = document.getElementById('lastExploration');
+      const explorationCountEl = document.getElementById('explorationCount');
+      const explorationCycleCountEl = document.getElementById('explorationCycleCount');
       const recentTilesEl = document.getElementById('recentTiles');
       if (lastExpEl) lastExpEl.textContent = lastExp ? (lastExp.coord ? `${lastExp.coord} @ ${new Date(lastExp.timestamp || lastExp.time || Date.now()).toLocaleTimeString()}` : JSON.stringify(lastExp)) : '—';
+      if (explorationCountEl) explorationCountEl.textContent = explorationCount.toString();
+      if (explorationCycleCountEl) explorationCycleCountEl.textContent = explorationCycleCount.toString();
       if (recentTilesEl) {
         recentTilesEl.innerHTML = '';
         (recent.slice(0,8)).forEach((tile, index) => {

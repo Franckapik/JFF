@@ -282,43 +282,60 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
     tiles?: TileMap
   ): Tile | null => {
     try {
+      // Vérifie la validité des paramètres
       if (!shipPosition || range <= 0) {
         return null;
       }
+      // Récupère la map des tuiles
       const tilesMap = tiles || get().tiles;
       if (!tilesMap || Object.keys(tilesMap).length === 0) {
         return null;
       }
+      // Trouve la tuile sur laquelle se trouve le vaisseau
       const currentTile = get().findTileAtPosition(shipPosition, tilesMap);
       if (!currentTile) {
         return null;
       }
+      // Liste des tuiles candidates à retourner
       const candidateTiles: Tile[] = [];
+      // visited : Set des coordonnées déjà explorées par l'algorithme BFS (pour éviter les boucles)
       const visited = new Set<GridCoordinate>();
+      // queue : file FIFO pour le parcours BFS, chaque entrée contient la coordonnée et la distance depuis la tuile de départ
       const queue: { coord: GridCoordinate; distance: number }[] = [
         { coord: currentTile.position.coord, distance: 0 }
       ];
+      // Parcours BFS : explore toutes les tuiles accessibles dans le rayon
       while (queue.length > 0) {
+        // Récupère la prochaine tuile à explorer et sa distance depuis le départ
         const { coord, distance } = queue.shift()!;
+        // Si la distance dépasse le rayon demandé, on ignore cette tuile
         if (distance > range) continue;
+        // Si la tuile a déjà été visitée, on l'ignore
         if (visited.has(coord)) continue;
+        // Marque la tuile comme visitée
         visited.add(coord);
+        // Récupère la tuile courante
         const tile = tilesMap[coord];
         if (!tile) continue;
+        // Si la tuile est walkable, non collectée, et différente de la tuile de départ, on l'ajoute aux candidates
         if (distance > 0 && tile.walkable && !tile.collected) {
           candidateTiles.push(tile);
         }
+        // Si la distance est encore dans le rayon, on ajoute les voisins à la file pour exploration
         if (distance < range && tile.neighbors) {
           for (const neighborCoord of tile.neighbors) {
+            // On n'ajoute que les voisins non visités
             if (!visited.has(neighborCoord)) {
               queue.push({ coord: neighborCoord, distance: distance + 1 });
             }
           }
         }
       }
+      // Si aucune tuile candidate trouvée, retourne null
       if (candidateTiles.length === 0) {
         return null;
       }
+      // Sélectionne une tuile aléatoire parmi les candidates
       const randomTile = candidateTiles[Math.floor(Math.random() * candidateTiles.length)];
       return randomTile;
     } catch (_error) {
