@@ -31,7 +31,17 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
     return {};
   }
   const range = context.config?.exploringRadius ?? 2;
-  const targetDroneTile = tileStore.tileInRadius(shipPosition, range);
+  let targetDroneTile = tileStore.tileInRadius(shipPosition, range);
+  if (targetDroneTile) {
+    // Fixe la hauteur Y à 0.5 pour la position cible
+    targetDroneTile = {
+      ...targetDroneTile,
+      position: {
+        ...targetDroneTile.position,
+        y: 0.5,
+      }
+    };
+  }
 
   if (!targetDroneTile) {
     fsmLogger.info(`[${context.entityId}] assignDroneDeployingContext: No valid target tile found`);
@@ -52,7 +62,7 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
       ...context.droneFleet,
       currentMission: {
         type: 'explore' as const,
-        target: context.vehicle.basePosition.coord,
+        target: context.vehicle?.basePosition?.coord || '0,0',
         drones: [droneType]
       },
       missionStartTime: Date.now(),
@@ -118,8 +128,12 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
   }
   // Obtenir la tuile de base comme cible de retour
   const basePosition = context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0, coord: '0,0' };
+  // Fixe la hauteur Y à 0.5 pour la position cible de retour
   const baseTile = {
-    position: basePosition,
+    position: {
+      ...basePosition,
+      y: 0.2,
+    },
     coord: basePosition.coord ?? '0,0',
     type: 'depart',
     biome: 'station',

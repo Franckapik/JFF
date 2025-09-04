@@ -193,13 +193,19 @@
     </div>
     
     <div class="card">
-      <h3>📍 Vehicle Position</h3>
+      <h3>📍 Position actuelle</h3>
       <div class="position-value" id="vehiclePosition">—</div>
+      <div style="font-size:12px; color:#6b7280; margin-top:6px;">
+        Coord: <span id="vehiclePositionCoord">—</span>
+      </div>
     </div>
     
     <div class="card">
-      <h3>🏠 Base Position</h3>
+      <h3>🏠 Position d'origine</h3>
       <div class="position-value" id="basePosition">—</div>
+      <div style="font-size:12px; color:#6b7280; margin-top:6px;">
+        Coord: <span id="basePositionCoord">—</span>
+      </div>
     </div>
     
     <div class="card">
@@ -249,6 +255,15 @@
   </div>
 
   <script>
+    // Copie de la fonction worldToGrid du store
+    function worldToGrid(position, spacing) {
+      // spacing doit être identique à celui du store
+      const s = typeof spacing === 'number' ? spacing : -0.2; // valeur par défaut du slice
+      if (!position || typeof position.x !== 'number' || typeof position.z !== 'number') return '[Position invalide]';
+      const x = Math.round(position.x / (1 + s));
+      const z = Math.round(position.z / (1 + s));
+      return `${x},${z}`;
+    }
     const CHANNEL_NAME = 'xstate-machine-channel';
     let channel = null;
     let updateCount = 0;
@@ -378,8 +393,34 @@
     function updateContextualData(context) {
       const data = extractContextData(context);
       
+      // Note architecturale : 
+      // - basePosition = position d'origine fixée à l'initialisation (avec coord stocké)
+      // - vehiclePosition = position actuelle mise à jour dynamiquement (coord calculé)
+      // Cette différence est intentionnelle : basePosition sert de référence/fallback
+      //
+      // IMPORTANT : La basePosition change à chaque redémarrage de session FSM !
+      
       elements.vehiclePosition.textContent = formatPosition(data.vehiclePosition);
+        // Affiche la coordonnée du véhicule : préfère coord du contexte, sinon calcul local
+        const vehiclePositionCoordEl = document.getElementById('vehiclePositionCoord');
+        const spacing = typeof context.spacing === 'number' ? context.spacing : -0.2;
+        if (!data.vehiclePosition || typeof data.vehiclePosition !== 'object' || typeof data.vehiclePosition.x !== 'number' || typeof data.vehiclePosition.z !== 'number') {
+          vehiclePositionCoordEl.textContent = '[Position véhicule invalide]';
+        } else if (data.vehiclePosition.coord && typeof data.vehiclePosition.coord === 'string') {
+          vehiclePositionCoordEl.textContent = data.vehiclePosition.coord + ' (contexte)';
+        } else {
+          vehiclePositionCoordEl.textContent = worldToGrid(data.vehiclePosition, spacing) + ' (calcul local)';
+        }
       elements.basePosition.textContent = formatPosition(data.basePosition);
+        // Affiche la coordonnée de la base depuis context.basePosition.coord si présent, sinon fallback sur worldToGrid
+        const basePositionCoordEl = document.getElementById('basePositionCoord');
+        if (data.basePosition && typeof data.basePosition === 'object' && typeof data.basePosition.coord === 'string' && data.basePosition.coord.length > 0) {
+          basePositionCoordEl.textContent = data.basePosition.coord + ' (session courante)';
+        } else if (data.basePosition && typeof data.basePosition.x === 'number' && typeof data.basePosition.z === 'number') {
+          basePositionCoordEl.textContent = worldToGrid(data.basePosition, spacing) + ' (calcul local)';
+        } else {
+          basePositionCoordEl.textContent = '[Position base invalide]';
+        }
       elements.fuelLevel.textContent = data.fuel !== undefined ? `${data.fuel}%` : '—';
       elements.resourceCount.textContent = data.resources !== undefined ? data.resources.toString() : '—';
       elements.currentMode.textContent = data.mode || '—';

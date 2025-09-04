@@ -34,8 +34,8 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
     vehicle: {
       id: `${entityId}-ship`,
       type: "main-ship",
-      position: { x: 0, y: 0.5, z: 0 },
-      basePosition: { x: 0, y: 0.5, z: 0, coord: "0,0" },
+      position: null,
+      basePosition: null,
       isMoving: false,
       progress: 0,
       resources: { food: 0, debris: 0, special: 0, total: 0 },

@@ -1,6 +1,7 @@
 // Types centralisés pour le logger et la config
 
 export type LogType =
+  | "ALL"
   | "INFO"
   | "STATE"
   | "ACTION"

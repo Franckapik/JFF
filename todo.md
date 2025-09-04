@@ -1,5 +1,8 @@
 --TODO
-La logique est fortement cassée. Je n'y arrive pas !!
+L'initialisation se fait dpeuis la scene avec un guard de controle avant de passer à evaluating.
+
+
+
 Il faut absolument que l'initialisation du vaisseau se fasse normalement. La position de fleet doit etre envoyée jusqu'au handler, puis que ce dernier change l'état du vaisseau.
 
 
@@ -33,3 +36,19 @@ Il reste donc la génération des fichiers à commencer par exploring pour que l
 
 Le cycle de mise a jour des etats du drone via les assign context fonctionne. 
 Il faut desormais remplir les actions d'effets dans scanning et returning pour que les events soient bien envoyés. Ces actions doivent etre dans explorations/actions.effects.ts comme pour evaluation/actions.effects.ts !
+
+
+
+-----MEMOIRE-------
+
+Le vaisseau apparaît au bon endroit lorsque tu utilises { x: 0, y: 0, z: 0 } pour initialPosition car :
+
+Le <group> parent positionne le Fleet à la position de la tuile de départ :
+Dans Fleet, si tu utilises initialPosition={x: 0, y: 0, z: 0}, le mesh du vaisseau est placé à l'origine locale du <group>, donc il hérite directement de la position du parent (la tuile de départ).
+Si tu mets une valeur différente dans initialPosition, tu ajoutes un offset relatif à la position du <group>, ce qui décale le mesh.
+En résumé :
+La position réelle du vaisseau dans la scène = position du <group> + position locale du Fleet.
+Mettre { x: 0, y: 0, z: 0 } garantit qu’il n’y a pas de décalage supplémentaire : le vaisseau est exactement sur la tuile de départ.
+
+Si tu observes un offset avec d’autres valeurs, c’est parce que tu combines la position du parent et celle du Fleet, ce qui crée un doublon de translation.
+Pour éviter tout décalage, garde initialPosition à zéro et utilise uniquement la position du <group> pour placer le vaisseau sur la tuile.

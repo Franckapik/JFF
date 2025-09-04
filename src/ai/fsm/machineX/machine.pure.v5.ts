@@ -28,54 +28,24 @@ import { setup } from 'xstate';
 import type { FSMContext } from '../../../types/fsm.d.ts';
 
 // Import depuis l'architecture domain-based
-import {
-  __maintenanceEffectsPlaceholder,
-  __maintenanceGuardsPlaceholder,
-  assignDroneDeployingContext,
-  assignDroneDockedContext,
-  assignDroneReturningContext,
-  assignDroneScanningContext,
-  // Evaluation domain (COMPLET)
-  assignEvaluationContext,
-  assignShipCollectingContext,
-  assignShipLoadResourcesContext,
-  assignShipMovingToTileContext,
-  assignShipReachedBaseContext,
-  assignShipReturningContext,
-  // Exploration domain (COMPLET - actions effects migrées)
-  onCollectingEntry,
-  onCollectingExit,
-  onDroneDeployingEntry,
-  onDroneDeployingExit,
-  onDroneReturningEntry,
-  onDroneReturningExit,
-  onDroneScanningEntry,
-  onDroneScanningExit,
-  onEvaluatingEntry,
-  onEvaluatingExit,
-  onExploringEntry,
-  onExploringExit,
-  onShipCollectingEntry,
-  onShipCollectingExit,
-  onShipMovingToTileEntry,
-  onShipMovingToTileExit,
-  onShipReturningEntry,
-  onShipReturningExit,
-  // Global domain (COMPLET - actions transversales)
-  processDroneInitRequest,
-  processShipInitRequest,
-  shouldCollect,
-  shouldExplore,
-  updateDronePosition,
-  updateShipPosition
-} from './domains';
+// Imports par domaine pour éviter les erreurs de syntaxe
+import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection';
+import { assignEvaluationContext, onEvaluatingEntry, onEvaluatingExit, shouldExplore } from './domains/evaluation';
+import { shouldCollect } from './domains/evaluation/guards';
+import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration';
+import { updateDronePosition, updateShipPosition } from './domains/global';
+import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign';
+import { onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects';
+import { __maintenanceEffectsPlaceholder, __maintenanceGuardsPlaceholder } from './domains/maintenance';
+
+
+// Import des guards d'initializing
 
 // Import des guards de collection
-import {
-  canCollectTile,
-  hasMoreCollectibleTiles,
-  isVehicleOverloaded
-} from './domains/collection/guards';
+import { canCollectTile, hasMoreCollectibleTiles, isVehicleOverloaded } from './domains/collection/guards';
+// Import des guards d'initializing
+import * as initializingGuards from './domains/initializing/guards';
+import { areAllEntitiesInitialized } from './domains/initializing/guards';
 
 
 import { createMachineContext } from './context/initialContext';
@@ -132,22 +102,31 @@ export const machineXV5Pure = setup({
     onShipReturningEntry,
     onShipReturningExit,
     
-    // Actions temporaires du domaine MAINTENANCE (à migrer)
-    onMaintainingEntry: __maintenanceEffectsPlaceholder,
-    onMaintainingExit: __maintenanceEffectsPlaceholder,
-    onShipOnBaseEntry: __maintenanceEffectsPlaceholder,
-    onShipOnBaseExit: __maintenanceEffectsPlaceholder,
-    onShipDepositingEntry: __maintenanceEffectsPlaceholder,
-    onShipDepositingExit: __maintenanceEffectsPlaceholder,
-    onShipRepairingEntry: __maintenanceEffectsPlaceholder,
-    onShipRepairingExit: __maintenanceEffectsPlaceholder,
-    onShipRefuelingEntry: __maintenanceEffectsPlaceholder,
-    onShipRefuelingExit: __maintenanceEffectsPlaceholder,
+  // Actions temporaires du domaine MAINTENANCE (à migrer)
+  onMaintainingEntry: __maintenanceEffectsPlaceholder,
+  onMaintainingExit: __maintenanceEffectsPlaceholder,
+  onShipOnBaseEntry: __maintenanceEffectsPlaceholder,
+  onShipOnBaseExit: __maintenanceEffectsPlaceholder,
+  onShipDepositingEntry: __maintenanceEffectsPlaceholder,
+  onShipDepositingExit: __maintenanceEffectsPlaceholder,
+  onShipRepairingEntry: __maintenanceEffectsPlaceholder,
+  onShipRepairingExit: __maintenanceEffectsPlaceholder,
+  onShipRefuelingEntry: __maintenanceEffectsPlaceholder,
+  onShipRefuelingExit: __maintenanceEffectsPlaceholder,
+
+  // Actions d'effets pour initializing
+  onInitializingEntry,
+  onInitializingExit,
   },
   guards: {
-  // Guards du domaine EVALUATION (migré)
-  shouldExplore,
-    
+    // Guards d'initializing
+  isVehiclePositionInitialized: (args) => initializingGuards.isVehiclePositionInitialized(args.context),
+  isDronePositionInitialized: (args) => initializingGuards.isDronePositionInitialized(args.context),
+  isBasePositionInitialized: (args) => initializingGuards.isBasePositionInitialized(args.context),
+  areAllEntitiesInitialized: (args) => areAllEntitiesInitialized(args.context),
+
+    // Guards du domaine EVALUATION (migré)
+    shouldExplore,
     // Guards temporaires des domaines (à migrer)
     shouldCollect,
     shouldMaintain: __maintenanceGuardsPlaceholder,
@@ -161,7 +140,7 @@ export const machineXV5Pure = setup({
 }).createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5QFsCGBjAFgSwHZgA0A1AVgAUBXAJzAGIBlACQEkyB9MgeXuYBVnOAOTYBVMgBEAgrwCiAbQAMAXUSgADgHtY2AC7YNuVSAAeiAEwkAnJYB0ADgAsAZgckSARnd2STu04A0IACeiO5mAL7hgWhYeISklDQMLOzMgnzMkgAyzABaMmwASjIAiiIy9LyKKkggmtp6BkamCAC0DnY2ln52dpbuTpYOCgDsIySBIQjuIw4jNhZmAGwrI2EOSyOR0Rg4+MTk1HTihUIFXDz8QqIS0vLKRvW6+oa1LRaWCl2uoxuO4+4JsFzCRhjYFID+iQVmYFC4nNsQDE9vFDkkTmc2GkMtk8gVimUKlUHrUno1XqB3iQ-DZqdCzO4lhYNoDJuYHBzwUyRgp6XZAVsokjdnEDokwDYwAA3VAAGwoqD0uCgtEEMhk4jYMgIZCynEKaQA4tVHlpnk03oh+TZ3MMmZYlgphkMRmyEGYGe4bCNrG5fJYrEt3IjkaKEkdJTL5Yq8Cq1Rq2ABhThZLIyRP8QTGknqM3k5qIMZuxlgpZ2BQKZYOBk8pxLEMi-bhmiRuUKpVx9WagCykjSskEkkEifuNVzDReBfdvNsfV5VgGQzmdmLg1sXgrlg9lacJA9DdiTbRErAxjUso0VFjNggVAMYDYEDA540QVjtAxaqKMkkicYFTYfg0xNUk80nS0ECWfobGcWY7B9OYSAULc3Q9EYnHsOtASWXwRiWakDxRMUI1PF8r2VG873wNhYHQVBcFwd9PwKRhJHoNh6ETIc1XEEDx3NCkTFCBkvgDJx3GsflYTwoEpjQjC-CDaFcPwuxCLDY9JTPC9yKgSj7zYGgdGoRjlQ-U4v2KX9-3YgAhNjR1NCcLUpRBBgcWknCcOFLF8OZfOWYsXXBXoSB5Mxem8+shVDI9xRsdANFlWUwHQDtaBkbsZEKQ0ZGHABNDjeE4Mg+LqMCXKE6Y7Bw2kmQcRlkPw5diwGL4avGMKfTMEZvHUuKI0S5LUvSvUAHU2AAMXKLI2DGyRCnSLMyrJcDXOq5w6rMBrHQdUFeta6061mLcIQZOtop2Q9UXioaUrS69YBwNQ2GQDQpVjNgdA0L7sBS5JWG-ayAKAxzQOcwSWjXG14I6AZXDwtZWt3GwXAarxbWhANgxixsbsGpL7o7GwnuwF63o+5Uvp+vR-qYQGrL-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-Rc4EXM0AA */
   id: 'machineXV5Pure',
-  initial: 'evaluating',
+  initial: 'initializing',
   
   
   context: ({ input }) => {
@@ -173,27 +152,41 @@ export const machineXV5Pure = setup({
     return createMachineContext('bot-0', 'auto');
   },
 
-  // Événements globaux (disponibles dans tous les états)
+
+  // Événements globaux (disponibles dans tous les états sauf initialisation)
   on: {
     SHIP_POSITION_UPDATE: {
       actions: 'updateShipPosition'
     },
-    SHIP_INITIALIZE_REQUEST: {
-      actions: 'processShipInitRequest',
-      target: '.evaluating' // Transition vers evaluating après l'initialisation
-    },
     DRONE_POSITION_UPDATE: {
       actions: 'updateDronePosition'
-    },
-    DRONE_INITIALIZE_REQUEST: {
-      actions: 'processDroneInitRequest'
     }
   },
 
   states: {
     /**
-     * État EVALUATING - Évalue les conditions pour choisir la prochaine action
+     * État INITIALIZING - Initialise le vaisseau et le drone
      */
+    initializing: {
+      entry: 'onInitializingEntry',
+      exit: 'onInitializingExit',
+      on: {
+        SHIP_INITIALIZE_REQUEST: {
+          actions: 'processShipInitRequest'
+        },
+        DRONE_INITIALIZE_REQUEST: {
+          actions: 'processDroneInitRequest'
+        },
+        BASE_POSITION_INITIALIZED: {}
+      },
+      always: {
+        target: 'evaluating',
+        guard: 'areAllEntitiesInitialized'
+      }
+    },
+  /**
+   * État EVALUATING - Évalue les conditions pour choisir la prochaine action
+   */
     evaluating: {
       entry: 'onEvaluatingEntry',
       exit: 'onEvaluatingExit',

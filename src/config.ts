@@ -22,12 +22,7 @@ declare global {
 
 export const config: AppConfig = window.appConfig || {
   enabledLogTypes: [
-"DEBUG",
-"INFO",
-"WARN",
-"ERROR",
-"EVENT"
-
+    "DEBUG"
   ] as LogType[],
   showHelpers: {
     drone: true,

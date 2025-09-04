@@ -21,10 +21,8 @@ import fsmLogger from '../logger/fsmLogger.ts';
 
 import { applyDroneVisualAnimations } from './utils/droneAnimationUtils';
 import {
-  calculateTargetPosition,
-  calculateWorldPosition,
-  getDroneSpeed,
-  shouldAnimateDrone
+    getDroneSpeed,
+    shouldAnimateDrone
 } from './utils/dronePositionUtils';
 
 export const useDroneAnimation = ({
@@ -44,11 +42,7 @@ export const useDroneAnimation = ({
   // ============================================================================
   
   const droneFromContext = context?.droneFleet?.drones?.[droneType];
-  const initialPosition = droneFromContext?.position || { x: 0, y: 0, z: 0 };
-  const shipPosition = context?.vehicle?.position || { x: 0, y: 0, z: 0 };
-  const actualFleetPosition = (initialPosition?.x === 0 && initialPosition?.y === 0 && initialPosition?.z === 0) 
-    ? shipPosition 
-    : (initialPosition || shipPosition);
+  const initialPosition = { x: 0, y: 0, z: 0 }; // Position relative au group parent
 
   // ============================================================================
   // CONTRÔLE D'ACTIVATION DE L'ANIMATION
@@ -109,7 +103,7 @@ export const useDroneAnimation = ({
   
   useFrame((state, delta) => {
     // Sortie précoce si l'animation n'est pas nécessaire
-    if (!droneRef.current || !actualFleetPosition || !context || !animationEnabled.current) {
+    if (!droneRef.current || !context || !animationEnabled.current) {
       return;
     }
 
@@ -117,8 +111,42 @@ export const useDroneAnimation = ({
     if (!drone) return;
 
     const droneState: DroneVisualState = drone.visualState || 'docked';
-    const formationOffset = context.droneFleet?.formationOffsets?.[droneType];
-    const targetPosition = calculateTargetPosition(drone, droneState, actualFleetPosition, formationOffset);
+    const formationOffset = context.droneFleet?.formationOffsets?.[droneType] || { x: 0.5, y: 0, z: 0.5 };
+    const parentPosition = droneRef.current.parent?.position || { x: 0, y: 0, z: 0 };
+
+    // ============================================================================
+    // CALCUL DE LA POSITION CIBLE RELATIVE AU PARENT GROUP
+    // ============================================================================
+
+    let targetRelativePosition = { x: 0, y: 0, z: 0 };
+
+    switch (droneState) {
+      case 'docked':
+        // Position de formation relative au group parent
+        targetRelativePosition = formationOffset;
+        break;
+        
+      case 'deploying':
+      case 'scanning':
+        // Aller vers la tuile cible (position absolue - position parent = position relative)
+        if (drone.targetDroneTile && typeof drone.targetDroneTile === 'object' && 'position' in drone.targetDroneTile) {
+          const targetPos = drone.targetDroneTile.position;
+          targetRelativePosition = {
+            x: targetPos.x - parentPosition.x,
+            y: targetPos.y - parentPosition.y,
+            z: targetPos.z - parentPosition.z,
+          };
+        }
+        break;
+        
+      case 'returning':
+        // Retour vers la position du vaisseau (center du group parent)
+        targetRelativePosition = { x: 0, y: 0, z: 0 };
+        break;
+        
+      default:
+        targetRelativePosition = formationOffset;
+    }
 
     // ============================================================================
     // INTERPOLATION DE POSITION
@@ -128,11 +156,11 @@ export const useDroneAnimation = ({
       const speed = getDroneSpeed(droneState);
       const lerpFactor = Math.min(1.0, delta * speed);
       
-      currentLocalPosition.current.x = THREE.MathUtils.lerp(currentLocalPosition.current.x, targetPosition.x, lerpFactor);
-      currentLocalPosition.current.y = THREE.MathUtils.lerp(currentLocalPosition.current.y, targetPosition.y, lerpFactor);
-      currentLocalPosition.current.z = THREE.MathUtils.lerp(currentLocalPosition.current.z, targetPosition.z, lerpFactor);
+      currentLocalPosition.current.x = THREE.MathUtils.lerp(currentLocalPosition.current.x, targetRelativePosition.x, lerpFactor);
+      currentLocalPosition.current.y = THREE.MathUtils.lerp(currentLocalPosition.current.y, targetRelativePosition.y, lerpFactor);
+      currentLocalPosition.current.z = THREE.MathUtils.lerp(currentLocalPosition.current.z, targetRelativePosition.z, lerpFactor);
     } else {
-      currentLocalPosition.current = { ...targetPosition };
+      currentLocalPosition.current = { ...targetRelativePosition };
     }
 
     // ============================================================================
@@ -161,7 +189,12 @@ export const useDroneAnimation = ({
     // ENVOI DE LA POSITION AU TRACKER
     // ============================================================================
     
-    const worldPosition = calculateWorldPosition(currentLocalPosition.current, actualFleetPosition);
+    // Calculer la position absolue pour le tracker FSM
+    const worldPosition = {
+      x: parentPosition.x + currentLocalPosition.current.x,
+      y: parentPosition.y + currentLocalPosition.current.y,
+      z: parentPosition.z + currentLocalPosition.current.z,
+    };
     updateVisualPosition(worldPosition);
 
     // Désactiver l'animation si le drone a atteint sa cible et n'est plus en mouvement

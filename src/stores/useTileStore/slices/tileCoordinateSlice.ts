@@ -87,7 +87,7 @@ const createTileCoordinateSlice = (_set: unknown, get: () => any): TileCoordinat
    * @returns Position mondiale {x, y, z}
    */
   gridToWorld: (coord: GridCoordinate): WorldPosition => {
-    const spacing = get().spacing || 0.1;
+    const spacing = get().spacing ?? -0.2; // Cohérent avec tileBaseSlice
     
     // Parsing de la GridCoordinate "x,z"
     const parts = coord.split(',').map(Number);
@@ -114,7 +114,7 @@ const createTileCoordinateSlice = (_set: unknown, get: () => any): TileCoordinat
    * @returns Coordonnée de grille "x,z"
    */
   worldToGrid: (position: WorldPosition): GridCoordinate => {
-    const spacing = get().spacing || 0.1;
+    const spacing = get().spacing ?? -0.2; // Cohérent avec tileBaseSlice
     
     const x = Math.round(position.x / (1 + spacing));
     const z = Math.round(position.z / (1 + spacing));

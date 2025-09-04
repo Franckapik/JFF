@@ -173,9 +173,9 @@ const Scene: React.FC = () => {
                 <Fleet
                   botId={tile.assignedToBot as BotId}
                   initialPosition={{
-                    x: tile.position.x, // ✅ Vraies coordonnées mondiales  
-                    y: 0.5,
-                    z: tile.position.z,
+                    x: 0, // Position relative au group parent
+                    y: 0,
+                    z: 0,
                   }}
                   tilePosition={{
                     x: tile.position.x,

@@ -179,7 +179,11 @@ const log = (type: LogType, message: string, data: unknown = null, playerId: str
   const logEntry: LogEntry = { type, message: enhancedMessage, timestamp, playerId, metadata: data, filtered: false };
   if (config.enableBuffering) addToBuffer(logEntry);
   if (config.enableConsole) {
-    if (config.enabledLogTypes && !config.enabledLogTypes.includes(type)) {
+    if (
+      config.enabledLogTypes &&
+      !config.enabledLogTypes.includes('ALL') &&
+      !config.enabledLogTypes.includes(type)
+    ) {
       return logEntry;
     }
     
