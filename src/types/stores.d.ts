@@ -72,10 +72,10 @@ export interface TilePathSliceActions {
     dronePosition: WorldPosition,
     droneState: DroneVisualState,
     targetPosition?: Tile | null,
-    shipPosition?: WorldPosition
+    shipPosition?: import('./index').WorldGridPosition
   ) => number;
   tileInRadius: (
-    shipPosition: import('./index').WorldPosition,
+    shipPosition: import('./index').WorldGridPosition,
     range: number,
     tiles?: import('./index').TileMap
   ) => import('./index').Tile | null;

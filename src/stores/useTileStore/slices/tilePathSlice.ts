@@ -26,6 +26,7 @@ import type {
   Path,
   Tile,
   TileMap,
+  WorldGridPosition,
   WorldPosition
 } from '../../../types/index.ts';
 import type { TilePathSliceActions } from '../../../types/stores.d.ts';
@@ -244,7 +245,7 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
     dronePosition: WorldPosition,
     droneState: DroneVisualState,
     targetDroneTile?: Tile | null,
-    shipPosition?: WorldPosition
+    shipPosition?: WorldGridPosition
   ): number => {
     if (!dronePosition) return Infinity;
 
@@ -277,7 +278,7 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
    * Retourne directement la tuile (Tile) au lieu de la position
    */
   tileInRadius: (
-    shipPosition: WorldPosition,
+    shipPosition: WorldGridPosition,
     range: number,
     tiles?: TileMap
   ): Tile | null => {
@@ -291,8 +292,14 @@ const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceAction
       if (!tilesMap || Object.keys(tilesMap).length === 0) {
         return null;
       }
-      // Trouve la tuile sur laquelle se trouve le vaisseau
-      const currentTile = get().findTileAtPosition(shipPosition, tilesMap);
+      // Si shipPosition.coord existe et correspond à une tuile, on l'utilise directement
+      let currentTile: Tile | null = null;
+      if (shipPosition.coord && tilesMap[shipPosition.coord]) {
+        currentTile = tilesMap[shipPosition.coord];
+      } else {
+        // Sinon, fallback sur la recherche par position
+        currentTile = get().findTileAtPosition(shipPosition, tilesMap);
+      }
       if (!currentTile) {
         return null;
       }
