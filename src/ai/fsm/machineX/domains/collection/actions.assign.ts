@@ -176,7 +176,7 @@ export const assignShipReturningContext = createAssignAction(({ context, event }
 
 /**
  * Action assign pour gérer l'arrivée du vaisseau à la base après collecte
- * Dépose les ressources et prépare le retour à l'évaluation
+ * Prépare le vaisseau pour la maintenance (le transfert de ressources se fait en maintenance)
  */
 export const assignShipReachedBaseContext = createAssignAction(({ context, event }) => {
   fsmLogger.action(`🔄 [${context?.entityId || 'unknown'}] assignShipReachedBaseContext called with:`, {
@@ -191,23 +191,9 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
     return {};
   }
   
-  // Transférer les ressources du véhicule vers le score
-  const vehicleResources = context.vehicle.resources || { food: 0, debris: 0, special: 0, total: 0 };
-  const currentScore = context.score?.resources || { food: 0, debris: 0, special: 0, total: 0 };
-  
-  const newScore = {
-    food: (currentScore.food || 0) + (vehicleResources.food || 0),
-    debris: (currentScore.debris || 0) + (vehicleResources.debris || 0), 
-    special: (currentScore.special || 0) + (vehicleResources.special || 0),
-    total: 0 // Sera calculé ci-dessous
-  };
-  newScore.total = newScore.food + newScore.debris + newScore.special;
-
-  fsmLogger.action(`🏠 [${context.entityId}] Ship reached base - depositing resources:`, {
-    resourcesDeposited: vehicleResources,
-    scoreBefore: currentScore,
-    scoreAfter: newScore,
-    totalGained: vehicleResources.total || 0
+  fsmLogger.action(`🏠 [${context.entityId}] Ship reached base - ready for maintenance`, {
+    vehicleResources: context.vehicle.resources,
+    vehicleState: context.vehicle.visualState
   });
   
   return {
@@ -217,15 +203,10 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
       progress: 100, // Arrivé à la base
       currentSpeed: 0,
       targetVehicleTile: null, // Plus de cible active
-      resources: { food: 0, debris: 0, special: 0, total: 0 }, // Ressources déposées
       visualState: 'docked' as VehicleVisualState
     },
-    score: {
-      ...context.score,
-      resources: newScore
-    },
     lastAction: 'shipReachedBase_success',
-    fsmState: 'evaluating', // 🟢 Retour à l'évaluation après dépose
+    fsmState: 'maintaining_ship_on_base', // 🟢 Passage direct à maintenance pour dépôt
   };
 });
 
