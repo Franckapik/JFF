@@ -38,22 +38,17 @@ export const createShipCollectingHandler = ({ botId, shipType, send }: ShipHandl
           shipType
         });
         
-        // Simulation de la collecte de ressources (comme dans les actions.effects.ts)
+        // Collecte de ressources réelles depuis la tuile cible
         collectionTimer = setTimeout(() => {
           fsmLogger.action(`📦 [${botId}] Collection completed, sending SHIP_LOAD_RESOURCES`);
           
-          // Simuler l'ajout de ressources au vaisseau (seront traitées par l'action assignShipReturningContext)
-          const resourcesCollected = {
-            food: Math.floor(Math.random() * 3) + 1, // 1-3 food
-            debris: Math.floor(Math.random() * 2) + 1, // 1-2 debris  
-            special: Math.random() > 0.7 ? 1 : 0 // 30% chance de special
-          };
+          // Les ressources seront calculées depuis la tuile cible dans assignShipLoadResourcesContext
+          // L'événement déclenche juste le processus de transfert
           
           send({ 
             type: 'SHIP_LOAD_RESOURCES', 
             botId, 
-            shipType,
-            resourcesCollected // Include collected resources in event
+            shipType
           });
           collectionStarted = false; // Reset pour la prochaine collecte
           collectionTimer = null;

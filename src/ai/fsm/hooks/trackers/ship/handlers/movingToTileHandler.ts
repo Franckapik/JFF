@@ -6,7 +6,9 @@
 
 import fsmLogger from '../../../../../../logger/fsmLogger.ts';
 import type { WorldPosition } from '../../../../../../types/coordinates.d.ts';
-import { TILE_DETECTION_THRESHOLD } from '../../../../machineX/config/constants';
+
+// FIX: utiliser le même seuil que le collectingRadius FSM (3) et useShipTracker
+const DEBUG_TILE_DETECTION_THRESHOLD = 3;
 
 interface ShipHandlerParams {
   botId: string;
@@ -21,14 +23,14 @@ interface ShipHandlerParams {
 export const createShipMovingToTileHandler = ({ botId, shipType, send }: ShipHandlerParams) => {
   return {
     process(distance: number, position: WorldPosition): boolean {
-      // Utilise le même seuil de détection que les drones
-      const isCloseEnough = distance < TILE_DETECTION_THRESHOLD;
+      // Utilise le seuil de détection temporaire pour debug
+      const isCloseEnough = distance < DEBUG_TILE_DETECTION_THRESHOLD;
       
       if (isCloseEnough) {
-        fsmLogger.mouvement(`🚢 [${botId}] Ship reached target tile (threshold: ${TILE_DETECTION_THRESHOLD})`, { 
+        fsmLogger.mouvement(`🚢 [${botId}] Ship reached target tile (threshold: ${DEBUG_TILE_DETECTION_THRESHOLD})`, { 
           position, 
           distance, 
-          TILE_DETECTION_THRESHOLD,
+          threshold: DEBUG_TILE_DETECTION_THRESHOLD,
           shipType
         });
         

@@ -30,6 +30,7 @@ export const useShipAnimation = ({ context, updateVisualPosition, shipType = "ma
   const vehicle = context?.vehicle;
   const shipVisualState: VehicleVisualState = vehicle?.visualState || "uninitialized";
   const currentWorldPosition = useRef<WorldPosition>(initialPosition ?? { x: 0, y: 0.5, z: 0 });
+  const lastSyncedPosition = useRef<WorldPosition | null>(null);
   const targetVehicleTile = vehicle?.targetVehicleTile ?? null;
 
   // ============================================================================
@@ -69,6 +70,14 @@ export const useShipAnimation = ({ context, updateVisualPosition, shipType = "ma
       let target: WorldPosition = vehicle.position;
       if (targetVehicleTile && typeof targetVehicleTile === 'object' && 'position' in targetVehicleTile) {
         target = targetVehicleTile.position;
+        
+        // Log pour debug de la target
+        fsmLogger.mouvement(`🎯 [${shipType}] Using targetVehicleTile position`, {
+          shipVisualState,
+          vehiclePosition: vehicle.position,
+          targetPosition: target,
+          targetVehicleTile
+        });
       }
       
       // Convertir la position absolue en position relative au parent group
@@ -77,10 +86,10 @@ export const useShipAnimation = ({ context, updateVisualPosition, shipType = "ma
         y: target.y - parentPosition.y,
         z: target.z - parentPosition.z,
       };
-      
-      if (shipVisualState === "moving" || shipVisualState === "collecting") {
+
+      if (shipVisualState === "moving_to_tile" || shipVisualState === "collecting" || shipVisualState === "returning") {
         // Animation interpolée pour les états de mouvement (en coordonnées relatives)
-        const lerpFactor = Math.min(1.0, delta);
+        const lerpFactor = Math.min(1.0, delta * 2); // Augmenter le facteur pour un mouvement plus fluide
         const currentRelative = {
           x: shipRef.current.position.x,
           y: shipRef.current.position.y,
@@ -95,12 +104,40 @@ export const useShipAnimation = ({ context, updateVisualPosition, shipType = "ma
         
         shipRef.current.position.set(newRelative.x, newRelative.y, newRelative.z);
         
+        // Log pour debug
+        fsmLogger.mouvement(`🚢 [${shipType}] Ship animating to target`, {
+          shipVisualState,
+          currentRelative,
+          relativeTarget,
+          newRelative,
+          targetVehicleTile: targetVehicleTile ? "has target" : "no target"
+        });
+        
         // Mettre à jour currentWorldPosition pour la cohérence
         currentWorldPosition.current = {
           x: parentPosition.x + newRelative.x,
           y: parentPosition.y + newRelative.y,
           z: parentPosition.z + newRelative.z,
         };
+
+        // Synchronisation optimisée avec le contexte FSM
+        // Ne mettre à jour que si la position a changé significativement OU en état de mouvement critique
+        const isMovingToTile = shipVisualState === "moving_to_tile";
+        const positionChangeThreshold = isMovingToTile ? 0.05 : 0.2; // Seuil plus bas pendant le mouvement
+        const lastPos = lastSyncedPosition.current;
+        const currentPos = currentWorldPosition.current;
+        
+        if (!lastPos || 
+            Math.abs(currentPos.x - lastPos.x) > positionChangeThreshold ||
+            Math.abs(currentPos.y - lastPos.y) > positionChangeThreshold ||
+            Math.abs(currentPos.z - lastPos.z) > positionChangeThreshold) {
+          
+          lastSyncedPosition.current = { ...currentPos };
+          
+          if (updateVisualPosition) {
+            updateVisualPosition(currentPos);
+          }
+        }
       } else {
         // Position directe pour les autres états (en coordonnées relatives)
         shipRef.current.position.set(relativeTarget.x, relativeTarget.y, relativeTarget.z);

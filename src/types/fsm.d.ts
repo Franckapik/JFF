@@ -99,6 +99,7 @@ export interface ExplorationCycle {
 /** Configuration FSM (extrait de initialContext.ts) */
 export interface FSMConfig {
   exploringRadius: number;
+  collectingRadius: number;
   fuelThreshold: number;
   capacityThreshold: number;
   movementSpeed: number;

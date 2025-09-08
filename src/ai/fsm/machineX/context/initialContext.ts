@@ -39,7 +39,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
       isMoving: false,
       progress: 0,
       resources: { food: 0, debris: 0, special: 0, total: 0 },
-  targetVehicleTile: null,
+      targetVehicleTile: null,
       fuel: 100,
       damage: 0,
       totalDistance: 0,
@@ -61,7 +61,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
     },
     score: { resources: { food: 0, debris: 0, special: 0, total: 0 } },
     memory: {
-  knownTiles: [],
+      knownTiles: [],
       knownDangers: [],
       stats: {
         tilesExplored: 0,
@@ -87,7 +87,8 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
     },
     // selectedTileForCollection supprimé
     config: {
-      exploringRadius: 2, 
+      exploringRadius: 2,
+      collectingRadius: 3,
       fuelThreshold: 20,
       capacityThreshold: 80,
       movementSpeed: entityType === "auto" ? 8 : 4,

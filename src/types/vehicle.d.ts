@@ -11,7 +11,6 @@ export type VehicleId = string;
 /** États visuels du véhicule principal pour R3F et animations */
 export type VehicleVisualState = 
   | 'uninitialized'
-  | 'moving' 
   | 'moving_to_tile'
   | 'collecting' 
   | 'returning'

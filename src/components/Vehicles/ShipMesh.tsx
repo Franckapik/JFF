@@ -79,7 +79,7 @@ const ShipMesh = forwardRef<THREE.Group, ShipMeshProps>(
       (currentResources.food > 0 || currentResources.debris > 0 || currentResources.special > 0);
       
     return (
-      <group ref={meshRef || ref || shipRef}>
+      <group ref={shipRef}>
         <mesh 
           position={[0, 0, 0]} 
           castShadow

@@ -71,7 +71,6 @@ export const processShipInitRequest = createAssignAction(({ context, event }) =>
 		});
 	}
 
-		fsmLogger.debug(basePosition.coord)
 
 	return {
 		vehicle: {

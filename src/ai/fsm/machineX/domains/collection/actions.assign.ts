@@ -43,10 +43,11 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
   if (event.type === 'NEED_COLLECTING') {
   // Utiliser selectTargetTileInRadiusForDrone pour sélectionner une vraie tuile cible (targetVehicleTile)
     const tileStore = useTileStore.getState() as TileStoreType;
-    const shipPosition = context.vehicle?.position || context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0 };
+    const shipPosition = context.vehicle?.position;
     
-    // Sélectionner une tuile aléatoire dans un rayon pour la collecte
-    const targetVehicleTile = tileStore.tileInRadius(shipPosition, 3);
+  // Sélectionner une tuile aléatoire dans un rayon pour la collecte
+  const collectingRadius = context.config?.collectingRadius ?? 3;
+  const targetVehicleTile = tileStore.tileInRadius(shipPosition, collectingRadius);
     if (!targetVehicleTile) {
       fsmLogger.error(`🚢 [${context.entityId}] No target tile found for collection`);
       return {};
@@ -190,7 +191,24 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
     return {};
   }
   
-  fsmLogger.action(`🏠 [${context.entityId}] Ship reached base - depositing resources and resetting`);
+  // Transférer les ressources du véhicule vers le score
+  const vehicleResources = context.vehicle.resources || { food: 0, debris: 0, special: 0, total: 0 };
+  const currentScore = context.score?.resources || { food: 0, debris: 0, special: 0, total: 0 };
+  
+  const newScore = {
+    food: (currentScore.food || 0) + (vehicleResources.food || 0),
+    debris: (currentScore.debris || 0) + (vehicleResources.debris || 0), 
+    special: (currentScore.special || 0) + (vehicleResources.special || 0),
+    total: 0 // Sera calculé ci-dessous
+  };
+  newScore.total = newScore.food + newScore.debris + newScore.special;
+
+  fsmLogger.action(`🏠 [${context.entityId}] Ship reached base - depositing resources:`, {
+    resourcesDeposited: vehicleResources,
+    scoreBefore: currentScore,
+    scoreAfter: newScore,
+    totalGained: vehicleResources.total || 0
+  });
   
   return {
     vehicle: {
@@ -198,9 +216,13 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
       isMoving: false, // ✅ IMPORTANT: Le vaisseau s'arrête à la base
       progress: 100, // Arrivé à la base
       currentSpeed: 0,
-  targetVehicleTile: null, // Plus de cible active
+      targetVehicleTile: null, // Plus de cible active
       resources: { food: 0, debris: 0, special: 0, total: 0 }, // Ressources déposées
       visualState: 'docked' as VehicleVisualState
+    },
+    score: {
+      ...context.score,
+      resources: newScore
     },
     lastAction: 'shipReachedBase_success',
     fsmState: 'evaluating', // 🟢 Retour à l'évaluation après dépose
@@ -209,7 +231,7 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
 
 /**
  * Action assign pour traiter le chargement des ressources collectées
- * Mise à jour des ressources du vaisseau après collecte
+ * Transfert des ressources de la tuile vers le vaisseau avec gestion de capacité
  */
 export const assignShipLoadResourcesContext = createAssignAction(({ context, event }) => {
   fsmLogger.action(`🔄 [${context?.entityId || 'unknown'}] assignShipLoadResourcesContext called with:`, {
@@ -222,44 +244,125 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
     fsmLogger.error(`⚠️ [${context.entityId}] No vehicle found in context for resource loading`);
     return {};
   }
+
+  // Récupérer la tuile cible et ses ressources
+  const targetTile = context.vehicle.targetVehicleTile;
+  if (!targetTile || !targetTile.position?.coord) {
+    fsmLogger.error(`⚠️ [${context.entityId}] No target tile or coordinate found`);
+    return {};
+  }
+
+  // Utiliser le store pour obtenir les ressources actuelles de la tuile
+  const tileStore = useTileStore.getState();
+  const tileCoord = targetTile.position.coord;
   
-  // Récupérer les ressources collectées depuis l'événement ou utiliser des valeurs par défaut
-  const resourcesCollected = (event as Record<string, unknown>)?.resourcesCollected as {
-    food?: number;
-    debris?: number;
-    special?: number;
-  } || {
-    food: Math.floor(Math.random() * 3) + 1,
-    debris: Math.floor(Math.random() * 2) + 1,
-    special: Math.random() > 0.7 ? 1 : 0
-  };
+  // Vérifier si la tuile existe et a des ressources
+  const currentTile = tileStore.tiles[tileCoord];
+  if (!currentTile || !currentTile.resources || currentTile.resources.total <= 0) {
+    fsmLogger.warn(`⚠️ [${context.entityId}] Target tile has no resources to collect`, {
+      coord: tileCoord,
+      tileExists: !!currentTile,
+      resources: currentTile?.resources
+    });
+    return {};
+  }
+
+  // Capacité max du véhicule
+  const maxCapacity = typeof context.vehicle.maxCapacity === 'object' 
+    ? context.vehicle.maxCapacity.total || 2003
+    : Number(context.vehicle.maxCapacity) || 2003;
+
+  // Ressources actuelles du véhicule
+  const currentResources = context.vehicle.resources || { food: 0, debris: 0, special: 0, total: 0 };
+  const currentTotal = currentResources.total || 0;
   
-  // Mettre à jour les ressources du véhicule
-  const currentResources = context.vehicle.resources || { food: 0, debris: 0, special: 0 };
+  // Espace disponible dans le véhicule
+  const availableCapacity = maxCapacity - currentTotal;
+  
+  if (availableCapacity <= 0) {
+    fsmLogger.warn(`⚠️ [${context.entityId}] Vehicle is at full capacity - no resources collected`);
+    return {};
+  }
+
+  // Collecter les ressources via le store (qui gère la logique de déduction)
+  const resourcesCollected = tileStore.collectResources(tileCoord, context.entityId);
+  
+  // Ajuster les ressources collectées selon la capacité disponible
+  const totalRequested = resourcesCollected.total;
+  const actualCollected = Math.min(totalRequested, availableCapacity);
+  
+  // Si on ne peut pas tout prendre, ajuster proportionnellement
+  if (actualCollected < totalRequested && totalRequested > 0) {
+    const ratio = actualCollected / totalRequested;
+    resourcesCollected.food = Math.floor(resourcesCollected.food * ratio);
+    resourcesCollected.debris = Math.floor(resourcesCollected.debris * ratio);
+    resourcesCollected.special = Math.floor(resourcesCollected.special * ratio);
+    resourcesCollected.total = resourcesCollected.food + resourcesCollected.debris + resourcesCollected.special;
+    
+    // Si on ne peut pas tout prendre, déduire seulement ce qu'on peut prendre
+    if (actualCollected < totalRequested) {
+      const excessResources = {
+        food: resourcesCollected.food - Math.floor(resourcesCollected.food * ratio),
+        debris: resourcesCollected.debris - Math.floor(resourcesCollected.debris * ratio),
+        special: resourcesCollected.special - Math.floor(resourcesCollected.special * ratio)
+      };
+      
+      // Remettre l'excès sur la tuile via le store
+      if (excessResources.food > 0 || excessResources.debris > 0 || excessResources.special > 0) {
+        tileStore.deductResources(tileCoord, {
+          food: -excessResources.food,
+          debris: -excessResources.debris,
+          special: -excessResources.special
+        });
+      }
+    }
+  }
+
+  // Nouvelles ressources du véhicule après collecte
   const newResources = {
     food: (currentResources.food || 0) + (resourcesCollected.food || 0),
     debris: (currentResources.debris || 0) + (resourcesCollected.debris || 0),
-    special: (currentResources.special || 0) + (resourcesCollected.special || 0)
+    special: (currentResources.special || 0) + (resourcesCollected.special || 0),
+    total: 0 // Sera calculé ci-dessous
   };
+  newResources.total = newResources.food + newResources.debris + newResources.special;
   
-  const totalResources = Object.values(newResources).reduce((sum, val) => sum + (val || 0), 0);
+  // Obtenir l'état actuel de la tuile après collecte (le store l'a mise à jour)
+  const updatedTile = tileStore.tiles[tileCoord];
+  const remainingTileResources = updatedTile.resources;
+
+  // Vérifier si le véhicule est maintenant plein ou presque plein (>80%)
+  const isVehicleNearFull = newResources.total >= (maxCapacity * 0.8);
+  const tileIsEmpty = remainingTileResources.total <= 0;
+  const shouldReturnToBase = isVehicleNearFull || tileIsEmpty;
   
-  fsmLogger.action(`📦 [${context.entityId}] Resources loaded onto ship:`, {
+  fsmLogger.action(`📦 [${context.entityId}] Resources transferred from tile:`, {
+    tileCoord,
+    tileResourcesAfter: remainingTileResources,
     collected: resourcesCollected,
-    previous: currentResources,
-    new: newResources,
-    total: totalResources
+    vehicleResourcesBefore: currentResources,
+    vehicleResourcesAfter: newResources,
+    vehicleCapacity: `${newResources.total}/${maxCapacity}`,
+    capacityUsed: `${Math.round((newResources.total / maxCapacity) * 100)}%`,
+    isNearFull: isVehicleNearFull,
+    tileIsEmpty,
+    shouldReturn: shouldReturnToBase
   });
   
   return {
     vehicle: {
       ...context.vehicle,
-      resources: {
-        ...newResources,
-        total: totalResources
+      resources: newResources,
+      // Mettre à jour la référence à la tuile cible avec les nouvelles ressources
+      targetVehicleTile: {
+        ...targetTile,
+        resources: remainingTileResources,
+        collected: tileIsEmpty
       }
     },
-    lastAction: 'shipLoadResources_success'
+    lastAction: 'shipLoadResources_success',
+    // Ajouter une indication sur le prochain état recommandé pour la FSM
+    shouldReturnToBase
   };
 });
 

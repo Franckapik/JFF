@@ -139,5 +139,82 @@ export const hasMoreCollectibleTiles = createGuard('hasMoreCollectibleTiles', ({
   return hasMore;
 });
 
+/**
+ * Guard pour déterminer si le vaisseau doit retourner à la base après collecte
+ */
+export const shouldReturnToBase = createGuard('shouldReturnToBase', ({ context }) => {
+  const vehicle = context.vehicle;
+  if (!vehicle) {
+    fsmLogger.error(`[shouldReturnToBase] No vehicle found in context`);
+    return false;
+  }
+  
+  const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0, total: 0 };
+  const totalResources = currentResources.total || 0;
+  
+  // Gérer maxCapacity qui peut être un nombre ou un objet avec total
+  const maxCapacity = typeof vehicle.maxCapacity === 'object' && vehicle.maxCapacity !== null 
+    ? (vehicle.maxCapacity as unknown as Record<string, number>).total || 2003
+    : Number(vehicle.maxCapacity) || 2003;
+  
+  // Retourner à la base si le véhicule est plein à 80% ou plus
+  const capacityThreshold = maxCapacity * 0.8;
+  const isNearFull = totalResources >= capacityThreshold;
+  
+  // Ou si le véhicule a peu de carburant
+  const hasLowFuel = (vehicle.fuel || 100) < 30;
+  
+  // Ou si des dégâts importants
+  const hasDamage = (vehicle.damage || 0) > 70;
+  
+  const shouldReturn = isNearFull || hasLowFuel || hasDamage;
+  
+  fsmLogger.info(`🔙 [shouldReturnToBase] Vehicle return status:`, {
+    totalResources,
+    maxCapacity,
+    capacityUsed: `${Math.round((totalResources / maxCapacity) * 100)}%`,
+    isNearFull,
+    fuel: vehicle.fuel,
+    hasLowFuel,
+    damage: vehicle.damage,
+    hasDamage,
+    shouldReturn
+  });
+  
+  return shouldReturn;
+});
+
+/**
+ * Guard pour vérifier si le vaisseau peut continuer à collecter 
+ * (inverse de shouldReturnToBase mais avec logique différente)
+ */
+export const canContinueCollecting = createGuard('canContinueCollecting', ({ context }) => {
+  const vehicle = context.vehicle;
+  if (!vehicle) return false;
+  
+  // Vérifier la capacité restante
+  const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0, total: 0 };
+  const totalResources = currentResources.total || 0;
+  
+  const maxCapacity = typeof vehicle.maxCapacity === 'object' && vehicle.maxCapacity !== null 
+    ? (vehicle.maxCapacity as unknown as Record<string, number>).total || 2003
+    : Number(vehicle.maxCapacity) || 2003;
+  
+  const hasCapacity = totalResources < (maxCapacity * 0.8); // Moins de 80% plein
+  const hasEnoughFuel = (vehicle.fuel || 0) > 30;
+  const isOperational = (vehicle.damage || 0) < 70;
+  
+  const canContinue = hasCapacity && hasEnoughFuel && isOperational;
+  
+  fsmLogger.info(`🔄 [canContinueCollecting] Vehicle continuation status:`, {
+    hasCapacity: `${totalResources}/${maxCapacity}`,
+    hasEnoughFuel,
+    isOperational,
+    canContinue
+  });
+  
+  return canContinue;
+});
+
 // Placeholder pour éviter les erreurs d'import
 export const __collectionGuardsPlaceholder = createGuard('__collectionGuardsPlaceholder', () => true);

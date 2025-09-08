@@ -91,7 +91,7 @@ export const shouldAnimateShip = (
 export const mapFSMStateToVisualState = (fsmState: string): VehicleVisualState => {
   switch (fsmState) {
     case 'collecting_ship_moving_to_tile':
-      return 'moving';
+      return 'collecting';
     case 'collecting_ship_collecting':
       return 'collecting';
     case 'collecting_ship_returning':

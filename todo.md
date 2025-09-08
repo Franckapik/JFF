@@ -3,15 +3,15 @@ L'initialisation se fait dpeuis la scene avec un guard de controle avant de pass
 Le travail en cours est la position du vehicle en WorldGridPosition. Cela permet une comprehension dans le viewer des deplacements. Attention a bien surveiller les perf. FAIT
 
 A faire : 
-- recherche d etuiles pour l'explorzation en fonction d'un radius réel indiqué depuis le store. 
+- recherche d etuiles pour l'explorzation en fonction d'un radius réel indiqué depuis le store. FAIT
 
 Je suis rendu là. J'ai commenté la fonction tileInRadius afin de comprendre comment elle fonctionne et si cette derniere utilise bien la compraison range et distance.
 
 Déja :
-shipPosition peut desormais changer de type car la position du vaisseau est de type WolrdGrid desormais. 
+shipPosition peut desormais changer de type car la position du vaisseau est de type WolrdGrid desormais. FAIT
 
-- regarder le systeme de comptage de tuiles explorées. A indiquer dans le viewzer. 
-- permettre la collection en fonction du compte d'exploration selon un chiffre deifnis dans le store.
+- regarder le systeme de comptage de tuiles explorées. A indiquer dans le viewzer. FAIT
+- permettre la collection en fonction du compte d'exploration selon un chiffre deifnis dans le store. FAIT
 - s'assurer que le score soit bien en place et visible depuis le viwer egalement.
 - le chemin doit ensuite vraiment se faire de tuiles en tuile pour le vehicle.
 

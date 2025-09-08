@@ -42,6 +42,7 @@ export const applyShipVisualAnimations = (
       mesh.rotation.z = Math.sin(elapsedTime * 2) * 0.02;
       break;
       
+  // case 'moving': // supprimé car doublon inutile
     case 'moving_to_tile':
       // Animation de déplacement : oscillation verticale modérée
       mesh.position.y = baseY + Math.sin(elapsedTime * 4) * 0.1;

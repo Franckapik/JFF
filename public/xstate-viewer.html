@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <title>XState Viewer - JFF</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
   <style>
     body { 
       font-family: system-ui, sans-serif; 
@@ -191,6 +192,13 @@
       <div class="state-value" id="stateValue">—</div>
       <span class="status-badge status-unknown" id="statusBadge">unknown</span>
     </div>
+    <div class="card">
+      <h3>🚢🛸 Visual States</h3>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <span><strong>Vehicle:</strong> <span class="state-value" id="vehicleVisualState">—</span></span>
+        <span><strong>Drone:</strong> <span class="state-value" id="droneVisualState">—</span></span>
+      </div>
+    </div>
     
     <div class="card">
       <h3>📍 Position actuelle</h3>
@@ -214,8 +222,26 @@
         <div>Fuel: <span id="fuelLevel">—</span></div>
         <div>Resources: <span id="resourceCount">—</span></div>
         <div>Mode: <span id="currentMode">—</span></div>
+        <div>Player Score: <span id="scoreTotal">—</span></div>
+        <div>Cargo Hold:</div>
+        <div style="margin-left:10px; font-size:11px; color:#374151;">
+          <span><i class="fas fa-apple-alt" title="Food" style="color:#e53e3e;"></i> <span id="vehicleFood">—</span></span>
+          <span style="margin-left:8px;"><i class="fas fa-cog" title="Debris" style="color:#718096;"></i> <span id="vehicleDebris">—</span></span>
+          <span style="margin-left:8px;"><i class="fas fa-star" title="Special" style="color:#ecc94b;"></i> <span id="vehicleSpecial">—</span></span>
+          <span style="margin-left:8px;"><i class="fas fa-box" title="Total" style="color:#4fd1c5;"></i> <span id="vehicleTotal">—</span></span>
+        </div>
       </div>
     </div>
+
+     <div class="card">
+       <h3>🏆 Player Score Details</h3>
+       <div style="margin-left:10px; font-size:13px; color:#374151; display:flex; gap:16px; align-items:center;">
+         <span><i class="fas fa-apple-alt" title="Food" style="color:#e53e3e;"></i> <span id="scoreFood">—</span></span>
+         <span><i class="fas fa-cog" title="Debris" style="color:#718096;"></i> <span id="scoreDebris">—</span></span>
+         <span><i class="fas fa-star" title="Special" style="color:#ecc94b;"></i> <span id="scoreSpecial">—</span></span>
+         <span><i class="fas fa-box" title="Total" style="color:#4fd1c5;"></i> <span id="scoreTotalDetail">—</span></span>
+       </div>
+     </div>
     
     <div class="card" id="explorationMemoryCard">
       <h3>🗺️ Exploration Memory</h3>
@@ -271,7 +297,7 @@
     let updateCount = 0;
     let isConnected = false;
 
-    const elements = {
+  const elements = {
       connectionStatus: document.getElementById('connectionStatus'),
       botId: document.getElementById('botId'),
       stateValue: document.getElementById('stateValue'),
@@ -283,7 +309,9 @@
       basePosition: document.getElementById('basePosition'),
       fuelLevel: document.getElementById('fuelLevel'),
       resourceCount: document.getElementById('resourceCount'),
-      currentMode: document.getElementById('currentMode')
+  currentMode: document.getElementById('currentMode'),
+  vehicleVisualState: document.getElementById('vehicleVisualState'),
+  droneVisualState: document.getElementById('droneVisualState')
     };
 
     function updateConnectionStatus(connected) {
@@ -330,15 +358,31 @@
       return '—';
     }
 
-    function extractContextData(context) {
+  function extractContextData(context) {
       if (!context || typeof context !== 'object') return {};
 
       // Common places where positions are stored in this project:
       // - context.vehicle.position
       // - context.vehicle.basePosition
       // - top-level context.position or context.shipPosition (legacy)
-      const vehicle = context.vehicle ?? {};
+  const vehicle = context.vehicle ?? {};
       const vehiclePosition = vehicle.position ?? context.vehiclePosition ?? context.position ?? null;
+      // Visual state extraction
+      const vehicleVisualState = vehicle.visualState ?? '—';
+      // Drone visual state: try explorer drone, else first drone
+      let droneVisualState = '—';
+      if (context.droneFleet && context.droneFleet.drones) {
+        if (context.droneFleet.drones.explorer && context.droneFleet.drones.explorer.visualState) {
+          droneVisualState = context.droneFleet.drones.explorer.visualState;
+        } else {
+          for (const k in context.droneFleet.drones) {
+            if (context.droneFleet.drones[k]?.visualState) {
+              droneVisualState = context.droneFleet.drones[k].visualState;
+              break;
+            }
+          }
+        }
+      }
       const basePosition = vehicle.basePosition ?? context.basePosition ?? context.shipPosition ?? null;
 
       const fuel = vehicle.fuel ?? context.fuel?.current ?? context.fuelLevel ?? null;
@@ -399,6 +443,8 @@
         fuel,
         resources,
         mode,
+        vehicleVisualState,
+        droneVisualState,
         memory: {
           lastExploration,
           recentTiles,
@@ -410,6 +456,9 @@
 
     function updateContextualData(context) {
       const data = extractContextData(context);
+      // Affichage des états visuels
+      elements.vehicleVisualState.textContent = data.vehicleVisualState || '—';
+      elements.droneVisualState.textContent = data.droneVisualState || '—';
       
       // Note architecturale : 
       // - basePosition = position d'origine fixée à l'initialisation (avec coord stocké)
@@ -444,6 +493,39 @@
       elements.fuelLevel.textContent = data.fuel !== undefined ? `${data.fuel}%` : '—';
       elements.resourceCount.textContent = data.resources !== undefined ? data.resources.toString() : '—';
       elements.currentMode.textContent = data.mode || '—';
+      // Score du joueur (score.resources.total)
+      const scoreTotalEl = document.getElementById('scoreTotal');
+      if (scoreTotalEl) {
+        const score = context.score?.resources?.total;
+        scoreTotalEl.textContent = (typeof score === 'number') ? score.toString() : '—';
+      }
+    // Détail du score du joueur
+    const scoreFood = document.getElementById('scoreFood');
+    const scoreDebris = document.getElementById('scoreDebris');
+    const scoreSpecial = document.getElementById('scoreSpecial');
+    const scoreTotalDetail = document.getElementById('scoreTotalDetail');
+    const scoreRes = context.score?.resources || {};
+    scoreFood && (scoreFood.textContent = (scoreRes.food ?? '—').toString());
+    scoreDebris && (scoreDebris.textContent = (scoreRes.debris ?? '—').toString());
+    scoreSpecial && (scoreSpecial.textContent = (scoreRes.special ?? '—').toString());
+    scoreTotalDetail && (scoreTotalDetail.textContent = (scoreRes.total ?? '—').toString());
+      // Détail des ressources du véhicule
+      const vehicle = context.vehicle || {};
+      const vFood = document.getElementById('vehicleFood');
+      const vDebris = document.getElementById('vehicleDebris');
+      const vSpecial = document.getElementById('vehicleSpecial');
+      const vTotal = document.getElementById('vehicleTotal');
+      if (vehicle.resources) {
+        vFood && (vFood.textContent = vehicle.resources.food?.toString() ?? '0');
+        vDebris && (vDebris.textContent = vehicle.resources.debris?.toString() ?? '0');
+        vSpecial && (vSpecial.textContent = vehicle.resources.special?.toString() ?? '0');
+        vTotal && (vTotal.textContent = vehicle.resources.total?.toString() ?? '0');
+      } else {
+        vFood && (vFood.textContent = '—');
+        vDebris && (vDebris.textContent = '—');
+        vSpecial && (vSpecial.textContent = '—');
+        vTotal && (vTotal.textContent = '—');
+      }
       // Exploration memory
       const lastExp = data.memory?.lastExploration;
       const recent = data.memory?.recentTiles ?? [];

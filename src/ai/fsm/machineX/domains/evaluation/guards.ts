@@ -8,6 +8,7 @@
  */
 
 import fsmLogger from '../../../../../logger/fsmLogger';
+import { useTileStore } from '../../../../../stores/useTileStore';
 import type { XStateV5Guard } from '../../../../../types/xstate.v5.types';
 
 /**
@@ -56,10 +57,28 @@ export const shouldCollect = createGuard('shouldCollect', ({ context }) => {
     return !context.vehicle.isAtCapacity && context.vehicle.fuel > context.config.fuelThreshold;
   }
   
-  // Logique classique : collecte des tuiles déjà explorées
-    return context.vehicle?.targetVehicleTile !== null && 
-         !context.vehicle.isAtCapacity &&
-         context.vehicle.fuel > context.config.fuelThreshold;
+  // Logique modifiée : vérifier s'il existe des tuiles collectibles dans le rayon
+  // au lieu de vérifier si une tuile cible est déjà assignée
+  if (context.vehicle.isAtCapacity || context.vehicle.fuel <= context.config.fuelThreshold) {
+    return false;
+  }
+  
+  // Utiliser le store pour vérifier les tuiles disponibles
+  const tileStore = useTileStore.getState();
+  const shipPosition = context.vehicle?.position;
+  const collectingRadius = context.config?.collectingRadius ?? 3;
+  
+  // Vérifier s'il existe au moins une tuile collectible dans le rayon
+  const availableTile = tileStore.tileInRadius(shipPosition, collectingRadius);
+  
+  fsmLogger.info(`[${context.entityId}] shouldCollect: checking available tiles`, {
+    shipPosition,
+    collectingRadius,
+    hasAvailableTile: !!availableTile,
+    targetTileCoord: availableTile?.coord
+  });
+  
+  return !!availableTile;
 });
 
 /**

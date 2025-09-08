@@ -7,6 +7,9 @@ import type { FSMContext } from "../../../../../types/fsm.d.ts";
 import type { TileStoreType } from "../../../../../types/stores.d.ts";
 import type { XStateSend } from "../../../../../types/tracker.d.ts";
 
+import fsmLogger from "../../../../../logger/fsmLogger.ts";
+// DEBUG: seuil ajusté pour correspondre au collectingRadius FSM
+
 import { createShipHandlers } from "./handlers";
 
 interface ShipTrackerParams {
@@ -27,21 +30,18 @@ export const useShipTracker = ({
 
   const updatePosition = useCallback(
     (position: WorldPosition) => {
-      // Suppression de l'affectation à currentVisualPosition
+      // Synchronisation de position avec le contexte FSM (optimisée)
+      send({
+        type: 'SHIP_POSITION_UPDATE',
+        position,
+        shipType
+      });
 
-      // ⚠️ PROTECTION : Ne pas traiter si le drone est en cours d'exploration
-      const isDroneExploring = context?.droneFleet?.drones?.explorer?.visualState === 'deploying' || 
-                              context?.droneFleet?.drones?.explorer?.visualState === 'scanning' ||
-                              context?.droneFleet?.drones?.explorer?.visualState === 'returning';
-      
-      if (isDroneExploring) {
-        // Le drone est en cours d'exploration, ne pas interférer avec les événements du vaisseau
-        return;
-      }
-
+      // Traitement prioritaire des handlers pour les états de mouvement
       const handlers = createShipHandlers({ fsmSend: send, botId, shipType });
       const vehicle = context?.vehicle;
       const vehicleVisualState = vehicle?.visualState;
+      
       if (!vehicle) return;
 
       let distance = Infinity;
@@ -50,12 +50,16 @@ export const useShipTracker = ({
           // Utiliser le handler d'initialisation au début du jeu
           handlers.initializeHandler.process(position);
           break;
-        case "moving":
+        case "moving_to_tile":
           if (vehicle.targetVehicleTile && vehicle.targetVehicleTile.position) {
-            distance = calculateDistance(position, gridToWorld(vehicle.targetVehicleTile.position.coord));
+            // FIX: Utiliser directement la position FSM de la tuile, pas la conversion gridToWorld
+            const targetPosition = vehicle.targetVehicleTile.position;
+            distance = calculateDistance(position, targetPosition);
             if (distance !== Infinity) {
               handlers.movingToTileHandler.process(distance, position);
             }
+          } else {
+            fsmLogger.warn(`🚢 [${botId}] No target tile for moving`, { vehicle: vehicle.targetVehicleTile });
           }
           break;
         case "collecting":
