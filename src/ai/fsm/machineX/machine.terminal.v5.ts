@@ -85,35 +85,276 @@ const terminalEffects = {
 };
 
 /**
- * Actions assign inline (pour éviter les imports avec dépendances logger)
+ * Actions assign avec vraies mutations de contexte (Phase 2)
  * Utilisent l'API assign() de XState v5
  */
 const terminalAssignActions = {
   // Initializing
-  processShipInitRequest: assign(({ context }: { context: FSMContext }): FSMContext => context),
-  processDroneInitRequest: assign(({ context }: { context: FSMContext }): FSMContext => context),
+  processShipInitRequest: assign(({ context, event }: { context: FSMContext; event: any }): FSMContext => {
+    return {
+      ...context,
+      vehicle: {
+        ...context.vehicle,
+        position: event.initialPosition || { x: 0, y: 0, z: 0 },
+        visualState: 'idle' as any,
+      },
+    };
+  }),
+  
+  processDroneInitRequest: assign(({ context, event }: { context: FSMContext; event: any }): FSMContext => {
+    const firstDroneKey = Object.keys(context.droneFleet.drones)[0];
+    return {
+      ...context,
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet.drones,
+          [firstDroneKey]: {
+            ...context.droneFleet.drones[firstDroneKey],
+            position: event.initialPosition || { x: 0, y: 0, z: 0 },
+            visualState: 'docked' as any,
+          },
+        },
+      },
+    };
+  }),
   
   // Global
-  updateShipPosition: assign(({ context }: { context: FSMContext }): FSMContext => context),
-  updateDronePosition: assign(({ context }: { context: FSMContext }): FSMContext => context),
+  updateShipPosition: assign(({ context, event }: { context: FSMContext; event: any }): FSMContext => {
+    return {
+      ...context,
+      vehicle: {
+        ...context.vehicle,
+        position: event.position || context.vehicle.position,
+      },
+    };
+  }),
+  
+  updateDronePosition: assign(({ context, event }: { context: FSMContext; event: any }): FSMContext => {
+    const firstDroneKey = Object.keys(context.droneFleet.drones)[0];
+    return {
+      ...context,
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet.drones,
+          [firstDroneKey]: {
+            ...context.droneFleet.drones[firstDroneKey],
+            position: event.position || context.droneFleet.drones[firstDroneKey].position,
+          },
+        },
+      },
+    };
+  }),
   
   // Exploration
-  assignDroneDeployingContext: assign(({ context }: { context: FSMContext }): FSMContext => context),
-  assignDroneScanningContext: assign(({ context }: { context: FSMContext }): FSMContext => context),
-  assignDroneReturningContext: assign(({ context }: { context: FSMContext }): FSMContext => context),
-  assignDroneDockedContext: assign(({ context }: { context: FSMContext }): FSMContext => context),
+  assignDroneDeployingContext: assign(({ context }: { context: FSMContext }): FSMContext => {
+    const firstDroneKey = Object.keys(context.droneFleet.drones)[0];
+    const firstDrone = context.droneFleet.drones[firstDroneKey];
+    return {
+      ...context,
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet.drones,
+          [firstDroneKey]: {
+            ...firstDrone,
+            visualState: 'deploying' as any,
+            targetPosition: context.explorationQueue[0] || null,
+          },
+        },
+      },
+      fsmState: 'exploring',
+    };
+  }),
+  
+  assignDroneScanningContext: assign(({ context }: { context: FSMContext }): FSMContext => {
+    const firstDroneKey = Object.keys(context.droneFleet.drones)[0];
+    const firstDrone = context.droneFleet.drones[firstDroneKey];
+    return {
+      ...context,
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet.drones,
+          [firstDroneKey]: {
+            ...firstDrone,
+            visualState: 'scanning' as any,
+          },
+        },
+      },
+      memory: {
+        ...context.memory,
+        stats: {
+          ...context.memory.stats,
+          tilesExploredInCycle: (context.memory.stats.tilesExploredInCycle || 0) + 1,
+          tilesExplored: (context.memory.stats.tilesExplored || 0) + 1,
+        },
+      },
+    };
+  }),
+  
+  assignDroneReturningContext: assign(({ context }: { context: FSMContext }): FSMContext => {
+    const firstDroneKey = Object.keys(context.droneFleet.drones)[0];
+    const firstDrone = context.droneFleet.drones[firstDroneKey];
+    return {
+      ...context,
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet.drones,
+          [firstDroneKey]: {
+            ...firstDrone,
+            visualState: 'returning' as any,
+            targetPosition: context.vehicle.basePosition,
+          },
+        },
+      },
+    };
+  }),
+  
+  assignDroneDockedContext: assign(({ context }: { context: FSMContext }): FSMContext => {
+    const firstDroneKey = Object.keys(context.droneFleet.drones)[0];
+    const firstDrone = context.droneFleet.drones[firstDroneKey];
+    return {
+      ...context,
+      droneFleet: {
+        ...context.droneFleet,
+        drones: {
+          ...context.droneFleet.drones,
+          [firstDroneKey]: {
+            ...firstDrone,
+            visualState: 'docked' as any,
+            targetPosition: null,
+          },
+        },
+      },
+      fsmState: 'evaluating',
+    };
+  }),
   
   // Collection
-  assignShipMovingToTileContext: assign(({ context }: { context: FSMContext }): FSMContext => context),
-  assignShipCollectingContext: assign(({ context }: { context: FSMContext }): FSMContext => context),
-  assignShipLoadResourcesContext: assign(({ context }: { context: FSMContext }): FSMContext => context),
-  assignShipReturningContext: assign(({ context }: { context: FSMContext }): FSMContext => context),
-  assignShipReachedBaseContext: assign(({ context }: { context: FSMContext }): FSMContext => context),
+  assignShipMovingToTileContext: assign(({ context }: { context: FSMContext }): FSMContext => {
+    const targetTile = context.injectedData?.availableTiles?.[0] as any;
+    return {
+      ...context,
+      vehicle: {
+        ...context.vehicle,
+        visualState: 'moving' as any,
+        targetVehicleTile: targetTile || null,
+      },
+      fsmState: 'collecting',
+    };
+  }),
+  
+  assignShipCollectingContext: assign(({ context }: { context: FSMContext }): FSMContext => {
+    return {
+      ...context,
+      vehicle: {
+        ...context.vehicle,
+        visualState: 'collecting' as any,
+      },
+    };
+  }),
+  
+  assignShipLoadResourcesContext: assign(({ context, event }: { context: FSMContext; event: any }): FSMContext => {
+    const amountToAdd = event.amount || { food: 50, debris: 50, special: 0 }; // Default amounts for testing
+    const currentResources = context.vehicle.resources;
+    const newResources = {
+      food: (currentResources.food || 0) + (amountToAdd.food || 0),
+      debris: (currentResources.debris || 0) + (amountToAdd.debris || 0),
+      special: (currentResources.special || 0) + (amountToAdd.special || 0),
+      total: 0, // Will be recalculated
+    };
+    newResources.total = newResources.food + newResources.debris + newResources.special;
+    
+    // Consume fuel during collection (1% per collection)
+    const newFuel = Math.max(0, (context.vehicle.fuel || 100) - 1);
+    
+    return {
+      ...context,
+      vehicle: {
+        ...context.vehicle,
+        resources: newResources,
+        fuel: newFuel,
+      },
+      memory: {
+        ...context.memory,
+        stats: {
+          ...context.memory.stats,
+          tilesCollected: (context.memory.stats.tilesCollected || 0) + 1,
+          totalResourcesFound: (context.memory.stats.totalResourcesFound || 0) + newResources.total,
+        },
+      },
+    };
+  }),
+  
+  assignShipReturningContext: assign(({ context }: { context: FSMContext }): FSMContext => {
+    return {
+      ...context,
+      vehicle: {
+        ...context.vehicle,
+        visualState: 'returning' as any,
+        targetVehicleTile: null,
+      },
+    };
+  }),
+  
+  assignShipReachedBaseContext: assign(({ context }: { context: FSMContext }): FSMContext => {
+    return {
+      ...context,
+      vehicle: {
+        ...context.vehicle,
+        visualState: 'idle' as any,
+        position: context.vehicle.basePosition,
+      },
+      fsmState: 'maintaining',
+    };
+  }),
   
   // Maintenance
-  assignShipDepositResourcesContext: assign(({ context }: { context: FSMContext }): FSMContext => context),
-  assignShipRefuelContext: assign(({ context }: { context: FSMContext }): FSMContext => context),
-  assignShipRepairContext: assign(({ context }: { context: FSMContext }): FSMContext => context),
+  assignShipDepositResourcesContext: assign(({ context }: { context: FSMContext }): FSMContext => {
+    const depositedResources = context.vehicle.resources;
+    return {
+      ...context,
+      vehicle: {
+        ...context.vehicle,
+        resources: { food: 0, debris: 0, special: 0, total: 0 },
+        visualState: 'depositing' as any,
+      },
+      score: {
+        ...context.score,
+        resources: {
+          food: (context.score.resources.food || 0) + depositedResources.food,
+          debris: (context.score.resources.debris || 0) + depositedResources.debris,
+          special: (context.score.resources.special || 0) + depositedResources.special,
+          total: (context.score.resources.total || 0) + depositedResources.total,
+        },
+      },
+    };
+  }),
+  
+  assignShipRefuelContext: assign(({ context }: { context: FSMContext }): FSMContext => {
+    return {
+      ...context,
+      vehicle: {
+        ...context.vehicle,
+        fuel: 100, // Refuel to 100%
+        visualState: 'refueling' as any,
+      },
+    };
+  }),
+  
+  assignShipRepairContext: assign(({ context }: { context: FSMContext }): FSMContext => {
+    return {
+      ...context,
+      vehicle: {
+        ...context.vehicle,
+        damage: 0, // Full repair
+        visualState: 'repairing' as any,
+      },
+    };
+  }),
 };
 
 /**
@@ -134,9 +375,23 @@ const terminalGuards = {
   canCollectTile: ({ context }: { context: FSMContext }) => canCollectTile({ context, event: {} as any }),
   isVehicleOverloaded: ({ context }: { context: FSMContext }) => isVehicleOverloaded({ context, event: {} as any }),
   
-  // hasMoreCollectibleTiles: stub simplifié pour l'instant
-  // TODO: implémenter avec context.injectedData.availableTiles (Option A)
+  // hasMoreCollectibleTiles: avec logique overload prioritaire
+  // Si overloaded, retourner false même si des tuiles existent
   hasMoreCollectibleTiles: ({ context }: { context: FSMContext }) => {
+    // Vérifier d'abord si overloaded (priorité plus haute)
+    const currentResources = context.vehicle.resources;
+    const totalResources = (currentResources.food || 0) + (currentResources.debris || 0) + (currentResources.special || 0);
+    const maxCapacity = typeof context.vehicle.maxCapacity === 'object' && context.vehicle.maxCapacity !== null 
+      ? (context.vehicle.maxCapacity as any).total || 2003
+      : Number(context.vehicle.maxCapacity) || 2003;
+    const threshold = maxCapacity * 0.8;
+    
+    // Si overloaded, pas de nouvelles collectes
+    if (totalResources >= threshold) {
+      return false;
+    }
+    
+    // Sinon, vérifier les tuiles disponibles
     const tiles = context.injectedData?.availableTiles;
     return tiles && tiles.length > 1; // Si plus d'une tuile disponible
   },
@@ -230,6 +485,10 @@ export const machineXV5Terminal = setup({
         ship_moving_to_tile: {
           entry: 'onShipMovingToTileEntry',
           exit: 'onShipMovingToTileExit',
+          // Transition automatique si overloaded (après mutation du contexte)
+          always: [
+            { target: 'ship_returning', guard: 'isVehicleOverloaded', actions: 'assignShipReturningContext' }
+          ],
           on: {
             SHIP_REACHES_TILE: [
               { target: 'ship_collecting', guard: 'canCollectTile', actions: 'assignShipCollectingContext' },
