@@ -91,6 +91,77 @@ const guards = {
     const damage = context.vehicle?.damage ?? 0;
     return fuel < 30 || damage > 50;
   },
+
+  // Collection guards
+  canCollectTile: ({ context }) => {
+    const vehicle = context.vehicle;
+    if (!vehicle) return false;
+    
+    const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
+    const totalResources = Object.values(currentResources).reduce((sum, val) => sum + (val || 0), 0);
+    
+    const maxCapacity = typeof vehicle.maxCapacity === 'object' && vehicle.maxCapacity !== null 
+      ? (vehicle.maxCapacity?.total || 10)
+      : Number(vehicle.maxCapacity) || 10;
+    
+    const hasCapacity = totalResources < maxCapacity;
+    const hasEnoughFuel = (vehicle.fuel || 0) > 20;
+    const isOperational = (vehicle.damage || 0) < 80;
+    
+    return hasCapacity && hasEnoughFuel && isOperational;
+  },
+
+  isVehicleOverloaded: ({ context }) => {
+    const vehicle = context.vehicle;
+    if (!vehicle) return false;
+    
+    const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
+    const totalResources = Object.values(currentResources).reduce((sum, val) => sum + (val || 0), 0);
+    
+    const maxCapacity = typeof vehicle.maxCapacity === 'object' && vehicle.maxCapacity !== null 
+      ? (vehicle.maxCapacity?.total || 10)
+      : Number(vehicle.maxCapacity) || 10;
+    
+    const threshold = maxCapacity * 0.8;
+    return totalResources >= threshold;
+  },
+
+  shouldReturnToBase: ({ context }) => {
+    const vehicle = context.vehicle;
+    if (!vehicle) return false;
+    
+    const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0, total: 0 };
+    const totalResources = currentResources.total || 0;
+    
+    const maxCapacity = typeof vehicle.maxCapacity === 'object' && vehicle.maxCapacity !== null 
+      ? (vehicle.maxCapacity?.total || 2003)
+      : Number(vehicle.maxCapacity) || 2003;
+    
+    const capacityThreshold = maxCapacity * 0.8;
+    const isNearFull = totalResources >= capacityThreshold;
+    const hasLowFuel = (vehicle.fuel || 100) < 30;
+    const hasDamage = (vehicle.damage || 0) > 70;
+    
+    return isNearFull || hasLowFuel || hasDamage;
+  },
+
+  canContinueCollecting: ({ context }) => {
+    const vehicle = context.vehicle;
+    if (!vehicle) return false;
+    
+    const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0, total: 0 };
+    const totalResources = currentResources.total || 0;
+    
+    const maxCapacity = typeof vehicle.maxCapacity === 'object' && vehicle.maxCapacity !== null 
+      ? (vehicle.maxCapacity?.total || 2003)
+      : Number(vehicle.maxCapacity) || 2003;
+    
+    const hasCapacity = totalResources < (maxCapacity * 0.8);
+    const hasEnoughFuel = (vehicle.fuel || 0) > 30;
+    const isOperational = (vehicle.damage || 0) < 70;
+    
+    return hasCapacity && hasEnoughFuel && isOperational;
+  },
 };
 
 // Mock context factory
@@ -381,6 +452,203 @@ if (
     guards.shouldMaintain,
     createMockContext({ vehicle: { fuel: 50, damage: 20 } }),
     false
+  )
+)
+  passed++;
+
+console.log(''.padEnd(70, '-'));
+
+// =============================
+// COLLECTION GUARD TESTS (Tests 18-27)
+// =============================
+console.log('\n🧪 COLLECTION GUARD TESTS\n');
+console.log(
+  'Status | Guard Name                | Result | Expected'
+);
+console.log(''.padEnd(70, '-'));
+
+// Test 18: canCollectTile - Good conditions
+total++;
+if (
+  runGuardTest(
+    'canCollectTile (good)',
+    guards.canCollectTile,
+    createMockContext({
+      vehicle: {
+        fuel: 50,
+        damage: 20,
+        resources: { food: 0, debris: 0, special: 0 },
+        maxCapacity: 100,
+      },
+    }),
+    true
+  )
+)
+  passed++;
+
+// Test 19: canCollectTile - Low fuel
+total++;
+if (
+  runGuardTest(
+    'canCollectTile (low fuel)',
+    guards.canCollectTile,
+    createMockContext({
+      vehicle: {
+        fuel: 15,
+        damage: 20,
+        resources: { food: 0, debris: 0, special: 0 },
+        maxCapacity: 100,
+      },
+    }),
+    false
+  )
+)
+  passed++;
+
+// Test 20: canCollectTile - High damage
+total++;
+if (
+  runGuardTest(
+    'canCollectTile (high damage)',
+    guards.canCollectTile,
+    createMockContext({
+      vehicle: {
+        fuel: 50,
+        damage: 85,
+        resources: { food: 0, debris: 0, special: 0 },
+        maxCapacity: 100,
+      },
+    }),
+    false
+  )
+)
+  passed++;
+
+// Test 21: canCollectTile - At capacity
+total++;
+if (
+  runGuardTest(
+    'canCollectTile (at capacity)',
+    guards.canCollectTile,
+    createMockContext({
+      vehicle: {
+        fuel: 50,
+        damage: 20,
+        resources: { food: 50, debris: 50, special: 0 },
+        maxCapacity: 100,
+      },
+    }),
+    false
+  )
+)
+  passed++;
+
+// Test 22: isVehicleOverloaded - Below threshold
+total++;
+if (
+  runGuardTest(
+    'isVehicleOverloaded (50%)',
+    guards.isVehicleOverloaded,
+    createMockContext({
+      vehicle: {
+        resources: { food: 50, debris: 0, special: 0 },
+        maxCapacity: 100,
+      },
+    }),
+    false
+  )
+)
+  passed++;
+
+// Test 23: isVehicleOverloaded - At 80%
+total++;
+if (
+  runGuardTest(
+    'isVehicleOverloaded (80%)',
+    guards.isVehicleOverloaded,
+    createMockContext({
+      vehicle: {
+        resources: { food: 80, debris: 0, special: 0 },
+        maxCapacity: 100,
+      },
+    }),
+    true
+  )
+)
+  passed++;
+
+// Test 24: shouldReturnToBase - Low fuel
+total++;
+if (
+  runGuardTest(
+    'shouldReturnToBase (low fuel)',
+    guards.shouldReturnToBase,
+    createMockContext({
+      vehicle: {
+        fuel: 20,
+        damage: 0,
+        resources: { food: 0, debris: 0, special: 0, total: 0 },
+        maxCapacity: 2003,
+      },
+    }),
+    true
+  )
+)
+  passed++;
+
+// Test 25: shouldReturnToBase - High damage
+total++;
+if (
+  runGuardTest(
+    'shouldReturnToBase (high damage)',
+    guards.shouldReturnToBase,
+    createMockContext({
+      vehicle: {
+        fuel: 50,
+        damage: 75,
+        resources: { food: 0, debris: 0, special: 0, total: 0 },
+        maxCapacity: 2003,
+      },
+    }),
+    true
+  )
+)
+  passed++;
+
+// Test 26: shouldReturnToBase - Near full
+total++;
+if (
+  runGuardTest(
+    'shouldReturnToBase (near full)',
+    guards.shouldReturnToBase,
+    createMockContext({
+      vehicle: {
+        fuel: 50,
+        damage: 0,
+        resources: { food: 0, debris: 0, special: 0, total: 1700 },
+        maxCapacity: 2003,
+      },
+    }),
+    true
+  )
+)
+  passed++;
+
+// Test 27: canContinueCollecting - All good
+total++;
+if (
+  runGuardTest(
+    'canContinueCollecting (good)',
+    guards.canContinueCollecting,
+    createMockContext({
+      vehicle: {
+        fuel: 50,
+        damage: 20,
+        resources: { food: 0, debris: 0, special: 0, total: 500 },
+        maxCapacity: 2003,
+      },
+    }),
+    true
   )
 )
   passed++;

@@ -201,6 +201,54 @@ export default [
     },
   },
 
+  // Bloc dédié: Collection Domain Guards - Enforce Purity
+  {
+    files: ['src/ai/fsm/machineX/domains/collection/**/*.{ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        project: './tsconfig.json',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+      'import': importPlugin,
+    },
+    rules: {
+      // Note: collection/guards.ts has hasMoreCollectibleTiles with getState()
+      // This is marked @deprecated and will be refactored in Phase 2
+      // For now, we warn about violations
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: "CallExpression[callee.object.name='useTileStore'] > Identifier",
+          message: '⚠️ Guards in collection/ should be pure. getState() is discouraged. Use guards.pure.ts for new guards.',
+        },
+        {
+          selector: "CallExpression[callee.object.name='useGameStore'] > Identifier",
+          message: '⚠️ Guards in collection/ should be pure. getState() is discouraged. Use guards.pure.ts for new guards.',
+        },
+      ],
+      
+      // Forbid React/R3F/stores imports in collection guards (ensure purity)
+      'no-restricted-imports': [
+        'error',
+        {
+          name: 'react',
+          message: '❌ FSM guards must be pure. React imports forbidden.',
+        },
+        {
+          name: '@react-three/fiber',
+          message: '❌ FSM guards must be pure. R3F imports forbidden.',
+        },
+      ],
+    },
+  },
+
   // Bloc JavaScript uniquement (sans TypeScript parser)
   {
     files: ['src/**/*.{js,jsx}'],

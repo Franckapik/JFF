@@ -48,8 +48,8 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 // Imports par domaine pour éviter les erreurs de syntaxe
 import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection';
 import { assignEvaluationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation';
-import { shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure';
 import { shouldCollect } from './domains/evaluation/guards';
+import { shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure';
 import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration';
 import { updateDronePosition, updateShipPosition } from './domains/global';
 import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign';
@@ -61,8 +61,9 @@ import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepa
 
 // Import des guards d'initializing
 
-// Import des guards de collection
-import { canCollectTile, hasMoreCollectibleTiles, isVehicleOverloaded } from './domains/collection/guards';
+// Import des guards de collection (pure)
+import { canCollectTile, isVehicleOverloaded } from './domains/collection/guards.pure';
+import { hasMoreCollectibleTiles } from './domains/collection/guards'; // ⚠️ IMPURE - deferred to Phase 2
 // Import des guards d'initializing
 import * as initializingGuards from './domains/initializing/guards';
 import { areAllEntitiesInitialized } from './domains/initializing/guards';

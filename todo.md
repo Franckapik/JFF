@@ -73,3 +73,14 @@ le worflow devrait etre j'observe, je passe dans Xstate, je recoit une commande 
 EN résumé, il faut contraindre, sécuriser, rendre le FSM independant, et visible depuis le terminal vscode.
 Les fichiers readme pourraient etre distribués egalement lorsqu'il y a des pratiques de generation de code à suivre pour diriger l'écriture systematiquement. Les commentaires pourraient/devraient aussi pouvoir aider.
 Un fichier copilot instruction bien evidemment.
+
+
+Que faire des liens guards et xtstaes ? 
+Options pour Phase 2:
+
+Soit injecter availableTiles: Tile[] dans le contexte FSM
+Soit créer un service externe qui gère les queries spatiales
+Soit utiliser un actor XState dédié pour les queries de tiles
+Pour l'instant, on la garde deprecated mais fonctionnelle.
+
+Le contexte FSM doit etre clair vis à vis de la séparation avec les stores Zustand. Comment le contraindre, quelle limite choisir?

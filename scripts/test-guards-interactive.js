@@ -129,6 +129,81 @@ const evaluationGuards = {
 };
 
 /**
+ * JavaScript implementations of collection guards (transpiled from guards.pure.ts)
+ */
+const collectionGuards = {
+  canCollectTile: ({ context }) => {
+    const vehicle = context.vehicle;
+    if (!vehicle) return false;
+    
+    const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
+    const totalResources = Object.values(currentResources).reduce((sum, val) => sum + (val || 0), 0);
+    
+    const maxCapacity = typeof vehicle.maxCapacity === 'object' && vehicle.maxCapacity !== null 
+      ? (vehicle.maxCapacity?.total || 10)
+      : Number(vehicle.maxCapacity) || 10;
+    
+    const hasCapacity = totalResources < maxCapacity;
+    const hasEnoughFuel = (vehicle.fuel || 0) > 20;
+    const isOperational = (vehicle.damage || 0) < 80;
+    
+    return hasCapacity && hasEnoughFuel && isOperational;
+  },
+
+  isVehicleOverloaded: ({ context }) => {
+    const vehicle = context.vehicle;
+    if (!vehicle) return false;
+    
+    const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
+    const totalResources = Object.values(currentResources).reduce((sum, val) => sum + (val || 0), 0);
+    
+    const maxCapacity = typeof vehicle.maxCapacity === 'object' && vehicle.maxCapacity !== null 
+      ? (vehicle.maxCapacity?.total || 10)
+      : Number(vehicle.maxCapacity) || 10;
+    
+    const threshold = maxCapacity * 0.8;
+    return totalResources >= threshold;
+  },
+
+  shouldReturnToBase: ({ context }) => {
+    const vehicle = context.vehicle;
+    if (!vehicle) return false;
+    
+    const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0, total: 0 };
+    const totalResources = currentResources.total || 0;
+    
+    const maxCapacity = typeof vehicle.maxCapacity === 'object' && vehicle.maxCapacity !== null 
+      ? (vehicle.maxCapacity?.total || 2003)
+      : Number(vehicle.maxCapacity) || 2003;
+    
+    const capacityThreshold = maxCapacity * 0.8;
+    const isNearFull = totalResources >= capacityThreshold;
+    const hasLowFuel = (vehicle.fuel || 100) < 30;
+    const hasDamage = (vehicle.damage || 0) > 70;
+    
+    return isNearFull || hasLowFuel || hasDamage;
+  },
+
+  canContinueCollecting: ({ context }) => {
+    const vehicle = context.vehicle;
+    if (!vehicle) return false;
+    
+    const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0, total: 0 };
+    const totalResources = currentResources.total || 0;
+    
+    const maxCapacity = typeof vehicle.maxCapacity === 'object' && vehicle.maxCapacity !== null 
+      ? (vehicle.maxCapacity?.total || 2003)
+      : Number(vehicle.maxCapacity) || 2003;
+    
+    const hasCapacity = totalResources < (maxCapacity * 0.8);
+    const hasEnoughFuel = (vehicle.fuel || 0) > 30;
+    const isOperational = (vehicle.damage || 0) < 70;
+    
+    return hasCapacity && hasEnoughFuel && isOperational;
+  },
+};
+
+/**
  * Guard registry: maps domain names to guard modules
  */
 const GUARD_REGISTRY = {
@@ -151,8 +226,18 @@ const GUARD_REGISTRY = {
     ],
     description: '📊 Evaluation domain guards (exploration & maintenance decisions)',
   },
-  // collection: { /* deferred to step 6 */ },
+  collection: {
+    module: collectionGuards,
+    guards: [
+      'canCollectTile',
+      'isVehicleOverloaded',
+      'shouldReturnToBase',
+      'canContinueCollecting',
+    ],
+    description: '📦 Collection domain guards (resource gathering & capacity)',
+  },
 };
+
 
 /**
  * Context scenario presets

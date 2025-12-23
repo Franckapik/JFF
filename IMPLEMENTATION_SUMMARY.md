@@ -39,6 +39,19 @@
 
 **Status:** Partial migration complete. 2/3 guards pure, ESLint rules applied.
 
+#### COLLECTION DOMAIN (80% Complete)
+
+**File Created:** `src/ai/fsm/machineX/domains/collection/guards.pure.ts`
+
+4 pure guards extracted (1 deferred):
+- ✅ `canCollectTile` - Check capacity, fuel > 20%, damage < 80%
+- ✅ `isVehicleOverloaded` - Check if resources >= 80% capacity
+- ✅ `shouldReturnToBase` - Check capacity/fuel/damage thresholds
+- ✅ `canContinueCollecting` - Check if can continue collecting
+- ⚠️ `hasMoreCollectibleTiles` - **IMPURE** (calls `useTileStore.getState().calculateDistance()`) - Marked @deprecated for Phase 2
+
+**Status:** Partial migration complete. 4/5 guards pure, ESLint rules applied.
+
 ---
 
 ### ✅ Step 4: Node.js Validation Scripts
@@ -134,13 +147,13 @@ isShipOnBase    ✅ PASS     true      0.22ms     -
 📊 Results: 3/3 passed (100.0%)
 ```
 
-### 2. **Quick Test Script** (17 Built-in Tests)
+### 2. **Quick Test Script** (27 Built-in Tests)
 
 ```bash
 npm run quick-test-guards
 ```
 
-Runs 17 predefined tests instantly:
+Runs 27 predefined tests instantly:
 
 **Maintenance Domain (10 tests):**
 - needsRefuel (low fuel) → true
@@ -162,6 +175,18 @@ Runs 17 predefined tests instantly:
 - shouldMaintain (low fuel) → true
 - shouldMaintain (high damage) → true
 - shouldMaintain (all good) → false
+
+**Collection Domain (10 tests):**
+- canCollectTile (good conditions) → true
+- canCollectTile (low fuel) → false
+- canCollectTile (high damage) → false
+- canCollectTile (at capacity) → false
+- isVehicleOverloaded (50%) → false
+- isVehicleOverloaded (80%) → true
+- shouldReturnToBase (low fuel) → true
+- shouldReturnToBase (high damage) → true
+- shouldReturnToBase (near full) → true
+- canContinueCollecting (good) → true
 
 **Output:**
 ```

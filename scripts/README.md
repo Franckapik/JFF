@@ -162,9 +162,19 @@ Mixed pure + impure guards. **2 pure guards** extracted to `guards.pure.ts`:
 
 **Status:** 🔄 Partial migration - 2/3 guards pure, `shouldCollect` marked @deprecated for Phase 2
 
-### ⚙️ Collection (DEFER)
+### 📦 Collection
 
-Mixed pure + impure. Will be extracted in Phase 2.
+Mixed pure + impure guards. **4 pure guards** extracted to `guards.pure.ts`:
+
+| Guard | Description | Test Case | Status |
+|-------|-------------|-----------|--------|
+| `canCollectTile` | capacity available, fuel > 20%, damage < 80% | fuel=50, damage=20 → true | ✅ PURE |
+| `isVehicleOverloaded` | resources >= 80% capacity | resources=80/100 → true | ✅ PURE |
+| `shouldReturnToBase` | capacity >= 80% OR fuel < 30% OR damage > 70% | fuel=20 → true | ✅ PURE |
+| `canContinueCollecting` | capacity < 80%, fuel > 30%, damage < 70% | fuel=50, damage=20 → true | ✅ PURE |
+| `hasMoreCollectibleTiles` | checks tiles in radius via useTileStore | N/A | ⚠️ IMPURE (deferred) |
+
+**Status:** 🔄 Partial migration - 4/5 guards pure, `hasMoreCollectibleTiles` marked @deprecated for Phase 2
 
 ---
 

@@ -97,6 +97,11 @@ export const isVehicleOverloaded = createGuard('isVehicleOverloaded', ({ context
 
 /**
  * Guard pour vérifier s'il y a encore des tuiles collectibles disponibles
+ * 
+ * @deprecated ⚠️ IMPURE GUARD - calls useTileStore.getState().calculateDistance()
+ * This guard violates purity constraints and cannot be tested in terminal.
+ * Deferred to Phase 2 (Context Injector implementation).
+ * For new pure guards, use guards.pure.ts instead.
  */
 export const hasMoreCollectibleTiles = createGuard('hasMoreCollectibleTiles', ({ context }) => {
   // knownTiles est maintenant un tableau de Tile
