@@ -45,21 +45,11 @@ npm run test:fsm-verbose    # Mode debug détaillé
 
 ## ✅ Validation
 
-### `check-exports.js`
-Valide les conventions d'export:
-- Stores/hooks: **named exports** uniquement
-- Composants React: **default export** uniquement
-
-```bash
-npm run check-exports
-```
-
 ### `pre-commit.sh`
 Validation complète avant commit:
 1. ESLint
-2. Check exports
-3. TypeScript type-check
-4. Build
+2. TypeScript type-check
+3. Build
 
 ```bash
 ./scripts/pre-commit.sh
@@ -89,12 +79,11 @@ npm run quick-test-guards
 
 ```
 scripts/
-├── test-fsm-cycle.js           ⭐ NOUVEAU: Tests FSM terminal
-├── check-exports.js
-├── pre-commit.sh
+├── menu.js                       ⭐ NOUVEAU: Menu interactif
+├── test-fsm-cycle.js           ⭐ Tests FSM terminal
 ├── test-guards-interactive.js
 ├── quick-test-guards.js
-├── validate-migration-v5.js
+├── pre-commit.sh
 ├── README-SCRIPTS.md           ⭐ Ce fichier
 ├── README.md                   # Documentation guards originale
 └── validate-guards/
@@ -126,7 +115,7 @@ npm run test:fsm-verbose    # Voir tous les détails
 
 ### Pour CI/CD
 ```bash
-npm run test:fsm-quick && npm run check-exports
+npm run test:fsm-quick
 ```
 
 ---
@@ -169,6 +158,7 @@ await simulator.waitForState('exploring.drone_scanning');
 
 | Commande | Description | Durée |
 |----------|-------------|-------|
+| `npm run test` | Menu interactif | Interactif |
 | `npm run test:fsm-cycle` | Cycle complet | ~10s |
 | `npm run test:fsm-quick` | Test rapide | <1s |
 | `npm run test:fsm-explore` | Exploration seule | ~2s |
@@ -177,7 +167,6 @@ await simulator.waitForState('exploring.drone_scanning');
 | `npm run test:fsm-verbose` | Mode debug | Variable |
 | `npm run validate-guards` | Guards interactif | Interactif |
 | `npm run quick-test-guards` | Guards rapide | <1s |
-| `npm run check-exports` | Validation exports | <1s |
 
 ---
 
