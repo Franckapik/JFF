@@ -47,8 +47,9 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 // Import depuis l'architecture domain-based
 // Imports par domaine pour éviter les erreurs de syntaxe
 import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection';
-import { assignEvaluationContext, onEvaluatingEntry, onEvaluatingExit, shouldExplore } from './domains/evaluation';
-import { shouldCollect, shouldMaintain } from './domains/evaluation/guards';
+import { assignEvaluationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation';
+import { shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure';
+import { shouldCollect } from './domains/evaluation/guards';
 import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration';
 import { updateDronePosition, updateShipPosition } from './domains/global';
 import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign';

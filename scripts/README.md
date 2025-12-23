@@ -150,9 +150,17 @@ All guards in `guards.pure.ts`:
 
 **Status:** ✅ Production-ready, fully tested, ESLint enforced
 
-### 📊 Evaluation (DEFER)
+### 📊 Evaluation
 
-Mixed pure + impure. Will be extracted in Phase 2.
+Mixed pure + impure guards. **2 pure guards** extracted to `guards.pure.ts`:
+
+| Guard | Description | Test Case | Status |
+|-------|-------------|-----------|--------|
+| `shouldExplore` | cycle < 2, fuel > threshold, damage < 80 | fuel=50, damage=0 → true | ✅ PURE |
+| `shouldMaintain` | fuel < 30% OR damage > 50% | fuel=20 → true | ✅ PURE |
+| `shouldCollect` | checks tiles in radius via useTileStore | N/A | ⚠️ IMPURE (deferred) |
+
+**Status:** 🔄 Partial migration - 2/3 guards pure, `shouldCollect` marked @deprecated for Phase 2
 
 ### ⚙️ Collection (DEFER)
 

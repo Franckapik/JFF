@@ -1,6 +1,6 @@
 # 🎉 FSM Guard Validation System - Implementation Complete
 
-**Status:** ✅ POC Complete for Maintenance Domain  
+**Status:** ✅ Maintenance Domain Complete | 🔄 Evaluation Domain Partial  
 **Date:** 2025-12-23  
 **Implemented Steps:** 1, 4, 5 + Interactive Menu + Quick Tests
 
@@ -8,7 +8,9 @@
 
 ## Summary of Implementation
 
-### ✅ Step 1: Pure Guards Extraction (MAINTENANCE DOMAIN)
+### ✅ Step 1: Pure Guards Extraction
+
+#### MAINTENANCE DOMAIN (100% Complete)
 
 **File Created:** `src/ai/fsm/machineX/domains/maintenance/guards.pure.ts`
 
@@ -25,6 +27,17 @@
 - ✅ No React/R3F dependencies
 - ✅ TypeScript typed: `XStateV5Guard`
 - ✅ Fully tested in Node.js terminal
+
+#### EVALUATION DOMAIN (67% Complete)
+
+**File Created:** `src/ai/fsm/machineX/domains/evaluation/guards.pure.ts`
+
+2 pure guards extracted (1 deferred):
+- ✅ `shouldExplore` - Check cycle limit, fuel, damage, capacity
+- ✅ `shouldMaintain` - Check if fuel < 30% OR damage > 50%
+- ⚠️ `shouldCollect` - **IMPURE** (calls `useTileStore.getState()`) - Marked @deprecated for Phase 2
+
+**Status:** Partial migration complete. 2/3 guards pure, ESLint rules applied.
 
 ---
 
@@ -81,9 +94,11 @@
 **Enforcement Result:**
 ```
 ✅ npm run type-check     → PASS
-✅ npx eslint             → PASS
+✅ npx eslint             → PASS (maintenance & evaluation)
 ✅ Guards are protected   → PURE & TESTABLE
 ```
+
+**Evaluation Domain Rules:** Same structure as maintenance but with **warning level** for backward compatibility with `shouldCollect` (impure guard).
 
 ---
 
@@ -96,7 +111,7 @@ npm run validate-guards
 ```
 
 Features:
-- 🎯 Select domain (currently: maintenance)
+- 🎯 Select domain (maintenance, evaluation)
 - ☑️ Choose guards to test
 - 🎛️ Select context preset (healthy, critical, custom)
 - 🔧 Configure custom context values
@@ -119,13 +134,15 @@ isShipOnBase    ✅ PASS     true      0.22ms     -
 📊 Results: 3/3 passed (100.0%)
 ```
 
-### 2. **Quick Test Script** (10 Built-in Tests)
+### 2. **Quick Test Script** (17 Built-in Tests)
 
 ```bash
 npm run quick-test-guards
 ```
 
-Runs 10 predefined tests instantly:
+Runs 17 predefined tests instantly:
+
+**Maintenance Domain (10 tests):**
 - needsRefuel (low fuel) → true
 - needsRefuel (high fuel) → false
 - needsRepair (high damage) → true
@@ -136,6 +153,15 @@ Runs 10 predefined tests instantly:
 - isShipOnBase (far from base) → false
 - maintenanceComplete (all OK) → true
 - maintenanceComplete (low fuel) → false
+
+**Evaluation Domain (7 tests):**
+- shouldExplore (good conditions) → true
+- shouldExplore (low fuel) → false
+- shouldExplore (cycle limit) → false
+- shouldExplore (high damage) → false
+- shouldMaintain (low fuel) → true
+- shouldMaintain (high damage) → true
+- shouldMaintain (all good) → false
 
 **Output:**
 ```

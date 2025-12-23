@@ -47,6 +47,11 @@ export const shouldExplore = createGuard('shouldExplore', ({ context }) => {
 /**
  * Guard pour déterminer si la collecte est nécessaire
  * Nouvelle logique : Si plus de 2 explorations par drone, le vaisseau doit explorer/collecter
+ * 
+ * @deprecated ⚠️ IMPURE GUARD - calls useTileStore.getState()
+ * This guard violates purity constraints and cannot be tested in terminal.
+ * Deferred to Phase 2 (Context Injector implementation).
+ * For new pure guards, use guards.pure.ts instead.
  */
 export const shouldCollect = createGuard('shouldCollect', ({ context }) => {
   const exploredThisCycle = context.memory?.stats?.tilesExploredInCycle ?? 0;

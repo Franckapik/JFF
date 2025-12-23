@@ -65,6 +65,32 @@ const guards = {
 
     return !hasResources && !needsRepairs && !needsFuel;
   },
+
+  // Evaluation guards
+  shouldExplore: ({ context }) => {
+    const exploredThisCycle = context.memory?.stats?.tilesExploredInCycle ?? 0;
+    const MAX_EXPLORATIONS_PER_CYCLE = 2;
+    
+    if (exploredThisCycle > MAX_EXPLORATIONS_PER_CYCLE) return false;
+
+    const fuel = context.vehicle?.fuel ?? 0;
+    const damage = context.vehicle?.damage ?? 0;
+    const fuelThreshold = context.config?.fuelThreshold ?? 20;
+    const isAtCapacity = context.vehicle?.isAtCapacity ?? false;
+    const DAMAGE_THRESHOLD = 80;
+    
+    if (fuel < fuelThreshold) return false;
+    if (damage > DAMAGE_THRESHOLD) return false;
+    if (isAtCapacity) return false;
+    
+    return true;
+  },
+
+  shouldMaintain: ({ context }) => {
+    const fuel = context.vehicle?.fuel ?? 100;
+    const damage = context.vehicle?.damage ?? 0;
+    return fuel < 30 || damage > 50;
+  },
 };
 
 // Mock context factory
@@ -245,6 +271,115 @@ if (
         resources: { food: 0, debris: 0, special: 0 },
       },
     }),
+    false
+  )
+)
+  passed++;
+
+console.log(''.padEnd(70, '-'));
+
+// EVALUATION TESTS
+console.log('\n🧪 EVALUATION GUARD TESTS\n');
+console.log(
+  'Status | Guard Name                | Result | Expected'
+);
+console.log(''.padEnd(70, '-'));
+
+// Test 11: shouldExplore - Good conditions
+total++;
+if (
+  runGuardTest(
+    'shouldExplore (good conditions)',
+    guards.shouldExplore,
+    createMockContext({
+      vehicle: { fuel: 50, damage: 20, isAtCapacity: false },
+      config: { fuelThreshold: 20 },
+      memory: { stats: { tilesExploredInCycle: 1 } },
+    }),
+    true
+  )
+)
+  passed++;
+
+// Test 12: shouldExplore - Low fuel
+total++;
+if (
+  runGuardTest(
+    'shouldExplore (low fuel)',
+    guards.shouldExplore,
+    createMockContext({
+      vehicle: { fuel: 15, damage: 20, isAtCapacity: false },
+      config: { fuelThreshold: 20 },
+      memory: { stats: { tilesExploredInCycle: 1 } },
+    }),
+    false
+  )
+)
+  passed++;
+
+// Test 13: shouldExplore - Too many explorations
+total++;
+if (
+  runGuardTest(
+    'shouldExplore (cycle limit)',
+    guards.shouldExplore,
+    createMockContext({
+      vehicle: { fuel: 50, damage: 20, isAtCapacity: false },
+      config: { fuelThreshold: 20 },
+      memory: { stats: { tilesExploredInCycle: 3 } },
+    }),
+    false
+  )
+)
+  passed++;
+
+// Test 14: shouldExplore - High damage
+total++;
+if (
+  runGuardTest(
+    'shouldExplore (high damage)',
+    guards.shouldExplore,
+    createMockContext({
+      vehicle: { fuel: 50, damage: 85, isAtCapacity: false },
+      config: { fuelThreshold: 20 },
+      memory: { stats: { tilesExploredInCycle: 1 } },
+    }),
+    false
+  )
+)
+  passed++;
+
+// Test 15: shouldMaintain - Low fuel
+total++;
+if (
+  runGuardTest(
+    'shouldMaintain (low fuel)',
+    guards.shouldMaintain,
+    createMockContext({ vehicle: { fuel: 25, damage: 10 } }),
+    true
+  )
+)
+  passed++;
+
+// Test 16: shouldMaintain - High damage
+total++;
+if (
+  runGuardTest(
+    'shouldMaintain (high damage)',
+    guards.shouldMaintain,
+    createMockContext({ vehicle: { fuel: 50, damage: 60 } }),
+    true
+  )
+)
+  passed++;
+
+// Test 17: shouldMaintain - All good
+total++;
+if (
+  runGuardTest(
+    'shouldMaintain (all good)',
+    guards.shouldMaintain,
+    createMockContext({ vehicle: { fuel: 50, damage: 20 } }),
     false
   )
 )

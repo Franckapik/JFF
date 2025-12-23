@@ -16,19 +16,18 @@
 
 import inquirer from 'inquirer';
 import {
-  createMockFSMContext,
-  createHealthyVehicleContext,
-  createCriticalVehicleContext,
+    createCriticalVehicleContext,
+    createHealthyVehicleContext,
+    createMockFSMContext,
 } from './validate-guards/context-fixtures.js';
 import {
-  testGuard,
-  testGuards,
-  getTestStats,
+    getTestStats,
+    testGuards
 } from './validate-guards/guard-runner.js';
 import {
-  formatHeader,
-  formatResultsTable,
-  formatTestSummary,
+    formatHeader,
+    formatResultsTable,
+    formatTestSummary,
 } from './validate-guards/reporters.js';
 
 /**
@@ -95,6 +94,41 @@ const maintenanceGuards = {
 };
 
 /**
+ * JavaScript implementations of evaluation guards (transpiled from guards.pure.ts)
+ */
+const evaluationGuards = {
+  shouldExplore: ({ context }) => {
+    const exploredThisCycle = context.memory?.stats?.tilesExploredInCycle ?? 0;
+    const MAX_EXPLORATIONS_PER_CYCLE = 2;
+    
+    if (exploredThisCycle > MAX_EXPLORATIONS_PER_CYCLE) {
+      return false;
+    }
+
+    const fuel = context.vehicle?.fuel ?? 0;
+    const damage = context.vehicle?.damage ?? 0;
+    const fuelThreshold = context.config?.fuelThreshold ?? 20;
+    const isAtCapacity = context.vehicle?.isAtCapacity ?? false;
+    const DAMAGE_THRESHOLD = 80;
+    
+    if (fuel < fuelThreshold) return false;
+    if (damage > DAMAGE_THRESHOLD) return false;
+    if (isAtCapacity) return false;
+    
+    return true;
+  },
+
+  shouldMaintain: ({ context }) => {
+    const fuel = context.vehicle?.fuel ?? 100;
+    const damage = context.vehicle?.damage ?? 0;
+    const FUEL_MAINTENANCE_THRESHOLD = 30;
+    const DAMAGE_MAINTENANCE_THRESHOLD = 50;
+    
+    return fuel < FUEL_MAINTENANCE_THRESHOLD || damage > DAMAGE_MAINTENANCE_THRESHOLD;
+  },
+};
+
+/**
  * Guard registry: maps domain names to guard modules
  */
 const GUARD_REGISTRY = {
@@ -109,7 +143,14 @@ const GUARD_REGISTRY = {
     ],
     description: '🔧 Maintenance domain guards (fuel, damage, resources)',
   },
-  // evaluation: { /* deferred to step 6 */ },
+  evaluation: {
+    module: evaluationGuards,
+    guards: [
+      'shouldExplore',
+      'shouldMaintain',
+    ],
+    description: '📊 Evaluation domain guards (exploration & maintenance decisions)',
+  },
   // collection: { /* deferred to step 6 */ },
 };
 

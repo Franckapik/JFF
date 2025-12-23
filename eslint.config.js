@@ -153,6 +153,54 @@ export default [
     },
   },
 
+  // Bloc dédié: Evaluation Domain Guards - Enforce Purity
+  {
+    files: ['src/ai/fsm/machineX/domains/evaluation/**/*.{ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        project: './tsconfig.json',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+      'import': importPlugin,
+    },
+    rules: {
+      // Note: evaluation/guards.ts still has shouldCollect with getState()
+      // This is marked @deprecated and will be refactored in Phase 2
+      // For now, we allow it but warn about new violations
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: "CallExpression[callee.object.name='useTileStore'] > Identifier",
+          message: '⚠️ Guards in evaluation/ should be pure. getState() is discouraged. Use guards.pure.ts for new guards.',
+        },
+        {
+          selector: "CallExpression[callee.object.name='useGameStore'] > Identifier",
+          message: '⚠️ Guards in evaluation/ should be pure. getState() is discouraged. Use guards.pure.ts for new guards.',
+        },
+      ],
+      
+      // Forbid React/R3F/stores imports in evaluation guards (ensure purity)
+      'no-restricted-imports': [
+        'error',
+        {
+          name: 'react',
+          message: '❌ FSM guards must be pure. React imports forbidden.',
+        },
+        {
+          name: '@react-three/fiber',
+          message: '❌ FSM guards must be pure. R3F imports forbidden.',
+        },
+      ],
+    },
+  },
+
   // Bloc JavaScript uniquement (sans TypeScript parser)
   {
     files: ['src/**/*.{js,jsx}'],
