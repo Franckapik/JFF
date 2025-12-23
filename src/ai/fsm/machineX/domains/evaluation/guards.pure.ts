@@ -86,3 +86,54 @@ export const shouldMaintain: XStateV5Guard = ({ context }) => {
   
   return fuel < FUEL_MAINTENANCE_THRESHOLD || damage > DAMAGE_MAINTENANCE_THRESHOLD;
 };
+
+/**
+ * 🔍 Pure guard: Check if collection is appropriate based on available tiles and vehicle state
+ * 
+ * Returns true when:
+ * - Available tiles exist (via injected query result)
+ * - Vehicle is NOT at capacity
+ * - Vehicle has sufficient fuel
+ * 
+ * DEPENDENCY INJECTION PATTERN:
+ * This guard reads injectedData.availableTiles which is populated by onEvaluatingEntry effect.
+ * The effect queries useTileStore and injects results, keeping this guard pure for testing.
+ * 
+ * ARCHITECTURE: Effect Zone (gets data) → Injection Zone → Guard Zone (uses data)
+ * This maintains guard purity while deferring SoC boundary discussion to Phase 2.
+ * 
+ * @see FSM_CONTEXT_VS_STORES_ANALYSIS.md for long-term architectural options
+ * 
+ * @param context FSMContext containing injectedData with availableTiles
+ * @returns true if collection should proceed
+ * 
+ * @example
+ * // In Node.js test (with injected data):
+ * const context = {
+ *   vehicle: { fuel: 50, isAtCapacity: false },
+ *   config: { fuelThreshold: 20 },
+ *   injectedData: { 
+ *     availableTiles: [{ coord: { x: 1, z: 1 } }],
+ *     injectedAt: Date.now()
+ *   }
+ * };
+ * const result = shouldCollect({ context, event: {} });
+ * console.log(result); // true
+ */
+export const shouldCollect: XStateV5Guard = ({ context }) => {
+  // ✅ PURE: Read injected data, not getState()
+  const availableTiles = context.injectedData?.availableTiles;
+  
+  // Must have tiles available to collect
+  if (!availableTiles || availableTiles.length === 0) return false;
+  
+  // Vehicle state checks
+  const isAtCapacity = context.vehicle?.isAtCapacity ?? false;
+  const fuel = context.vehicle?.fuel ?? 0;
+  const fuelThreshold = context.config?.fuelThreshold ?? 20;
+  
+  if (isAtCapacity) return false;
+  if (fuel < fuelThreshold) return false;
+  
+  return true;
+};

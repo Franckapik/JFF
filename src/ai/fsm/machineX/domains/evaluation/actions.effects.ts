@@ -8,10 +8,63 @@
  */
 
 import type { ActorRef } from 'xstate';
+import { assign } from 'xstate';
 
 import fsmLogger from '../../../../../logger/fsmLogger';
+import { useTileStore } from '../../../../../stores/useTileStore';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5';
+
+/**
+ * 🔍 ACTION: Inject tile data into context for shouldCollect guard
+ * 
+ * This is the EFFECT ZONE where side effects (getState calls) are allowed.
+ * The onEvaluatingEntry uses this to query the tile store and inject results.
+ * 
+ * DEPENDENCY INJECTION PATTERN:
+ * - Effect queries useTileStore.getState() ✅ (allowed in effects)
+ * - Results stored in context.injectedData ✅ (context update)
+ * - shouldCollect guard reads injectedData ✅ (pure, testable)
+ * 
+ * TEMPORARY SCAFFOLDING: Marked for Phase 2 discussion on permanent SoC boundaries.
+ * Could be replaced by: Service Layer, Query Actor, or Query-in-Effect pattern.
+ * 
+ * @see FSM_CONTEXT_VS_STORES_ANALYSIS.md for architectural options
+ */
+export const assignInjectTileData = assign({
+  injectedData: ({ context }) => {
+    fsmLogger.info('[assignInjectTileData] Querying tile store for available tiles...');
+    
+    try {
+      const tileStore = useTileStore.getState();
+      const shipPosition = context.vehicle?.position;
+      const collectingRadius = context.config?.collectingRadius ?? 3;
+      
+      // Query available tiles within collecting radius
+      const availableTiles = tileStore.tileInRadius(shipPosition, collectingRadius) || [];
+      
+      fsmLogger.info('[assignInjectTileData] Query result:', {
+        shipPosition,
+        collectingRadius,
+        availableTilesCount: availableTiles.length,
+        injectedAt: Date.now()
+      });
+      
+      return {
+        ...context.injectedData,
+        availableTiles: Array.isArray(availableTiles) ? availableTiles : [availableTiles].filter(Boolean),
+        injectedAt: Date.now(),
+      };
+    } catch (error) {
+      fsmLogger.error('[assignInjectTileData] Failed to query tile store:', error);
+      return {
+        ...context.injectedData,
+        availableTiles: [],
+        injectedAt: Date.now(),
+      };
+    }
+  },
+});
 
 /**
  * Action d'entrée de l'état evaluating : logique de décision prioritaire

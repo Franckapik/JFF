@@ -92,6 +92,25 @@ const guards = {
     return fuel < 30 || damage > 50;
   },
 
+  // ✅ NEW: shouldCollect with Dependency Injection pattern
+  shouldCollect: ({ context }) => {
+    // ✅ PURE: Read injected data, not getState()
+    const availableTiles = context.injectedData?.availableTiles;
+    
+    // Must have tiles available to collect
+    if (!availableTiles || availableTiles.length === 0) return false;
+    
+    // Vehicle state checks
+    const isAtCapacity = context.vehicle?.isAtCapacity ?? false;
+    const fuel = context.vehicle?.fuel ?? 0;
+    const fuelThreshold = context.config?.fuelThreshold ?? 20;
+    
+    if (isAtCapacity) return false;
+    if (fuel < fuelThreshold) return false;
+    
+    return true;
+  },
+
   // Collection guards
   canCollectTile: ({ context }) => {
     const vehicle = context.vehicle;
@@ -161,6 +180,45 @@ const guards = {
     const isOperational = (vehicle.damage || 0) < 70;
     
     return hasCapacity && hasEnoughFuel && isOperational;
+  },
+
+  // Initializing guards
+  isVehiclePositionInitialized: ({ context }) => {
+    const vehiclePos = context.vehicle?.position;
+    return !!vehiclePos && 
+           vehiclePos.x !== undefined && 
+           vehiclePos.z !== undefined;
+  },
+
+  isDronePositionInitialized: ({ context }) => {
+    const drones = context.droneFleet?.drones || {};
+    const firstDrone = Object.values(drones)[0];
+    const dronePos = firstDrone?.position;
+    return !!dronePos && 
+           dronePos.x !== undefined && 
+           dronePos.z !== undefined;
+  },
+
+  isBasePositionInitialized: ({ context }) => {
+    const basePos = context.vehicle?.basePosition;
+    return !!basePos && 
+           basePos.x !== undefined && 
+           basePos.z !== undefined;
+  },
+
+  areAllEntitiesInitialized: ({ context }) => {
+    const vehiclePos = context.vehicle?.position;
+    const vehicleInit = !!vehiclePos && vehiclePos.x !== undefined && vehiclePos.z !== undefined;
+    
+    const drones = context.droneFleet?.drones || {};
+    const firstDrone = Object.values(drones)[0];
+    const dronePos = firstDrone?.position;
+    const droneInit = !!dronePos && dronePos.x !== undefined && dronePos.z !== undefined;
+    
+    const basePos = context.vehicle?.basePosition;
+    const baseInit = !!basePos && basePos.x !== undefined && basePos.z !== undefined;
+    
+    return vehicleInit && droneInit && baseInit;
   },
 };
 
@@ -456,10 +514,71 @@ if (
 )
   passed++;
 
+// =============================
+// 🔍 DEPENDENCY INJECTION PATTERN - shouldCollect Tests (Tests 18-20)
+// =============================
+console.log(''.padEnd(70, '-'));
+console.log('\n🔍 DEPENDENCY INJECTION PATTERN - shouldCollect Tests\n');
+console.log(
+  'Status | Guard Name                | Result | Expected'
+);
+console.log(''.padEnd(70, '-'));
+
+// Test 18: shouldCollect - With injected tiles
+total++;
+if (
+  runGuardTest(
+    'shouldCollect (injected tiles)',
+    guards.shouldCollect,
+    createMockContext({
+      vehicle: { fuel: 50, isAtCapacity: false },
+      config: { fuelThreshold: 20 },
+      injectedData: {
+        availableTiles: [{ coord: { x: 1, z: 1 } }],
+        injectedAt: Date.now(),
+      },
+    }),
+    true
+  )
+)
+  passed++;
+
+// Test 19: shouldCollect - No injected tiles
+total++;
+if (
+  runGuardTest(
+    'shouldCollect (no tiles)',
+    guards.shouldCollect,
+    createMockContext({
+      vehicle: { fuel: 50, isAtCapacity: false },
+      config: { fuelThreshold: 20 },
+      injectedData: { availableTiles: [], injectedAt: Date.now() },
+    }),
+    false
+  )
+)
+  passed++;
+
+// Test 20: shouldCollect - No injection (deferred to Phase 2)
+total++;
+if (
+  runGuardTest(
+    'shouldCollect (no injection)',
+    guards.shouldCollect,
+    createMockContext({
+      vehicle: { fuel: 50, isAtCapacity: false },
+      config: { fuelThreshold: 20 },
+      // injectedData intentionally missing
+    }),
+    false
+  )
+)
+  passed++;
+
 console.log(''.padEnd(70, '-'));
 
 // =============================
-// COLLECTION GUARD TESTS (Tests 18-27)
+// COLLECTION GUARD TESTS (Tests 21-30)
 // =============================
 console.log('\n🧪 COLLECTION GUARD TESTS\n');
 console.log(
@@ -467,7 +586,7 @@ console.log(
 );
 console.log(''.padEnd(70, '-'));
 
-// Test 18: canCollectTile - Good conditions
+// Test 21: canCollectTile - Good conditions
 total++;
 if (
   runGuardTest(
@@ -486,7 +605,7 @@ if (
 )
   passed++;
 
-// Test 19: canCollectTile - Low fuel
+// Test 22: canCollectTile - Low fuel
 total++;
 if (
   runGuardTest(
@@ -505,7 +624,7 @@ if (
 )
   passed++;
 
-// Test 20: canCollectTile - High damage
+// Test 23: canCollectTile - High damage
 total++;
 if (
   runGuardTest(
@@ -524,7 +643,7 @@ if (
 )
   passed++;
 
-// Test 21: canCollectTile - At capacity
+// Test 24: canCollectTile - At capacity
 total++;
 if (
   runGuardTest(
@@ -543,7 +662,7 @@ if (
 )
   passed++;
 
-// Test 22: isVehicleOverloaded - Below threshold
+// Test 25: isVehicleOverloaded - Below threshold
 total++;
 if (
   runGuardTest(
@@ -560,7 +679,7 @@ if (
 )
   passed++;
 
-// Test 23: isVehicleOverloaded - At 80%
+// Test 26: isVehicleOverloaded - At 80%
 total++;
 if (
   runGuardTest(
@@ -577,7 +696,7 @@ if (
 )
   passed++;
 
-// Test 24: shouldReturnToBase - Low fuel
+// Test 27: shouldReturnToBase - Low fuel
 total++;
 if (
   runGuardTest(
@@ -596,7 +715,7 @@ if (
 )
   passed++;
 
-// Test 25: shouldReturnToBase - High damage
+// Test 28: shouldReturnToBase - High damage
 total++;
 if (
   runGuardTest(
@@ -615,7 +734,7 @@ if (
 )
   passed++;
 
-// Test 26: shouldReturnToBase - Near full
+// Test 29: shouldReturnToBase - Near full
 total++;
 if (
   runGuardTest(
@@ -634,7 +753,7 @@ if (
 )
   passed++;
 
-// Test 27: canContinueCollecting - All good
+// Test 30: canContinueCollecting - All good
 total++;
 if (
   runGuardTest(
@@ -646,6 +765,131 @@ if (
         damage: 20,
         resources: { food: 0, debris: 0, special: 0, total: 500 },
         maxCapacity: 2003,
+      },
+    }),
+    true
+  )
+)
+  passed++;
+
+console.log(''.padEnd(70, '-'));
+
+// =============================
+// INITIALIZING GUARD TESTS (Tests 31-37)
+// =============================
+console.log('\n🧪 INITIALIZING GUARD TESTS\n');
+console.log(
+  'Status | Guard Name                | Result | Expected'
+);
+console.log(''.padEnd(70, '-'));
+
+// Test 31: isVehiclePositionInitialized - Valid position
+total++;
+if (
+  runGuardTest(
+    'isVehiclePositionInitialized (valid)',
+    guards.isVehiclePositionInitialized,
+    createMockContext({
+      vehicle: {
+        position: { x: 10, z: 20 },
+      },
+    }),
+    true
+  )
+)
+  passed++;
+
+// Test 32: isVehiclePositionInitialized - Missing position
+total++;
+if (
+  runGuardTest(
+    'isVehiclePositionInitialized (missing)',
+    guards.isVehiclePositionInitialized,
+    createMockContext({
+      vehicle: {},
+    }),
+    false
+  )
+)
+  passed++;
+
+// Test 33: isDronePositionInitialized - Valid drone
+total++;
+if (
+  runGuardTest(
+    'isDronePositionInitialized (valid)',
+    guards.isDronePositionInitialized,
+    createMockContext({
+      droneFleet: {
+        drones: {
+          explorer: { position: { x: 5, z: 15 } },
+        },
+      },
+    }),
+    true
+  )
+)
+  passed++;
+
+// Test 34: isDronePositionInitialized - No drones
+total++;
+if (
+  runGuardTest(
+    'isDronePositionInitialized (no drones)',
+    guards.isDronePositionInitialized,
+    createMockContext({
+      droneFleet: { drones: {} },
+    }),
+    false
+  )
+)
+  passed++;
+
+// Test 35: isBasePositionInitialized - Valid base
+total++;
+if (
+  runGuardTest(
+    'isBasePositionInitialized (valid)',
+    guards.isBasePositionInitialized,
+    createMockContext({
+      vehicle: {
+        basePosition: { x: 0, z: 0 },
+      },
+    }),
+    true
+  )
+)
+  passed++;
+
+// Test 36: isBasePositionInitialized - Missing base
+total++;
+if (
+  runGuardTest(
+    'isBasePositionInitialized (missing)',
+    guards.isBasePositionInitialized,
+    createMockContext({
+      vehicle: {},
+    }),
+    false
+  )
+)
+  passed++;
+
+// Test 37: areAllEntitiesInitialized - All valid
+total++;
+if (
+  runGuardTest(
+    'areAllEntitiesInitialized (all valid)',
+    guards.areAllEntitiesInitialized,
+    createMockContext({
+      vehicle: {
+        position: { x: 10, z: 20 },
+        basePosition: { x: 0, z: 0 },
+      },
+      droneFleet: {
+        drones: {
+          explorer: { position: { x: 5, z: 15 } },
+        },
       },
     }),
     true

@@ -176,6 +176,21 @@ Mixed pure + impure guards. **4 pure guards** extracted to `guards.pure.ts`:
 
 **Status:** 🔄 Partial migration - 4/5 guards pure, `hasMoreCollectibleTiles` marked @deprecated for Phase 2
 
+### 🚀 Initializing
+
+Mixed pure + impure guards. **4 pure guards** extracted to `guards.pure.ts`:
+
+| Guard | Description | Test Case | Status |
+|-------|-------------|-----------|--------|
+| `isVehiclePositionInitialized` | checks vehicle position exists | position={x:10, z:20} → true | ✅ PURE |
+| `isDronePositionInitialized` | checks first drone position exists | drone.position={x:5, z:15} → true | ✅ PURE |
+| `isBasePositionInitialized` | checks base position exists | basePosition={x:0, z:0} → true | ✅ PURE |
+| `areAllEntitiesInitialized` | composite check of all 3 guards | all positions valid → true | ✅ PURE |
+
+**Status:** ✅ 100% pure - All 4 guards migrated successfully
+
+**Note:** The impure versions in `guards.ts` call `useGameStore.getState().isGameInitialized()` and are marked @deprecated. The pure versions only check position data from context.
+
 ---
 
 ## Context Fixtures (Mock Data)

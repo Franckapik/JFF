@@ -5,11 +5,21 @@
  * 
  * CONVENTION : should[Action]
  * Guards pour les conditions de transition dans le domaine d'évaluation
+ * 
+ * ARCHITECTURE NOTE (Phase 11 - Context Injector Pattern):
+ * shouldCollect has been migrated to guards.pure.ts and now uses dependency
+ * injection. The effect onEvaluatingEntry queries tiles and injects into
+ * context.injectedData, allowing the guard to remain pure and testable.
+ * 
+ * @see guards.pure.ts for pure implementation
+ * @see actions.effects.ts for injection logic (assignInjectTileData)
+ * @see src/types/fsm.d.ts for injectedData type definition
  */
 
 import fsmLogger from '../../../../../logger/fsmLogger';
-import { useTileStore } from '../../../../../stores/useTileStore';
 import type { XStateV5Guard } from '../../../../../types/xstate.v5.types';
+
+import { shouldCollect as shouldCollectPure } from './guards.pure';
 
 /**
  * Générateur de guards typés avec log automatique
@@ -45,46 +55,28 @@ export const shouldExplore = createGuard('shouldExplore', ({ context }) => {
 });
 
 /**
- * Guard pour déterminer si la collecte est nécessaire
- * Nouvelle logique : Si plus de 2 explorations par drone, le vaisseau doit explorer/collecter
+ * 🔍 shouldCollect - Now Pure via Dependency Injection
  * 
- * @deprecated ⚠️ IMPURE GUARD - calls useTileStore.getState()
- * This guard violates purity constraints and cannot be tested in terminal.
- * Deferred to Phase 2 (Context Injector implementation).
- * For new pure guards, use guards.pure.ts instead.
+ * MIGRATION NOTES (Phase 11):
+ * - Implementation moved to guards.pure.ts (100% pure, Node.js testable)
+ * - Tile queries now executed in onEvaluatingEntry effect
+ * - Query results injected into context.injectedData.availableTiles
+ * - Pure guard reads injected data instead of calling getState()
+ * 
+ * ARCHITECTURE DECISION (Temporary Scaffolding):
+ * This Context Injector pattern is TEMPORARY scaffolding for Phase 2.
+ * The "injectedData" zone is marked for discussion on permanent SoC boundaries.
+ * 
+ * FUTURE REFACTORING OPTIONS (Phase 2):
+ * 1. Service Layer: Move all queries to a separate service, FSM stays pure
+ * 2. Query Actor: Create XState actor for spatial queries, communicate via events
+ * 3. Pre-computed Cache: Effect caches tiles before FSM state transitions
+ * 
+ * @see FSM_CONTEXT_VS_STORES_ANALYSIS.md for architectural options
+ * @see guards.pure.ts for pure implementation
+ * @see actions.effects.ts assignInjectTileData for query execution
  */
-export const shouldCollect = createGuard('shouldCollect', ({ context }) => {
-  const exploredThisCycle = context.memory?.stats?.tilesExploredInCycle ?? 0;
-  
-  // Si plus de 2 explorations par drone, le vaisseau prend le relais
-  if (exploredThisCycle > 2) {
-    fsmLogger.info(`[${context.entityId}] shouldCollect: true - Vaisseau prend le relais après ${exploredThisCycle} explorations par drone`);
-    return !context.vehicle.isAtCapacity && context.vehicle.fuel > context.config.fuelThreshold;
-  }
-  
-  // Logique modifiée : vérifier s'il existe des tuiles collectibles dans le rayon
-  // au lieu de vérifier si une tuile cible est déjà assignée
-  if (context.vehicle.isAtCapacity || context.vehicle.fuel <= context.config.fuelThreshold) {
-    return false;
-  }
-  
-  // Utiliser le store pour vérifier les tuiles disponibles
-  const tileStore = useTileStore.getState();
-  const shipPosition = context.vehicle?.position;
-  const collectingRadius = context.config?.collectingRadius ?? 3;
-  
-  // Vérifier s'il existe au moins une tuile collectible dans le rayon
-  const availableTile = tileStore.tileInRadius(shipPosition, collectingRadius);
-  
-  fsmLogger.info(`[${context.entityId}] shouldCollect: checking available tiles`, {
-    shipPosition,
-    collectingRadius,
-    hasAvailableTile: !!availableTile,
-    targetTileCoord: availableTile?.coord
-  });
-  
-  return !!availableTile;
-});
+export const shouldCollect = createGuard('shouldCollect', shouldCollectPure);
 
 /**
  * Guard pour déterminer si la maintenance est nécessaire

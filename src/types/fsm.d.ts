@@ -147,6 +147,56 @@ export interface FSMContext {
 
   // Système de drones
   droneFleet: DroneFleet;
+
+  // ========================================================================
+  // 🔍 DEPENDENCY INJECTION PATTERN - For Pure Guard Testing
+  // ========================================================================
+  // This zone holds query results injected by effects, allowing guards to
+  // remain pure (100% testable in Node.js without React/Zustand coupling).
+  // 
+  // PATTERN: Effects execute getState() queries here, guards read results.
+  // TEMPORARY SCAFFOLDING: Marked for Phase 2 SoC (Separation of Concerns)
+  // discussion to determine permanent architectural boundary.
+  // ========================================================================
+  injectedData?: {
+    /**
+     * Tiles available for collection within collecting radius.
+     * 
+     * FUTURE REFACTORING OPPORTUNITIES (Phase 2):
+     * - Should tile queries be batched?
+     * - Should we cache with TTL (time-to-live)?
+     * - Should exploration and collection share same query?
+     * - Could we use a service layer instead of injection?
+     * 
+     * @see FSM_CONTEXT_VS_STORES_ANALYSIS.md for architectural options
+     */
+    availableTiles?: Tile[];
+
+    /**
+     * Nearby collectible tiles with pre-computed distances.
+     * Used by collection domain guards for candidate selection.
+     * 
+     * FUTURE: Could be replaced by on-demand distance calculation
+     * or replaced with a Query Actor pattern in Phase 2.
+     */
+    nearbyCollectibleTiles?: Array<Tile & { distance: number }>;
+
+    /**
+     * Can the current vehicle reach base from current position?
+     * Pre-computed in effect to avoid expensive pathfinding in guard.
+     * 
+     * FUTURE: Consider whether pathfinding belongs in context or service.
+     */
+    canReachBase?: boolean;
+
+    /**
+     * Timestamp when data was injected.
+     * 
+     * FUTURE: Could enforce cache validity/freshness in Phase 2.
+     * Example: if (Date.now() - injectedAt > 1000) recompute
+     */
+    injectedAt?: number;
+  };
 }
 
 /** Fonction utilitaire de type uniquement pour validation d'état */

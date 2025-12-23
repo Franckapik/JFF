@@ -204,6 +204,49 @@ const collectionGuards = {
 };
 
 /**
+ * JavaScript implementations of initializing guards (transpiled from guards.pure.ts)
+ */
+const initializingGuards = {
+  isVehiclePositionInitialized: ({ context }) => {
+    const vehiclePos = context.vehicle?.position;
+    return !!vehiclePos && 
+           vehiclePos.x !== undefined && 
+           vehiclePos.z !== undefined;
+  },
+
+  isDronePositionInitialized: ({ context }) => {
+    const drones = context.droneFleet?.drones || {};
+    const firstDrone = Object.values(drones)[0];
+    const dronePos = firstDrone?.position;
+    return !!dronePos && 
+           dronePos.x !== undefined && 
+           dronePos.z !== undefined;
+  },
+
+  isBasePositionInitialized: ({ context }) => {
+    const basePos = context.vehicle?.basePosition;
+    return !!basePos && 
+           basePos.x !== undefined && 
+           basePos.z !== undefined;
+  },
+
+  areAllEntitiesInitialized: ({ context }) => {
+    const vehiclePos = context.vehicle?.position;
+    const vehicleInit = !!vehiclePos && vehiclePos.x !== undefined && vehiclePos.z !== undefined;
+    
+    const drones = context.droneFleet?.drones || {};
+    const firstDrone = Object.values(drones)[0];
+    const dronePos = firstDrone?.position;
+    const droneInit = !!dronePos && dronePos.x !== undefined && dronePos.z !== undefined;
+    
+    const basePos = context.vehicle?.basePosition;
+    const baseInit = !!basePos && basePos.x !== undefined && basePos.z !== undefined;
+    
+    return vehicleInit && droneInit && baseInit;
+  },
+};
+
+/**
  * Guard registry: maps domain names to guard modules
  */
 const GUARD_REGISTRY = {
@@ -235,6 +278,16 @@ const GUARD_REGISTRY = {
       'canContinueCollecting',
     ],
     description: '📦 Collection domain guards (resource gathering & capacity)',
+  },
+  initializing: {
+    module: initializingGuards,
+    guards: [
+      'isVehiclePositionInitialized',
+      'isDronePositionInitialized',
+      'isBasePositionInitialized',
+      'areAllEntitiesInitialized',
+    ],
+    description: '🚀 Initializing domain guards (entity position validation)',
   },
 };
 

@@ -249,6 +249,50 @@ export default [
     },
   },
 
+  // Bloc dédié: Initializing Domain Guards - Enforce Purity
+  {
+    files: ['src/ai/fsm/machineX/domains/initializing/**/*.{ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        project: './tsconfig.json',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+      'import': importPlugin,
+    },
+    rules: {
+      // Note: initializing/guards.ts has 4 guards with useGameStore.getState()
+      // They are marked @deprecated and will be refactored in Phase 2
+      // For now, we warn about violations
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: "CallExpression[callee.object.name='useGameStore'] > Identifier",
+          message: '⚠️ Guards in initializing/ should be pure. getState() is discouraged. Use guards.pure.ts for new guards.',
+        },
+      ],
+      
+      // Forbid React/R3F/stores imports in initializing guards (ensure purity)
+      'no-restricted-imports': [
+        'error',
+        {
+          name: 'react',
+          message: '❌ FSM guards must be pure. React imports forbidden.',
+        },
+        {
+          name: '@react-three/fiber',
+          message: '❌ FSM guards must be pure. R3F imports forbidden.',
+        },
+      ],
+    },
+  },
+
   // Bloc JavaScript uniquement (sans TypeScript parser)
   {
     files: ['src/**/*.{js,jsx}'],

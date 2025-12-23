@@ -62,8 +62,8 @@ import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepa
 // Import des guards d'initializing
 
 // Import des guards de collection (pure)
-import { canCollectTile, isVehicleOverloaded } from './domains/collection/guards.pure';
 import { hasMoreCollectibleTiles } from './domains/collection/guards'; // ⚠️ IMPURE - deferred to Phase 2
+import { canCollectTile, isVehicleOverloaded } from './domains/collection/guards.pure';
 // Import des guards d'initializing
 import * as initializingGuards from './domains/initializing/guards';
 import { areAllEntitiesInitialized } from './domains/initializing/guards';
