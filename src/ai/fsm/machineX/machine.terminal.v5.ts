@@ -23,6 +23,11 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 import { createMachineContext } from './context/initialContext.ts';
 import type { MachineEvents } from './events.pure.v5.ts';
 
+// Import des guards réels depuis l'architecture domain-based
+import { canCollectTile, isVehicleOverloaded } from './domains/collection/guards.pure.ts';
+import { shouldCollect, shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure.ts';
+import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure.ts';
+
 /**
  * Actions d'effets pour le mode terminal (remplacent les effets R3F par des logs)
  * Définies inline pour éviter les dépendances au logger
@@ -112,20 +117,36 @@ const terminalAssignActions = {
 };
 
 /**
- * Guards inline
+ * Guards avec implémentations réelles des domaines
+ * Note: areAllEntitiesInitialized gardé en stub car dépend de stores (impure)
+ * Note: hasMoreCollectibleTiles nécessite injectedData (Option A - voir roadmap)
  */
 const terminalGuards = {
+  // Initializing (stub - impure, deferred)
   areAllEntitiesInitialized: () => true,
-  shouldExplore: () => true,
-  shouldCollect: () => true,
-  shouldMaintain: () => true,
-  canCollectTile: () => true,
-  isVehicleOverloaded: () => false,
-  hasMoreCollectibleTiles: () => false,
-  needsDeposit: () => false,
-  needsRefuel: () => false,
-  needsRepair: () => false,
-  maintenanceComplete: () => true,
+  
+  // Evaluation (guards purs)
+  shouldExplore: ({ context }: { context: FSMContext }) => shouldExplore({ context, event: {} as any }),
+  shouldCollect: ({ context }: { context: FSMContext }) => shouldCollect({ context, event: {} as any }),
+  shouldMaintain: ({ context }: { context: FSMContext }) => shouldMaintain({ context, event: {} as any }),
+  
+  // Collection (guards purs)
+  canCollectTile: ({ context }: { context: FSMContext }) => canCollectTile({ context, event: {} as any }),
+  isVehicleOverloaded: ({ context }: { context: FSMContext }) => isVehicleOverloaded({ context, event: {} as any }),
+  
+  // hasMoreCollectibleTiles: stub simplifié pour l'instant
+  // TODO: implémenter avec context.injectedData.availableTiles (Option A)
+  hasMoreCollectibleTiles: ({ context }: { context: FSMContext }) => {
+    const tiles = context.injectedData?.availableTiles;
+    return tiles && tiles.length > 1; // Si plus d'une tuile disponible
+  },
+  
+  // Maintenance (guards purs)
+  needsDeposit: ({ context }: { context: FSMContext }) => needsDeposit({ context, event: {} as any }),
+  needsRefuel: ({ context }: { context: FSMContext }) => needsRefuel({ context, event: {} as any }),
+  needsRepair: ({ context }: { context: FSMContext }) => needsRepair({ context, event: {} as any }),
+  isShipOnBase: ({ context }: { context: FSMContext }) => isShipOnBase({ context, event: {} as any }),
+  maintenanceComplete: ({ context }: { context: FSMContext }) => maintenanceComplete({ context, event: {} as any }),
 };
 
 /**

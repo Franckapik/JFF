@@ -153,6 +153,61 @@ class EventSimulator {
   }
 
   /**
+   * Vérifie une valeur dans le contexte
+   * @param {string} path - Chemin vers la propriété (ex: 'vehicle.fuel', 'ship.resourcesLoaded')
+   * @param {*} expectedValue - Valeur attendue
+   * @param {object} options - Options (operator: '===', '>', '<', '>=', '<=')
+   */
+  assertContextValue(path, expectedValue, options = {}) {
+    const operator = options.operator || '===';
+    const snapshot = this.actor.getSnapshot();
+    const actualValue = this.getNestedValue(snapshot.context, path);
+    
+    let result = false;
+    switch (operator) {
+      case '===':
+        result = actualValue === expectedValue;
+        break;
+      case '>':
+        result = actualValue > expectedValue;
+        break;
+      case '<':
+        result = actualValue < expectedValue;
+        break;
+      case '>=':
+        result = actualValue >= expectedValue;
+        break;
+      case '<=':
+        result = actualValue <= expectedValue;
+        break;
+      default:
+        throw new Error(`Unknown operator: ${operator}`);
+    }
+    
+    if (!result) {
+      const error = `❌ Assertion failed: ${path} ${operator} ${expectedValue}, got ${actualValue}`;
+      console.error(error);
+      this.stats.errors++;
+      throw new Error(error);
+    }
+    
+    if (this.verbose) {
+      console.log(`✅ Assertion passed: ${path} ${operator} ${expectedValue}`);
+    }
+    
+    return actualValue;
+  }
+
+  /**
+   * Récupère une valeur imbriquée dans un objet
+   */
+  getNestedValue(obj, path) {
+    return path.split('.').reduce((current, key) => {
+      return current?.[key];
+    }, obj);
+  }
+
+  /**
    * Affiche les statistiques
    */
   printStats() {
@@ -193,6 +248,11 @@ async function testExplorationCycle(simulator) {
   
   await simulator.waitForState('evaluating', 2000);
   
+  // ✅ Vérifier que shouldExplore devrait passer avec ces valeurs
+  // Contexte initial: fuel=45, damage=35, exploredThisCycle=0
+  const ctxBeforeExplore = simulator.actor.getSnapshot().context;
+  console.log(`  📊 Context before explore: fuel=${ctxBeforeExplore.vehicle?.fuel || 'N/A'}, damage=${ctxBeforeExplore.vehicle?.damage || 'N/A'}`);
+  
   // 2. Démarrer l'exploration
   await simulator.send({ type: 'NEED_EXPLORING' }, 100);
   await simulator.waitForState('exploring.drone_deploying', 1000);
@@ -224,6 +284,10 @@ async function testCollectionCycle(simulator) {
     console.log('⚠️  Not in evaluating state, skipping to collection...');
   }
   
+  // ✅ Vérifier les conditions de shouldCollect
+  const ctxBefore = simulator.actor.getSnapshot().context;
+  console.log(`  📊 Context before collect: fuel=${ctxBefore.vehicle?.fuel || 'N/A'}, capacity=${ctxBefore.vehicle?.isAtCapacity || false}`);
+  
   // 2. Démarrer la collection
   await simulator.send({ type: 'NEED_COLLECTING' }, 100);
   await simulator.waitForState('collecting.ship_moving_to_tile', 1000);
@@ -231,6 +295,11 @@ async function testCollectionCycle(simulator) {
   // 3. Le vaisseau atteint la tuile
   await simulator.send({ type: 'SHIP_REACHES_TILE' }, 500);
   await simulator.waitForState('collecting.ship_collecting', 1000);
+  
+  // ✅ Vérifier canCollectTile (devrait être true)
+  const ctxBeforeLoad = simulator.actor.getSnapshot().context;
+  const currentResources = ctxBeforeLoad.vehicle?.resources;
+  console.log(`  📊 Resources before load: ${JSON.stringify(currentResources)}`);
   
   // 4. Le vaisseau charge les ressources (première fois)
   await simulator.send({ type: 'SHIP_LOAD_RESOURCES' }, 500);
@@ -252,6 +321,11 @@ async function testCollectionCycle(simulator) {
     await simulator.send({ type: 'SHIP_LOAD_RESOURCES' }, 500);
     await simulator.wait(300);
   }
+  
+  // ✅ Vérifier que isVehicleOverloaded devrait être true maintenant
+  const ctxAfterLoad = simulator.actor.getSnapshot().context;
+  const resourcesAfter = ctxAfterLoad.vehicle?.resources;
+  console.log(`  📊 Resources after load: ${JSON.stringify(resourcesAfter)}`);
   
   // Maintenant on devrait être en ship_returning ou pouvoir y aller
   await simulator.waitForState('collecting.ship_returning', 2000);
@@ -281,23 +355,37 @@ async function testMaintenanceCycle(simulator) {
   // Attendre que la machine traite les transitions automatiques
   await simulator.wait(500);
   
-  // 3. Forcer la complétion en envoyant les événements manuellement
+  // 3. Vérifier les conditions de maintenance
   const ctx = simulator.actor.getSnapshot().context;
+  console.log(`  📊 Maintenance needs: fuel=${ctx.vehicle?.fuel || 'N/A'}, damage=${ctx.vehicle?.damage || 'N/A'}, resources=${JSON.stringify(ctx.vehicle?.resources)}`);
   
+  // ✅ Vérifier needsDeposit
+  const hasResources = ctx.vehicle?.resources && 
+    (ctx.vehicle.resources.food || 0) + (ctx.vehicle.resources.debris || 0) + (ctx.vehicle.resources.special || 0) > 0;
+  
+  // ✅ Vérifier needsRefuel (fuel < 30)
+  const needsRefuel = (ctx.vehicle?.fuel || 100) < 30;
+  
+  // ✅ Vérifier needsRepair (damage > 50)
+  const needsRepair = (ctx.vehicle?.damage || 0) > 50;
+  
+  console.log(`  🔍 Evaluated: needsDeposit=${hasResources}, needsRefuel=${needsRefuel}, needsRepair=${needsRepair}`);
+  
+  // 4. Forcer la complétion en envoyant les événements manuellement
   // Dépôt manuel si nécessaire
-  if (ctx.ship.resourcesLoaded > 0) {
+  if (hasResources) {
     console.log('  📦 Depositing resources...');
     await simulator.send({ type: 'SHIP_DEPOSIT_COMPLETE' }, 300);
   }
   
   // Refuel manuel
-  if (ctx.ship.fuel < 80) {
+  if (needsRefuel) {
     console.log('  ⛽ Refueling...');
     await simulator.send({ type: 'SHIP_REFUEL_COMPLETE' }, 300);
   }
   
   // Repair manuel
-  if (ctx.ship.hp < 80) {
+  if (needsRepair) {
     console.log('  🔨 Repairing...');
     await simulator.send({ type: 'SHIP_REPAIR_COMPLETE' }, 300);
   }
@@ -362,42 +450,95 @@ async function testQuickCycle(simulator) {
 // ========================================
 async function runTests() {
   try {
-    // Créer le contexte initial
+    // Créer le contexte initial compatible avec FSMContext
     const initialContext = {
       entityId: 'test-bot-0',
-      botMode: 'auto',
-      currentState: 'initializing',
-      ship: {
-        type: 'harvester',
+      entityType: 'auto',
+      autonomousMode: true,
+      vehicle: {
+        id: 'test-bot-0-ship',
+        type: 'main-ship',
         position: { x: 0, y: 0, z: 0 },
-        targetPosition: null,
-        velocity: { x: 0, y: 0, z: 0 },
-        fuel: 45, // Bas pour tester le refuel
-        hp: 65,   // Bas pour tester le repair
-        maxCargoCapacity: 100,
-        resourcesLoaded: 75, // Pour tester le deposit
-        status: 'idle',
+        basePosition: { x: 0, y: 0, z: 0 },
+        isMoving: false,
+        progress: 0,
+        resources: { food: 50, debris: 25, special: 0, total: 75 }, // Pour tester needsDeposit
+        targetVehicleTile: null,
+        fuel: 45, // Bas pour tester needsRefuel (< 30 trigger)
+        damage: 35, // Moyen (< 50 = OK, mais proche)
+        totalDistance: 0,
+        path: [],
+        isAtCapacity: false,
+        maxSpeed: 1,
+        currentSpeed: 0,
+        maxCapacity: { food: 200, debris: 1800, special: 3, total: 2003 },
+        visualState: 'uninitialized',
       },
-      drone: {
-        type: 'scout',
-        position: { x: 0, y: 0, z: 0 },
-        targetPosition: null,
-        velocity: { x: 0, y: 0, z: 0 },
-        status: 'docked',
+      fsmState: 'initializing',
+      explorationQueue: [],
+      lastAction: null,
+      error: null,
+      timestamps: {
+        stateChange: Date.now(),
+        lastMovement: null,
+        lastCollection: null,
       },
-      base: {
-        position: { x: 0, y: 0, z: 0 },
-        resources: 0,
+      score: { resources: { food: 0, debris: 0, special: 0, total: 0 } },
+      memory: {
+        knownTiles: [],
+        knownDangers: [],
+        stats: {
+          tilesExplored: 0,
+          tilesCollected: 0,
+          totalResourcesFound: 0,
+          lastExploration: null,
+          lastCollection: null,
+          explorationCycles: 0,
+          currentCycleStartTime: null,
+          tilesExploredInCycle: 0,
+          bestTileInCycle: null,
+        },
+        stateHistory: ['uninitialized'],
+        transitionHistory: [],
       },
-      world: {
-        tilesToExplore: [
-          { x: 5, y: 0, z: 5 },
-          { x: 10, y: 0, z: 10 },
+      explorationCycle: {
+        isActive: false,
+        targetTilesCount: 15,
+        exploredTiles: [],
+        bestTileFound: null,
+        startTime: null,
+        phase: 'idle',
+      },
+      config: {
+        exploringRadius: 2,
+        collectingRadius: 3,
+        fuelThreshold: 20,
+        capacityThreshold: 80,
+        movementSpeed: 8,
+        explorationInterval: 1000,
+        enableLogging: true,
+      },
+      droneFleet: {
+        drones: {
+          explorer: {
+            id: 'test-bot-0-drone',
+            type: 'scout',
+            position: { x: 0, y: 0, z: 0 },
+            targetPosition: null,
+            isMoving: false,
+            progress: 0,
+            visualState: 'docked',
+            path: [],
+          },
+        },
+      },
+      // ✅ Injection de données pour shouldCollect (Option A)
+      injectedData: {
+        availableTiles: [
+          { coord: { x: 3, y: 0, z: 3 }, resources: { food: 100, debris: 50, special: 0, total: 150 } },
+          { coord: { x: 7, y: 0, z: 7 }, resources: { food: 50, debris: 100, special: 0, total: 150 } },
         ],
-        tilesToCollect: [
-          { x: 3, y: 0, z: 3 },
-          { x: 7, y: 0, z: 7 },
-        ],
+        injectedAt: Date.now(),
       },
     };
 
