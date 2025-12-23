@@ -48,14 +48,14 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 // Imports par domaine pour éviter les erreurs de syntaxe
 import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection';
 import { assignEvaluationContext, onEvaluatingEntry, onEvaluatingExit, shouldExplore } from './domains/evaluation';
-import { shouldCollect } from './domains/evaluation/guards';
+import { shouldCollect, shouldMaintain } from './domains/evaluation/guards';
 import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration';
 import { updateDronePosition, updateShipPosition } from './domains/global';
 import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign';
 import { onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects';
 import { __maintenanceEffectsPlaceholder } from './domains/maintenance';
 import { assignShipDepositResourcesContext, assignShipRefuelContext, assignShipRepairContext } from './domains/maintenance/actions.assign';
-import { __maintenanceGuardsPlaceholder, isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards';
+import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure';
 
 
 // Import des guards d'initializing
@@ -151,9 +151,9 @@ export const machineXV5Pure = setup({
 
     // Guards du domaine EVALUATION (migré)
     shouldExplore,
+    shouldMaintain,
     // Guards temporaires des domaines (à migrer)
     shouldCollect,
-    shouldMaintain: __maintenanceGuardsPlaceholder,
     canCollectTile,
     isVehicleOverloaded,
     hasMoreCollectibleTiles,

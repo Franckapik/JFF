@@ -61,3 +61,15 @@ Mettre { x: 0, y: 0, z: 0 } garantit qu’il n’y a pas de décalage supplémen
 
 Si tu observes un offset avec d’autres valeurs, c’est parce que tu combines la position du parent et celle du Fleet, ce qui crée un doublon de translation.
 Pour éviter tout décalage, garde initialPosition à zéro et utilise uniquement la position du <group> pour placer le vaisseau sur la tuile.
+
+Je disposes d'un FSM géré avec xstate. Un monitor (xstate-viewer) avec un brodacast me permets de voir les états et évolution des valeurs. La console dans le navigateur web me permets de voir les logs que je peux copier ici. Le visuel de r3f me permets de controler le comportement. Mais, je reste insatisfait vis à vis de la manière d'avanacer au fur et à mesure de la complexité du projet. Des branches postérieures m'ont permis de trouver mes besoins réels :
+
+les guards doivent etre purs et 100% testables : les corriger.
+les stores doivent etre utilisés aux bons endroits pour laisser plus de pouvoir aux tests.
+les résultats doivent etre visibles dans le terminal de VScode pour povoir laisser plus d'autonomie à copilot : le but ultime est de pouvoir tester les guards et les cycles complets depuis le terminal. Attention à ne pas inserer trop de complexité ou de code sur lequel je n'aurais plus aucun controle.
+peut-on envisager une certaine independance de xstate vis à vis de react three fiber ? Je comprends que les positions et interactions seront issues de r3f, mais comment pouvoir faire évoluer le code avec copilot en terminal, selon des tests très rapides sans trop intervenir sur r3f ?
+contraindre au maximum avec ES lint et TS.
+le worflow devrait etre j'observe, je passe dans Xstate, je recoit une commande ? J'ai peur de refaire la meme erreur en ajoutant une couche d'abstraction complexe.
+EN résumé, il faut contraindre, sécuriser, rendre le FSM independant, et visible depuis le terminal vscode.
+Les fichiers readme pourraient etre distribués egalement lorsqu'il y a des pratiques de generation de code à suivre pour diriger l'écriture systematiquement. Les commentaires pourraient/devraient aussi pouvoir aider.
+Un fichier copilot instruction bien evidemment.

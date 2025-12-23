@@ -103,6 +103,56 @@ export default [
     },
   },
 
+  // Bloc dédié: Maintenance Domain Guards - Enforce Purity
+  {
+    files: ['src/ai/fsm/machineX/domains/maintenance/**/*.{ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        project: './tsconfig.json',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+      'import': importPlugin,
+    },
+    rules: {
+      // Forbid store access in maintenance domain (ensure pure guards)
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.object.name='useTileStore'] > Identifier",
+          message: '❌ Guards in maintenance/ must be pure. getState() is forbidden. Use guards.pure.ts instead.',
+        },
+        {
+          selector: "CallExpression[callee.object.name='useGameStore'] > Identifier",
+          message: '❌ Guards in maintenance/ must be pure. getState() is forbidden. Use guards.pure.ts instead.',
+        },
+      ],
+      
+      // Forbid React/R3F/stores imports in maintenance guards (ensure purity)
+      'no-restricted-imports': [
+        'error',
+        {
+          name: 'react',
+          message: '❌ FSM guards must be pure. React imports forbidden.',
+        },
+        {
+          name: '@react-three/fiber',
+          message: '❌ FSM guards must be pure. R3F imports forbidden.',
+        },
+        {
+          name: 'zustand',
+          message: '❌ FSM guards must be pure. Store imports forbidden.',
+        },
+      ],
+    },
+  },
+
   // Bloc JavaScript uniquement (sans TypeScript parser)
   {
     files: ['src/**/*.{js,jsx}'],
