@@ -41,10 +41,20 @@ La logique mise en place pour les actions se fait via le dossier domains. Les "a
 - assign : maj du context
 - actions : actions avec effets de bords (requetes api par exemple). Ici seulement des logs d'état.
 
-Il reste donc la génération des fichiers à commencer par exploring pour que le drone effectuent tout les mouvements. Le dossier "actionold" contient logiquement le fonctionnement ancien de ces différentes fonctions.
-
-Le cycle de mise a jour des etats du drone via les assign context fonctionne. 
-Il faut desormais remplir les actions d'effets dans scanning et returning pour que les events soient bien envoyés. Ces actions doivent etre dans explorations/actions.effects.ts comme pour evaluation/actions.effects.ts !
+✅ EXPLORATION DOMAIN MIGRATION COMPLETE (Phase 11 - 23 déc 2025):
+- actions.assign.ts : ✅ Toutes les actions assign complètes (assignDroneDeployingContext, assignDroneScanningContext, assignDroneReturningContext, assignDroneDockedContext)
+- actions.effects.ts : ✅ Nettoyées pour ne contenir que des logs (plus de setTimeout)
+- guards.ts : ✅ AUCUN GUARD (BY DESIGN - processus séquentiel event-driven, pas de branchements conditionnels)
+  * Le guard shouldExplore() existe dans evaluation/guards.pure.ts (décision d'ENTRER dans l'exploration)
+  * DANS l'exploration: transitions automatiques basées sur events physiques (position/timer)
+  * Pattern: Event-driven (DRONE_REACHES_TILE, DRONE_HAS_SCANNED, DRONE_REACHES_BASE) pas condition-driven
+- handlers/ : ✅ Tous les handlers complétés:
+  * deployingHandler → envoie DRONE_REACHES_TILE
+  * scanningHandler → envoie DRONE_HAS_SCANNED après 2s (logique métier)
+  * returningHandler → envoie DRONE_REACHES_BASE
+- ARCHITECTURE: Les events sont maintenant envoyés depuis les TRACKERS, pas depuis les actions d'effets
+- SEPARATION: FSM indépendant de R3F, testable en terminal
+- Pattern établi: Effect Zone (logs only) → Tracker Zone (send events) → Guard Zone (pure decisions)
 
 
 
