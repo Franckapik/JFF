@@ -5,10 +5,10 @@
  */
 
 // Actions d'assignation (context)
-export * from './actions.assign';
+export * from './actions.assign.ts';
 
 // Actions avec effets de bord (entry/exit)
-export * from './actions.effects';
+export * from './actions.effects.ts';
 
 // Guards
-export * from './guards';
+export * from './guards.ts';

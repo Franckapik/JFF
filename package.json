@@ -59,7 +59,13 @@
     "preview": "vite preview",
     "validate-guards": "node scripts/test-guards-interactive.js",
     "quick-test-guards": "node scripts/quick-test-guards.js",
-    "check-exports": "node scripts/check-exports.js"
+    "check-exports": "node scripts/check-exports.js",
+    "test:fsm-cycle": "node scripts/test-fsm-cycle.js",
+    "test:fsm-quick": "node scripts/test-fsm-cycle.js --scenario=quick",
+    "test:fsm-explore": "node scripts/test-fsm-cycle.js --scenario=explore",
+    "test:fsm-collect": "node scripts/test-fsm-cycle.js --scenario=collect",
+    "test:fsm-maintain": "node scripts/test-fsm-cycle.js --scenario=maintain",
+    "test:fsm-verbose": "node scripts/test-fsm-cycle.js --verbose"
   },
   "browserslist": [
     ">0.2%",
