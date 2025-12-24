@@ -63,6 +63,19 @@ export {
 } from './hexGrid';
 
 // ============================================================================
+// PATHFINDING ALGORITHMS
+// ============================================================================
+
+export {
+  findPath,
+  calculatePathDistance,
+  findTileAtPosition,
+  findTilesInRadius,
+  selectRandomTile,
+  calculateDroneDistance,
+} from './pathfinding';
+
+// ============================================================================
 // TYPE RE-EXPORTS
 // ============================================================================
 
