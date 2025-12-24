@@ -10,5 +10,4 @@ export * from './actions.assign.ts';
 // Actions effects (effets de bord)
 export * from './actions.effects.ts';
 
-// Guards (conditions)
-export * from './guards.ts';
+// Note: Exploration has no guards - transitions are event-driven

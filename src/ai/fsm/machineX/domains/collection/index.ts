@@ -10,5 +10,5 @@ export * from './actions.assign.ts';
 // Actions effects (effets de bord)
 export * from './actions.effects.ts';
 
-// Guards (conditions)
-export * from './guards.ts';
+// Guards (pure - no store dependencies)
+export * from './guards.pure.ts';
