@@ -6,6 +6,7 @@
 
 import type { WorldPosition } from '../../types/coordinates.d.ts';
 import type { DroneVisualState } from '../../types/drone.d.ts';
+import { calculateRelativePosition } from '../../core/spatial/animation';
 
 interface DroneData {
   position?: WorldPosition;
@@ -28,11 +29,7 @@ export const calculateTargetPosition = (
       ? drone.targetDroneTile.position
       : drone.targetDroneTile;
     if (pos) {
-      return {
-        x: pos.x - actualFleetPosition.x,
-        y: pos.y - actualFleetPosition.y,
-        z: pos.z - actualFleetPosition.z
-      };
+      return calculateRelativePosition(pos, actualFleetPosition);
     }
   }
   
@@ -51,19 +48,11 @@ export const calculateTargetPosition = (
       ? drone.targetDroneTile.position
       : drone.targetDroneTile;
     if (pos) {
-      return {
-        x: pos.x - actualFleetPosition.x,
-        y: pos.y - actualFleetPosition.y,
-        z: pos.z - actualFleetPosition.z
-      };
+      return calculateRelativePosition(pos, actualFleetPosition);
     }
   }
   if (drone.position) {
-    return {
-      x: drone.position.x - actualFleetPosition.x,
-      y: drone.position.y - actualFleetPosition.y,
-      z: drone.position.z - actualFleetPosition.z
-    };
+    return calculateRelativePosition(drone.position, actualFleetPosition);
   }
   
   // Par défaut, utiliser l'offset de formation si disponible
@@ -98,8 +87,8 @@ export const shouldAnimateDrone = (
 export const calculateWorldPosition = (
   localPosition: WorldPosition,
   initialPosition: WorldPosition
-): WorldPosition => ({
-  x: initialPosition.x + localPosition.x,
-  y: initialPosition.y + localPosition.y,
-  z: initialPosition.z + localPosition.z
-});
+): WorldPosition => {
+  // Import de la fonction depuis core/spatial
+  const { calculateWorldPosition: coreCalculateWorldPosition } = require('../../core/spatial/animation');
+  return coreCalculateWorldPosition(localPosition, initialPosition);
+};

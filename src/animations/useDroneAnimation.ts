@@ -18,6 +18,7 @@ import type { DroneVisualState } from '../types/drone.d.ts';
 import type { DroneAnimationProps, DroneAnimationReturn } from '../types/r3f';
 
 import fsmLogger from '../logger/fsmLogger.ts';
+import { interpolateWithSpeed } from '../core/spatial/animation';
 
 import { applyDroneVisualAnimations } from './utils/droneAnimationUtils';
 import {
@@ -154,11 +155,13 @@ export const useDroneAnimation = ({
     
     if (isMoving && (droneState === 'deploying' || droneState === 'scanning' || droneState === 'returning')) {
       const speed = getDroneSpeed(droneState);
-      const lerpFactor = Math.min(1.0, delta * speed);
       
-      currentLocalPosition.current.x = THREE.MathUtils.lerp(currentLocalPosition.current.x, targetRelativePosition.x, lerpFactor);
-      currentLocalPosition.current.y = THREE.MathUtils.lerp(currentLocalPosition.current.y, targetRelativePosition.y, lerpFactor);
-      currentLocalPosition.current.z = THREE.MathUtils.lerp(currentLocalPosition.current.z, targetRelativePosition.z, lerpFactor);
+      // Utilisation de core/spatial pour l'interpolation
+      currentLocalPosition.current = interpolateWithSpeed(
+        currentLocalPosition.current,
+        targetRelativePosition,
+        { speed, deltaTime: delta }
+      );
     } else {
       currentLocalPosition.current = { ...targetRelativePosition };
     }

@@ -20,6 +20,7 @@ import type { ShipAnimationProps, ShipAnimationReturn } from "../types/r3f";
 import type { VehicleVisualState } from "../types/vehicle.d.ts";
 
 import fsmLogger from "../logger/fsmLogger.ts";
+import { interpolateWithSpeed } from "../core/spatial/animation";
 
 import { applyShipVisualAnimations } from "./utils/shipAnimationUtils";
 // ...existing code...
@@ -89,18 +90,18 @@ export const useShipAnimation = ({ context, updateVisualPosition, shipType = "ma
 
       if (shipVisualState === "moving_to_tile" || shipVisualState === "collecting" || shipVisualState === "returning") {
         // Animation interpolée pour les états de mouvement (en coordonnées relatives)
-        const lerpFactor = Math.min(1.0, delta * 2); // Augmenter le facteur pour un mouvement plus fluide
         const currentRelative = {
           x: shipRef.current.position.x,
           y: shipRef.current.position.y,
           z: shipRef.current.position.z,
         };
         
-        const newRelative = {
-          x: THREE.MathUtils.lerp(currentRelative.x, relativeTarget.x, lerpFactor),
-          y: THREE.MathUtils.lerp(currentRelative.y, relativeTarget.y, lerpFactor),
-          z: THREE.MathUtils.lerp(currentRelative.z, relativeTarget.z, lerpFactor),
-        };
+        // Utilisation de core/spatial pour l'interpolation
+        const newRelative = interpolateWithSpeed(
+          currentRelative,
+          relativeTarget,
+          { speed: 2.0, deltaTime: delta }
+        );
         
         shipRef.current.position.set(newRelative.x, newRelative.y, newRelative.z);
         
