@@ -15,10 +15,11 @@
 - [x] Injecter tiles dans contexte au démarrage (useXFSMStore.startBot)
 - [x] Build vérifié OK
 
-## Phase 3: Initialisation simplifiée  
-- [ ] Fournir positions initiales vehicle/drone dans contexte
-- [ ] Supprimer initializationHandlers (drone + ship)
-- [ ] Simplifier Scene.tsx (plus de dépendance aux events d'init)
+## Phase 3: Initialisation simplifiée ✅ Terminé
+- [x] Fournir positions initiales vehicle/drone directement dans startBot
+- [x] Lire la depart tile depuis TileStore et envoyer SHIP/DRONE_INITIALIZE_REQUEST
+- [x] initializationHandlers conservés comme fallback (non supprimés)
+- [x] Build vérifié OK
 
 ## Phase 4: Actions pures
 - [ ] Découpler actions.assign.ts des stores (tous domaines)

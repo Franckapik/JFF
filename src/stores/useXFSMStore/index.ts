@@ -187,6 +187,7 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
     /**
      * Démarre un bot XState (après que le jeu soit initialisé)
      * ✅ Phase 2: Sends TILES_UPDATED to inject grid data into FSM context
+     * ✅ Phase 3: Sends initial positions from depart tile (no more waiting for Fleet)
      */
     startBot: (botId: BotId): void => {
       startBotActor(botId);
@@ -204,6 +205,37 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
             spacing: spacing ?? 1.2,
             radius: radius ?? 3
           });
+          
+          // ✅ Phase 3: Find depart tile for this bot and inject initial positions
+          const departTile = Object.values(tiles).find(
+            tile => tile.type === 'depart' && tile.assignedToBot === botId
+          );
+          
+          if (departTile) {
+            const initialPosition = {
+              x: departTile.position.x,
+              y: 0.5, // Standard height for vehicles
+              z: departTile.position.z
+            };
+            
+            fsmLogger.game(`[XFSMStore] Injecting initial positions for ${botId} at depart tile ${departTile.position.coord}`);
+            
+            // Send ship position
+            actor.send({
+              type: 'SHIP_INITIALIZE_REQUEST',
+              shipType: 'main-ship',
+              initialPosition
+            });
+            
+            // Send drone position (same as ship initially)
+            actor.send({
+              type: 'DRONE_INITIALIZE_REQUEST',
+              droneType: 'explorer',
+              initialPosition
+            });
+          } else {
+            fsmLogger.warn(`[XFSMStore] No depart tile found for ${botId} - FSM may block in initializing`);
+          }
         }
         
         const currentState = get();
