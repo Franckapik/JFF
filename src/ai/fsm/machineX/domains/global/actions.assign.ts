@@ -107,3 +107,29 @@ export const updateDronePosition = createAssignAction(({ context, event }) => {
  * Migré depuis actions.pure.v5.ts
  */
 // ...existing code...
+
+/**
+ * Phase 2: Action assign pour mettre à jour gridInfo depuis TILES_UPDATED event
+ * Permet au FSM d'avoir accès aux tiles sans appeler useTileStore.getState()
+ */
+export const updateGridInfo = createAssignAction(({ context, event }) => {
+  if (event.type !== 'TILES_UPDATED') return context;
+  
+  const { tiles, spacing, radius } = event;
+  
+  fsmLogger.context(`🗺️ [${context.entityId}] Updating gridInfo`, { 
+    tileCount: Object.keys(tiles).length,
+    spacing,
+    radius
+  });
+  
+  return {
+    gridInfo: {
+      tiles,
+      spacing,
+      radius,
+      departTileCoord: context.gridInfo?.departTileCoord,
+      syncedAt: Date.now(),
+    },
+  };
+});

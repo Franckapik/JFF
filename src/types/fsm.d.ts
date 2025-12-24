@@ -197,6 +197,32 @@ export interface FSMContext {
      */
     injectedAt?: number;
   };
+
+  // ========================================================================
+  // 🗺️ GRID INFO - Tile data injected at FSM startup (Phase 2)
+  // ========================================================================
+  // Contains spatial grid data injected from TileStore at bot creation.
+  // This allows pure guards and actions to access grid data without
+  // calling useTileStore.getState() directly.
+  // 
+  // Updated via TILES_UPDATED event when grid state changes significantly.
+  // ========================================================================
+  gridInfo?: {
+    /** All tiles in the grid, indexed by coord string "x,z" */
+    tiles: Record<string, Tile>;
+    
+    /** Grid spacing for world position calculations */
+    spacing: number;
+    
+    /** Grid radius for boundary checks */
+    radius: number;
+    
+    /** Depart tile coord for this bot */
+    departTileCoord?: string;
+    
+    /** Timestamp when grid was last synced */
+    syncedAt: number;
+  };
 }
 
 /** Fonction utilitaire de type uniquement pour validation d'état */

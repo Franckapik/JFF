@@ -16,6 +16,8 @@ import type { MachineEvents } from '../../ai/fsm/machineX/events.pure.v5';
 import { machineXV5Pure } from '../../ai/fsm/machineX/machine.pure.v5';
 import { config } from '../../config.ts';
 import fsmLogger from '../../logger/fsmLogger.ts';
+// ✅ Phase 2: Import TileStore for grid sync
+import { useTileStore } from '../useTileStore/index.ts';
 import type {
   BotId,
   BotSnapshot,
@@ -184,11 +186,26 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
 
     /**
      * Démarre un bot XState (après que le jeu soit initialisé)
+     * ✅ Phase 2: Sends TILES_UPDATED to inject grid data into FSM context
      */
     startBot: (botId: BotId): void => {
       startBotActor(botId);
       const actor = actors.get(botId);
       if (actor) {
+        // ✅ Phase 2: Inject grid data into FSM context
+        const tileStore = useTileStore.getState();
+        const { tiles, spacing, radius } = tileStore;
+        
+        if (tiles && Object.keys(tiles).length > 0) {
+          fsmLogger.game(`[XFSMStore] Injecting grid data for ${botId}: ${Object.keys(tiles).length} tiles`);
+          actor.send({
+            type: 'TILES_UPDATED',
+            tiles,
+            spacing: spacing ?? 1.2,
+            radius: radius ?? 3
+          });
+        }
+        
         const currentState = get();
         set({
           botStates: {

@@ -51,7 +51,8 @@ import { assignEvaluationContext, onEvaluatingEntry, onEvaluatingExit } from './
 // ✅ Phase 1: ALL guards from guards.pure.ts (no store dependencies)
 import { canStartExploring, hasTilesAvailable, shouldCollect, shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure';
 import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration';
-import { updateDronePosition, updateShipPosition } from './domains/global';
+// ✅ Phase 2: Import updateGridInfo for TILES_UPDATED event
+import { updateDronePosition, updateGridInfo, updateShipPosition } from './domains/global';
 import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign';
 import { onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects';
 import { __maintenanceEffectsPlaceholder } from './domains/maintenance';
@@ -80,6 +81,7 @@ export const machineXV5Pure = setup({
     // Actions globales (ne dépendent d'aucun domaine spécifique)
     updateShipPosition,
     updateDronePosition,
+    updateGridInfo, // ✅ Phase 2: Grid sync action
     processDroneInitRequest,
     processShipInitRequest,
     
@@ -188,6 +190,10 @@ export const machineXV5Pure = setup({
     },
     DRONE_POSITION_UPDATE: {
       actions: 'updateDronePosition'
+    },
+    // ✅ Phase 2: Grid sync event handler
+    TILES_UPDATED: {
+      actions: 'updateGridInfo'
     }
   },
 

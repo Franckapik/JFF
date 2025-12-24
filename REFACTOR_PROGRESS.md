@@ -8,10 +8,12 @@
 - [x] Ajouter `hasTilesAvailable` et `canStartExploring` pures dans evaluation/guards.pure.ts
 - [x] Build vérifié OK
 
-## Phase 2: Contexte FSM enrichi
-- [ ] Ajouter `gridInfo` au type FSMContext
-- [ ] Injecter tiles dans contexte au démarrage (useXFSMStore)
-- [ ] Implémenter event TILES_UPDATED pour synchronisation
+## Phase 2: Contexte FSM enrichi ✅ Terminé
+- [x] Ajouter `gridInfo` au type FSMContext
+- [x] Créer event TILES_UPDATED avec tiles, spacing, radius
+- [x] Créer action updateGridInfo dans domains/global
+- [x] Injecter tiles dans contexte au démarrage (useXFSMStore.startBot)
+- [x] Build vérifié OK
 
 ## Phase 3: Initialisation simplifiée  
 - [ ] Fournir positions initiales vehicle/drone dans contexte
