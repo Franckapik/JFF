@@ -1,3 +1,4 @@
+import { findTileAtPosition, worldToGrid } from '../../../../../core/spatial';
 import fsmLogger from '../../../../../logger/fsmLogger';
 import { useTileStore } from '../../../../../stores/useTileStore';
 import { createAssignAction } from '../global/actions.assign';
@@ -52,7 +53,8 @@ export const processShipInitRequest = createAssignAction(({ context, event }) =>
 	
 	// Trouver la tuile la plus proche au lieu d'utiliser worldToGrid
 	const tileStore = useTileStore.getState();
-	const nearestTile = tileStore.findTileAtPosition(event.initialPosition);
+	const tiles = tileStore.tiles;
+	const nearestTile = findTileAtPosition(event.initialPosition, tiles);
 	let basePosition;
 
 	if (nearestTile && nearestTile.position) {
@@ -62,7 +64,8 @@ export const processShipInitRequest = createAssignAction(({ context, event }) =>
 		};
 
 	} else {
-		const coord = tileStore.worldToGrid(event.initialPosition);
+		const spacing = tileStore.spacing ?? -0.2;
+		const coord = worldToGrid(event.initialPosition, { spacing });
 		basePosition = { ...event.initialPosition, coord };
 
 		fsmLogger.warn(`🚢 [${context.entityId}] No tile found at position, using worldToGrid fallback`, {

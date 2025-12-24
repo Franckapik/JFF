@@ -5,8 +5,7 @@
  */
 
 import { assign } from 'xstate';
-
-import fsmLogger from '../../../../../logger/fsmLogger';
+import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial';import fsmLogger from '../../../../../logger/fsmLogger';
 import { useTileStore } from '../../../../../stores/useTileStore';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { TileStoreType } from '../../../../../types/stores.d.ts';
@@ -47,7 +46,10 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     
   // Sélectionner une tuile aléatoire dans un rayon pour la collecte
   const collectingRadius = context.config?.collectingRadius ?? 3;
-  const targetVehicleTile = tileStore.tileInRadius(shipPosition, collectingRadius);
+  const tiles = tileStore.tiles;
+  const startCoord = shipPosition?.coord;
+  const candidateTiles = startCoord ? findTilesInRadius(startCoord, collectingRadius, tiles) : [];
+  const targetVehicleTile = selectRandomTile(candidateTiles);
     if (!targetVehicleTile) {
       fsmLogger.error(`🚢 [${context.entityId}] No target tile found for collection`);
       return {};

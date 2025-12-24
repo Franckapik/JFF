@@ -6,6 +6,7 @@
 
 import { assign } from 'xstate';
 
+import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial';
 import fsmLogger from '../../../../../logger/fsmLogger';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { DroneVisualState } from '../../../../../types/drone';
@@ -31,7 +32,10 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
     return {};
   }
   const range = context.config?.exploringRadius ?? 2;
-  let targetDroneTile = tileStore.tileInRadius(shipPosition, range);
+  const tiles = tileStore.tiles;
+  const startCoord = shipPosition.coord;
+  const candidateTiles = findTilesInRadius(startCoord, range, tiles);
+  let targetDroneTile = selectRandomTile(candidateTiles);
   if (targetDroneTile) {
     // Fixe la hauteur Y à 0.5 pour la position cible
     targetDroneTile = {

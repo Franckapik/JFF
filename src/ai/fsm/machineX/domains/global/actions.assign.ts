@@ -9,6 +9,7 @@
 
 import { assign } from 'xstate';
 
+import { worldToGrid } from '../../../../../core/spatial';
 import fsmLogger from '../../../../../logger/fsmLogger';
 import { useTileStore } from '../../../../../stores/useTileStore';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
@@ -47,7 +48,8 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
     
     // Créer une WorldGridPosition pour basePosition
     const tileStore = useTileStore.getState();
-    const coord = tileStore.worldToGrid(position);
+    const spacing = tileStore.spacing ?? -0.2;
+    const coord = worldToGrid(position, { spacing });
     const basePosition = { ...position, coord };
     
     return {
@@ -61,7 +63,8 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
   
   // Calculer coord pour position normale
   const tileStore = useTileStore.getState();
-  const coord = tileStore.worldToGrid(position);
+  const spacing = tileStore.spacing ?? -0.2;
+  const coord = worldToGrid(position, { spacing });
   
   return {
     vehicle: {

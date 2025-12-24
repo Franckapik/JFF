@@ -8,10 +8,11 @@
 
 ## Progress Summary
 
-- **Overall Progress:** 4/9 phases (44%)
+- **Overall Progress:** 5/9 phases (56%)
 - **Functions Migrated:** 27 pure functions
 - **Test Coverage:** 169 tests, 100% passing
-- **Commits:** 4 completed
+- **Commits:** 6 completed
+- **FSM Domains Refactored:** 5 domains using core/spatial
 
 ### Completed Phases
 
@@ -19,6 +20,7 @@
 2. ✅ **Phase 1B:** Coordinate utilities (7 functions, 46 tests)  
 3. ✅ **Phase 2A:** Hex grid generation (10 functions, 48 tests)
 4. ✅ **Phase 2B:** Pathfinding algorithms (6 functions, 51 tests)
+5. ✅ **Phase 3:** FSM domain migration (5 domains refactored)
 
 ---
 

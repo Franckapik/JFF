@@ -6,6 +6,7 @@
  * Guards réels pour la collecte de ressources par le vaisseau
  */
 
+import { calculateDistance } from '../../../../../core/spatial';
 import fsmLogger from '../../../../../logger/fsmLogger';
 import { useTileStore } from '../../../../../stores/useTileStore/index';
 import type { XStateV5Guard } from '../../../../../types/xstate.v5.types';
@@ -98,7 +99,7 @@ export const isVehicleOverloaded = createGuard('isVehicleOverloaded', ({ context
 /**
  * Guard pour vérifier s'il y a encore des tuiles collectibles disponibles
  * 
- * @deprecated ⚠️ IMPURE GUARD - calls useTileStore.getState().calculateDistance()
+ * @deprecated ⚠️ IMPURE GUARD - calls calculateDistance from core/spatial
  * This guard violates purity constraints and cannot be tested in terminal.
  * Deferred to Phase 2 (Context Injector implementation).
  * For new pure guards, use guards.pure.ts instead.
@@ -121,9 +122,10 @@ export const hasMoreCollectibleTiles = createGuard('hasMoreCollectibleTiles', ({
       // Approximation de distance
       const [tileX, tileZ] = tile.position?.coord?.split(',').map(Number) || [0,0];
       const tileStore = useTileStore.getState();
-      const distance = tileStore.calculateDistance(
+      const spacing = tileStore.spacing ?? -0.2;
+      const distance = calculateDistance(
         shipPosition,
-        { x: tileX * 2, y: 0, z: tileZ * 2 }
+        { x: tileX * Math.abs(spacing), y: 0, z: tileZ * Math.abs(spacing) }
       );
       if (distance <= maxDistance) {
         collectibleTilesCount++;
