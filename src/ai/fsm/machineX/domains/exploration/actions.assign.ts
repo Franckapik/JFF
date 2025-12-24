@@ -2,13 +2,13 @@
  * ==========================================================================
  * EXPLORATION DOMAIN - Actions de mise à jour du contexte (assign)
  * ==========================================================================
+ * ✅ Phase 4: Pure actions - uses context.gridInfo instead of useTileStore
  */
 
 import { assign } from 'xstate';
 
 import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial';
 import fsmLogger from '../../../../../logger/fsmLogger';
-import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { DroneVisualState } from '../../../../../types/drone';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5';
@@ -22,21 +22,23 @@ function createAssignAction(
 
 /**
  * Action assign pour le déploiement de drone en exploration
- * Logique fusionnée : sélection de tuile + mise à jour contexte en une seule fois
+ * ✅ Phase 4: Uses context.gridInfo.tiles instead of useTileStore.getState()
  */
 export const assignDroneDeployingContext = createAssignAction(({ context }) => {
-  const tileStore = useTileStore.getState();
+  // ✅ Phase 4: Use context.gridInfo instead of useTileStore.getState()
+  const tiles = context.gridInfo?.tiles || {};
   const shipPosition = context.vehicle?.position || context.vehicle?.basePosition;
+  
   if (!shipPosition) {
     fsmLogger.error(`[${context.entityId}] assignDroneDeployingContext: No ship position available`);
     return {};
   }
-  const range = context.config?.exploringRadius ?? 2;
-  const tiles = tileStore.tiles;
   
-  // ⚠️ GUARD: Vérifier que le TileStore est initialisé avec des tiles
-  if (!tiles || Object.keys(tiles).length === 0) {
-    fsmLogger.warn(`[${context.entityId}] assignDroneDeployingContext: TileStore is empty - tiles not yet initialized`);
+  const range = context.config?.exploringRadius ?? 2;
+  
+  // ⚠️ GUARD: Vérifier que gridInfo contient des tiles
+  if (Object.keys(tiles).length === 0) {
+    fsmLogger.warn(`[${context.entityId}] assignDroneDeployingContext: gridInfo.tiles is empty`);
     return {};
   }
   

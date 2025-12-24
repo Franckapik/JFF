@@ -2,6 +2,10 @@
  * ==========================================================================
  * COLLECTION DOMAIN - Actions de mise à jour du contexte (assign)
  * ==========================================================================
+ * ✅ Phase 4: Pure actions - uses context.gridInfo instead of useTileStore
+ * 
+ * NOTE: useTileStore is kept ONLY for mutation operations (collectResources, deductResources)
+ * which require modifying the tile store directly. All reads use context.gridInfo.
  */
 
 import { assign } from 'xstate';
@@ -9,7 +13,6 @@ import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial
 import fsmLogger from '../../../../../logger/fsmLogger';
 import { useTileStore } from '../../../../../stores/useTileStore';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
-import type { TileStoreType } from '../../../../../types/stores.d.ts';
 import type { VehicleVisualState } from '../../../../../types/vehicle.d.ts';
 import type { MachineEvents } from '../../events.pure.v5';
 
@@ -22,7 +25,7 @@ function createAssignAction(
 
 /**
  * Action assign pour le démarrage de la collecte
- * Configure le vaisseau pour se déplacer vers la position cible (0,0,0 pour test)
+ * ✅ Phase 4: Uses context.gridInfo.tiles instead of useTileStore.getState()
  */
 export const assignShipMovingToTileContext = createAssignAction(({ context, event }) => {
   fsmLogger.info(`🔄 [${context?.entityId || 'unknown'}] assignShipMovingToTileContext called with:`, {
@@ -41,16 +44,16 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
   fsmLogger.info(`🔄 [${context.entityId}] Updating context for ship movement: ${event.type}`);
   
   if (event.type === 'NEED_COLLECTING') {
-  // Utiliser selectTargetTileInRadiusForDrone pour sélectionner une vraie tuile cible (targetVehicleTile)
-    const tileStore = useTileStore.getState() as TileStoreType;
+    // ✅ Phase 4: Use context.gridInfo instead of useTileStore.getState()
+    const tiles = context.gridInfo?.tiles || {};
     const shipPosition = context.vehicle?.position;
     
-  // Sélectionner une tuile aléatoire dans un rayon pour la collecte
-  const collectingRadius = context.config?.collectingRadius ?? 3;
-  const tiles = tileStore.tiles;
-  const startCoord = shipPosition?.coord;
-  const candidateTiles = startCoord ? findTilesInRadius(startCoord, collectingRadius, tiles) : [];
-  const targetVehicleTile = selectRandomTile(candidateTiles);
+    // Sélectionner une tuile aléatoire dans un rayon pour la collecte
+    const collectingRadius = context.config?.collectingRadius ?? 3;
+    const startCoord = shipPosition?.coord;
+    const candidateTiles = startCoord ? findTilesInRadius(startCoord, collectingRadius, tiles) : [];
+    const targetVehicleTile = selectRandomTile(candidateTiles);
+    
     if (!targetVehicleTile) {
       fsmLogger.error(`🚢 [${context.entityId}] No target tile found for collection`);
       return {};
@@ -90,7 +93,7 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     
     fsmLogger.info(`✅ [${context.entityId}] Ship movement setup result:`, {
       hasVehicle: !!updatedContext.vehicle,
-  targetVehicleTile: updatedContext.vehicle?.targetVehicleTile,
+      targetVehicleTile: updatedContext.vehicle?.targetVehicleTile,
       isMoving: updatedContext.vehicle?.isMoving
     });
     
@@ -236,7 +239,9 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
     return {};
   }
 
-  // Utiliser le store pour obtenir les ressources actuelles de la tuile
+  // ⚠️ MUTATION REQUIRED: useTileStore is needed here for write operations
+  // collectResources() and deductResources() modify the tile store directly
+  // This cannot be done via context.gridInfo which is read-only
   const tileStore = useTileStore.getState();
   const tileCoord = targetTile.position.coord;
   

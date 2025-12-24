@@ -1,6 +1,9 @@
+/**
+ * ✅ Phase 4: Pure actions for initializing domain
+ * Uses context.gridInfo instead of useTileStore.getState()
+ */
 import { findTileAtPosition, worldToGrid } from '../../../../../core/spatial';
 import fsmLogger from '../../../../../logger/fsmLogger';
-import { useTileStore } from '../../../../../stores/useTileStore';
 import { createAssignAction } from '../global/actions.assign';
 
 export const processDroneInitRequest = createAssignAction(({ context, event }) => {
@@ -51,9 +54,11 @@ export const processShipInitRequest = createAssignAction(({ context, event }) =>
 		return context;
 	}
 	
-	// Trouver la tuile la plus proche au lieu d'utiliser worldToGrid
-	const tileStore = useTileStore.getState();
-	const tiles = tileStore.tiles;
+	// ✅ Phase 4: Use context.gridInfo instead of useTileStore.getState()
+	const tiles = context.gridInfo?.tiles || {};
+	const spacing = context.gridInfo?.spacing ?? 1.2;
+	
+	// Trouver la tuile la plus proche
 	const nearestTile = findTileAtPosition(event.initialPosition, tiles);
 	let basePosition;
 
@@ -62,9 +67,7 @@ export const processShipInitRequest = createAssignAction(({ context, event }) =>
 			...event.initialPosition, 
 			coord: nearestTile.position.coord 
 		};
-
 	} else {
-		const spacing = tileStore.spacing ?? -0.2;
 		const coord = worldToGrid(event.initialPosition, { spacing });
 		basePosition = { ...event.initialPosition, coord };
 
@@ -73,7 +76,6 @@ export const processShipInitRequest = createAssignAction(({ context, event }) =>
 			calculatedCoord: coord
 		});
 	}
-
 
 	return {
 		vehicle: {

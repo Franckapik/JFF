@@ -3,7 +3,7 @@
  * GLOBAL DOMAIN - Actions de mise à jour du contexte (assign)
  * ==========================================================================
  * 
- * Actions globales qui ne dépendent d'aucun domaine spécifique métier.
+ * ✅ Phase 4: Pure actions - no store dependencies (uses context.gridInfo)
  * Ces actions gèrent les mises à jour de positions et l'initialisation.
  */
 
@@ -11,7 +11,6 @@ import { assign } from 'xstate';
 
 import { worldToGrid } from '../../../../../core/spatial';
 import fsmLogger from '../../../../../logger/fsmLogger';
-import { useTileStore } from '../../../../../stores/useTileStore';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5';
 
@@ -39,6 +38,9 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
   
   fsmLogger.context(`🚢 [${context.entityId}] Setting ship position`, { position, shipType: event.shipType });
   
+  // ✅ Phase 4: Use context.gridInfo.spacing instead of useTileStore.getState()
+  const spacing = context.gridInfo?.spacing ?? 1.2;
+  
   // Si c'est la première position réelle (différente de la position par défaut), mettre à jour basePosition aussi
   const isInitialization = !context.vehicle?.position || 
     (context.vehicle.position.x === 0 && context.vehicle.position.y === 0.5 && context.vehicle.position.z === 0);
@@ -47,8 +49,6 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
     fsmLogger.context(`🚢 [${context.entityId}] First ship position update - setting as base position`);
     
     // Créer une WorldGridPosition pour basePosition
-    const tileStore = useTileStore.getState();
-    const spacing = tileStore.spacing ?? -0.2;
     const coord = worldToGrid(position, { spacing });
     const basePosition = { ...position, coord };
     
@@ -62,8 +62,6 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
   }
   
   // Calculer coord pour position normale
-  const tileStore = useTileStore.getState();
-  const spacing = tileStore.spacing ?? -0.2;
   const coord = worldToGrid(position, { spacing });
   
   return {

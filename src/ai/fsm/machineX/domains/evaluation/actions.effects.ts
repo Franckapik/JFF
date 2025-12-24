@@ -5,48 +5,48 @@
  * 
  * CONVENTION : on[State][Event]
  * Actions pour effets de bord (logging, API calls, notifications)
+ * 
+ * ✅ Phase 4: Uses context.gridInfo and pure spatial functions
  */
 
 import type { ActorRef } from 'xstate';
 import { assign } from 'xstate';
 
+import { findTilesInRadius } from '../../../../../core/spatial';
 import fsmLogger from '../../../../../logger/fsmLogger';
-import { useTileStore } from '../../../../../stores/useTileStore';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5';
 
 /**
  * 🔍 ACTION: Inject tile data into context for shouldCollect guard
  * 
- * This is the EFFECT ZONE where side effects (getState calls) are allowed.
- * The onEvaluatingEntry uses this to query the tile store and inject results.
+ * ✅ Phase 4: Uses context.gridInfo.tiles and pure findTilesInRadius function
+ * instead of useTileStore.getState().tileInRadius()
  * 
  * DEPENDENCY INJECTION PATTERN:
- * - Effect queries useTileStore.getState() ✅ (allowed in effects)
+ * - Uses pure findTilesInRadius with context.gridInfo.tiles ✅ (pure)
  * - Results stored in context.injectedData ✅ (context update)
  * - shouldCollect guard reads injectedData ✅ (pure, testable)
- * 
- * TEMPORARY SCAFFOLDING: Marked for Phase 2 discussion on permanent SoC boundaries.
- * Could be replaced by: Service Layer, Query Actor, or Query-in-Effect pattern.
- * 
- * @see FSM_CONTEXT_VS_STORES_ANALYSIS.md for architectural options
  */
 export const assignInjectTileData = assign({
   injectedData: ({ context }) => {
-    fsmLogger.info('[assignInjectTileData] Querying tile store for available tiles...');
+    fsmLogger.info('[assignInjectTileData] Querying gridInfo for available tiles...');
     
     try {
-      const tileStore = useTileStore.getState();
+      const tiles = context.gridInfo?.tiles || {};
       const shipPosition = context.vehicle?.position;
       const collectingRadius = context.config?.collectingRadius ?? 3;
+      const shipCoord = shipPosition?.coord;
       
-      // Query available tiles within collecting radius
-      const availableTiles = tileStore.tileInRadius(shipPosition, collectingRadius) || [];
+      // ✅ Phase 4: Use pure findTilesInRadius with context.gridInfo.tiles
+      const availableTiles = shipCoord ? findTilesInRadius(shipCoord, collectingRadius, tiles) : [];
       
       fsmLogger.info('[assignInjectTileData] Query result:', {
         shipPosition,
+        shipCoord,
         collectingRadius,
         availableTilesCount: availableTiles.length,
+        gridInfoTilesCount: Object.keys(tiles).length,
         injectedAt: Date.now()
       });
       
@@ -56,7 +56,7 @@ export const assignInjectTileData = assign({
         injectedAt: Date.now(),
       };
     } catch (error) {
-      fsmLogger.error('[assignInjectTileData] Failed to query tile store:', error);
+      fsmLogger.error('[assignInjectTileData] Failed to query gridInfo:', error);
       return {
         ...context.injectedData,
         availableTiles: [],
