@@ -76,6 +76,24 @@ export {
 } from './pathfinding';
 
 // ============================================================================
+// ANIMATION UTILITIES
+// ============================================================================
+
+export {
+  interpolatePosition,
+  interpolateWithSpeed,
+  calculateLerpFactor,
+  calculateVelocity,
+  shouldSyncPosition,
+  shouldSyncTime,
+  calculateDistance3D,
+  calculateRelativePosition,
+  calculateWorldPosition,
+} from './animation';
+
+export type { LerpOptions, VelocityOptions, SyncOptions } from './animation';
+
+// ============================================================================
 // TYPE RE-EXPORTS
 // ============================================================================
 
