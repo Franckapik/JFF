@@ -46,6 +46,23 @@ export {
 } from './coordinates';
 
 // ============================================================================
+// HEX GRID GENERATION
+// ============================================================================
+
+export {
+  initializeGameGrid,
+  placeGameStations,
+  placeDangerTiles,
+  placeStartingTiles,
+  assignStartingTilesToBots,
+  calculateHexNeighbors,
+  calculateHexPosition,
+  generateTileResources,
+  generateRandomColor,
+  getStationCount,
+} from './hexGrid';
+
+// ============================================================================
 // TYPE RE-EXPORTS
 // ============================================================================
 
