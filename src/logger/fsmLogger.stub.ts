@@ -12,25 +12,25 @@
 
 const fsmLogger = {
   // Méthodes principales
-  info: (...args) => {
+  info: (..._args: unknown[]) => {
     // Silencieux par défaut, décommenter pour debug:
     // console.log('[FSM INFO]', ...args);
   },
   
-  warn: (...args) => {
+  warn: (...args: unknown[]) => {
     console.warn('[FSM WARN]', ...args);
   },
   
-  error: (...args) => {
+  error: (...args: unknown[]) => {
     console.error('[FSM ERROR]', ...args);
   },
   
-  debug: (...args) => {
+  debug: (..._args: unknown[]) => {
     // Silencieux par défaut, décommenter pour debug:
     // console.log('[FSM DEBUG]', ...args);
   },
   
-  log: (...args) => {
+  log: (..._args: unknown[]) => {
     // Silencieux par défaut, décommenter pour debug:
     // console.log('[FSM LOG]', ...args);
   },
