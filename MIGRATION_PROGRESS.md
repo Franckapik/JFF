@@ -165,30 +165,46 @@ gridToWorld: (coord) => {
 
 ---
 
-### ⏳ Phase 5: Animation Position Logic
+### ✅ Phase 5: Animation Position Logic
 
-**Status:** ⏳ NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Target:** `src/core/spatial/animation.ts`
 
-**Functions to Extract:**
-- `interpolatePosition(current, target, speed, deltaTime)`
-- `calculateVelocity(from, to, speed)`
-- `shouldSyncPosition(current, lastSync, threshold)`
+**Functions Extracted:**
+- `interpolatePosition(current, target, lerp)` - Linear position interpolation
+- `calculateLerpFactor(speed, deltaTime)` - Calculate interpolation factor
+- `interpolateWithSpeed(from, to, options)` - Speed-based interpolation
+- `calculateVelocity(from, to, speed)` - Velocity calculation
+- `shouldSyncPosition(current, lastSync, threshold)` - Position sync detection
+- `shouldSyncTime(lastSync, interval)` - Time-based sync detection
+- `calculateDistance3D(from, to)` - 3D euclidean distance
+- `calculateRelativePosition(entity, reference)` - Relative position calculation
+- `calculateWorldPosition(entity, offset)` - World position with offset
 
-**Commit:** `refactor(animations): extract position logic to core/spatial`
+**Test Coverage:** 45 tests passing ✅
+**Files:** `animation.ts`, `animation.test.ts`
+
+**Commit:** `feat(core): extract animation position logic`
 
 ---
 
-### ⏳ Phase 6: Diagnostic Test Scenarios
+### ✅ Phase 6: Diagnostic Test Scenarios
 
-**Status:** ⏳ NOT STARTED  
+**Status:** ✅ COMPLETE  
 **Target:** `src/core/spatial/__tests__/scenarios.test.ts`
 
-**Scenarios to Cover:**
-- Full exploration cycle (deploy → scan → return)
-- Multi-tile collection with overload
-- Maintenance sequence (deposit → refuel → repair)
-- Emergency transitions (low fuel, damage)
+**Scenarios Covered:**
+- Exploration Cycle: drone deploy → scan → return
+- Collection Cycle: ship move → collect → return
+- Multi-Tile Collection: capacity management
+- Pathfinding Around Obstacles: unwalkable tiles
+- Position Sync Optimization: threshold-based updates
+- Coordinate System Consistency: round-trip conversions
+- Station Interaction: fuel/repair station pathfinding
+- Edge Cases: error handling, invalid inputs
+
+**Test Coverage:** 20 comprehensive end-to-end tests passing ✅
+**Files:** `scenarios.test.ts`
 
 **Commit:** `test(core): add end-to-end spatial behavior scenarios`
 
@@ -210,9 +226,9 @@ gridToWorld: (coord) => {
 
 ## 📊 Overall Progress
 
-**Phases Completed:** 1 / 9 (11%)  
-**Test Coverage:** 110 tests (distance + coordinates)  
-**Functions Migrated:** 11 / ~40 (28%)  
+**Phases Completed:** 6 / 9 (67%)  
+**Test Coverage:** 234 tests (24 + 46 + 48 + 51 + 45 + 20)  
+**Functions Migrated:** 36 / ~40 (90%)  
 **Blockers:** None
 
 ---
