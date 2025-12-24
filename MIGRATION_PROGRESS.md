@@ -40,33 +40,48 @@
 
 ---
 
-### 🔄 Phase 1B: Refactor tileCoordinateSlice (IN PROGRESS)
+### ✅ Phase 1B: Refactor tileCoordinateSlice (COMPLETED)
 
-**Status:** 🔄 TODO  
-**Target:** `src/stores/useTileStore/slices/tileCoordinateSlice.ts`
+**Date:** 2025-12-24  
+**Status:** ✅ DONE
 
-**Tasks:**
-- [ ] Import `core/spatial` functions
-- [ ] Replace implementations with thin wrappers
-- [ ] Inject `spacing` config from store state
-- [ ] Validate FSM actions still work
-- [ ] Run integration tests
+**Refactored:**
+- ✅ `src/stores/useTileStore/slices/tileCoordinateSlice.ts`
 
-**Expected Changes:**
+**Changes:**
+- All validation functions delegate to `core/spatial`
+- All coordinate conversion functions inject `spacing` from store state
+- Vector3 operations kept as-is (R3F specific)
+- API preserved for backward compatibility
+- Comments updated to reflect wrapper pattern
+
+**Before/After:**
 ```typescript
-// Before
+// Before: Logic in store
 gridToWorld: (coord) => {
   const spacing = get().spacing ?? -0.2;
   const parts = coord.split(',').map(Number);
-  // ... implementation
+  const x = parts[0];
+  const z = parts[1];
+  return {
+    x: x * (1 + spacing),
+    y: 0.5,
+    z: z * (1 + spacing)
+  };
 }
 
-// After
+// After: Wrapper over core/spatial
 gridToWorld: (coord) => {
   const spacing = get().spacing ?? -0.2;
   return coreGridToWorld(coord, { spacing, defaultY: 0.5 });
 }
 ```
+
+**Validation:**
+- ✅ Build passes (npm run build)
+- ✅ All tests pass (70/70)
+- ✅ No breaking changes to API
+- ✅ FSM actions still functional
 
 **Commit:** `refactor(store): tileCoordinateSlice as wrappers over core/spatial`
 
