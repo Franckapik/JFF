@@ -23,9 +23,9 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 import { createMachineContext } from './context/initialContext.ts';
 import type { MachineEvents } from './events.pure.v5.ts';
 
-// Import des guards réels depuis l'architecture domain-based
-import { canCollectTile, isVehicleOverloaded } from './domains/collection/guards.pure.ts';
-import { canStartExploring, shouldCollect, shouldExplore, shouldMaintain } from './domains/evaluation/guards.ts';
+// Import des guards réels depuis l'architecture domain-based (versions pures)
+import { canCollectTile, hasMoreCollectibleTiles, isVehicleOverloaded } from './domains/collection/guards.pure.ts';
+import { canStartExploring, hasTilesAvailable, shouldCollect, shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure.ts';
 import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure.ts';
 
 /**
@@ -355,18 +355,37 @@ const terminalAssignActions = {
       },
     };
   }),
+  
+  // ✅ Phase 4: updateGridInfo - Update context with tile data from TILES_UPDATED event
+  updateGridInfo: assign(({ context, event }: { context: FSMContext; event: any }): FSMContext => {
+    if (event.type !== 'TILES_UPDATED') return context;
+    
+    const { tiles, spacing, radius } = event;
+    console.log(`🗺️ [Terminal] Updating gridInfo: ${Object.keys(tiles).length} tiles, spacing=${spacing}`);
+    
+    return {
+      ...context,
+      gridInfo: {
+        tiles,
+        spacing,
+        radius,
+        departTileCoord: context.gridInfo?.departTileCoord,
+        syncedAt: Date.now(),
+      },
+    };
+  }),
 };
 
 /**
- * Guards avec implémentations réelles des domaines
- * Note: areAllEntitiesInitialized gardé en stub car dépend de stores (impure)
- * Note: hasMoreCollectibleTiles nécessite injectedData (Option A - voir roadmap)
+ * Guards avec implémentations réelles des domaines (pures)
+ * ✅ Phase 4: All guards now use pure versions from guards.pure.ts
  */
 const terminalGuards = {
-  // Initializing (stub - impure, deferred)
+  // Initializing (stub - impure logic not needed, context-only)
   areAllEntitiesInitialized: () => true,
   
-  // Evaluation (guards)
+  // Evaluation (guards purs)
+  hasTilesAvailable: ({ context }: { context: FSMContext }) => hasTilesAvailable({ context, event: {} as any }),
   canStartExploring: ({ context }: { context: FSMContext }) => canStartExploring({ context, event: {} as any }),
   shouldExplore: ({ context }: { context: FSMContext }) => shouldExplore({ context, event: {} as any }),
   shouldCollect: ({ context }: { context: FSMContext }) => shouldCollect({ context, event: {} as any }),
@@ -375,27 +394,7 @@ const terminalGuards = {
   // Collection (guards purs)
   canCollectTile: ({ context }: { context: FSMContext }) => canCollectTile({ context, event: {} as any }),
   isVehicleOverloaded: ({ context }: { context: FSMContext }) => isVehicleOverloaded({ context, event: {} as any }),
-  
-  // hasMoreCollectibleTiles: avec logique overload prioritaire
-  // Si overloaded, retourner false même si des tuiles existent
-  hasMoreCollectibleTiles: ({ context }: { context: FSMContext }) => {
-    // Vérifier d'abord si overloaded (priorité plus haute)
-    const currentResources = context.vehicle.resources;
-    const totalResources = (currentResources.food || 0) + (currentResources.debris || 0) + (currentResources.special || 0);
-    const maxCapacity = typeof context.vehicle.maxCapacity === 'object' && context.vehicle.maxCapacity !== null 
-      ? (context.vehicle.maxCapacity as any).total || 2003
-      : Number(context.vehicle.maxCapacity) || 2003;
-    const threshold = maxCapacity * 0.8;
-    
-    // Si overloaded, pas de nouvelles collectes
-    if (totalResources >= threshold) {
-      return false;
-    }
-    
-    // Sinon, vérifier les tuiles disponibles
-    const tiles = context.injectedData?.availableTiles;
-    return tiles && tiles.length > 1; // Si plus d'une tuile disponible
-  },
+  hasMoreCollectibleTiles: ({ context }: { context: FSMContext }) => hasMoreCollectibleTiles({ context, event: {} as any }),
   
   // Maintenance (guards purs)
   needsDeposit: ({ context }: { context: FSMContext }) => needsDeposit({ context, event: {} as any }),
@@ -431,7 +430,8 @@ export const machineXV5Terminal = setup({
 
   on: {
     SHIP_POSITION_UPDATE: { actions: 'updateShipPosition' },
-    DRONE_POSITION_UPDATE: { actions: 'updateDronePosition' }
+    DRONE_POSITION_UPDATE: { actions: 'updateDronePosition' },
+    TILES_UPDATED: { actions: 'updateGridInfo' }
   },
 
   states: {
