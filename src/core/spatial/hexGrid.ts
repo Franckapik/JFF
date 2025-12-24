@@ -12,12 +12,13 @@
  * @version 1.0.0
  */
 
-import { encodeHexCoord } from './coordinates';
 
 import type { GridCoordinate, WorldGridPosition } from '../../types/coordinates';
-import type { Tile, TileBiome, TileMap, TileType } from '../../types/tile';
 import type { ResourceStats } from '../../types/resources';
 import type { HexGridConfig, StationPlacementConfig } from '../../types/spatial';
+import type { Tile, TileBiome, TileMap, TileType } from '../../types/tile';
+
+import { encodeHexCoord } from './coordinates';
 
 // ============================================================================
 // CONSTANTS

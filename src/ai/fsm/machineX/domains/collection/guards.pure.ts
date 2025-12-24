@@ -39,6 +39,28 @@ export const canCollectTile: XStateV5Guard = ({ context }) => {
 };
 
 /**
+ * Guard pour vérifier s'il y a des tuiles collectibles parmi les tuiles connues.
+ * Version pure: utilise uniquement context.memory.knownTiles au lieu de TileStore.
+ * 
+ * Retourne true si au moins une tile connue a des ressources non collectées.
+ */
+export const hasMoreCollectibleTiles: XStateV5Guard = ({ context }) => {
+  // On utilise les tuiles connues du FSM plutôt que le TileStore
+  const knownTiles = context.memory?.knownTiles || [];
+  
+  if (knownTiles.length === 0) return false;
+  
+  // Chercher au moins une tuile avec des ressources non collectées
+  for (const tile of knownTiles) {
+    if (tile?.resources && tile.resources.total > 0 && !tile.collected) {
+      return true;
+    }
+  }
+  
+  return false;
+};
+
+/**
  * Guard pour vérifier si le véhicule est surchargé (>= 80% capacité)
  * Retourne true si le véhicule doit déposer ses ressources
  */

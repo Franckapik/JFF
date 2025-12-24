@@ -12,15 +12,15 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  calculateDistance3D,
-  calculateLerpFactor,
-  calculateRelativePosition,
-  calculateVelocity,
-  calculateWorldPosition,
-  interpolatePosition,
-  interpolateWithSpeed,
-  shouldSyncPosition,
-  shouldSyncTime,
+    calculateDistance3D,
+    calculateLerpFactor,
+    calculateRelativePosition,
+    calculateVelocity,
+    calculateWorldPosition,
+    interpolatePosition,
+    interpolateWithSpeed,
+    shouldSyncPosition,
+    shouldSyncTime,
 } from './animation';
 
 // ============================================================================

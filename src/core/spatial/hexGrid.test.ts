@@ -12,16 +12,16 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  assignStartingTilesToBots,
-  calculateHexNeighbors,
-  calculateHexPosition,
-  generateRandomColor,
-  generateTileResources,
-  getStationCount,
-  initializeGameGrid,
-  placeDangerTiles,
-  placeGameStations,
-  placeStartingTiles,
+    assignStartingTilesToBots,
+    calculateHexNeighbors,
+    calculateHexPosition,
+    generateRandomColor,
+    generateTileResources,
+    getStationCount,
+    initializeGameGrid,
+    placeDangerTiles,
+    placeGameStations,
+    placeStartingTiles,
 } from './hexGrid';
 
 describe('core/spatial/hexGrid', () => {

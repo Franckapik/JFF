@@ -12,14 +12,15 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GridCoordinate } from '../../types/coordinates';
+
 import {
-  createGridCoord,
-  encodeHexCoord,
-  gridToWorld,
-  isValidGridCoord,
-  isValidWorldPosition,
-  parseGridCoord,
-  worldToGrid,
+    createGridCoord,
+    encodeHexCoord,
+    gridToWorld,
+    isValidGridCoord,
+    isValidWorldPosition,
+    parseGridCoord,
+    worldToGrid,
 } from './coordinates';
 
 describe('core/spatial/coordinates', () => {

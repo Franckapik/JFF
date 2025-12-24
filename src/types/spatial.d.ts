@@ -11,7 +11,7 @@
  * @version 1.0.0
  */
 
-import type { GridCoordinate, WorldPosition } from './coordinates';
+import type { WorldPosition } from './coordinates';
 
 // ============================================================================
 // DISTANCE CALCULATION

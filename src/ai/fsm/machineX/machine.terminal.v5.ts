@@ -25,7 +25,7 @@ import type { MachineEvents } from './events.pure.v5.ts';
 
 // Import des guards réels depuis l'architecture domain-based
 import { canCollectTile, isVehicleOverloaded } from './domains/collection/guards.pure.ts';
-import { shouldCollect, shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure.ts';
+import { canStartExploring, shouldCollect, shouldExplore, shouldMaintain } from './domains/evaluation/guards.ts';
 import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure.ts';
 
 /**
@@ -366,7 +366,8 @@ const terminalGuards = {
   // Initializing (stub - impure, deferred)
   areAllEntitiesInitialized: () => true,
   
-  // Evaluation (guards purs)
+  // Evaluation (guards)
+  canStartExploring: ({ context }: { context: FSMContext }) => canStartExploring({ context, event: {} as any }),
   shouldExplore: ({ context }: { context: FSMContext }) => shouldExplore({ context, event: {} as any }),
   shouldCollect: ({ context }: { context: FSMContext }) => shouldCollect({ context, event: {} as any }),
   shouldMaintain: ({ context }: { context: FSMContext }) => shouldMaintain({ context, event: {} as any }),
@@ -448,7 +449,7 @@ export const machineXV5Terminal = setup({
       entry: 'onEvaluatingEntry',
       exit: 'onEvaluatingExit',
       on: {
-        NEED_EXPLORING: { target: 'exploring', guard: 'shouldExplore', actions: 'assignDroneDeployingContext' },
+        NEED_EXPLORING: { target: 'exploring', guard: 'canStartExploring', actions: 'assignDroneDeployingContext' },
         NEED_COLLECTING: { target: 'collecting', guard: 'shouldCollect', actions: 'assignShipMovingToTileContext' },
         NEED_MAINTENANCE: { target: 'maintaining', guard: 'shouldMaintain' }
       }

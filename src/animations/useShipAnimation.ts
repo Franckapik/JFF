@@ -19,8 +19,8 @@ import type { WorldPosition } from "../types";
 import type { ShipAnimationProps, ShipAnimationReturn } from "../types/r3f";
 import type { VehicleVisualState } from "../types/vehicle.d.ts";
 
-import fsmLogger from "../logger/fsmLogger.ts";
 import { interpolateWithSpeed } from "../core/spatial/animation";
+import fsmLogger from "../logger/fsmLogger.ts";
 
 import { applyShipVisualAnimations } from "./utils/shipAnimationUtils";
 // ...existing code...

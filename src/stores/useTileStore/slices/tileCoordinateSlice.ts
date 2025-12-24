@@ -19,17 +19,17 @@ import { Vector3 } from "three";
 
 // Import des fonctions pures depuis core/spatial
 import {
-  encodeHexCoord as coreEncodeHexCoord,
-  gridToWorld as coreGridToWorld,
-  hasReachedTarget as coreHasReachedTarget,
-  isValidGridCoord as coreIsValidGridCoord,
-  isValidWorldPosition as coreIsValidWorldPosition,
-  worldToGrid as coreWorldToGrid,
+    encodeHexCoord as coreEncodeHexCoord,
+    gridToWorld as coreGridToWorld,
+    hasReachedTarget as coreHasReachedTarget,
+    isValidGridCoord as coreIsValidGridCoord,
+    isValidWorldPosition as coreIsValidWorldPosition,
+    worldToGrid as coreWorldToGrid,
 } from '../../../core/spatial';
 
 import type {
-  GridCoordinate,
-  WorldPosition
+    GridCoordinate,
+    WorldPosition
 } from '../../../types/index.ts';
 import type { TileCoordinateSliceActions } from '../../../types/stores.d.ts';
 

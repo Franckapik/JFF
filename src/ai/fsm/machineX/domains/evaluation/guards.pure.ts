@@ -12,6 +12,61 @@
 import type { XStateV5Guard } from '../../../../../types/xstate.v5.types';
 
 /**
+ * Pure guard: Check if tiles are available in FSM context
+ * 
+ * Uses injectedData.availableTiles or memory.knownTiles instead of TileStore.
+ * Tiles must be injected into context before this guard can return true.
+ * 
+ * @returns true if tiles data is available in context
+ */
+export const hasTilesAvailable: XStateV5Guard = ({ context }) => {
+  // Check injected tiles first (from onEvaluatingEntry effect)
+  const injectedTiles = context.injectedData?.availableTiles;
+  if (injectedTiles && injectedTiles.length > 0) return true;
+  
+  // Fallback: check known tiles in memory
+  const knownTiles = context.memory?.knownTiles || [];
+  return knownTiles.length > 0;
+};
+
+/**
+ * Pure guard: Combined check for tiles available AND exploration conditions
+ * 
+ * Combines hasTilesAvailable + shouldExplore into a single guard.
+ * This is a pure version that only reads FSM context.
+ * 
+ * @returns true if exploration can start
+ */
+export const canStartExploring: XStateV5Guard = ({ context }) => {
+  // Check 1: Tiles must be available
+  const injectedTiles = context.injectedData?.availableTiles;
+  const knownTiles = context.memory?.knownTiles || [];
+  const hasTiles = (injectedTiles && injectedTiles.length > 0) || knownTiles.length > 0;
+  
+  if (!hasTiles) return false;
+  
+  // Check 2: Exploration cycle limit
+  const exploredThisCycle = context.memory?.stats?.tilesExploredInCycle ?? 0;
+  const MAX_EXPLORATIONS_PER_CYCLE = 2;
+  
+  if (exploredThisCycle > MAX_EXPLORATIONS_PER_CYCLE) return false;
+  
+  // Check 3: Vehicle state
+  const fuel = context.vehicle?.fuel ?? 0;
+  const damage = context.vehicle?.damage ?? 0;
+  const fuelThreshold = context.config?.fuelThreshold ?? 20;
+  const isAtCapacity = context.vehicle?.isAtCapacity ?? false;
+  
+  const DAMAGE_THRESHOLD = 80;
+  
+  if (fuel < fuelThreshold) return false;
+  if (damage > DAMAGE_THRESHOLD) return false;
+  if (isAtCapacity) return false;
+  
+  return true;
+};
+
+/**
  * Pure guard: Check if exploration is appropriate based on vehicle state
  * 
  * Returns true when:
@@ -42,6 +97,9 @@ export const shouldExplore: XStateV5Guard = ({ context }) => {
     return false;
   }
 
+  // ⚠️ NOTE: Cannot check TileStore here (pure guard, no side effects)
+  // The assignDroneDeployingContext action will handle empty TileStore gracefully
+  
   // Vehicle state checks
   const fuel = context.vehicle?.fuel ?? 0;
   const damage = context.vehicle?.damage ?? 0;

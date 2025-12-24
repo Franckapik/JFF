@@ -33,6 +33,13 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
   }
   const range = context.config?.exploringRadius ?? 2;
   const tiles = tileStore.tiles;
+  
+  // ⚠️ GUARD: Vérifier que le TileStore est initialisé avec des tiles
+  if (!tiles || Object.keys(tiles).length === 0) {
+    fsmLogger.warn(`[${context.entityId}] assignDroneDeployingContext: TileStore is empty - tiles not yet initialized`);
+    return {};
+  }
+  
   const startCoord = shipPosition.coord;
   const candidateTiles = findTilesInRadius(startCoord, range, tiles);
   let targetDroneTile = selectRandomTile(candidateTiles);

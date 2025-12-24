@@ -4,9 +4,9 @@
  * ============================================================================
  */
 
+import { calculateRelativePosition } from '../../core/spatial/animation';
 import type { WorldPosition } from '../../types/coordinates.d.ts';
 import type { DroneVisualState } from '../../types/drone.d.ts';
-import { calculateRelativePosition } from '../../core/spatial/animation';
 
 interface DroneData {
   position?: WorldPosition;

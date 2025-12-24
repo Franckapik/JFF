@@ -15,12 +15,12 @@ import type { Path } from '../../types/coordinates';
 import type { Tile, TileMap } from '../../types/tile';
 
 import {
-  calculateDroneDistance,
-  calculatePathDistance,
-  findPath,
-  findTileAtPosition,
-  findTilesInRadius,
-  selectRandomTile,
+    calculateDroneDistance,
+    calculatePathDistance,
+    findPath,
+    findTileAtPosition,
+    findTilesInRadius,
+    selectRandomTile,
 } from './pathfinding';
 
 // ============================================================================

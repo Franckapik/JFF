@@ -17,6 +17,7 @@
  */
 
 import fsmLogger from '../../../../../logger/fsmLogger';
+import { useTileStore } from '../../../../../stores/useTileStore';
 import type { XStateV5Guard } from '../../../../../types/xstate.v5.types';
 
 import { shouldCollect as shouldCollectPure } from './guards.pure';
@@ -34,6 +35,64 @@ function createGuard(
     return result;
   };
 }
+
+/**
+ * Guard pour vérifier que le TileStore est initialisé
+ * ⚠️ IMPURE - Accède au TileStore (mais safe pour guards XState)
+ */
+export const hasTilesAvailable = createGuard('hasTilesAvailable', () => {
+  const tileStore = useTileStore.getState();
+  const tiles = tileStore.tiles;
+  const hasTiles = tiles && Object.keys(tiles).length > 0;
+  
+  if (!hasTiles) {
+    fsmLogger.warn('[GUARD] hasTilesAvailable: false - TileStore not yet initialized');
+  }
+  
+  return hasTiles;
+});
+
+/**
+ * Guard combiné : vérifie à la fois les tiles disponibles ET les conditions d'exploration
+ * Combine hasTilesAvailable + shouldExplore de guards.pure.ts
+ */
+export const canStartExploring = createGuard('canStartExploring', ({ context }) => {
+  // Check 1: TileStore doit être initialisé
+  const tileStore = useTileStore.getState();
+  const tiles = tileStore.tiles;
+  const hasTiles = tiles && Object.keys(tiles).length > 0;
+  
+  if (!hasTiles) {
+    fsmLogger.warn('[GUARD] canStartExploring: false - TileStore not yet initialized');
+    return false;
+  }
+  
+  // Check 2: Conditions métier (même logique que shouldExplore pure)
+  const exploredThisCycle = context.memory?.stats?.tilesExploredInCycle ?? 0;
+  const MAX_EXPLORATIONS_PER_CYCLE = 2;
+  
+  if (exploredThisCycle > MAX_EXPLORATIONS_PER_CYCLE) {
+    fsmLogger.info(`[GUARD] canStartExploring: false - déjà ${exploredThisCycle} explorations ce cycle (max: ${MAX_EXPLORATIONS_PER_CYCLE})`);
+    return false;
+  }
+
+  const fuel = context.vehicle?.fuel ?? 0;
+  const damage = context.vehicle?.damage ?? 0;
+  const fuelThreshold = context.config?.fuelThreshold ?? 20;
+  const isAtCapacity = context.vehicle?.isAtCapacity ?? false;
+  
+  const hasEnoughFuel = fuel >= fuelThreshold;
+  const isHealthy = damage <= 80;
+  const hasSpace = !isAtCapacity;
+  
+  const canExplore = hasEnoughFuel && isHealthy && hasSpace;
+  
+  if (!canExplore) {
+    fsmLogger.info(`[GUARD] canStartExploring: false - fuel:${fuel}, damage:${damage}, atCapacity:${isAtCapacity}`);
+  }
+  
+  return canExplore;
+});
 
 /**
  * Guard principal pour déterminer si l'exploration est nécessaire

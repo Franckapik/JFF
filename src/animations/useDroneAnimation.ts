@@ -17,8 +17,8 @@ import type { WorldPosition } from '../types';
 import type { DroneVisualState } from '../types/drone.d.ts';
 import type { DroneAnimationProps, DroneAnimationReturn } from '../types/r3f';
 
-import fsmLogger from '../logger/fsmLogger.ts';
 import { interpolateWithSpeed } from '../core/spatial/animation';
+import fsmLogger from '../logger/fsmLogger.ts';
 
 import { applyDroneVisualAnimations } from './utils/droneAnimationUtils';
 import {

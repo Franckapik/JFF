@@ -12,11 +12,12 @@
 import { describe, expect, it } from 'vitest';
 
 import type { WorldPosition } from '../../types/coordinates';
+
 import {
-  calculateDistance,
-  calculateDistance2D,
-  getDirectionVector,
-  hasReachedTarget,
+    calculateDistance,
+    calculateDistance2D,
+    getDirectionVector,
+    hasReachedTarget,
 } from './distance';
 
 describe('core/spatial/distance', () => {

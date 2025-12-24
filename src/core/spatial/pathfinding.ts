@@ -17,11 +17,11 @@
  */
 
 import type {
-  GridCoordinate,
-  Path,
-  Tile,
-  TileMap,
-  WorldPosition,
+    GridCoordinate,
+    Path,
+    Tile,
+    TileMap,
+    WorldPosition,
 } from '../../types/index';
 
 // ============================================================================

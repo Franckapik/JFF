@@ -48,8 +48,8 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 // Imports par domaine pour éviter les erreurs de syntaxe
 import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection';
 import { assignEvaluationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation';
-import { shouldCollect } from './domains/evaluation/guards';
-import { shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure';
+// ✅ Phase 1: ALL guards from guards.pure.ts (no store dependencies)
+import { canStartExploring, hasTilesAvailable, shouldCollect, shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure';
 import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration';
 import { updateDronePosition, updateShipPosition } from './domains/global';
 import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign';
@@ -58,16 +58,10 @@ import { __maintenanceEffectsPlaceholder } from './domains/maintenance';
 import { assignShipDepositResourcesContext, assignShipRefuelContext, assignShipRepairContext } from './domains/maintenance/actions.assign';
 import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure';
 
-
-// Import des guards d'initializing
-
-// Import des guards de collection (pure)
-import { hasMoreCollectibleTiles } from './domains/collection/guards'; // ⚠️ IMPURE - deferred to Phase 2
-import { canCollectTile, isVehicleOverloaded } from './domains/collection/guards.pure';
-// Import des guards d'initializing
-import * as initializingGuards from './domains/initializing/guards';
-import { areAllEntitiesInitialized } from './domains/initializing/guards';
-
+// ✅ Phase 1: Pure guards from collection domain
+import { canCollectTile, hasMoreCollectibleTiles, isVehicleOverloaded } from './domains/collection/guards.pure';
+// ✅ Phase 1: Pure guards from initializing domain
+import { areAllEntitiesInitialized, isBasePositionInitialized, isDronePositionInitialized, isVehiclePositionInitialized } from './domains/initializing/guards.pure';
 
 import { createMachineContext } from './context/initialContext';
 import type { MachineEvents } from './events.pure.v5';
@@ -145,22 +139,26 @@ export const machineXV5Pure = setup({
   onInitializingExit,
   },
   guards: {
-    // Guards d'initializing
-  isVehiclePositionInitialized: (args) => initializingGuards.isVehiclePositionInitialized(args.context),
-  isDronePositionInitialized: (args) => initializingGuards.isDronePositionInitialized(args.context),
-  isBasePositionInitialized: (args) => initializingGuards.isBasePositionInitialized(args.context),
-  areAllEntitiesInitialized: (args) => areAllEntitiesInitialized(args.context),
+    // ✅ Phase 1: All guards from guards.pure.ts (no store dependencies)
+    // Guards d'initializing (pure) - these take context directly, wrap them
+    isVehiclePositionInitialized: (args) => isVehiclePositionInitialized(args.context),
+    isDronePositionInitialized: (args) => isDronePositionInitialized(args.context),
+    isBasePositionInitialized: (args) => isBasePositionInitialized(args.context),
+    areAllEntitiesInitialized: (args) => areAllEntitiesInitialized(args.context),
 
-    // Guards du domaine EVALUATION (migré)
+    // Guards du domaine EVALUATION (pure) - these are XStateV5Guard format
+    hasTilesAvailable, // ✅ Uses context.injectedData or memory.knownTiles
+    canStartExploring, // ✅ Pure: combines hasTilesAvailable + shouldExplore
     shouldExplore,
     shouldMaintain,
-    // Guards temporaires des domaines (à migrer)
-    shouldCollect,
+    shouldCollect, // ✅ Pure: uses context.injectedData.availableTiles
+    
+    // Guards du domaine COLLECTION (pure)
     canCollectTile,
     isVehicleOverloaded,
-    hasMoreCollectibleTiles,
+    hasMoreCollectibleTiles, // ✅ Pure: uses context.memory.knownTiles
     
-    // Guards du domaine MAINTENANCE (migrés)
+    // Guards du domaine MAINTENANCE (pure)
     needsDeposit,
     needsRefuel,
     needsRepair,
@@ -225,7 +223,7 @@ export const machineXV5Pure = setup({
       on: {
         NEED_EXPLORING: { 
           target: 'exploring', 
-          guard: 'shouldExplore',
+          guard: 'canStartExploring', // ⚠️ Combine hasTilesAvailable + shouldExplore
           actions: 'assignDroneDeployingContext' // MAJ contexte ici (assign)
         },
         NEED_COLLECTING: { 

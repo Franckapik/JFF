@@ -5,7 +5,8 @@
  */
 
 import { assign } from 'xstate';
-import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial';import fsmLogger from '../../../../../logger/fsmLogger';
+import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial';
+import fsmLogger from '../../../../../logger/fsmLogger';
 import { useTileStore } from '../../../../../stores/useTileStore';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { TileStoreType } from '../../../../../types/stores.d.ts';

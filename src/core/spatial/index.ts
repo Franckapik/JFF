@@ -25,10 +25,7 @@
 // ============================================================================
 
 export {
-  calculateDistance,
-  hasReachedTarget,
-  getDirectionVector,
-  calculateDistance2D,
+    calculateDistance, calculateDistance2D, getDirectionVector, hasReachedTarget
 } from './distance';
 
 // ============================================================================
@@ -36,13 +33,9 @@ export {
 // ============================================================================
 
 export {
-  isValidGridCoord,
-  isValidWorldPosition,
-  encodeHexCoord,
-  gridToWorld,
-  worldToGrid,
-  parseGridCoord,
-  createGridCoord,
+    createGridCoord, encodeHexCoord,
+    gridToWorld, isValidGridCoord,
+    isValidWorldPosition, parseGridCoord, worldToGrid
 } from './coordinates';
 
 // ============================================================================
@@ -50,16 +43,9 @@ export {
 // ============================================================================
 
 export {
-  initializeGameGrid,
-  placeGameStations,
-  placeDangerTiles,
-  placeStartingTiles,
-  assignStartingTilesToBots,
-  calculateHexNeighbors,
-  calculateHexPosition,
-  generateTileResources,
-  generateRandomColor,
-  getStationCount,
+    assignStartingTilesToBots,
+    calculateHexNeighbors,
+    calculateHexPosition, generateRandomColor, generateTileResources, getStationCount, initializeGameGrid, placeDangerTiles, placeGameStations, placeStartingTiles
 } from './hexGrid';
 
 // ============================================================================
@@ -67,12 +53,9 @@ export {
 // ============================================================================
 
 export {
-  findPath,
-  calculatePathDistance,
-  findTileAtPosition,
-  findTilesInRadius,
-  selectRandomTile,
-  calculateDroneDistance,
+    calculateDroneDistance, calculatePathDistance, findPath, findTileAtPosition,
+    findTilesInRadius,
+    selectRandomTile
 } from './pathfinding';
 
 // ============================================================================
@@ -80,30 +63,18 @@ export {
 // ============================================================================
 
 export {
-  interpolatePosition,
-  interpolateWithSpeed,
-  calculateLerpFactor,
-  calculateVelocity,
-  shouldSyncPosition,
-  shouldSyncTime,
-  calculateDistance3D,
-  calculateRelativePosition,
-  calculateWorldPosition,
+    calculateDistance3D, calculateLerpFactor, calculateRelativePosition, calculateVelocity, calculateWorldPosition, interpolatePosition,
+    interpolateWithSpeed, shouldSyncPosition,
+    shouldSyncTime
 } from './animation';
 
-export type { LerpOptions, VelocityOptions, SyncOptions } from './animation';
+export type { LerpOptions, SyncOptions, VelocityOptions } from './animation';
 
 // ============================================================================
 // TYPE RE-EXPORTS
 // ============================================================================
 
 export type {
-  DistanceOptions,
-  ReachedTargetOptions,
-  DistanceResult,
-  CoordinateConversionConfig,
-  HexCoordEncodeOptions,
-  CoordinateValidationResult,
-  HexGridConfig,
-  StationPlacementConfig,
+    CoordinateConversionConfig, CoordinateValidationResult, DistanceOptions, DistanceResult, HexCoordEncodeOptions, HexGridConfig, ReachedTargetOptions, StationPlacementConfig
 } from '../../types/spatial';
+

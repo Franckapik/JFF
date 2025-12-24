@@ -21,20 +21,20 @@ import { describe, expect, it } from 'vitest';
 import type { Tile, TileMap } from '../../../types/tile';
 
 import {
-  calculateDistance,
-  calculateDroneDistance,
-  calculateRelativePosition,
-  findPath,
-  findTileAtPosition,
-  findTilesInRadius,
-  gridToWorld,
-  hasReachedTarget,
-  initializeGameGrid,
-  interpolateWithSpeed,
-  placeGameStations,
-  selectRandomTile,
-  shouldSyncPosition,
-  worldToGrid,
+    calculateDistance,
+    calculateDroneDistance,
+    calculateRelativePosition,
+    findPath,
+    findTileAtPosition,
+    findTilesInRadius,
+    gridToWorld,
+    hasReachedTarget,
+    initializeGameGrid,
+    interpolateWithSpeed,
+    placeGameStations,
+    selectRandomTile,
+    shouldSyncPosition,
+    worldToGrid,
 } from '../index';
 
 // ============================================================================
