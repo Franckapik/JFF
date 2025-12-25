@@ -94,3 +94,8 @@ Soit utiliser un actor XState dédié pour les queries de tiles
 Pour l'instant, on la garde deprecated mais fonctionnelle.
 
 Le contexte FSM doit etre clair vis à vis de la séparation avec les stores Zustand. Comment le contraindre, quelle limite choisir?
+
+
+Je dois faire une liste permettant de comprendre les poitn sobligatoire pour le bon déroulement d'un cycle :
+
+App : Scene :
