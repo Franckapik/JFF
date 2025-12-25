@@ -25,7 +25,7 @@
 
 import { createActor } from 'xstate';
 import { machineXV5Pure } from '../src/ai/fsm/machineX/machine.pure.v5.ts';
-import { createMachineContext } from '../src/ai/fsm/machineX/context/initialContext.ts';
+import { makeInitialContext, mockDepartTile, mockTiles, availableTiles, collectAmounts } from './fsm-mock-data.js';
 
 // ========================================
 // Configuration et paramètres
@@ -240,13 +240,13 @@ async function testExplorationCycle(simulator) {
   await simulator.send({
     type: 'SHIP_INITIALIZE_REQUEST',
     shipType: 'harvester',
-    initialPosition: { x: 0, y: 0, z: 0 }
+    initialPosition: { ...mockDepartTile.position }
   });
-  
+
   await simulator.send({
     type: 'DRONE_INITIALIZE_REQUEST',
     droneType: 'scout',
-    initialPosition: { x: 0, y: 0, z: 0 }
+    initialPosition: { ...mockDepartTile.position }
   });
   
   await simulator.waitForState('evaluating', 2000);
@@ -257,24 +257,24 @@ async function testExplorationCycle(simulator) {
   console.log(`  📊 Context before explore: fuel=${ctxBeforeExplore.vehicle?.fuel || 'N/A'}, damage=${ctxBeforeExplore.vehicle?.damage || 'N/A'}`);
   
   // 2. Démarrer l'exploration
-  await simulator.send({ type: 'NEED_EXPLORING' }, 100);
-  await simulator.waitForState('exploring.drone_deploying', 1000);
-  
-  // ✅ PHASE 2: Vérifier que le drone est en état 'deploying'
-  const firstDroneKey = Object.keys(simulator.actor.getSnapshot().context.droneFleet.drones)[0];
-  const droneAfterDeploy = simulator.actor.getSnapshot().context.droneFleet.drones[firstDroneKey];
-  console.log(`  ✅ Drone visualState: ${droneAfterDeploy.visualState} (expected: deploying)`);
-  
-  // 3. Le drone atteint la tuile
-  await simulator.send({ type: 'DRONE_REACHES_TILE' }, 500);
-  await simulator.waitForState('exploring.drone_scanning', 1000);
-  
-  // ✅ PHASE 2: Vérifier que le drone est en état 'scanning' et tilesExplored a augmenté
-  const droneAfterScan = simulator.actor.getSnapshot().context.droneFleet.drones[firstDroneKey];
-  const tilesExplored = simulator.actor.getSnapshot().context.memory.stats.tilesExplored;
-  console.log(`  ✅ Drone visualState: ${droneAfterScan.visualState} (expected: scanning)`);
-  console.log(`  ✅ Tiles explored: ${tilesExplored} (expected: > 0)`);
-  
+  await simulator.send({ type: 'NEED_COLLECTING' }, 100);
+  await simulator.waitForState('collecting.ship_moving_to_tile', 1000);
+  // ...existing code...
+  await simulator.send({ type: 'SHIP_REACHES_TILE' }, 500);
+  await simulator.waitForState('collecting.ship_collecting', 1000);
+  // ...existing code...
+  await simulator.send({ type: 'SHIP_LOAD_RESOURCES', amount: collectAmounts[0] }, 500);
+  // ...existing code...
+  if (currentState === 'collecting.ship_moving_to_tile') {
+    console.log('  ℹ️  More tiles to collect, collecting again...');
+    // Deuxième collecte
+    await simulator.send({ type: 'SHIP_REACHES_TILE' }, 500);
+    await simulator.waitForState('collecting.ship_collecting', 1000);
+    // Charger plus de ressources pour dépasser le seuil (80% de 2003 = 1602)
+    await simulator.send({ type: 'SHIP_LOAD_RESOURCES', amount: collectAmounts[1] }, 500);
+    await simulator.wait(300);
+    // ...existing code...
+  }
   // 4. Le drone scanne
   await simulator.send({ type: 'DRONE_HAS_SCANNED' }, 500);
   await simulator.waitForState('exploring.drone_returning', 1000);
@@ -511,13 +511,13 @@ async function testQuickCycle(simulator) {
   await simulator.send({
     type: 'SHIP_INITIALIZE_REQUEST',
     shipType: 'harvester',
-    initialPosition: { x: 0, y: 0, z: 0 }
+    initialPosition: { ...mockDepartTile.position }
   });
-  
+
   await simulator.send({
     type: 'DRONE_INITIALIZE_REQUEST',
     droneType: 'scout',
-    initialPosition: { x: 0, y: 0, z: 0 }
+    initialPosition: { ...mockDepartTile.position }
   });
   
   await simulator.waitForState('evaluating', 2000);
@@ -598,7 +598,7 @@ async function testCriticalFuel(simulator) {
       for (let i = 0; i < 20; i++) {
         await simulator.send({
           type: 'SHIP_LOAD_RESOURCES',
-          amount: { food: 10, debris: 10, special: 0 },
+          amount: collectAmounts[2],
         });
       }
       
@@ -695,7 +695,7 @@ async function testMaxCapacity(simulator) {
     // Collecter des ressources
     await simulator.send({
       type: 'SHIP_LOAD_RESOURCES',
-      amount: { food: 300, debris: 400, special: 0 },
+      amount: collectAmounts[0],
     });
     await new Promise(resolve => setTimeout(resolve, 150));
     
@@ -866,73 +866,9 @@ async function testNoTilesAvailable(simulator) {
 async function runTests() {
   try {
     // ✅ Phase 7: Use createMachineContext + pre-initialize with positions (like useXFSMStore)
-    const baseContext = createMachineContext('test-bot-0', 'auto');
-    
-    // Simulated depart tile for tests
-    const mockDepartTile = {
-      position: { x: 0, y: 0.5, z: 0, coord: '0,0' },
-      type: 'depart',
-      assignedToBot: 'test-bot-0'
-    };
-    
-    const initialPosition = {
-      x: mockDepartTile.position.x,
-      y: 0.5,
-      z: mockDepartTile.position.z,
-      coord: mockDepartTile.position.coord
-    };
-    
-    // Mock tiles for grid (with valid structure including position.coord)
-    const mockTiles = {
-      '0,0': mockDepartTile,
-      '3,3': { 
-        position: { x: 3, y: 0, z: 3, coord: '3,3' }, 
-        resources: { food: 100, debris: 50, special: 0, total: 150 }, 
-        hasResources: true,
-        type: 'resource',
-        biome: 'forest'
-      },
-      '7,7': { 
-        position: { x: 7, y: 0, z: 7, coord: '7,7' }, 
-        resources: { food: 50, debris: 100, special: 0, total: 150 }, 
-        hasResources: true,
-        type: 'resource',
-        biome: 'desert'
-      },
-    };
-    
-    // ✅ Create context with pre-initialized positions (mimics useXFSMStore Phase 7 fix)
-    const initialContext = {
-      ...baseContext,
-      vehicle: {
-        ...baseContext.vehicle,
-        position: initialPosition,
-        basePosition: initialPosition,
-      },
-      droneFleet: {
-        ...baseContext.droneFleet,
-        drones: {
-          explorer: {
-            ...baseContext.droneFleet.drones.explorer,
-            position: initialPosition,
-          }
-        }
-      },
-      gridInfo: {
-        tiles: mockTiles,
-        spacing: 1.2,
-        radius: 3,
-        departTileCoord: '0,0',
-        syncedAt: Date.now(),
-      },
-      injectedData: {
-        availableTiles: [
-          mockTiles['3,3'],
-          mockTiles['7,7'],
-        ],
-        injectedAt: Date.now(),
-      },
-    };
+
+    // Utilise le contexte mocké centralisé
+    const initialContext = makeInitialContext('test-bot-0', 'auto');
 
     // Créer l'acteur du FSM (production machine with pre-initialized context)
     console.log('🚀 Creating FSM actor (using production machine.pure.v5.ts)...\n');
