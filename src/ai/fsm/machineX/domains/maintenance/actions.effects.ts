@@ -11,7 +11,6 @@
  * - onShipRefuelingEntry/Exit
  */
 
-import fsmLogger from '../../../../../logger/fsmLogger';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 
 // TODO: Migrer les actions de maintenance ici
@@ -19,6 +18,5 @@ import type { FSMContext } from '../../../../../types/fsm.d.ts';
 // export const onShipOnBaseEntry = ({ context }: { context: FSMContext }) => { ... };
 
 // Placeholder pour éviter les erreurs d'import
-export const __maintenanceEffectsPlaceholder = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`🎭 [${context.entityId}] Maintenance effects placeholder`);
+export const __maintenanceEffectsPlaceholder = ({ context: _context }: { context: FSMContext }) => {
 };

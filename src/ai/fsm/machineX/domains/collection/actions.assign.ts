@@ -9,8 +9,9 @@
  */
 
 import { assign } from 'xstate';
-import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial';
+
 import fsmLogger from '../../../../../logger/fsmLogger';
+import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial';
 import { useTileStore } from '../../../../../stores/useTileStore';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { VehicleVisualState } from '../../../../../types/vehicle.d.ts';
@@ -37,11 +38,9 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
   
   // Vérification de sécurité pour l'événement
   if (!event || !event.type) {
-    fsmLogger.info(`⚠️ [${context?.entityId || 'unknown'}] assignShipMovingToTileContext called with invalid event`);
     return {}; // Préserver le contexte
   }
   
-  fsmLogger.info(`🔄 [${context.entityId}] Updating context for ship movement: ${event.type}`);
   
   if (event.type === 'NEED_COLLECTING') {
     // ✅ Phase 4: Use context.gridInfo instead of useTileStore.getState()
@@ -55,7 +54,6 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     const targetVehicleTile = selectRandomTile(candidateTiles);
     
     if (!targetVehicleTile) {
-      fsmLogger.error(`🚢 [${context.entityId}] No target tile found for collection`);
       return {};
     }
     const targetGridCoord = targetVehicleTile.coord;
@@ -101,7 +99,6 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
   }
   
   // Pour les autres événements, ne pas modifier le contexte
-  fsmLogger.info(`⚠️ [${context.entityId}] No ship movement needed for event: ${event.type}`);
   return {};
 });
 
@@ -117,11 +114,9 @@ export const assignShipCollectingContext = createAssignAction(({ context, event 
   });
   
   if (!context.vehicle) {
-    fsmLogger.info(`⚠️ [${context.entityId}] No vehicle found in context`);
     return {};
   }
   
-  fsmLogger.info(`📦 [${context.entityId}] Updating vehicle state to collecting`);
   
   return {
     vehicle: {
@@ -147,7 +142,6 @@ export const assignShipReturningContext = createAssignAction(({ context, event }
   });
   
   if (!context.vehicle) {
-    fsmLogger.info(`⚠️ [${context.entityId}] No vehicle found in context`);
     return {};
   }
   
@@ -193,7 +187,6 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
   });
   
   if (!context.vehicle) {
-    fsmLogger.info(`⚠️ [${context.entityId}] No vehicle found in context for base arrival`);
     return {};
   }
   
@@ -228,14 +221,12 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
   });
   
   if (!context.vehicle) {
-    fsmLogger.error(`⚠️ [${context.entityId}] No vehicle found in context for resource loading`);
     return {};
   }
 
   // Récupérer la tuile cible et ses ressources
   const targetTile = context.vehicle.targetVehicleTile;
   if (!targetTile || !targetTile.position?.coord) {
-    fsmLogger.error(`⚠️ [${context.entityId}] No target tile or coordinate found`);
     return {};
   }
 
@@ -269,7 +260,6 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
   const availableCapacity = maxCapacity - currentTotal;
   
   if (availableCapacity <= 0) {
-    fsmLogger.warn(`⚠️ [${context.entityId}] Vehicle is at full capacity - no resources collected`);
     return {};
   }
 
@@ -356,7 +346,6 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
 });
 
 // Placeholder pour éviter les erreurs d'import
-export const __collectionAssignPlaceholder = createAssignAction(({ context }) => {
-  fsmLogger.info(`🔄 [${context.entityId}] Collection assign actions placeholder`);
+export const __collectionAssignPlaceholder = createAssignAction(({ context: _context }) => {
   return {};
 });

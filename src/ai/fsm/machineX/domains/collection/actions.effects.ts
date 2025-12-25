@@ -4,69 +4,59 @@
  * ==========================================================================
  */
 
-import fsmLogger from '../../../../../logger/fsmLogger';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 
 /**
  * Action d'entrée de l'état collecting
  */
-export const onCollectingEntry = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`📦 [${context.entityId}] Entrée dans l'état COLLECTING`);
+export const onCollectingEntry = ({ context: _context }: { context: FSMContext }) => {
 };
 
 /**
  * Action de sortie de l'état collecting
  */
-export const onCollectingExit = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`📦 [${context.entityId}] Sortie de l'état COLLECTING`);
+export const onCollectingExit = ({ context: _context }: { context: FSMContext }) => {
 };
 
 /**
  * Action d'entrée de l'état ship_moving_to_tile
  */
-export const onShipMovingToTileEntry = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`🚢 [${context.entityId}] Entrée dans l'état SHIP_MOVING_TO_TILE`);
+export const onShipMovingToTileEntry = ({ context: _context }: { context: FSMContext }) => {
   // Le déplacement et la détection d'arrivée sont maintenant gérés par le tracker
 };
 
 /**
  * Action de sortie de l'état ship_moving_to_tile
  */
-export const onShipMovingToTileExit = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`🚢 [${context.entityId}] Sortie de l'état SHIP_MOVING_TO_TILE`);
+export const onShipMovingToTileExit = ({ context: _context }: { context: FSMContext }) => {
 };
 
 /**
  * Action d'entrée de l'état ship_collecting
  */
-export const onShipCollectingEntry = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`📦 [${context.entityId}] Entrée dans l'état SHIP_COLLECTING`);
+export const onShipCollectingEntry = ({ context: _context }: { context: FSMContext }) => {
   // La simulation de collecte et l'envoi de SHIP_LOAD_RESOURCES sont maintenant gérés par le tracker
 };
 
 /**
  * Action de sortie de l'état ship_collecting
  */
-export const onShipCollectingExit = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`📦 [${context.entityId}] Sortie de l'état SHIP_COLLECTING`);
+export const onShipCollectingExit = ({ context: _context }: { context: FSMContext }) => {
 };
 
 /**
  * Action d'entrée de l'état ship_returning
  */
-export const onShipReturningEntry = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`🔙 [${context.entityId}] Entrée dans l'état SHIP_RETURNING`);
+export const onShipReturningEntry = ({ context: _context }: { context: FSMContext }) => {
   // Le retour et la détection d'arrivée à la base sont maintenant gérés par le tracker
 };
 
 /**
  * Action de sortie de l'état ship_returning
  */
-export const onShipReturningExit = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`🔙 [${context.entityId}] Sortie de l'état SHIP_RETURNING`);
+export const onShipReturningExit = ({ context: _context }: { context: FSMContext }) => {
 };
 
 // Placeholder pour éviter les erreurs d'import
-export const __collectionEffectsPlaceholder = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`🎭 [${context.entityId}] Collection effects placeholder`);
+export const __collectionEffectsPlaceholder = ({ context: _context }: { context: FSMContext }) => {
 };

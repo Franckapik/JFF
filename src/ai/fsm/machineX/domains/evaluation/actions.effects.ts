@@ -30,7 +30,6 @@ import type { MachineEvents } from '../../events.pure.v5';
  */
 export const assignInjectTileData = assign({
   injectedData: ({ context }) => {
-    fsmLogger.info('[assignInjectTileData] Querying gridInfo for available tiles...');
     
     try {
       const tiles = context.gridInfo?.tiles || {};
@@ -56,7 +55,6 @@ export const assignInjectTileData = assign({
         injectedAt: Date.now(),
       };
     } catch (error) {
-      fsmLogger.error('[assignInjectTileData] Failed to query gridInfo:', error);
       return {
         ...context.injectedData,
         availableTiles: [],
@@ -71,7 +69,6 @@ export const assignInjectTileData = assign({
  * Envoie un événement selon la situation du contexte
  */
 export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self: ActorRef<any, MachineEvents> }) => {
-  fsmLogger.action('onEvaluatingEntry');
   
   const vehicle = context?.vehicle;
   const fuel = vehicle?.fuel || 100;
@@ -93,7 +90,6 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
       self.send({ type: 'NEED_MAINTENANCE' } as MachineEvents);
     } else {
       // Tester d'abord l'exploration avec le guard shouldExplore
-      fsmLogger.info(`[Evaluating] → Testing NEED_EXPLORING`);
       self.send({ type: 'NEED_EXPLORING' } as MachineEvents);
       
       // Si shouldExplore échoue ET que le drone n'est pas en cours d'exploration,
@@ -116,5 +112,4 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
  * Action de sortie de l'état evaluating : simple log
  */
 export const onEvaluatingExit = ({ context: _context }: { context: FSMContext }) => {
-  fsmLogger.action('onEvaluatingExit');
 };

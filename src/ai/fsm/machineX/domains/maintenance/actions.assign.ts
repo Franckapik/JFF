@@ -36,7 +36,6 @@ export const assignShipDepositResourcesContext = createAssignAction(({ context, 
   });
   
   if (!context.vehicle) {
-    fsmLogger.info(`⚠️ [${context.entityId}] No vehicle found in context for resource deposit`);
     return {};
   }
   
@@ -78,7 +77,6 @@ export const assignShipDepositResourcesContext = createAssignAction(({ context, 
  * Action assign pour la réparation du véhicule
  */
 export const assignShipRepairContext = createAssignAction(({ context }) => {
-  fsmLogger.action(`🔧 [${context.entityId}] Starting vehicle repair`);
   
   if (!context.vehicle) {
     return {};
@@ -99,7 +97,6 @@ export const assignShipRepairContext = createAssignAction(({ context }) => {
  * Action assign pour le ravitaillement du véhicule
  */
 export const assignShipRefuelContext = createAssignAction(({ context }) => {
-  fsmLogger.action(`⛽ [${context.entityId}] Starting vehicle refuel`);
   
   if (!context.vehicle) {
     return {};
@@ -117,7 +114,6 @@ export const assignShipRefuelContext = createAssignAction(({ context }) => {
 });
 
 // Placeholder pour éviter les erreurs d'import
-export const __maintenanceAssignPlaceholder = createAssignAction(({ context }) => {
-  fsmLogger.info(`🔄 [${context.entityId}] Maintenance assign actions placeholder`);
+export const __maintenanceAssignPlaceholder = createAssignAction(({ context: _context }) => {
   return {};
 });

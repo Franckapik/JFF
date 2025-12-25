@@ -2,7 +2,6 @@
  * Slice pour la configuration du nombre de joueurs
  * Gère le nombre de joueurs humains et de bots
  */
-import fsmLogger from '../../../logger/fsmLogger.ts';
 import type { GameStoreType, PlayerCountSliceActions } from '../../../types/stores.d.ts';
 
 const createPlayerCountSlice = (set: (updater: (state: GameStoreType) => Partial<GameStoreType>) => void, _get: () => GameStoreType): PlayerCountSliceActions => ({
@@ -14,13 +13,6 @@ const createPlayerCountSlice = (set: (updater: (state: GameStoreType) => Partial
   setPlayerCount: (count: number): void => {
     // Assurer que le nombre de joueurs est valide (minimum 1)
     const validCount = Math.max(1, count);
-    
-    fsmLogger.game(`Player count updated`, { 
-      requested: count, 
-      actual: validCount,
-      type: 'human_players'
-    });
-    
     set((state) => ({ 
       ...state,
       playerCount: validCount,
@@ -31,13 +23,6 @@ const createPlayerCountSlice = (set: (updater: (state: GameStoreType) => Partial
   setBotCount: (count: number): void => {
     // Assurer que le nombre de bots est valide (minimum 0)
     const validCount = Math.max(0, count);
-    
-    fsmLogger.game(`Bot count updated`, { 
-      requested: count, 
-      actual: validCount,
-      type: 'bot_players'
-    });
-    
     set((state) => ({ 
       ...state,
       botCount: validCount,

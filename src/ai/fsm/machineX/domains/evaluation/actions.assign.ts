@@ -9,7 +9,6 @@
 
 import { assign } from 'xstate';
 
-import fsmLogger from '../../../../../logger/fsmLogger';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5';
 
@@ -25,8 +24,7 @@ function createAssignAction(
  * Actuellement pas d'action assign spécifique pour l'évaluation,
  * la logique de décision se fait dans les effets de bord
  */
-export const assignEvaluationContext = createAssignAction(({ context, event }) => {
-  fsmLogger.info(`🔄 [${context.entityId}] assignEvaluationContext called with event: ${event.type}`);
+export const assignEvaluationContext = createAssignAction(({ context: _context, event: _event }) => {
   
   // Pour le moment, l'évaluation ne modifie pas le contexte directement
   // La logique de décision se fait dans onEvaluatingEntry

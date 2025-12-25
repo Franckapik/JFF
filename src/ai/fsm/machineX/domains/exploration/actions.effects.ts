@@ -10,8 +10,8 @@
  * - Cette séparation permet de tester les guards et le FSM indépendamment de R3F
  */
 
-import fsmLogger from '../../../../../logger/fsmLogger';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
+import fsmLogger from '../../../../../logger/fsmLogger';
 
 
 /**
@@ -19,8 +19,7 @@ import type { FSMContext } from '../../../../../types/fsm.d.ts';
  * 
  * LOG ONLY: Trace l'entrée dans l'état d'exploration global
  */
-export const onExploringEntry = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`🔍 [${context.entityId}] Entrée dans l'état EXPLORING`);
+export const onExploringEntry = ({ context: _context }: { context: FSMContext }) => {
 };
 
 /**
@@ -28,8 +27,7 @@ export const onExploringEntry = ({ context }: { context: FSMContext }) => {
  * 
  * LOG ONLY: Trace la sortie de l'état d'exploration global
  */
-export const onExploringExit = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`🔍 [${context.entityId}] Sortie de l'état EXPLORING`);
+export const onExploringExit = ({ context: _context }: { context: FSMContext }) => {
 };
 
 /**
@@ -50,8 +48,7 @@ export const onDroneDeployingEntry = ({ context }: { context: FSMContext }) => {
  * 
  * LOG ONLY: Trace la fin du déploiement (drone a atteint la tuile)
  */
-export const onDroneDeployingExit = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`🚁 [${context.entityId}] Sortie de l'état DRONE_DEPLOYING`);
+export const onDroneDeployingExit = ({ context: _context }: { context: FSMContext }) => {
 };
 
 /**
@@ -76,8 +73,7 @@ export const onDroneScanningEntry = ({ context }: { context: FSMContext }) => {
  * 
  * LOG ONLY: Trace la fin du scan (résultats enregistrés dans le contexte)
  */
-export const onDroneScanningExit = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`📡 [${context.entityId}] Sortie de l'état DRONE_SCANNING`);
+export const onDroneScanningExit = ({ context: _context }: { context: FSMContext }) => {
 };
 
 /**
@@ -99,7 +95,6 @@ export const onDroneReturningEntry = ({ context }: { context: FSMContext }) => {
  * 
  * LOG ONLY: Trace la fin du retour (drone docked)
  */
-export const onDroneReturningExit = ({ context }: { context: FSMContext }) => {
-  fsmLogger.action(`🔙 [${context.entityId}] Sortie de l'état DRONE_RETURNING`);
+export const onDroneReturningExit = ({ context: _context }: { context: FSMContext }) => {
 };
 

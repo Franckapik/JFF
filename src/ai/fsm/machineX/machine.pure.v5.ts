@@ -46,16 +46,16 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 
 // Import depuis l'architecture domain-based
 // Imports par domaine pour éviter les erreurs de syntaxe
-import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection';
-import { assignEvaluationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation';
+import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection/index';
+import { assignEvaluationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation/index';
 // ✅ Phase 1: ALL guards from guards.pure.ts (no store dependencies)
 import { canStartExploring, hasTilesAvailable, shouldCollect, shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure';
-import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration';
+import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration/index';
 // ✅ Phase 2: Import updateGridInfo for TILES_UPDATED event
-import { updateDronePosition, updateGridInfo, updateShipPosition } from './domains/global';
+import { updateDronePosition, updateGridInfo, updateShipPosition } from './domains/global/index';
 import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign';
 import { onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects';
-import { __maintenanceEffectsPlaceholder } from './domains/maintenance';
+import { __maintenanceEffectsPlaceholder } from './domains/maintenance/index';
 import { assignShipDepositResourcesContext, assignShipRefuelContext, assignShipRepairContext } from './domains/maintenance/actions.assign';
 import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure';
 

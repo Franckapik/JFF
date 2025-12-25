@@ -12,7 +12,6 @@ export const processDroneInitRequest = createAssignAction(({ context, event }) =
 	// Protection : vérifier que la position du vaisseau existe
 	const shipPosition = context.vehicle?.position;
 	if (!shipPosition) {
-		fsmLogger.error(`🛸 [${context.entityId}] processDroneInitRequest: ship position is null`);
 		return context;
 	}
 	
@@ -50,7 +49,6 @@ export const processShipInitRequest = createAssignAction(({ context, event }) =>
 	
 	// Protection : vérifier que initialPosition existe
 	if (!event.initialPosition) {
-		fsmLogger.error(`🚢 [${context.entityId}] processShipInitRequest: initialPosition is null`);
 		return context;
 	}
 	

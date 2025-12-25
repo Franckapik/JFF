@@ -7,8 +7,8 @@
 
 import { assign } from 'xstate';
 
-import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial';
 import fsmLogger from '../../../../../logger/fsmLogger';
+import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial';
 import type { DroneVisualState } from '../../../../../types/drone';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5';
@@ -30,7 +30,6 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
   const shipPosition = context.vehicle?.position || context.vehicle?.basePosition;
   
   if (!shipPosition) {
-    fsmLogger.error(`[${context.entityId}] assignDroneDeployingContext: No ship position available`);
     return {};
   }
   
@@ -38,7 +37,6 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
   
   // ⚠️ GUARD: Vérifier que gridInfo contient des tiles
   if (Object.keys(tiles).length === 0) {
-    fsmLogger.warn(`[${context.entityId}] assignDroneDeployingContext: gridInfo.tiles is empty`);
     return {};
   }
   
@@ -57,7 +55,6 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
   }
 
   if (!targetDroneTile) {
-    fsmLogger.info(`[${context.entityId}] assignDroneDeployingContext: No valid target tile found`);
     return {};
   }
   const droneType = 'explorer';
@@ -92,7 +89,6 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
     lastAction: 'droneDeployForExploration_success',
     fsmState: 'exploring_deploying',
   };
-  fsmLogger.info(`[${context.entityId}] assignDroneDeployingContext: Assigned new targetDroneTile and updated drone context`, { targetDroneTile });
   return updatedContext;
 });
 
@@ -102,10 +98,8 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
 export const assignDroneScanningContext = createAssignAction(({ context }) => {
   const targetDroneTile = context.droneFleet?.drones?.explorer?.targetDroneTile;
   if (!targetDroneTile) {
-    fsmLogger.warn(`[${context.entityId}] assignDroneScanningContext: No targetDroneTile to push to memory.knownTiles`);
     return {};
   }
-  fsmLogger.info(`[${context.entityId}] assignDroneScanningContext: Pushed targetDroneTile to memory.knownTiles`, { targetDroneTile });
   // Incrémentation des compteurs d'exploration (global et par cycle)
   const currentCount = typeof context.explorationCount === 'number' ? context.explorationCount : 0;
   const currentCycleCount = context.memory?.stats?.tilesExploredInCycle ?? 0;
@@ -150,7 +144,6 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
     currentDroneState: context.droneFleet?.drones?.explorer?.visualState
   });
   if (!context.droneFleet?.drones?.explorer) {
-    fsmLogger.info(`⚠️ [${context.entityId}] No explorer drone found in context`);
     return {};
   }
   // Obtenir la tuile de base comme cible de retour
@@ -199,11 +192,9 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
   });
   
   if (!context.droneFleet?.drones?.explorer) {
-    fsmLogger.info(`⚠️ [${context.entityId}] No explorer drone found in context`);
     return {};
   }
   
-  fsmLogger.info(`🏠 [${context.entityId}] Updating drone state to docked and context to evaluating`);
   
   const droneState: DroneVisualState = 'docked';
   

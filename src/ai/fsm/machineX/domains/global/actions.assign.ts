@@ -32,11 +32,9 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
   
   // Protection : vérifier que position n'est pas null
   if (!position) {
-    fsmLogger.error(`🚢 [${context.entityId}] updateShipPosition: position is null`);
     return context;
   }
   
-  fsmLogger.context(`🚢 [${context.entityId}] Setting ship position`, { position, shipType: event.shipType });
   
   // ✅ Phase 4: Use context.gridInfo.spacing instead of useTileStore.getState()
   const spacing = context.gridInfo?.spacing ?? 1.2;
@@ -46,7 +44,6 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
     (context.vehicle.position.x === 0 && context.vehicle.position.y === 0.5 && context.vehicle.position.z === 0);
   
   if (isInitialization) {
-    fsmLogger.context(`🚢 [${context.entityId}] First ship position update - setting as base position`);
     
     // Créer une WorldGridPosition pour basePosition
     const coord = worldToGrid(position, { spacing });
@@ -81,11 +78,9 @@ export const updateDronePosition = createAssignAction(({ context, event }) => {
   
   // Protection : vérifier que position n'est pas null
   if (!event.position) {
-    fsmLogger.error(`🛸 [${context.entityId}] updateDronePosition: position is null`);
     return context;
   }
   
-  fsmLogger.context(`🛸 [${context.entityId}] Updating drone position`, { position: event.position, droneType: event.droneType });
   return {
     droneFleet: {
       ...context.droneFleet,
