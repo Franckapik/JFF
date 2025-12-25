@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 /**
  * ==========================================================================
- * SCRIPT TEST FSM CYCLE COMPLET - Test autonome en terminal Node.js
+ * SCRIPT TEST FSM CYCLE - Production Machine Test
  * ==========================================================================
  * 
- * Teste le FSM XState v5 de manière autonome sans dépendances R3F.
+ * ✅ Phase 7: Now uses machine.pure.v5.ts (real R3F machine) instead of
+ * machine.terminal.v5.ts which bypasses real guards.
+ * 
  * Simule un cycle complet: initialisation → exploration → collection → maintenance
  * 
  * USAGE:
@@ -22,7 +24,8 @@
  */
 
 import { createActor } from 'xstate';
-import { machineXV5Terminal } from '../src/ai/fsm/machineX/machine.terminal.v5.ts';
+import { machineXV5Pure } from '../src/ai/fsm/machineX/machine.pure.v5.ts';
+import { createMachineContext } from '../src/ai/fsm/machineX/context/initialContext.ts';
 
 // ========================================
 // Configuration et paramètres
@@ -32,7 +35,7 @@ const verbose = args.includes('--verbose') || args.includes('-v');
 const scenario = args.find(arg => arg.startsWith('--scenario='))?.split('=')[1] || 'full';
 
 console.log('╔═══════════════════════════════════════════════════════════════╗');
-console.log('║         TEST FSM CYCLE COMPLET - Terminal Mode              ║');
+console.log('║      TEST FSM CYCLE - Production Machine (pure.v5)          ║');
 console.log('╚═══════════════════════════════════════════════════════════════╝');
 console.log(`\n📋 Scénario: ${scenario}`);
 console.log(`🔍 Verbose: ${verbose ? 'ON' : 'OFF'}\n`);
@@ -862,101 +865,78 @@ async function testNoTilesAvailable(simulator) {
 // ========================================
 async function runTests() {
   try {
-    // Créer le contexte initial compatible avec FSMContext
+    // ✅ Phase 7: Use createMachineContext + pre-initialize with positions (like useXFSMStore)
+    const baseContext = createMachineContext('test-bot-0', 'auto');
+    
+    // Simulated depart tile for tests
+    const mockDepartTile = {
+      position: { x: 0, y: 0.5, z: 0, coord: '0,0' },
+      type: 'depart',
+      assignedToBot: 'test-bot-0'
+    };
+    
+    const initialPosition = {
+      x: mockDepartTile.position.x,
+      y: 0.5,
+      z: mockDepartTile.position.z,
+      coord: mockDepartTile.position.coord
+    };
+    
+    // Mock tiles for grid (with valid structure including position.coord)
+    const mockTiles = {
+      '0,0': mockDepartTile,
+      '3,3': { 
+        position: { x: 3, y: 0, z: 3, coord: '3,3' }, 
+        resources: { food: 100, debris: 50, special: 0, total: 150 }, 
+        hasResources: true,
+        type: 'resource',
+        biome: 'forest'
+      },
+      '7,7': { 
+        position: { x: 7, y: 0, z: 7, coord: '7,7' }, 
+        resources: { food: 50, debris: 100, special: 0, total: 150 }, 
+        hasResources: true,
+        type: 'resource',
+        biome: 'desert'
+      },
+    };
+    
+    // ✅ Create context with pre-initialized positions (mimics useXFSMStore Phase 7 fix)
     const initialContext = {
-      entityId: 'test-bot-0',
-      entityType: 'auto',
-      autonomousMode: true,
+      ...baseContext,
       vehicle: {
-        id: 'test-bot-0-ship',
-        type: 'main-ship',
-        position: { x: 0, y: 0, z: 0 },
-        basePosition: { x: 0, y: 0, z: 0 },
-        isMoving: false,
-        progress: 0,
-        resources: { food: 50, debris: 25, special: 0, total: 75 }, // Pour tester needsDeposit
-        targetVehicleTile: null,
-        fuel: 45, // Bas pour tester needsRefuel (< 30 trigger)
-        damage: 35, // Moyen (< 50 = OK, mais proche)
-        totalDistance: 0,
-        path: [],
-        isAtCapacity: false,
-        maxSpeed: 1,
-        currentSpeed: 0,
-        maxCapacity: { food: 200, debris: 1800, special: 3, total: 2003 },
-        visualState: 'uninitialized',
-      },
-      fsmState: 'initializing',
-      explorationQueue: [],
-      lastAction: null,
-      error: null,
-      timestamps: {
-        stateChange: Date.now(),
-        lastMovement: null,
-        lastCollection: null,
-      },
-      score: { resources: { food: 0, debris: 0, special: 0, total: 0 } },
-      memory: {
-        knownTiles: [],
-        knownDangers: [],
-        stats: {
-          tilesExplored: 0,
-          tilesCollected: 0,
-          totalResourcesFound: 0,
-          lastExploration: null,
-          lastCollection: null,
-          explorationCycles: 0,
-          currentCycleStartTime: null,
-          tilesExploredInCycle: 0,
-          bestTileInCycle: null,
-        },
-        stateHistory: ['uninitialized'],
-        transitionHistory: [],
-      },
-      explorationCycle: {
-        isActive: false,
-        targetTilesCount: 15,
-        exploredTiles: [],
-        bestTileFound: null,
-        startTime: null,
-        phase: 'idle',
-      },
-      config: {
-        exploringRadius: 2,
-        collectingRadius: 3,
-        fuelThreshold: 20,
-        capacityThreshold: 80,
-        movementSpeed: 8,
-        explorationInterval: 1000,
-        enableLogging: true,
+        ...baseContext.vehicle,
+        position: initialPosition,
+        basePosition: initialPosition,
       },
       droneFleet: {
+        ...baseContext.droneFleet,
         drones: {
           explorer: {
-            id: 'test-bot-0-drone',
-            type: 'scout',
-            position: { x: 0, y: 0, z: 0 },
-            targetPosition: null,
-            isMoving: false,
-            progress: 0,
-            visualState: 'docked',
-            path: [],
-          },
-        },
+            ...baseContext.droneFleet.drones.explorer,
+            position: initialPosition,
+          }
+        }
       },
-      // ✅ Injection de données pour shouldCollect (Option A)
+      gridInfo: {
+        tiles: mockTiles,
+        spacing: 1.2,
+        radius: 3,
+        departTileCoord: '0,0',
+        syncedAt: Date.now(),
+      },
       injectedData: {
         availableTiles: [
-          { coord: { x: 3, y: 0, z: 3 }, resources: { food: 100, debris: 50, special: 0, total: 150 } },
-          { coord: { x: 7, y: 0, z: 7 }, resources: { food: 50, debris: 100, special: 0, total: 150 } },
+          mockTiles['3,3'],
+          mockTiles['7,7'],
         ],
         injectedAt: Date.now(),
       },
     };
 
-    // Créer l'acteur du FSM
-    console.log('🚀 Creating FSM actor...\n');
-    const actor = createActor(machineXV5Terminal, {
+    // Créer l'acteur du FSM (production machine with pre-initialized context)
+    console.log('🚀 Creating FSM actor (using production machine.pure.v5.ts)...\n');
+    const actor = createActor(machineXV5Pure, {
       input: initialContext,
     });
 
