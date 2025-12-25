@@ -1,23 +1,6 @@
 /**
  * ==========================================================================
- * MACHINE XState v5 - M    // Actions du domaine MAINTENANCE 
-    assignShipDepositResourcesContext,
-    assignShipRepairContext,
-    assignShipRefuelContext,
-    onMaintainingEntry: __maintenanceEffectsPlaceholder,
-    onMaintainingExit: __maintenanceEffectsPlaceholder,
-    onShipOnBaseEntry: __maintenanceEffectsPlaceholder,
-    onShipOnBaseExit: __maintenanceEffectsPlaceholder,
-    onShipDepositingEntry: __maintenanceEffectsPlaceholder,
-    onShipDepositingExit: __maintenanceEffectsPlaceholder,
-    onShipRepairingEntry: __maintenanceEffectsPlaceholder,
-    onShipRepairingExit: __maintenanceEffectsPlaceholder,
-    onShipRefuelingEntry: __maintenanceEffectsPlaceholder,
-    onShipRefuelingExit: __maintenanceEffectsPlaceholder,
-
-    // Actions d'effets pour initializing
-    onInitializingEntry,
-    onInitializingExit,c architecture domain-based
+ * MACHINE XState v5 - Machine architecture domain-based
  * ==========================================================================
  * 
  * ✅ MIGRATION COMPLÈTE vers architecture domain-based !
@@ -26,14 +9,16 @@
  * ✅ Domaine global : COMPLET (updateShipPosition, updateDronePosition, processDroneInitRequest)
  * ✅ Domaine evaluation : COMPLET (assignEvaluationContext, onEvaluatingEntry)
  * ✅ Domaine exploration : COMPLET (assignDroneDeployingContext + toutes les actions effects)
- * 🔄 Domaine collection : Placeholders temporaires (prêt pour migration)
- * 🔄 Domaine maintenance : Placeholders temporaires (prêt pour migration)
+ * ✅ Domaine collection : COMPLET (migration complète)
+ * ✅ Domaine maintenance : COMPLET (migration complète)
  * 
  * ACTIONS MIGRÉES :
  * - Global: updateShipPosition, updateDronePosition, processDroneInitRequest
  * - Evaluation: assignEvaluationContext, onEvaluatingEntry
  * - Exploration: assignDroneDeployingContext, onExploringEntry/Exit, onDroneDeployingEntry/Exit, 
  *   onDroneScanningEntry/Exit, onDroneReturningEntry/Exit
+ * - Collection: toutes les actions de déplacement et chargement de ressources
+ * - Maintenance: toutes les actions de dépôt, réparation, ravitaillement
  * 
  * STRUCTURE ACTUELLE :
  * - Imports uniquement depuis l'architecture domain-based via ./domains
@@ -46,26 +31,26 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 
 // Import depuis l'architecture domain-based
 // Imports par domaine pour éviter les erreurs de syntaxe
-import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection/index';
-import { assignEvaluationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation/index';
+import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection/index.ts';
+import { assignEvaluationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation/index.ts';
 // ✅ Phase 1: ALL guards from guards.pure.ts (no store dependencies)
-import { canStartExploring, hasTilesAvailable, shouldCollect, shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure';
-import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration/index';
+import { canStartExploring, hasTilesAvailable, shouldCollect, shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure.ts';
+import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration/index.ts';
 // ✅ Phase 2: Import updateGridInfo for TILES_UPDATED event
-import { updateDronePosition, updateGridInfo, updateShipPosition } from './domains/global/index';
-import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign';
-import { onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects';
-import { __maintenanceEffectsPlaceholder } from './domains/maintenance/index';
-import { assignShipDepositResourcesContext, assignShipRefuelContext, assignShipRepairContext } from './domains/maintenance/actions.assign';
-import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure';
+import { updateDronePosition, updateGridInfo, updateShipPosition } from './domains/global/index.ts';
+import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign.ts';
+import { onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects.ts';
+import { assignShipDepositResourcesContext, assignShipRefuelContext, assignShipRepairContext } from './domains/maintenance/actions.assign.ts';
+import { onMaintainingEntry, onMaintainingExit, onShipDepositingEntry, onShipDepositingExit, onShipOnBaseEntry, onShipOnBaseExit, onShipRefuelingEntry, onShipRefuelingExit, onShipRepairingEntry, onShipRepairingExit } from './domains/maintenance/actions.effects.ts';
+import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure.ts';
 
 // ✅ Phase 1: Pure guards from collection domain
-import { canCollectTile, hasMoreCollectibleTiles, isVehicleOverloaded } from './domains/collection/guards.pure';
+import { canCollectTile, hasMoreCollectibleTiles, isVehicleOverloaded } from './domains/collection/guards.pure.ts';
 // ✅ Phase 1: Pure guards from initializing domain
-import { areAllEntitiesInitialized, isBasePositionInitialized, isDronePositionInitialized, isVehiclePositionInitialized } from './domains/initializing/guards.pure';
+import { areAllEntitiesInitialized, isBasePositionInitialized, isDronePositionInitialized, isVehiclePositionInitialized } from './domains/initializing/guards.pure.ts';
 
-import { createMachineContext } from './context/initialContext';
-import type { MachineEvents } from './events.pure.v5';
+import { createMachineContext } from './context/initialContext.ts';
+import type { MachineEvents } from './events.pure.v5.ts';
 
 
 
@@ -123,22 +108,20 @@ export const machineXV5Pure = setup({
     assignShipDepositResourcesContext,
     assignShipRepairContext,
     assignShipRefuelContext,
-    
-  // Actions temporaires du domaine MAINTENANCE (à migrer)
-  onMaintainingEntry: __maintenanceEffectsPlaceholder,
-  onMaintainingExit: __maintenanceEffectsPlaceholder,
-  onShipOnBaseEntry: __maintenanceEffectsPlaceholder,
-  onShipOnBaseExit: __maintenanceEffectsPlaceholder,
-  onShipDepositingEntry: __maintenanceEffectsPlaceholder,
-  onShipDepositingExit: __maintenanceEffectsPlaceholder,
-  onShipRepairingEntry: __maintenanceEffectsPlaceholder,
-  onShipRepairingExit: __maintenanceEffectsPlaceholder,
-  onShipRefuelingEntry: __maintenanceEffectsPlaceholder,
-  onShipRefuelingExit: __maintenanceEffectsPlaceholder,
+    onMaintainingEntry,
+    onMaintainingExit,
+    onShipOnBaseEntry,
+    onShipOnBaseExit,
+    onShipDepositingEntry,
+    onShipDepositingExit,
+    onShipRepairingEntry,
+    onShipRepairingExit,
+    onShipRefuelingEntry,
+    onShipRefuelingExit,
 
-  // Actions d'effets pour initializing
-  onInitializingEntry,
-  onInitializingExit,
+    // Actions d'effets pour initializing
+    onInitializingEntry,
+    onInitializingExit,
   },
   guards: {
     // ✅ Phase 1: All guards from guards.pure.ts (no store dependencies)

@@ -12,10 +12,10 @@
 import type { ActorRef } from 'xstate';
 import { assign } from 'xstate';
 
-import { findTilesInRadius } from '../../../../../core/spatial';
-import fsmLogger from '../../../../../logger/fsmLogger';
+import { findTilesInRadius } from '../../../../../core/spatial/index.ts';
+import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
-import type { MachineEvents } from '../../events.pure.v5';
+import type { MachineEvents } from '../../events.pure.v5.ts';
 
 /**
  * 🔍 ACTION: Inject tile data into context for shouldCollect guard

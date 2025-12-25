@@ -3,20 +3,146 @@
  * MAINTENANCE DOMAIN - Actions avec effets de bord (entry/exit)
  * ==========================================================================
  * 
- * TODO: Migrer les actions effects liées à la maintenance depuis actions.pure.v5.ts
- * - onMaintainingEntry/Exit
- * - onShipOnBaseEntry/Exit
- * - onShipDepositingEntry/Exit
- * - onShipRepairingEntry/Exit
- * - onShipRefuelingEntry/Exit
+ * ARCHITECTURE NOTES:
+ * - Les actions d'effets ne gèrent QUE les logs et effets de bord (pas de mutations contexte)
+ * - Les transitions et mises à jour contexte sont dans actions.assign
+ * - Les trackers observent l'état de la ship et envoient les événements (MAINTENANCE_COMPLETE, etc)
+ * - Cette séparation permet de tester les guards et le FSM indépendamment de R3F
  */
 
+import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 
-// TODO: Migrer les actions de maintenance ici
-// export const onMaintainingEntry = ({ context }: { context: FSMContext }) => { ... };
-// export const onShipOnBaseEntry = ({ context }: { context: FSMContext }) => { ... };
+/**
+ * Action d'entrée de l'état maintaining
+ * 
+ * LOG ONLY: Trace l'entrée dans l'état global de maintenance
+ */
+export const onMaintainingEntry = ({ context }: { context: FSMContext }) => {
+  fsmLogger.action(`🔧 [${context.entityId}] Entrée dans l'état MAINTAINING`, {
+    vehicleState: {
+      fuel: context.vehicle?.fuel,
+      damage: context.vehicle?.damage,
+      resources: context.vehicle?.resources?.total
+    },
+    maintenanceTasks: {
+      needsFuel: context.vehicle?.fuel !== 100,
+      needsRepair: context.vehicle?.damage !== 0,
+      needsDeposit: (context.vehicle?.resources?.total || 0) > 0
+    }
+  });
+};
+
+/**
+ * Action de sortie de l'état maintaining
+ * 
+ * LOG ONLY: Trace la fin de la maintenance
+ */
+export const onMaintainingExit = ({ context }: { context: FSMContext }) => {
+  fsmLogger.action(`✅ [${context.entityId}] Sortie de l'état MAINTAINING`, {
+    vehicleState: {
+      fuel: context.vehicle?.fuel,
+      damage: context.vehicle?.damage,
+      resources: context.vehicle?.resources?.total
+    }
+  });
+};
+
+/**
+ * Action d'entrée de l'état maintaining_on_base
+ * 
+ * LOG ONLY: Trace l'arrivée du véhicule à la base
+ */
+export const onShipOnBaseEntry = ({ context }: { context: FSMContext }) => {
+  fsmLogger.action(`🏠 [${context.entityId}] Arrivée du navire à la base`, {
+    position: context.vehicle?.position?.coord,
+    basePosition: context.vehicle?.basePosition?.coord
+  });
+};
+
+/**
+ * Action de sortie de l'état maintaining_on_base
+ * 
+ * LOG ONLY: Trace le départ du navire depuis la base
+ */
+export const onShipOnBaseExit = ({ context }: { context: FSMContext }) => {
+  fsmLogger.action(`✅ [${context.entityId}] Départ du navire depuis la base`, {
+    position: context.vehicle?.position?.coord
+  });
+};
+
+/**
+ * Action d'entrée de l'état maintaining_depositing
+ * 
+ * LOG ONLY: Trace le début du dépôt de ressources
+ */
+export const onShipDepositingEntry = ({ context }: { context: FSMContext }) => {
+  const resources = context.vehicle?.resources || { food: 0, debris: 0, special: 0, total: 0 };
+  fsmLogger.action(`📦 [${context.entityId}] Dépôt des ressources`, {
+    resourcesDeposited: resources,
+    currentScore: context.score?.resources
+  });
+};
+
+/**
+ * Action de sortie de l'état maintaining_depositing
+ * 
+ * LOG ONLY: Trace la fin du dépôt (ressources transférées au score)
+ */
+export const onShipDepositingExit = ({ context }: { context: FSMContext }) => {
+  fsmLogger.action(`✅ [${context.entityId}] Ressources déposées avec succès`, {
+    score: context.score?.resources,
+    vehicleResources: context.vehicle?.resources
+  });
+};
+
+/**
+ * Action d'entrée de l'état maintaining_repairing
+ * 
+ * LOG ONLY: Trace le début de la réparation
+ */
+export const onShipRepairingEntry = ({ context }: { context: FSMContext }) => {
+  fsmLogger.action(`🔨 [${context.entityId}] Réparation du navire`, {
+    damageBefore: context.vehicle?.damage,
+    estimatedTime: '2s' // Durée type de réparation
+  });
+};
+
+/**
+ * Action de sortie de l'état maintaining_repairing
+ * 
+ * LOG ONLY: Trace la fin de la réparation (navire intact)
+ */
+export const onShipRepairingExit = ({ context }: { context: FSMContext }) => {
+  fsmLogger.action(`✅ [${context.entityId}] Navire réparé`, {
+    damageAfter: context.vehicle?.damage
+  });
+};
+
+/**
+ * Action d'entrée de l'état maintaining_refueling
+ * 
+ * LOG ONLY: Trace le début du ravitaillement
+ */
+export const onShipRefuelingEntry = ({ context }: { context: FSMContext }) => {
+  fsmLogger.action(`⛽ [${context.entityId}] Ravitaillement du navire`, {
+    fuelBefore: context.vehicle?.fuel,
+    estimatedTime: '1s' // Durée type de ravitaillement
+  });
+};
+
+/**
+ * Action de sortie de l'état maintaining_refueling
+ * 
+ * LOG ONLY: Trace la fin du ravitaillement (navire plein)
+ */
+export const onShipRefuelingExit = ({ context }: { context: FSMContext }) => {
+  fsmLogger.action(`✅ [${context.entityId}] Navire ravitaillé`, {
+    fuelAfter: context.vehicle?.fuel
+  });
+};
 
 // Placeholder pour éviter les erreurs d'import
 export const __maintenanceEffectsPlaceholder = ({ context: _context }: { context: FSMContext }) => {
 };
+

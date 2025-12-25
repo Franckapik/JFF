@@ -10,7 +10,7 @@
 import { assign } from 'xstate';
 
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
-import type { MachineEvents } from '../../events.pure.v5';
+import type { MachineEvents } from '../../events.pure.v5.ts';
 
 // Helper pour typage assign compatible XState v5
 function createAssignAction(

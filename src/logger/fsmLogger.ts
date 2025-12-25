@@ -1,6 +1,6 @@
 // Module de journalisation avancé pour la FSM (TypeScript)
-import { config as globalConfig } from '../config';
-import type { LogEntry, LogType } from '../types/logger';
+import { config as globalConfig } from '../config.ts';
+import type { LogEntry, LogType } from '../types/logger.ts';
 
 /**
  * Styles et préfixes pour chaque type de log

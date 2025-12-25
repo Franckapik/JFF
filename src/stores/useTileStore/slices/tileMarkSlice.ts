@@ -25,7 +25,7 @@ import type {
 } from '../../../types/index.ts';
 import type { TileMarkSliceActions, TileStoreType } from '../../../types/stores.d.ts';
 
-import { isTileCompletelyCollected } from './tileResourceSlice.js';
+import { isTileCompletelyCollected } from './tileResourceSlice.ts';
 
 // =========================================================================
 // TYPES LOCAUX

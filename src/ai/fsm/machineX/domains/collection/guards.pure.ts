@@ -12,7 +12,7 @@
  * @see scripts/validate-guards/ pour les tests
  */
 
-import type { XStateV5Guard } from '../../../../../types/xstate.v5.types';
+import type { XStateV5Guard } from '../../../../../types/xstate.v5.types.ts';
 
 /**
  * Guard pour vérifier si une tuile peut être collectée

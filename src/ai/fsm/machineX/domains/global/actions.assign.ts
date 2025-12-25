@@ -9,10 +9,10 @@
 
 import { assign } from 'xstate';
 
-import { worldToGrid } from '../../../../../core/spatial';
-import fsmLogger from '../../../../../logger/fsmLogger';
+import { worldToGrid } from '../../../../../core/spatial/index.ts';
+import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
-import type { MachineEvents } from '../../events.pure.v5';
+import type { MachineEvents } from '../../events.pure.v5.ts';
 
 // Helper pour typage assign compatible XState v5
 export function createAssignAction(

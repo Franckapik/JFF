@@ -10,8 +10,8 @@
  * - Cette séparation permet de tester les guards et le FSM indépendamment de R3F
  */
 
+import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
-import fsmLogger from '../../../../../logger/fsmLogger';
 
 
 /**

@@ -13,12 +13,12 @@
  */
 
 
-import type { GridCoordinate, WorldGridPosition } from '../../types/coordinates';
-import type { ResourceStats } from '../../types/resources';
-import type { HexGridConfig, StationPlacementConfig } from '../../types/spatial';
-import type { Tile, TileBiome, TileMap, TileType } from '../../types/tile';
+import type { GridCoordinate, WorldGridPosition } from '../../types/coordinates.ts';
+import type { ResourceStats } from '../../types/resources.ts';
+import type { HexGridConfig, StationPlacementConfig } from '../../types/spatial.ts';
+import type { Tile, TileBiome, TileMap, TileType } from '../../types/tile.ts';
 
-import { encodeHexCoord } from './coordinates';
+import { encodeHexCoord } from './coordinates.ts';
 
 // ============================================================================
 // CONSTANTS

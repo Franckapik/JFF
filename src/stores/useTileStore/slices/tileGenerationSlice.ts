@@ -26,7 +26,7 @@ import type {
   TileMap,
   TileType
 } from '../../../types/index.ts';
-import type { ResourceStats } from '../../../types/resources.js';
+import type { ResourceStats } from '../../../types/resources.ts';
 import type { TileGenerationSliceActions, TileStoreType } from '../../../types/stores.d.ts';
 
 import fsmLogger from "../../../logger/fsmLogger.ts";

@@ -25,7 +25,7 @@ import {
     isValidGridCoord as coreIsValidGridCoord,
     isValidWorldPosition as coreIsValidWorldPosition,
     worldToGrid as coreWorldToGrid,
-} from '../../../core/spatial';
+} from '../../../core/spatial/index.ts';
 
 import type {
     GridCoordinate,

@@ -9,7 +9,7 @@
  * All guards follow the pattern: GuardPredicate<FSMContext, MachineEvents>
  */
 
-import type { XStateV5Guard } from '../../../../../types/xstate.v5.types';
+import type { XStateV5Guard } from '../../../../../types/xstate.v5.types.ts';
 
 /**
  * Pure guard: Check if vehicle needs refueling (fuel < 30%)

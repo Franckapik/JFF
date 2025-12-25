@@ -31,7 +31,7 @@ import type {
     GridCoordinate,
     Tile
 } from '../../../types/index.ts';
-import type { ResourceStats } from '../../../types/resources.js';
+import type { ResourceStats } from '../../../types/resources.ts';
 import type { TileResourceSliceActions, TileStoreType } from '../../../types/stores.d.ts';
 
 import fsmLogger from '../../../logger/fsmLogger.ts';

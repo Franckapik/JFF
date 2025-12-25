@@ -12,16 +12,16 @@
  */
 
 // Domaine global (actions transversales - COMPLET - migré depuis actions.pure.v5.ts)
-export * from './global';
+export * from './global/index.ts';
 
 // Domaine évaluation (COMPLET - migré depuis actions.pure.v5.ts)
-export * from './evaluation';
+export * from './evaluation/index.ts';
 
 // Domaine exploration (COMPLET - assignDroneDeployingContext migré)
-export * from './exploration';
+export * from './exploration/index.ts';
 
 // Domaine collection (TODO: migrer les actions collection)
-export * from './collection';
+export * from './collection/index.ts';
 
 // Domaine maintenance (TODO: migrer les actions maintenance)
-export * from './maintenance';
+export * from './maintenance/index.ts';

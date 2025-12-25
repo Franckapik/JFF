@@ -26,7 +26,7 @@
 
 export {
     calculateDistance, calculateDistance2D, getDirectionVector, hasReachedTarget
-} from './distance';
+} from './distance.ts';
 
 // ============================================================================
 // COORDINATE UTILITIES
@@ -36,7 +36,7 @@ export {
     createGridCoord, encodeHexCoord,
     gridToWorld, isValidGridCoord,
     isValidWorldPosition, parseGridCoord, worldToGrid
-} from './coordinates';
+} from './coordinates.ts';
 
 // ============================================================================
 // HEX GRID GENERATION
@@ -46,7 +46,7 @@ export {
     assignStartingTilesToBots,
     calculateHexNeighbors,
     calculateHexPosition, generateRandomColor, generateTileResources, getStationCount, initializeGameGrid, placeDangerTiles, placeGameStations, placeStartingTiles
-} from './hexGrid';
+} from './hexGrid.ts';
 
 // ============================================================================
 // PATHFINDING ALGORITHMS
@@ -56,7 +56,7 @@ export {
     calculateDroneDistance, calculatePathDistance, findPath, findTileAtPosition,
     findTilesInRadius,
     selectRandomTile
-} from './pathfinding';
+} from './pathfinding.ts';
 
 // ============================================================================
 // ANIMATION UTILITIES
@@ -66,7 +66,7 @@ export {
     calculateDistance3D, calculateLerpFactor, calculateRelativePosition, calculateVelocity, calculateWorldPosition, interpolatePosition,
     interpolateWithSpeed, shouldSyncPosition,
     shouldSyncTime
-} from './animation';
+} from './animation.ts';
 
 export type { LerpOptions, SyncOptions, VelocityOptions } from './animation';
 

@@ -41,8 +41,8 @@ const SCRIPT_CATEGORIES = {
       {
         name: '🎯 TOUS LES TESTS FSM',
         description: '⚡ Exécute tous les scénarios FSM + Guards + Vitest (~15s)',
-        command: 'sh',
-        args: ['-c', 'node scripts/test-fsm-cycle.js --scenario=full && echo "\n✅ Tests FSM OK\n" && node scripts/quick-test-guards.js && echo "\n✅ Tests Guards OK\n" && npx vitest run src/core/spatial --reporter=dot && echo "\n✅ Tests Vitest OK\n"'],
+        command: 'bash',
+        args: ['scripts/run-all-tests.sh'],
       },
       {
         name: 'Cycle Complet (full)',

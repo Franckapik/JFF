@@ -10,12 +10,12 @@
 
 import { assign } from 'xstate';
 
-import fsmLogger from '../../../../../logger/fsmLogger';
-import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial';
-import { useTileStore } from '../../../../../stores/useTileStore';
+import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial/index.ts';
+import fsmLogger from '../../../../../logger/fsmLogger.ts';
+import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { VehicleVisualState } from '../../../../../types/vehicle.d.ts';
-import type { MachineEvents } from '../../events.pure.v5';
+import type { MachineEvents } from '../../events.pure.v5.ts';
 
 // Helper pour typage assign compatible XState v5
 function createAssignAction(

@@ -20,7 +20,7 @@ declare global {
   }
 }
 
-export const config: AppConfig = window.appConfig || {
+export const config: AppConfig = (typeof window !== 'undefined' ? window.appConfig : undefined) || {
   enabledLogTypes: [
     "ALL"
   ] as LogType[],

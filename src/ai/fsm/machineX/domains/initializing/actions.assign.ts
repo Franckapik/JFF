@@ -2,9 +2,9 @@
  * ✅ Phase 4: Pure actions for initializing domain
  * Uses context.gridInfo instead of useTileStore.getState()
  */
-import { findTileAtPosition, worldToGrid } from '../../../../../core/spatial';
-import fsmLogger from '../../../../../logger/fsmLogger';
-import { createAssignAction } from '../global/actions.assign';
+import { findTileAtPosition, worldToGrid } from '../../../../../core/spatial/index.ts';
+import fsmLogger from '../../../../../logger/fsmLogger.ts';
+import { createAssignAction } from '../global/actions.assign.ts';
 
 export const processDroneInitRequest = createAssignAction(({ context, event }) => {
 	if (event.type !== 'DRONE_INITIALIZE_REQUEST') return context;
