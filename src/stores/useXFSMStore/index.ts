@@ -58,10 +58,61 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
   /**
    * Crée et enregistre un nouvel acteur XState pour un bot donné
    * (ou retourne l'acteur existant si déjà créé)
+   * ✅ Phase 7 (Option C): Pre-initialize context with valid positions from depart tile
    */
   const createBotActor = (botId: BotId): Actor<typeof machineXV5Pure> => {
     if (actors.has(botId)) return actors.get(botId)!;
-    const botContext = createMachineContext(botId, 'auto');
+    
+    // ✅ Get depart tile BEFORE creating context to avoid race condition
+    const tileStore = useTileStore.getState();
+    const { tiles, spacing, radius } = tileStore;
+    
+    let departTile = null;
+    let initialPosition = { x: 0, y: 0.5, z: 0, coord: '0,0' };
+    
+    if (tiles && Object.keys(tiles).length > 0) {
+      departTile = Object.values(tiles).find(
+        tile => tile.type === 'depart' && tile.assignedToBot === botId
+      );
+      
+      if (departTile) {
+        initialPosition = {
+          x: departTile.position.x,
+          y: 0.5,
+          z: departTile.position.z,
+          coord: departTile.position.coord
+        };
+        fsmLogger.game(`[XFSMStore] Pre-initializing ${botId} at depart tile ${departTile.position.coord}`);
+      }
+    }
+    
+    // ✅ Create context with positions already set (fixes areAllEntitiesInitialized guard)
+    const baseContext = createMachineContext(botId, 'auto');
+    const botContext = {
+      ...baseContext,
+      vehicle: {
+        ...baseContext.vehicle,
+        position: initialPosition,
+        basePosition: initialPosition,
+      },
+      droneFleet: {
+        ...baseContext.droneFleet,
+        drones: {
+          explorer: {
+            ...baseContext.droneFleet.drones.explorer,
+            position: initialPosition,
+          }
+        }
+      },
+      // ✅ Inject grid info immediately
+      gridInfo: tiles ? {
+        tiles,
+        spacing: spacing ?? 1.2,
+        radius: radius ?? 3,
+        departTileCoord: departTile?.position?.coord,
+        syncedAt: Date.now(),
+      } : baseContext.gridInfo
+    };
     
     // Configuration conditionnelle de l'inspection
     const actorConfig = { 
@@ -77,7 +128,7 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
     // Debug: afficher le type et le contenu de value
     const stateValue = initialSnapshot.value;
     const stateDisplay = typeof stateValue === 'string' ? stateValue : JSON.stringify(stateValue);
-    fsmLogger.game(`[XFSMStore] Creation ${botId} - Status: ${initialSnapshot.status}, State: ${stateDisplay}, StateType: ${typeof stateValue}`);
+    fsmLogger.game(`[XFSMStore] Creation ${botId} - Status: ${initialSnapshot.status}, State: ${stateDisplay}, Context has positions: vehicle=${!!initialSnapshot.context.vehicle?.position}, drone=${!!initialSnapshot.context.droneFleet?.drones?.explorer?.position}`);
     
     // Enregistrer l'acteur (créé mais pas démarré)
     actors.set(botId, actor);
@@ -186,58 +237,12 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
 
     /**
      * Démarre un bot XState (après que le jeu soit initialisé)
-     * ✅ Phase 2: Sends TILES_UPDATED to inject grid data into FSM context
-     * ✅ Phase 3: Sends initial positions from depart tile (no more waiting for Fleet)
+     * ✅ Phase 7: Simplified - positions and gridInfo already injected in createBotActor()
      */
     startBot: (botId: BotId): void => {
       startBotActor(botId);
       const actor = actors.get(botId);
       if (actor) {
-        // ✅ Phase 2: Inject grid data into FSM context
-        const tileStore = useTileStore.getState();
-        const { tiles, spacing, radius } = tileStore;
-        
-        if (tiles && Object.keys(tiles).length > 0) {
-          fsmLogger.game(`[XFSMStore] Injecting grid data for ${botId}: ${Object.keys(tiles).length} tiles`);
-          actor.send({
-            type: 'TILES_UPDATED',
-            tiles,
-            spacing: spacing ?? 1.2,
-            radius: radius ?? 3
-          });
-          
-          // ✅ Phase 3: Find depart tile for this bot and inject initial positions
-          const departTile = Object.values(tiles).find(
-            tile => tile.type === 'depart' && tile.assignedToBot === botId
-          );
-          
-          if (departTile) {
-            const initialPosition = {
-              x: departTile.position.x,
-              y: 0.5, // Standard height for vehicles
-              z: departTile.position.z
-            };
-            
-            fsmLogger.game(`[XFSMStore] Injecting initial positions for ${botId} at depart tile ${departTile.position.coord}`);
-            
-            // Send ship position
-            actor.send({
-              type: 'SHIP_INITIALIZE_REQUEST',
-              shipType: 'main-ship',
-              initialPosition
-            });
-            
-            // Send drone position (same as ship initially)
-            actor.send({
-              type: 'DRONE_INITIALIZE_REQUEST',
-              droneType: 'explorer',
-              initialPosition
-            });
-          } else {
-            fsmLogger.warn(`[XFSMStore] No depart tile found for ${botId} - FSM may block in initializing`);
-          }
-        }
-        
         const currentState = get();
         set({
           botStates: {
@@ -245,6 +250,8 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
             [botId]: actor.getSnapshot(),
           },
         });
+        
+        fsmLogger.game(`[XFSMStore] Bot ${botId} started with pre-initialized context`);
       }
     },
 
