@@ -25,7 +25,7 @@
 
 import { createActor } from 'xstate';
 import { machineXV5Pure } from '../src/ai/fsm/machineX/machine.pure.v5.ts';
-import { makeInitialContext, mockDepartTile, mockTiles, availableTiles, collectAmounts } from './fsm-mock-data.js';
+import { collectAmounts, makeInitialContext, mockDepartTile } from './fsm-mock-data.js';
 
 // ========================================
 // Configuration et paramètres
@@ -73,7 +73,19 @@ class EventSimulator {
     });
 
     if (this.verbose) {
-      console.log(`\n📨 Event: ${event.type}`, event);
+      // Séparateur visuel pour les events
+      console.log('\n' + '═'.repeat(80));
+      console.log('⚡ EVENT SENT');
+      console.log('═'.repeat(80));
+      console.table({
+        type: event.type,
+        time: `${this.stats.totalEvents}ms`
+      });
+      // Afficher les données détaillées séparément pour éviter le débordement
+      if (Object.keys(event).length > 1) {
+        console.log('📋 Event Payload:');
+        console.log(JSON.stringify(event, null, 2));
+      }
     }
 
     this.actor.send(event);
@@ -83,7 +95,14 @@ class EventSimulator {
     
     const snapshot = this.actor.getSnapshot();
     if (this.verbose) {
-      console.log(`📊 State: ${JSON.stringify(snapshot.value)}`);
+      // Séparateur visuel pour les states
+      console.log('\n' + '─'.repeat(80));
+      console.log('🎯 STATE RESULT');
+      console.log('─'.repeat(80));
+      console.table({
+        state: JSON.stringify(snapshot.value),
+        time: `${Date.now() - this.stats.startTime}ms`
+      });
     }
     
     return snapshot;

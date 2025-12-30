@@ -191,19 +191,76 @@ const log = (type: LogType, message: string, data: unknown = null, playerId: str
     const formatObject = (obj: unknown): string => {
       if (obj === null || obj === undefined) return String(obj);
       if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') return String(obj);
-      try {
-        return JSON.stringify(obj, (_key, value) => {
-          // Gérer les références circulaires
-          if (value instanceof HTMLElement) return '[HTMLElement]';
-          if (value instanceof Function) return '[Function]';
-          if (value instanceof Error) return `[Error: ${value.message}]`;
-          if (typeof value === 'object' && value !== null && value.constructor && value.constructor.name !== 'Object' && value.constructor.name !== 'Array') {
-            return `[${value.constructor.name}]`;
+      
+      // Essayer de créer une copie safe-to-stringify
+      const makeSerializable = (value: unknown, depth: number = 0): unknown => {
+        if (depth > 10) return '[Max depth reached]'; // Éviter la récursion infinie
+        
+        // Types primitifs
+        if (value === null || value === undefined) return value;
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
+        
+        // Types spéciaux non-sérialisables
+        if (value instanceof Date) return value.toISOString();
+        if (value instanceof HTMLElement) return '[HTMLElement]';
+        if (value instanceof Error) return `[Error: ${value.message}]`;
+        if (value instanceof Function) return `[Function: ${(value as any).name || 'anonymous'}]`;
+        if (value instanceof Set) return `[Set(${value.size})]`;
+        if (value instanceof Map) return `[Map(${value.size})]`;
+        if (value instanceof WeakSet) return '[WeakSet]';
+        if (value instanceof WeakMap) return '[WeakMap]';
+        if (value instanceof ArrayBuffer) return '[ArrayBuffer]';
+        if (value instanceof Promise) return '[Promise]';
+        if (value instanceof RegExp) return `[RegExp: ${value.toString()}]`;
+        if (typeof value === 'symbol') return `[Symbol: ${String(value)}]`;
+        
+        // Gestion des objets personnalisés
+        if (typeof value === 'object' && value !== null) {
+          if (value.constructor && value.constructor.name !== 'Object' && value.constructor.name !== 'Array') {
+            // Pour les classes personnalisées, essayer d'extraire les propriétés
+            try {
+              const plain: Record<string, unknown> = {};
+              for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+                plain[key] = makeSerializable(val, depth + 1);
+              }
+              return { [`[${value.constructor.name}]`]: plain };
+            } catch {
+              return `[${value.constructor.name}]`;
+            }
           }
-          return value;
-        }, 2); // Indentation de 2 espaces
-      } catch (_error) {
-        return '[Object - Could not stringify]';
+          
+          // Tableau
+          if (Array.isArray(value)) {
+            return value.map((item: unknown) => makeSerializable(item, depth + 1));
+          }
+          
+          // Objet simple
+          const plain: Record<string, unknown> = {};
+          for (const [key, val] of Object.entries(value)) {
+            plain[key] = makeSerializable(val, depth + 1);
+          }
+          return plain;
+        }
+        
+        return value;
+      };
+      
+      try {
+        const serializable = makeSerializable(obj);
+        return JSON.stringify(serializable, null, 2); // Indentation de 2 espaces
+      } catch (error) {
+        // Si la sérialisation échoue complètement, essayer une approche simplifiée
+        try {
+          // Dernière tentative: stringify direct sans replacer
+          return JSON.stringify(obj, null, 2);
+        } catch {
+          // En dernier recours, essayer toString
+          try {
+            return String(obj);
+          } catch {
+            return '[Object - Could not stringify]';
+          }
+        }
       }
     };
     
@@ -219,19 +276,14 @@ const log = (type: LogType, message: string, data: unknown = null, playerId: str
     } else if (data !== null) {
       // Version avec objet formaté pour faciliter la copie
       const formattedData = formatObject(data);
+      // Pour Node.js: afficher sans %c qui ne fonctionne pas correctement
       // eslint-disable-next-line no-console
-      console.log(
-        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}\n${formattedData}`,
-        typeConfig.style,
-        'color: inherit'
-      );
+      console.log(`${typeConfig.prefix} [${new Date().toLocaleTimeString()}] ${enhancedMessage}`);
+      // eslint-disable-next-line no-console
+      console.log(formattedData);
     } else {
       // eslint-disable-next-line no-console
-      console.log(
-        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}`,
-        typeConfig.style,
-        'color: inherit'
-      );
+      console.log(`${typeConfig.prefix} [${new Date().toLocaleTimeString()}] ${enhancedMessage}`);
     }
   }
   return logEntry;
@@ -340,22 +392,58 @@ const fsmLogger = {
   logFullObject: (type: LogType, message: string, obj: unknown, playerId: string | null = null) => {
     if (!config.enableConsole) return;
     
-  const typeConfig = LOG_TYPE_STYLES[type] || LOG_TYPE_STYLES.INFO;
+    const typeConfig = LOG_TYPE_STYLES[type] || LOG_TYPE_STYLES.INFO;
     const enhancedMessage = playerId ? `[${playerId}] ${message}` : message;
     
-    try {
-      const fullObjectString = JSON.stringify(obj, (_key, value) => {
-        // Gérer les références circulaires et types spéciaux
-        if (value instanceof HTMLElement) return '[HTMLElement]';
-        if (value instanceof Function) return `[Function: ${value.name || 'anonymous'}]`;
-        if (value instanceof Error) return `[Error: ${value.message}]`;
-        if (value instanceof Date) return value.toISOString();
-        if (typeof value === 'object' && value !== null && value.constructor &&
-            value.constructor.name !== 'Object' && value.constructor.name !== 'Array') {
-          return `[${value.constructor.name}]`;
+    const makeSerializable = (value: unknown, depth: number = 0): unknown => {
+      if (depth > 10) return '[Max depth reached]';
+      
+      if (value === null || value === undefined) return value;
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
+      
+      if (value instanceof Date) return value.toISOString();
+      if (value instanceof HTMLElement) return '[HTMLElement]';
+      if (value instanceof Error) return `[Error: ${value.message}]`;
+      if (value instanceof Function) return `[Function: ${(value as any).name || 'anonymous'}]`;
+      if (value instanceof Set) return `[Set(${value.size})]`;
+      if (value instanceof Map) return `[Map(${value.size})]`;
+      if (value instanceof WeakSet) return '[WeakSet]';
+      if (value instanceof WeakMap) return '[WeakMap]';
+      if (value instanceof ArrayBuffer) return '[ArrayBuffer]';
+      if (value instanceof Promise) return '[Promise]';
+      if (value instanceof RegExp) return `[RegExp: ${value.toString()}]`;
+      if (typeof value === 'symbol') return `[Symbol: ${String(value)}]`;
+      
+      if (typeof value === 'object' && value !== null) {
+        if (value.constructor && value.constructor.name !== 'Object' && value.constructor.name !== 'Array') {
+          try {
+            const plain: Record<string, unknown> = {};
+            for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+              plain[key] = makeSerializable(val, depth + 1);
+            }
+            return { [`[${value.constructor.name}]`]: plain };
+          } catch {
+            return `[${value.constructor.name}]`;
+          }
         }
-        return value;
-      }, 2);
+        
+        if (Array.isArray(value)) {
+          return value.map((item: unknown) => makeSerializable(item, depth + 1));
+        }
+        
+        const plain: Record<string, unknown> = {};
+        for (const [key, val] of Object.entries(value)) {
+          plain[key] = makeSerializable(val, depth + 1);
+        }
+        return plain;
+      }
+      
+      return value;
+    };
+    
+    try {
+      const serializable = makeSerializable(obj);
+      const fullObjectString = JSON.stringify(serializable, null, 2);
       
       // eslint-disable-next-line no-console
       console.log(

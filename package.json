@@ -65,7 +65,9 @@
     "test:fsm-explore": "node scripts/test-fsm-cycle.js --scenario=explore",
     "test:fsm-collect": "node scripts/test-fsm-cycle.js --scenario=collect",
     "test:fsm-maintain": "node scripts/test-fsm-cycle.js --scenario=maintain",
-    "test:fsm-verbose": "node scripts/test-fsm-cycle.js --verbose"
+    "test:fsm-verbose": "node scripts/test-fsm-cycle.js --verbose",
+    "test:fsm-autonomous": "node scripts/test-fsm-autonomous.js",
+    "test:fsm-autonomous-verbose": "node scripts/test-fsm-autonomous.js --verbose"
   },
   "browserslist": [
     ">0.2%",

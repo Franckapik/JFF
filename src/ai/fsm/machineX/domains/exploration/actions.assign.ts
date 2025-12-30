@@ -42,6 +42,7 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
   
   const startCoord = shipPosition.coord;
   const candidateTiles = findTilesInRadius(startCoord, range, tiles);
+  
   let targetDroneTile = selectRandomTile(candidateTiles);
   if (targetDroneTile) {
     // Fixe la hauteur Y à 0.5 pour la position cible
