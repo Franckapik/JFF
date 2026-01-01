@@ -13,45 +13,59 @@ Fonctionnalité: Maintenance
     Et que vehicle.resources = {food: 800, debris: 850, special: 0, total: 1650}
     Et que score.resources.total = 0
     Et que le FSM est en état "maintaining"
+    Quand l'événement NEED_MAINTAINING est reçu
+    Alors le FSM transite vers "maintaining.depositing"
     Quand l'événement SHIP_DEPOSIT_COMPLETE est reçu
     Alors vehicle.resources = {food: 0, debris: 0, special: 0, total: 0}
     Et score.resources.food augmente de 800
     Et score.resources.debris augmente de 850
     Et score.resources.total = 1650
+    Et le FSM transite vers l'état de maintenance suivant ou "evaluating"
 
   Scénario: Refuel du véhicule
     Étant donné que vehicle.fuel = 25
     Et que le guard needsRefuel retourne true (25 < 30)
     Et que le FSM est en état "maintaining"
+    Quand l'événement NEED_MAINTAINING est reçu
+    Alors le FSM transite vers "maintaining.refueling"
     Quand l'événement SHIP_REFUEL_COMPLETE est reçu
     Alors vehicle.fuel = 100
     Et le guard needsRefuel retourne false
+    Et le FSM transite vers l'état de maintenance suivant ou "evaluating"
 
   Scénario: Réparation du véhicule
     Étant donné que vehicle.damage = 75
     Et que le guard needsRepair retourne true (75 > 50)
     Et que le FSM est en état "maintaining"
+    Quand l'événement NEED_MAINTAINING est reçu
+    Alors le FSM transite vers "maintaining.repairing"
     Quand l'événement SHIP_REPAIR_COMPLETE est reçu
     Alors vehicle.damage = 0
     Et le guard needsRepair retourne false
+    Et le FSM transite vers l'état de maintenance suivant ou "evaluating"
 
   Scénario: Maintenance complète automatique
     Étant donné que vehicle.resources.total = 1650
     Et que vehicle.fuel = 25
     Et que vehicle.damage = 60
-    Et que le FSM est en état "maintaining"
+    Et que le FSM est en état "evaluating"
+    Quand l'événement NEED_MAINTAINING est reçu
+    Alors le FSM transite vers "maintaining"
     
-    # Dépôt
+    # Phase 1: Dépôt
+    Alors le FSM transite vers "maintaining.depositing"
     Quand l'événement SHIP_DEPOSIT_COMPLETE est reçu
     Alors vehicle.resources.total = 0
     Et le guard needsDeposit retourne false
     
-    # Refuel
+    # Phase 2: Refuel
+    Alors le FSM transite vers "maintaining.refueling"
     Quand l'événement SHIP_REFUEL_COMPLETE est reçu
     Alors vehicle.fuel = 100
     Et le guard needsRefuel retourne false
     
-    # Repair
+    # Phase 3: Repair
+    Alors le FSM transite vers "maintaining.repairing"
     Quand l'événement SHIP_REPAIR_COMPLETE est reçu
     Alors vehicle.damage = 0
     Et le guard needsRepair retourne false
@@ -65,13 +79,16 @@ Fonctionnalité: Maintenance
     Étant donné que vehicle.fuel = 20
     Et que vehicle.damage = 30
     Et que vehicle.resources.total = 50
-    Et que le FSM est en état "maintaining"
+    Et que le FSM est en état "evaluating"
+    Quand l'événement NEED_MAINTAINING est reçu
+    Alors le FSM transite vers "maintaining"
     
-    # Seulement needsRefuel = true
+    # Seulement needsRefuel = true (autres guards false)
+    Alors le FSM transite vers "maintaining.refueling"
     Quand l'événement SHIP_REFUEL_COMPLETE est reçu
     Alors vehicle.fuel = 100
     Quand le guard maintenanceComplete est évalué
-    Alors le guard retourne true (needsDeposit=false, needsRepair=false)
+    Alors le guard retourne true (needsDeposit=false, needsRepair=false, needsRefuel=false)
     Et le FSM transite automatiquement vers "evaluating"
 
   Plan du Scénario: Validation du guard needsRefuel

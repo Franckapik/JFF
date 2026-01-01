@@ -63,13 +63,13 @@ export const needsRepair: XStateV5Guard = ({ context }) => {
  * Pure guard: Check if vehicle has resources to deposit
  * 
  * @param context FSMContext containing vehicle resources
- * @returns true if total resources (food + debris + special) > 0
+ * @returns true if total resources (food + debris + special) > 100
  * 
  * @example
  * // In Node.js test:
  * const context = { vehicle: { resources: { food: 100, debris: 50, special: 0 } } };
  * const result = needsDeposit({ context, event: {} });
- * console.log(result); // true
+ * console.log(result); // true (150 > 100)
  */
 export const needsDeposit: XStateV5Guard = ({ context }) => {
   const vehicle = context.vehicle;
@@ -80,7 +80,7 @@ export const needsDeposit: XStateV5Guard = ({ context }) => {
   const resources = vehicle.resources;
   const totalResources = (resources.food ?? 0) + (resources.debris ?? 0) + (resources.special ?? 0);
   
-  return totalResources > 0;
+  return totalResources > 100;
 };
 
 /**

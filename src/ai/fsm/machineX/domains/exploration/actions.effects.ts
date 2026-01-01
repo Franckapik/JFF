@@ -98,3 +98,30 @@ export const onDroneReturningEntry = ({ context }: { context: FSMContext }) => {
 export const onDroneReturningExit = ({ context: _context }: { context: FSMContext }) => {
 };
 
+/**
+ * Action d'entrée de l'état drone_docked
+ * 
+ * LOG ONLY: Trace l'amarrage du drone à la base
+ * EVENT: DRONE_READY_FOR_REDEPLOY envoyé par tracker après DOCK_DURATION
+ * 
+ * Ce nouvel état permet:
+ * - Animation de stationnement du drone
+ * - Traitement des données scannées
+ * - Préparer le drone pour un nouveau cycle d'exploration
+ */
+export const onDroneDockedEntry = ({ context }: { context: FSMContext }) => {
+  const dockedTile = context.memory?.knownTiles?.[context.memory.knownTiles.length - 1];
+  fsmLogger.action(`⚓ [${context.entityId}] Entrée dans l'état DRONE_DOCKED`, {
+    dockedTile: dockedTile?.position?.coord || 'unknown',
+    totalExploredThisCycle: context.memory?.stats?.tilesExploredInCycle || 0
+  });
+};
+
+/**
+ * Action de sortie de l'état drone_docked
+ * 
+ * LOG ONLY: Trace le début de la redéploiement du drone
+ */
+export const onDroneDockedExit = ({ context: _context }: { context: FSMContext }) => {
+};
+

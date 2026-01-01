@@ -35,6 +35,7 @@ export type MachineEvents =
   | { type: 'DRONE_REACHES_TILE' }
   | { type: 'DRONE_HAS_SCANNED' }
   | { type: 'DRONE_REACHES_BASE' }
+  | { type: 'DRONE_READY_FOR_REDEPLOY' }
   | { type: 'SHIP_REACHES_TILE' }
   | { type: 'SHIP_LOAD_RESOURCES' }
   | { type: 'SHIP_REACHES_BASE' }

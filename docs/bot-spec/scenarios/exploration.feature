@@ -38,11 +38,13 @@ Fonctionnalité: Exploration Autonome
     Alors le FSM transite vers "exploring.drone_docked"
     Et drone.visualState devient "docked"
     Et drone.targetPosition = basePosition
-    Et le FSM transite automatiquement vers "evaluating"
+    Quand l'événement DRONE_READY_FOR_REDEPLOY est reçu
+    Alors le FSM transite vers "evaluating"
+    Et drone est prêt pour un nouveau déploiement
 
   Scénario: Exploration bloquée par fuel bas
     Étant donné que explorationQueue contient ["5,5"]
-    Et que vehicle.fuel = 8
+    Et que vehicle.fuel = 18
     Et que vehicle.damage = 20
     Quand le guard shouldExplore est évalué
     Alors le guard retourne false
@@ -72,17 +74,17 @@ Fonctionnalité: Exploration Autonome
     Alors le guard retourne <result>
 
     Exemples:
-      | queue       | fuel | damage | result | commentaire                    |
-      | ["5,5"]     | 50   | 30     | true   | Toutes conditions satisfaites  |
-      | []          | 50   | 30     | false  | Queue vide                     |
-      | ["5,5"]     | 5    | 30     | false  | Fuel trop bas (< 10)           |
-      | ["5,5"]     | 50   | 85     | false  | Damage trop élevé (> 80)       |
-      | ["5,5"]     | 10   | 80     | false  | Fuel et damage à la limite     |
-      | ["5,5"]     | 11   | 79     | true   | Juste au-dessus des limites    |
+      | queue       | fuel | damage | result | commentaire                          |
+      | ["5,5"]     | 50   | 30     | true   | Toutes conditions satisfaites       |
+      | []          | 50   | 30     | false  | Queue vide                          |
+      | ["5,5"]     | 18   | 30     | false  | Fuel trop bas (< 20, stratégie prudente) |
+      | ["5,5"]     | 50   | 85     | false  | Damage trop élevé (> 80)            |
+      | ["5,5"]     | 20   | 80     | false  | Fuel et damage à la limite          |
+      | ["5,5"]     | 21   | 79     | true   | Juste au-dessus des limites         |
 
   Scénario: Interruption de l'exploration par LOW_FUEL_WARNING
     Étant donné que le FSM est en état "exploring.drone_deploying"
-    Et que vehicle.fuel = 8
+    Et que vehicle.fuel = 18
     Quand l'événement LOW_FUEL_WARNING est reçu
     Alors l'exploration en cours est interrompue
     Et le FSM transite vers "maintaining"
@@ -119,3 +121,14 @@ Fonctionnalité: Exploration Autonome
     Et memory.stats.tilesExplored = 100
     Et le temps d'exécution est < 20 minutes
     Et l'efficacité est >= 5 tiles/minute
+
+  Scénario: Synchronisation de la grille - TILES_UPDATED
+    Étant donné que le FSM est en état "evaluating"
+    Et que la grille contient 50 tuiles initialement
+    Quand l'événement TILES_UPDATED est reçu avec:
+      | spacing | 1.0 |
+      | radius  | 5   |
+      | tiles   | 75 tuiles mises à jour |
+    Alors context.gridInfo.tiles est synchronisé avec les 75 tuiles
+    Et la grille est à jour pour l'exploration
+    Et les tuiles déjà explorées conservent leur statut explored=true

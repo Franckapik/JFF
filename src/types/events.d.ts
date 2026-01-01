@@ -19,8 +19,9 @@ export type MachineEventType =
   
   // Événements drone (exploring)
   | 'DRONE_REACHES_TILE'
-  | 'DRONE_SCANS_TILE' 
+  | 'DRONE_HAS_SCANNED'
   | 'DRONE_REACHES_BASE'
+  | 'DRONE_READY_FOR_REDEPLOY'
   
   // Événements ship (collecting)
   | 'SHIP_REACHES_TILE'
@@ -28,9 +29,6 @@ export type MachineEventType =
   | 'SHIP_REACHES_BASE'
   
   // Événements maintenance
-  | 'SHIP_START_DEPOSIT'
-  | 'SHIP_START_REPAIR'
-  | 'SHIP_START_REFUEL'
   | 'SHIP_DEPOSIT_COMPLETE'
   | 'SHIP_REPAIR_COMPLETE'
   | 'SHIP_REFUEL_COMPLETE'
@@ -49,14 +47,12 @@ export type MachineEvents =
   | { type: 'DRONE_POSITION_UPDATE'; payload?: unknown }
   | { type: 'DRONE_INITIALIZE_REQUEST'; payload?: unknown }
   | { type: 'DRONE_REACHES_TILE' }
-  | { type: 'DRONE_SCANS_TILE' }
+  | { type: 'DRONE_HAS_SCANNED' }
   | { type: 'DRONE_REACHES_BASE' }
+  | { type: 'DRONE_READY_FOR_REDEPLOY' }
   | { type: 'SHIP_REACHES_TILE' }
   | { type: 'SHIP_LOAD_RESOURCES' }
   | { type: 'SHIP_REACHES_BASE' }
-  | { type: 'SHIP_START_DEPOSIT' }
-  | { type: 'SHIP_START_REPAIR' }
-  | { type: 'SHIP_START_REFUEL' }
   | { type: 'SHIP_DEPOSIT_COMPLETE' }
   | { type: 'SHIP_REPAIR_COMPLETE' }
   | { type: 'SHIP_REFUEL_COMPLETE' }
@@ -79,8 +75,9 @@ export const MACHINE_EVENT_TYPES: Record<Uppercase<MachineEventType>, MachineEve
   
   // Événements drone
   DRONE_REACHES_TILE: 'DRONE_REACHES_TILE',
-  DRONE_SCANS_TILE: 'DRONE_SCANS_TILE',
+  DRONE_HAS_SCANNED: 'DRONE_HAS_SCANNED',
   DRONE_REACHES_BASE: 'DRONE_REACHES_BASE',
+  DRONE_READY_FOR_REDEPLOY: 'DRONE_READY_FOR_REDEPLOY',
   
   // Événements ship
   SHIP_REACHES_TILE: 'SHIP_REACHES_TILE',
@@ -88,9 +85,6 @@ export const MACHINE_EVENT_TYPES: Record<Uppercase<MachineEventType>, MachineEve
   SHIP_REACHES_BASE: 'SHIP_REACHES_BASE',
   
   // Événements maintenance
-  SHIP_START_DEPOSIT: 'SHIP_START_DEPOSIT',
-  SHIP_START_REPAIR: 'SHIP_START_REPAIR',
-  SHIP_START_REFUEL: 'SHIP_START_REFUEL',
   SHIP_DEPOSIT_COMPLETE: 'SHIP_DEPOSIT_COMPLETE',
   SHIP_REPAIR_COMPLETE: 'SHIP_REPAIR_COMPLETE',
   SHIP_REFUEL_COMPLETE: 'SHIP_REFUEL_COMPLETE',

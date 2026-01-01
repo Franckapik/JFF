@@ -29,6 +29,7 @@ export const DURATIONS = {
   
   // Durées d'actions
   SCAN_DURATION: 800,
+  DOCK_DURATION: 500,      // Drone docking time before redeploy
   COLLECT_DURATION: 1200,
   DEPOSIT_DURATION: 1500,
   REFUEL_DURATION: 1000,
@@ -214,6 +215,18 @@ export function getExploringEvents(
         reason: 'Drone returning to base'
       });
     }
+  } else if (subState === 'drone_docked') {
+    if (verbose) {
+      // eslint-disable-next-line no-console
+      console.log(`⚓ [TRACKER] Drone docking (${DURATIONS.DOCK_DURATION}ms)`);
+    }
+    
+    // 🔄 Après docking, redéployer automatiquement
+    events.push({
+      event: { type: 'DRONE_READY_FOR_REDEPLOY' },
+      delay: DURATIONS.DOCK_DURATION,
+      reason: 'Drone ready to redeploy after docking'
+    });
   }
   
   return events;

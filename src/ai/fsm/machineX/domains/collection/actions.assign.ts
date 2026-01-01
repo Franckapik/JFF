@@ -497,6 +497,11 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
   };
   newResources.total = newResources.food + newResources.debris + newResources.special;
   
+  // 🔥 FUEL CONSUMPTION: 1% per collection (as per business rules)
+  const currentFuel = context.vehicle?.fuel ?? 100;
+  const fuelConsumed = 1; // 1% fuel per collection
+  const newFuel = Math.max(0, currentFuel - fuelConsumed);
+  
   // Obtenir l'état actuel de la tuile après collecte (le store l'a mise à jour)
   // ✅ IMPORTANT: Récupérer TOUS les attributs de la tuile, y compris le flag 'collected'
   const updatedTile = useStore 
@@ -583,6 +588,7 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
     vehicle: {
       ...context.vehicle,
       resources: newResources,
+      fuel: newFuel, // 🔥 FUEL CONSUMPTION: 1% per collection
       // Mettre à jour la référence à la tuile cible avec les nouvelles ressources
       targetVehicleTile: nextTargetTile  // ✅ Utiliser la nouvelle cible si disponible
     },

@@ -17,7 +17,7 @@ import type { GridCoordinate, WorldPosition } from './coordinates';
 export type DroneVisualState = 'uninitialized' | 'docked' | 'deploying' | 'scanning' | 'returning' | 'failed';
 
 /** États FSM des drones pour la logique XState */
-export type DroneFSMState = 'drone_deploying' | 'drone_scanning' | 'drone_returning';
+export type DroneFSMState = 'drone_deploying' | 'drone_scanning' | 'drone_returning' | 'drone_docked';
 
 /** Types de drones supportés par le système */
 export type DroneType = 'explorer' | 'combat' | 'special';

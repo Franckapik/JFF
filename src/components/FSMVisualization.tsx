@@ -47,6 +47,7 @@ export default function FSMVisualization() {
     drone_deploying: 0,
     drone_scanning: 0,
     drone_returning: 0,
+    drone_docked: 0,
     collecting: 0,
     ship_moving_to_tile: 0,
     ship_collecting: 0,
@@ -91,7 +92,7 @@ export default function FSMVisualization() {
     // Incrémenter le compteur de visite pour le state principal et les substates
     setStateVisitCounts((prev) => {
       const allStates = [
-        'initializing', 'evaluating', 'exploring', 'drone_deploying', 'drone_scanning', 'drone_returning',
+        'initializing', 'evaluating', 'exploring', 'drone_deploying', 'drone_scanning', 'drone_returning', 'drone_docked',
         'collecting', 'ship_moving_to_tile', 'ship_collecting', 'ship_returning',
         'maintaining', 'refueling', 'repairing', 'depositing'
       ];
@@ -270,7 +271,8 @@ export default function FSMVisualization() {
             {renderSubstates(currentState, [
               { key: 'drone_deploying', label: '🚁 Deploying' },
               { key: 'drone_scanning', label: '📡 Scanning' },
-              { key: 'drone_returning', label: '🔙 Returning' }
+              { key: 'drone_returning', label: '🔙 Returning' },
+              { key: 'drone_docked', label: '⚓ Docked' }
             ], stateVisitCounts)}
           </div>
 

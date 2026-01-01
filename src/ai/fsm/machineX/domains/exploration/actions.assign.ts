@@ -224,6 +224,7 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
 
 /**
  * Action assign pour remettre le contexte en évaluation après le retour du drone
+ * Transition: drone_returning → drone_docked (mais on garde l'action assignDroneDockedContext compatible)
  */
 export const assignDroneDockedContext = createAssignAction(({ context, event }) => {
   fsmLogger.info(`🔄 [${context?.entityId || 'unknown'}] assignDroneDockedContext called with:`, {
@@ -264,8 +265,28 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
     explorationCycle: {
       ...context.explorationCycle,
       isActive: false,
+      phase: 'docked' as const // 🟢 Nouveau phase: drone_docked
+    }
+  };
+});
+
+/**
+ * Action assign pour remettre le contexte en évaluation après le drone docked
+ * Transition: drone_docked → evaluating (nouvelle action pour la transition)
+ */
+export const assignDroneReadyContext = createAssignAction(({ context, event }) => {
+  fsmLogger.info(`🔄 [${context?.entityId || 'unknown'}] assignDroneReadyContext called - transition to evaluating with:`, {
+    hasContext: !!context,
+    hasEvent: !!event,
+    eventType: event?.type
+  });
+  
+  return {
+    explorationCycle: {
+      ...context.explorationCycle,
+      isActive: false,
       phase: 'idle' as const
     },
-    fsmState: 'evaluating', // 🟢 Retour à l'état global evaluating
+    fsmState: 'evaluating' // 🟢 Retour à l'état global evaluating
   };
 });
