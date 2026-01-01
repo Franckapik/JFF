@@ -34,7 +34,7 @@ export const config: AppConfig = (typeof window !== 'undefined' ? window.appConf
   },
   enableXStateInspection: false,
   testMode: typeof import.meta !== 'undefined' && import.meta.env?.DEV === true, // Active en mode dev uniquement
-  enableVerboseTracking: false,
+  enableVerboseTracking: true, // Logs détaillés du tracker (visible dans Console Ninja)
   // logLevel: "debug", // Si tu veux gérer un vrai niveau de log, décommente et utilise
 };
 

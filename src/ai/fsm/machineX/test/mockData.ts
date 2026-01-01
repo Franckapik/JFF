@@ -8,7 +8,7 @@
  */
 
 import type { FSMContext } from '../../../../types/fsm.d.ts';
-import type { TileState } from '../../../../types/tile.d.ts';
+import type { Tile } from '../../../../types/tile.d.ts';
 import { createMachineContext } from '../context/initialContext.ts';
 
 // ========================================
@@ -24,7 +24,7 @@ export const initialPosition = {
 } as const;
 
 /** Tuile de départ */
-export const mockDepartTile: TileState = {
+export const mockDepartTile: Tile = {
   position: { x: 0, y: 0.5, z: 0, coord: '0,0' },
   type: 'depart',
   assignedToBot: 'test-bot-0',
@@ -39,7 +39,7 @@ export const mockDepartTile: TileState = {
 };
 
 /** Tuiles de ressources mockées */
-export const mockTiles: Record<string, TileState> = {
+export const mockTiles: Record<string, Tile> = {
   '0,0': mockDepartTile,
   '1,1': {
     position: { x: 1, y: 0, z: 1, coord: '1,1' },
@@ -92,7 +92,7 @@ export const mockTiles: Record<string, TileState> = {
 };
 
 /** Tuiles disponibles pour l'injection (exclut la tuile de départ) */
-export const availableTiles: TileState[] = [
+export const availableTiles: Tile[] = [
   mockTiles['1,1'],
   mockTiles['2,0'],
   mockTiles['3,3'],
@@ -128,8 +128,8 @@ export const mockGridConfig = {
  * @param mode - Mode d'initialisation (défaut: 'auto')
  * @returns Contexte FSM prêt à l'emploi avec tuiles mockées
  */
-export function makeInitialContext(botId: string = 'test-bot-0', mode: 'auto' | 'manual' = 'auto'): FSMContext {
-  const baseContext = createMachineContext(botId, mode);
+export function makeInitialContext(botId: string = 'test-bot-0'): FSMContext {
+  const baseContext = createMachineContext(botId, 'bot');
   
   return {
     ...baseContext,

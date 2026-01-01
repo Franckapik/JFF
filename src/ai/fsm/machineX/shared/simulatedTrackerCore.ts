@@ -11,8 +11,8 @@
  * ✅ Source unique de vérité pour les timings
  */
 
-import type { FSMContext } from '../../../../types/fsm.d';
-import type { MachineEvents } from '../events.pure.v5';
+import type { FSMContext } from '../../../../types/fsm.d.ts';
+import type { MachineEvents } from '../events.pure.v5.ts';
 
 // ========================================
 // Configuration des durées (en ms)
@@ -105,7 +105,7 @@ export function detectCurrentState(snapshotValue: string | object): StateInfo {
   const keys = Object.keys(snapshotValue);
   if (keys.length > 0) {
     const mainState = keys[0];
-    const subState = (snapshotValue as any)[mainState];
+    const subState = (snapshotValue as Record<string, unknown>)[mainState];
     return { mainState, subState: typeof subState === 'string' ? subState : null };
   }
   
@@ -120,10 +120,10 @@ export function detectCurrentState(snapshotValue: string | object): StateInfo {
  * Extrait les positions et cibles du contexte FSM
  */
 export function extractPositionsAndTargets(context: FSMContext) {
-  const dronePos = context.drone?.position || context.droneFleet?.drones?.explorer?.position;
+  const dronePos = context.droneFleet?.drones?.explorer?.position;
   const shipPos = context.vehicle?.position;
   const basePos = context.vehicle?.basePosition;
-  const targetDroneTile = context.targetDroneTile || context.droneFleet?.drones?.explorer?.targetDroneTile;
+  const targetDroneTile = context.droneFleet?.drones?.explorer?.targetDroneTile;
   const targetVehicleTile = context.vehicle?.targetVehicleTile;
   const tiles = context.gridInfo?.tiles || {};
   
@@ -154,7 +154,9 @@ export function getExploringEvents(
   
   if (subState === 'drone_deploying') {
     if (verbose && targetDroneTile) {
-      console.log(`\n🔍 [CORE] drone_deploying to ${targetDroneTile.position?.coord || 'unknown'}`);
+      // eslint-disable-next-line no-console
+      console.log(`\n🔍 [TRACKER-CORE] drone_deploying to ${targetDroneTile.position?.coord || 'unknown'}`);
+      // eslint-disable-next-line no-console
       console.log(`   Tiles available: ${Object.keys(tiles).join(', ')}`);
     }
     
@@ -164,6 +166,7 @@ export function getExploringEvents(
       const travelTime = calculateTravelTime(distance, DURATIONS.DRONE_SPEED);
       
       if (verbose) {
+      // eslint-disable-next-line no-console
         console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${travelTime}ms`);
       }
       
@@ -173,11 +176,14 @@ export function getExploringEvents(
         reason: `Drone traveling to ${targetPos.coord}`
       });
     } else if (verbose) {
+      // eslint-disable-next-line no-console
       console.log(`   ⚠️  No valid target tile`);
     }
   } else if (subState === 'drone_scanning') {
     if (verbose) {
-      console.log(`\n🔍 [CORE] drone_scanning (${DURATIONS.SCAN_DURATION}ms)`);
+      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
+      console.log(`\n🔍 [TRACKER-CORE] drone_scanning (${DURATIONS.SCAN_DURATION}ms)`);
     }
     
     events.push({
@@ -187,7 +193,8 @@ export function getExploringEvents(
     });
   } else if (subState === 'drone_returning') {
     if (verbose) {
-      console.log(`\n🔍 [CORE] drone_returning to base`);
+      // eslint-disable-next-line no-console
+      console.log(`\n🔍 [TRACKER-CORE] drone_returning to base`);
     }
     
     if (basePos && dronePos) {
@@ -195,6 +202,7 @@ export function getExploringEvents(
       const travelTime = calculateTravelTime(distance, DURATIONS.DRONE_SPEED);
       
       if (verbose) {
+      // eslint-disable-next-line no-console
         console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${travelTime}ms`);
       }
       
@@ -222,7 +230,8 @@ export function getCollectingEvents(
   
   if (subState === 'ship_moving_to_tile') {
     if (verbose) {
-      console.log(`\n🔍 [CORE] ship_moving_to_tile`);
+      // eslint-disable-next-line no-console
+      console.log(`\n🔍 [TRACKER-CORE] ship_moving_to_tile`);
     }
     
     if (targetVehicleTile?.position && shipPos) {
@@ -230,7 +239,9 @@ export function getCollectingEvents(
       const travelTime = calculateTravelTime(distance, DURATIONS.SHIP_SPEED);
       
       if (verbose) {
+      // eslint-disable-next-line no-console
         console.log(`   Target: ${targetVehicleTile.position.coord}`);
+      // eslint-disable-next-line no-console
         console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${travelTime}ms`);
       }
       
@@ -242,20 +253,22 @@ export function getCollectingEvents(
     }
   } else if (subState === 'ship_collecting') {
     if (verbose) {
-      console.log(`\n🔍 [CORE] ship_collecting (${DURATIONS.COLLECT_DURATION}ms)`);
+      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
+      console.log(`\n🚢 [TRACKER-CORE] ship_collecting (${DURATIONS.COLLECT_DURATION}ms)`);
     }
     
     events.push({
       event: { 
-        type: 'SHIP_LOAD_RESOURCES',
-        amount: { food: 200, debris: 150, special: 0 }
+        type: 'SHIP_LOAD_RESOURCES'
       },
       delay: DURATIONS.COLLECT_DURATION,
       reason: 'Collecting resources'
     });
   } else if (subState === 'ship_returning') {
     if (verbose) {
-      console.log(`\n🔍 [CORE] ship_returning to base`);
+      // eslint-disable-next-line no-console
+      console.log(`\n🔍 [TRACKER-CORE] ship_returning to base`);
     }
     
     if (basePos && shipPos) {
@@ -263,6 +276,7 @@ export function getCollectingEvents(
       const travelTime = calculateTravelTime(distance, DURATIONS.SHIP_SPEED);
       
       if (verbose) {
+      // eslint-disable-next-line no-console
         console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${travelTime}ms`);
       }
       
@@ -282,14 +296,16 @@ export function getCollectingEvents(
  */
 export function getMaintainingEvents(
   subState: string,
-  context: FSMContext,
+  _context: FSMContext,
   verbose: boolean = false
 ): ScheduledEvent[] {
   const events: ScheduledEvent[] = [];
   
   if (subState === 'depositing') {
     if (verbose) {
-      console.log(`\n🔍 [CORE] depositing (${DURATIONS.DEPOSIT_DURATION}ms)`);
+      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
+      console.log(`\n🔧 [TRACKER-CORE] depositing (${DURATIONS.DEPOSIT_DURATION}ms)`);
     }
     
     events.push({
@@ -299,7 +315,9 @@ export function getMaintainingEvents(
     });
   } else if (subState === 'refueling') {
     if (verbose) {
-      console.log(`\n🔍 [CORE] refueling (${DURATIONS.REFUEL_DURATION}ms)`);
+      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
+      console.log(`\n🔧 [TRACKER-CORE] refueling (${DURATIONS.REFUEL_DURATION}ms)`);
     }
     
     events.push({
@@ -309,7 +327,9 @@ export function getMaintainingEvents(
     });
   } else if (subState === 'repairing') {
     if (verbose) {
-      console.log(`\n🔍 [CORE] repairing (${DURATIONS.REPAIR_DURATION}ms)`);
+      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console
+      console.log(`\n🔧 [TRACKER-CORE] repairing (${DURATIONS.REPAIR_DURATION}ms)`);
     }
     
     events.push({
