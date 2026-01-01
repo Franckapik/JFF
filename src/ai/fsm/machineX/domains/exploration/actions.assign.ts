@@ -3,12 +3,16 @@
  * EXPLORATION DOMAIN - Actions de mise à jour du contexte (assign)
  * ==========================================================================
  * ✅ Phase 4: Pure actions - uses context.gridInfo instead of useTileStore
+ * 
+ * NOTE: useTileStore is kept for mutation operations (markTileAsExplored)
+ * which require modifying the tile store directly.
  */
 
 import { assign } from 'xstate';
 
 import { calculateDistance, findTilesInRadius, selectRandomTile } from '../../../../../core/spatial/index.ts';
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
+import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { DroneVisualState } from '../../../../../types/drone.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
@@ -132,6 +136,15 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
     position: scannedPosition,
     isMoving: false
   };
+
+  // ⚠️ MUTATION: Mark tile as explored in the tile store
+  if (targetDroneTile?.position?.coord) {
+    const tileStoreState = typeof useTileStore !== 'undefined' && useTileStore.getState ? useTileStore.getState() : null;
+    if (tileStoreState?.markTileAsExplored) {
+      tileStoreState.markTileAsExplored(targetDroneTile.position.coord, context.entityId);
+    }
+  }
+
   return {
     droneFleet: {
       ...context.droneFleet,

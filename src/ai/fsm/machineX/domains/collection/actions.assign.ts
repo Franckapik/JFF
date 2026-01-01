@@ -110,7 +110,7 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     
     // ✅ Calculer la consommation de fuel basée sur la distance
     const distance = calculateDistance(shipPosition, consistentTargetPos);
-    const fuelConsumption = Math.max(1, Math.floor(distance * 0.5)); // 0.5 fuel par unité de distance
+    const fuelConsumption = Math.max(1, Math.floor(distance * 1.5)); // 1.5 fuel par unité de distance
     const currentFuel = context.vehicle?.fuel || 100;
     const newFuel = Math.max(0, currentFuel - fuelConsumption);
     

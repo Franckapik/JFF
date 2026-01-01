@@ -39,6 +39,19 @@ export {
 } from './coordinates.ts';
 
 // ============================================================================
+// COLROW COORDINATE SYSTEM (Human-Readable Format: A1, B2, ...)
+// ============================================================================
+
+export {
+    colRowListToGrid,
+    colRowToGrid,
+    getColRowLabel,
+    gridListToColRow,
+    gridToColRow,
+    parseColRow
+} from './colRowCoordinate.ts';
+
+// ============================================================================
 // HEX GRID GENERATION
 // ============================================================================
 

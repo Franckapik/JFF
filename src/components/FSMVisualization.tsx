@@ -2,6 +2,8 @@ import React from 'react';
 
 import useXFSMStore from '../stores/useXFSMStore';
 import type { FSMContext } from '../types/fsm.d';
+import PositionDisplay from './PositionDisplay';
+import TileMatrix from './TileMatrix';
 
 /**
  * Type guard pour vérifier si un snapshot est un XState snapshot valide
@@ -175,14 +177,13 @@ export default function FSMVisualization() {
               </td>
               <td>{renderBar((ctx?.vehicle?.resources?.total || 0) / (ctx?.vehicle?.maxCapacity?.total || 1000))}</td>
             </tr>
-            <tr>
-              <td>Position:</td>
-              <td style={styles.statValue} colSpan={2}>
-                ({ctx?.vehicle?.position?.x?.toFixed(1) || 0}, {ctx?.vehicle?.position?.z?.toFixed(1) || 0})
-              </td>
-            </tr>
           </tbody>
         </table>
+        <PositionDisplay
+          title="Ship Position"
+          worldPosition={ctx?.vehicle?.position}
+          gridCoord={ctx?.vehicle?.position?.coord}
+        />
       </section>
 
       {/* DRONE STATUS */}
@@ -199,19 +200,20 @@ export default function FSMVisualization() {
               <td style={styles.statValue}>{ctx?.droneFleet?.drones?.explorer?.visualState || 'uninitialized'}</td>
             </tr>
             <tr>
-              <td>Position:</td>
-              <td style={styles.statValue}>
-                ({ctx?.droneFleet?.drones?.explorer?.position?.x?.toFixed(1) || 0},{' '}
-                {ctx?.droneFleet?.drones?.explorer?.position?.z?.toFixed(1) || 0})
-              </td>
-            </tr>
-            <tr>
               <td>Active:</td>
               <td style={styles.statValue}>{ctx?.droneFleet?.drones?.explorer?.isActive ? '✅' : '❌'}</td>
             </tr>
           </tbody>
         </table>
+        <PositionDisplay
+          title="Drone Position"
+          worldPosition={ctx?.droneFleet?.drones?.explorer?.position}
+          gridCoord={undefined}
+        />
       </section>
+
+      {/* TILE MATRIX */}
+      <TileMatrix />
 
       {/* CYCLE STATISTICS */}
       <section style={styles.section}>
@@ -322,6 +324,14 @@ export default function FSMVisualization() {
             <tr>
               <td>Known Tiles:</td>
               <td style={styles.statValue}>{ctx?.memory?.knownTiles?.length || 0}</td>
+            </tr>
+            <tr>
+              <td>Tiles Explored in Cycle:</td>
+              <td style={styles.statValue}>{ctx?.memory?.stats?.tilesExploredInCycle || 0}</td>
+            </tr>
+            <tr>
+              <td>Total Tiles Explored:</td>
+              <td style={styles.statValue}>{ctx?.memory?.stats?.tilesExplored || 0}</td>
             </tr>
             <tr>
               <td>Exploration Count:</td>
