@@ -101,7 +101,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
           id: `${entityId}-drone-explorer`,
           type: "explorer" as DroneType,
           visualState: "uninitialized" as DroneVisualState,
-          position: { x: 0, y: 0.5, z: 0 },
+          position: null, // Will be initialized by DRONE_INITIALIZE_REQUEST
           targetDroneTile: null,
           isMoving: false,
           isActive: false,
@@ -111,7 +111,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
           id: `${entityId}-drone-combat`,
           type: "combat" as DroneType,
           visualState: "uninitialized" as DroneVisualState,
-          position: { x: 0, y: 0.5, z: 0 },
+          position: null, // Will be initialized by DRONE_INITIALIZE_REQUEST
           targetDroneTile: null,
           isMoving: false,
           isActive: false,
@@ -121,7 +121,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
           id: `${entityId}-drone-special`,
           type: "special" as DroneType,
           visualState: "uninitialized" as DroneVisualState,
-          position: { x: 0, y: 0.5, z: 0 },
+          position: null, // Will be initialized by DRONE_INITIALIZE_REQUEST
           targetDroneTile: null,
           isMoving: false,
           isActive: false,

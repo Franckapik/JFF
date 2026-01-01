@@ -47,6 +47,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "inquirer": "^9.3.8",
     "jsdom": "^26.1.0",
+    "npm-run-all": "^4.1.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
     "vite": "^5.4.10",
@@ -55,6 +56,8 @@
   "scripts": {
     "test": "node scripts/menu.js",
     "dev": "vite",
+    "log:server": "node scripts/log-server.mjs",
+    "dev:all": "npm-run-all -p log:server dev",
     "build": "tsc && vite build",
     "type-check": "tsc --noEmit",
     "type-watch": "tsc --noEmit --watch",

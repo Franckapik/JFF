@@ -181,7 +181,7 @@ export function getExploringEvents(
     }
   } else if (subState === 'drone_scanning') {
     if (verbose) {
-      // eslint-disable-next-line no-console
+       
       // eslint-disable-next-line no-console
       console.log(`\n🔍 [TRACKER-CORE] drone_scanning (${DURATIONS.SCAN_DURATION}ms)`);
     }
@@ -253,7 +253,7 @@ export function getCollectingEvents(
     }
   } else if (subState === 'ship_collecting') {
     if (verbose) {
-      // eslint-disable-next-line no-console
+       
       // eslint-disable-next-line no-console
       console.log(`\n🚢 [TRACKER-CORE] ship_collecting (${DURATIONS.COLLECT_DURATION}ms)`);
     }
@@ -303,7 +303,7 @@ export function getMaintainingEvents(
   
   if (subState === 'depositing') {
     if (verbose) {
-      // eslint-disable-next-line no-console
+       
       // eslint-disable-next-line no-console
       console.log(`\n🔧 [TRACKER-CORE] depositing (${DURATIONS.DEPOSIT_DURATION}ms)`);
     }
@@ -315,7 +315,7 @@ export function getMaintainingEvents(
     });
   } else if (subState === 'refueling') {
     if (verbose) {
-      // eslint-disable-next-line no-console
+       
       // eslint-disable-next-line no-console
       console.log(`\n🔧 [TRACKER-CORE] refueling (${DURATIONS.REFUEL_DURATION}ms)`);
     }
@@ -327,7 +327,7 @@ export function getMaintainingEvents(
     });
   } else if (subState === 'repairing') {
     if (verbose) {
-      // eslint-disable-next-line no-console
+       
       // eslint-disable-next-line no-console
       console.log(`\n🔧 [TRACKER-CORE] repairing (${DURATIONS.REPAIR_DURATION}ms)`);
     }
@@ -343,6 +343,84 @@ export function getMaintainingEvents(
 }
 
 /**
+ * Détermine les événements d'initialisation à planifier
+ */
+export function getInitializingEvents(
+  context: FSMContext,
+  verbose: boolean = false
+): ScheduledEvent[] {
+  const events: ScheduledEvent[] = [];
+  
+  // Position de base par défaut (0,0,0) - sera ajustée par les actions
+  const defaultPosition = { x: 0, y: 0.5, z: 0, coord: '0,0' };
+  
+  // Vérifier si le vaisseau doit être initialisé
+  const shipPosition = context.vehicle?.position;
+  if (!shipPosition || (shipPosition.x === undefined && shipPosition.z === undefined)) {
+    if (verbose) {
+      // eslint-disable-next-line no-console
+      console.log('\n🔧 [TRACKER-CORE] Scheduling SHIP_INITIALIZE_REQUEST');
+    }
+    events.push({
+      event: { 
+        type: 'SHIP_INITIALIZE_REQUEST',
+        initialPosition: defaultPosition,
+        shipType: 'main-ship'
+      },
+      delay: 50,
+      reason: 'Initialize ship'
+    });
+  }
+  
+  // Vérifier si le drone doit être initialisé
+  const droneState = context.droneFleet?.drones?.explorer?.visualState;
+  if (droneState === 'uninitialized') {
+    if (verbose) {
+      // eslint-disable-next-line no-console
+      console.log('\n🔧 [TRACKER-CORE] Scheduling DRONE_INITIALIZE_REQUEST');
+    }
+    events.push({
+      event: { 
+        type: 'DRONE_INITIALIZE_REQUEST',
+        droneType: 'explorer'
+      },
+      delay: 100, // After ship initialization
+      reason: 'Initialize drone'
+    });
+  }
+  
+  return events;
+}
+
+/**
+ * Détermine les événements d'évaluation à planifier
+ */
+export function getEvaluatingEvents(
+  context: FSMContext,
+  verbose: boolean = false
+): ScheduledEvent[] {
+  const events: ScheduledEvent[] = [];
+  
+  // Pour l'état evaluating, on envoie NEED_EXPLORING si le drone est disponible
+  const isDroneAvailable = context.droneFleet?.drones?.explorer?.visualState !== 'uninitialized';
+  const hasExplorationQueue = (context.explorationQueue?.length || 0) > 0;
+  
+  if (isDroneAvailable && !hasExplorationQueue) {
+    if (verbose) {
+      // eslint-disable-next-line no-console
+      console.log('\n🔧 [TRACKER-CORE] Scheduling NEED_EXPLORING');
+    }
+    events.push({
+      event: { type: 'NEED_EXPLORING' },
+      delay: 100,
+      reason: 'Start exploration cycle'
+    });
+  }
+  
+  return events;
+}
+
+/**
  * Fonction principale : détermine tous les événements à planifier pour un snapshot donné
  */
 export function getScheduledEvents(
@@ -350,12 +428,29 @@ export function getScheduledEvents(
   context: FSMContext,
   verbose: boolean = false
 ): ScheduledEvent[] {
-  const { mainState, subState } = detectCurrentState(snapshotValue);
-  
-  if (!subState) {
-    return [];
+  if (verbose) {
+    // eslint-disable-next-line no-console
+    console.log('\n🔍 [TRACKER-CORE] getScheduledEvents called', {
+      state: JSON.stringify(snapshotValue),
+      verbose
+    });
   }
   
+  const { mainState, subState } = detectCurrentState(snapshotValue);
+  
+  // Gestion des états sans sous-état
+  if (!subState) {
+    switch (mainState) {
+      case 'initializing':
+        return getInitializingEvents(context, verbose);
+      case 'evaluating':
+        return getEvaluatingEvents(context, verbose);
+      default:
+        return [];
+    }
+  }
+  
+  // Gestion des états avec sous-états
   switch (mainState) {
     case 'exploring':
       return getExploringEvents(subState, context, verbose);

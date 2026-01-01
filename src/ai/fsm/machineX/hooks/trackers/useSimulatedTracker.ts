@@ -14,10 +14,10 @@
 import { useEffect, useRef } from 'react';
 import type { Actor } from 'xstate';
 
+import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
 import type { machineXV5Pure } from '../../machine.pure.v5.ts';
 import { getScheduledEvents } from '../../shared/simulatedTrackerCore.ts';
-import type { FSMContext } from '../../../../../types/fsm.d.ts';
 
 // ========================================
 // Types
@@ -77,8 +77,13 @@ export function useSimulatedTracker(
     const scheduleEvent = (event: MachineEvents, delay: number, reason?: string): void => {
       const eventType = event.type;
       
+      // eslint-disable-next-line no-console
+      console.log(`📌 [TRACKER-DEBUG] Scheduling ${eventType} in ${delay}ms (verbose=${verbose}, reason=${reason || 'none'})`);
+      
       // Éviter les doublons
       if (pendingEvents.has(eventType)) {
+        // eslint-disable-next-line no-console
+        console.log(`⚠️ [TRACKER-DEBUG] Event ${eventType} already scheduled, skipping`);
         return;
       }
 
@@ -97,8 +102,8 @@ export function useSimulatedTracker(
       timers.push(timer);
     };
 
-    // Subscribe aux changements d'état
-    const subscription = actor.subscribe((snapshot) => {
+    // Définir le callback de traitement
+    const handleSnapshot = (snapshot: any) => {
       const state = snapshot.value;
       const stateStr = JSON.stringify(state);
       
@@ -113,11 +118,20 @@ export function useSimulatedTracker(
         verbose
       );
       
+      // eslint-disable-next-line no-console
+      console.log(`📋 [TRACKER-DEBUG] Received ${scheduledEvents.length} events to schedule for state:`, JSON.stringify(state));
+      
       // Planifier tous les événements retournés
       scheduledEvents.forEach(({ event, delay, reason }) => {
         scheduleEvent(event, delay, reason);
       });
-    });
+    };
+
+    // Subscribe aux changements d'état
+    const subscription = actor.subscribe(handleSnapshot);
+
+    // 🔥 CRITICAL: Traiter l'état actuel immédiatement pour ne pas rater les événements initiaux
+    handleSnapshot(actor.getSnapshot());
 
     // Cleanup au unmount
     return () => {

@@ -19,11 +19,11 @@
  */
 
 import { createActor } from 'xstate';
-import { machineXV5Pure } from '../src/ai/fsm/machineX/machine.pure.v5.ts';
+import { machineXV5Pure } from '../src/ai/fsm/machineX/machine.pure.v5';
 import {
-    getScheduledEvents
-} from '../src/ai/fsm/machineX/shared/simulatedTrackerCore.ts';
-import { makeInitialContext } from '../src/ai/fsm/machineX/test/mockData.ts';
+  getScheduledEvents
+} from '../src/ai/fsm/machineX/shared/simulatedTrackerCore';
+import { makeInitialContext } from '../src/ai/fsm/machineX/test/mockData';
 
 // ========================================
 // Configuration

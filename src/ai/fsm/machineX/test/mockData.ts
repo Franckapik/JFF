@@ -34,7 +34,6 @@ export const mockDepartTile: Tile = {
   resources: { food: 0, debris: 0, special: 0, total: 0 },
   hasResources: false,
   biome: 'plains',
-  discovered: true,
   scanned: false,
 };
 
@@ -50,7 +49,6 @@ export const mockTiles: Record<string, Tile> = {
     walkable: true,
     collected: false,
     neighbors: ['0,0', '2,0'],
-    discovered: false,
     scanned: false,
   },
   '2,0': {
@@ -62,7 +60,6 @@ export const mockTiles: Record<string, Tile> = {
     walkable: true,
     collected: false,
     neighbors: ['0,0', '1,1', '3,3'],
-    discovered: false,
     scanned: false,
   },
   '3,3': {
@@ -74,7 +71,6 @@ export const mockTiles: Record<string, Tile> = {
     walkable: true,
     collected: false,
     neighbors: ['2,0', '7,7'],
-    discovered: false,
     scanned: false,
   },
   '7,7': {
@@ -86,7 +82,6 @@ export const mockTiles: Record<string, Tile> = {
     walkable: true,
     collected: false,
     neighbors: ['3,3'],
-    discovered: false,
     scanned: false,
   }
 };
@@ -129,7 +124,7 @@ export const mockGridConfig = {
  * @returns Contexte FSM prêt à l'emploi avec tuiles mockées
  */
 export function makeInitialContext(botId: string = 'test-bot-0'): FSMContext {
-  const baseContext = createMachineContext(botId, 'bot');
+  const baseContext = createMachineContext(botId, 'auto');
   
   return {
     ...baseContext,
@@ -161,10 +156,6 @@ export function makeInitialContext(botId: string = 'test-bot-0'): FSMContext {
       radius: mockGridConfig.radius,
       departTileCoord: mockGridConfig.departTileCoord,
       syncedAt: Date.now(),
-    },
-    injectedData: {
-      availableTiles,
-      injectedAt: Date.now(),
     },
   };
 }

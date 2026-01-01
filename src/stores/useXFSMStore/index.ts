@@ -17,13 +17,13 @@ import { machineXV5Pure } from '../../ai/fsm/machineX/machine.pure.v5';
 import { config } from '../../config.ts';
 // ✅ Phase 2: Import TileStore for grid sync
 import type {
-  BotId,
-  BotSnapshot,
-  BotStatesMap,
-  EmptyBotState,
-  XFSMStore,
-  XFSMStoreActions,
-  XFSMStoreState
+    BotId,
+    BotSnapshot,
+    BotStatesMap,
+    EmptyBotState,
+    XFSMStore,
+    XFSMStoreActions,
+    XFSMStoreState
 } from '../../types/fsm.d.ts';
 import { useTileStore } from '../useTileStore/index.ts';
 
@@ -77,33 +77,20 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
       }
     }
     
-    // ✅ Create context with positions already set (fixes areAllEntitiesInitialized guard)
-    const baseContext = createMachineContext(botId, 'auto');
-    const botContext = {
-      ...baseContext,
-      vehicle: {
-        ...baseContext.vehicle,
-        position: initialPosition,
-        basePosition: initialPosition,
-      },
-      droneFleet: {
-        ...baseContext.droneFleet,
-        drones: {
-          explorer: {
-            ...baseContext.droneFleet.drones.explorer,
-            position: initialPosition,
-          }
-        }
-      },
-      // ✅ Inject grid info immediately
-      gridInfo: tiles ? {
+    // ✅ Create context without pre-injecting positions
+    // Let the FSM initialization flow handle entity initialization via DRONE/SHIP_INITIALIZE_REQUEST
+    const botContext = createMachineContext(botId, 'auto');
+    
+    // ✅ Inject grid info immediately (tiles are needed for exploration planning)
+    if (tiles) {
+      botContext.gridInfo = {
         tiles,
         spacing: spacing ?? 1.2,
         radius: radius ?? 3,
         departTileCoord: departTile?.position?.coord,
         syncedAt: Date.now(),
-      } : baseContext.gridInfo
-    };
+      };
+    }
     
     // Configuration conditionnelle de l'inspection
     const actorConfig = { 

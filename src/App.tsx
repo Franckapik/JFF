@@ -4,6 +4,7 @@ import { useSimulatedTracker } from './ai/fsm/machineX/hooks/trackers/useSimulat
 import FSMVisualization from './components/FSMVisualization';
 import { config } from './config';
 import useGameStore from './stores/useGameStore';
+import { useTileStore } from './stores/useTileStore';
 import useXFSMStore from './stores/useXFSMStore';
 
 /**
@@ -23,15 +24,29 @@ export default function App() {
   // Initialize on mount (one-time setup, no dependencies needed)
   React.useEffect(() => {
     const gameStore = useGameStore.getState();
+    const tileStore = useTileStore.getState();
     const xfsmStore = useXFSMStore.getState();
 
-    // Initialize game state flags
+    // ✅ STEP 1: Generate tiles FIRST
+    const radius = 3;
+    const spacing = -0.2;
+    const generatedTiles = tileStore.initializeGameGrid(radius, spacing);
+    tileStore.setTiles(generatedTiles);
+    
+    console.log('🎲 [App] Tiles generated:', {
+      tilesCount: Object.keys(generatedTiles).length,
+      radius,
+      spacing,
+      tileCoords: Object.keys(generatedTiles).slice(0, 5)
+    });
+
+    // ✅ STEP 2: Initialize game state flags
     gameStore.markPlayersAsInitialized();
     gameStore.markBotsAsInitialized();
     gameStore.markTilesAsInitialized();
     gameStore.markStartingTilesAsAssigned();
 
-    // Create and start bot FSM
+    // ✅ STEP 3: Create and start bot FSM (will now read tiles from tileStore)
     xfsmStore.addBot('bot-0');
     xfsmStore.startBot('bot-0');
     

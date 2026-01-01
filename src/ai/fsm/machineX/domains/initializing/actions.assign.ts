@@ -81,6 +81,7 @@ export const processShipInitRequest = createAssignAction(({ context, event }) =>
 			position: { ...event.initialPosition, coord: basePosition.coord },
 			basePosition: basePosition,
 			type: event.shipType as "main-ship",
+			visualState: 'docked', // Mark ship as initialized
 		},
 	};
 });

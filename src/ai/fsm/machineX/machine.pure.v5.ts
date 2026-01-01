@@ -132,11 +132,11 @@ export const machineXV5Pure = setup({
     areAllEntitiesInitialized: (args) => areAllEntitiesInitialized(args.context),
 
     // Guards du domaine EVALUATION (pure) - these are XStateV5Guard format
-    hasTilesAvailable, // ✅ Uses context.injectedData or memory.knownTiles
+    hasTilesAvailable, // ✅ Uses context.gridInfo.tiles or memory.knownTiles
     canStartExploring, // ✅ Pure: combines hasTilesAvailable + shouldExplore
     shouldExplore,
     shouldMaintain,
-    shouldCollect, // ✅ Pure: uses context.injectedData.availableTiles
+    shouldCollect, // ✅ Pure: uses context.gridInfo.tiles
     
     // Guards du domaine COLLECTION (pure)
     canCollectTile,

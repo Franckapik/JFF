@@ -14,15 +14,14 @@ import type { XStateV5Guard } from '../../../../../types/xstate.v5.types.ts';
 /**
  * Pure guard: Check if tiles are available in FSM context
  * 
- * Uses injectedData.availableTiles or memory.knownTiles instead of TileStore.
- * Tiles must be injected into context before this guard can return true.
+ * Uses context.gridInfo.tiles (already populated from TileStore sync)
  * 
  * @returns true if tiles data is available in context
  */
 export const hasTilesAvailable: XStateV5Guard = ({ context }) => {
-  // Check injected tiles first (from onEvaluatingEntry effect)
-  const injectedTiles = context.injectedData?.availableTiles;
-  if (injectedTiles && injectedTiles.length > 0) return true;
+  // Check gridInfo.tiles (populated by TILES_UPDATED or initial sync)
+  const tiles = context.gridInfo?.tiles;
+  if (tiles && Object.keys(tiles).length > 0) return true;
   
   // Fallback: check known tiles in memory
   const knownTiles = context.memory?.knownTiles || [];
@@ -39,9 +38,9 @@ export const hasTilesAvailable: XStateV5Guard = ({ context }) => {
  */
 export const canStartExploring: XStateV5Guard = ({ context }) => {
   // Check 1: Tiles must be available
-  const injectedTiles = context.injectedData?.availableTiles;
+  const tiles = context.gridInfo?.tiles;
   const knownTiles = context.memory?.knownTiles || [];
-  const hasTiles = (injectedTiles && injectedTiles.length > 0) || knownTiles.length > 0;
+  const hasTiles = (tiles && Object.keys(tiles).length > 0) || knownTiles.length > 0;
   
   if (!hasTiles) return false;
   
@@ -149,41 +148,40 @@ export const shouldMaintain: XStateV5Guard = ({ context }) => {
  * 🔍 Pure guard: Check if collection is appropriate based on available tiles and vehicle state
  * 
  * Returns true when:
- * - Available tiles exist (via injected query result)
+ * - Available tiles with resources exist in gridInfo
  * - Vehicle is NOT at capacity
  * - Vehicle has sufficient fuel
  * 
- * DEPENDENCY INJECTION PATTERN:
- * This guard reads injectedData.availableTiles which is populated by onEvaluatingEntry effect.
- * The effect queries useTileStore and injects results, keeping this guard pure for testing.
+ * Uses context.gridInfo.tiles which is already populated by TILES_UPDATED event or initial sync.
  * 
- * ARCHITECTURE: Effect Zone (gets data) → Injection Zone → Guard Zone (uses data)
- * This maintains guard purity while deferring SoC boundary discussion to Phase 2.
- * 
- * @see FSM_CONTEXT_VS_STORES_ANALYSIS.md for long-term architectural options
- * 
- * @param context FSMContext containing injectedData with availableTiles
+ * @param context FSMContext containing gridInfo with tiles
  * @returns true if collection should proceed
  * 
  * @example
- * // In Node.js test (with injected data):
+ * // In Node.js test (with gridInfo):
  * const context = {
  *   vehicle: { fuel: 50, isAtCapacity: false },
  *   config: { fuelThreshold: 20 },
- *   injectedData: { 
- *     availableTiles: [{ coord: { x: 1, z: 1 } }],
- *     injectedAt: Date.now()
+ *   gridInfo: { 
+ *     tiles: { '1,1': { hasResources: true, ... } }
  *   }
  * };
  * const result = shouldCollect({ context, event: {} });
  * console.log(result); // true
  */
 export const shouldCollect: XStateV5Guard = ({ context }) => {
-  // ✅ PURE: Read injected data, not getState()
-  const availableTiles = context.injectedData?.availableTiles;
+  // ✅ PURE: Read tiles from gridInfo
+  const tiles = context.gridInfo?.tiles;
   
-  // Must have tiles available to collect
-  if (!availableTiles || availableTiles.length === 0) return false;
+  // Must have tiles available with resources
+  if (!tiles || Object.keys(tiles).length === 0) return false;
+  
+  // Check if any tile has resources
+  const hasResourceTiles = Object.values(tiles).some(tile => 
+    tile.hasResources && !tile.collected
+  );
+  
+  if (!hasResourceTiles) return false;
   
   // Vehicle state checks
   const isAtCapacity = context.vehicle?.isAtCapacity ?? false;

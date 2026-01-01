@@ -10,24 +10,23 @@
  */
 
 import type { ActorRef } from 'xstate';
-import { assign } from 'xstate';
 
-import { findTilesInRadius } from '../../../../../core/spatial/index.ts';
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
 
 /**
- * 🔍 ACTION: Inject tile data into context for shouldCollect guard
+ * ⚠️ DEPRECATED: This action is no longer needed.
  * 
- * ✅ Phase 4: Uses context.gridInfo.tiles and pure findTilesInRadius function
- * instead of useTileStore.getState().tileInRadius()
+ * Guards now read directly from context.gridInfo.tiles which is already
+ * populated by TILES_UPDATED event or initial sync in useXFSMStore.
  * 
- * DEPENDENCY INJECTION PATTERN:
- * - Uses pure findTilesInRadius with context.gridInfo.tiles ✅ (pure)
- * - Results stored in context.injectedData ✅ (context update)
- * - shouldCollect guard reads injectedData ✅ (pure, testable)
+ * The injectedData pattern was an intermediate solution that is now obsolete.
+ * All guards have been updated to use gridInfo.tiles directly.
+ * 
+ * @deprecated Use context.gridInfo.tiles directly in guards
  */
+/*
 export const assignInjectTileData = assign({
   injectedData: ({ context }) => {
     
@@ -37,7 +36,6 @@ export const assignInjectTileData = assign({
       const collectingRadius = context.config?.collectingRadius ?? 3;
       const shipCoord = shipPosition?.coord;
       
-      // ✅ Phase 4: Use pure findTilesInRadius with context.gridInfo.tiles
       const availableTiles = shipCoord ? findTilesInRadius(shipCoord, collectingRadius, tiles) : [];
       
       fsmLogger.info('[assignInjectTileData] Query result:', {
@@ -63,6 +61,7 @@ export const assignInjectTileData = assign({
     }
   },
 });
+*/
 
 /**
  * Action d'entrée de l'état evaluating : logique de décision prioritaire

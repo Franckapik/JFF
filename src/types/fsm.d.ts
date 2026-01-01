@@ -149,51 +149,35 @@ export interface FSMContext {
   droneFleet: DroneFleet;
 
   // ========================================================================
-  // 🔍 DEPENDENCY INJECTION PATTERN - For Pure Guard Testing
+  // ⚠️ DEPRECATED: DEPENDENCY INJECTION PATTERN - No Longer Used
   // ========================================================================
-  // This zone holds query results injected by effects, allowing guards to
-  // remain pure (100% testable in Node.js without React/Zustand coupling).
+  // This zone was used to hold query results injected by effects, allowing
+  // guards to remain pure. This pattern is now OBSOLETE.
   // 
-  // PATTERN: Effects execute getState() queries here, guards read results.
-  // TEMPORARY SCAFFOLDING: Marked for Phase 2 SoC (Separation of Concerns)
-  // discussion to determine permanent architectural boundary.
+  // REPLACEMENT: Guards now read directly from context.gridInfo.tiles which
+  // is populated by TILES_UPDATED event or initial sync in useXFSMStore.
+  // This eliminates the need for a separate injection layer.
+  // 
+  // @deprecated Use context.gridInfo.tiles directly in guards
   // ========================================================================
   injectedData?: {
     /**
-     * Tiles available for collection within collecting radius.
-     * 
-     * FUTURE REFACTORING OPPORTUNITIES (Phase 2):
-     * - Should tile queries be batched?
-     * - Should we cache with TTL (time-to-live)?
-     * - Should exploration and collection share same query?
-     * - Could we use a service layer instead of injection?
-     * 
-     * @see FSM_CONTEXT_VS_STORES_ANALYSIS.md for architectural options
+     * @deprecated Use context.gridInfo.tiles instead
      */
     availableTiles?: Tile[];
 
     /**
-     * Nearby collectible tiles with pre-computed distances.
-     * Used by collection domain guards for candidate selection.
-     * 
-     * FUTURE: Could be replaced by on-demand distance calculation
-     * or replaced with a Query Actor pattern in Phase 2.
+     * @deprecated Use context.gridInfo.tiles with distance calculations
      */
     nearbyCollectibleTiles?: Array<Tile & { distance: number }>;
 
     /**
-     * Can the current vehicle reach base from current position?
-     * Pre-computed in effect to avoid expensive pathfinding in guard.
-     * 
-     * FUTURE: Consider whether pathfinding belongs in context or service.
+     * @deprecated Compute this in guards if needed
      */
     canReachBase?: boolean;
 
     /**
-     * Timestamp when data was injected.
-     * 
-     * FUTURE: Could enforce cache validity/freshness in Phase 2.
-     * Example: if (Date.now() - injectedAt > 1000) recompute
+     * @deprecated No longer needed
      */
     injectedAt?: number;
   };
