@@ -10,7 +10,7 @@
 
 import { assign } from 'xstate';
 
-import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial/index.ts';
+import { calculateDistance, findTilesInRadius, selectRandomTile } from '../../../../../core/spatial/index.ts';
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
@@ -43,15 +43,52 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
   
   
   if (event.type === 'NEED_COLLECTING') {
-    // ✅ Phase 4: Use context.gridInfo instead of useTileStore.getState()
+    // ✅ Phase 5: Priorité aux tuiles explorées (memory.knownTiles) avec ressources
     const tiles = context.gridInfo?.tiles || {};
     const shipPosition = context.vehicle?.position;
+    const knownTiles = context.memory?.knownTiles || [];
     
-    // Sélectionner une tuile aléatoire dans un rayon pour la collecte
-    const collectingRadius = context.config?.collectingRadius ?? 3;
-    const startCoord = shipPosition?.coord;
-    const candidateTiles = startCoord ? findTilesInRadius(startCoord, collectingRadius, tiles) : [];
-    const targetVehicleTile = selectRandomTile(candidateTiles);
+    // 1️⃣ PRIORITÉ: Chercher une tuile explorée avec ressources non collectées
+    const knownTilesWithResources = knownTiles.filter(tile => 
+      tile?.resources && 
+      tile.resources.total > 0 && 
+      !tile.collected &&
+      tile.hasResources
+    );
+    
+    let targetVehicleTile = null;
+    
+    if (knownTilesWithResources.length > 0) {
+      // Sélectionner la tuile avec le plus de ressources
+      targetVehicleTile = knownTilesWithResources.reduce((best, current) => 
+        (current.resources?.total || 0) > (best.resources?.total || 0) ? current : best
+      );
+      
+      fsmLogger.info(`🎯 [${context.entityId}] Targeting explored tile with resources:`, {
+        coord: targetVehicleTile.position?.coord,
+        resources: targetVehicleTile.resources,
+        totalKnownTiles: knownTiles.length,
+        tilesWithResources: knownTilesWithResources.length
+      });
+    } else {
+      // 2️⃣ FALLBACK: Si aucune tuile connue avec ressources, chercher dans un rayon aléatoire
+      const collectingRadius = context.config?.collectingRadius ?? 3;
+      const startCoord = shipPosition?.coord;
+      const candidateTiles = startCoord ? findTilesInRadius(startCoord, collectingRadius, tiles) : [];
+      const tilesWithResources = candidateTiles.filter(tile => 
+        tile?.resources && tile.resources.total > 0 && !tile.collected
+      );
+      
+      targetVehicleTile = tilesWithResources.length > 0 
+        ? selectRandomTile(tilesWithResources)
+        : selectRandomTile(candidateTiles);
+      
+      fsmLogger.info(`🔀 [${context.entityId}] No explored tiles available, using random tile:`, {
+        coord: targetVehicleTile?.position?.coord,
+        candidatesChecked: candidateTiles.length,
+        withResources: tilesWithResources.length
+      });
+    }
     
     if (!targetVehicleTile) {
       return {};
@@ -71,6 +108,12 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     // Mise à jour complète du contexte en une seule fois
     const targetVehicleTileObj = targetVehicleTile;
     
+    // ✅ Calculer la consommation de fuel basée sur la distance
+    const distance = calculateDistance(shipPosition, consistentTargetPos);
+    const fuelConsumption = Math.max(1, Math.floor(distance * 0.5)); // 0.5 fuel par unité de distance
+    const currentFuel = context.vehicle?.fuel || 100;
+    const newFuel = Math.max(0, currentFuel - fuelConsumption);
+    
     // Calculer coord pour la position pendant le mouvement
     // Ici coord=null pour optimiser pendant le déplacement
     const positionWithCoord = { ...shipPosition, coord: null as string | null };
@@ -83,7 +126,8 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
         isMoving: true, // ✅ IMPORTANT: Le vaisseau est en mouvement vers sa cible
         progress: 0, // Reset du progrès
         currentSpeed: context.vehicle?.maxSpeed || 1,
-        visualState: 'moving_to_tile' as VehicleVisualState
+        visualState: 'moving_to_tile' as VehicleVisualState,
+        fuel: newFuel // ✅ Déduire le fuel consommé
       },
       lastAction: 'shipMovingToTile_success',
       fsmState: 'collecting_ship_moving_to_tile', // 🟢 Mise à jour de l'état global FSM
@@ -92,7 +136,10 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     fsmLogger.info(`✅ [${context.entityId}] Ship movement setup result:`, {
       hasVehicle: !!updatedContext.vehicle,
       targetVehicleTile: updatedContext.vehicle?.targetVehicleTile,
-      isMoving: updatedContext.vehicle?.isMoving
+      isMoving: updatedContext.vehicle?.isMoving,
+      distance: distance.toFixed(2),
+      fuelConsumed: fuelConsumption,
+      fuelRemaining: newFuel
     });
     
     return updatedContext;
@@ -117,10 +164,16 @@ export const assignShipCollectingContext = createAssignAction(({ context, event 
     return {};
   }
   
+  const targetTilePosition = context.vehicle.targetVehicleTile?.position;
+  const arrivedPosition = targetTilePosition
+    ? { ...targetTilePosition, y: targetTilePosition.y ?? 0.5 }
+    : context.vehicle.position;
+
   
   return {
     vehicle: {
       ...context.vehicle,
+      position: arrivedPosition,
       isMoving: false, // ✅ IMPORTANT: Le vaisseau s'arrête pour collecter
       progress: 100, // Arrivé à destination
       currentSpeed: 0,
@@ -190,14 +243,21 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
     return {};
   }
   
+  const basePosition = context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0, coord: '0,0' };
   fsmLogger.action(`🏠 [${context.entityId}] Ship reached base - ready for maintenance`, {
     vehicleResources: context.vehicle.resources,
     vehicleState: context.vehicle.visualState
   });
+
+  const dockedPosition = {
+    ...basePosition,
+    y: basePosition.y ?? 0.5
+  };
   
   return {
     vehicle: {
       ...context.vehicle,
+      position: dockedPosition,
       isMoving: false, // ✅ IMPORTANT: Le vaisseau s'arrête à la base
       progress: 100, // Arrivé à la base
       currentSpeed: 0,
@@ -258,6 +318,107 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
       hasTileStoreData,
       contextTiles: context.gridInfo?.tiles ? Object.keys(context.gridInfo.tiles) : []
     });
+    
+    // ✅ FIX: Même si la tuile est vide, SYNCHRONISER le contexte FSM
+    // Cela évite la boucle infinie car le contexte sera mis à jour
+    if (currentTile) {
+      const emptyResources = { food: 0, debris: 0, special: 0, total: 0 };
+      
+      // Mettre à jour memory.knownTiles avec les ressources vides et le flag collected
+      const updatedKnownTiles = context.memory?.knownTiles?.map(tile => {
+        if (tile.position?.coord === tileCoord) {
+          return {
+            ...tile,
+            resources: emptyResources,
+            collected: true,  // ✅ Marquer comme collectée
+            hasResources: false
+          };
+        }
+        return tile;
+      }) || [];
+      
+      // Mettre à jour gridInfo.tiles aussi pour assurer la cohérence
+      const updatedGridTiles = context.gridInfo?.tiles ? {
+        ...context.gridInfo.tiles,
+        [tileCoord]: {
+          ...context.gridInfo.tiles[tileCoord],
+          resources: emptyResources,
+          collected: true,
+          hasResources: false
+        }
+      } : {};
+      
+      fsmLogger.info(`🔄 [${context.entityId}] Synchronizing FSM context with empty tile`, {
+        tileCoord,
+        updatedKnownTilesCount: updatedKnownTiles.length
+      });
+      
+      // ✅ CRITICAL FIX: Recalculer une nouvelle tuile cible après synchronisation
+      // pour éviter la boucle infinie ship_moving_to_tile → ship_collecting
+      let newTargetVehicleTile = null;
+      const shipPosition = context.vehicle?.position;
+      
+      // 1️⃣ PRIORITÉ: Chercher une autre tuile explorée avec ressources non collectées
+      const remainingTilesWithResources = updatedKnownTiles.filter(tile => 
+        tile?.resources && 
+        tile.resources.total > 0 && 
+        !tile.collected &&
+        tile.hasResources &&
+        tile.position?.coord !== tileCoord // ❌ EXCLURE la tuile actuelle !
+      );
+      
+      if (remainingTilesWithResources.length > 0) {
+        // Sélectionner la tuile avec le plus de ressources
+        newTargetVehicleTile = remainingTilesWithResources.reduce((best, current) => 
+          (current.resources?.total || 0) > (best.resources?.total || 0) ? current : best
+        );
+        
+        fsmLogger.info(`🎯 [${context.entityId}] Found new target tile after synchronization:`, {
+          newTarget: newTargetVehicleTile.position?.coord,
+          resources: newTargetVehicleTile.resources,
+          remainingCandidates: remainingTilesWithResources.length
+        });
+      } else {
+        // 2️⃣ FALLBACK: Chercher dans un rayon aléatoire (exclure tuile actuelle)
+        const collectingRadius = context.config?.collectingRadius ?? 3;
+        const startCoord = shipPosition?.coord;
+        const candidateTiles = startCoord ? findTilesInRadius(startCoord, collectingRadius, updatedGridTiles) : [];
+        const tilesWithResources = candidateTiles.filter(tile => 
+          tile?.resources && 
+          tile.resources.total > 0 && 
+          !tile.collected &&
+          tile.position?.coord !== tileCoord // ❌ EXCLURE la tuile actuelle !
+        );
+        
+        if (tilesWithResources.length > 0) {
+          newTargetVehicleTile = selectRandomTile(tilesWithResources);
+          fsmLogger.info(`🔀 [${context.entityId}] Selected fallback target after sync:`, {
+            newTarget: newTargetVehicleTile?.position?.coord,
+            candidatesChecked: candidateTiles.length,
+            withResources: tilesWithResources.length
+          });
+        } else {
+          fsmLogger.warn(`⚠️ [${context.entityId}] No alternative tiles found after synchronization`);
+        }
+      }
+      
+      return {
+        memory: {
+          ...context.memory,
+          knownTiles: updatedKnownTiles
+        },
+        gridInfo: {
+          ...context.gridInfo,
+          tiles: updatedGridTiles
+        },
+        vehicle: {
+          ...context.vehicle,
+          targetVehicleTile: newTargetVehicleTile // ✅ NOUVELLE CIBLE OU NULL si aucune
+        },
+        lastAction: 'shipLoadResources_emptyTile_synced'
+      };
+    }
+    
     return {};
   }
 
@@ -337,7 +498,7 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
   newResources.total = newResources.food + newResources.debris + newResources.special;
   
   // Obtenir l'état actuel de la tuile après collecte (le store l'a mise à jour)
-  // In Node.js test, simulate the tile being emptied
+  // ✅ IMPORTANT: Récupérer TOUS les attributs de la tuile, y compris le flag 'collected'
   const updatedTile = useStore 
     ? tileStoreState.tiles[tileCoord]
     : {
@@ -352,9 +513,13 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
   
   if (!useStore && updatedTile.resources) {
     updatedTile.resources.total = updatedTile.resources.food + updatedTile.resources.debris + updatedTile.resources.special;
+    // ✅ FIX: Dans l'environnement Node.js, marquer la tile comme collectée si elle est vide
+    updatedTile.collected = updatedTile.resources.total <= 0;
   }
   
   const remainingTileResources = updatedTile.resources;
+  // ✅ Récupérer le flag 'collected' réel depuis le TileStore ou du calcul Node.js
+  const tileCollectedFlag = updatedTile.collected || false;
 
   // Vérifier si le véhicule est maintenant plein ou presque plein (>80%)
   const isVehicleNearFull = newResources.total >= (maxCapacity * 0.8);
@@ -364,6 +529,7 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
   fsmLogger.action(`📦 [${context.entityId}] Resources transferred from tile:`, {
     tileCoord,
     tileResourcesAfter: remainingTileResources,
+    tileCollectedFlag,  // ✅ Logger le flag réel
     collected: resourcesCollected,
     vehicleResourcesBefore: currentResources,
     vehicleResourcesAfter: newResources,
@@ -374,16 +540,55 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
     shouldReturn: shouldReturnToBase
   });
   
+  // ✅ FIX: Mettre à jour memory.knownTiles avec le flag 'collected' RÉEL 
+  const updatedKnownTiles = context.memory?.knownTiles?.map(tile => {
+    if (tile.position?.coord === tileCoord) {
+      const hasResources = remainingTileResources.total > 0;
+      return {
+        ...tile,
+        resources: remainingTileResources,
+        collected: tileCollectedFlag,  // ✅ Utiliser le flag réel (TileStore ou calcul Node.js)
+        hasResources
+      };
+    }
+    return tile;
+  }) || [];
+  
+  // ✅ FIX: Si la tuile actuelle est maintenant collectée, trouver la prochaine tuile à cibler
+  let nextTargetTile = targetTile;
+  if (tileCollectedFlag || remainingTileResources.total <= 0) {
+    // Chercher une autre tuile explorée avec des ressources
+    const remainingTiles = updatedKnownTiles.filter(tile => 
+      tile?.resources && 
+      tile.resources.total > 0 && 
+      !tile.collected &&
+      tile.hasResources &&
+      tile.position?.coord !== tileCoord  // Pas la tuile actuelle
+    );
+    
+    if (remainingTiles.length > 0) {
+      // Choisir la tuile avec le plus de ressources
+      nextTargetTile = remainingTiles.reduce((best, current) => 
+        (current.resources?.total || 0) > (best.resources?.total || 0) ? current : best
+      );
+      fsmLogger.info(`🔄 [${context.entityId}] Current tile collected, switching to next best tile:`, {
+        previousTile: tileCoord,
+        nextTile: nextTargetTile.position?.coord,
+        nextResources: nextTargetTile.resources
+      });
+    }
+  }
+  
   return {
     vehicle: {
       ...context.vehicle,
       resources: newResources,
       // Mettre à jour la référence à la tuile cible avec les nouvelles ressources
-      targetVehicleTile: {
-        ...targetTile,
-        resources: remainingTileResources,
-        collected: tileIsEmpty
-      }
+      targetVehicleTile: nextTargetTile  // ✅ Utiliser la nouvelle cible si disponible
+    },
+    memory: {
+      ...context.memory,
+      knownTiles: updatedKnownTiles
     },
     lastAction: 'shipLoadResources_success',
     // Ajouter une indication sur le prochain état recommandé pour la FSM

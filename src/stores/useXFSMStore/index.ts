@@ -17,13 +17,13 @@ import { machineXV5Pure } from '../../ai/fsm/machineX/machine.pure.v5';
 import { config } from '../../config.ts';
 // ✅ Phase 2: Import TileStore for grid sync
 import type {
-    BotId,
-    BotSnapshot,
-    BotStatesMap,
-    EmptyBotState,
-    XFSMStore,
-    XFSMStoreActions,
-    XFSMStoreState
+  BotId,
+  BotSnapshot,
+  BotStatesMap,
+  EmptyBotState,
+  XFSMStore,
+  XFSMStoreActions,
+  XFSMStoreState
 } from '../../types/fsm.d.ts';
 import { useTileStore } from '../useTileStore/index.ts';
 

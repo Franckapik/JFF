@@ -77,13 +77,17 @@ export function useSimulatedTracker(
     const scheduleEvent = (event: MachineEvents, delay: number, reason?: string): void => {
       const eventType = event.type;
       
-      // eslint-disable-next-line no-console
-      console.log(`📌 [TRACKER-DEBUG] Scheduling ${eventType} in ${delay}ms (verbose=${verbose}, reason=${reason || 'none'})`);
+      if (verbose) {
+        // eslint-disable-next-line no-console
+        console.log(`📌 [TRACKER] ${eventType} in ${delay}ms`);
+      }
       
       // Éviter les doublons
       if (pendingEvents.has(eventType)) {
-        // eslint-disable-next-line no-console
-        console.log(`⚠️ [TRACKER-DEBUG] Event ${eventType} already scheduled, skipping`);
+        if (verbose) {
+          // eslint-disable-next-line no-console
+          console.log(`⚠️ [TRACKER] ${eventType} already scheduled`);
+        }
         return;
       }
 
@@ -92,7 +96,7 @@ export function useSimulatedTracker(
       const timer = setTimeout(() => {
         if (verbose) {
           // eslint-disable-next-line no-console
-          console.log(`\n🤖 [TRACKER] Sending: ${eventType}${reason ? ` (${reason})` : ''}\n`);
+          console.log(`🤖 [TRACKER] Sending: ${eventType}${reason ? ` (${reason})` : ''}`);
         }
         
         actor.send(event);
@@ -119,7 +123,7 @@ export function useSimulatedTracker(
       );
       
       // eslint-disable-next-line no-console
-      console.log(`📋 [TRACKER-DEBUG] Received ${scheduledEvents.length} events to schedule for state:`, JSON.stringify(state));
+      console.log(`📋 [TRACKER] Scheduling ${scheduledEvents.length} events for:`, JSON.stringify(state));
       
       // Planifier tous les événements retournés
       scheduledEvents.forEach(({ event, delay, reason }) => {

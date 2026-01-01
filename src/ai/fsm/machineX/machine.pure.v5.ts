@@ -41,7 +41,7 @@ import { updateDronePosition, updateGridInfo, updateShipPosition } from './domai
 import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign.ts';
 import { onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects.ts';
 import { assignShipDepositResourcesContext, assignShipRefuelContext, assignShipRepairContext } from './domains/maintenance/actions.assign.ts';
-import { onMaintainingEntry, onMaintainingExit, onShipDepositingEntry, onShipDepositingExit, onShipOnBaseEntry, onShipOnBaseExit, onShipRefuelingEntry, onShipRefuelingExit, onShipRepairingEntry, onShipRepairingExit } from './domains/maintenance/actions.effects.ts';
+import { onMaintainingEntry, onMaintainingExit, onShipDepositingEntry, onShipDepositingExit, onShipRefuelingEntry, onShipRefuelingExit, onShipRepairingEntry, onShipRepairingExit } from './domains/maintenance/actions.effects.ts';
 import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure.ts';
 
 // ✅ Phase 1: Pure guards from collection domain
@@ -110,8 +110,6 @@ export const machineXV5Pure = setup({
     assignShipRefuelContext,
     onMaintainingEntry,
     onMaintainingExit,
-    onShipOnBaseEntry,
-    onShipOnBaseExit,
     onShipDepositingEntry,
     onShipDepositingExit,
     onShipRepairingEntry,
@@ -205,7 +203,7 @@ export const machineXV5Pure = setup({
    * État EVALUATING - Évalue les conditions pour choisir la prochaine action
    */
     evaluating: {
-      entry: 'onEvaluatingEntry',
+      entry: ['assignEvaluationContext', 'onEvaluatingEntry'],
       exit: 'onEvaluatingExit',
 
       // Transitions manuelles (en cas d'événements explicites)
@@ -341,75 +339,53 @@ export const machineXV5Pure = setup({
 
     /**
      * État MAINTAINING - Gère la maintenance (dépôt, réparation, carburant)
+     * Structure simplifiée : transitions automatiques directes depuis l'état parent
      */
     maintaining: {
       entry: 'onMaintainingEntry',
       exit: 'onMaintainingExit',
-      initial: 'ship_on_base',
+      initial: 'depositing',
+      
+      // Transitions automatiques vers les tâches de maintenance (depuis l'état parent)
+      // ⚠️ IMPORTANT: Les actions assign sont RETIRÉES d'ici pour respecter le scénario Gherkin
+      // Le dépôt/refuel/repair se fera lors de la réception des événements SHIP_DEPOSIT_COMPLETE, etc.
+      always: [
+        {
+          target: '.depositing',
+          guard: 'needsDeposit'
+        },
+        {
+          target: '.refueling',
+          guard: 'needsRefuel'
+        },
+        {
+          target: '.repairing',
+          guard: 'needsRepair'
+        },
+        {
+          target: '#machineXV5Pure.evaluating'
+        }
+      ],
       
       states: {
-        ship_on_base: {
-          entry: 'onShipOnBaseEntry',
-          exit: 'onShipOnBaseExit',
-          
-          // Transitions automatiques vers les tâches de maintenance
-          always: [
-            {
-              target: 'depositing',
-              guard: 'needsDeposit',
-              actions: 'assignShipDepositResourcesContext'
-            },
-            {
-              target: 'refueling',
-              guard: 'needsRefuel',
-              actions: 'assignShipRefuelContext'
-            },
-            {
-              target: 'repairing',
-              guard: 'needsRepair',
-              actions: 'assignShipRepairContext'
-            },
-            {
-              target: '#machineXV5Pure.evaluating'
-            }
-          ],
-          
-          // Transitions manuelles
-          on: {
-            SHIP_START_DEPOSIT: 'depositing',
-            SHIP_START_REPAIR: 'repairing',
-            SHIP_START_REFUEL: 'refueling'
-          }
-        },
-        
         depositing: {
           entry: ['onShipDepositingEntry'],
           exit: 'onShipDepositingExit',
-          always: [
-            {
-              target: 'refueling',
-              guard: 'needsRefuel'
-            },
-            {
-              target: 'repairing', 
-              guard: 'needsRepair'
-            },
-            {
-              target: '#machineXV5Pure.evaluating'
-            }
-          ],
           on: {
             SHIP_DEPOSIT_COMPLETE: [
               {
                 target: 'refueling',
-                guard: 'needsRefuel'
+                guard: 'needsRefuel',
+                actions: 'assignShipDepositResourcesContext' // ✅ Dépôt UNIQUEMENT lors de l'événement
               },
               {
                 target: 'repairing',
-                guard: 'needsRepair'
+                guard: 'needsRepair',
+                actions: 'assignShipDepositResourcesContext' // ✅ Dépôt UNIQUEMENT lors de l'événement
               },
               {
-                target: '#machineXV5Pure.evaluating'
+                target: '#machineXV5Pure.evaluating',
+                actions: 'assignShipDepositResourcesContext' // ✅ Dépôt UNIQUEMENT lors de l'événement
               }
             ]
           }
@@ -456,9 +432,12 @@ export const machineXV5Pure = setup({
         }
       },
       
-      // Événement d'urgence pour revenir à la base
+      // Événement d'urgence redémarre l'évaluation des besoins de maintenance
       on: {
-        EMERGENCY_STOP: '.ship_on_base'
+        EMERGENCY_STOP: {
+          target: '.depositing',
+          guard: 'needsDeposit'
+        }
       }
     }
   }

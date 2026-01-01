@@ -99,3 +99,28 @@ Le contexte FSM doit etre clair vis à vis de la séparation avec les stores Zus
 Je dois faire une liste permettant de comprendre les poitn sobligatoire pour le bon déroulement d'un cycle :
 
 App : Scene :
+
+
+
+22:12:09 → {"collecting":"ship_moving_to_tile"}
+22:12:09 → evaluating
+22:12:07 → {"maintaining":"depositing"}
+22:12:05 → {"collecting":"ship_returning"}
+22:12:03 → {"collecting":"ship_collecting"}
+22:12:01 → {"collecting":"ship_moving_to_tile"}
+22:12:01 → evaluating
+22:12:00 → {"maintaining":"depositing"}
+22:11:57 → {"collecting":"ship_returning"}
+22:11:56 → {"collecting":"ship_collecting"}
+22:11:54 → {"collecting":"ship_moving_to_tile"}
+22:11:54 → evaluating
+22:11:53 → {"maintaining":"depositing"}
+22:11:51 → {"collecting":"ship_returning"}
+22:11:50 → {"collecting":"ship_collecting"}
+22:11:49 → {"collecting":"ship_moving_to_tile"}
+22:11:49 → evaluating
+22:11:47 → {"maintaining":"depositing"}
+22:11:44 → {"collecting":"ship_returning"}
+22:11:43 → {"collecting":"ship_collecting"}
+
+

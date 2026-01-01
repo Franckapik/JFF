@@ -112,7 +112,7 @@ const createTileResourceSlice = (_set: unknown, get: () => TileStoreType): TileR
      * Cette fonction :
      * 1. Vérifie l'existence et l'état de la tuile
      * 2. Récupère toutes les ressources disponibles
-     * 3. Met à jour la tuile avec un état "collecté"
+     * 3. Met à jour la tuile (marque collectée SEULEMENT si total === 0)
      * 4. Retourne les ressources collectées
      * 
      * @param coord - Coordonnée de la tuile à collecter
@@ -126,6 +126,12 @@ const createTileResourceSlice = (_set: unknown, get: () => TileStoreType): TileR
         return { food: 0, debris: 0, special: 0, total: 0 };
       }
       
+      // ⚠️ FIX: Ne pas collecter si déjà marquée comme collectée
+      if (tile.collected) {
+        fsmLogger.warn(`[TileResourceSlice] Tile ${coord} already collected by ${tile.collectedBy}, skipping`);
+        return { food: 0, debris: 0, special: 0, total: 0 };
+      }
+      
       // Calculer les ressources à collecter en fonction du pourcentage restant
       const resourcePercentage = tile.resourcePercentage ?? 100;
       const actualResources = {
@@ -136,11 +142,15 @@ const createTileResourceSlice = (_set: unknown, get: () => TileStoreType): TileR
       };
       actualResources.total = actualResources.food + actualResources.debris + actualResources.special;
       
-      // Marquer la tuile comme collectée
+      // ✅ FIX: On collecte toute la ressource disponible puis on vide la tuile
+      const remainingResources = { food: 0, debris: 0, special: 0, total: 0 };
+      const tileIsNowEmpty = true;
+      
       get().updateTile(coord, {
-        collected: true,
+        collected: tileIsNowEmpty,
         collectedAt: Date.now(),
         collectedBy: collector,
+        resources: remainingResources,
         resourcePercentage: 0,
         hasResources: false
       });

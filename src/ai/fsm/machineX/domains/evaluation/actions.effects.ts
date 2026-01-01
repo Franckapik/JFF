@@ -73,36 +73,41 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
   const fuel = vehicle?.fuel || 100;
   const damage = vehicle?.damage || 0;
   const isDroneAvailable = context.droneFleet?.drones?.explorer?.visualState === 'docked';
+  
+  // ✅ FIX: Check which tiles have resources and are not collected
+  const knownTiles = context.memory?.knownTiles || [];
+  const hasCollectibleTiles = knownTiles.some(tile => 
+    tile?.hasResources && !tile.collected && tile.resources?.total > 0
+  );
+  
   fsmLogger.info(`[Evaluating] Conditions`, {
     fuel,
     damage,
     needsMaintenance: fuel < 30 || damage > 50,
-    hasCollectibleTiles: false,
+    hasCollectibleTiles, // ✅ Now uses actual known tiles
     isShipNotFull: !context.vehicle?.isAtCapacity,
     isDroneAvailable,
     explorationQueueLength: context.explorationQueue?.length,
-    droneState: context.droneFleet?.drones?.explorer?.visualState
+    droneState: context.droneFleet?.drones?.explorer?.visualState,
+    knownTilesCount: knownTiles.length
   });
+  
   setTimeout(() => {
     if (fuel < 30 || damage > 50) {
       fsmLogger.info(`[Evaluating] → NEED_MAINTENANCE (maintenance needed)`);
       self.send({ type: 'NEED_MAINTENANCE' } as MachineEvents);
-    } else {
-      // Tester d'abord l'exploration avec le guard shouldExplore
+    } 
+    // ✅ PRIORITY 1: COLLECT before exploring (if collectible tiles exist)
+    else if (hasCollectibleTiles && !vehicle?.isAtCapacity) {
+      fsmLogger.info(`[Evaluating] → NEED_COLLECTING (collectible tiles available)`, {
+        tilesCount: knownTiles.filter(t => t?.hasResources && !t.collected).length
+      });
+      self.send({ type: 'NEED_COLLECTING' } as MachineEvents);
+    }
+    // ✅ PRIORITY 2: EXPLORE if no collectible tiles or ship is at capacity
+    else {
+      fsmLogger.info(`[Evaluating] → NEED_EXPLORING (no collectible tiles or ship at capacity)`);
       self.send({ type: 'NEED_EXPLORING' } as MachineEvents);
-      
-      // Si shouldExplore échoue ET que le drone n'est pas en cours d'exploration,
-      // alors tester la collecte après un délai
-      const isDroneExploring = context.droneFleet?.drones?.explorer?.visualState === 'deploying' || 
-                              context.droneFleet?.drones?.explorer?.visualState === 'scanning' ||
-                              context.droneFleet?.drones?.explorer?.visualState === 'returning';
-      
-      if (!isDroneExploring) {
-        setTimeout(() => {
-          fsmLogger.info(`[Evaluating] → Testing NEED_COLLECTING (exploration may be complete)`);
-          self.send({ type: 'NEED_COLLECTING' } as MachineEvents);
-        }, 50);
-      }
     }
   }, 100);
 };

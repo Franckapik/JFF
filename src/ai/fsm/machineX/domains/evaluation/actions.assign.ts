@@ -21,10 +21,28 @@ function createAssignAction(
 
 /**
  * Assign action pour l'évaluation initiale du contexte
- * Actuellement pas d'action assign spécifique pour l'évaluation,
- * la logique de décision se fait dans les effets de bord
+ * Réinitialise le compteur d'exploration si toutes les tuiles connues sont collectées
  */
 export const assignEvaluationContext = createAssignAction(({ context: _context, event: _event }) => {
+  
+  // ✅ FIX: Vérifier si toutes les tuiles connues ont été collectées
+  const knownTiles = _context.memory?.knownTiles || [];
+  const allTilesCollected = knownTiles.length > 0 && knownTiles.every(tile => tile.collected || !tile.hasResources);
+  
+  // Si toutes les tuiles sont collectées, réinitialiser le compteur d'exploration
+  // pour permettre un nouveau cycle d'exploration
+  if (allTilesCollected && (_context.memory?.stats?.tilesExploredInCycle ?? 0) > 0) {
+    return {
+      memory: {
+        ..._context.memory,
+        stats: {
+          ..._context.memory?.stats,
+          tilesExploredInCycle: 0
+        }
+      },
+      lastAction: 'evaluationCycleReset_allTilesCollected'
+    };
+  }
   
   // Pour le moment, l'évaluation ne modifie pas le contexte directement
   // La logique de décision se fait dans onEvaluatingEntry

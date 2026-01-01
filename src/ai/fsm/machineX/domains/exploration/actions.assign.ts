@@ -7,7 +7,7 @@
 
 import { assign } from 'xstate';
 
-import { findTilesInRadius, selectRandomTile } from '../../../../../core/spatial/index.ts';
+import { calculateDistance, findTilesInRadius, selectRandomTile } from '../../../../../core/spatial/index.ts';
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import type { DroneVisualState } from '../../../../../types/drone.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
@@ -58,6 +58,14 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
   if (!targetDroneTile) {
     return {};
   }
+  
+  // ✅ Calculer la consommation de fuel du drone basée sur la distance
+  const dronePos = context.droneFleet?.drones?.explorer?.position || shipPosition;
+  const distance = calculateDistance(dronePos, targetDroneTile.position);
+  const fuelConsumption = Math.max(1, Math.floor(distance * 0.3)); // 0.3 fuel par unité (drone plus efficace)
+  const currentFuel = context.vehicle?.fuel || 100;
+  const newFuel = Math.max(0, currentFuel - fuelConsumption);
+  
   const droneType = 'explorer';
   const droneState: DroneVisualState = 'deploying';
   const updatedDrone = {
@@ -69,6 +77,10 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
     lastUpdate: Date.now()
   };
   const updatedContext = {
+    vehicle: {
+      ...context.vehicle,
+      fuel: newFuel // ✅ Déduire le fuel consommé par le drone
+    },
     droneFleet: {
       ...context.droneFleet,
       currentMission: {
@@ -90,6 +102,13 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
     lastAction: 'droneDeployForExploration_success',
     fsmState: 'exploring_deploying',
   };
+  
+  fsmLogger.info(`✅ [${context.entityId}] Drone deploying with fuel consumption:`, {
+    distance: distance.toFixed(2),
+    fuelConsumed: fuelConsumption,
+    fuelRemaining: newFuel
+  });
+  
   return updatedContext;
 });
 
@@ -101,16 +120,25 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
   if (!targetDroneTile) {
     return {};
   }
+  const scannedPosition = {
+    ...targetDroneTile.position,
+    y: targetDroneTile.position.y ?? 0.5
+  };
   // Incrémentation des compteurs d'exploration (global et par cycle)
   const currentCount = typeof context.explorationCount === 'number' ? context.explorationCount : 0;
   const currentCycleCount = context.memory?.stats?.tilesExploredInCycle ?? 0;
+  const updatedExplorer = {
+    ...context.droneFleet.drones.explorer,
+    position: scannedPosition,
+    isMoving: false
+  };
   return {
     droneFleet: {
       ...context.droneFleet,
       drones: {
         ...context.droneFleet.drones,
         explorer: {
-          ...context.droneFleet.drones.explorer,
+          ...updatedExplorer,
           targetDroneTile: null
         }
       }
@@ -196,6 +224,11 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
     return {};
   }
   
+  const basePosition = context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0, coord: '0,0' };
+  const dockedPosition = {
+    ...basePosition,
+    y: basePosition.y ?? 0.5
+  };
   
   const droneState: DroneVisualState = 'docked';
   
@@ -207,6 +240,8 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
         explorer: {
           ...context.droneFleet.drones.explorer,
           visualState: droneState,
+          position: dockedPosition,
+          targetDroneTile: null,
           isActive: false,
           isMoving: false,
           lastUpdate: Date.now()

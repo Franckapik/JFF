@@ -58,6 +58,18 @@ export const assignShipDepositResourcesContext = createAssignAction(({ context, 
     totalGained: vehicleResources.total || 0
   });
   
+  // ✅ FIX: Réinitialiser le compteur d'exploration par cycle après le dépôt
+  // Cela permet de recommencer un nouveau cycle exploration → collection → maintenance
+  const resetStats = {
+    ...context.memory?.stats,
+    tilesExploredInCycle: 0
+  };
+  
+  fsmLogger.info(`🔄 [${context.entityId}] Resetting exploration cycle counter after deposit`, {
+    previousCount: context.memory?.stats?.tilesExploredInCycle ?? 0,
+    newCount: 0
+  });
+  
   return {
     vehicle: {
       ...context.vehicle,
@@ -67,6 +79,10 @@ export const assignShipDepositResourcesContext = createAssignAction(({ context, 
     score: {
       ...context.score,
       resources: newScore
+    },
+    memory: {
+      ...context.memory,
+      stats: resetStats
     },
     lastAction: 'resourcesDeposited_success',
     fsmState: 'maintaining_depositing',
