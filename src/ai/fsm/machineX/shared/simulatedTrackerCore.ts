@@ -150,7 +150,7 @@ export function getExploringEvents(
   context: FSMContext,
   verbose: boolean = false
 ): ScheduledEvent[] {
-  const { dronePos, basePos, targetDroneTile, tiles } = extractPositionsAndTargets(context);
+  const { dronePos, basePos, targetDroneTile, tiles: _tiles } = extractPositionsAndTargets(context);
   const events: ScheduledEvent[] = [];
   
   if (subState === 'drone_deploying') {
@@ -159,7 +159,7 @@ export function getExploringEvents(
       console.log(`🛸 [TRACKER] Drone → ${targetDroneTile.position?.coord || 'unknown'}`);
     }
     
-    if (targetDroneTile?.position?.coord && targetDroneTile.position.coord !== 'unknown') {
+    if (targetDroneTile?.position?.coord) {
       const targetPos = targetDroneTile.position;
       const distance = calculateDistance(dronePos, targetPos);
       const travelTime = calculateTravelTime(distance, DURATIONS.DRONE_SPEED);
@@ -370,6 +370,7 @@ export function getInitializingEvents(
   
   // Position de base par défaut (0,0,0) - sera ajustée par les actions
   const defaultPosition = { x: 0, y: 0.5, z: 0, coord: '0,0' };
+  const { basePos } = extractPositionsAndTargets(context);
   
   // Vérifier si le vaisseau doit être initialisé
   const shipPosition = context.vehicle?.position;
@@ -399,7 +400,8 @@ export function getInitializingEvents(
     events.push({
       event: { 
         type: 'DRONE_INITIALIZE_REQUEST',
-        droneType: 'explorer'
+        droneType: 'explorer',
+        initialPosition: basePos || defaultPosition,
       },
       delay: 100, // After ship initialization
       reason: 'Initialize drone'

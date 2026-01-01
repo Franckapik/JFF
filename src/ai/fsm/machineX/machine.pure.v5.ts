@@ -35,7 +35,7 @@ import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShip
 import { assignEvaluationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation/index.ts';
 // ✅ Phase 1: ALL guards from guards.pure.ts (no store dependencies)
 import { canStartExploring, hasTilesAvailable, shouldCollect, shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure.ts';
-import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReturningContext, assignDroneScanningContext, assignDroneReadyContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onDroneDockedEntry, onDroneDockedExit, onExploringEntry, onExploringExit } from './domains/exploration/index.ts';
+import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReadyContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneDockedEntry, onDroneDockedExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration/index.ts';
 // ✅ Phase 2: Import updateGridInfo for TILES_UPDATED event
 import { updateDronePosition, updateGridInfo, updateShipPosition } from './domains/global/index.ts';
 import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign.ts';

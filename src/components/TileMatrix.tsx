@@ -17,6 +17,7 @@ export default function TileMatrix() {
   const worldToGrid = useTileStore((state) => state.worldToGrid);
   const actor = useXFSMStore((state) => state.getActor('bot-0'));
   const [shipCoord, setShipCoord] = React.useState<GridCoordinate | null>(null);
+  const [baseCoord, setBaseCoord] = React.useState<GridCoordinate | null>(null);
   const [droneCoords, setDroneCoords] = React.useState<GridCoordinate[]>([]);
 
   // Mettre à jour les positions du ship et drones à chaque changement d'état
@@ -29,6 +30,11 @@ export default function TileMatrix() {
       // Position du ship
       if (ctx.vehicle?.position?.coord) {
         setShipCoord(ctx.vehicle.position.coord);
+      }
+
+      // Position de la base (tuile de départ)
+      if (ctx.vehicle?.basePosition?.coord) {
+        setBaseCoord(ctx.vehicle.basePosition.coord);
       }
 
       // Positions des drones (objet avec clés: explorer, combat, special)
@@ -119,13 +125,16 @@ export default function TileMatrix() {
             const coord = `${q},${r}` as GridCoordinate;
             const color = getColor(coord);
             const label = getSimpleLabel(q, r);
+            const isBase = coord === baseCoord;
             return (
               <div key={coord} style={styles.cellContainer} title={`${label} (${coord})`}>
                 <div
                   style={{
                     ...styles.dot,
                     backgroundColor: color,
-                    borderColor: color === 'transparent' ? '#000' : 'transparent'
+                    borderColor: color === 'transparent' ? '#000' : 'transparent',
+                    borderWidth: color === 'transparent' ? '1px' : '0px',
+                    outline: isBase ? '2px solid #000' : 'none',
                   }}
                 />
                 <div style={styles.label}>{label}</div>
@@ -137,7 +146,7 @@ export default function TileMatrix() {
       <div style={styles.legend}>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: 'transparent', border: '2px solid #000' }} />
-          <span>Tuile</span>
+          <span>Départ</span>
         </div>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#3b82f6' }} />
@@ -195,13 +204,6 @@ const styles = {
     color: '#666',
     minHeight: '10px',
     lineHeight: '10px',
-  } as React.CSSProperties,
-  dot: {
-    width: '12px',
-    height: '12px',
-    borderRadius: '50%',
-    cursor: 'pointer',
-    border: '1px solid',
   } as React.CSSProperties,
   legend: {
     display: 'flex',

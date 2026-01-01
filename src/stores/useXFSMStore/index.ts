@@ -17,13 +17,13 @@ import { machineXV5Pure } from '../../ai/fsm/machineX/machine.pure.v5';
 import { config } from '../../config.ts';
 // ✅ Phase 2: Import TileStore for grid sync
 import type {
-  BotId,
-  BotSnapshot,
-  BotStatesMap,
-  EmptyBotState,
-  XFSMStore,
-  XFSMStoreActions,
-  XFSMStoreState
+    BotId,
+    BotSnapshot,
+    BotStatesMap,
+    EmptyBotState,
+    XFSMStore,
+    XFSMStoreActions,
+    XFSMStoreState
 } from '../../types/fsm.d.ts';
 import { useTileStore } from '../useTileStore/index.ts';
 
@@ -60,21 +60,11 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
     const { tiles, spacing, radius } = tileStore;
     
     let departTile = null;
-    let initialPosition = { x: 0, y: 0.5, z: 0, coord: '0,0' };
     
     if (tiles && Object.keys(tiles).length > 0) {
       departTile = Object.values(tiles).find(
         tile => tile.type === 'depart' && tile.assignedToBot === botId
       );
-      
-      if (departTile) {
-        initialPosition = {
-          x: departTile.position.x,
-          y: 0.5,
-          z: departTile.position.z,
-          coord: departTile.position.coord
-        };
-      }
     }
     
     // ✅ Create context without pre-injecting positions

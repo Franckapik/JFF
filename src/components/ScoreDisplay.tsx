@@ -10,7 +10,7 @@ function hasValidContext(snapshot: unknown): snapshot is { context: { score?: { 
     snapshot !== null &&
     typeof snapshot === 'object' &&
     'context' in snapshot &&
-    typeof (snapshot as any).context === 'object'
+    typeof (snapshot as { context: unknown }).context === 'object'
   );
 }
 

@@ -5,8 +5,8 @@
  */
 
 import type { DroneType } from '../../../types/drone.d';
-import type { Tile } from '../../../types/tile.d';
 import type { WorldPosition } from '../../../types/index';
+import type { Tile } from '../../../types/tile.d';
 
 /**
  * Types d'événements avec payloads typés pour XState v5

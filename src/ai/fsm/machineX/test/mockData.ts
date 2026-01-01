@@ -34,7 +34,6 @@ export const mockDepartTile: Tile = {
   resources: { food: 0, debris: 0, special: 0, total: 0 },
   hasResources: false,
   biome: 'plains',
-  scanned: false,
 };
 
 /** Tuiles de ressources mockées */
@@ -49,7 +48,6 @@ export const mockTiles: Record<string, Tile> = {
     walkable: true,
     collected: false,
     neighbors: ['0,0', '2,0'],
-    scanned: false,
   },
   '2,0': {
     position: { x: 2, y: 0, z: 0, coord: '2,0' },
@@ -60,7 +58,6 @@ export const mockTiles: Record<string, Tile> = {
     walkable: true,
     collected: false,
     neighbors: ['0,0', '1,1', '3,3'],
-    scanned: false,
   },
   '3,3': {
     position: { x: 3, y: 0, z: 3, coord: '3,3' },
@@ -71,7 +68,6 @@ export const mockTiles: Record<string, Tile> = {
     walkable: true,
     collected: false,
     neighbors: ['2,0', '7,7'],
-    scanned: false,
   },
   '7,7': {
     position: { x: 7, y: 0, z: 7, coord: '7,7' },
@@ -82,7 +78,6 @@ export const mockTiles: Record<string, Tile> = {
     walkable: true,
     collected: false,
     neighbors: ['3,3'],
-    scanned: false,
   }
 };
 
