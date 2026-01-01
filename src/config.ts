@@ -11,6 +11,8 @@ interface AppConfig {
     scene: boolean;
   };
   enableXStateInspection: boolean;
+  testMode: boolean; // Active le tracker simulé pour tests
+  enableVerboseTracking: boolean; // Logs détaillés du tracker
   // logLevel?: string;
 }
 
@@ -31,6 +33,8 @@ export const config: AppConfig = (typeof window !== 'undefined' ? window.appConf
     scene: true,
   },
   enableXStateInspection: false,
+  testMode: import.meta.env.DEV, // Active en mode dev uniquement
+  enableVerboseTracking: false,
   // logLevel: "debug", // Si tu veux gérer un vrai niveau de log, décommente et utilise
 };
 

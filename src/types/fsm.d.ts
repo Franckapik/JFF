@@ -260,6 +260,7 @@ export interface XFSMStoreActions {
   startBot: (botId: BotId) => void;
   removeBot: (botId: BotId) => void;
   getBotState: (botId?: BotId) => BotSnapshot | EmptyBotState;
+  getActor: (botId?: BotId) => any | null; // Retourne l'acteur XState
   isBotActive: (botId: BotId) => boolean;
 }
 

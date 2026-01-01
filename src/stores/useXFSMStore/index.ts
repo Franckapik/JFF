@@ -254,6 +254,13 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
     },
     
     /**
+     * Récupère l'acteur XState d'un bot
+     */
+    getActor: (botId: BotId = 'bot-0'): Actor<typeof machineXV5Pure> | null => {
+      return actors.get(botId) || null;
+    },
+    
+    /**
      * Fonction utilitaire pour vérifier si un bot est actif
      */
     isBotActive: (botId: BotId): boolean => {

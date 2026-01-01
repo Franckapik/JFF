@@ -1,6 +1,8 @@
 import React from 'react';
 
+import { useSimulatedTracker } from './ai/fsm/machineX/hooks/trackers/useSimulatedTracker';
 import FSMVisualization from './components/FSMVisualization';
+import { config } from './config';
 import useGameStore from './stores/useGameStore';
 import useXFSMStore from './stores/useXFSMStore';
 
@@ -14,8 +16,11 @@ import useXFSMStore from './stores/useXFSMStore';
  * 3. Both tabs will sync via BroadcastChannel
  */
 export default function App() {
+  // Get bot actor from store for tracker
+  const getActor = useXFSMStore((state) => state.getActor);
+  const [botActor, setBotActor] = React.useState<ReturnType<typeof getActor>>(null);
+
   // Initialize on mount (one-time setup, no dependencies needed)
-  // Force recompile trigger
   React.useEffect(() => {
     const gameStore = useGameStore.getState();
     const xfsmStore = useXFSMStore.getState();
@@ -29,7 +34,17 @@ export default function App() {
     // Create and start bot FSM
     xfsmStore.addBot('bot-0');
     xfsmStore.startBot('bot-0');
+    
+    // Get actor for tracker
+    const actor = xfsmStore.getActor('bot-0');
+    setBotActor(actor);
   }, []);
+
+  // Activate simulated tracker in test mode
+  useSimulatedTracker(botActor, { 
+    verbose: config.enableVerboseTracking,
+    enabled: config.testMode 
+  });
 
   return (
     <React.StrictMode>
