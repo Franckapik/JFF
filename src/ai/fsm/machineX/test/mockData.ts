@@ -7,9 +7,9 @@
  * Permet de garantir que le test et le front utilisent exactement les mêmes données
  */
 
-import type { FSMContext } from '../../../../types/fsm.d';
-import type { TileState } from '../../../../types/tile.d';
-import { createMachineContext } from '../context/initialContext';
+import type { FSMContext } from '../../../../types/fsm.d.ts';
+import type { TileState } from '../../../../types/tile.d.ts';
+import { createMachineContext } from '../context/initialContext.ts';
 
 // ========================================
 // Positions et tuiles mock
