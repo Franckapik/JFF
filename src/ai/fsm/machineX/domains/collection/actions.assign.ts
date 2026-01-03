@@ -10,7 +10,7 @@
 
 import { assign } from 'xstate';
 
-import { calculateDistance, findTilesInRadius, selectRandomTile } from '../../../../../core/spatial/index.ts';
+import { calculateDistanceGrid, findTilesInRadius, gridToWorld, selectRandomTile } from '../../../../../core/spatial/index.ts';
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
@@ -45,7 +45,7 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
   if (event.type === 'NEED_COLLECTING') {
     // ✅ Phase 5: Priorité aux tuiles explorées (memory.knownTiles) avec ressources
     const tiles = context.gridInfo?.tiles || {};
-    const shipPosition = context.vehicle?.position;
+    const shipCoord = context.vehicle?.coord;
     const knownTiles = context.memory?.knownTiles || [];
     
     // 1️⃣ PRIORITÉ: Chercher une tuile explorée avec ressources non collectées
@@ -73,8 +73,7 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     } else {
       // 2️⃣ FALLBACK: Si aucune tuile connue avec ressources, chercher dans un rayon aléatoire
       const collectingRadius = context.config?.collectingRadius ?? 3;
-      const startCoord = shipPosition?.coord;
-      const candidateTiles = startCoord ? findTilesInRadius(startCoord, collectingRadius, tiles) : [];
+      const candidateTiles = shipCoord ? findTilesInRadius(shipCoord, collectingRadius, tiles) : [];
       const tilesWithResources = candidateTiles.filter(tile => 
         tile?.resources && tile.resources.total > 0 && !tile.collected
       );
@@ -93,12 +92,12 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     if (!targetVehicleTile) {
       return {};
     }
-    const targetGridCoord = targetVehicleTile.coord;
+    const targetGridCoord = targetVehicleTile.position.coord;
     const consistentTargetPos = targetVehicleTile.position;
     fsmLogger.info(`🚢 [${context.entityId}] Setting ship target for collection:`, {
       targetPosition: consistentTargetPos,
       targetGridCoord,
-      currentPosition: shipPosition,
+      currentCoord: shipCoord,
       coordinateCheck: {
         original: consistentTargetPos,
         recalculated: consistentTargetPos,
@@ -108,20 +107,16 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     // Mise à jour complète du contexte en une seule fois
     const targetVehicleTileObj = targetVehicleTile;
     
-    // ✅ Calculer la consommation de fuel basée sur la distance
-    const distance = calculateDistance(shipPosition, consistentTargetPos);
+    // ✅ Calculer la consommation de fuel basée sur la distance (grid-based)
+    const distance = shipCoord && targetGridCoord ? calculateDistanceGrid(shipCoord, targetGridCoord) : 0;
     const fuelConsumption = Math.max(1, Math.floor(distance * 1.5)); // 1.5 fuel par unité de distance
     const currentFuel = context.vehicle?.fuel || 100;
     const newFuel = Math.max(0, currentFuel - fuelConsumption);
     
-    // Calculer coord pour la position pendant le mouvement
-    // Ici coord=null pour optimiser pendant le déplacement
-    const positionWithCoord = { ...shipPosition, coord: null as string | null };
-    
     const updatedContext = {
       vehicle: {
         ...context.vehicle,
-        position: positionWithCoord,
+        coord: shipCoord || '0,0',
         targetVehicleTile: targetVehicleTileObj, // Utiliser l'objet Tile complet
         isMoving: true, // ✅ IMPORTANT: Le vaisseau est en mouvement vers sa cible
         progress: 0, // Reset du progrès
@@ -164,16 +159,14 @@ export const assignShipCollectingContext = createAssignAction(({ context, event 
     return {};
   }
   
-  const targetTilePosition = context.vehicle.targetVehicleTile?.position;
-  const arrivedPosition = targetTilePosition
-    ? { ...targetTilePosition, y: targetTilePosition.y ?? 0.5 }
-    : context.vehicle.position;
+  const targetTileCoord = context.vehicle.targetVehicleTile?.position?.coord;
+  const arrivedCoord = targetTileCoord || context.vehicle.coord;
 
   
   return {
     vehicle: {
       ...context.vehicle,
-      position: arrivedPosition,
+      coord: arrivedCoord,
       isMoving: false, // ✅ IMPORTANT: Le vaisseau s'arrête pour collecter
       progress: 100, // Arrivé à destination
       currentSpeed: 0,
@@ -198,11 +191,11 @@ export const assignShipReturningContext = createAssignAction(({ context, event }
     return {};
   }
   
-  // Position de base (pour simplifier, retour à la position initiale)
-  const basePosition = context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0, coord: '0,0' };
+  // Coordonnée de base (pour simplifier, retour à la position initiale)
+  const baseCoord = context.vehicle?.baseCoord || '0,0';
+  const baseWorldPos = gridToWorld(baseCoord);
   const baseTile = {
-    position: basePosition,
-    coord: basePosition.coord ?? '0,0',
+    position: { ...baseWorldPos, coord: baseCoord },
     type: 'depart',
     biome: 'station',
     resources: { food: 0, debris: 0, special: 0, total: 0 },
@@ -210,14 +203,16 @@ export const assignShipReturningContext = createAssignAction(({ context, event }
   };
 
   fsmLogger.info(`🔙 [${context.entityId}] Updating vehicle state to returning with target:`, {
-    basePosition,
-    currentPosition: context.vehicle.position
+    baseCoord,
+    basePosition: baseWorldPos,
+    currentCoord: context.vehicle.coord
   });
 
   return {
     vehicle: {
       ...context.vehicle,
-  targetVehicleTile: baseTile, // Utiliser un objet Tile complet pour la base
+      coord: context.vehicle.coord || '0,0',
+      targetVehicleTile: baseTile, // Utiliser un objet Tile complet pour la base
       isMoving: true, // ✅ IMPORTANT: Le vaisseau doit bouger vers la base
       progress: 0, // Reset du progrès pour le retour
       currentSpeed: context.vehicle?.maxSpeed || 1,
@@ -243,21 +238,16 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
     return {};
   }
   
-  const basePosition = context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0, coord: '0,0' };
+  const baseCoord = context.vehicle?.baseCoord || '0,0';
   fsmLogger.action(`🏠 [${context.entityId}] Ship reached base - ready for maintenance`, {
     vehicleResources: context.vehicle.resources,
     vehicleState: context.vehicle.visualState
   });
-
-  const dockedPosition = {
-    ...basePosition,
-    y: basePosition.y ?? 0.5
-  };
   
   return {
     vehicle: {
       ...context.vehicle,
-      position: dockedPosition,
+      coord: baseCoord,
       isMoving: false, // ✅ IMPORTANT: Le vaisseau s'arrête à la base
       progress: 100, // Arrivé à la base
       currentSpeed: 0,
@@ -356,7 +346,7 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
       // ✅ CRITICAL FIX: Recalculer une nouvelle tuile cible après synchronisation
       // pour éviter la boucle infinie ship_moving_to_tile → ship_collecting
       let newTargetVehicleTile = null;
-      const shipPosition = context.vehicle?.position;
+      const shipCoord = context.vehicle?.coord;
       
       // 1️⃣ PRIORITÉ: Chercher une autre tuile explorée avec ressources non collectées
       const remainingTilesWithResources = updatedKnownTiles.filter(tile => 
@@ -381,8 +371,7 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
       } else {
         // 2️⃣ FALLBACK: Chercher dans un rayon aléatoire (exclure tuile actuelle)
         const collectingRadius = context.config?.collectingRadius ?? 3;
-        const startCoord = shipPosition?.coord;
-        const candidateTiles = startCoord ? findTilesInRadius(startCoord, collectingRadius, updatedGridTiles) : [];
+        const candidateTiles = shipCoord ? findTilesInRadius(shipCoord, collectingRadius, updatedGridTiles) : [];
         const tilesWithResources = candidateTiles.filter(tile => 
           tile?.resources && 
           tile.resources.total > 0 && 
