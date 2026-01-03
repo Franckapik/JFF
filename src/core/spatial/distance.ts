@@ -157,3 +157,98 @@ export function calculateDistance2D(
   const dz = posB.z - posA.z;
   return Math.sqrt(dx * dx + dz * dz);
 }
+
+// ============================================================================
+// GRID COORDINATE DISTANCE FUNCTIONS (NEW)
+// ============================================================================
+
+/**
+ * Calcule la distance euclidienne entre deux coordonnées de grille
+ * Opère directement sur GridCoordinate sans conversion vers WorldPosition
+ * 
+ * @pure
+ * @param coordA - Première coordonnée de grille (format "x,z")
+ * @param coordB - Deuxième coordonnée de grille (format "x,z")
+ * @returns Distance euclidienne dans l'espace de grille
+ * 
+ * @example
+ * const distance = calculateDistanceGrid("5,10", "8,14");
+ * // distance = 5 (sqrt(9 + 16))
+ */
+export function calculateDistanceGrid(
+  coordA: import('../../types/coordinates').GridCoordinate,
+  coordB: import('../../types/coordinates').GridCoordinate
+): number {
+  // Parse les coordonnées
+  const [x1, z1] = coordA.split(',').map(Number);
+  const [x2, z2] = coordB.split(',').map(Number);
+
+  // Validation
+  if (isNaN(x1) || isNaN(z1) || isNaN(x2) || isNaN(z2)) {
+    console.warn('Invalid grid coordinates:', { coordA, coordB });
+    return Infinity;
+  }
+
+  const dx = x2 - x1;
+  const dz = z2 - z1;
+  return Math.sqrt(dx * dx + dz * dz);
+}
+
+/**
+ * Vérifie si une coordonnée de grille a atteint sa cible
+ * Version GridCoordinate de hasReachedTarget - utilisé pour FSM guards/actions
+ * 
+ * @pure
+ * @param current - Coordonnée actuelle (format "x,z")
+ * @param target - Coordonnée cible (format "x,z")
+ * @param thresholdGrid - Seuil en unités de grille (défaut: 0 = match exact)
+ * @returns True si la cible est atteinte
+ * 
+ * @example
+ * const reached = hasReachedTargetGrid("5,10", "5,10");
+ * // reached = true (match exact)
+ * 
+ * const nearReached = hasReachedTargetGrid("5,10", "6,11", 1.5);
+ * // nearReached = true (distance = 1.41 < 1.5)
+ */
+export function hasReachedTargetGrid(
+  current: import('../../types/coordinates').GridCoordinate,
+  target: import('../../types/coordinates').GridCoordinate,
+  thresholdGrid: number = 0
+): boolean {
+  // Match exact si threshold = 0
+  if (thresholdGrid === 0) {
+    return current === target;
+  }
+
+  const distance = calculateDistanceGrid(current, target);
+  return distance <= thresholdGrid;
+}
+
+/**
+ * Calcule la distance Manhattan entre deux coordonnées de grille
+ * Distance = |x2-x1| + |z2-z1| (utile pour pathfinding hex)
+ * 
+ * @pure
+ * @param coordA - Première coordonnée de grille
+ * @param coordB - Deuxième coordonnée de grille
+ * @returns Distance Manhattan dans l'espace de grille
+ * 
+ * @example
+ * const distance = calculateManhattanDistanceGrid("5,10", "8,14");
+ * // distance = 7 (|8-5| + |14-10|)
+ */
+export function calculateManhattanDistanceGrid(
+  coordA: import('../../types/coordinates').GridCoordinate,
+  coordB: import('../../types/coordinates').GridCoordinate
+): number {
+  const [x1, z1] = coordA.split(',').map(Number);
+  const [x2, z2] = coordB.split(',').map(Number);
+
+  if (isNaN(x1) || isNaN(z1) || isNaN(x2) || isNaN(z2)) {
+    console.warn('Invalid grid coordinates:', { coordA, coordB });
+    return Infinity;
+  }
+
+  return Math.abs(x2 - x1) + Math.abs(z2 - z1);
+}
