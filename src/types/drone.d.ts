@@ -33,8 +33,11 @@ export interface DroneState {
   visualState: DroneVisualState;
   position?: WorldPosition;
   targetDroneTile: import('./tile').Tile | null;
+  targetTileType?: import('./tile').TileType;  // Type de tuile ciblée
   isActive: boolean;
   isMoving: boolean;
+  isDestroyed?: boolean;                        // Flag destruction
+  health?: number;                               // Santé du drone (0-100)
   lastUpdate: number;
 }
 
@@ -62,6 +65,14 @@ export interface DroneFleet {
   formationOffsets: FormationOffsets;
   currentMission: DroneMission | null;
   missionStartTime: number | null;
+  stats: {                                      // Compteurs par type de drone
+    explorerDeployed: number;
+    explorerDestroyed: number;
+    combatDeployed: number;
+    combatDestroyed: number;
+    specialDeployed: number;
+    specialDestroyed: number;
+  };
 }
 
 // ============================================================================

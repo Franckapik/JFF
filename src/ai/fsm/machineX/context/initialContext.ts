@@ -73,6 +73,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
         currentCycleStartTime: null,
         tilesExploredInCycle: 0,
         bestTileInCycle: null,
+        dronesDestroyed: 0,
       },
       stateHistory: ["uninitialized" as FSMState],
       transitionHistory: [],
@@ -135,6 +136,14 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
       },
       currentMission: null,
       missionStartTime: null,
+      stats: {
+        explorerDeployed: 0,
+        explorerDestroyed: 0,
+        combatDeployed: 0,
+        combatDestroyed: 0,
+        specialDeployed: 0,
+        specialDestroyed: 0,
+      },
     },
   };
 };

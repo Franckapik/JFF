@@ -52,6 +52,7 @@ export interface EntityStats {
   currentCycleStartTime: number | null;
   tilesExploredInCycle: number;
   bestTileInCycle: KnownTileData | null;
+  dronesDestroyed?: number;  // Nombre de drones détruits au total
 }
 
 /** Transition d'état FSM (extrait de initialContext.ts) */

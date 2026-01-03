@@ -290,3 +290,77 @@ export const assignDroneReadyContext = createAssignAction(({ context, event }) =
     fsmState: 'evaluating' // 🟢 Retour à l'état global evaluating
   };
 });
+
+/**
+ * Action assign pour la destruction d'un drone lors de la rencontre d'une tuile danger
+ * Met à jour le contexte drone et les statistiques
+ */
+export const assignDroneDestroyedContext = createAssignAction(({ context, event }) => {
+  const eventWithDrone = event as any;
+  const droneType = eventWithDrone?.droneType || 'explorer';
+  const reason = eventWithDrone?.reason || 'danger';
+  
+  const currentDrone = context.droneFleet.drones[droneType as keyof typeof context.droneFleet.drones];
+  
+  if (!currentDrone) {
+    return {};
+  }
+  
+  // Mettre à jour le drone avec l'état détruit
+  const updatedDrone = {
+    ...currentDrone,
+    isActive: false,
+    isDestroyed: true,
+    visualState: 'failed' as const,
+    health: 0,
+    isMoving: false
+  };
+  
+  // Incrémenter les compteurs de destruction
+  const statsKey = `${droneType}Destroyed` as keyof typeof context.droneFleet.stats;
+  
+  fsmLogger.exploration(`[assignDroneDestroyedContext] Drone ${droneType} détruit par ${reason}`);
+  
+  return {
+    droneFleet: {
+      ...context.droneFleet,
+      drones: {
+        ...context.droneFleet.drones,
+        [droneType]: updatedDrone
+      },
+      stats: {
+        ...context.droneFleet.stats,
+        [statsKey]: (context.droneFleet.stats[statsKey] || 0) + 1
+      }
+    },
+    memory: {
+      ...context.memory,
+      stats: {
+        ...context.memory?.stats,
+        dronesDestroyed: (context.memory?.stats?.dronesDestroyed ?? 0) + 1
+      }
+    }
+  };
+});
+
+/**
+ * Action assign pour incrémenter les compteurs de déploiement de drone
+ */
+export const assignDroneDeployedContext = createAssignAction(({ context, event }) => {
+  const eventWithDrone = event as any;
+  const droneType = eventWithDrone?.droneType || 'explorer';
+  
+  const statsKey = `${droneType}Deployed` as keyof typeof context.droneFleet.stats;
+  
+  fsmLogger.exploration(`[assignDroneDeployedContext] Drone ${droneType} déployé`);
+  
+  return {
+    droneFleet: {
+      ...context.droneFleet,
+      stats: {
+        ...context.droneFleet.stats,
+        [statsKey]: (context.droneFleet.stats[statsKey] || 0) + 1
+      }
+    }
+  };
+});

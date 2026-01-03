@@ -125,3 +125,27 @@ export const onDroneDockedEntry = ({ context }: { context: FSMContext }) => {
 export const onDroneDockedExit = ({ context: _context }: { context: FSMContext }) => {
 };
 
+/**
+ * Action d'entrée de l'état drone_destroyed
+ * 
+ * LOG ONLY: Trace la destruction du drone et ses conséquences
+ */
+export const onDroneDestroyedEntry = ({ context }: { context: FSMContext }) => {
+  const currentDrone = context.droneFleet?.drones?.explorer;
+  const destroyedCount = context.droneFleet?.stats?.explorerDestroyed || 0;
+  
+  fsmLogger.action(`💥 [${context.entityId}] Drone DÉTRUIT`, {
+    droneType: currentDrone?.type || 'explorer',
+    targetTile: currentDrone?.targetDroneTile?.position?.coord || 'unknown',
+    totalDestroyed: destroyedCount,
+    visualState: currentDrone?.visualState || 'unknown'
+  });
+};
+
+/**
+ * Action de sortie de l'état drone_destroyed
+ * 
+ * LOG ONLY: Trace la sortie de l'état de destruction
+ */
+export const onDroneDestroyedExit = ({ context: _context }: { context: FSMContext }) => {
+};

@@ -20,6 +20,7 @@ export type MachineEventType =
   // Événements drone (exploring)
   | 'DRONE_REACHES_TILE'
   | 'DRONE_HAS_SCANNED'
+  | 'DRONE_DESTROYED'
   | 'DRONE_REACHES_BASE'
   | 'DRONE_READY_FOR_REDEPLOY'
   
@@ -46,8 +47,9 @@ export type MachineEvents =
   | { type: 'SHIP_INITIALIZE_REQUEST'; payload?: unknown }
   | { type: 'DRONE_POSITION_UPDATE'; payload?: unknown }
   | { type: 'DRONE_INITIALIZE_REQUEST'; payload?: unknown }
-  | { type: 'DRONE_REACHES_TILE' }
+  | { type: 'DRONE_REACHES_TILE'; tileCoord?: string; tileType?: string }
   | { type: 'DRONE_HAS_SCANNED' }
+  | { type: 'DRONE_DESTROYED'; droneType: string; reason: 'danger' | 'collision' | 'other' }
   | { type: 'DRONE_REACHES_BASE' }
   | { type: 'DRONE_READY_FOR_REDEPLOY' }
   | { type: 'SHIP_REACHES_TILE' }
@@ -76,6 +78,7 @@ export const MACHINE_EVENT_TYPES: Record<Uppercase<MachineEventType>, MachineEve
   // Événements drone
   DRONE_REACHES_TILE: 'DRONE_REACHES_TILE',
   DRONE_HAS_SCANNED: 'DRONE_HAS_SCANNED',
+  DRONE_DESTROYED: 'DRONE_DESTROYED',
   DRONE_REACHES_BASE: 'DRONE_REACHES_BASE',
   DRONE_READY_FOR_REDEPLOY: 'DRONE_READY_FOR_REDEPLOY',
   
