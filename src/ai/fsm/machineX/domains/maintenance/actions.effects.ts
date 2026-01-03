@@ -55,8 +55,8 @@ export const onMaintainingExit = ({ context }: { context: FSMContext }) => {
  */
 export const onShipOnBaseEntry = ({ context }: { context: FSMContext }) => {
   fsmLogger.action(`🏠 [${context.entityId}] Arrivée du navire à la base`, {
-    position: context.vehicle?.position?.coord,
-    basePosition: context.vehicle?.basePosition?.coord
+    coord: context.vehicle?.coord,
+    baseCoord: context.vehicle?.baseCoord
   });
 };
 
@@ -67,7 +67,7 @@ export const onShipOnBaseEntry = ({ context }: { context: FSMContext }) => {
  */
 export const onShipOnBaseExit = ({ context }: { context: FSMContext }) => {
   fsmLogger.action(`✅ [${context.entityId}] Départ du navire depuis la base`, {
-    position: context.vehicle?.position?.coord
+    coord: context.vehicle?.coord
   });
 };
 
