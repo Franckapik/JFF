@@ -9,24 +9,19 @@ import { createAssignAction } from '../global/actions.assign.ts';
 export const processDroneInitRequest = createAssignAction(({ context, event }) => {
 	if (event.type !== 'DRONE_INITIALIZE_REQUEST') return context;
 	
-	// Protection : vérifier que la position du vaisseau existe
-	const shipPosition = context.vehicle?.position;
-	if (!shipPosition) {
+	// Protection : vérifier que la coordonnée du vaisseau existe
+	const shipCoord = context.vehicle?.coord;
+	if (!shipCoord) {
 		return context;
 	}
 	
 	fsmLogger.context(`🛸 [${context.entityId}] Processing ${event.droneType} drone init request`, {
-		shipPosition,
+		shipCoord,
 		droneType: event.droneType,
 	});
 	
-	// Calculer la position initiale du drone avec l'offset de formation
-	const formationOffset = context.droneFleet?.formationOffsets?.[event.droneType] || { x: 0, y: 0, z: 0 };
-	const droneInitialPosition = {
-		x: shipPosition.x + formationOffset.x,
-		y: shipPosition.y + formationOffset.y,
-		z: shipPosition.z + formationOffset.z
-	};
+	// Pour l'initialisation des drones, on les place à la même position que le ship (docked)
+	// Les offsets de formation ne sont utilisés que pour le rendu (animation hooks)
 	return {
 		droneFleet: {
 			...context.droneFleet,
@@ -34,8 +29,8 @@ export const processDroneInitRequest = createAssignAction(({ context, event }) =
 				...context.droneFleet?.drones,
 				[event.droneType]: {
 					...context.droneFleet?.drones?.[event.droneType],
-					position: droneInitialPosition,
-					targetDroneTile: droneInitialPosition,
+					coord: shipCoord,  // Drone starts at ship position
+					targetDroneTile: null,
 					isActive: true,
 					visualState: 'docked',
 				},

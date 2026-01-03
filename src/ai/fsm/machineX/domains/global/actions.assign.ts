@@ -24,6 +24,8 @@ export function createAssignAction(
 /**
  * Action assign pour mettre à jour la position du vaisseau
  * Migré depuis actions.pure.v5.ts
+ * 
+ * ✅ Refactored: Uses GridCoordinate only (no WorldPosition storage)
  */
 export const updateShipPosition = createAssignAction(({ context, event }) => {
   if (event.type !== 'SHIP_POSITION_UPDATE') return context;
@@ -35,36 +37,31 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
     return context;
   }
   
-  
   // ✅ Phase 4: Use context.gridInfo.spacing instead of useTileStore.getState()
   const spacing = context.gridInfo?.spacing ?? 1.2;
   
-  // Si c'est la première position réelle (différente de la position par défaut), mettre à jour basePosition aussi
-  const isInitialization = !context.vehicle?.position || 
-    (context.vehicle.position.x === 0 && context.vehicle.position.y === 0.5 && context.vehicle.position.z === 0);
+  // Convert WorldPosition → GridCoordinate
+  const coord = worldToGrid(position, { spacing });
+  
+  // Si c'est la première position réelle, mettre à jour baseCoord aussi
+  const isInitialization = !context.vehicle?.coord;
   
   if (isInitialization) {
-    
-    // Créer une WorldGridPosition pour basePosition
-    const coord = worldToGrid(position, { spacing });
-    const basePosition = { ...position, coord };
-    
+    fsmLogger.init(`🎯 Ship initialization: coord=${coord}`);
     return {
       vehicle: {
         ...context.vehicle,
-        position: { ...position, coord },
-        basePosition: basePosition,
+        coord,
+        baseCoord: coord,  // Set base at first position
       },
     };
   }
   
-  // Calculer coord pour position normale
-  const coord = worldToGrid(position, { spacing });
-  
+  // Mise à jour normale de position
   return {
     vehicle: {
       ...context.vehicle,
-      position: { ...position, coord },
+      coord,
     },
   };
 });
@@ -72,23 +69,31 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
 /**
  * Action assign pour mettre à jour la position du drone
  * Migré depuis actions.pure.v5.ts
+ * 
+ * ✅ Refactored: Uses GridCoordinate only
  */
 export const updateDronePosition = createAssignAction(({ context, event }) => {
   if (event.type !== 'DRONE_POSITION_UPDATE') return context;
   
+  const { position, droneType } = event;
+  
   // Protection : vérifier que position n'est pas null
-  if (!event.position) {
+  if (!position) {
     return context;
   }
+  
+  // Convert WorldPosition → GridCoordinate
+  const spacing = context.gridInfo?.spacing ?? 1.2;
+  const coord = worldToGrid(position, { spacing });
   
   return {
     droneFleet: {
       ...context.droneFleet,
       drones: {
         ...context.droneFleet?.drones,
-        [event.droneType]: {
-          ...context.droneFleet?.drones?.[event.droneType],
-          position: event.position,
+        [droneType]: {
+          ...context.droneFleet?.drones?.[droneType],
+          coord,
         },
       },
     },

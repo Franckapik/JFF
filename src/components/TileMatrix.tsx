@@ -47,7 +47,10 @@ export default function TileMatrix() {
           if (drone?.position) {
             // Convertir WorldPosition en GridCoordinate
             const gridCoord = worldToGrid(drone.position);
-            if (gridCoord) coords.push(gridCoord);
+            if (gridCoord) {
+              // ✅ Ajouter le type de drone avec un séparateur (explorer|3,3 par exemple)
+              coords.push(`${type}|${gridCoord}` as any);
+            }
           }
         }
         
@@ -100,7 +103,13 @@ export default function TileMatrix() {
   // Déterminer la couleur d'un point
   const getColor = (coord: GridCoordinate): string => {
     if (coord === shipCoord) return '#22c55e'; // vert
-    if (droneCoords.includes(coord)) return '#f97316'; // orange
+    // ✅ Vérifier si c'est un drone (format: "type|coord" ou "coord")
+    const isDrone = droneCoords.some(droneEntry => {
+      const parts = String(droneEntry).split('|');
+      const droneCoord = parts.length > 1 ? parts[1] : parts[0];
+      return droneCoord === coord;
+    });
+    if (isDrone) return '#f97316'; // orange
     const tile = coordIndex.get(coord);
     if (tile?.type === 'fuel') return '#f32ad1ff'; // rose vif pour carburant
     if (tile?.type === 'repair') return '#bd259cff'; // magenta pour réparation
@@ -108,6 +117,20 @@ export default function TileMatrix() {
     if (tile?.collected) return '#8b5cf6'; // violet
     if (tile?.explored) return '#3b82f6'; // bleu
     return 'transparent'; // transparent par défaut
+  };
+
+  // ✅ Extraire le type de drone pour un affichage texte
+  const getDroneLabel = (coord: GridCoordinate): string | null => {
+    for (const droneEntry of droneCoords) {
+      const parts = String(droneEntry).split('|');
+      if (parts.length > 1 && parts[1] === coord) {
+        const droneType = parts[0];
+        if (droneType === 'explorer') return 'e';
+        if (droneType === 'combat') return 'c';
+        if (droneType === 'special') return 's';
+      }
+    }
+    return null;
   };
 
   // Convertir les coordonnées q,r en format simple (A1, B2, ...)
@@ -129,6 +152,8 @@ export default function TileMatrix() {
             const color = getColor(coord);
             const label = getSimpleLabel(q, r);
             const isBase = coord === baseCoord;
+            const droneLabel = getDroneLabel(coord); // ✅ Obtenir le label du drone
+            const isDroneHere = droneLabel !== null;
             return (
               <div key={coord} style={styles.cellContainer} title={`${label} (${coord})`}>
                 <div
@@ -138,8 +163,28 @@ export default function TileMatrix() {
                     borderColor: color === 'transparent' ? '#000' : 'transparent',
                     borderWidth: color === 'transparent' ? '1px' : '0px',
                     outline: isBase ? '2px solid #000' : 'none',
+                    position: 'relative',
                   }}
-                />
+                >
+                  {/* ✅ Afficher le label du drone (e, c, s) centré sur le rond */}
+                  {isDroneHere && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        fontSize: '8px',
+                        fontWeight: 'bold',
+                        color: '#000',
+                        textShadow: '0 0 2px white',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      {droneLabel}
+                    </div>
+                  )}
+                </div>
                 <div style={styles.label}>{label}</div>
               </div>
             );
@@ -165,7 +210,7 @@ export default function TileMatrix() {
         </div>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#f97316' }} />
-          <span>Drone</span>
+          <span>Drone (e/c/s)</span>
         </div>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#f32ad1ff' }} />

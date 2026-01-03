@@ -238,12 +238,18 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
     return {};
   }
   
-  const basePosition = context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0, coord: '0,0' };
-  const dockedPosition = {
-    ...basePosition,
-    y: basePosition.y ?? 0.5
-  };
-  
+  // Position du drone docked = position du vaisseau (strictement)
+  const shipPosition = context.vehicle?.position;
+  if (!shipPosition) {
+    fsmLogger.warn(`⚠️ [${context.entityId}] Ship position undefined when docking drone`, {
+      vehicleState: context.vehicle
+    });
+    return {};
+  }
+
+
+  console.log(shipPosition)
+
   const droneState: DroneVisualState = 'docked';
   
   return {
@@ -254,7 +260,7 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
         explorer: {
           ...context.droneFleet.drones.explorer,
           visualState: droneState,
-          position: dockedPosition,
+          position: shipPosition,
           targetDroneTile: null,
           isActive: false,
           isMoving: false,
@@ -265,7 +271,7 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
     explorationCycle: {
       ...context.explorationCycle,
       isActive: false,
-      phase: 'docked' as const // 🟢 Nouveau phase: drone_docked
+      phase: 'idle' // Drone docked = waiting for next exploration cycle
     }
   };
 });
@@ -296,9 +302,9 @@ export const assignDroneReadyContext = createAssignAction(({ context, event }) =
  * Met à jour le contexte drone et les statistiques
  */
 export const assignDroneDestroyedContext = createAssignAction(({ context, event }) => {
-  const eventWithDrone = event as any;
-  const droneType = eventWithDrone?.droneType || 'explorer';
-  const reason = eventWithDrone?.reason || 'danger';
+  const eventWithDrone = event as Record<string, unknown>;
+  const droneType = (eventWithDrone?.droneType as string) || 'explorer';
+  const reason = (eventWithDrone?.reason as string) || 'danger';
   
   const currentDrone = context.droneFleet.drones[droneType as keyof typeof context.droneFleet.drones];
   
@@ -319,7 +325,7 @@ export const assignDroneDestroyedContext = createAssignAction(({ context, event 
   // Incrémenter les compteurs de destruction
   const statsKey = `${droneType}Destroyed` as keyof typeof context.droneFleet.stats;
   
-  fsmLogger.exploration(`[assignDroneDestroyedContext] Drone ${droneType} détruit par ${reason}`);
+  fsmLogger.info(`[assignDroneDestroyedContext] Drone ${droneType} détruit par ${reason}`);
   
   return {
     droneFleet: {
@@ -347,12 +353,12 @@ export const assignDroneDestroyedContext = createAssignAction(({ context, event 
  * Action assign pour incrémenter les compteurs de déploiement de drone
  */
 export const assignDroneDeployedContext = createAssignAction(({ context, event }) => {
-  const eventWithDrone = event as any;
-  const droneType = eventWithDrone?.droneType || 'explorer';
+  const eventWithDrone = event as Record<string, unknown>;
+  const droneType = (eventWithDrone?.droneType as string) || 'explorer';
   
   const statsKey = `${droneType}Deployed` as keyof typeof context.droneFleet.stats;
   
-  fsmLogger.exploration(`[assignDroneDeployedContext] Drone ${droneType} déployé`);
+  fsmLogger.info(`[assignDroneDeployedContext] Drone ${droneType} déployé`);
   
   return {
     droneFleet: {

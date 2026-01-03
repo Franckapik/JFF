@@ -31,7 +31,7 @@ export interface DroneState {
   id: string;
   type: DroneType;
   visualState: DroneVisualState;
-  position?: WorldPosition;
+  coord?: GridCoordinate;                       // Position en coordonnée de grille (optional car drones peuvent être docked)
   targetDroneTile: import('./tile').Tile | null;
   targetTileType?: import('./tile').TileType;  // Type de tuile ciblée
   isActive: boolean;
