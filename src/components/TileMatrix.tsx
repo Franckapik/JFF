@@ -14,7 +14,6 @@ import type { GridCoordinate } from '../types/coordinates.d';
  */
 export default function TileMatrix() {
   const tiles = useTileStore((state) => state.tiles);
-  const worldToGrid = useTileStore((state) => state.worldToGrid);
   const actor = useXFSMStore((state) => state.getActor('bot-0'));
   const [shipCoord, setShipCoord] = React.useState<GridCoordinate | null>(null);
   const [baseCoord, setBaseCoord] = React.useState<GridCoordinate | null>(null);
@@ -27,14 +26,14 @@ export default function TileMatrix() {
     const subscription = actor.subscribe((snapshot) => {
       const ctx = snapshot.context;
       
-      // Position du ship
-      if (ctx.vehicle?.position?.coord) {
-        setShipCoord(ctx.vehicle.position.coord);
+      // Position du ship (GridCoordinate directement)
+      if (ctx.vehicle?.coord) {
+        setShipCoord(ctx.vehicle.coord);
       }
 
       // Position de la base (tuile de départ)
-      if (ctx.vehicle?.basePosition?.coord) {
-        setBaseCoord(ctx.vehicle.basePosition.coord);
+      if (ctx.vehicle?.baseCoord) {
+        setBaseCoord(ctx.vehicle.baseCoord);
       }
 
       // Positions des drones (objet avec clés: explorer, combat, special)
@@ -44,13 +43,10 @@ export default function TileMatrix() {
         
         for (const type of droneTypes) {
           const drone = ctx.droneFleet.drones[type];
-          if (drone?.position) {
-            // Convertir WorldPosition en GridCoordinate
-            const gridCoord = worldToGrid(drone.position);
-            if (gridCoord) {
-              // ✅ Ajouter le type de drone avec un séparateur (explorer|3,3 par exemple)
-              coords.push(`${type}|${gridCoord}` as any);
-            }
+          if (drone?.coord) {
+            // ✅ Utiliser GridCoordinate directement (plus de conversion nécessaire)
+            // Format: "explorer|3,3" pour afficher le type de drone
+            coords.push(`${type}|${drone.coord}` as any);
           }
         }
         
@@ -59,7 +55,7 @@ export default function TileMatrix() {
     });
 
     return () => subscription.unsubscribe();
-  }, [actor, worldToGrid]);
+  }, [actor]);
 
   // Debug: afficher les stats
   React.useEffect(() => {
