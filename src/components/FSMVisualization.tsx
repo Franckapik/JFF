@@ -48,6 +48,7 @@ export default function FSMVisualization() {
     drone_scanning: 0,
     drone_returning: 0,
     drone_docked: 0,
+    drone_destroyed: 0,
     collecting: 0,
     ship_moving_to_tile: 0,
     ship_collecting: 0,
@@ -57,6 +58,7 @@ export default function FSMVisualization() {
     repairing: 0,
     depositing: 0,
   });
+  const [lastDroneDestroyed, setLastDroneDestroyed] = React.useState<{ type: string; time: string } | null>(null);
 
   // Debug: log essential state info on change
   React.useEffect(() => {
@@ -92,7 +94,7 @@ export default function FSMVisualization() {
     // Incrémenter le compteur de visite pour le state principal et les substates
     setStateVisitCounts((prev) => {
       const allStates = [
-        'initializing', 'evaluating', 'exploring', 'drone_deploying', 'drone_scanning', 'drone_returning', 'drone_docked',
+        'initializing', 'evaluating', 'exploring', 'drone_deploying', 'drone_scanning', 'drone_returning', 'drone_docked', 'drone_destroyed',
         'collecting', 'ship_moving_to_tile', 'ship_collecting', 'ship_returning',
         'maintaining', 'refueling', 'repairing', 'depositing'
       ];
@@ -105,7 +107,7 @@ export default function FSMVisualization() {
       return updated;
     });
 
-    // Mettre à jour les stats
+    // Mettre à jour les stats et détecter les drones détruits
     const ctx = botSnapshot.context;
     if (ctx) {
       setCycleStats({
@@ -114,6 +116,17 @@ export default function FSMVisualization() {
         repairsCompleted: 0,
         refuelsCompleted: 0,
       });
+
+      // Détecter si un drone a été détruit
+      if (currentState.includes('drone_destroyed')) {
+        const explorerDestroyed = ctx.droneFleet?.drones?.explorer?.isDestroyed;
+        if (explorerDestroyed) {
+          setLastDroneDestroyed({
+            type: 'explorer',
+            time: new Date().toLocaleTimeString()
+          });
+        }
+      }
     }
   }, [botStates]);
 
@@ -147,6 +160,19 @@ export default function FSMVisualization() {
     <div style={styles.container}>
       <h1>🤖 FSM Cycle Visualization</h1>
       <p style={{ color: '#999', fontSize: '12px' }}>Connected to XState via Zustand • Real-time updates from bot-0</p>
+
+      {/* DRONE DESTRUCTION ALERT */}
+      {lastDroneDestroyed && (
+        <section style={{ ...styles.section, backgroundColor: '#ffebee', borderLeft: '4px solid #ff6b6b' }}>
+          <h3 style={{ color: '#ff6b6b', margin: '0 0 8px 0' }}>💥 Drone Destroyed!</h3>
+          <p style={{ margin: '0' }}>
+            <strong>{lastDroneDestroyed.type}</strong> drone was destroyed at <strong>{lastDroneDestroyed.time}</strong>
+          </p>
+          <p style={{ fontSize: '12px', color: '#666', margin: '4px 0 0 0' }}>
+            Destroyed by danger tile - No information collected
+          </p>
+        </section>
+      )}
 
       {/* CURRENT STATE */}
       <section style={styles.section}>
@@ -189,28 +215,104 @@ export default function FSMVisualization() {
 
       {/* DRONE STATUS */}
       <section style={styles.section}>
-        <h3>🚁 Drone Status</h3>
-        <table style={styles.table}>
-          <tbody>
-            <tr>
-              <td>Type:</td>
-              <td style={styles.statValue}>explorer</td>
-            </tr>
-            <tr>
-              <td>Visual State:</td>
-              <td style={styles.statValue}>{ctx?.droneFleet?.drones?.explorer?.visualState || 'uninitialized'}</td>
-            </tr>
-            <tr>
-              <td>Active:</td>
-              <td style={styles.statValue}>{ctx?.droneFleet?.drones?.explorer?.isActive ? '✅' : '❌'}</td>
-            </tr>
-          </tbody>
-        </table>
-        <PositionDisplay
-          title="Drone Position"
-          worldPosition={ctx?.droneFleet?.drones?.explorer?.position}
-          gridCoord={undefined}
-        />
+        <h3>🚁 Drone Status (All Types)</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+          {/* EXPLORER DRONE */}
+          <div style={{ border: '1px solid #ddd', padding: '12px', borderRadius: '6px', backgroundColor: '#f5f5f5' }}>
+            <h4 style={{ margin: '0 0 8px 0', color: '#2196f3' }}>🛰️ Explorer</h4>
+            <table style={{ width: '100%', fontSize: '12px', marginBottom: '8px' }}>
+              <tbody>
+                <tr>
+                  <td style={{ fontWeight: 'bold', paddingRight: '8px' }}>State:</td>
+                  <td>{ctx?.droneFleet?.drones?.explorer?.visualState || 'uninitialized'}</td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', paddingRight: '8px' }}>Status:</td>
+                  <td style={{ color: ctx?.droneFleet?.drones?.explorer?.isDestroyed ? '#ff6b6b' : '#4caf50' }}>
+                    {ctx?.droneFleet?.drones?.explorer?.isDestroyed ? '💥 Destroyed' : ctx?.droneFleet?.drones?.explorer?.isActive ? '✅ Active' : '❌ Inactive'}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', paddingRight: '8px' }}>Deployed:</td>
+                  <td>{ctx?.droneFleet?.stats?.explorerDeployed || 0}</td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', paddingRight: '8px' }}>Destroyed:</td>
+                  <td style={{ color: '#ff6b6b' }}>{ctx?.droneFleet?.stats?.explorerDestroyed || 0}</td>
+                </tr>
+              </tbody>
+            </table>
+            <PositionDisplay
+              title="Position"
+              worldPosition={ctx?.droneFleet?.drones?.explorer?.position}
+              gridCoord={undefined}
+            />
+          </div>
+
+          {/* COMBAT DRONE */}
+          <div style={{ border: '1px solid #ddd', padding: '12px', borderRadius: '6px', backgroundColor: '#f5f5f5' }}>
+            <h4 style={{ margin: '0 0 8px 0', color: '#f44336' }}>🎯 Combat</h4>
+            <table style={{ width: '100%', fontSize: '12px', marginBottom: '8px' }}>
+              <tbody>
+                <tr>
+                  <td style={{ fontWeight: 'bold', paddingRight: '8px' }}>State:</td>
+                  <td>{ctx?.droneFleet?.drones?.combat?.visualState || 'uninitialized'}</td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', paddingRight: '8px' }}>Status:</td>
+                  <td style={{ color: ctx?.droneFleet?.drones?.combat?.isDestroyed ? '#ff6b6b' : '#4caf50' }}>
+                    {ctx?.droneFleet?.drones?.combat?.isDestroyed ? '💥 Destroyed' : ctx?.droneFleet?.drones?.combat?.isActive ? '✅ Active' : '❌ Inactive'}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', paddingRight: '8px' }}>Deployed:</td>
+                  <td>{ctx?.droneFleet?.stats?.combatDeployed || 0}</td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', paddingRight: '8px' }}>Destroyed:</td>
+                  <td style={{ color: '#ff6b6b' }}>{ctx?.droneFleet?.stats?.combatDestroyed || 0}</td>
+                </tr>
+              </tbody>
+            </table>
+            <PositionDisplay
+              title="Position"
+              worldPosition={ctx?.droneFleet?.drones?.combat?.position}
+              gridCoord={undefined}
+            />
+          </div>
+
+          {/* SPECIAL DRONE */}
+          <div style={{ border: '1px solid #ddd', padding: '12px', borderRadius: '6px', backgroundColor: '#f5f5f5' }}>
+            <h4 style={{ margin: '0 0 8px 0', color: '#9c27b0' }}>✨ Special</h4>
+            <table style={{ width: '100%', fontSize: '12px', marginBottom: '8px' }}>
+              <tbody>
+                <tr>
+                  <td style={{ fontWeight: 'bold', paddingRight: '8px' }}>State:</td>
+                  <td>{ctx?.droneFleet?.drones?.special?.visualState || 'uninitialized'}</td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', paddingRight: '8px' }}>Status:</td>
+                  <td style={{ color: ctx?.droneFleet?.drones?.special?.isDestroyed ? '#ff6b6b' : '#4caf50' }}>
+                    {ctx?.droneFleet?.drones?.special?.isDestroyed ? '💥 Destroyed' : ctx?.droneFleet?.drones?.special?.isActive ? '✅ Active' : '❌ Inactive'}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', paddingRight: '8px' }}>Deployed:</td>
+                  <td>{ctx?.droneFleet?.stats?.specialDeployed || 0}</td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', paddingRight: '8px' }}>Destroyed:</td>
+                  <td style={{ color: '#ff6b6b' }}>{ctx?.droneFleet?.stats?.specialDestroyed || 0}</td>
+                </tr>
+              </tbody>
+            </table>
+            <PositionDisplay
+              title="Position"
+              worldPosition={ctx?.droneFleet?.drones?.special?.position}
+              gridCoord={undefined}
+            />
+          </div>
+        </div>
       </section>
 
       {/* TILE MATRIX */}
@@ -272,7 +374,8 @@ export default function FSMVisualization() {
               { key: 'drone_deploying', label: '🚁 Deploying' },
               { key: 'drone_scanning', label: '📡 Scanning' },
               { key: 'drone_returning', label: '🔙 Returning' },
-              { key: 'drone_docked', label: '⚓ Docked' }
+              { key: 'drone_docked', label: '⚓ Docked' },
+              { key: 'drone_destroyed', label: '💥 Destroyed' }
             ], stateVisitCounts)}
           </div>
 
