@@ -11,10 +11,10 @@
  * ✅ Source unique de vérité pour les timings
  */
 
+import { gridToWorld } from '../../../../core/spatial/coordinates.ts';
+import type { GridCoordinate, WorldPosition } from '../../../../types/coordinates';
 import type { FSMContext } from '../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../events.pure.v5.ts';
-import type { GridCoordinate, WorldPosition } from '../../../../types/coordinates';
-import { gridToWorld } from '../../../../core/spatial/coordinates.ts';
 
 // ========================================
 // Configuration des durées (en ms)

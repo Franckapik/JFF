@@ -2,8 +2,8 @@ import React from 'react';
 
 import { gridToWorld } from '../core/spatial';
 import useXFSMStore from '../stores/useXFSMStore';
-import type { FSMContext } from '../types/fsm.d';
 import type { GridCoordinate } from '../types/coordinates';
+import type { FSMContext } from '../types/fsm.d';
 import PositionDisplay from './PositionDisplay';
 import TileMatrix from './TileMatrix';
 

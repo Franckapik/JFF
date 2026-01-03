@@ -1,4 +1,4 @@
-import type { Path, WorldGridPosition } from './coordinates';
+import type { Path } from './coordinates';
 import type { ResourceStats } from './resources';
 import type { ShipType } from './tracker';
 
