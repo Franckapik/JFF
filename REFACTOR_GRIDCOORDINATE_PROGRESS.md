@@ -37,16 +37,31 @@
 - [x] Tests TypeScript (pas d'erreurs nouvelles)
 - [x] **Commit:** feat(spatial): Add GridCoordinate distance functions
 
-### 🔄 Étape 2: Types FSM
-- [ ] Modification vehicle.d.ts (VehicleState)
-- [ ] Modification drone.d.ts (DroneState)
-- [ ] Validation types
+### ✅ Étape 2: Types FSM
+- [x] Modification vehicle.d.ts (VehicleState)
+- [x] Modification drone.d.ts (DroneState)
+- [x] Validation types
+- [x] **Commit:** refactor(fsm): Use GridCoordinate in vehicle/drone state and actions
 
-### 🔄 Étape 3: Actions FSM
-- [ ] Domain global
-- [ ] Domain exploration
-- [ ] Domain collecting
-- [ ] Domain maintenance
+### ✅ Étape 3: Actions FSM - Global et Initializing
+- [x] Domain global (updateShipPosition, updateDronePosition)
+- [x] Domain initializing (processShipInitRequest, processDroneInitRequest)
+- [x] Guards initializing
+
+### ✅ Étape 4: Actions FSM - Exploration, Collection, Maintenance
+- [x] Domain exploration
+- [x] **Commit:** refactor(fsm/exploration): Use GridCoordinate in all exploration actions
+- [x] Domain collection  
+- [x] **Commit:** refactor(fsm/collection): Use GridCoordinate in all collection actions
+- [x] Domain maintenance
+- [x] **Commit:** refactor(fsm/maintenance): Use GridCoordinate in maintenance domain
+- [x] Toutes les actions FSM utilisent maintenant GridCoordinate
+
+### 🔄 Étape 5: Tests, mocks et components  
+- [ ] Fixer simulatedTrackerCore.ts
+- [ ] Fixer test/mockData.ts
+- [ ] Fixer FSMVisualization.tsx (conversion boundary)
+- [ ] Fixer erreurs fsmLogger (init method)
 
 ### 🔄 Étape 4: Guards
 - [ ] Evaluation guards

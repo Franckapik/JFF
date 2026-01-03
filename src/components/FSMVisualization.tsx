@@ -1,7 +1,9 @@
 import React from 'react';
 
+import { gridToWorld } from '../core/spatial';
 import useXFSMStore from '../stores/useXFSMStore';
 import type { FSMContext } from '../types/fsm.d';
+import type { GridCoordinate } from '../types/coordinates';
 import PositionDisplay from './PositionDisplay';
 import TileMatrix from './TileMatrix';
 
@@ -31,6 +33,12 @@ function isValidSnapshot(snapshot: unknown): snapshot is {
 export default function FSMVisualization() {
   const botStates = useXFSMStore((state) => state.botStates);
   const activeBots = useXFSMStore((state) => state.activeBots);
+
+  // Helper pour convertir GridCoordinate en WorldPosition pour l'affichage
+  const coordToWorldPos = React.useCallback((coord: GridCoordinate | null | undefined, spacing = 1.2) => {
+    if (!coord) return undefined;
+    return gridToWorld(coord, { spacing, defaultY: 0.5 });
+  }, []);
 
   // États pour le log des transitions
   const [eventLog, setEventLog] = React.useState<Array<{ time: string; event: string; state: string }>>([]);
@@ -208,8 +216,8 @@ export default function FSMVisualization() {
         </table>
         <PositionDisplay
           title="Ship Position"
-          worldPosition={ctx?.vehicle?.position}
-          gridCoord={ctx?.vehicle?.position?.coord}
+          worldPosition={coordToWorldPos(ctx?.vehicle?.coord, ctx?.gridInfo?.spacing)}
+          gridCoord={ctx?.vehicle?.coord}
         />
       </section>
 
@@ -244,8 +252,8 @@ export default function FSMVisualization() {
             </table>
             <PositionDisplay
               title="Position"
-              worldPosition={ctx?.droneFleet?.drones?.explorer?.position}
-              gridCoord={undefined}
+              worldPosition={coordToWorldPos(ctx?.droneFleet?.drones?.explorer?.coord, ctx?.gridInfo?.spacing)}
+              gridCoord={ctx?.droneFleet?.drones?.explorer?.coord}
             />
           </div>
 
@@ -276,8 +284,8 @@ export default function FSMVisualization() {
             </table>
             <PositionDisplay
               title="Position"
-              worldPosition={ctx?.droneFleet?.drones?.combat?.position}
-              gridCoord={undefined}
+              worldPosition={coordToWorldPos(ctx?.droneFleet?.drones?.combat?.coord, ctx?.gridInfo?.spacing)}
+              gridCoord={ctx?.droneFleet?.drones?.combat?.coord}
             />
           </div>
 
@@ -308,8 +316,8 @@ export default function FSMVisualization() {
             </table>
             <PositionDisplay
               title="Position"
-              worldPosition={ctx?.droneFleet?.drones?.special?.position}
-              gridCoord={undefined}
+              worldPosition={coordToWorldPos(ctx?.droneFleet?.drones?.special?.coord, ctx?.gridInfo?.spacing)}
+              gridCoord={ctx?.droneFleet?.drones?.special?.coord}
             />
           </div>
         </div>

@@ -13,6 +13,8 @@
 
 import type { FSMContext } from '../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../events.pure.v5.ts';
+import type { GridCoordinate, WorldPosition } from '../../../../types/coordinates';
+import { gridToWorld } from '../../../../core/spatial/coordinates.ts';
 
 // ========================================
 // Configuration des durées (en ms)
@@ -40,12 +42,13 @@ export const DURATIONS = {
 // Types
 // ========================================
 
-export type Position = {
-  x: number;
-  y?: number;
-  z: number;
-  coord?: string;
-};
+/**
+ * Convertit une GridCoordinate en WorldPosition pour les calculs
+ */
+function coordToWorldPosition(coord: GridCoordinate | undefined, spacing: number = -0.2): WorldPosition | null {
+  if (!coord) return null;
+  return gridToWorld(coord, { spacing, defaultY: 0.5 });
+}
 
 export type ScheduledEvent = {
   event: MachineEvents;
@@ -65,7 +68,7 @@ export type StateInfo = {
 /**
  * Calcule la distance euclidienne entre deux positions
  */
-export function calculateDistance(pos1: Position | null | undefined, pos2: Position | null | undefined): number {
+export function calculateDistance(pos1: WorldPosition | null | undefined, pos2: WorldPosition | null | undefined): number {
   if (!pos1 || !pos2) return 0;
   
   const dx = (pos2.x ?? 0) - (pos1.x ?? 0);
@@ -119,11 +122,19 @@ export function detectCurrentState(snapshotValue: string | object): StateInfo {
 
 /**
  * Extrait les positions et cibles du contexte FSM
+ * Convertit les GridCoordinate en WorldPosition pour les calculs de distance
  */
 export function extractPositionsAndTargets(context: FSMContext) {
-  const dronePos = context.droneFleet?.drones?.explorer?.position;
-  const shipPos = context.vehicle?.position;
-  const basePos = context.vehicle?.basePosition;
+  const spacing = context.gridInfo?.spacing ?? -0.2;
+  
+  const droneCoord = context.droneFleet?.drones?.explorer?.coord;
+  const shipCoord = context.vehicle?.coord;
+  const baseCoord = context.vehicle?.baseCoord;
+  
+  const dronePos = coordToWorldPosition(droneCoord, spacing);
+  const shipPos = coordToWorldPosition(shipCoord, spacing);
+  const basePos = coordToWorldPosition(baseCoord, spacing);
+  
   const targetDroneTile = context.droneFleet?.drones?.explorer?.targetDroneTile;
   const targetVehicleTile = context.vehicle?.targetVehicleTile;
   const tiles = context.gridInfo?.tiles || {};
@@ -135,6 +146,7 @@ export function extractPositionsAndTargets(context: FSMContext) {
     targetDroneTile,
     targetVehicleTile,
     tiles,
+    spacing,
   };
 }
 
@@ -150,7 +162,7 @@ export function getExploringEvents(
   context: FSMContext,
   verbose: boolean = false
 ): ScheduledEvent[] {
-  const { dronePos, basePos, targetDroneTile, tiles: _tiles } = extractPositionsAndTargets(context);
+  const { dronePos, basePos, targetDroneTile, tiles: _tiles, spacing } = extractPositionsAndTargets(context);
   const events: ScheduledEvent[] = [];
   
   if (subState === 'drone_deploying') {
@@ -160,25 +172,27 @@ export function getExploringEvents(
     }
     
     if (targetDroneTile?.position?.coord) {
-      const targetPos = targetDroneTile.position;
-      const distance = calculateDistance(dronePos, targetPos);
-      const travelTime = calculateTravelTime(distance, DURATIONS.DRONE_SPEED);
-      
-      // ✅ FIX: Si la distance est pratiquement nulle (drone déjà sur place)
-      // programmer l'événement immédiatement pour éviter les boucles
-      const isAlreadyOnTile = distance < 0.01; // Tolérance de 0.01 unité
-      const effectiveDelay = isAlreadyOnTile ? 0 : travelTime;
-      
-      if (verbose) {
-      // eslint-disable-next-line no-console
-        console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${effectiveDelay}ms${isAlreadyOnTile ? ' (already on tile)' : ''}`);
+      const targetPos = coordToWorldPosition(targetDroneTile.position.coord as GridCoordinate, spacing);
+      if (targetPos) {
+        const distance = calculateDistance(dronePos, targetPos);
+        const travelTime = calculateTravelTime(distance, DURATIONS.DRONE_SPEED);
+        
+        // ✅ FIX: Si la distance est pratiquement nulle (drone déjà sur place)
+        // programmer l'événement immédiatement pour éviter les boucles
+        const isAlreadyOnTile = distance < 0.01; // Tolérance de 0.01 unité
+        const effectiveDelay = isAlreadyOnTile ? 0 : travelTime;
+        
+        if (verbose) {
+        // eslint-disable-next-line no-console
+          console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${effectiveDelay}ms${isAlreadyOnTile ? ' (already on tile)' : ''}`);
+        }
+        
+        events.push({
+          event: { type: 'DRONE_REACHES_TILE' },
+          delay: effectiveDelay,
+          reason: `Drone traveling to ${targetDroneTile.position.coord}`
+        });
       }
-      
-      events.push({
-        event: { type: 'DRONE_REACHES_TILE' },
-        delay: effectiveDelay,
-        reason: `Drone traveling to ${targetPos.coord}`
-      });
     } else if (verbose) {
       // eslint-disable-next-line no-console
       console.log(`   ⚠️  No valid target tile`);
@@ -240,7 +254,7 @@ export function getCollectingEvents(
   context: FSMContext,
   verbose: boolean = false
 ): ScheduledEvent[] {
-  const { shipPos, basePos, targetVehicleTile } = extractPositionsAndTargets(context);
+  const { shipPos, basePos, targetVehicleTile, spacing } = extractPositionsAndTargets(context);
   const events: ScheduledEvent[] = [];
   
   if (subState === 'ship_moving_to_tile') {
@@ -249,8 +263,10 @@ export function getCollectingEvents(
       console.log(`🚢 [TRACKER] Ship moving`);
     }
     
-    if (targetVehicleTile?.position && shipPos) {
-      const distance = calculateDistance(shipPos, targetVehicleTile.position);
+    if (targetVehicleTile?.position?.coord && shipPos) {
+      const targetPos = coordToWorldPosition(targetVehicleTile.position.coord as GridCoordinate, spacing);
+      if (!targetPos) return events;
+      const distance = calculateDistance(shipPos, targetPos);
       const travelTime = calculateTravelTime(distance, DURATIONS.SHIP_SPEED);
       
       // ✅ FIX: Si la distance est pratiquement nulle (bot déjà sur place)
@@ -367,22 +383,24 @@ export function getInitializingEvents(
   verbose: boolean = false
 ): ScheduledEvent[] {
   const events: ScheduledEvent[] = [];
+  const spacing = context.gridInfo?.spacing ?? -0.2;
   
-  // Position de base par défaut (0,0,0) - sera ajustée par les actions
-  const defaultPosition = { x: 0, y: 0.5, z: 0, coord: '0,0' };
-  const { basePos } = extractPositionsAndTargets(context);
+  // GridCoordinate de base par défaut
+  const defaultCoord: GridCoordinate = '0,0';
+  const baseCoord = context.vehicle?.baseCoord || defaultCoord;
   
   // Vérifier si le vaisseau doit être initialisé
-  const shipPosition = context.vehicle?.position;
-  if (!shipPosition || (shipPosition.x === undefined && shipPosition.z === undefined)) {
+  const shipCoord = context.vehicle?.coord;
+  if (!shipCoord) {
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log('🚀 [TRACKER] Init ship');
     }
+    const initialPosition = coordToWorldPosition(defaultCoord, spacing) || { x: 0, y: 0.5, z: 0 };
     events.push({
       event: { 
         type: 'SHIP_INITIALIZE_REQUEST',
-        initialPosition: defaultPosition,
+        initialPosition,
         shipType: 'main-ship'
       },
       delay: 50,
@@ -397,11 +415,12 @@ export function getInitializingEvents(
       // eslint-disable-next-line no-console
       console.log('🔧 [TRACKER] Init drone');
     }
+    const initialPosition = coordToWorldPosition(baseCoord, spacing) || { x: 0, y: 0.5, z: 0 };
     events.push({
       event: { 
         type: 'DRONE_INITIALIZE_REQUEST',
         droneType: 'explorer',
-        initialPosition: basePos || defaultPosition,
+        initialPosition,
       },
       delay: 100, // After ship initialization
       reason: 'Initialize drone'

@@ -47,7 +47,7 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
   const isInitialization = !context.vehicle?.coord;
   
   if (isInitialization) {
-    fsmLogger.init(`🎯 Ship initialization: coord=${coord}`);
+    fsmLogger.info(`🎯 Ship initialization: coord=${coord}`);
     return {
       vehicle: {
         ...context.vehicle,

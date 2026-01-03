@@ -21,7 +21,7 @@ import type { FSMContext } from '../../../../../types/fsm.d.ts';
  */
 export function isVehiclePositionInitialized(context: FSMContext): boolean {
   const vehicleCoord = context?.vehicle?.coord;
-  return !!vehicleCoord && vehicleCoord !== '';
+  return vehicleCoord != null && vehicleCoord.length > 0;
 }
 
 /**
@@ -33,7 +33,7 @@ export function isDronePositionInitialized(context: FSMContext): boolean {
   const drones = context?.droneFleet?.drones || {};
   const firstDrone = Object.values(drones)[0] as { coord?: string };
   const droneCoord = firstDrone?.coord;
-  return !!droneCoord && droneCoord !== '';
+  return droneCoord != null && droneCoord.length > 0;
 }
 
 /**
@@ -43,7 +43,7 @@ export function isDronePositionInitialized(context: FSMContext): boolean {
  */
 export function isBasePositionInitialized(context: FSMContext): boolean {
   const baseCoord = context?.vehicle?.baseCoord;
-  return !!baseCoord && baseCoord !== '';
+  return baseCoord != null && baseCoord.length > 0;
 }
 
 /**
