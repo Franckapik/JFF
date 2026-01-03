@@ -22,6 +22,45 @@ export function createAssignAction(
 }
 
 /**
+ * Helper pour synchroniser la position des drones docked avec le vaisseau
+ * Appelé après chaque changement de position du vaisseau
+ */
+function syncDockedDronesPosition(
+  context: FSMContext,
+  newShipCoord: string
+): Partial<FSMContext> {
+  const drones = context.droneFleet?.drones;
+  if (!drones) return {};
+
+  // Construire un nouvel objet drones avec les positions mises à jour
+  const updatedDrones = { ...drones };
+  let hasDockedDrone = false;
+
+  for (const droneType of Object.keys(drones) as Array<keyof typeof drones>) {
+    const drone = drones[droneType];
+    if (drone?.visualState === 'docked') {
+      updatedDrones[droneType] = {
+        ...drone,
+        coord: newShipCoord as `${number},${number}`,
+      };
+      hasDockedDrone = true;
+    }
+  }
+
+  // Ne retourner une mise à jour que si un drone docked a été trouvé
+  if (hasDockedDrone) {
+    return {
+      droneFleet: {
+        ...context.droneFleet,
+        drones: updatedDrones,
+      },
+    };
+  }
+
+  return {};
+}
+
+/**
  * Action assign pour mettre à jour la position du vaisseau
  * Migré depuis actions.pure.v5.ts
  * 
@@ -54,15 +93,17 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
         coord,
         baseCoord: coord,  // Set base at first position
       },
+      ...syncDockedDronesPosition(context, coord),
     };
   }
   
-  // Mise à jour normale de position
+  // Mise à jour normale de position + synchroniser les drones docked
   return {
     vehicle: {
       ...context.vehicle,
       coord,
     },
+    ...syncDockedDronesPosition(context, coord),
   };
 });
 

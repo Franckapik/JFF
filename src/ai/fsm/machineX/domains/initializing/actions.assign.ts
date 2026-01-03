@@ -4,15 +4,16 @@
  */
 import { findTileAtPosition, worldToGrid } from '../../../../../core/spatial/index.ts';
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
+import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import { createAssignAction } from '../global/actions.assign.ts';
 
 export const processDroneInitRequest = createAssignAction(({ context, event }) => {
-	if (event.type !== 'DRONE_INITIALIZE_REQUEST') return context;
+	if (event.type !== 'DRONE_INITIALIZE_REQUEST') return {};
 	
 	// Protection : vérifier que la coordonnée du vaisseau existe
 	const shipCoord = context.vehicle?.coord;
 	if (!shipCoord) {
-		return context;
+		return {};
 	}
 	
 	fsmLogger.context(`🛸 [${context.entityId}] Processing ${event.droneType} drone init request`, {
@@ -40,11 +41,11 @@ export const processDroneInitRequest = createAssignAction(({ context, event }) =
 });
 
 export const processShipInitRequest = createAssignAction(({ context, event }) => {
-	if (event.type !== 'SHIP_INITIALIZE_REQUEST') return context;
+	if (event.type !== 'SHIP_INITIALIZE_REQUEST') return {};
 	
 	// Protection : vérifier que initialPosition existe
 	if (!event.initialPosition) {
-		return context;
+		return {};
 	}
 	
 	// ✅ Phase 4: Use context.gridInfo instead of useTileStore.getState()
@@ -53,32 +54,31 @@ export const processShipInitRequest = createAssignAction(({ context, event }) =>
 	
 	// Trouver la tuile la plus proche
 	const nearestTile = findTileAtPosition(event.initialPosition, tiles);
-	let basePosition;
+	let baseCoord: string;
 
 	if (nearestTile && nearestTile.position) {
-		basePosition = { 
-			...event.initialPosition, 
-			coord: nearestTile.position.coord 
-		};
+		baseCoord = nearestTile.position.coord;
+		fsmLogger.info(`🚢 [${context.entityId}] Ship initialized at tile ${baseCoord}`, {
+			initialPosition: event.initialPosition,
+			nearestTile: nearestTile.position.coord
+		});
 	} else {
-		const coord = worldToGrid(event.initialPosition, { spacing });
-		basePosition = { ...event.initialPosition, coord };
-
+		baseCoord = worldToGrid(event.initialPosition, { spacing });
 		fsmLogger.warn(`🚢 [${context.entityId}] No tile found at position, using worldToGrid fallback`, {
 			initialPosition: event.initialPosition,
-			calculatedCoord: coord
+			calculatedCoord: baseCoord
 		});
 	}
 
 	return {
 		vehicle: {
 			...context.vehicle,
-			position: { ...event.initialPosition, coord: basePosition.coord },
-			basePosition: basePosition,
+			coord: baseCoord,
+			baseCoord: baseCoord,
 			type: event.shipType as "main-ship",
-			visualState: 'docked', // Mark ship as initialized
+			visualState: 'docked' as const,
 		},
-	};
+	} as Partial<FSMContext>;
 });
 // Actions d'assignation pour le domaine initializing
 
