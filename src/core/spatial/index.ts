@@ -25,7 +25,9 @@
 // ============================================================================
 
 export {
-    calculateDistance, calculateDistance2D, getDirectionVector, hasReachedTarget
+    calculateDistance, calculateDistance2D,
+    calculateDistanceGrid, calculateManhattanDistanceGrid,
+    getDirectionVector, hasReachedTarget, hasReachedTargetGrid
 } from './distance.ts';
 
 // ============================================================================

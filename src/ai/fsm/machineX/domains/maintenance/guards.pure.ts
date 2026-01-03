@@ -9,6 +9,7 @@
  * All guards follow the pattern: GuardPredicate<FSMContext, MachineEvents>
  */
 
+import { calculateDistanceGrid } from '../../../../../core/spatial/index.ts';
 import type { XStateV5Guard } from '../../../../../types/xstate.v5.types.ts';
 
 /**
@@ -84,37 +85,31 @@ export const needsDeposit: XStateV5Guard = ({ context }) => {
 };
 
 /**
- * Pure guard: Check if ship is at base (distance to basePosition <= 1.0 unit)
+ * Pure guard: Check if ship is at base (distance to baseCoord <= 1 hex)
  * 
- * @param context FSMContext containing vehicle position and basePosition
- * @returns true if ship is within 1.0 unit distance from base
+ * @param context FSMContext containing vehicle coord and baseCoord
+ * @returns true if ship is within 1 hex distance from base
  * 
  * @example
  * // In Node.js test:
  * const context = {
  *   vehicle: {
- *     position: { x: 0, z: 0 },
- *     basePosition: { x: 0.5, z: 0.5 }
+ *     coord: { col: 0, row: 0 },
+ *     baseCoord: { col: 1, row: 0 }
  *   }
  * };
  * const result = isShipOnBase({ context, event: {} });
- * console.log(result); // true (distance ~0.707 < 1.0)
+ * console.log(result); // true (distance = 1)
  */
 export const isShipOnBase: XStateV5Guard = ({ context }) => {
   const vehicle = context.vehicle;
-  if (!vehicle || !vehicle.position || !vehicle.basePosition) {
+  if (!vehicle || !vehicle.coord || !vehicle.baseCoord) {
     return false;
   }
 
-  const shipPos = vehicle.position;
-  const basePos = vehicle.basePosition;
+  const distance = calculateDistanceGrid(vehicle.coord, vehicle.baseCoord);
   
-  const distance = Math.sqrt(
-    Math.pow(shipPos.x - basePos.x, 2) + 
-    Math.pow(shipPos.z - basePos.z, 2)
-  );
-  
-  const BASE_PROXIMITY_THRESHOLD = 1.0;
+  const BASE_PROXIMITY_THRESHOLD = 1;
   
   return distance <= BASE_PROXIMITY_THRESHOLD;
 };

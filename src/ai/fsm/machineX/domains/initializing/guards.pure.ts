@@ -15,38 +15,35 @@
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 
 /**
- * Vérifie que la position du véhicule principal est assignée
+ * Vérifie que la coordonnée du véhicule principal est assignée
+ * ✅ Refactored: Uses GridCoordinate instead of WorldPosition
  * Note: Ne vérifie plus isGameInitialized() (dépendance store supprimée)
  */
 export function isVehiclePositionInitialized(context: FSMContext): boolean {
-  const vehiclePos = context?.vehicle?.position;
-  return !!vehiclePos && 
-         vehiclePos.x !== undefined && 
-         vehiclePos.z !== undefined;
+  const vehicleCoord = context?.vehicle?.coord;
+  return vehicleCoord != null && vehicleCoord.length > 0;
 }
 
 /**
- * Vérifie que la position du drone est assignée
+ * Vérifie que la coordonnée du drone est assignée
+ * ✅ Refactored: Uses GridCoordinate instead of WorldPosition
  * Note: Ne vérifie plus isGameInitialized() (dépendance store supprimée)
  */
 export function isDronePositionInitialized(context: FSMContext): boolean {
   const drones = context?.droneFleet?.drones || {};
-  const firstDrone = Object.values(drones)[0] as { position?: { x?: number; z?: number } };
-  const dronePos = firstDrone?.position;
-  return !!dronePos && 
-         dronePos.x !== undefined && 
-         dronePos.z !== undefined;
+  const firstDrone = Object.values(drones)[0] as { coord?: string };
+  const droneCoord = firstDrone?.coord;
+  return droneCoord != null && droneCoord.length > 0;
 }
 
 /**
- * Vérifie que la position de base de départ du véhicule est assignée
+ * Vérifie que la coordonnée de base de départ du véhicule est assignée
+ * ✅ Refactored: Uses GridCoordinate instead of WorldGridPosition
  * Note: Ne vérifie plus isGameInitialized() (dépendance store supprimée)
  */
 export function isBasePositionInitialized(context: FSMContext): boolean {
-  const basePos = context?.vehicle?.basePosition;
-  return !!basePos && 
-         basePos.x !== undefined && 
-         basePos.z !== undefined;
+  const baseCoord = context?.vehicle?.baseCoord;
+  return baseCoord != null && baseCoord.length > 0;
 }
 
 /**

@@ -34,8 +34,8 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
     vehicle: {
       id: `${entityId}-ship`,
       type: "main-ship",
-      position: null,
-      basePosition: null,
+      coord: null,        // Will be initialized by SHIP_INITIALIZE_REQUEST
+      baseCoord: null,    // Will be initialized by SHIP_INITIALIZE_REQUEST
       isMoving: false,
       progress: 0,
       resources: { food: 0, debris: 0, special: 0, total: 0 },
@@ -102,7 +102,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
           id: `${entityId}-drone-explorer`,
           type: "explorer" as DroneType,
           visualState: "uninitialized" as DroneVisualState,
-          position: null, // Will be initialized by DRONE_INITIALIZE_REQUEST
+          coord: undefined, // Will be initialized by DRONE_INITIALIZE_REQUEST
           targetDroneTile: null,
           isMoving: false,
           isActive: false,
@@ -112,7 +112,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
           id: `${entityId}-drone-combat`,
           type: "combat" as DroneType,
           visualState: "uninitialized" as DroneVisualState,
-          position: null, // Will be initialized by DRONE_INITIALIZE_REQUEST
+          coord: undefined, // Will be initialized by DRONE_INITIALIZE_REQUEST
           targetDroneTile: null,
           isMoving: false,
           isActive: false,
@@ -122,7 +122,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
           id: `${entityId}-drone-special`,
           type: "special" as DroneType,
           visualState: "uninitialized" as DroneVisualState,
-          position: null, // Will be initialized by DRONE_INITIALIZE_REQUEST
+          coord: undefined, // Will be initialized by DRONE_INITIALIZE_REQUEST
           targetDroneTile: null,
           isMoving: false,
           isActive: false,

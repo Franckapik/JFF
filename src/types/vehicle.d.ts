@@ -1,4 +1,4 @@
-import type { Path, WorldGridPosition } from './coordinates';
+import type { Path } from './coordinates';
 import type { ResourceStats } from './resources';
 import type { ShipType } from './tracker';
 
@@ -26,8 +26,8 @@ export type VehicleVisualState =
 export interface VehicleState {
   id: string;
   type: ShipType;
-  position: WorldGridPosition;
-  basePosition: WorldGridPosition;
+  coord: import('./coordinates').GridCoordinate;          // Position en coordonnée de grille
+  baseCoord: import('./coordinates').GridCoordinate;      // Position de base en coordonnée de grille
   isMoving: boolean;
   progress: number;
   resources: ResourceStats;

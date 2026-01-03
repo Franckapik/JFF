@@ -83,9 +83,9 @@ export const onDroneScanningExit = ({ context: _context }: { context: FSMContext
  * EVENT: DRONE_REACHES_BASE envoyé par returningHandler (tracker)
  */
 export const onDroneReturningEntry = ({ context }: { context: FSMContext }) => {
-  const basePosition = context.vehicle?.basePosition;
+  const baseCoord = context.vehicle?.baseCoord;
   fsmLogger.action(`🔙 [${context.entityId}] Entrée dans l'état DRONE_RETURNING`, {
-    basePosition: basePosition?.coord || 'unknown',
+    baseCoord: baseCoord || 'unknown',
     tilesExploredInCycle: context.memory?.stats?.tilesExploredInCycle || 0
   });
 };

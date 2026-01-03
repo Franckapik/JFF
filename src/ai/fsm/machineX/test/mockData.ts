@@ -15,14 +15,6 @@ import { createMachineContext } from '../context/initialContext.ts';
 // Positions et tuiles mock
 // ========================================
 
-/** Position initiale (tile de départ) */
-export const initialPosition = {
-  x: 0,
-  y: 0.5,
-  z: 0,
-  coord: '0,0'
-} as const;
-
 /** Tuile de départ */
 export const mockDepartTile: Tile = {
   position: { x: 0, y: 0.5, z: 0, coord: '0,0' },
@@ -125,23 +117,23 @@ export function makeInitialContext(botId: string = 'test-bot-0'): FSMContext {
     ...baseContext,
     vehicle: {
       ...baseContext.vehicle,
-      position: { ...initialPosition },
-      basePosition: { ...initialPosition },
+      coord: '0,0' as import('../../../../types/coordinates').GridCoordinate,
+      baseCoord: '0,0' as import('../../../../types/coordinates').GridCoordinate,
     },
     droneFleet: {
       ...baseContext.droneFleet,
       drones: {
         explorer: {
           ...baseContext.droneFleet.drones.explorer,
-          position: { ...initialPosition },
+          coord: '0,0' as import('../../../../types/coordinates').GridCoordinate,
         },
         combat: {
           ...baseContext.droneFleet.drones.combat,
-          position: { ...initialPosition },
+          coord: '0,0' as import('../../../../types/coordinates').GridCoordinate,
         },
         special: {
           ...baseContext.droneFleet.drones.special,
-          position: { ...initialPosition },
+          coord: '0,0' as import('../../../../types/coordinates').GridCoordinate,
         }
       }
     },
