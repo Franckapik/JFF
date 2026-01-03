@@ -1,0 +1,336 @@
+
+> react-three-vite@1.0.2 dev:all
+> npm-run-all -p log:server dev
+
+
+> react-three-vite@1.0.2 log:server
+> node scripts/log-server.mjs
+
+
+> react-three-vite@1.0.2 dev
+> vite
+
+🚀 Browser log server listening on http://localhost:5123/log
+[32m✔[0m [33mConsole Ninja[0m extension is connected to [33mVite[0m, see [36mhttps://tinyurl.com/2vt8jxzw[0m
+
+  VITE v5.4.19  ready in 1326 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+Browserslist: browsers data (caniuse-lite) is 7 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[browser:/] 🎲 [App] Tiles generated: {"tilesCount":37,"radius":3,"spacing":-0.2,"tileCoords":["0,3","0,4","0,5","0,6","1,2"]}
+[browser:/] 🔄 [FSM] State: initializing | Status: active
+[browser:/] 
+🤖 [useSimulatedTracker] Starting...
+
+[browser:/] 📋 [TRACKER] State: initializing
+[browser:/] 🚀 [TRACKER] Init ship
+[browser:/] 🔧 [TRACKER] Init drone
+[browser:/] 📋 [TRACKER] Scheduling 2 events for: "initializing"
+[browser:/] 📌 [TRACKER] SHIP_INITIALIZE_REQUEST in 50ms
+[browser:/] 📌 [TRACKER] DRONE_INITIALIZE_REQUEST in 100ms
+[browser:/] 🎲 [App] Tiles generated: {"tilesCount":37,"radius":3,"spacing":-0.2,"tileCoords":["0,3","0,4","0,5","0,6","1,2"]}
+[browser:/] 🔄 [FSM] State: initializing | Status: active
+[browser:/] 
+🤖 [useSimulatedTracker] Starting...
+
+[browser:/] 📋 [TRACKER] State: initializing
+[browser:/] 🤖 [TRACKER] Sending: SHIP_INITIALIZE_REQUEST (Initialize ship)
+[browser:/] 🚀 [TRACKER] Init ship
+[browser:/] 🔧 [TRACKER] Init drone
+[browser:/] 📋 [TRACKER] Scheduling 2 events for: "initializing"
+[browser:/] 🔄 [FSM] State: initializing | Status: active
+[browser:/] 📌 [TRACKER] SHIP_INITIALIZE_REQUEST in 50ms
+[browser:/] 📌 [TRACKER] DRONE_INITIALIZE_REQUEST in 100ms
+[browser:/] 🤖 [TRACKER] Sending: DRONE_INITIALIZE_REQUEST (Initialize drone)
+[browser:/] 🔧 CONTEXT [20:24:03] 🛸 [bot-0] Processing explorer drone init request
+[browser:/] {
+  "shipPosition": {
+    "x": 0,
+    "y": 0.5,
+    "z": 0,
+    "coord": "3,3"
+  },
+  "droneType": "explorer"
+}
+[browser:/] 🔵 INFO [20:24:03] [Evaluating] Conditions
+[browser:/] {
+  "fuel": 100,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasCollectibleTiles": false,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked"
+}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING
+[browser:/] 📋 [TRACKER] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER] NEED_EXPLORING in 100ms
+[browser:/] 🤖 [TRACKER] Sending: SHIP_INITIALIZE_REQUEST (Initialize ship)
+[browser:/] 🔄 [FSM] State: evaluating | Status: active
+[browser:/] 🔄 [FSM] State: initializing | Status: active
+[browser:/] 🤖 [TRACKER] Sending: DRONE_INITIALIZE_REQUEST (Initialize drone)
+[browser:/] 🔧 CONTEXT [20:24:04] 🛸 [bot-0] Processing explorer drone init request
+[browser:/] {
+  "shipPosition": {
+    "x": 0,
+    "y": 0.5,
+    "z": 0,
+    "coord": "3,3"
+  },
+  "droneType": "explorer"
+}
+[browser:/] 🔵 INFO [20:24:04] [Evaluating] Conditions
+[browser:/] {
+  "fuel": 100,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasCollectibleTiles": false,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked"
+}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING
+[browser:/] 📋 [TRACKER] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER] NEED_EXPLORING in 100ms
+[browser:/] 🔄 [FSM] State: evaluating | Status: active
+[browser:/] 🔵 INFO [20:24:04] ✅ [bot-0] Drone deploying with fuel consumption:
+[browser:/] {
+  "distance": "2.06",
+  "fuelConsumed": 1,
+  "fuelRemaining": 99
+}
+[browser:/] 🟠 ACTION [20:24:04] 🚁 [bot-0] Entrée dans l'état DRONE_DEPLOYING
+[browser:/] {
+  "targetTile": "4,2"
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
+[browser:/] 🛸 [TRACKER] Drone → 4,2
+[browser:/]    Distance: 2.03 units, Travel time: 1016.6088968004807ms
+[browser:/] 📋 [TRACKER] Scheduling 1 events for: {"exploring":"drone_deploying"}
+[browser:/] 📌 [TRACKER] DRONE_REACHES_TILE in 1016.6088968004807ms
+[browser:/] 🔄 [FSM] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] 🤖 [TRACKER] Sending: NEED_EXPLORING (Start exploration cycle)
+[browser:/] 🔵 INFO [20:24:04] [Evaluating] → Testing NEED_COLLECTING (exploration may be complete)
+[browser:/] 🔵 INFO [20:24:04] ✅ [bot-0] Drone deploying with fuel consumption:
+[browser:/] {
+  "distance": "3.72",
+  "fuelConsumed": 1,
+  "fuelRemaining": 99
+}
+[browser:/] 🟠 ACTION [20:24:04] 🚁 [bot-0] Entrée dans l'état DRONE_DEPLOYING
+[browser:/] {
+  "targetTile": "5,1"
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
+[browser:/] 🛸 [TRACKER] Drone → 5,1
+[browser:/]    Distance: 3.71 units, Travel time: 1855.2593614122475ms
+[browser:/] 📋 [TRACKER] Scheduling 1 events for: {"exploring":"drone_deploying"}
+[browser:/] 📌 [TRACKER] DRONE_REACHES_TILE in 1855.2593614122475ms
+[browser:/] 🔄 [FSM] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] 🤖 [TRACKER] Sending: NEED_EXPLORING (Start exploration cycle)
+[browser:/] 🔵 INFO [20:24:04] [Evaluating] → Testing NEED_COLLECTING (exploration may be complete)
+[browser:/] 🤖 [TRACKER] Sending: DRONE_REACHES_TILE (Drone traveling to 4,2)
+[browser:/] 🟠 ACTION [20:24:05] 📡 [bot-0] Entrée dans l'état DRONE_SCANNING
+[browser:/] {
+  "scannedTile": "4,2",
+  "explorationCount": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_scanning"}
+[browser:/] 🔍 [TRACKER] Scanning (800ms)
+[browser:/] 📋 [TRACKER] Scheduling 1 events for: {"exploring":"drone_scanning"}
+[browser:/] 📌 [TRACKER] DRONE_HAS_SCANNED in 800ms
+[browser:/] 🔄 [FSM] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] 🤖 [TRACKER] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:/] 🔵 INFO [20:24:05] 🔄 [bot-0] assignDroneReturningContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_HAS_SCANNED",
+  "currentDroneState": "deploying"
+}
+[browser:/] 🔵 INFO [20:24:05] 🔙 [bot-0] Updating drone state to returning with targetDroneTile (base)
+[browser:/] {
+  "baseTile": {
+    "position": {
+      "x": 0,
+      "y": 0.2,
+      "z": 0,
+      "coord": "3,3"
+    },
+    "coord": "3,3",
+    "type": "depart",
+    "biome": "station",
+    "resources": {
+      "food": 0,
+      "debris": 0,
+      "special": 0,
+      "total": 0
+    },
+    "hasResources": false
+  }
+}
+[browser:/] 🟠 ACTION [20:24:05] 🔙 [bot-0] Entrée dans l'état DRONE_RETURNING
+[browser:/] {
+  "basePosition": "3,3",
+  "tilesExploredInCycle": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_returning"}
+[browser:/] 🏠 [TRACKER] Drone returning
+[browser:/]    Distance: 1.73 units, Travel time: 866.0254037844386ms
+[browser:/] 📋 [TRACKER] Scheduling 1 events for: {"exploring":"drone_returning"}
+[browser:/] 📌 [TRACKER] DRONE_REACHES_BASE in 866.0254037844386ms
+[browser:/] 🔄 [FSM] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🤖 [TRACKER] Sending: DRONE_REACHES_TILE (Drone traveling to 5,1)
+[browser:/] 🟠 ACTION [20:24:06] 📡 [bot-0] Entrée dans l'état DRONE_SCANNING
+[browser:/] {
+  "scannedTile": "5,1",
+  "explorationCount": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_scanning"}
+[browser:/] 🔍 [TRACKER] Scanning (800ms)
+[browser:/] 📋 [TRACKER] Scheduling 1 events for: {"exploring":"drone_scanning"}
+[browser:/] 📌 [TRACKER] DRONE_HAS_SCANNED in 800ms
+[browser:/] 🔄 [FSM] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] 🤖 [TRACKER] Sending: DRONE_REACHES_BASE (Drone returning to base)
+[browser:/] 🔵 INFO [20:24:06] 🔄 [bot-0] assignDroneDockedContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_REACHES_BASE",
+  "currentDroneState": "returning"
+}
+[browser:/] 🔵 INFO [20:24:06] [Evaluating] Conditions
+[browser:/] {
+  "fuel": 99,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasCollectibleTiles": false,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked"
+}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING
+[browser:/] 📋 [TRACKER] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER] NEED_EXPLORING in 100ms
+[browser:/] 🔄 [FSM] State: evaluating | Status: active
+[browser:/] 🤖 [TRACKER] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:/] 🔵 INFO [20:24:06] 🔄 [bot-0] assignDroneReturningContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_HAS_SCANNED",
+  "currentDroneState": "deploying"
+}
+[browser:/] 🔵 INFO [20:24:06] 🔙 [bot-0] Updating drone state to returning with targetDroneTile (base)
+[browser:/] {
+  "baseTile": {
+    "position": {
+      "x": 0,
+      "y": 0.2,
+      "z": 0,
+      "coord": "3,3"
+    },
+    "coord": "3,3",
+    "type": "depart",
+    "biome": "station",
+    "resources": {
+      "food": 0,
+      "debris": 0,
+      "special": 0,
+      "total": 0
+    },
+    "hasResources": false
+  }
+}
+[browser:/] 🟠 ACTION [20:24:06] 🔙 [bot-0] Entrée dans l'état DRONE_RETURNING
+[browser:/] {
+  "basePosition": "3,3",
+  "tilesExploredInCycle": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_returning"}
+[browser:/] 🏠 [TRACKER] Drone returning
+[browser:/]    Distance: 3.46 units, Travel time: 1732.0508075688772ms
+[browser:/] 📋 [TRACKER] Scheduling 1 events for: {"exploring":"drone_returning"}
+[browser:/] 📌 [TRACKER] DRONE_REACHES_BASE in 1732.0508075688772ms
+[browser:/] 🔄 [FSM] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🔵 INFO [20:24:06] ✅ [bot-0] Drone deploying with fuel consumption:
+[browser:/] {
+  "distance": "3.46",
+  "fuelConsumed": 1,
+  "fuelRemaining": 98
+}
+[browser:/] 🟠 ACTION [20:24:06] 🚁 [bot-0] Entrée dans l'état DRONE_DEPLOYING
+[browser:/] {
+  "targetTile": "3,5"
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
+[browser:/] 🛸 [TRACKER] Drone → 3,5
+[browser:/]    Distance: 3.46 units, Travel time: 1732.0508075688772ms
+[browser:/] 📋 [TRACKER] Scheduling 1 events for: {"exploring":"drone_deploying"}
+[browser:/] 📌 [TRACKER] DRONE_REACHES_TILE in 1732.0508075688772ms
+[browser:/] 🔄 [FSM] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] 🤖 [TRACKER] Sending: NEED_EXPLORING (Start exploration cycle)
+[browser:/] 🔵 INFO [20:24:06] [Evaluating] → Testing NEED_COLLECTING (exploration may be complete)
+[browser:/] 🤖 [TRACKER] Sending: DRONE_REACHES_BASE (Drone returning to base)
+[browser:/] 🔵 INFO [20:24:08] 🔄 [bot-0] assignDroneDockedContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_REACHES_BASE",
+  "currentDroneState": "returning"
+}
+[browser:/] 🔵 INFO [20:24:08] [Evaluating] Conditions
+[browser:/] {
+  "fuel": 99,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasCollectibleTiles": false,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked"
+}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING
+[browser:/] 📋 [TRACKER] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER] NEED_EXPLORING in 100ms
+[browser:/] 🔄 [FSM] State: evaluating | Status: active
+[browser:/] 🤖 [TRACKER] Sending: DRONE_REACHES_TILE (Drone traveling to 3,5)
+[browser:/] 🟠 ACTION [20:24:08] 📡 [bot-0] Entrée dans l'état DRONE_SCANNING
+[browser:/] {
+  "scannedTile": "3,5",
+  "explorationCount": 2
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_scanning"}
+[browser:/] 🔍 [TRACKER] Scanning (800ms)
+[browser:/] 📋 [TRACKER] Scheduling 1 events for: {"exploring":"drone_scanning"}
+[browser:/] 📌 [TRACKER] DRONE_HAS_SCANNED in 800ms
+[browser:/] 🔄 [FSM] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] 🔵 INFO [20:24:08] ✅ [bot-0] Drone deploying with fuel consumption:
+[browser:/] {
+  "distance": "3.46",
+  "fuelConsumed": 1,
+  "fuelRemaining": 98
+}
+[browser:/] 🟠 ACTION [20:24:08] 🚁 [bot-0] Entrée dans l'état DRONE_DEPLOYING
+[browser:/] {
+  "targetTile": "1,5"
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
+[browser:/] 🛸 [TRACKER] Drone → 1,5
+[browser:/]    Distance: 3.46 units, Travel time: 1732.0508075688772ms
+[browser:/] 📋 [TRACKER] Scheduling 1 events for: {"exploring":"drone_deploying"}
+[browser:/] 📌 [TRACKER] DRONE_REACHES_TILE in 1732.0508075688772ms
+[browser:/] 🔄 [FSM] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] 🤖 [TRACKER] Sending: NEED_EXPLORING (Start exploration cycle)
+[browser:/] 🔵 INFO [20:24:08] [Evaluating] → Testing NEED_COLLECTING (exploration may be complete)

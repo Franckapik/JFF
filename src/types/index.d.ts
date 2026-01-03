@@ -6,7 +6,7 @@
 // ============================================================================
 // TYPES DE COORDONNÉES ET POSITIONS
 // ============================================================================
-export type { GridCoordinate, TileCoordinate, WorldPosition } from './coordinates.d';
+export type { GridCoordinate, HexCoordinate, Path, WorldGridPosition, WorldPosition } from './coordinates.d';
 
 // ============================================================================
 // TYPES DE RESSOURCES
@@ -17,15 +17,18 @@ export type { ResourceStats, ResourceType } from './resources.d';
 // TYPES DE VÉHICULES
 // ============================================================================
 export type {
-    DroneFleet, DroneMission, DroneState,
-    FormationOffsets, VehicleId, VehicleState
+    VehicleId, VehicleState, VehicleVisualState
 } from './vehicle.d';
 
 // ============================================================================
 // TYPES DE DRONES (SIMPLIFIÉS AVEC TYPES UNION)
 // ============================================================================
 export type {
-    DroneFSMState,
+    DroneFleet, DroneMission, DroneState,
+    FormationOffsets
+} from './drone.d';
+// ============================================================================
+export type {
     DroneType,
     DroneVisualState, NonTrackableDroneVisualState, TrackableDroneVisualState
 } from './drone.d';
@@ -52,7 +55,7 @@ export type {
 // ============================================================================
 // TYPES DE TUILES (DÉTAILLÉS)
 // ============================================================================
-export type { DistanceResult, HexPosition, PathNode, TileBiome, TileGenerationConfig, TileSearchOptions, TileStore, TileStoreActions, TileStoreState, TileType, TileWithDistance } from './tile.d';
+export type { DistanceResult, HexPosition, Path, PathNode, TileBiome, TileGenerationConfig, TileSearchOptions, TileType, TileWithDistance } from './tile.d';
 
 // ============================================================================
 // TYPES POUR REACT THREE FIBER (PROPS)
@@ -62,5 +65,5 @@ export type { DroneMeshProps, FleetProps, TileProps } from './r3f.d';
 // ============================================================================
 // TYPES POUR LES TRACKERS FSM
 // ============================================================================
-export type { BaseTrackerParams, CanSendEventFn, DroneProcessorFunction, DroneTrackerParams, GridToHexCoordFn, InitializationHandler, MarkEventSentFn, PositionHandler, ShipProcessorFunction, ShipTrackerParams, ShipType, WorldToGridFn, XStateSend } from './tracker.d';
+export type { BaseTrackerParams, CanSendEventFn, DroneProcessorFunction, DroneTrackerParams, InitializationHandler, MarkEventSentFn, PositionHandler, ShipProcessorFunction, ShipTrackerParams, ShipType, WorldToGridFn, XStateSend } from './tracker.d';
 

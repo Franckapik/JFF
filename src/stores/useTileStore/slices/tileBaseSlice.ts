@@ -24,36 +24,14 @@ import type {
   Tile,
   TileMap
 } from '../../../types/index.ts';
-
-// =========================================================================
-// TYPES LOCAUX
-// =========================================================================
-
-/** Actions du slice de base */
-interface TileBaseSliceState {
-  tiles: TileMap;
-  radius: number;
-  spacing: number;
-  hoveredTile: GridCoordinate | null;
-}
-
-interface TileBaseSliceActions {
-  updateHoveredTile: (coord: GridCoordinate | null) => void;
-  setTiles: (tiles: TileMap) => void;
-  getTile: (coord: GridCoordinate) => Tile | undefined;
-  getNeighbors: (coord: GridCoordinate) => Tile[];
-  updateTile: (coord: GridCoordinate, updates: Partial<Tile>) => void;
-  updateTileState: (coord: GridCoordinate, updates: Partial<Tile>) => void;
-  clearTiles: () => void;
-}
-
-type TileBaseSlice = TileBaseSliceState & TileBaseSliceActions;
+import type { TileBaseSliceActions, TileStoreType } from '../../../types/stores.d.ts';
 
 // =========================================================================
 // SLICE PRINCIPAL
 // =========================================================================
 
-const createTileBaseSlice = (set: any, get: any): TileBaseSlice => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const createTileBaseSlice = (set: any, get: () => TileStoreType): TileBaseSliceActions => {
   return {
     
     // =====================================================================
@@ -73,7 +51,7 @@ const createTileBaseSlice = (set: any, get: any): TileBaseSlice => {
     /**
      * Espacement entre les tuiles hexagonales
      */
-    spacing: 0.1,
+    spacing: -0.2,
     
     /**
      * Coordonnée de la tuile actuellement survolée
@@ -123,8 +101,8 @@ const createTileBaseSlice = (set: any, get: any): TileBaseSlice => {
      */
     getNeighbors: (coord: GridCoordinate): Tile[] => {
       const tile = get().tiles[coord];
-      return tile && (tile as any).neighbors 
-        ? (tile as any).neighbors.map((neighbor: GridCoordinate) => get().tiles[neighbor]).filter(Boolean)
+      return tile && 'neighbors' in tile && Array.isArray(tile.neighbors)
+        ? tile.neighbors.map((neighbor: GridCoordinate) => get().tiles[neighbor]).filter(Boolean)
         : [];
     },
 
@@ -136,7 +114,7 @@ const createTileBaseSlice = (set: any, get: any): TileBaseSlice => {
      * @param updates - Propriétés à mettre à jour ou ajouter
      */
     updateTile: (coord: GridCoordinate, updates: Partial<Tile>): void => {
-      set((state: any) => {
+      set((state: TileStoreType) => {
         const updatedTiles = { ...state.tiles };
         if (updatedTiles[coord]) {
           updatedTiles[coord] = { ...updatedTiles[coord], ...updates };
@@ -153,7 +131,7 @@ const createTileBaseSlice = (set: any, get: any): TileBaseSlice => {
      * @param updates - Mises à jour spécifiques aux collectes
      */
     updateTileState: (coord: GridCoordinate, updates: Partial<Tile>): void => {
-      set((state: any) => {
+      set((state: TileStoreType) => {
         const updatedTiles = { ...state.tiles };
         if (updatedTiles[coord]) {
           const currentTile = updatedTiles[coord];
@@ -174,7 +152,7 @@ const createTileBaseSlice = (set: any, get: any): TileBaseSlice => {
      */
     clearTiles: (): void => set({ tiles: {} }),
 
-  } as TileBaseSlice;
+  } as TileBaseSliceActions;
 };
 
 export default createTileBaseSlice;

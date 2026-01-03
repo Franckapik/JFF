@@ -7,10 +7,10 @@ import { create } from 'zustand';
 import type { GameStoreType } from '../../types/stores.d';
 
 // Import des slices
-import createClockSlice from './slices/clockSlice';
-import createInitializationFlagsSlice from './slices/initializationFlagsSlice';
-import createPlayerCountSlice from './slices/playerCountSlice';
-import createUiConfigSlice from './slices/uiConfigSlice';
+import createClockSlice from './slices/clockSlice.ts';
+import createInitializationFlagsSlice from './slices/initializationFlagsSlice.ts';
+import createPlayerCountSlice from './slices/playerCountSlice.ts';
+import createUiConfigSlice from './slices/uiConfigSlice.ts';
 
 /**
  * Crée un store Zustand en combinant tous les slices

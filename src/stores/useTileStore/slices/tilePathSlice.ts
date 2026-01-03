@@ -11,7 +11,7 @@
  * 
  * Fonctionnalités consolidées depuis :
  * - tileCalculationSlice : calculateDistance
- * - tileGenerationSlice : findPath, calculatePathDistance, findTileAtPosition, calculatePath
+ * - tileGenerationSlice : findPath, calculatePathDistance, findTileAtPosition
  * 
  * Types de calculs disponibles :
  * - Distance euclidienne : distance en ligne droite entre deux points
@@ -23,11 +23,15 @@
 import type {
   DroneVisualState,
   GridCoordinate,
+  Path,
   Tile,
-  TileCoordinate,
   TileMap,
+  WorldGridPosition,
   WorldPosition
 } from '../../../types/index.ts';
+import type { TilePathSliceActions } from '../../../types/stores.d.ts';
+
+import fsmLogger from '../../../logger/fsmLogger.ts';
 
 
 // =========================================================================
@@ -47,53 +51,11 @@ const pathConstants = {
 };
 
 // =========================================================================
-// TYPES LOCAUX
-// =========================================================================
-
-/** Résultat d'un calcul de chemin */
-interface PathResult {
-  path: GridCoordinate[];
-  totalDistance: number;
-  isReachable: boolean;
-}
-
-/** Actions du slice de pathfinding */
-interface TilePathSliceActions {
-  findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap) => GridCoordinate[];
-  calculateDistance: (
-    from: GridCoordinate | TileCoordinate | WorldPosition, 
-    to: GridCoordinate | TileCoordinate | WorldPosition, 
-    usePathfinding?: boolean, 
-    detailed?: boolean
-  ) => number;
-  calculate3DDistance: (from: WorldPosition, to: WorldPosition) => number;
-  calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap) => number;
-  findTileAtPosition: (position: WorldPosition, tiles?: TileMap) => Tile | null;
-  calculatePath: (
-    currentPosition: WorldPosition, 
-    targetCoord: GridCoordinate, 
-    tiles?: TileMap, 
-    fallbackCoord?: GridCoordinate
-  ) => PathResult;
-  isReachable: (from: GridCoordinate, to: GridCoordinate, tiles?: TileMap) => boolean;
-  calculateDroneDistance: (
-    dronePosition: WorldPosition,
-    droneState: DroneVisualState,
-    targetPosition?: WorldPosition,
-    shipPosition?: WorldPosition
-  ) => number;
-  selectTargetTileInRadiusForDrone: (
-    shipPosition: WorldPosition,
-    range: number,
-    tiles?: TileMap
-  ) => WorldPosition | null;
-}
-
-// =========================================================================
 // SLICE FACTORY - TILE PATH UTILITIES
 // =========================================================================
 
-const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const createTilePathSlice = (_set: unknown, get: () => any): TilePathSliceActions => ({
   
   // =========================================================================
   // PATHFINDING FUNCTIONS - Algorithmes de recherche de chemin
@@ -105,37 +67,62 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
    * @param startCoord - Starting coordinate (e.g., "A1")
    * @param targetCoord - Target coordinate (e.g., "B2")
    * @param tiles - Map of all tiles (optionnel, utilise get().tiles par défaut)
-   * @returns Array of coordinates representing the path
+   * @returns Path representing the route from start to target
    */
-  findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap): GridCoordinate[] => {
+  findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap): Path => {
+    // Récupère la map des tuiles à utiliser (paramètre ou store)
     const tilesMap = tiles || get().tiles;
     
-    if (!startCoord || !targetCoord || startCoord === targetCoord) {
-      return startCoord === targetCoord ? [startCoord] : [];
+    // Vérifie la validité des coordonnées de départ et d'arrivée
+    // Si elles sont identiques, retourne le point de départ comme chemin
+    if (!startCoord || !targetCoord) {
+      fsmLogger.error('findPath: Invalid coordinates provided', { startCoord, targetCoord });
+      return [];
     }
     
-    const queue: GridCoordinate[][] = [[startCoord]];
+    if (startCoord === targetCoord) {
+      fsmLogger.info('findPath: Start and target coordinates are identical', { startCoord, targetCoord });
+      return [startCoord];
+    }
+    
+    // Initialisation de la file pour BFS : chaque élément est un chemin (array de coordonnées)
+    const queue: Path[] = [[startCoord]];
+    // Set pour garder les coordonnées déjà visitées et éviter les boucles
     const visited = new Set<GridCoordinate>();
 
+    // Boucle principale BFS : explore les chemins possibles
     while (queue.length > 0) {
+      // Récupère le chemin courant à explorer
       const path = queue.shift()!;
+      // Dernière coordonnée du chemin (noeud courant)
       const currentCoord = path[path.length - 1];
 
+      // Si on a atteint la cible, retourne le chemin trouvé
       if (currentCoord === targetCoord) {
+        fsmLogger.info('findPath: Path found successfully', { 
+          startCoord, 
+          targetCoord, 
+          pathLength: path.length,
+          path: path.slice(0, 5) // Log seulement les 5 premiers éléments pour éviter le spam
+        });
         return path;
       }
 
+      // Ignore les coordonnées déjà visitées
       if (visited.has(currentCoord)) {
         continue;
       }
 
+      // Marque la coordonnée comme visitée
       visited.add(currentCoord);
+      // Récupère la tuile courante
       const currentTile = tilesMap[currentCoord];
 
-      if (currentTile && (currentTile as any).neighbors) {
-        for (const neighborCoord of (currentTile as any).neighbors) {
+      // Si la tuile a des voisins, explore chaque voisin
+      if (currentTile && 'neighbors' in currentTile && Array.isArray(currentTile.neighbors)) {
+        for (const neighborCoord of currentTile.neighbors) {
           const neighborTile = tilesMap[neighborCoord];
-          
+          // Ajoute le voisin à la file si il est walkable et non visité
           if (neighborTile && neighborTile.walkable && !visited.has(neighborCoord)) {
             queue.push([...path, neighborCoord]);
           }
@@ -143,54 +130,14 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
       }
     }
 
-    return []; // Aucun chemin trouvé
-  },
-
-  /**
-   * Calcule la distance entre deux positions ou coordonnées
-   * Supporte plusieurs formats d'entrée et types de calcul
-   * 
-   * @param from - Position/coordonnée de départ
-   * @param to - Position/coordonnée d'arrivée
-   * @param usePathfinding - Si true, utilise le pathfinding, sinon distance euclidienne
-   * @param detailed - Si true, retourne des informations détaillées
-   * @returns Distance calculée
-   */
-  calculateDistance: (
-    from: GridCoordinate | TileCoordinate | WorldPosition, 
-    to: GridCoordinate | TileCoordinate | WorldPosition, 
-    usePathfinding: boolean = false, 
-  ): number => {
-    const tiles = get().tiles;
-    
-    // Conversion des entrées vers GridCoordinate
-    const fromCoord = typeof from === 'string' 
-      ? from 
-      : typeof from === 'object' && 'x' in from && 'z' in from 
-        ? `${from.x},${from.z}` 
-        : null;
-        
-    const toCoord = typeof to === 'string' 
-      ? to 
-      : typeof to === 'object' && 'x' in to && 'z' in to 
-        ? `${to.x},${to.z}` 
-        : null;
-    
-    if (!fromCoord || !toCoord) {
-      return Infinity;
-    }
-    
-    if (usePathfinding) {
-      // Calcul via pathfinding
-      const path = get().findPath(fromCoord, toCoord, tiles);
-      return path.length > 0 ? path.length - 1 : Infinity;
-    } else {
-      // Calcul euclidien
-      const [fromX, fromZ] = fromCoord.split(',').map(Number);
-      const [toX, toZ] = toCoord.split(',').map(Number);
-      
-      return Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toZ - fromZ, 2));
-    }
+    // Aucun chemin trouvé : retourne un tableau vide et log l'échec
+    fsmLogger.warn('findPath: No path found between coordinates', { 
+      startCoord, 
+      targetCoord, 
+      visitedNodes: visited.size,
+      availableTiles: Object.keys(tilesMap).length
+    });
+    return [];
   },
 
   /**
@@ -199,7 +146,7 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
    * @param to - Target world position
    * @returns 3D distance between the two positions
    */
-  calculate3DDistance: (from: WorldPosition, to: WorldPosition): number => {
+  calculateDistance: (from: WorldPosition, to: WorldPosition): number => {
     if (!from || !to) return Infinity;
     
     const dx = to.x - from.x;
@@ -211,11 +158,11 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
 
   /**
    * Calculate the total distance of a path
-   * @param path - Array of coordinates representing the path
+   * @param path - Path representing the route
    * @param tiles - Map of all tiles (optionnel)
    * @returns Total distance of the path
    */
-  calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap): number => {
+  calculatePathDistance: (path: Path, tiles?: TileMap): number => {
     if (!path || path.length < 2) return 0;
     
     const tilesMap = tiles || get().tiles;
@@ -225,10 +172,19 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
       const tileA = tilesMap[path[i]];
       const tileB = tilesMap[path[i + 1]];
       if (tileA && tileB) {
-        const distance = Math.sqrt(
-          Math.pow(tileB.position.x - tileA.position.x, 2) + 
-          Math.pow(tileB.position.z - tileA.position.z, 2)
-        );
+        // Adapter à la nouvelle structure WorldGridPosition
+        const positionA: WorldPosition = {
+          x: tileA.position.x,
+          y: tileA.position.y,
+          z: tileA.position.z
+        };
+        const positionB: WorldPosition = {
+          x: tileB.position.x,
+          y: tileB.position.y,
+          z: tileB.position.z
+        };
+        
+        const distance = get().calculateDistance(positionA, positionB);
         totalDistance += distance;
       }
     }
@@ -250,67 +206,26 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
     }
     
     // Recherche de la tuile la plus proche dans le seuil
-    const foundTile = Object.values(tilesMap).find((tile: any) => {
+    const foundTile = Object.values(tilesMap).find((tile: Tile) => {
       if (!tile || !tile.position) return false;
       
-      const distance = Math.sqrt(
-        Math.pow(tile.position.x - position.x, 2) + 
-        Math.pow(tile.position.z - position.z, 2)
+      // Adapter à la nouvelle structure WorldGridPosition
+      const tileWorldPosition: WorldPosition = {
+        x: tile.position.x,
+        y: tile.position.y,
+        z: tile.position.z
+      };
+      
+      // Calculer distance 2D (XZ seulement) pour l'assignation de tuiles
+      const distance2D = Math.sqrt(
+        Math.pow(position.x - tileWorldPosition.x, 2) + 
+        Math.pow(position.z - tileWorldPosition.z, 2)
       );
       
-      return distance < pathConstants.thresholds.positionMatch;
+      return distance2D < pathConstants.thresholds.positionMatch;
     });
     
     return foundTile as Tile || null;
-  },
-
-  /**
-   * Calculate path from current position to target
-   * @param currentPosition - Current position {x, y, z}
-   * @param targetCoord - Target coordinate
-   * @param tiles - Map of all tiles (optionnel)
-   * @param fallbackCoord - Fallback coordinate if current position doesn't match a tile
-   * @returns Path data {path, totalDistance, isReachable}
-   */
-  calculatePath: (
-    currentPosition: WorldPosition, 
-    targetCoord: GridCoordinate, 
-    tiles?: TileMap, 
-    fallbackCoord?: GridCoordinate
-  ): PathResult => {
-    const tilesMap = tiles || get().tiles;
-    
-    // Find the tile at current position
-    const currentTile = get().findTileAtPosition(currentPosition, tilesMap);
-    
-    let path: GridCoordinate[] = [];
-    if (currentTile) {
-      path = get().findPath(currentTile.coord, targetCoord, tilesMap);
-    } else if (fallbackCoord) {
-      // Use fallback coordinate if we can't find a tile at current position
-      path = get().findPath(fallbackCoord, targetCoord, tilesMap);
-    }
-    
-    const totalDistance = get().calculatePathDistance(path, tilesMap);
-    const isReachable = path.length > 0;
-    
-    return {
-      path,
-      totalDistance,
-      isReachable
-    };
-  },
-
-  /**
-   * Vérifie si une destination est atteignable depuis une position
-   * @param from - Coordonnée de départ
-   * @param to - Coordonnée d'arrivée
-   * @param tiles - Map des tuiles (optionnel)
-   * @returns true si la destination est atteignable
-   */
-  isReachable: (from: GridCoordinate, to: GridCoordinate, tiles?: TileMap): boolean => {
-    const path = get().findPath(from, to, tiles);
-    return path.length > 0;
   },
 
   // =========================================================================
@@ -322,36 +237,33 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
    * Unifie la logique qui était dispersée dans droneTrackerEngine
    * @param dronePosition - Position actuelle du drone
    * @param droneState - État visuel du drone (deploying, scanning, returning)
-   * @param targetPosition - Position cible (pour deploying/scanning)
+   * @param targetDroneTile - Tuile cible (pour deploying/scanning)
    * @param shipPosition - Position du vaisseau (pour returning)
    * @returns Distance appropriée selon l'état, Infinity si impossible
    */
   calculateDroneDistance: (
     dronePosition: WorldPosition,
     droneState: DroneVisualState,
-    targetPosition?: WorldPosition,
-    shipPosition?: WorldPosition
+    targetDroneTile?: Tile | null,
+    shipPosition?: WorldGridPosition
   ): number => {
     if (!dronePosition) return Infinity;
 
     switch (droneState) {
       case 'deploying':
       case 'scanning': {
-        if (!targetPosition) return Infinity;
-        
+        if (!targetDroneTile || !targetDroneTile.position) return Infinity;
+        const targetPosition = targetDroneTile.position;
         // Distance 2D (XZ) pour l'exploration - ignore la hauteur Y
-        const dx = dronePosition.x - targetPosition.x;
-        const dz = dronePosition.z - targetPosition.z;
-        return Math.sqrt(dx * dx + dz * dz);
+        const target2D = { x: targetPosition.x, y: 0, z: targetPosition.z };
+        const drone2D = { x: dronePosition.x, y: 0, z: dronePosition.z };
+        return get().calculateDistance(drone2D, target2D);
       }
-      
       case 'returning': {
         if (!shipPosition) return Infinity;
-        
         // Distance 3D complète pour le retour au vaisseau
-        return get().calculate3DDistance(dronePosition, shipPosition);
+        return get().calculateDistance(dronePosition, shipPosition);
       }
-      
       default:
         return Infinity;
     }
@@ -363,105 +275,77 @@ const createTilePathSlice = (set: any, get: any): TilePathSliceActions => ({
 
   /**
    * Sélectionne une tuile cible dans un rayon donné pour le drone
-   * Utilise un algorithme BFS basé sur les GridCoordinate et le système de voisins
-   * pour garantir que seules les tuiles existantes du plateau sont sélectionnées
-   * @param shipPosition - Position du vaisseau (base de calcul)
-   * @param range - Rayon de recherche en nombre de tuiles (distance hexagonale)
-   * @param tiles - Map des tuiles (optionnel, utilise get().tiles par défaut)
-   * @returns Position cible ou null si aucune cible valide
+   * Retourne directement la tuile (Tile) au lieu de la position
    */
-  selectTargetTileInRadiusForDrone: (
-    shipPosition: WorldPosition,
+  tileInRadius: (
+    shipPosition: WorldGridPosition,
     range: number,
     tiles?: TileMap
-  ): WorldPosition | null => {
+  ): Tile | null => {
     try {
+      // Vérifie la validité des paramètres
       if (!shipPosition || range <= 0) {
         return null;
       }
-      
-      // Utiliser les tuiles fournies ou récupérer du store
+      // Récupère la map des tuiles
       const tilesMap = tiles || get().tiles;
-      
       if (!tilesMap || Object.keys(tilesMap).length === 0) {
-        return null; // Pas de fallback aléatoire - retourner null si pas de tuiles
+        return null;
       }
-      
-      // 1. Trouver la tuile actuelle du vaisseau
-      const currentTile = get().findTileAtPosition(shipPosition, tilesMap);
+      // Si shipPosition.coord existe et correspond à une tuile, on l'utilise directement
+      let currentTile: Tile | null = null;
+      if (shipPosition.coord && tilesMap[shipPosition.coord]) {
+        currentTile = tilesMap[shipPosition.coord];
+      } else {
+        // Sinon, fallback sur la recherche par position
+        currentTile = get().findTileAtPosition(shipPosition, tilesMap);
+      }
       if (!currentTile) {
-        return null; // Impossible de localiser le vaisseau sur le plateau
+        return null;
       }
-      
-      // 2. Recherche BFS pour collecter toutes les tuiles dans le rayon
+      // Liste des tuiles candidates à retourner
       const candidateTiles: Tile[] = [];
+      // visited : Set des coordonnées déjà explorées par l'algorithme BFS (pour éviter les boucles)
       const visited = new Set<GridCoordinate>();
+      // queue : file FIFO pour le parcours BFS, chaque entrée contient la coordonnée et la distance depuis la tuile de départ
       const queue: { coord: GridCoordinate; distance: number }[] = [
-        { coord: currentTile.coord, distance: 0 }
+        { coord: currentTile.position.coord, distance: 0 }
       ];
-      
+      // Parcours BFS : explore toutes les tuiles accessibles dans le rayon
       while (queue.length > 0) {
+        // Récupère la prochaine tuile à explorer et sa distance depuis le départ
         const { coord, distance } = queue.shift()!;
-        
-        // Si on a dépassé le rayon, on arrête cette branche
-        if (distance > range) {
-          continue;
-        }
-        
-        // Si déjà visité, on passe
-        if (visited.has(coord)) {
-          continue;
-        }
-        
+        // Si la distance dépasse le rayon demandé, on ignore cette tuile
+        if (distance > range) continue;
+        // Si la tuile a déjà été visitée, on l'ignore
+        if (visited.has(coord)) continue;
+        // Marque la tuile comme visitée
         visited.add(coord);
+        // Récupère la tuile courante
         const tile = tilesMap[coord];
-        
-        if (!tile) {
-          continue; // Tuile inexistante (ne devrait pas arriver)
-        }
-        
-        // Ajouter à la liste des candidats si c'est une tuile valide et pas la tuile de départ
+        if (!tile) continue;
+        // Si la tuile est walkable, non collectée, et différente de la tuile de départ, on l'ajoute aux candidates
         if (distance > 0 && tile.walkable && !tile.collected) {
           candidateTiles.push(tile);
         }
-        
-        // Ajouter les voisins à la queue pour la prochaine itération
+        // Si la distance est encore dans le rayon, on ajoute les voisins à la file pour exploration
         if (distance < range && tile.neighbors) {
           for (const neighborCoord of tile.neighbors) {
+            // On n'ajoute que les voisins non visités
             if (!visited.has(neighborCoord)) {
               queue.push({ coord: neighborCoord, distance: distance + 1 });
             }
           }
         }
       }
-      
-      // 3. Sélectionner une tuile candidate au hasard
+      // Si aucune tuile candidate trouvée, retourne null
       if (candidateTiles.length === 0) {
-        return null; // Aucune tuile valide trouvée dans le rayon
+        return null;
       }
-      
+      // Sélectionne une tuile aléatoire parmi les candidates
       const randomTile = candidateTiles[Math.floor(Math.random() * candidateTiles.length)];
-
-      // 4. Convertir la position de la tuile en WorldPosition
-      let targetPosition: WorldPosition;
-      if (Array.isArray(randomTile.position)) {
-        targetPosition = { 
-          x: randomTile.position[0], 
-          y: randomTile.position[1] + 0.5, // Légèrement au-dessus de la tuile
-          z: randomTile.position[2] 
-        };
-      } else {
-        targetPosition = { 
-          x: randomTile.position.x, 
-          y: (randomTile.position.y || 0) + 0.5,
-          z: randomTile.position.z 
-        };
-      }
-      
-      return targetPosition;
-      
+      return randomTile;
     } catch (_error) {
-      // En cas d'erreur, retourner null plutôt qu'une position aléatoire
       return null;
     }
   },

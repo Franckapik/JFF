@@ -23,24 +23,21 @@
 import type {
     GridCoordinate
 } from '../../../types/index.ts';
+import type { TileMarkSliceActions, TileStoreType } from '../../../types/stores.d.ts';
 
-import { isTileCompletelyCollected } from './tileResourceSlice.js';
+import { isTileCompletelyCollected } from './tileResourceSlice.ts';
 
 // =========================================================================
 // TYPES LOCAUX
 // =========================================================================
 
 /** Actions du slice de marquage */
-interface TileMarkSliceActions {
-  markTileAsExplored: (coord: GridCoordinate, explorer?: string) => void;
-  markTileAsCollected: (coord: GridCoordinate, collector?: string) => boolean;
-}
 
 // =========================================================================
 // SLICE PRINCIPAL
 // =========================================================================
 
-const createTileMarkSlice = (set: any, get: any): TileMarkSliceActions => {
+const createTileMarkSlice = (_set: unknown, get: () => TileStoreType): TileMarkSliceActions => {
   return {
 
     // =====================================================================
@@ -71,17 +68,11 @@ const createTileMarkSlice = (set: any, get: any): TileMarkSliceActions => {
         return;
       }
       
-      set((state: any) => ({
-        tiles: {
-          ...state.tiles,
-          [coord]: {
-            ...state.tiles[coord],
-            explored: true,
-            exploredAt: Date.now(),
-            exploredBy: explorer,
-          },
-        },
-      }));
+      get().updateTile(coord, {
+        explored: true,
+        exploredAt: Date.now(),
+        exploredBy: explorer,
+      });
     },
 
     /**
@@ -105,18 +96,13 @@ const createTileMarkSlice = (set: any, get: any): TileMarkSliceActions => {
       // Si la tuile est déjà complètement collectée, ne rien faire
       if (isTileCompletelyCollected(tile)) return false;
       
-      set((state: any) => {
-        const updatedTiles = { ...state.tiles };
-        updatedTiles[coord] = { 
-          ...updatedTiles[coord], 
-          collected: true,
-          collectedAt: Date.now(),
-          collectedBy: collector,
-          resourcePercentage: 0, // Mettre à 0% car la tuile est complètement collectée
-          hasResources: false,
-          resources: { food: 0, debris: 0, special: 0, total: 0 }
-        };
-        return { tiles: updatedTiles };
+      get().updateTile(coord, {
+        collected: true,
+        collectedAt: Date.now(),
+        collectedBy: collector,
+        resourcePercentage: 0, // Mettre à 0% car la tuile est complètement collectée
+        hasResources: false,
+        resources: { food: 0, debris: 0, special: 0, total: 0 }
       });
       
       return true;

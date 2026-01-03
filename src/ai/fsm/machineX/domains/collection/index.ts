@@ -5,10 +5,10 @@
  */
 
 // Actions assign (mise à jour du contexte)
-export * from './actions.assign';
+export * from './actions.assign.ts';
 
 // Actions effects (effets de bord)
-export * from './actions.effects';
+export * from './actions.effects.ts';
 
-// Guards (conditions)
-export * from './guards';
+// Guards (pure - no store dependencies)
+export * from './guards.pure.ts';

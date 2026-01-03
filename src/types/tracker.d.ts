@@ -7,7 +7,7 @@
  * Ces types unifient la logique de tracking entre XState et React Three Fiber.
  */
 
-import type { GridCoordinate, TileCoordinate, WorldPosition } from './coordinates';
+import type { GridCoordinate, WorldPosition } from './coordinates';
 import type { DroneType } from './drone';
 import type { FSMContext } from './fsm';
 
@@ -30,8 +30,7 @@ export type CanSendEventFn = (eventType: string) => boolean;
 export type MarkEventSentFn = (eventType: string, timeout?: number) => void;
 
 /** Type pour les fonctions de conversion de coordonnées */
-export type GridToHexCoordFn = (coord: GridCoordinate) => string | null;
-export type WorldToGridFn = (position: WorldPosition) => TileCoordinate;
+export type WorldToGridFn = (position: WorldPosition) => GridCoordinate;
 
 // ============================================================================
 // INTERFACES POUR LES PARAMÈTRES DES TRACKERS
@@ -50,7 +49,6 @@ export interface ShipTrackerParams {
   shipType: ShipType;
   send: XStateSend;
   botId: string;
-  gridToHexCoord: GridToHexCoordFn;
   worldToGrid: WorldToGridFn;
 }
 

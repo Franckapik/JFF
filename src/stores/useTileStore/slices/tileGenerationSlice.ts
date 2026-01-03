@@ -26,7 +26,8 @@ import type {
   TileMap,
   TileType
 } from '../../../types/index.ts';
-import type { ResourceStats } from '../../../types/resources.js';
+import type { ResourceStats } from '../../../types/resources.ts';
+import type { TileGenerationSliceActions, TileStoreType } from '../../../types/stores.d.ts';
 
 import fsmLogger from "../../../logger/fsmLogger.ts";
 
@@ -76,12 +77,12 @@ const tileConstants = {
     fuel: {
       0: 0,    // Pas de stations pour rayon 0
       1: 1,    // 1 station pour rayon 1
-      default: 2  // 2 stations pour rayon >= 2
+      default: 1  // 1 station pour rayon >= 2
     },
     repair: {
       0: 0,    // Pas de stations pour rayon 0
       1: 1,    // 1 station pour rayon 1
-      default: 2  // 2 stations pour rayon >= 2
+      default: 1  // 1 station pour rayon >= 2
     }
   }
 };
@@ -91,28 +92,10 @@ const tileConstants = {
 // =========================================================================
 
 /** Actions du slice de génération */
-interface TileGenerationSliceActions {
-  initializeGameGrid: (radius: number, spacing: number) => TileMap;
-  placeGameStations: (tileMap: TileMap, radius: number) => TileMap;
-  placeDangerTiles: (tileMap: TileMap, radius: number) => TileMap;
-  placeStartingTiles: (tileMap: TileMap, botCount: number) => TileMap;
-  assignStartingTiles: (activeBotIds: string[]) => void;
-}
 
 // =========================================================================
 // UTILITAIRES HEXAGONAUX
 // =========================================================================
-
-/**
- * Encode une coordonnée hexagonale en string
- * @param q - Coordonnée q
- * @param r - Coordonnée r
- * @param radius - Rayon de la grille
- * @returns Coordonnée encodée
- */
-const encodeHexCoord = (q: number, r: number, radius: number): GridCoordinate => {
-  return `${q + radius},${r + radius}` as GridCoordinate;
-};
 
 /**
  * Génère une couleur aléatoire
@@ -126,7 +109,7 @@ const generateRandomColor = (): string => {
 // SLICE FACTORY - TILE GENERATION UTILITIES
 // =========================================================================
 
-const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActions => ({
+const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): TileGenerationSliceActions => ({
 
   /**
    * Initialise une grille hexagonale complète de tuiles
@@ -152,7 +135,7 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
             Math.abs(neighbor.r) <= radius &&
             Math.abs(-neighbor.q - neighbor.r) <= radius
           )
-          .map((neighbor) => encodeHexCoord(neighbor.q, neighbor.r, radius));
+          .map((neighbor) => get().encodeHexCoord(neighbor.q, neighbor.r, radius));
 
         // Génération des ressources
         const resources: ResourceStats = {
@@ -165,10 +148,13 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
 
         // Création de la tuile typée
         const tile: Tile = {
-          coord: encodeHexCoord(q, r, radius),
-          tileCoord: { x: q + radius, z: r + radius },
-          position: { x, y: tileConstants.defaultY, z },
-          type: 'food' as TileType,
+          position: { 
+            x, 
+            y: tileConstants.defaultY, 
+            z, 
+            coord: get().encodeHexCoord(q, r, radius) 
+          },
+          type: 'resource' as TileType,
           biome: 'grassland' as TileBiome,
           walkable: true,
           explored: false,
@@ -185,7 +171,7 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
     
     // Convertir en TileMap initial
     const tileMap: TileMap = tiles.reduce((acc, tile) => {
-      return { ...acc, [tile.coord]: tile };
+      return { ...acc, [tile.position.coord]: tile };
     }, {});
     
     // 2. Placer les stations
@@ -205,7 +191,7 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
    * @returns Nouveau TileMap avec les stations placées
    */
   placeGameStations: (tileMap: TileMap, radius: number): TileMap => {
-    const tiles = Object.values(tileMap);
+    const tiles = Object.values(tileMap) as Tile[];
     const fuelCount = tileConstants.stationsConfig.fuel[radius] || tileConstants.stationsConfig.fuel.default;
     const repairCount = tileConstants.stationsConfig.repair[radius] || tileConstants.stationsConfig.repair.default;
     
@@ -216,15 +202,15 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
     for (let i = 0; i < fuelCount; i++) {
       const randomIndex = Math.floor(Math.random() * tiles.length);
       const tile = tiles[randomIndex];
-      if (tile.type === 'food') {
-        const updatedTile = {
+      if (tile && tile.type === 'resource') {
+        const updatedTile: Tile = {
           ...tile,
           type: 'fuel' as TileType,
           color: "orange",
           hasResources: false,
           resources: { food: 0, debris: 0, special: 0, total: 0 }
         };
-        newTileMap[tile.coord] = updatedTile;
+        newTileMap[tile.position.coord] = updatedTile;
       }
     }
     
@@ -232,15 +218,15 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
     for (let i = 0; i < repairCount; i++) {
       const randomIndex = Math.floor(Math.random() * tiles.length);
       const tile = tiles[randomIndex];
-      if (tile.type === 'food') {
-        const updatedTile = {
+      if (tile && tile.type === 'resource') {
+        const updatedTile: Tile = {
           ...tile,
           type: 'repair' as TileType,
           color: "green",
           hasResources: false,
           resources: { food: 0, debris: 0, special: 0, total: 0 }
         };
-        newTileMap[tile.coord] = updatedTile;
+        newTileMap[tile.position.coord] = updatedTile;
       }
     }
     
@@ -254,7 +240,7 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
    * @returns Nouveau TileMap avec les tuiles de danger placées
    */
   placeDangerTiles: (tileMap: TileMap): TileMap => {
-    const tiles = Object.values(tileMap);
+    const tiles = Object.values(tileMap) as Tile[];
     const dangerCount = Math.max(1, Math.floor(tiles.length * 0.1));
     
     // Créer une copie du TileMap pour éviter la mutation
@@ -263,8 +249,8 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
     for (let i = 0; i < dangerCount; i++) {
       const randomIndex = Math.floor(Math.random() * tiles.length);
       const tile = tiles[randomIndex];
-      if (tile.type === 'food') {
-        const updatedTile = {
+      if (tile && tile.type === 'resource') {
+        const updatedTile: Tile = {
           ...tile,
           type: 'danger' as TileType,
           color: "red",
@@ -272,7 +258,7 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
           hasResources: false,
           resources: { food: 0, debris: 0, special: 0, total: 0 }
         };
-        newTileMap[tile.coord] = updatedTile;
+        newTileMap[tile.position.coord] = updatedTile;
       }
     }
     
@@ -287,7 +273,9 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
    */
   placeStartingTiles: (tileMap: TileMap, botCount: number): TileMap => {
     const tiles = Object.values(tileMap).filter(
-      (tile) => tile.type === 'food'
+      (tile: unknown): tile is Tile => 
+        tile !== null && typeof tile === 'object' && 
+        'type' in tile && (tile as Tile).type === 'resource'
     );
 
     // Mélanger les tuiles candidates pour un placement aléatoire
@@ -316,7 +304,7 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
         hasResources: true,
         color: "#4CAF50" // Vert pour les tuiles de départ
       };
-      newTileMap[tile.coord] = updatedTile;
+      newTileMap[tile.position.coord] = updatedTile;
     }
 
     return newTileMap;
@@ -349,14 +337,16 @@ const createTileGenerationSlice = (set: any, get: any): TileGenerationSliceActio
           ...tile,
           assignedToBot: botId
         };
-        finalTileMap[tile.coord] = updatedTile;
+        finalTileMap[tile.position.coord] = updatedTile;
         
-        fsmLogger.game(`[TileGeneration] Tuile de départ assignée à ${botId}:${tile.coord}`);
+        fsmLogger.game(`[TileGeneration] Tuile de départ assignée à ${botId}:${tile.position.coord + "|" + [tile.position.x, tile.position.z]}`);
       }
     });
     
-    // 5. Mettre à jour l'état avec le nouveau TileMap
-    set({ tiles: finalTileMap });
+    // 5. Mettre à jour l'état avec les nouvelles tuiles
+    Object.keys(finalTileMap).forEach(coord => {
+      get().updateTile(coord as GridCoordinate, finalTileMap[coord as GridCoordinate]);
+    });
   },
 
 });

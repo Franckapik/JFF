@@ -13,13 +13,16 @@
 export type MachineEventType = 
   // Événements globaux (position updates, init)
   | 'SHIP_POSITION_UPDATE'
+  | 'SHIP_INITIALIZE_REQUEST'
   | 'DRONE_POSITION_UPDATE'
   | 'DRONE_INITIALIZE_REQUEST'
   
   // Événements drone (exploring)
   | 'DRONE_REACHES_TILE'
-  | 'DRONE_SCANS_TILE' 
+  | 'DRONE_HAS_SCANNED'
+  | 'DRONE_DESTROYED'
   | 'DRONE_REACHES_BASE'
+  | 'DRONE_READY_FOR_REDEPLOY'
   
   // Événements ship (collecting)
   | 'SHIP_REACHES_TILE'
@@ -27,9 +30,6 @@ export type MachineEventType =
   | 'SHIP_REACHES_BASE'
   
   // Événements maintenance
-  | 'SHIP_START_DEPOSIT'
-  | 'SHIP_START_REPAIR'
-  | 'SHIP_START_REFUEL'
   | 'SHIP_DEPOSIT_COMPLETE'
   | 'SHIP_REPAIR_COMPLETE'
   | 'SHIP_REFUEL_COMPLETE'
@@ -44,17 +44,17 @@ export type MachineEventType =
  */
 export type MachineEvents = 
   | { type: 'SHIP_POSITION_UPDATE'; payload?: unknown }
+  | { type: 'SHIP_INITIALIZE_REQUEST'; payload?: unknown }
   | { type: 'DRONE_POSITION_UPDATE'; payload?: unknown }
   | { type: 'DRONE_INITIALIZE_REQUEST'; payload?: unknown }
-  | { type: 'DRONE_REACHES_TILE' }
-  | { type: 'DRONE_SCANS_TILE' }
+  | { type: 'DRONE_REACHES_TILE'; tileCoord?: string; tileType?: string }
+  | { type: 'DRONE_HAS_SCANNED' }
+  | { type: 'DRONE_DESTROYED'; droneType: string; reason: 'danger' | 'collision' | 'other' }
   | { type: 'DRONE_REACHES_BASE' }
+  | { type: 'DRONE_READY_FOR_REDEPLOY' }
   | { type: 'SHIP_REACHES_TILE' }
   | { type: 'SHIP_LOAD_RESOURCES' }
   | { type: 'SHIP_REACHES_BASE' }
-  | { type: 'SHIP_START_DEPOSIT' }
-  | { type: 'SHIP_START_REPAIR' }
-  | { type: 'SHIP_START_REFUEL' }
   | { type: 'SHIP_DEPOSIT_COMPLETE' }
   | { type: 'SHIP_REPAIR_COMPLETE' }
   | { type: 'SHIP_REFUEL_COMPLETE' }
@@ -71,13 +71,16 @@ export type MachineEvents =
 export const MACHINE_EVENT_TYPES: Record<Uppercase<MachineEventType>, MachineEventType> = {
   // Événements globaux
   SHIP_POSITION_UPDATE: 'SHIP_POSITION_UPDATE',
+  SHIP_INITIALIZE_REQUEST: 'SHIP_INITIALIZE_REQUEST',
   DRONE_POSITION_UPDATE: 'DRONE_POSITION_UPDATE', 
   DRONE_INITIALIZE_REQUEST: 'DRONE_INITIALIZE_REQUEST',
   
   // Événements drone
   DRONE_REACHES_TILE: 'DRONE_REACHES_TILE',
-  DRONE_SCANS_TILE: 'DRONE_SCANS_TILE',
+  DRONE_HAS_SCANNED: 'DRONE_HAS_SCANNED',
+  DRONE_DESTROYED: 'DRONE_DESTROYED',
   DRONE_REACHES_BASE: 'DRONE_REACHES_BASE',
+  DRONE_READY_FOR_REDEPLOY: 'DRONE_READY_FOR_REDEPLOY',
   
   // Événements ship
   SHIP_REACHES_TILE: 'SHIP_REACHES_TILE',
@@ -85,9 +88,6 @@ export const MACHINE_EVENT_TYPES: Record<Uppercase<MachineEventType>, MachineEve
   SHIP_REACHES_BASE: 'SHIP_REACHES_BASE',
   
   // Événements maintenance
-  SHIP_START_DEPOSIT: 'SHIP_START_DEPOSIT',
-  SHIP_START_REPAIR: 'SHIP_START_REPAIR',
-  SHIP_START_REFUEL: 'SHIP_START_REFUEL',
   SHIP_DEPOSIT_COMPLETE: 'SHIP_DEPOSIT_COMPLETE',
   SHIP_REPAIR_COMPLETE: 'SHIP_REPAIR_COMPLETE',
   SHIP_REFUEL_COMPLETE: 'SHIP_REFUEL_COMPLETE',

@@ -1,67 +1,45 @@
-import type { TileCoordinate, WorldPosition } from './coordinates';
-import type { DroneType, DroneVisualState } from './drone';
+import type { Path, WorldGridPosition } from './coordinates';
 import type { ResourceStats } from './resources';
 import type { ShipType } from './tracker';
 
 export type VehicleId = string;
 
-/** État du véhicule principal (extrait de initialContext.ts) */
+// ============================================================================
+// TYPES VISUELS VÉHICULE
+// ============================================================================
+
+/** États visuels du véhicule principal pour R3F et animations */
+export type VehicleVisualState = 
+  | 'uninitialized'
+  | 'moving_to_tile'
+  | 'collecting' 
+  | 'returning'
+  | 'docked' 
+  | 'damaged' 
+  | 'maintenance';
+
+// ============================================================================
+// INTERFACES VÉHICULE
+// ============================================================================
+
+/** État du véhicule principal */
 export interface VehicleState {
   id: string;
   type: ShipType;
-  position: WorldPosition;
-  basePosition: WorldPosition;
-  coord: TileCoordinate;
+  position: WorldGridPosition;
+  basePosition: WorldGridPosition;
   isMoving: boolean;
   progress: number;
   resources: ResourceStats;
-  targetTile: TileCoordinate;
+  targetVehicleTile: import('./tile').Tile | null;
   fuel: number;
   damage: number;
   totalDistance: number;
-  path: TileCoordinate[];
-  startCoord: TileCoordinate | null;
+  path: Path;
   isAtCapacity: boolean;
   maxSpeed: number;
   currentSpeed: number;
   maxCapacity: ResourceStats;
-}
-
-/** État d'un drone individuel (extrait de initialContext.ts) */
-export interface DroneState {
-  id: string;
-  type: DroneType;
-  state: DroneVisualState;
-  position?: WorldPosition;
-  targetPosition: WorldPosition;
-  isActive: boolean;
-  isMoving: boolean;
-  lastUpdate: number;
-}
-
-/** Offsets de formation des drones (extrait de initialContext.ts) */
-export interface FormationOffsets {
-  explorer: WorldPosition;
-  combat: WorldPosition;
-  special: WorldPosition;
-}
-
-/** Mission active pour les drones (extrait de initialContext.ts) */
-export interface DroneMission {
-  type: 'explore' | 'collect' | 'defend' | 'special';
-  target: TileCoordinate;
-  drones: DroneType[];
-}
-
-/** Flotte de drones (extrait de initialContext.ts) */
-export interface DroneFleet {
-  drones: {
-    explorer: DroneState;
-    combat: DroneState;
-    special: DroneState;
-  };
-  formationOffsets: FormationOffsets;
-  currentMission: DroneMission | null;
-  missionStartTime: number | null;
+  visualState: VehicleVisualState;
 }
 

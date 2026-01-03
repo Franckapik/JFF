@@ -2,16 +2,20 @@
  * ==========================================================================
  * EXPLORATION DOMAIN - Actions de mise à jour du contexte (assign)
  * ==========================================================================
+ * ✅ Phase 4: Pure actions - uses context.gridInfo instead of useTileStore
+ * 
+ * NOTE: useTileStore is kept for mutation operations (markTileAsExplored)
+ * which require modifying the tile store directly.
  */
 
 import { assign } from 'xstate';
 
-import fsmLogger from '../../../../../logger/fsmLogger';
+import { calculateDistance, findTilesInRadius, selectRandomTile } from '../../../../../core/spatial/index.ts';
+import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
-import type { DroneType, DroneVisualState } from '../../../../../types/drone';
+import type { DroneVisualState } from '../../../../../types/drone.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
-import type { TileStoreType } from '../../../../../types/stores';
-import type { MachineEvents } from '../../events.pure.v5';
+import type { MachineEvents } from '../../events.pure.v5.ts';
 
 // Helper pour typage assign compatible XState v5
 function createAssignAction(
@@ -22,168 +26,151 @@ function createAssignAction(
 
 /**
  * Action assign pour le déploiement de drone en exploration
- * Logique fusionnée : sélection de tuile + mise à jour contexte en une seule fois
+ * ✅ Phase 4: Uses context.gridInfo.tiles instead of useTileStore.getState()
  */
-export const assignDroneDeployingContext = createAssignAction(({ context, event }) => {
-  fsmLogger.info(`🔄 [${context?.entityId || 'unknown'}] assignDroneDeployingContext called with:`, {
-    hasContext: !!context,
-    hasEvent: !!event,
-    eventType: event?.type,
-    contextKeys: Object.keys(context || {})
+export const assignDroneDeployingContext = createAssignAction(({ context }) => {
+  // ✅ Phase 4: Use context.gridInfo instead of useTileStore.getState()
+  const tiles = context.gridInfo?.tiles || {};
+  const shipPosition = context.vehicle?.position || context.vehicle?.basePosition;
+  
+  if (!shipPosition) {
+    return {};
+  }
+  
+  const range = context.config?.exploringRadius ?? 2;
+  
+  // ⚠️ GUARD: Vérifier que gridInfo contient des tiles
+  if (Object.keys(tiles).length === 0) {
+    return {};
+  }
+  
+  const startCoord = shipPosition.coord;
+  const candidateTiles = findTilesInRadius(startCoord, range, tiles);
+  
+  let targetDroneTile = selectRandomTile(candidateTiles);
+  if (targetDroneTile) {
+    // Fixe la hauteur Y à 0.5 pour la position cible
+    targetDroneTile = {
+      ...targetDroneTile,
+      position: {
+        ...targetDroneTile.position,
+        y: 0.5,
+      }
+    };
+  }
+
+  if (!targetDroneTile) {
+    return {};
+  }
+  
+  // ✅ Calculer la consommation de fuel du drone basée sur la distance
+  const dronePos = context.droneFleet?.drones?.explorer?.position || shipPosition;
+  const distance = calculateDistance(dronePos, targetDroneTile.position);
+  const fuelConsumption = Math.max(1, Math.floor(distance * 0.3)); // 0.3 fuel par unité (drone plus efficace)
+  const currentFuel = context.vehicle?.fuel || 100;
+  const newFuel = Math.max(0, currentFuel - fuelConsumption);
+  
+  const droneType = 'explorer';
+  const droneState: DroneVisualState = 'deploying';
+  const updatedDrone = {
+    ...context.droneFleet.drones[droneType],
+    visualState: droneState,
+    targetDroneTile: targetDroneTile,
+    isActive: true,
+    isMoving: true,
+    lastUpdate: Date.now()
+  };
+  const updatedContext = {
+    vehicle: {
+      ...context.vehicle,
+      fuel: newFuel // ✅ Déduire le fuel consommé par le drone
+    },
+    droneFleet: {
+      ...context.droneFleet,
+      currentMission: {
+        type: 'explore' as const,
+        target: context.vehicle?.basePosition?.coord || '0,0',
+        drones: [droneType]
+      },
+      missionStartTime: Date.now(),
+      drones: {
+        ...context.droneFleet.drones,
+        [droneType]: updatedDrone
+      }
+    },
+    explorationCycle: {
+      ...context.explorationCycle,
+      isActive: true,
+      phase: 'exploring' as const
+    },
+    lastAction: 'droneDeployForExploration_success',
+    fsmState: 'exploring_deploying',
+  };
+  
+  fsmLogger.info(`✅ [${context.entityId}] Drone deploying with fuel consumption:`, {
+    distance: distance.toFixed(2),
+    fuelConsumed: fuelConsumption,
+    fuelRemaining: newFuel
   });
   
-  // Vérification de sécurité pour l'événement
-  if (!event || !event.type) {
-    fsmLogger.info(`⚠️ [${context?.entityId || 'unknown'}] assignDroneDeployingContext called with invalid event`);
-    return {}; // Préserver le contexte
-  }
-  
-  fsmLogger.info(`🔄 [${context.entityId}] Updating context for drone deployment: ${event.type}`);
-  
-  if (event.type === 'NEED_EXPLORING') {
-  const droneType: DroneType = 'explorer';
-  const range = context.config?.exploringRadius ?? 2;
-    
-    // Vérifier si le drone existe dans la flotte
-    if (!context.droneFleet?.drones[droneType]) {
-      fsmLogger.error(`❌ [${context.entityId}] Drone ${droneType} not found in fleet`);
-      return {
-        error: `Drone ${droneType} not found in fleet`,
-        lastAction: 'droneDeployForExploration_failed'
-      };
-    }
-
-    // Obtenir la position du vaisseau
-    const shipPosition = context.vehicle?.position || context.vehicle?.basePosition;
-    if (!shipPosition) {
-      fsmLogger.error(`❌ [${context.entityId}] No ship position available for drone deployment`);
-      return {
-        error: 'No ship position available',
-        lastAction: 'droneDeployForExploration_failed'
-      };
-    }
-
-    // Utiliser la fonction du tileStore pour sélectionner une tuile cible
-    const tileStore = useTileStore.getState() as TileStoreType;
-    const targetPosition = tileStore.selectTargetTileInRadiusForDrone(shipPosition, range);
-    
-    // Si aucune cible valide dans le rayon autorisé, déclencher un retour en évaluation
-    if (!targetPosition) {
-      fsmLogger.debug(`[${context.entityId}] No valid exploration targets within radius ${range}, area exploration complete`);
-      return {
-        explorationCycle: {
-          ...context.explorationCycle,
-          isActive: false,
-          phase: 'idle'
-        },
-        lastAction: 'droneDeployForExploration_noTargets'
-      };
-    }
-
-    fsmLogger.info(`🚁 [${context.entityId}] Deploying drone for exploration to target:`, {
-      targetPosition,
-      shipPosition,
-      range
-    });
-    
-    const droneState: DroneVisualState = 'deploying';
-    const updatedDrone = {
-      ...context.droneFleet.drones[droneType],
-      state: droneState,
-      targetPosition,
-      isActive: true,
-      isMoving: true, // ✅ IMPORTANT: Le drone est en mouvement vers sa cible
-      lastUpdate: Date.now()
-    };
-
-    // Mise à jour complète du contexte en une seule fois
-    const updatedContext = {
-      droneFleet: {
-        ...context.droneFleet,
-        currentMission: {
-          type: 'explore' as const,
-          target: context.vehicle.coord,
-          drones: [droneType] as DroneType[]
-        },
-        missionStartTime: Date.now(),
-        drones: {
-          ...context.droneFleet.drones,
-          [droneType]: updatedDrone
-        }
-      },
-      explorationCycle: {
-        ...context.explorationCycle,
-        isActive: true,
-        phase: 'exploring' as const
-      },
-      lastAction: 'droneDeployForExploration_success',
-      currentState: 'exploring_deploying', // 🟢 Mise à jour de l'état global FSM
-    };
-    
-    fsmLogger.info(`✅ [${context.entityId}] Drone deployment result:`, {
-      hasDroneFleet: !!updatedContext.droneFleet,
-      explorer: updatedContext.droneFleet?.drones?.explorer,
-      targetPosition: updatedContext.droneFleet?.drones?.explorer?.targetPosition
-    });
-    
-    return updatedContext;
-  }
-  
-  // Pour les autres événements, ne pas modifier le contexte
-  fsmLogger.info(`⚠️ [${context.entityId}] No drone deployment needed for event: ${event.type}`);
-  return {};
+  return updatedContext;
 });
 
 /**
  * Action assign pour mettre à jour l'état du drone lors du passage en scanning
  */
-export const assignDroneScanningContext = createAssignAction(({ context, event }) => {
-  fsmLogger.info(`🔄 [${context?.entityId || 'unknown'}] assignDroneScanningContext called with:`, {
-    hasContext: !!context,
-    hasEvent: !!event,
-    eventType: event?.type,
-    currentDroneState: context.droneFleet?.drones?.explorer?.state
-  });
-  
-  if (!context.droneFleet?.drones?.explorer) {
-    fsmLogger.info(`⚠️ [${context.entityId}] No explorer drone found in context`);
+export const assignDroneScanningContext = createAssignAction(({ context }) => {
+  const targetDroneTile = context.droneFleet?.drones?.explorer?.targetDroneTile;
+  if (!targetDroneTile) {
     return {};
   }
-  
-  fsmLogger.info(`📡 [${context.entityId}] Updating drone state to scanning`);
-  
-  const droneState: DroneVisualState = 'scanning';
-  
-  // Incrémenter les stats d'exploration en même temps
-  const currentTilesExploredInCycle = context.memory?.stats?.tilesExploredInCycle || 0;
-  const newCount = currentTilesExploredInCycle + 1;
-  fsmLogger.info(`📊 [${context.entityId}] Incrémentation exploration: ${currentTilesExploredInCycle} → ${newCount}`);
-  
+  const scannedPosition = {
+    ...targetDroneTile.position,
+    y: targetDroneTile.position.y ?? 0.5
+  };
+  // Incrémentation des compteurs d'exploration (global et par cycle)
+  const currentCount = typeof context.explorationCount === 'number' ? context.explorationCount : 0;
+  const currentCycleCount = context.memory?.stats?.tilesExploredInCycle ?? 0;
+  const updatedExplorer = {
+    ...context.droneFleet.drones.explorer,
+    position: scannedPosition,
+    isMoving: false
+  };
+
+  // ⚠️ MUTATION: Mark tile as explored in the tile store
+  if (targetDroneTile?.position?.coord) {
+    const tileStoreState = typeof useTileStore !== 'undefined' && useTileStore.getState ? useTileStore.getState() : null;
+    if (tileStoreState?.markTileAsExplored) {
+      tileStoreState.markTileAsExplored(targetDroneTile.position.coord, context.entityId);
+    }
+  }
+
   return {
     droneFleet: {
       ...context.droneFleet,
       drones: {
         ...context.droneFleet.drones,
         explorer: {
-          ...context.droneFleet.drones.explorer,
-          state: droneState,
-          lastUpdate: Date.now()
+          ...updatedExplorer,
+          targetDroneTile: null
         }
       }
     },
     memory: {
       ...context.memory,
+      knownTiles: [...(context.memory?.knownTiles ?? []), targetDroneTile],
       stats: {
-        ...context.memory.stats,
-        tilesExploredInCycle: newCount,
+        ...context.memory?.stats,
+        tilesExplored: (context.memory?.stats?.tilesExplored ?? 0) + 1,
+        tilesExploredInCycle: currentCycleCount + 1,
         lastExploration: {
-          coord: { coord: '0,0', type: 'explore' }, // Coordonnée temporaire, sera mise à jour lors de DRONE_HAS_SCANNED
+          coord: targetDroneTile.position.coord,
           timestamp: Date.now(),
-          hasResources: false // Sera mis à jour lors de DRONE_HAS_SCANNED
+          hasResources: targetDroneTile.hasResources
         }
       }
     },
-    currentState: 'exploring_scanning', // 🟢 Mise à jour de l'état global FSM
+    explorationCount: currentCount + 1
   };
 });
 
@@ -196,28 +183,27 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
     hasContext: !!context,
     hasEvent: !!event,
     eventType: event?.type,
-    currentDroneState: context.droneFleet?.drones?.explorer?.state
+    currentDroneState: context.droneFleet?.drones?.explorer?.visualState
   });
-  
   if (!context.droneFleet?.drones?.explorer) {
-    fsmLogger.info(`⚠️ [${context.entityId}] No explorer drone found in context`);
     return {};
   }
-  
-  // Obtenir la position du vaisseau comme cible de retour
-  const shipPosition = context.vehicle?.position || context.vehicle?.basePosition;
-  if (!shipPosition) {
-    fsmLogger.error(`❌ [${context.entityId}] No ship position available for drone return`);
-    return {};
-  }
-  
-  fsmLogger.info(`🔙 [${context.entityId}] Updating drone state to returning with target:`, {
-    shipPosition,
-    currentDronePosition: context.droneFleet.drones.explorer.position
-  });
-  
+  // Obtenir la tuile de base comme cible de retour
+  const basePosition = context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0, coord: '0,0' };
+  // Fixe la hauteur Y à 0.5 pour la position cible de retour
+  const baseTile = {
+    position: {
+      ...basePosition,
+      y: 0.2,
+    },
+    coord: basePosition.coord ?? '0,0',
+    type: 'depart',
+    biome: 'station',
+    resources: { food: 0, debris: 0, special: 0, total: 0 },
+    hasResources: false
+  };
+  fsmLogger.info(`🔙 [${context.entityId}] Updating drone state to returning with targetDroneTile (base)`, { baseTile });
   const droneState: DroneVisualState = 'returning';
-  
   return {
     droneFleet: {
       ...context.droneFleet,
@@ -225,36 +211,38 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
         ...context.droneFleet.drones,
         explorer: {
           ...context.droneFleet.drones.explorer,
-          state: droneState,
-          targetPosition: shipPosition, // ✅ IMPORTANT: Cible mise à jour vers la base
-          isMoving: true, // ✅ IMPORTANT: Le drone doit bouger vers la base
+          visualState: droneState,
+          targetDroneTile: baseTile,
+          isMoving: true,
           lastUpdate: Date.now()
         }
       }
     },
-    currentState: 'exploring_returning', // 🟢 Mise à jour de l'état global FSM
+    fsmState: 'exploring_returning',
   };
 });
 
 /**
- 
-/**
  * Action assign pour remettre le contexte en évaluation après le retour du drone
+ * Transition: drone_returning → drone_docked (mais on garde l'action assignDroneDockedContext compatible)
  */
 export const assignDroneDockedContext = createAssignAction(({ context, event }) => {
   fsmLogger.info(`🔄 [${context?.entityId || 'unknown'}] assignDroneDockedContext called with:`, {
     hasContext: !!context,
     hasEvent: !!event,
     eventType: event?.type,
-    currentDroneState: context.droneFleet?.drones?.explorer?.state
+    currentDroneState: context.droneFleet?.drones?.explorer?.visualState
   });
   
   if (!context.droneFleet?.drones?.explorer) {
-    fsmLogger.info(`⚠️ [${context.entityId}] No explorer drone found in context`);
     return {};
   }
   
-  fsmLogger.info(`🏠 [${context.entityId}] Updating drone state to docked and context to evaluating`);
+  const basePosition = context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0, coord: '0,0' };
+  const dockedPosition = {
+    ...basePosition,
+    y: basePosition.y ?? 0.5
+  };
   
   const droneState: DroneVisualState = 'docked';
   
@@ -265,7 +253,9 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
         ...context.droneFleet.drones,
         explorer: {
           ...context.droneFleet.drones.explorer,
-          state: droneState,
+          visualState: droneState,
+          position: dockedPosition,
+          targetDroneTile: null,
           isActive: false,
           isMoving: false,
           lastUpdate: Date.now()
@@ -275,8 +265,102 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
     explorationCycle: {
       ...context.explorationCycle,
       isActive: false,
+      phase: 'docked' as const // 🟢 Nouveau phase: drone_docked
+    }
+  };
+});
+
+/**
+ * Action assign pour remettre le contexte en évaluation après le drone docked
+ * Transition: drone_docked → evaluating (nouvelle action pour la transition)
+ */
+export const assignDroneReadyContext = createAssignAction(({ context, event }) => {
+  fsmLogger.info(`🔄 [${context?.entityId || 'unknown'}] assignDroneReadyContext called - transition to evaluating with:`, {
+    hasContext: !!context,
+    hasEvent: !!event,
+    eventType: event?.type
+  });
+  
+  return {
+    explorationCycle: {
+      ...context.explorationCycle,
+      isActive: false,
       phase: 'idle' as const
     },
-    currentState: 'evaluating', // 🟢 Retour à l'état global evaluating
+    fsmState: 'evaluating' // 🟢 Retour à l'état global evaluating
+  };
+});
+
+/**
+ * Action assign pour la destruction d'un drone lors de la rencontre d'une tuile danger
+ * Met à jour le contexte drone et les statistiques
+ */
+export const assignDroneDestroyedContext = createAssignAction(({ context, event }) => {
+  const eventWithDrone = event as any;
+  const droneType = eventWithDrone?.droneType || 'explorer';
+  const reason = eventWithDrone?.reason || 'danger';
+  
+  const currentDrone = context.droneFleet.drones[droneType as keyof typeof context.droneFleet.drones];
+  
+  if (!currentDrone) {
+    return {};
+  }
+  
+  // Mettre à jour le drone avec l'état détruit
+  const updatedDrone = {
+    ...currentDrone,
+    isActive: false,
+    isDestroyed: true,
+    visualState: 'failed' as const,
+    health: 0,
+    isMoving: false
+  };
+  
+  // Incrémenter les compteurs de destruction
+  const statsKey = `${droneType}Destroyed` as keyof typeof context.droneFleet.stats;
+  
+  fsmLogger.exploration(`[assignDroneDestroyedContext] Drone ${droneType} détruit par ${reason}`);
+  
+  return {
+    droneFleet: {
+      ...context.droneFleet,
+      drones: {
+        ...context.droneFleet.drones,
+        [droneType]: updatedDrone
+      },
+      stats: {
+        ...context.droneFleet.stats,
+        [statsKey]: (context.droneFleet.stats[statsKey] || 0) + 1
+      }
+    },
+    memory: {
+      ...context.memory,
+      stats: {
+        ...context.memory?.stats,
+        dronesDestroyed: (context.memory?.stats?.dronesDestroyed ?? 0) + 1
+      }
+    }
+  };
+});
+
+/**
+ * Action assign pour incrémenter les compteurs de déploiement de drone
+ */
+export const assignDroneDeployedContext = createAssignAction(({ context, event }) => {
+  const eventWithDrone = event as any;
+  const droneType = eventWithDrone?.droneType || 'explorer';
+  
+  const statsKey = `${droneType}Deployed` as keyof typeof context.droneFleet.stats;
+  
+  fsmLogger.exploration(`[assignDroneDeployedContext] Drone ${droneType} déployé`);
+  
+  return {
+    droneFleet: {
+      ...context.droneFleet,
+      stats: {
+        ...context.droneFleet.stats,
+        [statsKey]: (context.droneFleet.stats[statsKey] || 0) + 1
+      }
+    }
   };
 });

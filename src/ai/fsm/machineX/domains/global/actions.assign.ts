@@ -3,18 +3,19 @@
  * GLOBAL DOMAIN - Actions de mise à jour du contexte (assign)
  * ==========================================================================
  * 
- * Actions globales qui ne dépendent d'aucun domaine spécifique métier.
+ * ✅ Phase 4: Pure actions - no store dependencies (uses context.gridInfo)
  * Ces actions gèrent les mises à jour de positions et l'initialisation.
  */
 
 import { assign } from 'xstate';
 
-import fsmLogger from '../../../../../logger/fsmLogger';
+import { worldToGrid } from '../../../../../core/spatial/index.ts';
+import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
-import type { MachineEvents } from '../../events.pure.v5';
+import type { MachineEvents } from '../../events.pure.v5.ts';
 
 // Helper pour typage assign compatible XState v5
-function createAssignAction(
+export function createAssignAction(
   fn: (args: { context: FSMContext; event: MachineEvents }) => Partial<FSMContext>
 ): ReturnType<typeof assign<FSMContext, MachineEvents, object, MachineEvents, never>> {
   return assign<FSMContext, MachineEvents, object, MachineEvents, never>(fn);
@@ -26,11 +27,44 @@ function createAssignAction(
  */
 export const updateShipPosition = createAssignAction(({ context, event }) => {
   if (event.type !== 'SHIP_POSITION_UPDATE') return context;
-  fsmLogger.context(`🚢 [${context.entityId}] Setting ship position`, { position: event.position, shipType: event.shipType });
+  
+  const { position } = event;
+  
+  // Protection : vérifier que position n'est pas null
+  if (!position) {
+    return context;
+  }
+  
+  
+  // ✅ Phase 4: Use context.gridInfo.spacing instead of useTileStore.getState()
+  const spacing = context.gridInfo?.spacing ?? 1.2;
+  
+  // Si c'est la première position réelle (différente de la position par défaut), mettre à jour basePosition aussi
+  const isInitialization = !context.vehicle?.position || 
+    (context.vehicle.position.x === 0 && context.vehicle.position.y === 0.5 && context.vehicle.position.z === 0);
+  
+  if (isInitialization) {
+    
+    // Créer une WorldGridPosition pour basePosition
+    const coord = worldToGrid(position, { spacing });
+    const basePosition = { ...position, coord };
+    
+    return {
+      vehicle: {
+        ...context.vehicle,
+        position: { ...position, coord },
+        basePosition: basePosition,
+      },
+    };
+  }
+  
+  // Calculer coord pour position normale
+  const coord = worldToGrid(position, { spacing });
+  
   return {
     vehicle: {
       ...context.vehicle,
-      position: event.position,
+      position: { ...position, coord },
     },
   };
 });
@@ -41,7 +75,12 @@ export const updateShipPosition = createAssignAction(({ context, event }) => {
  */
 export const updateDronePosition = createAssignAction(({ context, event }) => {
   if (event.type !== 'DRONE_POSITION_UPDATE') return context;
-  fsmLogger.context(`🛸 [${context.entityId}] Updating drone position`, { position: event.position, droneType: event.droneType });
+  
+  // Protection : vérifier que position n'est pas null
+  if (!event.position) {
+    return context;
+  }
+  
   return {
     droneFleet: {
       ...context.droneFleet,
@@ -60,25 +99,30 @@ export const updateDronePosition = createAssignAction(({ context, event }) => {
  * Action assign pour traiter les demandes d'initialisation de drone
  * Migré depuis actions.pure.v5.ts
  */
-export const processDroneInitRequest = createAssignAction(({ context, event }) => {
-  if (event.type !== 'DRONE_INITIALIZE_REQUEST') return context;
-  fsmLogger.context(`🛸 [${context.entityId}] Processing ${event.droneType} drone init request`, {
-    shipPosition: context.vehicle.position,
-    initialPosition: event.initialPosition,
-    droneType: event.droneType,
+// ...existing code...
+
+/**
+ * Phase 2: Action assign pour mettre à jour gridInfo depuis TILES_UPDATED event
+ * Permet au FSM d'avoir accès aux tiles sans appeler useTileStore.getState()
+ */
+export const updateGridInfo = createAssignAction(({ context, event }) => {
+  if (event.type !== 'TILES_UPDATED') return context;
+  
+  const { tiles, spacing, radius } = event;
+  
+  fsmLogger.context(`🗺️ [${context.entityId}] Updating gridInfo`, { 
+    tileCount: Object.keys(tiles).length,
+    spacing,
+    radius
   });
+  
   return {
-    droneFleet: {
-      ...context.droneFleet,
-      drones: {
-        ...context.droneFleet?.drones,
-        [event.droneType]: {
-          ...context.droneFleet?.drones?.[event.droneType],
-          position: event.initialPosition,
-          isActive: true,
-          state: 'docked',
-        },
-      },
+    gridInfo: {
+      tiles,
+      spacing,
+      radius,
+      departTileCoord: context.gridInfo?.departTileCoord,
+      syncedAt: Date.now(),
     },
   };
 });

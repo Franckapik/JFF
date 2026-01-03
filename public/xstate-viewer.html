@@ -1,0 +1,740 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>XState Viewer - JFF</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
+  <style>
+    body { 
+      font-family: system-ui, sans-serif; 
+      margin: 0; 
+      padding: 20px;
+      background: #f5f5f5;
+      color: #333;
+    }
+    .header { 
+      background: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { 
+      margin: 0;
+      color: #2563eb;
+      font-size: 20px;
+    }
+    .header-stats {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .status { 
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .card h3 {
+      margin: 0 0 12px 0;
+      color: #1f2937;
+      font-size: 16px;
+    }
+    .state-value {
+      font-size: 20px;
+      font-weight: bold;
+      color: #059669;
+      margin: 8px 0;
+    }
+    /* Prevent overflow: shrink text, single line with ellipsis */
+    .state-value {
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 16px;
+    }
+    .bot-info {
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-active { background: #d1fae5; color: #065f46; }
+    .status-done { background: #dbeafe; color: #1e40af; }
+    .status-error { background: #fee2e2; color: #991b1b; }
+    .status-unknown { background: #f3f4f6; color: #374151; }
+    
+    .context-container {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .context-header {
+      background: #f9fafb;
+      padding: 15px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      font-weight: 600;
+      color: #374151;
+    }
+    pre { 
+      white-space: pre-wrap; 
+      word-break: break-word; 
+      background: white;
+      margin: 0;
+      padding: 20px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #1f2937;
+      overflow-x: auto;
+    }
+    .connection-status {
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .connected { background: #d1fae5; color: #065f46; }
+    .disconnected { background: #fee2e2; color: #991b1b; }
+    
+    .refresh-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+    .refresh-btn:hover { background: #1d4ed8; }
+    
+    .position-value {
+      font-family: 'Courier New', monospace;
+      background: #f3f4f6;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #374151;
+      margin: 8px 0;
+    }
+    
+    .collapsible-header {
+      background: #f9fafb;
+      padding: 15px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      font-weight: 600;
+      color: #374151;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+    
+    .collapsible-header:hover {
+      background: #f3f4f6;
+    }
+    
+    .collapse-icon {
+      transition: transform 0.2s ease;
+    }
+    
+    .collapsed .collapse-icon {
+      transform: rotate(-90deg);
+    }
+    
+    .collapsible-content {
+  max-height: 400px;
+  overflow: auto; /* allow vertical scroll */
+  transition: max-height 0.3s ease;
+    }
+    
+    .collapsed .collapsible-content {
+  max-height: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🤖 XState Live Viewer</h1>
+    <div class="header-stats">
+      <span class="connection-status" id="connectionStatus">Connecting...</span>
+      <span>Updates: <strong id="updateCount">0</strong></span>
+      <span>Last: <strong id="lastUpdate">Never</strong></span>
+      <button class="refresh-btn" onclick="requestSync()">🔄</button>
+    </div>
+  </div>
+
+  <div class="status">
+    <div class="card">
+      <h3>🤖 Bot State</h3>
+      <div class="bot-info">Bot ID: <strong id="botId">bot-0</strong></div>
+      <div class="state-value" id="stateValue">—</div>
+      <span class="status-badge status-unknown" id="statusBadge">unknown</span>
+    </div>
+    <div class="card">
+      <h3>🚢🛸 Visual States</h3>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <span><strong>Vehicle:</strong> <span class="state-value" id="vehicleVisualState">—</span></span>
+        <span><strong>Drone:</strong> <span class="state-value" id="droneVisualState">—</span></span>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h3>📍 Position actuelle</h3>
+      <div class="position-value" id="vehiclePosition">—</div>
+      <div style="font-size:12px; color:#6b7280; margin-top:6px;">
+        Coord: <span id="vehiclePositionCoord">—</span>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h3>🏠 Position d'origine</h3>
+      <div class="position-value" id="basePosition">—</div>
+      <div style="font-size:12px; color:#6b7280; margin-top:6px;">
+        Coord: <span id="basePositionCoord">—</span>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h3>⚡ Quick Stats</h3>
+      <div style="font-size: 12px; color: #6b7280;">
+        <div>Fuel: <span id="fuelLevel">—</span></div>
+        <div>Resources: <span id="resourceCount">—</span></div>
+        <div>Mode: <span id="currentMode">—</span></div>
+        <div>Player Score: <span id="scoreTotal">—</span></div>
+        <div>Cargo Hold:</div>
+        <div style="margin-left:10px; font-size:11px; color:#374151;">
+          <span><i class="fas fa-apple-alt" title="Food" style="color:#e53e3e;"></i> <span id="vehicleFood">—</span></span>
+          <span style="margin-left:8px;"><i class="fas fa-cog" title="Debris" style="color:#718096;"></i> <span id="vehicleDebris">—</span></span>
+          <span style="margin-left:8px;"><i class="fas fa-star" title="Special" style="color:#ecc94b;"></i> <span id="vehicleSpecial">—</span></span>
+          <span style="margin-left:8px;"><i class="fas fa-box" title="Total" style="color:#4fd1c5;"></i> <span id="vehicleTotal">—</span></span>
+        </div>
+      </div>
+    </div>
+
+     <div class="card">
+       <h3>🏆 Player Score Details</h3>
+       <div style="margin-left:10px; font-size:13px; color:#374151; display:flex; gap:16px; align-items:center;">
+         <span><i class="fas fa-apple-alt" title="Food" style="color:#e53e3e;"></i> <span id="scoreFood">—</span></span>
+         <span><i class="fas fa-cog" title="Debris" style="color:#718096;"></i> <span id="scoreDebris">—</span></span>
+         <span><i class="fas fa-star" title="Special" style="color:#ecc94b;"></i> <span id="scoreSpecial">—</span></span>
+         <span><i class="fas fa-box" title="Total" style="color:#4fd1c5;"></i> <span id="scoreTotalDetail">—</span></span>
+       </div>
+     </div>
+    
+    <div class="card" id="explorationMemoryCard">
+      <h3>🗺️ Exploration Memory</h3>
+      <div style="font-size:12px; color:#6b7280;">
+        <div>Last Exploration: <strong id="lastExploration">—</strong></div>
+        <div>Exploration Count: <strong id="explorationCount">—</strong></div>
+        <div>This Cycle: <strong id="explorationCycleCount">—</strong></div>
+        <div style="margin-top:8px;">Recent Tiles:</div>
+        <div id="recentTiles" style="margin-top:6px; max-height:200px; overflow-y:auto;"></div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h3>🎯 Drone Target Tile</h3>
+      <div class="position-value" id="targetDroneTilePosition">—</div>
+      <div style="font-size:12px; color:#6b7280; margin-top:6px;">
+        Coord: <span id="targetDroneTileCoord">—</span><br>
+        Resources: <span id="targetDroneTileResources">—</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🎯 Vehicle Target Tile</h3>
+      <div class="position-value" id="targetVehicleTilePosition">—</div>
+      <div style="font-size:12px; color:#6b7280; margin-top:6px;">
+        Coord: <span id="targetVehicleTileCoord">—</span><br>
+        Resources: <span id="targetVehicleTileResources">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="context-container">
+    <div class="collapsible-header" onclick="toggleCollapse('contextContainer')">
+      <span>📋 Full Context (JSON)</span>
+      <span class="collapse-icon">🔽</span>
+    </div>
+    <div class="collapsible-content" id="contextContent">
+      <pre id="contextPre">Waiting for updates...</pre>
+    </div>
+  </div>
+
+  <script>
+    // Copie de la fonction worldToGrid du store
+    function worldToGrid(position, spacing) {
+      // spacing doit être identique à celui du store
+      const s = typeof spacing === 'number' ? spacing : -0.2; // valeur par défaut du slice
+      if (!position || typeof position.x !== 'number' || typeof position.z !== 'number') return '[Position invalide]';
+      const x = Math.round(position.x / (1 + s));
+      const z = Math.round(position.z / (1 + s));
+      return `${x},${z}`;
+    }
+    const CHANNEL_NAME = 'xstate-machine-channel';
+    let channel = null;
+    let updateCount = 0;
+    let isConnected = false;
+
+  const elements = {
+      connectionStatus: document.getElementById('connectionStatus'),
+      botId: document.getElementById('botId'),
+      stateValue: document.getElementById('stateValue'),
+      statusBadge: document.getElementById('statusBadge'),
+      contextPre: document.getElementById('contextPre'),
+      lastUpdate: document.getElementById('lastUpdate'),
+      updateCount: document.getElementById('updateCount'),
+      vehiclePosition: document.getElementById('vehiclePosition'),
+      basePosition: document.getElementById('basePosition'),
+      fuelLevel: document.getElementById('fuelLevel'),
+      resourceCount: document.getElementById('resourceCount'),
+  currentMode: document.getElementById('currentMode'),
+  vehicleVisualState: document.getElementById('vehicleVisualState'),
+  droneVisualState: document.getElementById('droneVisualState')
+    };
+
+    function updateConnectionStatus(connected) {
+      isConnected = connected;
+      if (connected) {
+        elements.connectionStatus.textContent = 'Connected';
+        elements.connectionStatus.className = 'connection-status connected';
+      } else {
+        elements.connectionStatus.textContent = 'Disconnected';
+        elements.connectionStatus.className = 'connection-status disconnected';
+      }
+    }
+
+    function formatJSON(obj) {
+      try { 
+        return JSON.stringify(obj, null, 2); 
+      } catch { 
+        return String(obj); 
+      }
+    }
+
+    function formatStateValue(value) {
+      if (typeof value === 'object' && value !== null) {
+        return JSON.stringify(value);
+      }
+      return String(value);
+    }
+
+    function updateStatusBadge(status) {
+      const badge = elements.statusBadge;
+      badge.textContent = status || 'unknown';
+      badge.className = `status-badge status-${status || 'unknown'}`;
+    }
+
+    function formatPosition(position) {
+      if (!position || typeof position !== 'object') return '—';
+      const x = Number(position.x ?? position[0]);
+      const y = Number(position.y ?? position[1]);
+      const z = Number(position.z ?? position[2]);
+      if (Number.isFinite(x) && Number.isFinite(z)) {
+        const yPart = Number.isFinite(y) ? `, ${y.toFixed(1)}` : '';
+        return `(${x.toFixed(1)}${yPart}, ${z.toFixed(1)})`;
+      }
+      return '—';
+    }
+
+  function extractContextData(context) {
+      if (!context || typeof context !== 'object') return {};
+
+      // Common places where positions are stored in this project:
+      // - context.vehicle.position
+      // - context.vehicle.basePosition
+      // - top-level context.position or context.shipPosition (legacy)
+  const vehicle = context.vehicle ?? {};
+      const vehiclePosition = vehicle.position ?? context.vehiclePosition ?? context.position ?? null;
+      // Visual state extraction
+      const vehicleVisualState = vehicle.visualState ?? '—';
+      // Drone visual state: try explorer drone, else first drone
+      let droneVisualState = '—';
+      if (context.droneFleet && context.droneFleet.drones) {
+        if (context.droneFleet.drones.explorer && context.droneFleet.drones.explorer.visualState) {
+          droneVisualState = context.droneFleet.drones.explorer.visualState;
+        } else {
+          for (const k in context.droneFleet.drones) {
+            if (context.droneFleet.drones[k]?.visualState) {
+              droneVisualState = context.droneFleet.drones[k].visualState;
+              break;
+            }
+          }
+        }
+      }
+      const basePosition = vehicle.basePosition ?? context.basePosition ?? context.shipPosition ?? null;
+
+      const fuel = vehicle.fuel ?? context.fuel?.current ?? context.fuelLevel ?? null;
+      const resources = vehicle.resources?.total ?? context.resources?.current ?? context.collectedResources ?? null;
+      const mode = context.fsmState ?? vehicle.visualState ?? context.mode ?? context.currentMode ?? null;
+      const memory = context.memory ?? {};
+      const explorationCycle = context.explorationCycle ?? {};
+
+      // lastExploration is stored under memory.stats.lastExploration per initialContext
+      const lastExploration = memory?.stats?.lastExploration ?? memory?.lastExploration ?? null;
+      // explorationCount: try context.explorationCount, then memory.stats.tilesExplored, then memory.exploredTiles.length
+      let explorationCount = context.explorationCount;
+      if (explorationCount === undefined) {
+        explorationCount = memory?.stats?.tilesExplored;
+      }
+      if (explorationCount === undefined && Array.isArray(memory.exploredTiles)) {
+        explorationCount = memory.exploredTiles.length;
+      }
+      if (explorationCount === undefined && Array.isArray(memory.knownTiles)) {
+        explorationCount = memory.knownTiles.length;
+      }
+      if (explorationCount === undefined) {
+        explorationCount = 0;
+      }
+
+      // recent tiles: handle several possible shapes after migration
+      let recentTiles = [];
+      try {
+        const known = memory.knownTiles;
+        if (Array.isArray(known)) {
+          recentTiles = known.slice();
+        } else if (known && typeof known === 'object') {
+          // Map or Map-like
+          if (typeof known.values === 'function') recentTiles = Array.from(known.values());
+          else recentTiles = Object.values(known);
+        }
+      } catch (_e) {
+        recentTiles = [];
+      }
+
+      // If no knownTiles, fallback to explorationCycle.exploredTiles or memory.recentExplorations
+      if (!recentTiles || recentTiles.length === 0) {
+        if (Array.isArray(explorationCycle.exploredTiles) && explorationCycle.exploredTiles.length) {
+          recentTiles = explorationCycle.exploredTiles.slice();
+        } else if (Array.isArray(memory.recentExplorations) && memory.recentExplorations.length) {
+          recentTiles = memory.recentExplorations.slice();
+        } else if (Array.isArray(memory.exploredTiles) && memory.exploredTiles.length) {
+          recentTiles = memory.exploredTiles.slice();
+        }
+      }
+
+      // Normalize recentTiles to array of simple objects and show newest first
+      recentTiles = (recentTiles || []).slice().reverse();
+
+      return {
+        vehiclePosition,
+        basePosition,
+        fuel,
+        resources,
+        mode,
+        vehicleVisualState,
+        droneVisualState,
+        memory: {
+          lastExploration,
+          recentTiles,
+          explorationCount,
+          explorationCycleCount: memory?.stats?.tilesExploredInCycle ?? 0
+        }
+      };
+    }
+
+    function updateContextualData(context) {
+      const data = extractContextData(context);
+      // Affichage des états visuels
+      elements.vehicleVisualState.textContent = data.vehicleVisualState || '—';
+      elements.droneVisualState.textContent = data.droneVisualState || '—';
+      
+      // Note architecturale : 
+      // - basePosition = position d'origine fixée à l'initialisation (avec coord stocké)
+      // - vehiclePosition = position actuelle mise à jour dynamiquement (coord calculé)
+      // Cette différence est intentionnelle : basePosition sert de référence/fallback
+      //
+      // IMPORTANT : La basePosition change à chaque redémarrage de session FSM !
+      
+      elements.vehiclePosition.textContent = formatPosition(data.vehiclePosition);
+        // Affiche la coordonnée du véhicule : préfère coord du contexte, sinon calcul local
+        const vehiclePositionCoordEl = document.getElementById('vehiclePositionCoord');
+        const spacing = typeof context.spacing === 'number' ? context.spacing : -0.2;
+        if (!data.vehiclePosition || typeof data.vehiclePosition !== 'object' || typeof data.vehiclePosition.x !== 'number' || typeof data.vehiclePosition.z !== 'number') {
+          vehiclePositionCoordEl.textContent = '[Position véhicule invalide]';
+        } else if (data.vehiclePosition.coord === null || data.vehiclePosition.coord === undefined) {
+          vehiclePositionCoordEl.textContent = 'en déplacement (performance)';
+        } else if (data.vehiclePosition.coord && typeof data.vehiclePosition.coord === 'string') {
+          vehiclePositionCoordEl.textContent = data.vehiclePosition.coord + ' (contexte)';
+        } else {
+          vehiclePositionCoordEl.textContent = worldToGrid(data.vehiclePosition, spacing) + ' (calcul local)';
+        }
+      elements.basePosition.textContent = formatPosition(data.basePosition);
+        // Affiche la coordonnée de la base depuis context.basePosition.coord si présent, sinon fallback sur worldToGrid
+        const basePositionCoordEl = document.getElementById('basePositionCoord');
+        if (data.basePosition && typeof data.basePosition === 'object' && typeof data.basePosition.coord === 'string' && data.basePosition.coord.length > 0) {
+          basePositionCoordEl.textContent = data.basePosition.coord + ' (session courante)';
+        } else if (data.basePosition && typeof data.basePosition.x === 'number' && typeof data.basePosition.z === 'number') {
+          basePositionCoordEl.textContent = worldToGrid(data.basePosition, spacing) + ' (calcul local)';
+        } else {
+          basePositionCoordEl.textContent = '[Position base invalide]';
+        }
+      elements.fuelLevel.textContent = data.fuel !== undefined ? `${data.fuel}%` : '—';
+      elements.resourceCount.textContent = data.resources !== undefined ? data.resources.toString() : '—';
+      elements.currentMode.textContent = data.mode || '—';
+      // Score du joueur (score.resources.total)
+      const scoreTotalEl = document.getElementById('scoreTotal');
+      if (scoreTotalEl) {
+        const score = context.score?.resources?.total;
+        scoreTotalEl.textContent = (typeof score === 'number') ? score.toString() : '—';
+      }
+    // Détail du score du joueur
+    const scoreFood = document.getElementById('scoreFood');
+    const scoreDebris = document.getElementById('scoreDebris');
+    const scoreSpecial = document.getElementById('scoreSpecial');
+    const scoreTotalDetail = document.getElementById('scoreTotalDetail');
+    const scoreRes = context.score?.resources || {};
+    scoreFood && (scoreFood.textContent = (scoreRes.food ?? '—').toString());
+    scoreDebris && (scoreDebris.textContent = (scoreRes.debris ?? '—').toString());
+    scoreSpecial && (scoreSpecial.textContent = (scoreRes.special ?? '—').toString());
+    scoreTotalDetail && (scoreTotalDetail.textContent = (scoreRes.total ?? '—').toString());
+      // Détail des ressources du véhicule
+      const vehicle = context.vehicle || {};
+      const vFood = document.getElementById('vehicleFood');
+      const vDebris = document.getElementById('vehicleDebris');
+      const vSpecial = document.getElementById('vehicleSpecial');
+      const vTotal = document.getElementById('vehicleTotal');
+      if (vehicle.resources) {
+        vFood && (vFood.textContent = vehicle.resources.food?.toString() ?? '0');
+        vDebris && (vDebris.textContent = vehicle.resources.debris?.toString() ?? '0');
+        vSpecial && (vSpecial.textContent = vehicle.resources.special?.toString() ?? '0');
+        vTotal && (vTotal.textContent = vehicle.resources.total?.toString() ?? '0');
+      } else {
+        vFood && (vFood.textContent = '—');
+        vDebris && (vDebris.textContent = '—');
+        vSpecial && (vSpecial.textContent = '—');
+        vTotal && (vTotal.textContent = '—');
+      }
+      // Exploration memory
+      const lastExp = data.memory?.lastExploration;
+      const recent = data.memory?.recentTiles ?? [];
+      const explorationCount = data.memory?.explorationCount ?? 0;
+      const explorationCycleCount = data.memory?.explorationCycleCount ?? 0;
+      const lastExpEl = document.getElementById('lastExploration');
+      const explorationCountEl = document.getElementById('explorationCount');
+      const explorationCycleCountEl = document.getElementById('explorationCycleCount');
+      const recentTilesEl = document.getElementById('recentTiles');
+      if (lastExpEl) lastExpEl.textContent = lastExp ? (lastExp.coord ? `${lastExp.coord} @ ${new Date(lastExp.timestamp || lastExp.time || Date.now()).toLocaleTimeString()}` : JSON.stringify(lastExp)) : '—';
+      if (explorationCountEl) explorationCountEl.textContent = explorationCount.toString();
+      if (explorationCycleCountEl) explorationCycleCountEl.textContent = explorationCycleCount.toString();
+      if (recentTilesEl) {
+        recentTilesEl.innerHTML = '';
+        (recent.slice(0,8)).forEach((tile, index) => {
+          const el = document.createElement('div');
+          el.style.cssText = `
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            color: #374151;
+            margin-bottom: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+          `;
+          
+          // Coordonnée principale
+            const coord = (tile && (tile.position?.coord || tile.coord || tile.coordString || tile.id)) || `Tile ${index + 1}`;
+          const coordEl = document.createElement('div');
+          coordEl.style.cssText = 'font-weight: 600; color: #1f2937;';
+          coordEl.textContent = coord;
+          
+          // Informations des ressources
+          const resources = tile.resources || {};
+          const hasRes = tile.hasResources || (resources.total && resources.total > 0);
+          const resEl = document.createElement('div');
+          resEl.style.cssText = `color: ${hasRes ? '#059669' : '#6b7280'}; font-size: 10px;`;
+          if (hasRes) {
+            const resTypes = [];
+            if (resources.food > 0) resTypes.push(`🍎${resources.food}`);
+            if (resources.debris > 0) resTypes.push(`🔩${resources.debris}`);
+            if (resources.special > 0) resTypes.push(`⭐${resources.special}`);
+            resEl.textContent = resTypes.length ? resTypes.join(' ') : `📦${resources.total || '?'}`;
+          } else {
+            resEl.textContent = '∅ Empty';
+          }
+          
+          // Timestamp d'exploration
+            const exploredAt = tile.exploredAt || (tile.explored && tile.timestamp) || (tile.time) || null;
+            const timeEl = document.createElement('div');
+            timeEl.style.cssText = 'color: #9ca3af; font-size: 9px;';
+            timeEl.textContent = exploredAt ? `🕒 ${new Date(exploredAt).toLocaleTimeString()}` : '';
+            el.appendChild(coordEl);
+            el.appendChild(resEl);
+            if (timeEl.textContent) el.appendChild(timeEl);
+          
+          recentTilesEl.appendChild(el);
+        });
+        
+        if (recent.length === 0) {
+          const emptyEl = document.createElement('div');
+          emptyEl.style.cssText = 'color: #9ca3af; font-style: italic; font-size: 11px;';
+          emptyEl.textContent = 'No tiles explored yet';
+          recentTilesEl.appendChild(emptyEl);
+        }
+      }
+      // Drone Target Tile
+      // Always prefer context.targetDroneTile if present, else search all drones for a targetDroneTile
+      let targetDroneTile = null;
+      if (context.targetDroneTile && typeof context.targetDroneTile === 'object') {
+        targetDroneTile = context.targetDroneTile;
+      } else {
+        const droneFleet = context.droneFleet ?? {};
+        const drones = droneFleet.drones ?? {};
+        // Try activeType first
+        if (droneFleet.activeType && drones[droneFleet.activeType]?.targetDroneTile) {
+          targetDroneTile = drones[droneFleet.activeType].targetDroneTile;
+        } else {
+          // Fallback: find first drone with a targetDroneTile
+          for (const droneKey in drones) {
+            if (drones[droneKey]?.targetDroneTile) {
+              targetDroneTile = drones[droneKey].targetDroneTile;
+              break;
+            }
+          }
+        }
+      }
+      const targetDroneTilePositionEl = document.getElementById('targetDroneTilePosition');
+      const targetDroneTileCoordEl = document.getElementById('targetDroneTileCoord');
+      const targetDroneTileResourcesEl = document.getElementById('targetDroneTileResources');
+      if (targetDroneTile && typeof targetDroneTile === 'object' && targetDroneTile.position) {
+        targetDroneTilePositionEl.textContent = formatPosition(targetDroneTile.position);
+        targetDroneTileCoordEl.textContent = targetDroneTile.position.coord || targetDroneTile.coord || '—';
+        const res = targetDroneTile.resources || {};
+        const resTypes = [];
+        if (res.food > 0) resTypes.push(`🍎${res.food}`);
+        if (res.debris > 0) resTypes.push(`🔩${res.debris}`);
+        if (res.special > 0) resTypes.push(`⭐${res.special}`);
+        targetDroneTileResourcesEl.textContent = resTypes.length ? resTypes.join(' ') : `📦${res.total || '?'}`;
+      } else {
+        targetDroneTilePositionEl.textContent = '—';
+        targetDroneTileCoordEl.textContent = '—';
+        targetDroneTileResourcesEl.textContent = '—';
+      }
+
+      // Vehicle Target Tile: prefer context.targetVehicleTile, then context.vehicle.targetVehicleTile, then search all vehicles if needed
+      let targetVehicleTile = null;
+      if (context.targetVehicleTile && typeof context.targetVehicleTile === 'object') {
+        targetVehicleTile = context.targetVehicleTile;
+      } else {
+        const vehicle = context.vehicle ?? {};
+        if (vehicle.targetVehicleTile && typeof vehicle.targetVehicleTile === 'object') {
+          targetVehicleTile = vehicle.targetVehicleTile;
+        } else if (context.vehicles && typeof context.vehicles === 'object') {
+          // If context.vehicles is a map of vehicles, search for first with targetVehicleTile
+          for (const vKey in context.vehicles) {
+            const v = context.vehicles[vKey];
+            if (v?.targetVehicleTile && typeof v.targetVehicleTile === 'object') {
+              targetVehicleTile = v.targetVehicleTile;
+              break;
+            }
+          }
+        }
+      }
+      const targetVehicleTilePositionEl = document.getElementById('targetVehicleTilePosition');
+      const targetVehicleTileCoordEl = document.getElementById('targetVehicleTileCoord');
+      const targetVehicleTileResourcesEl = document.getElementById('targetVehicleTileResources');
+      if (targetVehicleTile && typeof targetVehicleTile === 'object' && targetVehicleTile.position) {
+        targetVehicleTilePositionEl.textContent = formatPosition(targetVehicleTile.position);
+        targetVehicleTileCoordEl.textContent = targetVehicleTile.position.coord || targetVehicleTile.coord || '—';
+        const res = targetVehicleTile.resources || {};
+        const resTypes = [];
+        if (res.food > 0) resTypes.push(`🍎${res.food}`);
+        if (res.debris > 0) resTypes.push(`🔩${res.debris}`);
+        if (res.special > 0) resTypes.push(`⭐${res.special}`);
+        targetVehicleTileResourcesEl.textContent = resTypes.length ? resTypes.join(' ') : `📦${res.total || '?'}`;
+      } else {
+        targetVehicleTilePositionEl.textContent = '—';
+        targetVehicleTileCoordEl.textContent = '—';
+        targetVehicleTileResourcesEl.textContent = '—';
+      }
+    }
+
+    function toggleCollapse(containerId) {
+      const container = document.querySelector('.context-container');
+      container.classList.toggle('collapsed');
+    }
+
+    function handleStateUpdate(data) {
+      if (!data.snapshot) return;
+
+      const { botId: receivedBotId, snapshot } = data;
+      updateCount++;
+
+      // Update basic UI
+      elements.botId.textContent = receivedBotId || 'bot-0';
+      elements.stateValue.textContent = formatStateValue(snapshot.value);
+      elements.lastUpdate.textContent = new Date().toLocaleTimeString();
+      elements.updateCount.textContent = updateCount.toString();
+      
+      // Update contextual data from context
+      updateContextualData(snapshot.context || {});
+      
+      // Update full JSON context
+      elements.contextPre.textContent = formatJSON(snapshot.context || {});
+      
+      updateStatusBadge(snapshot.status);
+      updateConnectionStatus(true);
+    }
+
+    function requestSync() {
+      if (channel) {
+        channel.postMessage({ type: 'REQUEST_SYNC', botId: 'bot-0' });
+      }
+    }
+
+    function initChannel() {
+      try {
+        channel = new BroadcastChannel(CHANNEL_NAME);
+        
+        channel.onmessage = (ev) => {
+          const data = ev.data;
+          if (!data) return;
+          
+          if (data.type === 'STATE_UPDATE') {
+            handleStateUpdate(data);
+          }
+        };
+
+        updateConnectionStatus(true);
+        
+        // Request initial state
+        setTimeout(requestSync, 100);
+        
+      } catch (error) {
+        console.error('Failed to initialize BroadcastChannel:', error);
+        updateConnectionStatus(false);
+        elements.contextPre.textContent = 'Error: BroadcastChannel not supported or failed to initialize.';
+      }
+    }
+
+    // Initialize on load
+    initChannel();
+
+    // Log connection info
+    console.log('XState Viewer connected to channel:', CHANNEL_NAME);
+  </script>
+</body>
+</html>

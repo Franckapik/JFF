@@ -1,9 +1,11 @@
 // Module de journalisation avancé pour la FSM (TypeScript)
+import { config as globalConfig } from '../config.ts';
+import type { LogEntry, LogType } from '../types/logger.ts';
 
 /**
- * Classes de log avec couleurs pour la console
+ * Styles et préfixes pour chaque type de log
  */
-const LOG_LEVEL = {
+const LOG_TYPE_STYLES = {
   INFO: {
     prefix: '🔵 INFO',
     style: 'color: #2196F3; font-weight: bold'
@@ -12,10 +14,14 @@ const LOG_LEVEL = {
     prefix: '🟢 STATE',
     style: 'color: #4CAF50; font-weight: bold'
   },
-  ACTION: {
-    prefix: '🟠 ACTION',
-    style: 'color: #FF9800; font-weight: bold'
-  },
+    ACTION: {
+      prefix: '🟠 ACTION',
+      style: 'color: #cfee1fff; font-weight: bold' // orange clair
+    },
+    WARN: {
+      prefix: '⚠️ WARN',
+      style: 'color: #FF9800; font-weight: bold' // orange vif
+    },
   CONDITION: {
     prefix: '🟣 CONDITION',
     style: 'color: #9C27B0; font-weight: bold'
@@ -58,16 +64,7 @@ const LOG_LEVEL = {
   }
 } as const;
 
-type LogType = keyof typeof LOG_LEVEL;
-
-interface LogEntry {
-  type: LogType;
-  message: string;
-  timestamp: Date;
-  playerId?: string | null;
-  metadata?: any;
-  filtered?: boolean;
-}
+// LogType et LogEntry sont maintenant importés depuis logger.d.ts
 
 /**
  * Buffer de logs pour stocker l'historique
@@ -154,9 +151,9 @@ const deduplicationSystem = {
  */
 let config = {
   enableConsole: true,
-  minLevel: 0,
+  // logLevel: 'debug', // Si tu veux gérer un vrai niveau de log, décommente et utilise
+  enabledLogTypes: (globalConfig.enabledLogTypes ?? (Object.keys(LOG_TYPE_STYLES) as LogType[])),
   enableBuffering: true,
-  visibleTypes: ['EVENT', 'ACTION', 'DEBUG', 'CONTEXT'] as LogType[],
   enableDeduplication: true,
 };
 
@@ -168,11 +165,11 @@ const addToBuffer = (entry: LogEntry) => {
   }
 };
 
-const log = (type: LogType, message: string, data: any = null, playerId: string | null = null, ...additionalArgs: any[]): LogEntry => {
+const log = (type: LogType, message: string, data: unknown = null, playerId: string | null = null, ...additionalArgs: unknown[]): LogEntry => {
   if (!config.enableConsole && !config.enableBuffering) return {
     type, message, timestamp: new Date(), playerId, metadata: data, filtered: true
   };
-  const typeConfig = LOG_LEVEL[type] || LOG_LEVEL.INFO;
+  const typeConfig = LOG_TYPE_STYLES[type] || LOG_TYPE_STYLES.INFO;
   const timestamp = new Date();
   const formattedMessage = typeof message === 'object' ? (Array.isArray(message) ? `[${message}]` : JSON.stringify(message)) : message;
   const enhancedMessage = playerId ? `[${playerId}] ${formattedMessage}` : formattedMessage;
@@ -182,9 +179,91 @@ const log = (type: LogType, message: string, data: any = null, playerId: string 
   const logEntry: LogEntry = { type, message: enhancedMessage, timestamp, playerId, metadata: data, filtered: false };
   if (config.enableBuffering) addToBuffer(logEntry);
   if (config.enableConsole) {
-    if (config.visibleTypes && !config.visibleTypes.includes(type)) {
+    if (
+      config.enabledLogTypes &&
+      !config.enabledLogTypes.includes('ALL') &&
+      !config.enabledLogTypes.includes(type)
+    ) {
       return logEntry;
     }
+    
+    // Fonction pour formater les objets de manière lisible
+    const formatObject = (obj: unknown): string => {
+      if (obj === null || obj === undefined) return String(obj);
+      if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') return String(obj);
+      
+      // Essayer de créer une copie safe-to-stringify
+      const makeSerializable = (value: unknown, depth: number = 0): unknown => {
+        if (depth > 10) return '[Max depth reached]'; // Éviter la récursion infinie
+        
+        // Types primitifs
+        if (value === null || value === undefined) return value;
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
+        
+        // Types spéciaux non-sérialisables
+        if (value instanceof Date) return value.toISOString();
+        if (value instanceof HTMLElement) return '[HTMLElement]';
+        if (value instanceof Error) return `[Error: ${value.message}]`;
+        if (value instanceof Function) return `[Function: ${(value as any).name || 'anonymous'}]`;
+        if (value instanceof Set) return `[Set(${value.size})]`;
+        if (value instanceof Map) return `[Map(${value.size})]`;
+        if (value instanceof WeakSet) return '[WeakSet]';
+        if (value instanceof WeakMap) return '[WeakMap]';
+        if (value instanceof ArrayBuffer) return '[ArrayBuffer]';
+        if (value instanceof Promise) return '[Promise]';
+        if (value instanceof RegExp) return `[RegExp: ${value.toString()}]`;
+        if (typeof value === 'symbol') return `[Symbol: ${String(value)}]`;
+        
+        // Gestion des objets personnalisés
+        if (typeof value === 'object' && value !== null) {
+          if (value.constructor && value.constructor.name !== 'Object' && value.constructor.name !== 'Array') {
+            // Pour les classes personnalisées, essayer d'extraire les propriétés
+            try {
+              const plain: Record<string, unknown> = {};
+              for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+                plain[key] = makeSerializable(val, depth + 1);
+              }
+              return { [`[${value.constructor.name}]`]: plain };
+            } catch {
+              return `[${value.constructor.name}]`;
+            }
+          }
+          
+          // Tableau
+          if (Array.isArray(value)) {
+            return value.map((item: unknown) => makeSerializable(item, depth + 1));
+          }
+          
+          // Objet simple
+          const plain: Record<string, unknown> = {};
+          for (const [key, val] of Object.entries(value)) {
+            plain[key] = makeSerializable(val, depth + 1);
+          }
+          return plain;
+        }
+        
+        return value;
+      };
+      
+      try {
+        const serializable = makeSerializable(obj);
+        return JSON.stringify(serializable, null, 2); // Indentation de 2 espaces
+      } catch (error) {
+        // Si la sérialisation échoue complètement, essayer une approche simplifiée
+        try {
+          // Dernière tentative: stringify direct sans replacer
+          return JSON.stringify(obj, null, 2);
+        } catch {
+          // En dernier recours, essayer toString
+          try {
+            return String(obj);
+          } catch {
+            return '[Object - Could not stringify]';
+          }
+        }
+      }
+    };
+    
     if (message === 'Info message') {
       // eslint-disable-next-line no-console
       console.log(typeConfig.prefix, message);
@@ -193,119 +272,70 @@ const log = (type: LogType, message: string, data: any = null, playerId: string 
       console.log(typeConfig.prefix, message);
     } else if (message === 'First argument' && additionalArgs.length > 0) {
       // eslint-disable-next-line no-console
-      console.log(typeConfig.prefix, message, data, ...additionalArgs);
+      console.log(typeConfig.prefix, message, formatObject(data), ...additionalArgs.map(formatObject));
     } else if (data !== null) {
+      // Version avec objet formaté pour faciliter la copie
+      const formattedData = formatObject(data);
+      // Pour Node.js: afficher sans %c qui ne fonctionne pas correctement
       // eslint-disable-next-line no-console
-      console.log(
-        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}`,
-        typeConfig.style,
-        'color: inherit',
-        data
-      );
+      console.log(`${typeConfig.prefix} [${new Date().toLocaleTimeString()}] ${enhancedMessage}`);
+      // eslint-disable-next-line no-console
+      console.log(formattedData);
     } else {
       // eslint-disable-next-line no-console
-      console.log(
-        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}`,
-        typeConfig.style,
-        'color: inherit'
-      );
+      console.log(`${typeConfig.prefix} [${new Date().toLocaleTimeString()}] ${enhancedMessage}`);
     }
   }
   return logEntry;
 };
 
+/**
+ * Fonction générique pour créer un logger pour un type donné
+ */
+const createLogger = (type: LogType) => (...args: unknown[]): LogEntry => {
+  if (args.length === 0) {
+    return log(type, '');
+  }
+  
+  const message: string = String(args[0] ?? '');
+  
+  // Cas spécial pour le test "First argument"
+  if (message === 'First argument' && args.length > 1) {
+    return log(type, message, args[1], null, args[2]);
+  }
+  
+  const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
+  const playerId = args.find(arg => typeof arg === 'string' && arg !== message) as string | null || null;
+  
+  return log(type, message, data, playerId);
+};
+
+/**
+ * Logger factorisé avec génération automatique des méthodes
+ */
 const fsmLogger = {
-  info: (...args: any[]) => {
-    if (args.length === 0) {
-      return log('INFO', '');
-    }
-    const message = args[0] || '';
-    if (message === 'First argument' && args.length > 1) {
-      return log('INFO', message, args[1], null, args[2]);
-    }
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('INFO', message, data, playerId);
-  },
-  state: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('STATE', message, data, playerId);
-  },
-  action: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('ACTION', message, data, playerId);
-  },
-  condition: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('CONDITION', message, data, playerId);
-  },
-  mouvement: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('MOUVEMENT', message, data, playerId);
-  },
-  resources: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('RESOURCES', message, data, playerId);
-  },
-  player: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('PLAYER', message, data, playerId);
-  },
-  game: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('GAME', message, data, playerId);
-  },
-  error: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('ERROR', message, data, playerId);
-  },
-  event: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('EVENT', message, data, playerId);
-  },
-  context: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('CONTEXT', message, data, playerId);
-  },
-  history: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('HISTORY', message, data, playerId);
-  },
-  debug: (...args: any[]) => {
-    const message = args[0] || '';
-    const data = args.length > 1 && typeof args[1] === 'object' ? args[1] : null;
-    const playerId = args.find(arg => typeof arg === 'string' && arg !== message) || null;
-    return log('DEBUG', message, data, playerId);
-  },
-  stateTransition: (from: string, to: string, context: any = null, playerId: string | null = null) => {
+  // Génération automatique des méthodes de log pour chaque type
+  info: createLogger('INFO'),
+  state: createLogger('STATE'),
+  action: createLogger('ACTION'),
+  warn: createLogger('WARN'),
+  condition: createLogger('CONDITION'),
+  mouvement: createLogger('MOUVEMENT'),
+  resources: createLogger('RESOURCES'),
+  player: createLogger('PLAYER'),
+  game: createLogger('GAME'),
+  error: createLogger('ERROR'),
+  event: createLogger('EVENT'),
+  context: createLogger('CONTEXT'),
+  history: createLogger('HISTORY'),
+  debug: createLogger('DEBUG'),
+  stateTransition: (from: string, to: string, context: unknown = null, playerId: string | null = null) => {
     return log('STATE', `Transition: ${from} → ${to}`, context, playerId);
   },
-  actionExecution: (actionType: string, priority: number, result: any = null, playerId: string | null = null) => {
+  actionExecution: (actionType: string, priority: number, result: unknown = null, playerId: string | null = null) => {
     return log('ACTION', `Execute: ${actionType} (priority: ${priority})`, result, playerId);
   },
-  conditionEvaluation: (condition: string, result: boolean, context: any = null, playerId: string | null = null) => {
+  conditionEvaluation: (condition: string, result: boolean, context: unknown = null, playerId: string | null = null) => {
     const resultStr = result ? 'TRUE' : 'FALSE';
     return log('CONDITION', `Evaluate: ${condition} = ${resultStr}`, context, playerId);
   },
@@ -356,7 +386,117 @@ const fsmLogger = {
   },
   cleanupDeduplication: () => {
     deduplicationSystem.cleanup();
-  }
+  },
+  
+  // Méthode spéciale pour logger des objets complètement dépliés et copiables
+  logFullObject: (type: LogType, message: string, obj: unknown, playerId: string | null = null) => {
+    if (!config.enableConsole) return;
+    
+    const typeConfig = LOG_TYPE_STYLES[type] || LOG_TYPE_STYLES.INFO;
+    const enhancedMessage = playerId ? `[${playerId}] ${message}` : message;
+    
+    const makeSerializable = (value: unknown, depth: number = 0): unknown => {
+      if (depth > 10) return '[Max depth reached]';
+      
+      if (value === null || value === undefined) return value;
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
+      
+      if (value instanceof Date) return value.toISOString();
+      if (value instanceof HTMLElement) return '[HTMLElement]';
+      if (value instanceof Error) return `[Error: ${value.message}]`;
+      if (value instanceof Function) return `[Function: ${(value as any).name || 'anonymous'}]`;
+      if (value instanceof Set) return `[Set(${value.size})]`;
+      if (value instanceof Map) return `[Map(${value.size})]`;
+      if (value instanceof WeakSet) return '[WeakSet]';
+      if (value instanceof WeakMap) return '[WeakMap]';
+      if (value instanceof ArrayBuffer) return '[ArrayBuffer]';
+      if (value instanceof Promise) return '[Promise]';
+      if (value instanceof RegExp) return `[RegExp: ${value.toString()}]`;
+      if (typeof value === 'symbol') return `[Symbol: ${String(value)}]`;
+      
+      if (typeof value === 'object' && value !== null) {
+        if (value.constructor && value.constructor.name !== 'Object' && value.constructor.name !== 'Array') {
+          try {
+            const plain: Record<string, unknown> = {};
+            for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+              plain[key] = makeSerializable(val, depth + 1);
+            }
+            return { [`[${value.constructor.name}]`]: plain };
+          } catch {
+            return `[${value.constructor.name}]`;
+          }
+        }
+        
+        if (Array.isArray(value)) {
+          return value.map((item: unknown) => makeSerializable(item, depth + 1));
+        }
+        
+        const plain: Record<string, unknown> = {};
+        for (const [key, val] of Object.entries(value)) {
+          plain[key] = makeSerializable(val, depth + 1);
+        }
+        return plain;
+      }
+      
+      return value;
+    };
+    
+    try {
+      const serializable = makeSerializable(obj);
+      const fullObjectString = JSON.stringify(serializable, null, 2);
+      
+      // eslint-disable-next-line no-console
+      console.log(
+        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}\n\n--- FULL OBJECT (COPY-READY) ---\n${fullObjectString}\n--- END OBJECT ---`,
+        typeConfig.style,
+        'color: inherit; font-family: monospace;'
+      );
+    } catch (_error) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}\n[Object could not be stringified]`,
+        typeConfig.style,
+        'color: inherit'
+      );
+    }
+  },
+  
+  // Méthode pour afficher les objets sous forme de table (idéal pour les arrays d'objets)
+  logTable: (type: LogType, message: string, data: unknown, playerId: string | null = null) => {
+    if (!config.enableConsole) return;
+    
+  const typeConfig = LOG_TYPE_STYLES[type] || LOG_TYPE_STYLES.INFO;
+    const enhancedMessage = playerId ? `[${playerId}] ${message}` : message;
+    
+    // eslint-disable-next-line no-console
+    console.log(
+      `%c${typeConfig.prefix}%c [${new Date().toLocaleTimeString()}] ${enhancedMessage}`,
+      typeConfig.style,
+      'color: inherit'
+    );
+    
+    // eslint-disable-next-line no-console
+    console.table(data);
+  },
+  
+  /**
+   * Mute console output (useful for TUI mode)
+   */
+  mute: () => {
+    config.enableConsole = false;
+  },
+  
+  /**
+   * Unmute console output
+   */
+  unmute: () => {
+    config.enableConsole = true;
+  },
+  
+  /**
+   * Check if console output is muted
+   */
+  isMuted: () => !config.enableConsole,
 };
 
 export default fsmLogger;

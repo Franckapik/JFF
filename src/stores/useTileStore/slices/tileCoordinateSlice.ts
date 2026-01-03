@@ -1,6 +1,6 @@
 /**
  * =========================================================================
- * TILE COORDINATE SLICE - Gestion centralisée des systèmes de coordonnées (TypeScript)
+ * TILE COORDINATE SLICE - Thin wrappers over core/spatial (TypeScript)
  * =========================================================================
  * 
  * Ce slice gère tous les aspects liés aux coordonnées des tuiles :
@@ -9,163 +9,101 @@
  * - Opérations sur les Vector3
  * - Calculs de distance et de cibles
  * 
- * Fonctionnalités migrées depuis utils/coordinateSystem.js :
- * - isValidGridCoord, isValidWorldPosition
- * - hexToGridCoord, gridToHexCoord
- * - gridToWorld, worldToGrid
- * - toVector3, fromVector3
- * - hasReachedTarget
+ * ARCHITECTURE POST-MIGRATION:
+ * - Logique pure déléguée à core/spatial
+ * - Ce slice = wrappers qui injectent le state (spacing, radius)
+ * - Préserve l'API existante pour compatibilité
  */
 
 import { Vector3 } from "three";
 
+// Import des fonctions pures depuis core/spatial
+import {
+    encodeHexCoord as coreEncodeHexCoord,
+    gridToWorld as coreGridToWorld,
+    hasReachedTarget as coreHasReachedTarget,
+    isValidGridCoord as coreIsValidGridCoord,
+    isValidWorldPosition as coreIsValidWorldPosition,
+    worldToGrid as coreWorldToGrid,
+} from '../../../core/spatial/index.ts';
+
 import type {
-  GridCoordinate,
-  TileCoordinate,
-  WorldPosition
+    GridCoordinate,
+    WorldPosition
 } from '../../../types/index.ts';
+import type { TileCoordinateSliceActions } from '../../../types/stores.d.ts';
 
 // =========================================================================
-// TYPES LOCAUX
+// SLICE FACTORY - COORDINATE UTILITIES (Wrappers over core/spatial)
 // =========================================================================
 
-/** Actions du slice de coordonnées */
-interface TileCoordinateSliceActions {
-  isValidGridCoord: (coord: any) => coord is GridCoordinate;
-  isValidWorldPosition: (position: any) => position is WorldPosition;
-  hexToGridCoord: (hexCoord: string) => GridCoordinate | null;
-  gridToHexCoord: (gridCoord: GridCoordinate) => string | null;
-  gridToWorld: (coord: TileCoordinate) => WorldPosition;
-  worldToGrid: (position: WorldPosition) => TileCoordinate;
-  toVector3: (position: WorldPosition) => Vector3;
-  fromVector3: (vector: Vector3) => WorldPosition;
-  hasReachedTarget: (current: WorldPosition, target: WorldPosition, threshold?: number) => boolean;
-  normalizeCoordinate: (coord: any) => GridCoordinate | null;
-}
-
-// =========================================================================
-// SLICE FACTORY - COORDINATE UTILITIES
-// =========================================================================
-
-const createTileCoordinateSlice = (set: any, get: any): TileCoordinateSliceActions => ({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const createTileCoordinateSlice = (_set: unknown, get: () => any): TileCoordinateSliceActions => ({
   // =========================================================================
-  // VALIDATION FUNCTIONS
+  // VALIDATION FUNCTIONS - Delegated to core/spatial
   // =========================================================================
   
   /**
    * Valide une coordonnée de grille
-   * @param coord - Coordonnée au format "x,z"
-   * @returns True si valide
+   * Wrapper over core/spatial/coordinates.isValidGridCoord
    */
-  isValidGridCoord: (coord: any): coord is GridCoordinate => {
-    if (coord === null || coord === undefined) return false;
-    if (typeof coord !== 'string') return false;
-    return /^-?\d+,-?\d+$/.test(coord);
+  isValidGridCoord: (coord: unknown): coord is GridCoordinate => {
+    return coreIsValidGridCoord(coord);
   },
 
   /**
    * Valide une position mondiale
-   * @param position - Position avec propriétés x, y, z
-   * @returns True si valide
+   * Wrapper over core/spatial/coordinates.isValidWorldPosition
    */
-  isValidWorldPosition: (position: any): position is WorldPosition => {
-    if (!position || typeof position !== 'object' || Array.isArray(position)) return false;
-    return (
-      'x' in position &&
-      'y' in position &&
-      'z' in position &&
-      typeof position.x === 'number' &&
-      typeof position.y === 'number' &&
-      typeof position.z === 'number' &&
-      !isNaN(position.x) &&
-      !isNaN(position.y) &&
-      !isNaN(position.z)
-    );
+  isValidWorldPosition: (position: unknown): position is WorldPosition => {
+    return coreIsValidWorldPosition(position);
   },
 
   // =========================================================================
-  // COORDINATE CONVERSION FUNCTIONS
+  // COORDINATE CONVERSION FUNCTIONS - Inject spacing from state
   // =========================================================================
 
   /**
-   * Convertit format lettre-numéro vers format x,z (ex: "B5" vers "1,5")
-   * @param hexCoord - Coordonnée hex (ex: "B5")
-   * @returns Coordonnée grille ou null si invalide
+   * Encode les coordonnées hexagonales q,r en coordonnée de grille
+   * Wrapper over core/spatial/coordinates.encodeHexCoord
    */
-  hexToGridCoord: (hexCoord: string): GridCoordinate | null => {
-    if (hexCoord === null || hexCoord === undefined || hexCoord === '') return null;
-    if (typeof hexCoord !== 'string') return null;
-    
-    // Check if it's already in grid format
-    if (hexCoord.match(/^-?\d+,-?\d+$/)) return hexCoord as GridCoordinate;
-    
-    const match = hexCoord.match(/^([A-Za-z])(\d+)$/i);
-    if (!match) return null;
-    
-    const letter = match[1].toUpperCase();
-    const number = parseInt(match[2]);
-    
-    // Convert letter to number (A=0, B=1, etc.)
-    const x = letter.charCodeAt(0) - 'A'.charCodeAt(0);
-    
-    return `${x},${number}` as GridCoordinate;
-  },
-
-  /**
-   * Convertit format x,z vers format lettre-numéro (ex: "1,5" vers "B5")
-   * @param gridCoord - Coordonnée grille (ex: "1,5")
-   * @returns Coordonnée hex ou null si invalide
-   */
-  gridToHexCoord: (gridCoord: GridCoordinate): string | null => {
-    if (!get().isValidGridCoord(gridCoord)) return null;
-    
-    const [x, z] = gridCoord.split(',').map(Number);
-    
-    // Convert number to letter (0=A, 1=B, etc.)
-    if (x < 0 || x > 25) return null; // Only support A-Z
-    
-    const letter = String.fromCharCode('A'.charCodeAt(0) + x);
-    
-    return `${letter}${z}`;
+  encodeHexCoord: (q: number, r: number, radius: number): GridCoordinate => {
+    return coreEncodeHexCoord(q, r, { radius });
   },
 
   /**
    * Convertit une coordonnée de grille vers une position mondiale
-   * @param coord - Coordonnée de tuile {x, z}
-   * @returns Position mondiale {x, y, z}
+   * Wrapper that injects spacing from store state
    */
-  gridToWorld: (coord: TileCoordinate): WorldPosition => {
-    const spacing = get().spacing || 0.1;
+  gridToWorld: (coord: GridCoordinate): WorldPosition => {
+    const spacing = get().spacing ?? -0.2; // Inject state
+    const worldPos = coreGridToWorld(coord, { spacing, defaultY: 0.5 });
     
-    return {
-      x: coord.x * (1 + spacing),
-      y: 0.5, // Hauteur standard des tuiles
-      z: coord.z * (1 + spacing)
-    };
+    // Log pour debug des conversions avec fsmLogger si disponible
+    if (typeof window !== 'undefined' && 'fsmLogger' in window && window.fsmLogger) {
+      (window.fsmLogger as { mouvement: (msg: string) => void }).mouvement(
+        `🔄 gridToWorld: ${coord} -> {x: ${worldPos.x}, y: ${worldPos.y}, z: ${worldPos.z}} (spacing: ${spacing})`
+      );
+    }
+    
+    return worldPos;
   },
 
   /**
    * Convertit une position mondiale vers une coordonnée de grille
-   * @param position - Position mondiale {x, y, z}
-   * @returns Coordonnée de tuile {x, z}
+   * Wrapper that injects spacing from store state
    */
-  worldToGrid: (position: WorldPosition): TileCoordinate => {
-    const spacing = get().spacing || 0.1;
-    
-    return {
-      x: Math.round(position.x / (1 + spacing)),
-      z: Math.round(position.z / (1 + spacing))
-    };
+  worldToGrid: (position: WorldPosition): GridCoordinate => {
+    const spacing = get().spacing ?? -0.2; // Inject state
+    return coreWorldToGrid(position, { spacing });
   },
 
   // =========================================================================
-  // VECTOR3 OPERATIONS
+  // VECTOR3 OPERATIONS - R3F specific (kept as-is)
   // =========================================================================
 
   /**
    * Convertit une position vers un Vector3 Three.js
-   * @param position - Position {x, y, z}
-   * @returns Vector3 Three.js
    */
   toVector3: (position: WorldPosition): Vector3 => {
     return new Vector3(position.x, position.y, position.z);
@@ -173,8 +111,6 @@ const createTileCoordinateSlice = (set: any, get: any): TileCoordinateSliceActio
 
   /**
    * Convertit un Vector3 Three.js vers une position
-   * @param vector - Vector3 Three.js
-   * @returns Position {x, y, z}
    */
   fromVector3: (vector: Vector3): WorldPosition => {
     return {
@@ -185,53 +121,25 @@ const createTileCoordinateSlice = (set: any, get: any): TileCoordinateSliceActio
   },
 
   // =========================================================================
-  // DISTANCE AND TARGET FUNCTIONS
+  // DISTANCE AND TARGET FUNCTIONS - Delegated to core/spatial
   // =========================================================================
 
   /**
    * Vérifie si une position a atteint sa cible
-   * @param current - Position actuelle
-   * @param target - Position cible
-   * @param threshold - Seuil de distance (défaut: 0.1)
-   * @returns True si la cible est atteinte
+   * Wrapper over core/spatial/distance.hasReachedTarget
    */
   hasReachedTarget: (current: WorldPosition, target: WorldPosition, threshold: number = 0.1): boolean => {
-    if (!get().isValidWorldPosition(current) || !get().isValidWorldPosition(target)) {
+    if (!coreIsValidWorldPosition(current) || !coreIsValidWorldPosition(target)) {
       return false;
     }
     
-    const distance = Math.sqrt(
-      Math.pow(target.x - current.x, 2) + 
-      Math.pow(target.z - current.z, 2)
-    );
-    
-    return distance <= threshold;
+    return coreHasReachedTarget(current, target, { threshold, ignoreY: false });
   },
 
   // =========================================================================
   // UTILITY FUNCTIONS
   // =========================================================================
 
-  /**
-   * Normalise une coordonnée vers le format GridCoordinate
-   * @param coord - Coordonnée à normaliser
-   * @returns GridCoordinate normalisée ou null
-   */
-  normalizeCoordinate: (coord: any): GridCoordinate | null => {
-    if (get().isValidGridCoord(coord)) {
-      return coord;
-    }
-    
-    if (typeof coord === 'string') {
-      return get().hexToGridCoord(coord);
-    }
-    
-    if (coord && typeof coord === 'object' && 'x' in coord && 'z' in coord) {
-      return `${coord.x},${coord.z}` as GridCoordinate;
-    }
-    
-    return null;
-  }
 });
 
 export default createTileCoordinateSlice;

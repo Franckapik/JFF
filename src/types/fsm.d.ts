@@ -1,10 +1,12 @@
+import type { Tile } from './tile.d.ts';
 /**
  * Types FSM (extraits de initialContext.ts)
  */
 
-import type { GridCoordinate, TileCoordinate } from './coordinates';
+import type { GridCoordinate } from './coordinates';
+import type { DroneFleet } from './drone.d';
 import type { ResourceStats } from './resources';
-import type { DroneFleet, VehicleState } from './vehicle.d';
+import type { VehicleState } from './vehicle.d';
 
 /** Données d'une tuile connue en mémoire (extrait de initialContext.ts) */
 export interface KnownTileData {
@@ -27,14 +29,14 @@ export interface KnownDanger {
 
 /** Exploration récente (extrait de initialContext.ts) */
 export interface ExplorationRecord {
-  coord: TileCoordinate;
+  coord: GridCoordinate;
   timestamp: number;
   hasResources: boolean;
 }
 
 /** Collecte récente (extrait de initialContext.ts) */
 export interface CollectionRecord {
-  coord: TileCoordinate;
+  coord: GridCoordinate;
   timestamp: number;
   shipId: string;
 }
@@ -50,6 +52,7 @@ export interface EntityStats {
   currentCycleStartTime: number | null;
   tilesExploredInCycle: number;
   bestTileInCycle: KnownTileData | null;
+  dronesDestroyed?: number;  // Nombre de drones détruits au total
 }
 
 /** Transition d'état FSM (extrait de initialContext.ts) */
@@ -61,7 +64,7 @@ export interface StateTransition {
 
 /** Mémoire de l'entité (extrait de initialContext.ts) */
 export interface EntityMemory {
-  knownTiles: Map<GridCoordinate, KnownTileData>;
+  knownTiles: Tile[];
   knownDangers: KnownDanger[];
   stats: EntityStats;
   stateHistory: string[];
@@ -77,7 +80,7 @@ export interface ContextTimestamps {
 
 /** Tuile explorée dans un cycle (extrait de initialContext.ts) */
 export interface ExploredTile {
-  coord: TileCoordinate;
+  coord: GridCoordinate;
   resources: ResourceStats;
   value: number;
   exploredAt: number;
@@ -93,22 +96,16 @@ export interface ExplorationCycle {
   phase: 'idle' | 'exploring' | 'evaluating' | 'collecting';
 }
 
-/** Tuile sélectionnée pour collecte (extrait de initialContext.ts) */
-export interface SelectedTile {
-  coord: TileCoordinate;
-  resources: ResourceStats;
-  value: number;
-}
 
 /** Configuration FSM (extrait de initialContext.ts) */
 export interface FSMConfig {
   exploringRadius: number;
+  collectingRadius: number;
   fuelThreshold: number;
   capacityThreshold: number;
   movementSpeed: number;
   explorationInterval: number;
   enableLogging: boolean;
-  logLevel: 'info' | 'debug' | 'warn' | 'error';
 }
 
 /** Score de l'entité (extrait de initialContext.ts) */
@@ -127,9 +124,8 @@ export interface FSMContext {
   vehicle: VehicleState;
 
   // État FSM
-  currentState: string;
-  currentTarget: TileCoordinate | null;
-  explorationQueue: TileCoordinate[];
+  fsmState: string;
+  explorationQueue: GridCoordinate[];
   lastAction: string | null;
   error: string | null;
   timestamps: ContextTimestamps;
@@ -142,13 +138,76 @@ export interface FSMContext {
 
   // Cycle d'exploration
   explorationCycle: ExplorationCycle;
-  selectedTileForCollection: SelectedTile | null;
+  // selectedTileForCollection supprimé
+
+  /** Compteur de tuiles explorées (pour stats et viewer) */
+  explorationCount?: number;
 
   // Configuration
   config: FSMConfig;
 
   // Système de drones
   droneFleet: DroneFleet;
+
+  // ========================================================================
+  // ⚠️ DEPRECATED: DEPENDENCY INJECTION PATTERN - No Longer Used
+  // ========================================================================
+  // This zone was used to hold query results injected by effects, allowing
+  // guards to remain pure. This pattern is now OBSOLETE.
+  // 
+  // REPLACEMENT: Guards now read directly from context.gridInfo.tiles which
+  // is populated by TILES_UPDATED event or initial sync in useXFSMStore.
+  // This eliminates the need for a separate injection layer.
+  // 
+  // @deprecated Use context.gridInfo.tiles directly in guards
+  // ========================================================================
+  injectedData?: {
+    /**
+     * @deprecated Use context.gridInfo.tiles instead
+     */
+    availableTiles?: Tile[];
+
+    /**
+     * @deprecated Use context.gridInfo.tiles with distance calculations
+     */
+    nearbyCollectibleTiles?: Array<Tile & { distance: number }>;
+
+    /**
+     * @deprecated Compute this in guards if needed
+     */
+    canReachBase?: boolean;
+
+    /**
+     * @deprecated No longer needed
+     */
+    injectedAt?: number;
+  };
+
+  // ========================================================================
+  // 🗺️ GRID INFO - Tile data injected at FSM startup (Phase 2)
+  // ========================================================================
+  // Contains spatial grid data injected from TileStore at bot creation.
+  // This allows pure guards and actions to access grid data without
+  // calling useTileStore.getState() directly.
+  // 
+  // Updated via TILES_UPDATED event when grid state changes significantly.
+  // ========================================================================
+  gridInfo?: {
+    /** All tiles in the grid, indexed by coord string "x,z" */
+    tiles: Record<string, Tile>;
+    
+    /** Grid spacing for world position calculations */
+    spacing: number;
+    
+    /** Grid radius for boundary checks */
+    radius: number;
+    
+    /** Depart tile coord for this bot */
+    departTileCoord?: string;
+    
+    /** Timestamp when grid was last synced */
+    syncedAt: number;
+  };
 }
 
 /** Fonction utilitaire de type uniquement pour validation d'état */
@@ -186,6 +245,7 @@ export interface XFSMStoreActions {
   startBot: (botId: BotId) => void;
   removeBot: (botId: BotId) => void;
   getBotState: (botId?: BotId) => BotSnapshot | EmptyBotState;
+  getActor: (botId?: BotId) => any | null; // Retourne l'acteur XState
   isBotActive: (botId: BotId) => boolean;
 }
 
@@ -200,6 +260,7 @@ export type XFSMStore = XFSMStoreState & XFSMStoreActions;
 
 /** États possibles de la FSM (déplacé depuis constants.ts) */
 export type FSMState = 
+  | 'uninitialized'
   | 'exploring_deploying'
   | 'exploring_returning'
   | 'collecting_moving_to_target'

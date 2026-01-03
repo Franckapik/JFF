@@ -6,28 +6,34 @@
  *   - addBot, removeBot, send, getBotState
  *   - Synchronisation automatique des snapshots XState
  */
+import { createBrowserInspector } from '@statelyai/inspect';
 import { createActor, type Actor } from 'xstate';
 import { create } from 'zustand';
 
+import { createBroadcastChannel } from '../../ai/fsm/broadcast.ts';
 import { createMachineContext } from '../../ai/fsm/machineX/context/initialContext.ts';
 import type { MachineEvents } from '../../ai/fsm/machineX/events.pure.v5';
 import { machineXV5Pure } from '../../ai/fsm/machineX/machine.pure.v5';
-import fsmLogger from '../../logger/fsmLogger.ts';
+import { config } from '../../config.ts';
+// ✅ Phase 2: Import TileStore for grid sync
 import type {
-  BotId,
-  BotSnapshot,
-  BotStatesMap,
-  EmptyBotState,
-  XFSMStore,
-  XFSMStoreActions,
-  XFSMStoreState
+    BotId,
+    BotSnapshot,
+    BotStatesMap,
+    EmptyBotState,
+    XFSMStore,
+    XFSMStoreActions,
+    XFSMStoreState
 } from '../../types/fsm.d.ts';
+import { useTileStore } from '../useTileStore/index.ts';
 
 // État vide par défaut pour un bot non initialisé
 const EMPTY_BOT_STATE: EmptyBotState = { 
   value: 'uninitialized', 
   context: {} 
 };
+
+const inspector = config.enableXStateInspection ? createBrowserInspector() : null;
 
 // Store principal Zustand pour la gestion des bots XState
 const useXFSMStore = create<XFSMStore>((set, get) => {
@@ -37,23 +43,52 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
   const snapshotCache = new Map<BotId, BotSnapshot>();
   // Track des acteurs démarrés (XState v5 fix)
   const startedActors = new Set<BotId>();
+  
+  // Broadcast channel pour diffuser les états XState
+  const broadcast = createBroadcastChannel();
 
   /**
    * Crée et enregistre un nouvel acteur XState pour un bot donné
    * (ou retourne l'acteur existant si déjà créé)
+   * ✅ Phase 7 (Option C): Pre-initialize context with valid positions from depart tile
    */
   const createBotActor = (botId: BotId): Actor<typeof machineXV5Pure> => {
     if (actors.has(botId)) return actors.get(botId)!;
+    
+    // ✅ Get depart tile BEFORE creating context to avoid race condition
+    const tileStore = useTileStore.getState();
+    const { tiles, spacing, radius } = tileStore;
+    
+    let departTile = null;
+    
+    if (tiles && Object.keys(tiles).length > 0) {
+      departTile = Object.values(tiles).find(
+        tile => tile.type === 'depart' && tile.assignedToBot === botId
+      );
+    }
+    
+    // ✅ Create context without pre-injecting positions
+    // Let the FSM initialization flow handle entity initialization via DRONE/SHIP_INITIALIZE_REQUEST
     const botContext = createMachineContext(botId, 'auto');
-    const actor = createActor(machineXV5Pure, { input: botContext });
     
-    // Vérifier le statut et l'état initial de l'acteur
-    const initialSnapshot = actor.getSnapshot();
+    // ✅ Inject grid info immediately (tiles are needed for exploration planning)
+    if (tiles) {
+      botContext.gridInfo = {
+        tiles,
+        spacing: spacing ?? 1.2,
+        radius: radius ?? 3,
+        departTileCoord: departTile?.position?.coord,
+        syncedAt: Date.now(),
+      };
+    }
     
-    // Debug: afficher le type et le contenu de value
-    const stateValue = initialSnapshot.value;
-    const stateDisplay = typeof stateValue === 'string' ? stateValue : JSON.stringify(stateValue);
-    fsmLogger.game(`[XFSMStore] Creation ${botId} - Status: ${initialSnapshot.status}, State: ${stateDisplay}, StateType: ${typeof stateValue}`);
+    // Configuration conditionnelle de l'inspection
+    const actorConfig = { 
+      input: botContext,
+      ...(inspector && { inspect: inspector.inspect })
+    };
+    
+    const actor = createActor(machineXV5Pure, actorConfig);
     
     // Enregistrer l'acteur (créé mais pas démarré)
     actors.set(botId, actor);
@@ -67,7 +102,6 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
   const startBotActor = (botId: BotId): void => {
     const actor = actors.get(botId);
     if (!actor) {
-      fsmLogger.game(`[XFSMStore] No actor found for ${botId}`);
       return;
     }
 
@@ -80,28 +114,37 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
         const previousSnapshot = snapshotCache.get(botId);
         if (snapshot === previousSnapshot) return;
         snapshotCache.set(botId, snapshot);
+        
+        // Mise à jour du store Zustand
         set((state) => ({
           botStates: {
             ...(state?.botStates ?? {}),
             [botId]: snapshot,
           },
         }));
+
+        // Broadcast du snapshot pour le viewer
+        const snapshotData = snapshot as { value?: unknown; context?: Record<string, unknown> };
+        broadcast?.post({
+          type: 'STATE_UPDATE',
+          botId,
+          snapshot: {
+            value: snapshotData.value ?? 'unknown',
+            context: snapshotData.context ?? {},
+            status: snapshot.status
+          }
+        });
       });
       
       try {
         actor.start();
         const initialSnapshot = actor.getSnapshot();
         snapshotCache.set(botId, initialSnapshot);
-        
-        // Debug: afficher le type et le contenu de value après démarrage
-        const stateValue = initialSnapshot.value;
-        const stateDisplay = typeof stateValue === 'string' ? stateValue : JSON.stringify(stateValue);
-        fsmLogger.game(`[XFSMStore] Demarrage ${botId} - New Status: ${initialSnapshot.status}, State: ${stateDisplay}, StateType: ${typeof stateValue}`);
       } catch (error) {
-        fsmLogger.game(`[XFSMStore] Failed to start actor for ${botId}: ${error}`);
+        // Error starting actor
       }
     } else {
-      fsmLogger.game(`[XFSMStore] Actor ${botId} already started`);
+      // Actor already started
     }
   };
 
@@ -115,12 +158,7 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
     send: (event: MachineEvents, botId: BotId = 'bot-0'): void => {
       const actor = actors.get(botId);
       if (actor) {
-        const botState = snapshotCache.get(botId) || EMPTY_BOT_STATE;
-        const currentStateValue = 'value' in botState ? botState.value : 'unknown';
-        fsmLogger.event(event.type, { event, botId, currentState: currentStateValue });
         actor.send(event);
-      } else {
-        fsmLogger.error(`[XFSMStore.send] Acteur non trouvé pour botId: ${botId}`);
       }
     },
 
@@ -148,6 +186,7 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
 
     /**
      * Démarre un bot XState (après que le jeu soit initialisé)
+     * ✅ Phase 7: Simplified - positions and gridInfo already injected in createBotActor()
      */
     startBot: (botId: BotId): void => {
       startBotActor(botId);
@@ -192,6 +231,13 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
     },
     
     /**
+     * Récupère l'acteur XState d'un bot
+     */
+    getActor: (botId: BotId = 'bot-0'): Actor<typeof machineXV5Pure> | null => {
+      return actors.get(botId) || null;
+    },
+    
+    /**
      * Fonction utilitaire pour vérifier si un bot est actif
      */
     isBotActive: (botId: BotId): boolean => {
@@ -200,7 +246,29 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
     }
   };
 
-   
+  // Gestionnaire pour les requêtes du viewer (REQUEST_SYNC)
+  if (broadcast?.channel) {
+    broadcast.channel.onmessage = (ev: MessageEvent) => {
+      const data = ev.data;
+      if (!data || data.type !== 'REQUEST_SYNC') return;
+      
+      const targetBot = data.botId ?? 'bot-0';
+      const snapshot = snapshotCache.get(targetBot);
+      
+      if (snapshot) {
+        const snapshotData = snapshot as { value?: unknown; context?: Record<string, unknown> };
+        broadcast.post({
+          type: 'STATE_UPDATE',
+          botId: targetBot,
+          snapshot: {
+            value: snapshotData.value ?? 'unknown',
+            context: snapshotData.context ?? {},
+            status: snapshot.status
+          }
+        });
+      }
+    };
+  }
 
   // État initial conforme au type XFSMStoreState
   const initialState: XFSMStoreState = {

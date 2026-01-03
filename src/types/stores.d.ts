@@ -1,24 +1,21 @@
 /**
  * Types pour les stores Zustand du projet
+ * Architecture avec composition des slices pour éviter la redondance
  */
 
-import type { GridCoordinate, TileCoordinate, WorldPosition } from './coordinates.d';
+import type { GridCoordinate, WorldPosition } from './coordinates.d';
+import type { DroneVisualState } from './drone.d';
 import type { BotSnapshot, EmptyBotState, FSMEvent } from './fsm.d';
 import type { ResourceStats } from './resources.d';
-import type { Tile, TileMap } from './tile.d';
+import type { Path, Tile, TileMap, TileType, TileWithDistance } from './tile.d';
 
 // ============================================================================
-// TILE TYPES (pour éviter les any)
+// SLICE INTERFACES - Actions et état pour chaque slice
 // ============================================================================
 
-
-
-// ============================================================================
-// TILE STORE TYPE (fusion complète)
-// ============================================================================
-
-export type TileStoreType = {
-  // --- État principal ---
+/** Interface pour le slice de base des tuiles */
+export interface TileBaseSliceActions {
+  // État principal
   tiles: TileMap;
   radius: number;
   spacing: number;
@@ -27,7 +24,7 @@ export type TileStoreType = {
   autoExploreEnabled: boolean;
   debugMode: boolean;
 
-  // --- Actions de base ---
+  // Actions de base
   updateHoveredTile: (coord: GridCoordinate | null) => void;
   setTiles: (tiles: TileMap) => void;
   getTile: (coord: GridCoordinate) => Tile | undefined;
@@ -35,100 +32,179 @@ export type TileStoreType = {
   updateTile: (coord: GridCoordinate, updates: Partial<Tile>) => void;
   updateTileState: (coord: GridCoordinate, updates: Partial<Tile>) => void;
   clearTiles: () => void;
+}
 
-  // --- Ressources ---
+/** Interface pour le slice de coordonnées */
+export interface TileCoordinateSliceActions {
+  // Validateurs
+  isValidGridCoord: (coord: unknown) => coord is GridCoordinate;
+  isValidWorldPosition: (position: unknown) => position is WorldPosition;
+  
+  // Encodage hexagonal
+  encodeHexCoord: (q: number, r: number, radius: number) => GridCoordinate;
+  
+  // Conversions position/grille
+  gridToWorld: (coord: GridCoordinate) => WorldPosition;
+  worldToGrid: (position: WorldPosition) => GridCoordinate;
+  
+  // Vector3 (retour unknown pour éviter dépendance Three.js dans les types)
+  toVector3: (position: WorldPosition) => unknown;
+  fromVector3: (vector: unknown) => WorldPosition;
+  
+  // Distance
+  hasReachedTarget: (current: WorldPosition, target: WorldPosition, threshold?: number) => boolean;
+}
+
+/** Interface pour le slice de pathfinding */
+export interface TilePathSliceActions {
+  // Pathfinding principal
+  findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap) => Path;
+  
+  // Calculs de distance
+  calculateDistance: (from: WorldPosition, to: WorldPosition) => number;
+  calculatePathDistance: (path: Path, tiles?: TileMap) => number;
+  
+  // Recherche et analyse
+  findTileAtPosition: (position: WorldPosition, tiles?: TileMap) => Tile | null;
+  
+  // Calculs spécialisés pour drones
+  calculateDroneDistance: (
+    dronePosition: WorldPosition,
+    droneState: DroneVisualState,
+    targetPosition?: Tile | null,
+    shipPosition?: import('./index').WorldGridPosition
+  ) => number;
+  tileInRadius: (
+    shipPosition: import('./index').WorldGridPosition,
+    range: number,
+    tiles?: import('./index').TileMap
+  ) => import('./index').Tile | null;
+}
+
+/** Interface pour le slice de ressources */
+export interface TileResourceSliceActions {
+  // Gestion des ressources
   collectResources: (coord: GridCoordinate, collector: string) => ResourceStats;
   deductResources: (coord: GridCoordinate, amount: Partial<ResourceStats>) => boolean;
   hasResources: (coord: GridCoordinate, minimum?: Partial<ResourceStats>) => boolean;
   markTileAsCollected: (coord: GridCoordinate, collector?: string) => boolean;
   resetTileResources: (coord: GridCoordinate) => void;
   resetAllTileResources: () => void;
-  analyzeResourcesNearPosition: (source: GridCoordinate | { coord: GridCoordinate }, radius?: number) => Array<{
+  
+  // Analyse des ressources
+  analyzeResourcesNearPosition: (
+    source: GridCoordinate | { coord: GridCoordinate }, 
+    radius?: number
+  ) => Array<{
     coord: GridCoordinate;
     position: { x: number; y: number; z: number };
     resources: ResourceStats;
     distance: number;
   }>;
+}
 
-  // --- Pathfinding ---
-  findPath: (startCoord: GridCoordinate, targetCoord: GridCoordinate, tiles?: TileMap) => GridCoordinate[];
-  calculateDistance: (
-    from: GridCoordinate | TileCoordinate | WorldPosition,
-    to: GridCoordinate | TileCoordinate | WorldPosition,
-    usePathfinding?: boolean,
-    detailed?: boolean
-  ) => number;
-  calculateDroneDistance: (
-    position: WorldPosition,
-    droneState: string,
-    targetPosition: WorldPosition | undefined,
-    vehiclePosition: WorldPosition | undefined
-  ) => number;
-  calculatePathDistance: (path: GridCoordinate[], tiles?: TileMap) => number;
-  findTileAtPosition: (position: WorldPosition, tiles?: TileMap) => Tile | null;
-  isReachable: (from: GridCoordinate, to: GridCoordinate, tiles?: TileMap) => boolean;
-  selectTargetTileInRadiusForDrone: (
-    shipPosition: WorldPosition,
-    range: number,
-    tiles?: TileMap
-  ) => WorldPosition | null;
-
-  // --- Marquage ---
-  markTileAsExplored: (coord: GridCoordinate, explorer?: string) => void;
-
-  // --- Filtrage ---
+/** Interface pour le slice de filtrage */
+export interface TileFilterSliceActions {
+  // Filtrage et sélection
   getWalkableTiles: () => Tile[];
-  getWalkableTilesInRadius: (centerCoord: GridCoordinate, radius: number, options?: object) => Tile[];
+  getWalkableTilesInRadius: (centerCoord: GridCoordinate, radius: number, options?: object) => TileWithDistance[];
   selectRandomWalkableTile: () => Tile | null;
-  getTilesByType: (tileType: string) => Tile[];
+  getTilesByType: (tileType: TileType) => Tile[];
+}
 
-  // --- Coordonnées ---
-  isValidGridCoord: (coord: unknown) => coord is GridCoordinate;
-  isValidWorldPosition: (position: unknown) => position is WorldPosition;
-  gridToHexCoord: (coord: GridCoordinate) => string | null;
-  gridToWorld: (coord: GridCoordinate | TileCoordinate) => WorldPosition;
-  worldToGrid: (position: WorldPosition) => GridCoordinate | TileCoordinate;
-  normalizeCoordinate: (coord: GridCoordinate | TileCoordinate | string) => GridCoordinate | null;
+/** Interface pour le slice de marquage */
+export interface TileMarkSliceActions {
+  // Marquage d'exploration
+  markTileAsExplored: (coord: GridCoordinate, explorer?: string) => void;
+}
 
-  // --- Génération ---
+/** Interface pour le slice de génération */
+export interface TileGenerationSliceActions {
+  // Génération et initialisation
   initializeGameGrid: (radius: number, spacing: number) => TileMap;
+  placeGameStations: (tileMap: TileMap, radius: number) => TileMap;
+  placeDangerTiles: (tileMap: TileMap, radius: number) => TileMap;
+  placeStartingTiles: (tileMap: TileMap, botCount: number) => TileMap;
   assignStartingTiles: (activeBotIds: string[]) => void;
-};
+}
 
 // ============================================================================
-// GAME STORE TYPES
+// GAME STORE SLICE INTERFACES
 // ============================================================================
 
-/** Interface du GameStore */
-export interface GameStoreType {
-  // Configuration
+/** Interface pour le slice de configuration des joueurs */
+export interface PlayerCountSliceActions {
+  // État
   playerCount: number;
   botCount: number;
   
-  // Couleurs
-  getPlayerBaseColor: (index: number) => string;
-  getBotColorById: (botId: string) => string;
-  
-  // Flags d'initialisation
-  tilesInitialized: boolean;
-  botsInitialized: boolean;
-  playersInitialized: boolean;
-  startingTilesAssigned: boolean;
-  
   // Actions
-  markTilesAsInitialized: () => void;
-  markBotsAsInitialized: () => void;
+  setPlayerCount: (count: number) => void;
+  setBotCount: (count: number) => void;
+}
+
+/** Interface pour le slice d'initialisation */
+export interface InitializationFlagsSliceActions {
+  // États d'initialisation
+  playersInitialized: boolean;
+  botsInitialized: boolean;
+  tilesInitialized: boolean;
+  startingTilesAssigned: boolean;
+  fleetPositionsInitialized: Record<string, boolean>;
+  
+  // Actions d'initialisation
   markPlayersAsInitialized: () => void;
-  markStartingTilesAsAssigned: (value: boolean) => void;
-  isGameInitialized: () => boolean;
-  
-  // Fleet positions
-  isFleetPositionsInitialized: (botId: string) => boolean;
+  markBotsAsInitialized: () => void;
+  markTilesAsInitialized: () => void;
+  markStartingTilesAsAssigned: () => void;
   markFleetPositionsAsInitialized: (botId: string) => void;
+  isFleetPositionsInitialized: (botId: string) => boolean;
+  isGameInitialized: () => boolean;
+}
+
+/** Interface pour le slice de configuration UI */
+export interface UiConfigSliceActions {
+  // Configuration des couleurs
+  botColors: string[];
+  humanPlayerColor: string;
   
-  // UI colors
+  // Utilitaires de couleurs
+  getBotColor: (botIndex: number) => string;
+  getBotColorById: (botId: string) => string;
+  getPlayerBaseColor: (index: number) => string;
   getBackgroundColor: (baseColor: string) => string;
 }
+
+/** Interface pour le slice d'horloge */
+export interface ClockSliceActions {
+  // État de l'horloge
+  isClockRunning: boolean;
+  
+  // Actions
+  setClockRunning: (isRunning: boolean) => void;
+}
+
+// ============================================================================
+// COMPOSITION DES STORES - Types globaux via intersection
+// ============================================================================
+
+/** Type complet du TileStore (composition de tous les slices) */
+export type TileStoreType = TileBaseSliceActions & 
+                           TileCoordinateSliceActions & 
+                           TilePathSliceActions & 
+                           TileResourceSliceActions & 
+                           TileFilterSliceActions & 
+                           TileMarkSliceActions & 
+                           TileGenerationSliceActions;
+// ============================================================================
+// GAME STORE SLICE INTERFACES
+// ============================================================================
+
+/** Type complet du GameStore */
+export type GameStoreType = PlayerCountSliceActions & 
+                           InitializationFlagsSliceActions & 
+                           UiConfigSliceActions & 
+                           ClockSliceActions;
 
 // ============================================================================
 // XFSM STORE TYPES

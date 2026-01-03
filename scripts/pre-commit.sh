@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# Script de validation pré-commit pour vérifier les imports/exports
-echo "🔍 Vérification des imports/exports..."
+# Script de validation pré-commit
+echo "🔍 Vérification TypeScript..."
 
-# Exécuter le script d'analyse
-if node scripts/check-exports.js | grep -q "PROBLÈMES DÉTECTÉS"; then
-    echo "❌ Erreurs d'import/export détectées !"
-    echo "Exécutez 'npm run check-exports' pour voir les détails."
-    exit 1
+# Vérifier les types TypeScript
+if npm run type-check > /dev/null 2>&1; then
+    echo "✅ TypeScript validation passed."
 else
-    echo "✅ Aucun problème d'import/export détecté."
+    echo "❌ TypeScript errors detected!"
+    echo "Exécutez 'npm run type-check' pour voir les détails."
+    exit 1
 fi
 
 # Vérifier que les fichiers modifiés compilent
