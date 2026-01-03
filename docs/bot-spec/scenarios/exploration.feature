@@ -112,6 +112,25 @@ Fonctionnalité: Exploration Autonome
     Et le FSM transite vers "evaluating"
     Et explorationQueue est vide
 
+  Scénario: Drone détruit par une tuile danger
+    Étant donné que explorationQueue contient ["4,4", "5,5"]
+    Et que la tuile "4,4" est de type "danger"
+    Et que drone.visualState = "docked"
+    Et que vehicle.fuel = 50
+    Quand l'événement NEED_EXPLORING est reçu
+    Alors le FSM transite vers "exploring.drone_deploying"
+    Et drone.visualState devient "deploying"
+    Et drone.targetPosition = "4,4"
+    Quand le drone atteint la tuile danger "4,4"
+    Alors drone.visualState devient "failed"
+    Et drone.isActive = false
+    Et drone n'a collecté aucune information sur la tuile "4,4"
+    Et la tuile "4,4" ne figure pas dans memory.exploredTiles
+    Et explorationQueue reste ["5,5"]
+    Quand l'événement DRONE_DESTROYED est reçu
+    Alors le FSM transite vers "evaluating"
+    Et le bot peut continuer avec la prochaine tuile d'exploration
+
   Scénario: Performance - Exploration de 100 tuiles
     Étant donné que explorationQueue contient 100 tuiles
     Et que vehicle.fuel = 100
