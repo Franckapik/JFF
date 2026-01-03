@@ -10,7 +10,7 @@
 
 import { assign } from 'xstate';
 
-import { calculateDistance, findTilesInRadius, selectRandomTile } from '../../../../../core/spatial/index.ts';
+import { calculateDistanceGrid, findTilesInRadius, gridToWorld, selectRandomTile } from '../../../../../core/spatial/index.ts';
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { DroneVisualState } from '../../../../../types/drone.ts';
@@ -31,9 +31,9 @@ function createAssignAction(
 export const assignDroneDeployingContext = createAssignAction(({ context }) => {
   // ✅ Phase 4: Use context.gridInfo instead of useTileStore.getState()
   const tiles = context.gridInfo?.tiles || {};
-  const shipPosition = context.vehicle?.position || context.vehicle?.basePosition;
+  const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
   
-  if (!shipPosition) {
+  if (!shipCoord) {
     return {};
   }
   
@@ -44,8 +44,7 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
     return {};
   }
   
-  const startCoord = shipPosition.coord;
-  const candidateTiles = findTilesInRadius(startCoord, range, tiles);
+  const candidateTiles = findTilesInRadius(shipCoord, range, tiles);
   
   let targetDroneTile = selectRandomTile(candidateTiles);
   if (targetDroneTile) {
@@ -64,8 +63,8 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
   }
   
   // ✅ Calculer la consommation de fuel du drone basée sur la distance
-  const dronePos = context.droneFleet?.drones?.explorer?.position || shipPosition;
-  const distance = calculateDistance(dronePos, targetDroneTile.position);
+  const droneCoord = context.droneFleet?.drones?.explorer?.coord || shipCoord;
+  const distance = calculateDistanceGrid(droneCoord, targetDroneTile.position.coord);
   const fuelConsumption = Math.max(1, Math.floor(distance * 0.3)); // 0.3 fuel par unité (drone plus efficace)
   const currentFuel = context.vehicle?.fuel || 100;
   const newFuel = Math.max(0, currentFuel - fuelConsumption);
@@ -89,7 +88,7 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
       ...context.droneFleet,
       currentMission: {
         type: 'explore' as const,
-        target: context.vehicle?.basePosition?.coord || '0,0',
+        target: context.vehicle?.baseCoord || '0,0' as import('../../../../../types/coordinates').GridCoordinate,
         drones: [droneType]
       },
       missionStartTime: Date.now(),
@@ -124,16 +123,13 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
   if (!targetDroneTile) {
     return {};
   }
-  const scannedPosition = {
-    ...targetDroneTile.position,
-    y: targetDroneTile.position.y ?? 0.5
-  };
+  const scannedCoord = targetDroneTile.position.coord;
   // Incrémentation des compteurs d'exploration (global et par cycle)
   const currentCount = typeof context.explorationCount === 'number' ? context.explorationCount : 0;
   const currentCycleCount = context.memory?.stats?.tilesExploredInCycle ?? 0;
   const updatedExplorer = {
     ...context.droneFleet.drones.explorer,
-    position: scannedPosition,
+    coord: scannedCoord,
     isMoving: false
   };
 
@@ -189,14 +185,15 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
     return {};
   }
   // Obtenir la tuile de base comme cible de retour
-  const basePosition = context.vehicle?.basePosition || { x: 0, y: 0.5, z: 0, coord: '0,0' };
-  // Fixe la hauteur Y à 0.5 pour la position cible de retour
+  const baseCoord = context.vehicle?.baseCoord || '0,0' as import('../../../../../types/coordinates').GridCoordinate;
+  // Conversion en WorldPosition pour targetDroneTile (avec hauteur Y fixée)
+  const baseWorldPos = gridToWorld(baseCoord, { defaultY: 0.2 });
   const baseTile = {
     position: {
-      ...basePosition,
-      y: 0.2,
+      ...baseWorldPos,
+      coord: baseCoord
     },
-    coord: basePosition.coord ?? '0,0',
+    coord: baseCoord,
     type: 'depart',
     biome: 'station',
     resources: { food: 0, debris: 0, special: 0, total: 0 },
@@ -238,17 +235,14 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
     return {};
   }
   
-  // Position du drone docked = position du vaisseau (strictement)
-  const shipPosition = context.vehicle?.position;
-  if (!shipPosition) {
-    fsmLogger.warn(`⚠️ [${context.entityId}] Ship position undefined when docking drone`, {
+  // Coordonnée du drone docked = coordonnée du vaisseau (strictement)
+  const shipCoord = context.vehicle?.coord;
+  if (!shipCoord) {
+    fsmLogger.warn(`⚠️ [${context.entityId}] Ship coord undefined when docking drone`, {
       vehicleState: context.vehicle
     });
     return {};
   }
-
-
-  console.log(shipPosition)
 
   const droneState: DroneVisualState = 'docked';
   
@@ -260,7 +254,7 @@ export const assignDroneDockedContext = createAssignAction(({ context, event }) 
         explorer: {
           ...context.droneFleet.drones.explorer,
           visualState: droneState,
-          position: shipPosition,
+          coord: shipCoord,
           targetDroneTile: null,
           isActive: false,
           isMoving: false,
