@@ -102,6 +102,9 @@ export default function TileMatrix() {
     if (coord === shipCoord) return '#22c55e'; // vert
     if (droneCoords.includes(coord)) return '#f97316'; // orange
     const tile = coordIndex.get(coord);
+    if (tile?.type === 'fuel') return '#f32ad1ff'; // rose vif pour carburant
+    if (tile?.type === 'repair') return '#bd259cff'; // magenta pour réparation
+    if (tile?.type === 'danger') return '#ef4444'; // rouge pour danger
     if (tile?.collected) return '#8b5cf6'; // violet
     if (tile?.explored) return '#3b82f6'; // bleu
     return 'transparent'; // transparent par défaut
@@ -163,6 +166,18 @@ export default function TileMatrix() {
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#f97316' }} />
           <span>Drone</span>
+        </div>
+        <div style={styles.legendItem}>
+          <div style={{ ...styles.legendDot, backgroundColor: '#f32ad1ff' }} />
+          <span>⛽ Carburant</span>
+        </div>
+        <div style={styles.legendItem}>
+          <div style={{ ...styles.legendDot, backgroundColor: '#bd259cff' }} />
+          <span>🔧 Réparation</span>
+        </div>
+        <div style={styles.legendItem}>
+          <div style={{ ...styles.legendDot, backgroundColor: '#ef4444' }} />
+          <span>⚠️ Danger</span>
         </div>
       </div>
     </section>

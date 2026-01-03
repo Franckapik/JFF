@@ -22,10 +22,7 @@ export type TileType =
   | 'empty'
   | 'resource'
   | 'obstacle'
-  | 'explored'
-  | 'scanning'
   | 'danger'
-  | 'food'
   | 'fuel'
   | 'repair'
   | 'depart';

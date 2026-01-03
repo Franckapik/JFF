@@ -124,3 +124,5 @@ App : Scene :
 22:11:43 → {"collecting":"ship_collecting"}
 
 
+
+Refueling à - de 30% => correction à faire pour le changement d'état : boucle infinie eval - refueling.

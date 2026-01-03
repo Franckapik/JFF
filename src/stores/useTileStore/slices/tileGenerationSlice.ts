@@ -77,12 +77,12 @@ const tileConstants = {
     fuel: {
       0: 0,    // Pas de stations pour rayon 0
       1: 1,    // 1 station pour rayon 1
-      default: 2  // 2 stations pour rayon >= 2
+      default: 1  // 1 station pour rayon >= 2
     },
     repair: {
       0: 0,    // Pas de stations pour rayon 0
       1: 1,    // 1 station pour rayon 1
-      default: 2  // 2 stations pour rayon >= 2
+      default: 1  // 1 station pour rayon >= 2
     }
   }
 };
@@ -154,7 +154,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
             z, 
             coord: get().encodeHexCoord(q, r, radius) 
           },
-          type: 'food' as TileType,
+          type: 'resource' as TileType,
           biome: 'grassland' as TileBiome,
           walkable: true,
           explored: false,
@@ -202,7 +202,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
     for (let i = 0; i < fuelCount; i++) {
       const randomIndex = Math.floor(Math.random() * tiles.length);
       const tile = tiles[randomIndex];
-      if (tile && tile.type === 'food') {
+      if (tile && tile.type === 'resource') {
         const updatedTile: Tile = {
           ...tile,
           type: 'fuel' as TileType,
@@ -218,7 +218,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
     for (let i = 0; i < repairCount; i++) {
       const randomIndex = Math.floor(Math.random() * tiles.length);
       const tile = tiles[randomIndex];
-      if (tile && tile.type === 'food') {
+      if (tile && tile.type === 'resource') {
         const updatedTile: Tile = {
           ...tile,
           type: 'repair' as TileType,
@@ -249,7 +249,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
     for (let i = 0; i < dangerCount; i++) {
       const randomIndex = Math.floor(Math.random() * tiles.length);
       const tile = tiles[randomIndex];
-      if (tile && tile.type === 'food') {
+      if (tile && tile.type === 'resource') {
         const updatedTile: Tile = {
           ...tile,
           type: 'danger' as TileType,
@@ -275,7 +275,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
     const tiles = Object.values(tileMap).filter(
       (tile: unknown): tile is Tile => 
         tile !== null && typeof tile === 'object' && 
-        'type' in tile && (tile as Tile).type === 'food'
+        'type' in tile && (tile as Tile).type === 'resource'
     );
 
     // Mélanger les tuiles candidates pour un placement aléatoire
