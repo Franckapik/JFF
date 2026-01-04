@@ -158,6 +158,67 @@ Fonctionnalité: Collection de Ressources
     Alors la collection en cours est interrompue
     Et le FSM transite vers "maintaining"
     Et les resources déjà collectées sont préservées
+
+  # ============================================================================
+  # 🆕 SCÉNARIOS DE SYNCHRONISATION CONTEXTE FSM / TILESTORE
+  # ============================================================================
+
+  Scénario: Synchronisation mémoire après collecte réussie
+    Étant donné que le FSM est en état "collecting.ship_collecting"
+    Et que targetVehicleTile.coord = "2,4"
+    Et que memory.knownTiles["2,4"].resources.total = 429
+    Et que memory.knownTiles["2,4"].collected = false
+    Quand l'événement SHIP_LOAD_RESOURCES est reçu
+    Et que TileStore.collectResources("2,4") est appelé
+    Alors TileStore.tiles["2,4"].resources.total = 0
+    Et TileStore.tiles["2,4"].collected = true
+    # SYNCHRONISATION CRITIQUE:
+    Et memory.knownTiles["2,4"].resources.total = 0
+    Et memory.knownTiles["2,4"].collected = true
+    Et memory.knownTiles["2,4"].hasResources = false
+
+  Scénario: Transition correcte après dernière tuile collectée
+    Étant donné que le FSM est en état "collecting.ship_collecting"
+    Et que memory.knownTiles contient une seule tuile avec ressources:
+      | coord | resources.total | collected |
+      | 2,4   | 429             | false     |
+    Quand l'événement SHIP_LOAD_RESOURCES est reçu
+    Alors la tuile "2,4" est collectée (resources.total = 0, collected = true)
+    Quand le guard noMoreCollectibleTiles est évalué
+    Alors le guard retourne true (aucune tuile avec resources > 0 ET !collected)
+    Et le FSM transite vers "evaluating" (PAS vers ship_moving_to_tile)
+
+  Scénario: Éviter double collecte sur tuile déjà vidée
+    Étant donné que le FSM est en état "collecting.ship_collecting"
+    Et que targetVehicleTile.coord = "2,4"
+    Et que TileStore.tiles["2,4"].collected = true
+    Quand l'événement SHIP_LOAD_RESOURCES est reçu
+    Alors TileStore.collectResources retourne {total: 0} (tuile déjà collectée)
+    Et le warning "Tile already collected" est émis
+    Et le FSM synchronise le contexte
+    Et le FSM transite vers "evaluating" (pas de boucle)
+
+  # ============================================================================
+  # 🆕 SCÉNARIOS DE SORTIE DE BOUCLE
+  # ============================================================================
+
+  Scénario: Sortie de ship_moving_to_tile quand pas de cible valide
+    Étant donné que le FSM est en état "collecting.ship_moving_to_tile"
+    Et que targetVehicleTile = null (après synchronisation)
+    Quand le guard noMoreCollectibleTiles est évalué
+    Alors le guard retourne true
+    Et le FSM transite vers "evaluating"
+    Et le cycle peut continuer (exploration ou maintenance)
+
+  Scénario: Éviter blocage quand aucune tuile alternative
+    Étant donné que le FSM est en état "collecting.ship_collecting"
+    Et que la tuile cible est vide après collecte
+    Et que memory.knownTiles ne contient aucune autre tuile avec ressources
+    Quand l'action assignShipLoadResourcesContext est exécutée
+    Alors le warning "No alternative tiles found" est émis
+    Et targetVehicleTile = null
+    Et le FSM transite vers "evaluating" via le guard noMoreCollectibleTiles
+
   # ============================================================================
   # 🆕 NOUVEAU SCÉNARIO: Re-exploration après épuisement des tuiles connues
   # ============================================================================

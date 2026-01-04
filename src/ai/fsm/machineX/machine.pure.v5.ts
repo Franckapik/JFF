@@ -32,9 +32,9 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 // Import depuis l'architecture domain-based
 // Imports par domaine pour éviter les erreurs de syntaxe
 import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection/index.ts';
-import { assignEvaluationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation/index.ts';
+import { assignEvaluationContext, assignShipRelocationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation/index.ts';
 // ✅ Phase 1: ALL guards from guards.pure.ts (no store dependencies)
-import { canStartExploring, hasTilesAvailable, shouldCollect, shouldExplore, shouldMaintain } from './domains/evaluation/guards.pure.ts';
+import { allLocalTilesExplored, canStartExploring, canStartExploringWithValidTarget, hasTilesAvailable, hasUnexploredTilesInRadius, shouldCollect, shouldExplore, shouldMaintain, shouldRelocateShip } from './domains/evaluation/guards.pure.ts';
 import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReadyContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneDockedEntry, onDroneDockedExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration/index.ts';
 // ✅ Phase 2: Import updateGridInfo for TILES_UPDATED event
 import { updateDronePosition, updateGridInfo, updateShipPosition } from './domains/global/index.ts';
@@ -45,7 +45,7 @@ import { onMaintainingEntry, onMaintainingExit, onShipDepositingEntry, onShipDep
 import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure.ts';
 
 // ✅ Phase 1: Pure guards from collection domain
-import { canCollectTile, hasMoreCollectibleTiles, isVehicleOverloaded } from './domains/collection/guards.pure.ts';
+import { canCollectTile, hasMoreCollectibleTiles, isVehicleOverloaded, noMoreCollectibleTiles } from './domains/collection/guards.pure.ts';
 // ✅ Phase 1: Pure guards from initializing domain
 import { areAllEntitiesInitialized, isBasePositionInitialized, isDronePositionInitialized, isVehiclePositionInitialized } from './domains/initializing/guards.pure.ts';
 
@@ -72,6 +72,7 @@ export const machineXV5Pure = setup({
     
     // Actions du domaine EVALUATION (migrées)
     assignEvaluationContext,
+    assignShipRelocationContext, // ✅ NEW: Ship relocation to explore new area
     onEvaluatingEntry,
     onEvaluatingExit, 
     
@@ -135,14 +136,19 @@ export const machineXV5Pure = setup({
     // Guards du domaine EVALUATION (pure) - these are XStateV5Guard format
     hasTilesAvailable, // ✅ Uses context.gridInfo.tiles or memory.knownTiles
     canStartExploring, // ✅ Pure: combines hasTilesAvailable + shouldExplore
+    hasUnexploredTilesInRadius, // 🆕 Bug #7 Fix: Guarantees assignDroneDeployingContext will succeed
+    canStartExploringWithValidTarget, // 🆕 Bug #7 Fix: Combined guard (canStartExploring + hasUnexploredTilesInRadius)
     shouldExplore,
     shouldMaintain,
     shouldCollect, // ✅ Pure: uses context.gridInfo.tiles
+    allLocalTilesExplored, // ✅ NEW: Check if all tiles in radius are explored
+    shouldRelocateShip, // ✅ NEW: Ship must relocate to explore new area
     
     // Guards du domaine COLLECTION (pure)
     canCollectTile,
     isVehicleOverloaded,
     hasMoreCollectibleTiles, // ✅ Pure: uses context.memory.knownTiles
+    noMoreCollectibleTiles, // ✅ Inverse de hasMoreCollectibleTiles
     
     // Guards du domaine MAINTENANCE (pure)
     needsDeposit,
@@ -213,7 +219,9 @@ export const machineXV5Pure = setup({
       on: {
         NEED_EXPLORING: { 
           target: 'exploring', 
-          guard: 'canStartExploring', // ⚠️ Combine hasTilesAvailable + shouldExplore
+          // 🆕 Bug #7 Fix: Use combined guard to prevent stuck state
+          // Checks BOTH context.gridInfo.tiles AND TileStore (same as action)
+          guard: 'canStartExploringWithValidTarget',
           actions: 'assignDroneDeployingContext' // MAJ contexte ici (assign)
         },
         NEED_COLLECTING: { 
@@ -225,6 +233,26 @@ export const machineXV5Pure = setup({
           target: 'maintaining', 
           guard: 'shouldMaintain',
           // Ajoute ici l'action assign si besoin
+        },
+        NEED_SHIP_RELOCATION: {
+          target: 'relocating',
+          guard: 'shouldRelocateShip',
+          actions: 'assignShipRelocationContext' // ✅ NEW: Ship moves to new area
+        }
+      }
+    },
+
+    /**
+     * État RELOCATING - Ship déplace vers nouvelle zone pour exploration
+     */
+    relocating: {
+      entry: () => {
+        // eslint-disable-next-line no-console
+        console.log('🚢 [FSM] Entering RELOCATING state - ship moving to new exploration area');
+      },
+      on: {
+        SHIP_REACHES_TILE: {
+          target: 'evaluating'
         }
       }
     },
@@ -313,18 +341,22 @@ export const machineXV5Pure = setup({
           on: {
             SHIP_LOAD_RESOURCES: [
               {
+                // Priority 1: Vehicle overloaded → must return to base
                 target: 'ship_returning',
                 guard: 'isVehicleOverloaded',
                 actions: ['assignShipLoadResourcesContext', 'assignShipReturningContext']
               },
               {
-                target: 'ship_moving_to_tile',
-                guard: 'hasMoreCollectibleTiles',
+                // Priority 2: No more collectible tiles → go back to evaluating
+                // ✅ FIX: Changed from ship_returning to evaluating when no more tiles
+                target: '#machineXV5Pure.evaluating',
+                guard: 'noMoreCollectibleTiles',
                 actions: 'assignShipLoadResourcesContext'
               },
               {
-                target: 'ship_returning',
-                actions: ['assignShipLoadResourcesContext', 'assignShipReturningContext']
+                // Priority 3: More tiles available → continue collecting
+                target: 'ship_moving_to_tile',
+                actions: 'assignShipLoadResourcesContext'
               }
             ],
             RESOURCE_DEPLETED: '#machineXV5Pure.evaluating'
@@ -431,14 +463,17 @@ export const machineXV5Pure = setup({
             SHIP_REFUEL_COMPLETE: [
               {
                 target: 'depositing',
-                guard: 'needsDeposit'
+                guard: 'needsDeposit',
+                actions: 'assignShipRefuelContext' // ✅ FIX: Ajouter l'action de refuel
               },
               {
                 target: 'repairing',
-                guard: 'needsRepair'
+                guard: 'needsRepair',
+                actions: 'assignShipRefuelContext' // ✅ FIX: Ajouter l'action de refuel
               },
               {
-                target: '#machineXV5Pure.evaluating'
+                target: '#machineXV5Pure.evaluating',
+                actions: 'assignShipRefuelContext' // ✅ FIX: Ajouter l'action de refuel
               }
             ]
           }

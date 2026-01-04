@@ -115,19 +115,21 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
       const collectingRadius = context.config?.collectingRadius ?? 3;
       const candidateTiles = shipCoord ? findTilesInRadius(shipCoord, collectingRadius, tiles) : [];
       
-      // Filter for explored tiles only, with or without resources
+      // Filter for explored tiles with resources only
       const exploredTiles = candidateTiles.filter(tile => 
-        tile?.explored === true && !tile?.collected
+        tile?.explored === true && 
+        !tile?.collected &&
+        tile?.hasResources === true
       );
       
-      // Prefer explored tiles with resources, fallback to any explored tile
+      // Only select tiles with actual resources (no fallback to empty tiles)
       const tilesWithResources = exploredTiles.filter(tile => 
         tile?.resources && tile.resources.total > 0
       );
       
       targetVehicleTile = tilesWithResources.length > 0 
         ? selectRandomTile(tilesWithResources)
-        : (exploredTiles.length > 0 ? selectRandomTile(exploredTiles) : null);
+        : null;
       
       fsmLogger.info(`🔀 [${context.entityId}] No known collectible tiles, using explored tile fallback:`, {
         coord: targetVehicleTile?.position?.coord,
@@ -544,8 +546,10 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
   
   // Obtenir l'état actuel de la tuile après collecte (le store l'a mise à jour)
   // ✅ IMPORTANT: Récupérer TOUS les attributs de la tuile, y compris le flag 'collected'
+  // ⚠️ CRITICAL FIX: Relire getState() APRÈS la mutation pour avoir l'état à jour !
+  const freshTileStoreState = useStore ? useTileStore.getState() : null;
   const updatedTile = useStore 
-    ? tileStoreState.tiles[tileCoord]
+    ? freshTileStoreState!.tiles[tileCoord]
     : {
         ...currentTile,
         resources: {

@@ -6,7 +6,7 @@ import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates';
 import type { FSMContext } from '../types/fsm.d';
 import PositionDisplay from './PositionDisplay';
-import TileMatrix from './TileMatrix';
+import TileMatrixLayout from './TileMatrixLayout';
 
 /**
  * Type guard pour vérifier si un snapshot est un XState snapshot valide
@@ -206,37 +206,6 @@ export default function FSMVisualization() {
         <p>Status: {botSnapshot.status}</p>
       </section>
 
-      {/* SHIP STATUS */}
-      <section style={styles.section}>
-        <h3>🚢 Ship Status</h3>
-        <table style={styles.table}>
-          <tbody>
-            <tr>
-              <td>Fuel:</td>
-              <td style={styles.statValue}>{ctx?.vehicle?.fuel || 0}/100</td>
-              <td>{renderBar((ctx?.vehicle?.fuel || 0) / 100)}</td>
-            </tr>
-            <tr>
-              <td>Damage:</td>
-              <td style={styles.statValue}>{ctx?.vehicle?.damage || 0}</td>
-              <td>{renderBar((ctx?.vehicle?.damage || 0) / 100)}</td>
-            </tr>
-            <tr>
-              <td>Resources:</td>
-              <td style={styles.statValue}>
-                {ctx?.vehicle?.resources?.total || 0}/{ctx?.vehicle?.maxCapacity?.total || 1000}
-              </td>
-              <td>{renderBar((ctx?.vehicle?.resources?.total || 0) / (ctx?.vehicle?.maxCapacity?.total || 1000))}</td>
-            </tr>
-          </tbody>
-        </table>
-        <PositionDisplay
-          title="Ship Position"
-          worldPosition={coordToWorldPos(ctx?.vehicle?.coord, ctx?.gridInfo?.spacing)}
-          gridCoord={ctx?.vehicle?.coord}
-        />
-      </section>
-
       {/* DRONE STATUS */}
       <section style={styles.section}>
         <h3>🚁 Drone Status (All Types)</h3>
@@ -339,8 +308,8 @@ export default function FSMVisualization() {
         </div>
       </section>
 
-      {/* TILE MATRIX */}
-      <TileMatrix />
+      {/* TILE MATRIX LAYOUT (3 colonnes: Matrix, Ship Status, Collected Tiles) */}
+      <TileMatrixLayout />
 
       {/* CYCLE STATISTICS */}
       <section style={styles.section}>

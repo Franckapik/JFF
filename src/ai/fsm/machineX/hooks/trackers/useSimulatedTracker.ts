@@ -73,9 +73,13 @@ export function useSimulatedTracker(
 
     /**
      * Planifie l'envoi d'un événement après un délai
+     * ✅ Vérifie que l'état n'a pas changé avant d'envoyer
      */
     const scheduleEvent = (event: MachineEvents, delay: number, reason?: string): void => {
       const eventType = event.type;
+      
+      // Capturer l'état actuel au moment de la planification
+      const stateAtSchedule = lastStateRef.current;
       
       if (verbose) {
         // eslint-disable-next-line no-console
@@ -94,6 +98,18 @@ export function useSimulatedTracker(
       pendingEvents.set(eventType, true);
 
       const timer = setTimeout(() => {
+        // ✅ CRITICAL FIX: Vérifier que l'état n'a pas changé
+        // avant d'envoyer l'événement. Cela évite d'envoyer NEED_EXPLORING
+        // quand on est déjà passé à ship_moving_to_tile par exemple.
+        if (lastStateRef.current !== stateAtSchedule) {
+          if (verbose) {
+            // eslint-disable-next-line no-console
+            console.log(`⚠️ [TRACKER] ${eventType} canceled - state changed from ${stateAtSchedule} to ${lastStateRef.current}`);
+          }
+          pendingEvents.delete(eventType);
+          return;
+        }
+        
         if (verbose) {
           // eslint-disable-next-line no-console
           console.log(`🤖 [TRACKER] Sending: ${eventType}${reason ? ` (${reason})` : ''}`);

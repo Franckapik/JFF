@@ -27,6 +27,7 @@ function createAssignAction(
 /**
  * Action assign pour le déploiement de drone en exploration
  * ✅ Phase 4: Uses context.gridInfo.tiles instead of useTileStore.getState()
+ * ✅ Fix Bug #6: Exclut les tuiles déjà explorées de la sélection
  */
 export const assignDroneDeployingContext = createAssignAction(({ context }) => {
   // ✅ Phase 4: Use context.gridInfo instead of useTileStore.getState()
@@ -44,9 +45,52 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
     return {};
   }
   
+  // ✅ Get fresh tile state from TileStore for accurate explored status
+  const tileStoreState = typeof useTileStore !== 'undefined' && useTileStore.getState ? useTileStore.getState() : null;
+  const freshTiles = tileStoreState?.tiles || tiles;
+  
+  // ✅ Get explored tiles from memory.knownTiles for additional safety
+  const exploredCoords = new Set(
+    (context.memory?.knownTiles ?? [])
+      .filter(t => t?.explored)
+      .map(t => t?.position?.coord)
+  );
+  
   const candidateTiles = findTilesInRadius(shipCoord, range, tiles);
   
-  let targetDroneTile = selectRandomTile(candidateTiles);
+  // ✅ Fix Bug #6: Filter out already explored tiles
+  const unexploredTiles = candidateTiles.filter(tile => {
+    const coord = tile.position?.coord;
+    if (!coord) return false;
+    
+    // Exclure si marqué explored dans TileStore OU dans memory.knownTiles
+    const freshTile = freshTiles[coord];
+    if (freshTile?.explored) return false;
+    if (exploredCoords.has(coord)) return false;
+    
+    // Exclure la tuile de départ
+    if (tile.type === 'depart') return false;
+    
+    return true;
+  });
+  
+  // ✅ Log pour debug si aucune tuile inexploré
+  console.log(`🔍 [DEBUG assignDroneDeployingContext] ship=${shipCoord}, radius=${range}`, {
+    candidatesCount: candidateTiles.length,
+    unexploredCount: unexploredTiles.length,
+    exploredCoordsSize: exploredCoords.size,
+    exploredCoordsSample: Array.from(exploredCoords).slice(0, 10),
+    candidatesSample: candidateTiles.slice(0, 5).map(t => `${t.position.coord}:explored=${freshTiles[t.position.coord]?.explored}`)
+  });
+  
+  if (unexploredTiles.length === 0) {
+    fsmLogger.info(`⚠️ [${context.entityId}] No unexplored tiles in radius ${range}. Candidates: ${candidateTiles.length}, Explored: ${exploredCoords.size}`);
+    console.log(`❌ [DEBUG assignDroneDeployingContext] RETURNING EMPTY - no unexplored tiles`);
+    return {};
+  }
+  
+  let targetDroneTile = selectRandomTile(unexploredTiles);
+  console.log(`🎯 [DEBUG assignDroneDeployingContext] Selected target: ${targetDroneTile?.position?.coord}`);
   if (targetDroneTile) {
     // Fixe la hauteur Y à 0.5 pour la position cible
     targetDroneTile = {
@@ -141,6 +185,28 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
     }
   }
 
+  // ✅ Mark tile as explored with proper flags for collection guard
+  const exploredTile = {
+    ...targetDroneTile,
+    explored: true,
+    collected: false,
+    exploredAt: Date.now(),
+    exploredBy: context.entityId
+  };
+
+  // ✅ Fix: Éviter les doublons dans knownTiles - vérifier si la tuile existe déjà
+  const existingKnownTiles = context.memory?.knownTiles ?? [];
+  const isAlreadyKnown = existingKnownTiles.some(
+    t => t?.position?.coord === scannedCoord
+  );
+  
+  // ✅ Si la tuile est déjà connue, ne pas l'ajouter encore une fois
+  const updatedKnownTiles = isAlreadyKnown
+    ? existingKnownTiles.map(t => 
+        t?.position?.coord === scannedCoord ? exploredTile : t
+      )
+    : [...existingKnownTiles, exploredTile];
+
   return {
     droneFleet: {
       ...context.droneFleet,
@@ -154,7 +220,7 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
     },
     memory: {
       ...context.memory,
-      knownTiles: [...(context.memory?.knownTiles ?? []), targetDroneTile],
+      knownTiles: updatedKnownTiles,
       stats: {
         ...context.memory?.stats,
         tilesExplored: (context.memory?.stats?.tilesExplored ?? 0) + 1,
