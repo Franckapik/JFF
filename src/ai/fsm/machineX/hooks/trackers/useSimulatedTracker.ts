@@ -14,11 +14,11 @@
 import { useEffect, useRef } from 'react';
 import type { Actor } from 'xstate';
 
+import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
 import type { machineXV5Pure } from '../../machine.pure.v5.ts';
 import { getScheduledEvents, type TileProvider } from '../../shared/simulatedTrackerCore.ts';
-import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 
 // ========================================
 // Types

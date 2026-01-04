@@ -14,6 +14,7 @@
 import { gridToWorld } from '../../../../core/spatial/coordinates.ts';
 import type { GridCoordinate, WorldPosition } from '../../../../types/coordinates';
 import type { FSMContext } from '../../../../types/fsm.d.ts';
+import type { Tile } from '../../../../types/tile.d.ts';
 import type { MachineEvents } from '../events.pure.v5.ts';
 
 // ========================================
@@ -379,8 +380,8 @@ export function getMaintainingEvents(
  * Type pour injecter l'accès aux tuiles externes (ex: tileStore dans React)
  */
 export type TileProvider = {
-  tiles: Record<string, any>;
-  findAssignedDepartTile?: (entityId: string) => any;
+  tiles: Record<string, Tile>;
+  findAssignedDepartTile?: (entityId: string) => Tile | undefined;
 };
 
 /**
@@ -394,41 +395,28 @@ export function getInitializingEvents(
   const events: ScheduledEvent[] = [];
   const spacing = context.gridInfo?.spacing ?? -0.2;
   
-  let departTile: any = null;
-  let allDepartTiles: any[] = [];
+  let departTile: Tile | undefined = undefined;
   
   // ✅ Chercher d'abord dans le provider externe (tileStore)
   if (tileProvider?.findAssignedDepartTile) {
     departTile = tileProvider.findAssignedDepartTile(context.entityId);
-    allDepartTiles = Object.values(tileProvider.tiles).filter(tile => tile.type === 'depart');
     
-    if (verbose) {
-      console.log(`🚀 [TRACKER] Found ${allDepartTiles.length} depart tiles in external store`);
-    }
+    // verbose logging omitted - use fsmLogger instead
   }
   
   // ✅ Fallback : chercher dans le contexte FSM (pour compatibilité)
   if (!departTile) {
     const tiles = context.gridInfo?.tiles || {};
-    allDepartTiles = Object.values(tiles).filter(tile => tile.type === 'depart');
     departTile = Object.values(tiles).find(
       tile => tile.type === 'depart' && tile.assignedToBot === context.entityId
     );
   }
   
-  console.log(`🚀 [TRACKER] Bot ${context.entityId} initialization:`, {
-    totalTilesInGrid: tileProvider ? Object.keys(tileProvider.tiles).length : Object.keys(context.gridInfo?.tiles || {}).length,
-    departTilesFound: allDepartTiles.length,
-    departTileCoords: allDepartTiles.map(t => t.position?.coord || t.coord || 'invalid'),
-    myAssignedTile: departTile?.position?.coord || departTile?.coord || 'NONE',
-    entityId: context.entityId
-  });
+  // Bot initialization tracking omitted - use fsmLogger if needed
   
   // Utiliser la tuile de départ si trouvée, sinon fallback à '0,0'
-  const defaultCoord: GridCoordinate = departTile?.position?.coord || departTile?.coord || '0,0';
+  const defaultCoord: GridCoordinate = departTile?.position?.coord || '0,0';
   const baseCoord = context.vehicle?.baseCoord || defaultCoord;
-  
-  console.log(`🚀 [TRACKER] Using coordinate ${defaultCoord} for ${context.entityId} ship initialization`);
   
   // Vérifier si le vaisseau doit être initialisé
   const shipCoord = context.vehicle?.coord;
@@ -580,13 +568,13 @@ function checkAllLocalTilesExplored(context: FSMContext): boolean {
     
     if (distance <= exploringRadius) {
       // Skip base tile
-      if ((tile as Record<string, unknown>)?.type === 'depart') continue;
+      if ((tile as Tile)?.type === 'depart') continue;
       
       tilesInRadius++;
       
       // ✅ FIX: Use ONLY memory.knownTiles as source of truth
       // gridInfo.tiles.explored may not be updated in real-time
-      const isExploredInMemory = exploredCoords.has(coord);
+      const isExploredInMemory = exploredCoords.has(coord as `${number},${number}`);
       
       if (isExploredInMemory) {
         exploredInRadius++;

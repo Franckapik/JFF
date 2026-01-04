@@ -11,6 +11,7 @@ import { assign } from 'xstate';
 
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import type { GridCoordinate } from '../../../../../types/coordinates.d.ts';
+import type { Tile } from '../../../../../types/tile.d.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
 
@@ -91,17 +92,16 @@ export const assignShipRelocationContext = createAssignAction(({ context }) => {
     if (isNaN(col) || isNaN(row)) continue;
     
     // Skip base tile
-    if ((tile as Record<string, unknown>)?.type === 'depart') continue;
-    
-    // Calculate distance from ship
-    const distance = Math.max(Math.abs(col - shipCol), Math.abs(row - shipRow));
-    
-    // Only consider tiles OUTSIDE current radius
-    if (distance > exploringRadius) {
-      // Check if not explored
-      const isExploredInStore = (tile as Record<string, unknown>)?.explored === true;
-      const isExploredInMemory = exploredCoords.has(coord);
+      if ((tile as Tile)?.type === 'depart') continue;
       
+      // Calculate distance from ship
+      const distance = Math.max(Math.abs(col - shipCol), Math.abs(row - shipRow));
+      
+      // Only consider tiles OUTSIDE current radius
+      if (distance > exploringRadius) {
+        // Check if not explored
+        const isExploredInStore = (tile as Tile)?.explored === true;
+        const isExploredInMemory = exploredCoords.has(coord as `${number},${number}`);
       if (!isExploredInStore && !isExploredInMemory) {
         unexploredOutsideRadius.push({ 
           coord: coord as GridCoordinate, 
@@ -131,7 +131,7 @@ export const assignShipRelocationContext = createAssignAction(({ context }) => {
   const targetTile = targetTileData ? {
     ...targetTileData,
     position: {
-      ...(targetTileData as Record<string, unknown>).position as Record<string, unknown>,
+      ...(targetTileData as Tile)?.position,
       coord: targetCoord
     }
   } : null;
@@ -157,7 +157,7 @@ export const assignShipRelocationContext = createAssignAction(({ context }) => {
   return {
     vehicle: {
       ...context.vehicle,
-      targetVehicleTile: targetTile,
+      targetVehicleTile: targetTile as Tile,
       fuel: newFuel
     },
     memory: {
@@ -167,7 +167,6 @@ export const assignShipRelocationContext = createAssignAction(({ context }) => {
         tilesExploredInCycle: 0 // Reset cycle counter for new area
       }
     },
-    lastAction: 'shipRelocation_toNewArea',
-    fsmState: 'relocating'
+    lastAction: 'shipRelocation_toNewArea'
   };
 });

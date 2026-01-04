@@ -514,17 +514,6 @@ export default function FSMVisualization() {
 // UTILITIES
 // ============================================================
 
-function renderBar(percentage: number) {
-  const filled = Math.round(percentage * 10);
-  const empty = 10 - filled;
-  return (
-    <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>
-      [{Array(filled).fill('█').join('')}
-      {Array(empty).fill('░').join('')}] {Math.round(percentage * 100)}%
-    </span>
-  );
-}
-
 function getFlowStyle(stateKey: string, currentState: string) {
   const isActive = currentState.includes(stateKey);
   return {

@@ -20,11 +20,11 @@
  */
 
 import type {
-  GridCoordinate,
-  Tile,
-  TileBiome,
-  TileMap,
-  TileType
+    GridCoordinate,
+    Tile,
+    TileBiome,
+    TileMap,
+    TileType
 } from '../../../types/index.ts';
 import type { ResourceStats } from '../../../types/resources.ts';
 import type { TileGenerationSliceActions, TileStoreType } from '../../../types/stores.d.ts';
