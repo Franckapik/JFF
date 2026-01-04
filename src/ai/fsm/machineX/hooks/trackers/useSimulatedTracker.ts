@@ -17,7 +17,8 @@ import type { Actor } from 'xstate';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
 import type { machineXV5Pure } from '../../machine.pure.v5.ts';
-import { getScheduledEvents } from '../../shared/simulatedTrackerCore.ts';
+import { getScheduledEvents, type TileProvider } from '../../shared/simulatedTrackerCore.ts';
+import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 
 // ========================================
 // Types
@@ -131,11 +132,23 @@ export function useSimulatedTracker(
       if (stateStr === lastStateRef.current) return;
       lastStateRef.current = stateStr;
 
+      // ✅ Récupérer les tiles à jour au moment du traitement (pas dans les deps)
+      const currentTiles = useTileStore.getState().tiles;
+      const tileProvider: TileProvider = {
+        tiles: currentTiles,
+        findAssignedDepartTile: (entityId: string) => {
+          return Object.values(currentTiles).find(
+            tile => tile.type === 'depart' && tile.assignedToBot === entityId
+          );
+        }
+      };
+
       // Utiliser le core partagé pour obtenir les événements à planifier
       const scheduledEvents = getScheduledEvents(
         state, 
         snapshot.context as FSMContext, 
-        verbose
+        verbose,
+        tileProvider
       );
       
       // eslint-disable-next-line no-console

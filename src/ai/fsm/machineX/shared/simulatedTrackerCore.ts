@@ -376,18 +376,59 @@ export function getMaintainingEvents(
 }
 
 /**
+ * Type pour injecter l'accès aux tuiles externes (ex: tileStore dans React)
+ */
+export type TileProvider = {
+  tiles: Record<string, any>;
+  findAssignedDepartTile?: (entityId: string) => any;
+};
+
+/**
  * Détermine les événements d'initialisation à planifier
  */
 export function getInitializingEvents(
   context: FSMContext,
-  verbose: boolean = false
+  verbose: boolean = false,
+  tileProvider?: TileProvider
 ): ScheduledEvent[] {
   const events: ScheduledEvent[] = [];
   const spacing = context.gridInfo?.spacing ?? -0.2;
   
-  // GridCoordinate de base par défaut
-  const defaultCoord: GridCoordinate = '0,0';
+  let departTile: any = null;
+  let allDepartTiles: any[] = [];
+  
+  // ✅ Chercher d'abord dans le provider externe (tileStore)
+  if (tileProvider?.findAssignedDepartTile) {
+    departTile = tileProvider.findAssignedDepartTile(context.entityId);
+    allDepartTiles = Object.values(tileProvider.tiles).filter(tile => tile.type === 'depart');
+    
+    if (verbose) {
+      console.log(`🚀 [TRACKER] Found ${allDepartTiles.length} depart tiles in external store`);
+    }
+  }
+  
+  // ✅ Fallback : chercher dans le contexte FSM (pour compatibilité)
+  if (!departTile) {
+    const tiles = context.gridInfo?.tiles || {};
+    allDepartTiles = Object.values(tiles).filter(tile => tile.type === 'depart');
+    departTile = Object.values(tiles).find(
+      tile => tile.type === 'depart' && tile.assignedToBot === context.entityId
+    );
+  }
+  
+  console.log(`🚀 [TRACKER] Bot ${context.entityId} initialization:`, {
+    totalTilesInGrid: tileProvider ? Object.keys(tileProvider.tiles).length : Object.keys(context.gridInfo?.tiles || {}).length,
+    departTilesFound: allDepartTiles.length,
+    departTileCoords: allDepartTiles.map(t => t.position?.coord || t.coord || 'invalid'),
+    myAssignedTile: departTile?.position?.coord || departTile?.coord || 'NONE',
+    entityId: context.entityId
+  });
+  
+  // Utiliser la tuile de départ si trouvée, sinon fallback à '0,0'
+  const defaultCoord: GridCoordinate = departTile?.position?.coord || departTile?.coord || '0,0';
   const baseCoord = context.vehicle?.baseCoord || defaultCoord;
+  
+  console.log(`🚀 [TRACKER] Using coordinate ${defaultCoord} for ${context.entityId} ship initialization`);
   
   // Vérifier si le vaisseau doit être initialisé
   const shipCoord = context.vehicle?.coord;
@@ -563,7 +604,8 @@ function checkAllLocalTilesExplored(context: FSMContext): boolean {
 export function getScheduledEvents(
   snapshotValue: string | object,
   context: FSMContext,
-  verbose: boolean = false
+  verbose: boolean = false,
+  tileProvider?: TileProvider
 ): ScheduledEvent[] {
   if (verbose) {
     const stateStr = typeof snapshotValue === 'string' ? snapshotValue : JSON.stringify(snapshotValue);
@@ -577,7 +619,7 @@ export function getScheduledEvents(
   if (!subState) {
     switch (mainState) {
       case 'initializing':
-        return getInitializingEvents(context, verbose);
+        return getInitializingEvents(context, verbose, tileProvider);
       case 'evaluating':
         return getEvaluatingEvents(context, verbose);
       case 'relocating':

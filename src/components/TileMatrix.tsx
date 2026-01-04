@@ -213,7 +213,7 @@ export default function TileMatrix() {
             const { x, y } = getHexPosition(q, r);
             const color = getColor(coord as GridCoordinate);
             const label = getSimpleLabel(q, r);
-            const isBase = coord === shipCoord;
+            const isBase = coord === baseCoord;  // ✅ Compare avec baseCoord (tuile de départ) et non shipCoord (position actuelle)
             const droneLabel = getDroneLabel(coord as GridCoordinate);
             const isDroneHere = droneLabel !== null;
             

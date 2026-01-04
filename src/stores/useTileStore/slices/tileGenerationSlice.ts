@@ -354,10 +354,23 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
     );
 
     // Mélanger les tuiles candidates pour un placement aléatoire
-    const shuffledTiles = tiles
-      .map(value => ({ value, sort: Math.random() }))
+    console.log('🎲 [TileGeneration] placeStartingTiles - available resource tiles:', tiles.length);
+    
+    const tilesWithRandom = tiles.map(value => ({ 
+      value, 
+      sort: Math.random(),
+      coord: value.position.coord 
+    }));
+    
+    console.log('🎲 [TileGeneration] Random values for first 5 tiles:', 
+      tilesWithRandom.slice(0, 5).map(t => ({ coord: t.coord, sort: t.sort.toFixed(3) })));
+    
+    const shuffledTiles = tilesWithRandom
       .sort((a, b) => a.sort - b.sort)
       .map(({ value }) => value);
+    
+    console.log('🎲 [TileGeneration] Selected tiles for starting positions:', 
+      shuffledTiles.slice(0, botCount).map(t => t.position.coord));
 
     // Créer une copie du TileMap pour éviter la mutation
     const newTileMap = { ...tileMap };

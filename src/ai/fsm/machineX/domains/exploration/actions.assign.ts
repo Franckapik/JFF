@@ -252,6 +252,12 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
   }
   // Obtenir la tuile de base comme cible de retour
   const baseCoord = context.vehicle?.baseCoord || '0,0' as import('../../../../../types/coordinates').GridCoordinate;
+  
+  console.log(`🏠 [DRONE RETURNING] Looking for base tile at baseCoord: ${baseCoord}`);
+  console.log(`🏠 [DRONE RETURNING] Current ship coord: ${context.vehicle?.coord}`);
+  console.log(`🏠 [DRONE RETURNING] baseCoord from vehicle context: ${context.vehicle?.baseCoord}`);
+  console.log(`🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!`);
+  
   // Conversion en WorldPosition pour targetDroneTile (avec hauteur Y fixée)
   const baseWorldPos = gridToWorld(baseCoord, { defaultY: 0.2 });
   const baseTile = {

@@ -62,12 +62,16 @@ export const processShipInitRequest = createAssignAction(({ context, event }) =>
 			initialPosition: event.initialPosition,
 			nearestTile: nearestTile.position.coord
 		});
+		console.log(`🏠 [SHIP INIT] Ship baseCoord set to: ${baseCoord} (this should be the starting tile!)`);
+		console.log(`🏠 [SHIP INIT] Setting vehicle.baseCoord = ${baseCoord} (THIS SHOULD NEVER CHANGE)`);
 	} else {
 		baseCoord = worldToGrid(event.initialPosition, { spacing });
 		fsmLogger.warn(`🚢 [${context.entityId}] No tile found at position, using worldToGrid fallback`, {
 			initialPosition: event.initialPosition,
 			calculatedCoord: baseCoord
 		});
+		console.log(`🏠 [SHIP INIT FALLBACK] Ship baseCoord set to: ${baseCoord} (this should be the starting tile!)`);
+		console.log(`🏠 [SHIP INIT FALLBACK] Setting vehicle.baseCoord = ${baseCoord} (THIS SHOULD NEVER CHANGE)`);
 	}
 
 	return {

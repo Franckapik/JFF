@@ -187,6 +187,10 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
       fuelRemaining: newFuel
     });
     
+    console.log(`🚢 [SHIP MOVING] Ship moving from ${context.vehicle?.coord} to ${targetGridCoord}`);
+    console.log(`🏠 [SHIP MOVING] Original base coord is: ${context.vehicle?.baseCoord} (this should stay constant!)`);
+    console.log(`🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!`);
+    
     return updatedContext;
   }
   
@@ -245,6 +249,11 @@ export const assignShipReturningContext = createAssignAction(({ context, event }
   // Coordonnée de base (pour simplifier, retour à la position initiale)
   const baseCoord = context.vehicle?.baseCoord || '0,0';
   const baseWorldPos = gridToWorld(baseCoord);
+  
+  console.log(`🏠 [SHIP RETURNING] Looking for base tile at coord: ${baseCoord}`);
+  console.log(`🏠 [SHIP RETURNING] Current ship coord: ${context.vehicle.coord}`);
+  console.log(`🏠 [SHIP RETURNING] baseCoord from vehicle context: ${context.vehicle?.baseCoord}`);
+  
   const baseTile = {
     position: { ...baseWorldPos, coord: baseCoord },
     type: 'depart',
