@@ -123,7 +123,9 @@ export interface TileGenerationSliceActions {
   // Génération et initialisation
   initializeGameGrid: (radius: number, spacing: number) => TileMap;
   placeGameStations: (tileMap: TileMap, radius: number) => TileMap;
-  placeDangerTiles: (tileMap: TileMap, radius: number) => TileMap;
+  placeEmptyTiles: (tileMap: TileMap, emptyRatio?: number) => TileMap;
+  placeObstacleTiles: (tileMap: TileMap) => TileMap;
+  placeDangerTiles: (tileMap: TileMap) => TileMap;
   placeStartingTiles: (tileMap: TileMap, botCount: number) => TileMap;
   assignStartingTiles: (activeBotIds: string[]) => void;
 }

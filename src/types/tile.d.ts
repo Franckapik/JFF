@@ -164,7 +164,7 @@ export const isTile = (obj: unknown): obj is Tile => {
 
 /** Vérifie qu'un type de tuile est valide */
 export const isTileType = (type: unknown): type is TileType => {
-  const validTypes: TileType[] = ['depart', 'fuel', 'repair', 'food', 'debris', 'special', 'danger', 'empty', 'water'];
+  const validTypes: TileType[] = ['depart', 'fuel', 'repair', 'obstacle', 'danger', 'empty', 'resource'];
   return typeof type === 'string' && validTypes.includes(type as TileType);
 };
 

@@ -20,11 +20,11 @@
  */
 
 import type {
-  GridCoordinate,
-  Tile,
-  TileBiome,
-  TileMap,
-  TileType
+    GridCoordinate,
+    Tile,
+    TileBiome,
+    TileMap,
+    TileType
 } from '../../../types/index.ts';
 import type { ResourceStats } from '../../../types/resources.ts';
 import type { TileGenerationSliceActions, TileStoreType } from '../../../types/stores.d.ts';
@@ -177,10 +177,16 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
     // 2. Placer les stations
     let updatedTileMap = get().placeGameStations(tileMap, radius);
     
-    // 3. Placer les tuiles de danger
-    updatedTileMap = get().placeDangerTiles(updatedTileMap, radius);
+    // 3. Placer les tuiles vides (15% des tuiles)
+    updatedTileMap = get().placeEmptyTiles(updatedTileMap, 0.15);
     
-    // 4. Retourner le TileMap final (les tuiles de départ seront créées dans assignStartingTiles)
+    // 4. Placer les obstacles (20% des tuiles)
+    updatedTileMap = get().placeObstacleTiles(updatedTileMap);
+    
+    // 5. Placer les tuiles de danger
+    updatedTileMap = get().placeDangerTiles(updatedTileMap);
+    
+    // 6. Retourner le TileMap final (les tuiles de départ seront créées dans assignStartingTiles)
     return updatedTileMap;
   },
 
@@ -260,6 +266,75 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
         };
         newTileMap[tile.position.coord] = updatedTile;
       }
+    }
+    
+    return newTileMap;
+  },
+
+  /**
+   * Place les tuiles vides (une proportion des tuiles)
+   * @param tileMap - TileMap à modifier
+   * @param emptyRatio - Proportion de tuiles à convertir en empty (défaut 15%)
+   * @returns Nouveau TileMap avec les tuiles vides placées
+   */
+  placeEmptyTiles: (tileMap: TileMap, emptyRatio: number = 0.15): TileMap => {
+    const resourceTiles = (Object.values(tileMap) as Tile[]).filter((tile) => tile.type === 'resource');
+    const emptyCount = Math.max(0, Math.floor(resourceTiles.length * emptyRatio));
+    
+    // Créer une copie du TileMap pour éviter la mutation
+    const newTileMap = { ...tileMap };
+    
+    // Garder une liste des tuiles disponibles pour éviter les doublons
+    let availableResourceTiles = [...resourceTiles];
+    
+    for (let i = 0; i < emptyCount && availableResourceTiles.length > 0; i++) {
+      const randomIndex = Math.floor(Math.random() * availableResourceTiles.length);
+      const tile = availableResourceTiles[randomIndex];
+      const updatedTile: Tile = {
+        ...tile,
+        type: 'empty' as TileType,
+        color: '#9ca3af',
+        walkable: true,
+        hasResources: false,
+        resources: { food: 0, debris: 0, special: 0, total: 0 }
+      };
+      newTileMap[tile.position.coord] = updatedTile;
+      // Retirer la tuile des disponibles pour éviter les doublons
+      availableResourceTiles = availableResourceTiles.filter((_, idx) => idx !== randomIndex);
+    }
+    
+    return newTileMap;
+  },
+
+  /**
+   * Place les tuiles d'obstacles (20% des tuiles)
+   * @param tileMap - TileMap à modifier
+   * @returns Nouveau TileMap avec les tuiles d'obstacles placées
+   */
+  placeObstacleTiles: (tileMap: TileMap): TileMap => {
+    const resourceTiles = (Object.values(tileMap) as Tile[]).filter((tile) => tile.type === 'resource');
+    const obstacleCount = Math.max(1, Math.floor(resourceTiles.length * 0.2));
+    
+    // Créer une copie du TileMap pour éviter la mutation
+    const newTileMap = { ...tileMap };
+    
+    // Garder une liste des tuiles disponibles pour éviter les doublons
+    let availableResourceTiles = [...resourceTiles];
+    
+    for (let i = 0; i < obstacleCount && availableResourceTiles.length > 0; i++) {
+      const randomIndex = Math.floor(Math.random() * availableResourceTiles.length);
+      const tile = availableResourceTiles[randomIndex];
+      const updatedTile: Tile = {
+        ...tile,
+        type: 'obstacle' as TileType,
+        color: '#000000',
+        walkable: false,
+        hasResources: false,
+        resources: { food: 0, debris: 0, special: 0, total: 0 }
+      };
+      newTileMap[tile.position.coord] = updatedTile;
+      // Retirer la tuile des disponibles pour éviter les doublons
+      availableResourceTiles = availableResourceTiles.filter((_, idx) => idx !== randomIndex);
     }
     
     return newTileMap;

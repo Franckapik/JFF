@@ -18,6 +18,7 @@ export default function TileMatrix() {
   const [shipCoord, setShipCoord] = React.useState<GridCoordinate | null>(null);
   const [baseCoord, setBaseCoord] = React.useState<GridCoordinate | null>(null);
   const [droneCoords, setDroneCoords] = React.useState<GridCoordinate[]>([]);
+  const [exploringRadius, setExploringRadius] = React.useState<number>(2);
 
   // Mettre à jour les positions du ship et drones à chaque changement d'état
   React.useEffect(() => {
@@ -34,6 +35,11 @@ export default function TileMatrix() {
       // Position de la base (tuile de départ)
       if (ctx.vehicle?.baseCoord) {
         setBaseCoord(ctx.vehicle.baseCoord);
+      }
+
+      // Récupérer le rayon d'exploration depuis la config FSM
+      if (ctx.config?.exploringRadius !== undefined) {
+        setExploringRadius(ctx.config.exploringRadius);
       }
 
       // Positions des drones (objet avec clés: explorer, combat, special)
@@ -87,32 +93,61 @@ export default function TileMatrix() {
     return { q, r };
   });
   const minQ = Math.min(...coords.map(c => c.q));
-  const maxQ = Math.max(...coords.map(c => c.q));
   const minR = Math.min(...coords.map(c => c.r));
-  const maxR = Math.max(...coords.map(c => c.r));
-  const width = maxQ - minQ + 1;
-  const height = maxR - minR + 1;
 
   // Créer une grille indexée pour accès rapide
   const coordIndex = new Map(sortedTiles);
 
-  // Déterminer la couleur d'un point
+  /**
+   * Calcule si une tuile est dans le rayon d'exploration du ship
+   * Utilise la vraie distance hexagonale avec coordonnées offset pair (q, r)
+   * Pour radius 1 autour de D4 (3,3): C4 (2,3), C5 (2,4), D5 (3,4), E4 (4,3), E3 (4,2), D3 (3,2)
+   * @pure
+   */
+  const isInExplorationRadius = (coord: GridCoordinate): boolean => {
+    if (!shipCoord) return false;
+    
+    const [shipQ, shipR] = shipCoord.split(',').map(Number);
+    const [tileQ, tileR] = coord.split(',').map(Number);
+    
+    // Distance hexagonale vraie pour coordonnées offset pair
+    // En utilisant la coordonnée s = -q - r
+    const shipS = -shipQ - shipR;
+    const tileS = -tileQ - tileR;
+    
+    const distance = (Math.abs(shipQ - tileQ) + Math.abs(shipR - tileR) + Math.abs(shipS - tileS)) / 2;
+    
+    return distance <= exploringRadius;
+  };
+
+  // Déterminer la couleur d'un point avec opacité selon le rayon d'exploration
   const getColor = (coord: GridCoordinate): string => {
+    const inRadius = isInExplorationRadius(coord);
+    
+    // Ship et drones toujours à pleine opacité
     if (coord === shipCoord) return '#22c55e'; // vert
-    // ✅ Vérifier si c'est un drone (format: "type|coord" ou "coord")
     const isDrone = droneCoords.some(droneEntry => {
       const parts = String(droneEntry).split('|');
       const droneCoord = parts.length > 1 ? parts[1] : parts[0];
       return droneCoord === coord;
     });
     if (isDrone) return '#f97316'; // orange
+    
     const tile = coordIndex.get(coord);
-    if (tile?.type === 'fuel') return '#f32ad1ff'; // rose vif pour carburant
-    if (tile?.type === 'repair') return '#bd259cff'; // magenta pour réparation
-    if (tile?.type === 'danger') return '#ef4444'; // rouge pour danger
-    if (tile?.collected) return '#8b5cf6'; // violet
-    if (tile?.explored) return '#3b82f6'; // bleu
-    return 'transparent'; // transparent par défaut
+    
+    // Appliquer l'opacité selon la portée
+    if (tile?.type === 'fuel') return inRadius ? '#f32ad1ff' : 'rgba(243, 42, 209, 0.3)';
+    if (tile?.type === 'repair') return inRadius ? '#bd259cff' : 'rgba(189, 37, 156, 0.3)';
+    if (tile?.type === 'obstacle') return inRadius ? '#000000' : 'rgba(0, 0, 0, 0.3)';
+    if (tile?.type === 'danger') return inRadius ? '#ef4444' : 'rgba(239, 68, 68, 0.3)';
+    if (tile?.type === 'empty') return inRadius ? '#9ca3af' : 'rgba(156, 163, 175, 0.3)';
+    if (tile?.collected) return inRadius ? '#8b5cf6' : 'rgba(139, 92, 246, 0.3)'; // violet
+    if (tile?.explored) return inRadius ? '#3b82f6' : 'rgba(59, 130, 246, 0.3)'; // bleu
+    
+    // Tuiles non explorées
+    if (inRadius) return 'rgba(59, 130, 246, 0.5)'; // bleu semi-transparent dans le radius
+    
+    return 'rgba(200, 200, 200, 0.2)'; // gris très clair hors de portée
   };
 
   // ✅ Extraire le type de drone pour un affichage texte
@@ -136,28 +171,74 @@ export default function TileMatrix() {
     return `${colLetter}${rowNum}`;
   };
 
+  /**
+   * Calcule les coordonnées pixel (x, y) pour une tuile hexagonale (q, r)
+   * Utilise la géométrie hexagonale axiale flat-top
+   * Formules standard: x = size * 3/2 * q, y = size * sqrt(3) * (r + q/2)
+   * @pure
+   */
+  const getHexPosition = (q: number, r: number): { x: number; y: number } => {
+    const size = 28; // Taille de l'hexagone en pixels
+    // Normaliser les coordonnées par rapport au minimum
+    const normalizedQ = q - minQ;
+    const normalizedR = r - minR;
+    
+    // Formules standard pour hexagones flat-top (axial coordinates)
+    const x = size * (3 / 2) * normalizedQ;
+    const y = size * Math.sqrt(3) * (normalizedR + normalizedQ / 2);
+    
+    return { x, y };
+  };
+
+  // Calculer les dimensions du conteneur hexagonal
+  const hexPositions = sortedTiles.map(([coord]) => {
+    const [q, r] = coord.split(',').map(Number);
+    return getHexPosition(q, r);
+  });
+  const hexMaxX = Math.max(...hexPositions.map(p => p.x));
+  const hexMaxY = Math.max(...hexPositions.map(p => p.y));
+
   return (
     <section style={styles.section}>
-      <h3>🗺️ Tile Matrix</h3>
-      <div style={{ ...styles.grid, gridTemplateColumns: `repeat(${width}, 1fr)` }}>
-        {Array.from({ length: height }).map((_, rIdx) => (
-          Array.from({ length: width }).map((_, qIdx) => {
-            const q = minQ + qIdx;
-            const r = minR + rIdx;
-            const coord = `${q},${r}` as GridCoordinate;
-            const color = getColor(coord);
+      <h3>🗺️ Tile Matrix (Hexagonal)</h3>
+      <div style={{
+        ...styles.hexGrid,
+        width: `${hexMaxX + 100}px`,
+        height: `${hexMaxY + 100}px`,
+      }}>
+        {/* Tuiles */}
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          {sortedTiles.map(([coord]) => {
+            const [q, r] = coord.split(',').map(Number);
+            const { x, y } = getHexPosition(q, r);
+            const color = getColor(coord as GridCoordinate);
             const label = getSimpleLabel(q, r);
-            const isBase = coord === baseCoord;
-            const droneLabel = getDroneLabel(coord); // ✅ Obtenir le label du drone
+            const isBase = coord === shipCoord;
+            const droneLabel = getDroneLabel(coord as GridCoordinate);
             const isDroneHere = droneLabel !== null;
+            
             return (
-              <div key={coord} style={styles.cellContainer} title={`${label} (${coord})`}>
+              <div
+                key={coord}
+                style={{
+                  position: 'absolute',
+                  left: `${x + 50}px`,
+                  top: `${y + 50}px`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '3px',
+                  transition: 'opacity 0.2s ease',
+                }}
+                title={`${label} (${coord})`}
+              >
                 <div
                   style={{
                     ...styles.dot,
                     backgroundColor: color,
-                    borderColor: color === 'transparent' ? '#000' : 'transparent',
-                    borderWidth: color === 'transparent' ? '1px' : '0px',
+                    borderColor: color.includes('rgba(200') ? '#ddd' : 'transparent',
+                    borderWidth: color.includes('rgba(200') ? '1px' : '0px',
+                    borderStyle: 'dashed',
                     outline: isBase ? '2px solid #000' : 'none',
                     position: 'relative',
                   }}
@@ -184,41 +265,57 @@ export default function TileMatrix() {
                 <div style={styles.label}>{label}</div>
               </div>
             );
-          })
-        ))}
+          })}
+        </div>
       </div>
       <div style={styles.legend}>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: 'transparent', border: '2px solid #000' }} />
-          <span>Départ</span>
+          <span>Départ {baseCoord && <span style={styles.counter}>1</span>}</span>
         </div>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#3b82f6' }} />
-          <span>Explorée</span>
+          <span>Explorée <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.explored && !tile.collected).length}</span></span>
+        </div>
+        <div style={styles.legendItem}>
+          <div style={{ ...styles.legendDot, backgroundColor: 'rgba(59, 130, 246, 0.5)' }} />
+          <span>Explorable (r={exploringRadius}) <span style={styles.counter}>{sortedTiles.filter(([coord]) => isInExplorationRadius(coord as GridCoordinate) && !tiles[coord]?.explored).length}</span></span>
+        </div>
+        <div style={styles.legendItem}>
+          <div style={{ ...styles.legendDot, backgroundColor: 'rgba(200, 200, 200, 0.2)', border: '1px dashed #ddd' }} />
+          <span>Hors de portée</span>
         </div>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#8b5cf6' }} />
-          <span>Collectée</span>
+          <span>Collectée <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.collected).length}</span></span>
         </div>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#22c55e' }} />
-          <span>Ship</span>
+          <span>Ship {shipCoord && <span style={styles.counter}>1</span>}</span>
         </div>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#f97316' }} />
-          <span>Drone (e/c/s)</span>
+          <span>Drone (e/c/s) <span style={styles.counter}>{droneCoords.length}</span></span>
+        </div>
+        <div style={styles.legendItem}>
+          <div style={{ ...styles.legendDot, backgroundColor: '#9ca3af' }} />
+          <span>Empty <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.type === 'empty').length}</span></span>
+        </div>
+        <div style={styles.legendItem}>
+          <div style={{ ...styles.legendDot, backgroundColor: '#000000' }} />
+          <span>Obstacle <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.type === 'obstacle').length}</span></span>
         </div>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#f32ad1ff' }} />
-          <span>⛽ Carburant</span>
+          <span>⛽ Carburant <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.type === 'fuel').length}</span></span>
         </div>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#bd259cff' }} />
-          <span>🔧 Réparation</span>
+          <span>🔧 Réparation <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.type === 'repair').length}</span></span>
         </div>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#ef4444' }} />
-          <span>⚠️ Danger</span>
+          <span>⚠️ Danger <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.type === 'danger').length}</span></span>
         </div>
       </div>
     </section>
@@ -234,12 +331,13 @@ const styles = {
     borderLeft: '4px solid #2196f3',
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
   } as React.CSSProperties,
-  grid: {
-    display: 'grid',
-    gap: '3px',
-    marginBottom: '12ptransparent',
+  hexGrid: {
+    position: 'relative',
     borderRadius: '4px',
-    maxWidth: '400px',
+    border: '1px solid #ddd',
+    backgroundColor: '#fafafa',
+    overflow: 'auto',
+    maxHeight: '600px',
   } as React.CSSProperties,
   cellContainer: {
     display: 'flex',
@@ -248,24 +346,26 @@ const styles = {
     gap: '2px',
   } as React.CSSProperties,
   dot: {
-    width: '12px',
-    height: '12px',
+    width: '18px',
+    height: '18px',
     borderRadius: '50%',
     cursor: 'pointer',
     border: '1px solid',
   } as React.CSSProperties,
   label: {
-    fontSize: '8px',
+    fontSize: '9px',
     fontWeight: 'bold',
     color: '#666',
-    minHeight: '10px',
-    lineHeight: '10px',
+    minHeight: '11px',
+    lineHeight: '11px',
+    whiteSpace: 'nowrap',
   } as React.CSSProperties,
   legend: {
     display: 'flex',
     gap: '12px',
     flexWrap: 'wrap',
     fontSize: '11px',
+    marginTop: '15px',
   } as React.CSSProperties,
   legendItem: {
     display: 'flex',
@@ -276,6 +376,15 @@ const styles = {
     width: '8px',
     height: '8px',
     borderRadius: '50%',
+  } as React.CSSProperties,
+  counter: {
+    marginLeft: '4px',
+    fontWeight: 'bold',
+    color: '#1f2937',
+    backgroundColor: '#e5e7eb',
+    padding: '1px 5px',
+    borderRadius: '3px',
+    fontSize: '10px',
   } as React.CSSProperties,
 };
 
