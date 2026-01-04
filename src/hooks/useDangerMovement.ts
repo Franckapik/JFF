@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useRef } from 'react';
+
 import { useTileStore } from '../stores/useTileStore';
 import type { GridCoordinate } from '../types/coordinates.d.ts';
 
