@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { gridToWorld } from '../core/spatial';
+import { useTileStore } from '../stores/useTileStore';
 import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates';
 import type { FSMContext } from '../types/fsm.d';
@@ -42,12 +43,33 @@ export default function FSMVisualization() {
 
   // États pour le log des transitions
   const [eventLog, setEventLog] = React.useState<Array<{ time: string; event: string; state: string }>>([]);
-  const [cycleStats, setCycleStats] = React.useState({
-    tilesExplored: 0,
-    resourcesCollected: 0,
-    repairsCompleted: 0,
-    refuelsCompleted: 0,
-  });
+  
+  // Statistiques d'exploration unifiées depuis le TileStore (source de vérité unique)
+  const tiles = useTileStore((state) => state.tiles);
+  const cycleStats = React.useMemo(() => {
+    let totalTiles = 0;
+    let exploredTiles = 0;
+    let collectedTiles = 0;
+    let collectedButNotExplored = 0;
+    
+    Object.values(tiles).forEach((tile) => {
+      totalTiles++;
+      if (tile.explored === true) exploredTiles++;
+      if (tile.collected === true) {
+        collectedTiles++;
+        if (tile.explored !== true) collectedButNotExplored++;
+      }
+    });
+    
+    return {
+      tilesExplored: exploredTiles,
+      resourcesCollected: collectedTiles,
+      totalTiles,
+      collectedButNotExplored,
+      explorationRate: totalTiles > 0 ? ((exploredTiles / totalTiles) * 100).toFixed(1) : '0.0',
+      hasIssue: collectedButNotExplored > 0
+    };
+  }, [tiles]);
   const [stateVisitCounts, setStateVisitCounts] = React.useState<Record<string, number>>({
     initializing: 0,
     evaluating: 0,
@@ -115,16 +137,10 @@ export default function FSMVisualization() {
       return updated;
     });
 
-    // Mettre à jour les stats et détecter les drones détruits
+    // Mettre à jour les stats depuis le contexte FSM
     const ctx = botSnapshot.context;
     if (ctx) {
-      setCycleStats({
-        tilesExplored: ctx.memory?.stats?.tilesExplored || 0,
-        resourcesCollected: ctx.vehicle?.resources?.total || 0,
-        repairsCompleted: 0,
-        refuelsCompleted: 0,
-      });
-
+      // Note: cycleStats est maintenant calculé depuis le TileStore, pas besoin de setCycleStats
       // Détecter si un drone a été détruit
       if (currentState.includes('drone_destroyed')) {
         const explorerDestroyed = ctx.droneFleet?.drones?.explorer?.isDestroyed;
@@ -332,23 +348,38 @@ export default function FSMVisualization() {
         <table style={styles.table}>
           <tbody>
             <tr>
-              <td>🗺️ Tiles Explored:</td>
-              <td style={styles.statValue}>{cycleStats.tilesExplored}</td>
+              <td>✅ Tiles Explored (by drones):</td>
+              <td style={styles.statValue}>{cycleStats.tilesExplored} / {cycleStats.totalTiles}</td>
             </tr>
             <tr>
               <td>📦 Resources Collected:</td>
               <td style={styles.statValue}>{cycleStats.resourcesCollected}</td>
             </tr>
             <tr>
-              <td>🔧 Repairs Completed:</td>
-              <td style={styles.statValue}>{cycleStats.repairsCompleted}</td>
+              <td>📊 Exploration Rate:</td>
+              <td style={styles.statValue}>{cycleStats.explorationRate}%</td>
             </tr>
-            <tr>
-              <td>⛽ Refuels Completed:</td>
-              <td style={styles.statValue}>{cycleStats.refuelsCompleted}</td>
+            <tr style={{ color: cycleStats.hasIssue ? '#FF5252' : '#4CAF50', fontWeight: 'bold' }}>
+              <td>{cycleStats.hasIssue ? '❌' : '✓'} Unexplored Collected:</td>
+              <td style={{...styles.statValue, color: cycleStats.hasIssue ? '#FF5252' : '#4CAF50'}}>
+                {cycleStats.collectedButNotExplored}
+                {cycleStats.hasIssue && ' ⚠️'}
+              </td>
             </tr>
           </tbody>
         </table>
+        {cycleStats.hasIssue && (
+          <div style={{
+            marginTop: '10px',
+            padding: '10px',
+            background: 'rgba(255, 82, 82, 0.2)',
+            borderRadius: '4px',
+            border: '1px solid #FF5252',
+            fontSize: '13px'
+          }}>
+            ⚠️ Warning: {cycleStats.collectedButNotExplored} tile(s) collected without drone exploration!
+          </div>
+        )}
       </section>
 
       {/* STATE MACHINE CYCLE */}

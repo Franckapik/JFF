@@ -158,3 +158,95 @@ Fonctionnalité: Collection de Ressources
     Alors la collection en cours est interrompue
     Et le FSM transite vers "maintaining"
     Et les resources déjà collectées sont préservées
+  # ============================================================================
+  # 🆕 NOUVEAU SCÉNARIO: Re-exploration après épuisement des tuiles connues
+  # ============================================================================
+
+  Scénario: Re-exploration quand aucune tuile collectible connue n'est disponible
+    Étant donné que le FSM est en état "evaluating"
+    Et que memory.knownTiles contient 3 tuiles toutes déjà collectées:
+      | coord | explored | collected | hasResources |
+      | 1,1   | true     | true      | false        |
+      | 2,2   | true     | true      | false        |
+      | 3,3   | true     | true      | false        |
+    Et que vehicle.fuel = 60
+    Et que vehicle.damage = 20
+    Et que vehicle.resources.total = 300
+    
+    # Vérification: shouldCollect échoue car aucune tuile collectible
+    Quand le guard shouldCollect est évalué sur memory.knownTiles
+    Alors le guard retourne false (aucune tuile avec explored=true ET collected=false)
+    
+    # Le bot doit alors se déplacer vers une nouvelle zone et re-explorer
+    Quand le FSM évalue les transitions disponibles
+    Alors le guard shouldExplore retourne true (fuel > 20, damage < 80)
+    Et le FSM transite vers "exploring.drone_deploying"
+    
+    # Déplacement du ship vers nouvelle zone
+    Quand le ship se déplace vers une nouvelle position dans son rayon d'action
+    Alors vehicle.coord change (ex: de "2,2" à "4,4")
+    Et vehicle.fuel diminue selon la distance
+    
+    # Re-exploration depuis nouvelle position
+    Quand le drone explore les tuiles autour de la nouvelle position
+    Alors de nouvelles tuiles sont découvertes dans context.gridInfo.tiles
+    Et ces nouvelles tuiles sont ajoutées à memory.knownTiles avec explored=true
+    Et le cycle peut reprendre: evaluating → collecting (si ressources trouvées)
+
+  Scénario: Re-exploration avec limite de rayon respectée
+    Étant donné que le FSM est en état "evaluating"
+    Et que memory.knownTiles contient uniquement des tuiles collectées
+    Et que vehicle.coord = "2,2"
+    Et que context.config.exploringRadius = 2
+    Et que vehicle.fuel = 50
+    
+    # Le ship cherche les tuiles dans gridInfo.tiles dans son rayon
+    Quand le guard shouldExplore est évalué
+    Alors le FSM cherche des tuiles non-explorées dans gridInfo.tiles
+    Et filtre les tuiles à distance <= exploringRadius (2) de vehicle.coord
+    Et sélectionne une tuile non-explorée dans ce rayon
+    
+    # Si aucune tuile non-explorée dans le rayon actuel
+    Quand aucune tuile non-explorée n'est disponible dans le rayon
+    Alors le ship se déplace vers une position adjacente (ex: "3,3" ou "4,4")
+    Et répète le processus de recherche de tuiles non-explorées
+    Et explore depuis la nouvelle position
+
+  Scénario: Priorisation re-exploration vs maintenance
+    Étant donné que memory.knownTiles contient uniquement des tuiles collectées
+    Et que vehicle.fuel = 25
+    Et que vehicle.damage = 15
+    Et que vehicle.resources.total = 500
+    
+    # Cas 1: fuel suffisant pour exploration
+    Quand le guard shouldMaintain est évalué
+    Alors le guard retourne false (fuel >= 30 requis pour maintenance)
+    Quand le guard shouldExplore est évalué
+    Alors le guard retourne true (fuel > 20)
+    Et le FSM transite vers "exploring" (priorité à l'exploration)
+    
+    # Cas 2: fuel critique
+    Étant donné que vehicle.fuel = 28
+    Quand le guard shouldMaintain est évalué
+    Alors le guard retourne true (fuel < 30)
+    Et le FSM transite vers "maintaining" (priorité à la maintenance)
+    Et l'exploration est reportée après refuel
+
+  Plan du Scénario: Validation du guard shouldCollect avec memory.knownTiles
+    Étant donné que memory.knownTiles contient:
+      | coord | explored | collected | hasResources | resources.total |
+      | <t1>  | <exp1>   | <col1>    | <res1>       | <amt1>          |
+      | <t2>  | <exp2>   | <col2>    | <res2>       | <amt2>          |
+    Et que vehicle.fuel = <fuel>
+    Et que vehicle.isAtCapacity = <capacity>
+    Quand le guard shouldCollect est évalué
+    Alors le guard retourne <result>
+
+    Exemples:
+      | t1  | exp1 | col1  | res1  | amt1 | t2  | exp2 | col2  | res2  | amt2 | fuel | capacity | result | raison                                    |
+      | 1,1 | true | false | true  | 100  | 2,2 | true | false | true  | 150  | 50   | false    | true   | Tuiles explorées avec ressources          |
+      | 1,1 | true | true  | false | 0    | 2,2 | true | true  | false | 0    | 50   | false    | false  | Toutes tuiles collectées                  |
+      | 1,1 | true | false | true  | 100  | 2,2 | false| false | false | 0    | 50   | false    | true   | Au moins 1 tuile explorée avec ressources |
+      | 1,1 | false| false | true  | 100  | 2,2 | false| false | true  | 150  | 50   | false    | false  | Aucune tuile explorée (explored=false)    |
+      | 1,1 | true | false | true  | 100  | 2,2 | true | false | true  | 150  | 15   | false    | false  | Fuel trop bas (< 20)                      |
+      | 1,1 | true | false | true  | 100  | 2,2 | true | false | true  | 150  | 50   | true     | false  | Véhicule surchargé                        |

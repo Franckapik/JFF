@@ -14,18 +14,26 @@ import type { XStateV5Guard } from '../../../../../types/xstate.v5.types.ts';
 /**
  * Pure guard: Check if tiles are available in FSM context
  * 
- * Uses context.gridInfo.tiles (already populated from TileStore sync)
+ * Sources checked in order:
+ * 1. context.gridInfo.tiles (full grid snapshot - spatial cache)
+ * 2. context.memory.knownTiles (bot's personal exploration history)
+ * 
+ * Returns true if ANY tiles are available from either source.
+ * This ensures transitions can proceed when exploration data exists.
  * 
  * @returns true if tiles data is available in context
  */
 export const hasTilesAvailable: XStateV5Guard = ({ context }) => {
-  // Check gridInfo.tiles (populated by TILES_UPDATED or initial sync)
-  const tiles = context.gridInfo?.tiles;
-  if (tiles && Object.keys(tiles).length > 0) return true;
+  // Check gridInfo.tiles (spatial cache - all tiles in world)
+  const gridTiles = context.gridInfo?.tiles;
+  if (gridTiles && Object.keys(gridTiles).length > 0) return true;
   
-  // Fallback: check known tiles in memory
+  // Fallback: check known tiles in memory (bot's personal exploration history)
   const knownTiles = context.memory?.knownTiles || [];
-  return knownTiles.length > 0;
+  if (knownTiles.length > 0) return true;
+  
+  // No tiles available from any source
+  return false;
 };
 
 /**
@@ -145,43 +153,46 @@ export const shouldMaintain: XStateV5Guard = ({ context }) => {
 };
 
 /**
- * 🔍 Pure guard: Check if collection is appropriate based on available tiles and vehicle state
+ * 🔍 Pure guard: Check if collection is appropriate based on explored tiles and vehicle state
  * 
  * Returns true when:
- * - Available tiles with resources exist in gridInfo
+ * - Known explored tiles with resources exist in memory (SOURCE OF TRUTH)
  * - Vehicle is NOT at capacity
  * - Vehicle has sufficient fuel
  * 
- * Uses context.gridInfo.tiles which is already populated by TILES_UPDATED event or initial sync.
+ * PRIMARY: Uses context.memory.knownTiles (always in sync with drone exploration)
+ * This ensures bot only collects tiles it has actually explored via drone scans.
  * 
- * @param context FSMContext containing gridInfo with tiles
+ * @param context FSMContext containing memory.knownTiles with explored flag
  * @returns true if collection should proceed
  * 
  * @example
- * // In Node.js test (with gridInfo):
+ * // In Node.js test (with memory.knownTiles):
  * const context = {
  *   vehicle: { fuel: 50, isAtCapacity: false },
  *   config: { fuelThreshold: 20 },
- *   gridInfo: { 
- *     tiles: { '1,1': { hasResources: true, ... } }
+ *   memory: { 
+ *     knownTiles: [
+ *       { coord: '1,1', explored: true, hasResources: true, collected: false, resources: { total: 100 } }
+ *     ]
  *   }
  * };
  * const result = shouldCollect({ context, event: {} });
  * console.log(result); // true
  */
 export const shouldCollect: XStateV5Guard = ({ context }) => {
-  // ✅ PURE: Read tiles from gridInfo
-  const tiles = context.gridInfo?.tiles;
+  // ✅ PRIMARY: Check memory.knownTiles (always in sync with drone scans)
+  const knownTiles = context.memory?.knownTiles || [];
   
-  // Must have tiles available with resources
-  if (!tiles || Object.keys(tiles).length === 0) return false;
-  
-  // Check if any tile has resources
-  const hasResourceTiles = Object.values(tiles).some(tile => 
-    tile.hasResources && !tile.collected
+  // Must have at least one explored tile with resources that hasn't been collected
+  const hasCollectibleTiles = knownTiles.some(tile => 
+    tile?.explored === true &&
+    tile?.hasResources && 
+    !tile?.collected && 
+    tile?.resources?.total > 0
   );
   
-  if (!hasResourceTiles) return false;
+  if (!hasCollectibleTiles) return false;
   
   // Vehicle state checks
   const isAtCapacity = context.vehicle?.isAtCapacity ?? false;
