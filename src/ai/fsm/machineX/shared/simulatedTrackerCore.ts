@@ -432,6 +432,12 @@ export function getInitializingEvents(
 
 /**
  * Détermine les événements d'évaluation à planifier
+ * 
+ * Logique de décision selon les scenarios:
+ * 1. Si hasCollectibleTiles → NEED_COLLECTING
+ * 2. Si exploration cycle atteint (>= 3 tuiles explorées) → NEED_COLLECTING
+ * 3. Si toutes les tuiles locales sont explorées → NEED_SHIP_RELOCATION
+ * 4. Sinon → NEED_EXPLORING
  */
 export function getEvaluatingEvents(
   context: FSMContext,
@@ -439,23 +445,116 @@ export function getEvaluatingEvents(
 ): ScheduledEvent[] {
   const events: ScheduledEvent[] = [];
   
-  // Pour l'état evaluating, on envoie NEED_EXPLORING si le drone est disponible
   const isDroneAvailable = context.droneFleet?.drones?.explorer?.visualState !== 'uninitialized';
-  const hasExplorationQueue = (context.explorationQueue?.length || 0) > 0;
+  if (!isDroneAvailable) return events;
   
-  if (isDroneAvailable && !hasExplorationQueue) {
+  // ✅ Check for collectible tiles in memory.knownTiles
+  const knownTiles = context.memory?.knownTiles || [];
+  const collectibleTiles = knownTiles.filter(tile => 
+    tile?.explored === true &&
+    tile?.hasResources && 
+    !tile?.collected && 
+    tile?.resources?.total > 0
+  );
+  const hasCollectibleTiles = collectibleTiles.length > 0;
+  
+  // ✅ Check if exploration cycle limit reached (3 tiles = cycle complete)
+  const tilesExploredInCycle = context.memory?.stats?.tilesExploredInCycle ?? 0;
+  const EXPLORATION_CYCLE_LIMIT = 3;
+  const isCycleComplete = tilesExploredInCycle >= EXPLORATION_CYCLE_LIMIT;
+  
+  // ✅ Decision logic: Collect if we have tiles AND (cycle complete OR enough tiles)
+  if (hasCollectibleTiles && (isCycleComplete || collectibleTiles.length >= 2)) {
     if (verbose) {
       // eslint-disable-next-line no-console
-      console.log('🔧 [TRACKER] NEED_EXPLORING');
+      console.log(`🚢 [TRACKER] NEED_COLLECTING (${collectibleTiles.length} collectible tiles, cycle: ${tilesExploredInCycle}/${EXPLORATION_CYCLE_LIMIT})`);
     }
     events.push({
-      event: { type: 'NEED_EXPLORING' },
+      event: { type: 'NEED_COLLECTING' },
       delay: 100,
-      reason: 'Start exploration cycle'
+      reason: `Start collection (${collectibleTiles.length} tiles available)`
     });
+  } else {
+    // ✅ NEW: Check if all local tiles are explored (need relocation)
+    const allLocalExplored = checkAllLocalTilesExplored(context);
+    
+    if (allLocalExplored && !hasCollectibleTiles) {
+      if (verbose) {
+        // eslint-disable-next-line no-console
+        console.log(`🚢 [TRACKER] NEED_SHIP_RELOCATION (all local tiles explored, no collectibles)`);
+      }
+      events.push({
+        event: { type: 'NEED_SHIP_RELOCATION' },
+        delay: 100,
+        reason: 'Relocate to explore new area'
+      });
+    } else {
+      if (verbose) {
+        // eslint-disable-next-line no-console
+        console.log(`🔧 [TRACKER] NEED_EXPLORING (collectible: ${collectibleTiles.length}, cycle: ${tilesExploredInCycle}/${EXPLORATION_CYCLE_LIMIT})`);
+      }
+      events.push({
+        event: { type: 'NEED_EXPLORING' },
+        delay: 100,
+        reason: 'Continue exploration cycle'
+      });
+    }
   }
   
   return events;
+}
+
+/**
+ * Helper: Check if all tiles within exploration radius are already explored
+ * Uses memory.knownTiles as the primary source of truth for exploration status
+ */
+function checkAllLocalTilesExplored(context: FSMContext): boolean {
+  const tiles = context.gridInfo?.tiles || {};
+  const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
+  const exploringRadius = context.config?.exploringRadius ?? 2;
+  
+  if (!shipCoord || Object.keys(tiles).length === 0) return false;
+  
+  // Parse ship coordinate
+  const [shipCol, shipRow] = shipCoord.split(',').map(Number);
+  if (isNaN(shipCol) || isNaN(shipRow)) return false;
+  
+  // Get explored coords from memory.knownTiles - PRIMARY SOURCE OF TRUTH
+  const exploredCoords = new Set(
+    (context.memory?.knownTiles ?? [])
+      .filter(t => t?.explored)
+      .map(t => t?.position?.coord)
+  );
+  
+  // Check all tiles in radius
+  let tilesInRadius = 0;
+  let exploredInRadius = 0;
+  
+  for (const [coord, tile] of Object.entries(tiles)) {
+    const [col, row] = coord.split(',').map(Number);
+    if (isNaN(col) || isNaN(row)) continue;
+    
+    // Calculate distance (Chebyshev)
+    const distance = Math.max(Math.abs(col - shipCol), Math.abs(row - shipRow));
+    
+    if (distance <= exploringRadius) {
+      // Skip base tile
+      if ((tile as Record<string, unknown>)?.type === 'depart') continue;
+      
+      tilesInRadius++;
+      
+      // ✅ FIX: Use ONLY memory.knownTiles as source of truth
+      // gridInfo.tiles.explored may not be updated in real-time
+      const isExploredInMemory = exploredCoords.has(coord);
+      
+      if (isExploredInMemory) {
+        exploredInRadius++;
+      }
+    }
+  }
+  
+  // All local tiles explored if we have tiles AND all are explored
+  return tilesInRadius > 0 && exploredInRadius >= tilesInRadius;
 }
 
 /**
@@ -481,6 +580,8 @@ export function getScheduledEvents(
         return getInitializingEvents(context, verbose);
       case 'evaluating':
         return getEvaluatingEvents(context, verbose);
+      case 'relocating':
+        return getRelocatingEvents(context, verbose);
       default:
         return [];
     }
@@ -497,4 +598,54 @@ export function getScheduledEvents(
     default:
       return [];
   }
+}
+
+/**
+ * Détermine les événements pour l'état de relocalisation du ship
+ */
+export function getRelocatingEvents(
+  context: FSMContext,
+  verbose: boolean = false
+): ScheduledEvent[] {
+  const { shipPos, targetVehicleTile, spacing } = extractPositionsAndTargets(context);
+  const events: ScheduledEvent[] = [];
+  
+  if (verbose) {
+    // eslint-disable-next-line no-console
+    console.log(`🚢 [TRACKER] Ship relocating to new exploration area`);
+  }
+  
+  if (targetVehicleTile?.position?.coord && shipPos) {
+    const targetPos = coordToWorldPosition(targetVehicleTile.position.coord as GridCoordinate, spacing);
+    if (!targetPos) return events;
+    
+    const distance = calculateDistance(shipPos, targetPos);
+    const travelTime = calculateTravelTime(distance, DURATIONS.SHIP_SPEED);
+    
+    if (verbose) {
+      // eslint-disable-next-line no-console
+      console.log(`   Target: ${targetVehicleTile.position.coord}`);
+      // eslint-disable-next-line no-console
+      console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${travelTime}ms`);
+    }
+    
+    events.push({
+      event: { type: 'SHIP_REACHES_TILE' },
+      delay: travelTime,
+      reason: `Ship relocating to ${targetVehicleTile.position.coord}`
+    });
+  } else {
+    // No target set - go back to evaluating immediately
+    if (verbose) {
+      // eslint-disable-next-line no-console
+      console.log(`   ⚠️ No relocation target, returning to evaluating`);
+    }
+    events.push({
+      event: { type: 'SHIP_REACHES_TILE' },
+      delay: 100,
+      reason: 'No relocation target'
+    });
+  }
+  
+  return events;
 }

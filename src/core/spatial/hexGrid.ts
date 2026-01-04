@@ -328,6 +328,109 @@ export function placeDangerTiles(tileMap: TileMap, seed?: number): TileMap {
 }
 
 // ============================================================================
+// OBSTACLE TILE PLACEMENT
+// ============================================================================
+
+/**
+ * Place les tuiles d'obstacles dans le TileMap (20% des tuiles)
+ * 
+ * @pure
+ * @param tileMap - TileMap initial
+ * @param seed - Seed optionnel pour génération déterministe
+ * @returns Nouveau TileMap avec les tuiles d'obstacles placées
+ * 
+ * @example
+ * const withObstacles = placeObstacleTiles(tiles);
+ */
+export function placeObstacleTiles(tileMap: TileMap, seed?: number): TileMap {
+  const foodTiles = Object.values(tileMap).filter(t => t.type === 'food');
+  const obstacleCount = Math.max(1, Math.floor(foodTiles.length * 0.2));
+  
+  const newTileMap = { ...tileMap };
+  
+  const getRandomIndex = (tiles: Tile[], offset: number) => {
+    if (seed !== undefined) {
+      return Math.floor(((seed + offset) * 9301 + 49297) % 233280 / 233280 * tiles.length);
+    }
+    return Math.floor(Math.random() * tiles.length);
+  };
+  
+  let availableFoodTiles = [...foodTiles];
+  
+  for (let i = 0; i < obstacleCount && availableFoodTiles.length > 0; i++) {
+    const randomIndex = getRandomIndex(availableFoodTiles, i + 100);
+    const tile = availableFoodTiles[randomIndex];
+    newTileMap[tile.position.coord] = {
+      ...tile,
+      type: 'obstacle' as TileType,
+      color: '#000000',
+      walkable: false,
+      hasResources: false,
+      resources: { food: 0, debris: 0, special: 0, total: 0 },
+    };
+    // Retirer la tuile des disponibles
+    availableFoodTiles = availableFoodTiles.filter((_, idx) => idx !== randomIndex);
+  }
+  
+  return newTileMap;
+}
+
+// ============================================================================
+// EMPTY TILE PLACEMENT
+// ============================================================================
+
+/**
+ * Place les tuiles vides dans le TileMap (les tuiles non modifiées restent 'food')
+ * Convertit une proportion de tuiles 'food' en 'empty'
+ * 
+ * @pure
+ * @param tileMap - TileMap initial
+ * @param emptyRatio - Proportion de tuiles à convertir en empty (0.0 à 1.0)
+ * @param seed - Seed optionnel pour génération déterministe
+ * @returns Nouveau TileMap avec les tuiles vides placées
+ * 
+ * @example
+ * const withEmpty = placeEmptyTiles(tiles, 0.15);
+ */
+export function placeEmptyTiles(
+  tileMap: TileMap,
+  emptyRatio: number = 0.15,
+  seed?: number
+): TileMap {
+  const foodTiles = Object.values(tileMap).filter(t => t.type === 'food');
+  const emptyCount = Math.max(0, Math.floor(foodTiles.length * emptyRatio));
+  
+  const newTileMap = { ...tileMap };
+  
+  const getRandomIndex = (tiles: Tile[], offset: number) => {
+    if (seed !== undefined) {
+      return Math.floor(((seed + offset) * 9301 + 49297) % 233280 / 233280 * tiles.length);
+    }
+    return Math.floor(Math.random() * tiles.length);
+  };
+  
+  let availableFoodTiles = [...foodTiles];
+  
+  for (let i = 0; i < emptyCount && availableFoodTiles.length > 0; i++) {
+    const randomIndex = getRandomIndex(availableFoodTiles, i + 300);
+    const tile = availableFoodTiles[randomIndex];
+    newTileMap[tile.position.coord] = {
+      ...tile,
+      type: 'empty' as TileType,
+      color: '#9ca3af',
+      walkable: true,
+      hasResources: false,
+      resources: { food: 0, debris: 0, special: 0, total: 0 },
+    };
+    // Retirer la tuile des disponibles
+    availableFoodTiles = availableFoodTiles.filter((_, idx) => idx !== randomIndex);
+  }
+  
+  
+  return newTileMap;
+}
+
+// ============================================================================
 // STARTING TILE PLACEMENT
 // ============================================================================
 

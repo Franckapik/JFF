@@ -51,6 +51,7 @@ export type MachineEvents =
   | { type: 'NEED_EXPLORING' }
   | { type: 'NEED_COLLECTING' }
   | { type: 'NEED_MAINTENANCE' }
+  | { type: 'NEED_SHIP_RELOCATION' }  // Ship must move to explore new area
   // Phase 2: Grid synchronization event
   | {
       type: 'TILES_UPDATED';

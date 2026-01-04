@@ -126,3 +126,9 @@ App : Scene :
 
 
 Refueling à - de 30% => correction à faire pour le changement d'état : boucle infinie eval - refueling.
+
+L'exploration et la collecte privilegie-t-elle toujours des nouvelles tuiles ? COmment prouver l'inverse ? Comment rendre plus efficace le bot et lui accorder un profil ? 
+Base de depart aléatoire
+Connait-il deja les dangers ? 
+Ajouter un evenement plus aléatoire (nuage) dans le simulateur ? 
+Le refuel doit etre plus precoce dans le jeu

@@ -16,15 +16,37 @@ import type { XStateV5Guard } from '../../../../../types/xstate.v5.types.ts';
 
 /**
  * Guard pour vérifier si une tuile peut être collectée
- * Vérifie: capacité disponible, fuel suffisant, état opérationnel
+ * Vérifie: capacité disponible, fuel suffisant, état opérationnel, cible valide
+ * 
+ * ⚠️ NOTE: Ne peut pas vérifier si vehicle.coord === targetCoord car le guard
+ * est évalué AVANT l'action qui met à jour vehicle.coord (XState v5 behavior)
  */
 export const canCollectTile: XStateV5Guard = ({ context }) => {
   const vehicle = context.vehicle;
-  if (!vehicle) return false;
+  if (!vehicle) {
+    console.log('❌ [canCollectTile] No vehicle');
+    return false;
+  }
+  
+  // ✅ Vérifier que targetVehicleTile existe et a des ressources
+  const targetTile = vehicle.targetVehicleTile;
+  if (!targetTile) {
+    console.log('❌ [canCollectTile] No targetVehicleTile');
+    return false;
+  }
+  
+  if (!targetTile.resources || targetTile.resources.total <= 0) {
+    console.log('❌ [canCollectTile] Target tile has no resources', { 
+      coord: targetTile.position?.coord, 
+      resources: targetTile.resources 
+    });
+    return false;
+  }
   
   // Calculer les ressources actuelles
   const currentResources = vehicle.resources || { food: 0, debris: 0, special: 0 };
-  const totalResources = Object.values(currentResources).reduce((sum, val) => sum + (val || 0), 0);
+  // ⚠️ FIX: Ne pas inclure 'total' dans le calcul (évite de compter double)
+  const totalResources = (currentResources.food || 0) + (currentResources.debris || 0) + (currentResources.special || 0);
   
   // Gérer maxCapacity (peut être nombre ou objet avec total)
   const maxCapacity = typeof vehicle.maxCapacity === 'object' && vehicle.maxCapacity !== null 
@@ -35,7 +57,22 @@ export const canCollectTile: XStateV5Guard = ({ context }) => {
   const hasEnoughFuel = (vehicle.fuel || 0) > 20; // Au moins 20% de carburant
   const isOperational = (vehicle.damage || 0) < 80; // Moins de 80% de dégâts
   
-  return hasCapacity && hasEnoughFuel && isOperational;
+  const canCollect = hasCapacity && hasEnoughFuel && isOperational;
+  
+  console.log(`🔍 [canCollectTile]`, { 
+    hasTargetTile: !!targetTile,
+    targetCoord: targetTile?.position?.coord,
+    hasResources: targetTile?.resources?.total > 0,
+    currentResources,
+    totalResources,
+    maxCapacity,
+    hasCapacity, 
+    hasEnoughFuel, 
+    isOperational,
+    result: canCollect
+  });
+  
+  return canCollect;
 };
 
 /**
@@ -43,6 +80,10 @@ export const canCollectTile: XStateV5Guard = ({ context }) => {
  * Version pure: utilise uniquement context.memory.knownTiles au lieu de TileStore.
  * 
  * Retourne true si au moins une tile connue a des ressources non collectées.
+ * 
+ * ⚠️ CRITICAL FIX: Exclut la tuile actuelle (targetVehicleTile) car après SHIP_LOAD_RESOURCES,
+ * la tuile courante vient d'être vidée mais le contexte n'est pas encore synchronisé.
+ * Le guard est évalué AVANT l'action dans XState v5.
  */
 export const hasMoreCollectibleTiles: XStateV5Guard = ({ context }) => {
   // On utilise les tuiles connues du FSM plutôt que le TileStore
@@ -50,14 +91,31 @@ export const hasMoreCollectibleTiles: XStateV5Guard = ({ context }) => {
   
   if (knownTiles.length === 0) return false;
   
-  // Chercher au moins une tuile avec des ressources non collectées
+  // ✅ FIX: Exclure la tuile où le ship vient de collecter
+  // Cette tuile est soit vide, soit va être vidée par l'action qui suit
+  const currentTileCoord = context.vehicle?.targetVehicleTile?.position?.coord;
+  
+  // Chercher au moins une AUTRE tuile avec des ressources non collectées
   for (const tile of knownTiles) {
+    // Skip la tuile courante (celle qu'on vient de collecter)
+    if (tile?.position?.coord === currentTileCoord) continue;
+    
     if (tile?.resources && tile.resources.total > 0 && !tile.collected) {
       return true;
     }
   }
   
   return false;
+};
+
+/**
+ * Guard inverse: vérifie qu'il n'y a PLUS de tuiles collectibles.
+ * Utilisé pour transiter vers evaluating après la collecte.
+ * 
+ * Retourne true si AUCUNE tile connue n'a des ressources non collectées.
+ */
+export const noMoreCollectibleTiles: XStateV5Guard = ({ context }) => {
+  return !hasMoreCollectibleTiles({ context } as Parameters<XStateV5Guard>[0]);
 };
 
 /**

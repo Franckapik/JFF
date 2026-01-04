@@ -88,7 +88,7 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
     },
     // selectedTileForCollection supprimé
     config: {
-      exploringRadius: 2,
+      exploringRadius: 1,
       collectingRadius: 3,
       fuelThreshold: 20,
       capacityThreshold: 80,
