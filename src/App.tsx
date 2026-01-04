@@ -4,6 +4,7 @@ import { useSimulatedTracker } from './ai/fsm/machineX/hooks/trackers/useSimulat
 import FSMVisualization from './components/FSMVisualization';
 import ScoreDisplay from './components/ScoreDisplay';
 import { config } from './config';
+import { useDangerMovement } from './hooks/useDangerMovement';
 import useGameStore from './stores/useGameStore';
 import { useTileStore } from './stores/useTileStore';
 import useXFSMStore from './stores/useXFSMStore';
@@ -61,6 +62,9 @@ export default function App() {
     verbose: config.enableVerboseTracking,
     enabled: config.testMode 
   });
+
+  // 🔥 Activate dynamic danger movement system
+  useDangerMovement();
 
   return (
     <React.StrictMode>

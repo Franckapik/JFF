@@ -54,6 +54,9 @@ import createTileResourceSlice from './slices/tileResourceSlice.ts';
 import createTileCoordinateSlice from './slices/tileCoordinateSlice.ts';
 import createTileGenerationSlice from './slices/tileGenerationSlice.ts';
 
+// Import du slice des dangers dynamiques
+import { createTileDangerSlice } from './slices/tileDangerSlice.ts';
+
 // =========================================================================
 // STORE PRINCIPAL
 // =========================================================================
@@ -96,4 +99,7 @@ export const useTileStore = create<TileStoreType>((set, get) => ({
   
   // Slice de génération : création des grilles hexagonales
   ...createTileGenerationSlice(set, get),
+  
+  // Slice des dangers : gestion des dangers dynamiques
+  ...createTileDangerSlice(set, get),
 }));

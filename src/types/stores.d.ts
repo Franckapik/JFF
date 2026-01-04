@@ -130,6 +130,23 @@ export interface TileGenerationSliceActions {
   assignStartingTiles: (activeBotIds: string[]) => void;
 }
 
+/** Interface pour le slice des dangers dynamiques */
+export interface TileDangerSliceActions {
+  // État des dangers dynamiques
+  dynamicDangers: Map<string, import('../stores/useTileStore/slices/tileDangerSlice.ts').DynamicDanger>;
+  dangerCount: number;
+  lastDangerSpawn: number;
+
+  // Actions des dangers
+  spawnDynamicDanger: (coord: GridCoordinate, dangerId?: string) => boolean;
+  despawnDynamicDanger: (dangerId: string) => boolean;
+  moveDynamicDanger: (dangerId: string, newCoord: GridCoordinate) => boolean;
+  getDynamicDanger: (dangerId: string) => any | undefined;
+  getCurrentDynamicDangers: () => any[];
+  checkDangerCollision: (coord: GridCoordinate) => any | null;
+  getAllDangerCoords: () => GridCoordinate[];
+}
+
 // ============================================================================
 // GAME STORE SLICE INTERFACES
 // ============================================================================
@@ -197,7 +214,8 @@ export type TileStoreType = TileBaseSliceActions &
                            TileResourceSliceActions & 
                            TileFilterSliceActions & 
                            TileMarkSliceActions & 
-                           TileGenerationSliceActions;
+                           TileGenerationSliceActions &
+                           TileDangerSliceActions;
 // ============================================================================
 // GAME STORE SLICE INTERFACES
 // ============================================================================

@@ -71,6 +71,11 @@ export interface Tile {
   // Assignation aux entités
   assignedToBot?: string;             // ID du bot assigné (pour tuiles de départ)
   
+  // Dangers dynamiques
+  isDynamicDanger?: boolean;          // Est un danger dynamique qui se déplace
+  dangerId?: string;                  // ID du danger dynamique
+  originalColor?: string;             // Couleur originale avant transformation en danger
+  
   // Métadonnées
   isHovered?: boolean;                // Est survolée par la souris ?
   isSelected?: boolean;               // Est sélectionnée ?

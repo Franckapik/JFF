@@ -91,7 +91,7 @@ export const assignShipRelocationContext = createAssignAction(({ context }) => {
     if (isNaN(col) || isNaN(row)) continue;
     
     // Skip base tile
-    if ((tile as Record<string, unknown>)?.type === 'depart') continue;
+    if (tile?.type === 'depart') continue;
     
     // Calculate distance from ship
     const distance = Math.max(Math.abs(col - shipCol), Math.abs(row - shipRow));
@@ -99,8 +99,8 @@ export const assignShipRelocationContext = createAssignAction(({ context }) => {
     // Only consider tiles OUTSIDE current radius
     if (distance > exploringRadius) {
       // Check if not explored
-      const isExploredInStore = (tile as Record<string, unknown>)?.explored === true;
-      const isExploredInMemory = exploredCoords.has(coord);
+      const isExploredInStore = tile?.explored === true;
+      const isExploredInMemory = exploredCoords.has(coord as GridCoordinate);
       
       if (!isExploredInStore && !isExploredInMemory) {
         unexploredOutsideRadius.push({ 
@@ -131,8 +131,8 @@ export const assignShipRelocationContext = createAssignAction(({ context }) => {
   const targetTile = targetTileData ? {
     ...targetTileData,
     position: {
-      ...(targetTileData as Record<string, unknown>).position as Record<string, unknown>,
-      coord: targetCoord
+      coord: targetCoord,
+      x: 0, y: 0, z: 0  // Position simplifiée
     }
   } : null;
   

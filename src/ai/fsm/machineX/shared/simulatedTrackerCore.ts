@@ -539,13 +539,13 @@ function checkAllLocalTilesExplored(context: FSMContext): boolean {
     
     if (distance <= exploringRadius) {
       // Skip base tile
-      if ((tile as Record<string, unknown>)?.type === 'depart') continue;
+      if (tile?.type === 'depart') continue;
       
       tilesInRadius++;
       
       // ✅ FIX: Use ONLY memory.knownTiles as source of truth
       // gridInfo.tiles.explored may not be updated in real-time
-      const isExploredInMemory = exploredCoords.has(coord);
+      const isExploredInMemory = exploredCoords.has(coord as GridCoordinate);
       
       if (isExploredInMemory) {
         exploredInRadius++;
