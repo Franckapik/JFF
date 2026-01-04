@@ -11,8 +11,8 @@ import { assign } from 'xstate';
 
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import type { GridCoordinate } from '../../../../../types/coordinates.d.ts';
-import type { Tile } from '../../../../../types/tile.d.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
+import type { Tile } from '../../../../../types/tile.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
 
 // Helper pour typage assign compatible XState v5
