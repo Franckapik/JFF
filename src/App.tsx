@@ -5,6 +5,7 @@ import FSMVisualization from './components/FSMVisualization';
 import { config } from './config';
 import { useDangerMovement } from './hooks/useDangerMovement';
 import useGameStore from './stores/useGameStore';
+import useBotSelectionStore from './stores/useBotSelectionStore';
 import { useTileStore } from './stores/useTileStore';
 import useXFSMStore from './stores/useXFSMStore';
 
@@ -23,6 +24,11 @@ export default function App() {
   // Initialize on mount (one-time setup, no dependencies needed)
   React.useEffect(() => {
     try {
+      // 🔗 Initialize view mode from URL parameter
+      const botSelectionStore = useBotSelectionStore.getState();
+      botSelectionStore.initializeFromUrl();
+      console.log('🔗 [App] View mode initialized from URL:', botSelectionStore.selectedView);
+
       const gameStore = useGameStore.getState();
       const tileStore = useTileStore.getState();
       const xfsmStore = useXFSMStore.getState();
