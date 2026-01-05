@@ -269,9 +269,9 @@ export const machineXV5Pure = setup({
             },
             // 🆕 Recovery: Si pas de cible valide → DIRECTEMENT à relocating
             // C'est la condition de fin de cycle: aucune tuile explorable dans le rayon
+            // ✅ FIX: Removed assignShipRelocatingContext - déjà dans entry de relocating
             NO_TARGET_FOUND: {
-              target: '#machineXV5Pure.maintaining.relocating',
-              actions: 'assignShipRelocatingContext'
+              target: '#machineXV5Pure.maintaining.relocating'
             }
           }
         },
