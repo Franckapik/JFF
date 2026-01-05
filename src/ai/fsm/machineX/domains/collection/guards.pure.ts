@@ -35,6 +35,15 @@ export const canCollectTile: XStateV5Guard = ({ context }) => {
     return false;
   }
   
+  // ✅ Check collectable property (static game rule)
+  if (!targetTile.collectable) {
+    console.log('❌ [canCollectTile] Tile is not collectable', { 
+      coord: targetTile.position?.coord,
+      type: targetTile.type
+    });
+    return false;
+  }
+  
   if (!targetTile.resources || targetTile.resources.total <= 0) {
     console.log('❌ [canCollectTile] Target tile has no resources', { 
       coord: targetTile.position?.coord, 
@@ -99,6 +108,9 @@ export const hasMoreCollectibleTiles: XStateV5Guard = ({ context }) => {
   for (const tile of knownTiles) {
     // Skip la tuile courante (celle qu'on vient de collecter)
     if (tile?.position?.coord === currentTileCoord) continue;
+    
+    // ✅ Check collectable property (static game rule)
+    if (!tile?.collectable) continue;
     
     if (tile?.resources && tile.resources.total > 0 && !tile.collected) {
       return true;
@@ -184,4 +196,27 @@ export const canContinueCollecting: XStateV5Guard = ({ context }) => {
   const isOperational = (vehicle.damage || 0) < 70;
   
   return hasCapacity && hasEnoughFuel && isOperational;
+};
+
+/**
+ * Guard pour vérifier si le ship atteint une tuile danger
+ * Retourne true si targetVehicleTile est de type 'danger'
+ * Utilisé pour appliquer +10% damage sur collision avec danger
+ */
+export const shouldApplyDangerDamage: XStateV5Guard = ({ context }) => {
+  const targetTile = context.vehicle?.targetVehicleTile;
+  if (!targetTile) return false;
+  
+  // Check if tile is danger (static or dynamic)
+  const isDanger = targetTile.type === 'danger' || targetTile.isDynamicDanger === true;
+  
+  if (isDanger) {
+    console.log('⚠️ [shouldApplyDangerDamage] Ship reaching danger tile:', {
+      coord: targetTile.position?.coord,
+      type: targetTile.type,
+      isDynamicDanger: targetTile.isDynamicDanger
+    });
+  }
+  
+  return isDanger;
 };

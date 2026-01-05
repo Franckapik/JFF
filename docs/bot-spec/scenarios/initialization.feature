@@ -41,13 +41,30 @@ Fonctionnalité: Initialisation du Bot
       | isMoving       | false                 |
       | targetDroneTile| null                  |
 
-  Scénario: Initialisation de la grille
+  Scénario: Initialisation de la grille avec propriétés explorable/collectable
     Étant donné que le FSM est en état "initializing"
     Quand l'événement TILES_UPDATED est reçu avec 100 tuiles
     Alors context.gridInfo.tiles contient les 100 tuiles
+    Et chaque tuile a les propriétés obligatoires:
+      | propriété   | type   | valeur possible        |
+      | explorable  | bool   | true ou false          |
+      | collectable | bool   | true ou false          |
     Et context.gridInfo.spacing est défini
     Et context.gridInfo.radius est défini
     Et la grille est prête pour l'exploration
+    
+  Scénario: Initialisation des types de tuiles avec bonnes capacités
+    Étant donné que le FSM crée une grille avec 7 types de tuiles
+    Quand les tuiles sont initialisées
+    Alors les tuiles ont les propriétés correctes:
+      | type     | explorable | collectable | description                      |
+      | resource | true       | true        | Peut être explorée et collectée  |
+      | danger   | true       | false       | Peut être explorée mais pas collectée |
+      | empty    | true       | false       | Peut être explorée mais vide    |
+      | fuel     | false      | false       | Station, pas explorée ni collectée |
+      | repair   | false      | false       | Station, pas explorée ni collectée |
+      | obstacle | false      | false       | Non traversable                 |
+      | depart   | false      | false       | Base, non explorée              |
 
   Scénario: Transition complète d'initialisation vers évaluation
     Étant donné que le FSM est en état "initializing"

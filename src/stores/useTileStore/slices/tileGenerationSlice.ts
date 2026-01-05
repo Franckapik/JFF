@@ -157,6 +157,8 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
           type: 'resource' as TileType,
           biome: 'grassland' as TileBiome,
           walkable: true,
+          explorable: true,    // resource tiles peuvent être explorées
+          collectable: true,   // resource tiles peuvent être collectées
           explored: false,
           collected: false,
           neighbors,
@@ -213,6 +215,8 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
           ...tile,
           type: 'fuel' as TileType,
           color: "orange",
+          explorable: false,   // fuel tiles ne sont PAS explorables
+          collectable: false,  // fuel tiles ne sont PAS collectables
           hasResources: false,
           resources: { food: 0, debris: 0, special: 0, total: 0 }
         };
@@ -229,6 +233,8 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
           ...tile,
           type: 'repair' as TileType,
           color: "green",
+          explorable: false,   // repair tiles ne sont PAS explorables
+          collectable: false,  // repair tiles ne sont PAS collectables
           hasResources: false,
           resources: { food: 0, debris: 0, special: 0, total: 0 }
         };
@@ -261,6 +267,8 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
           type: 'danger' as TileType,
           color: "red",
           walkable: false,
+          explorable: true,    // danger tiles SONT explorables (le bot ne connaît pas le danger)
+          collectable: false,  // danger tiles ne sont PAS collectables
           hasResources: false,
           resources: { food: 0, debris: 0, special: 0, total: 0 }
         };
@@ -295,6 +303,8 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
         type: 'empty' as TileType,
         color: '#9ca3af',
         walkable: true,
+        explorable: true,    // empty tiles peuvent être explorées
+        collectable: false,  // empty tiles ne sont PAS collectables (pas de ressources)
         hasResources: false,
         resources: { food: 0, debris: 0, special: 0, total: 0 }
       };
@@ -329,6 +339,8 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
         type: 'obstacle' as TileType,
         color: '#000000',
         walkable: false,
+        explorable: false,   // obstacle tiles ne sont PAS explorables
+        collectable: false,  // obstacle tiles ne sont PAS collectables
         hasResources: false,
         resources: { food: 0, debris: 0, special: 0, total: 0 }
       };
@@ -381,6 +393,8 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
       const updatedTile = {
         ...tile,
         type: 'depart' as TileType,
+        explorable: false,   // depart tiles ne sont PAS explorables
+        collectable: false,  // depart tiles ne sont PAS collectables
         resources: { 
           food: startRes.food,
           debris: startRes.debris,

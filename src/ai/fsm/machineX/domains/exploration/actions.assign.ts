@@ -63,13 +63,13 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
     const coord = tile.position?.coord;
     if (!coord) return false;
     
+    // ✅ Check explorable property (static game rule)
+    if (!tile.explorable) return false;
+    
     // Exclure si marqué explored dans TileStore OU dans memory.knownTiles
     const freshTile = freshTiles[coord];
     if (freshTile?.explored) return false;
     if (exploredCoords.has(coord)) return false;
-    
-    // Exclure la tuile de départ
-    if (tile.type === 'depart') return false;
     
     return true;
   });
@@ -268,6 +268,8 @@ export const assignDroneReturningContext = createAssignAction(({ context, event 
     coord: baseCoord,
     type: 'depart',
     biome: 'station',
+    explorable: false,
+    collectable: false,
     resources: { food: 0, debris: 0, special: 0, total: 0 },
     hasResources: false
   };

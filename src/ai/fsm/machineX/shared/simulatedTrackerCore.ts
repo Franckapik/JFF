@@ -494,6 +494,7 @@ export function getEvaluatingEvents(
   // ✅ Check for collectible tiles in memory.knownTiles
   const knownTiles = context.memory?.knownTiles || [];
   const collectibleTiles = knownTiles.filter(tile => 
+    tile?.collectable &&  // ✅ Check collectable property
     tile?.explored === true &&
     tile?.hasResources && 
     !tile?.collected && 
@@ -581,8 +582,8 @@ function checkAllLocalTilesExplored(context: FSMContext): boolean {
     const distance = Math.max(Math.abs(col - shipCol), Math.abs(row - shipRow));
     
     if (distance <= exploringRadius) {
-      // Skip base tile
-      if ((tile as Tile)?.type === 'depart') continue;
+      // ✅ Skip non-explorable tiles (depart, fuel, repair, obstacle)
+      if (!(tile as Tile)?.explorable) continue;
       
       tilesInRadius++;
       
