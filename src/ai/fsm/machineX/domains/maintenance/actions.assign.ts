@@ -13,6 +13,8 @@
 import { assign } from 'xstate';
 
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
+import useGameStore from '../../../../../stores/useGameStore/index.ts';
+import { MAX_EXPLORATION_RADIUS } from '../../../../../stores/useGameStore/slices/radiusSlice.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { VehicleVisualState } from '../../../../../types/vehicle.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
@@ -126,6 +128,81 @@ export const assignShipRefuelContext = createAssignAction(({ context }) => {
     },
     lastAction: 'vehicleRefueled_success',
     fsmState: 'maintaining_refueling',
+  };
+});
+
+/**
+ * 🆕 PHASE 2: Action assign pour l'état relocating avec pénalités
+ * 
+ * Gameplay:
+ * - Si radius < 3: Incrémente le radius, applique les pénalités, renvoie RADIUS_INCREASED
+ * - Si radius >= 3: Renvoie GAME_OVER
+ * 
+ * Pénalités:
+ * - Score resources: divisé par 2
+ * - Vehicle damage: +30%
+ */
+export const assignShipRelocatingContext = createAssignAction(({ context }) => {
+  const gameStore = useGameStore.getState();
+  const currentRadius = gameStore.getExplorationRadius();
+  
+  fsmLogger.action(`🔄 [${context.entityId}] ========================================`);
+  fsmLogger.action(`🔄 [${context.entityId}] RELOCATING - Checking radius expansion`);
+  fsmLogger.action(`🔄 [${context.entityId}] Current radius: ${currentRadius}, Max: ${MAX_EXPLORATION_RADIUS}`);
+  
+  // Check if we're at max radius → GAME OVER
+  if (currentRadius >= MAX_EXPLORATION_RADIUS) {
+    fsmLogger.action(`🏁 [${context.entityId}] MAX RADIUS REACHED - GAME OVER incoming`);
+    fsmLogger.action(`🏁 [${context.entityId}] Final Score: ${context.score?.resources?.total || 0}`);
+    fsmLogger.action(`🏁 [${context.entityId}] ========================================`);
+    
+    // Mark for GAME_OVER event (will be raised by separate action)
+    return {
+      lastAction: 'game_over_pending',
+      fsmState: 'maintaining_relocating'
+    };
+  }
+  
+  // Increment radius via GameStore
+  const newRadius = gameStore.incrementRadius(context.entityId);
+  
+  // Apply penalties: score / 2
+  const currentScore = context.score?.resources || { food: 0, debris: 0, special: 0, total: 0 };
+  const penalizedScore = {
+    food: Math.floor((currentScore.food || 0) / 2),
+    debris: Math.floor((currentScore.debris || 0) / 2),
+    special: Math.floor((currentScore.special || 0) / 2),
+    total: 0
+  };
+  penalizedScore.total = penalizedScore.food + penalizedScore.debris + penalizedScore.special;
+  
+  // Apply penalties: damage + 30%
+  const currentDamage = context.vehicle?.damage || 0;
+  const newDamage = Math.min(100, currentDamage + 30);
+  
+  fsmLogger.action(`💥 [${context.entityId}] PENALTIES APPLIED:`);
+  fsmLogger.action(`   - Score: ${currentScore.total} → ${penalizedScore.total} (÷2)`);
+  fsmLogger.action(`   - Damage: ${currentDamage}% → ${newDamage}% (+30%)`);
+  fsmLogger.action(`   - Radius: ${currentRadius} → ${newRadius}`);
+  fsmLogger.action(`🔄 [${context.entityId}] ========================================`);
+  
+  return {
+    vehicle: {
+      ...context.vehicle,
+      damage: newDamage,
+      visualState: 'relocating' as VehicleVisualState
+    },
+    score: {
+      ...context.score,
+      resources: penalizedScore
+    },
+    // Update config with new radius (sync with GameStore)
+    config: {
+      ...context.config,
+      exploringRadius: newRadius
+    },
+    lastAction: 'radius_increased_pending',
+    fsmState: 'maintaining_relocating'
   };
 });
 

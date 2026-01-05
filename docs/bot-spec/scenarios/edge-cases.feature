@@ -121,6 +121,40 @@ Fonctionnalité: Cas Limites et Boucles Détectées
     Et le cycle peut continuer
 
   # ============================================================================
+  # SCÉNARIO PROBLÉMATIQUE #5b: Blocage dans drone_deploying sans target
+  # ============================================================================
+  # OBSERVÉ: Le FSM reste bloqué dans drone_deploying avec targetDroneTile = unknown
+  # après que assignDroneDeployingContext ne trouve aucune tuile à explorer
+  # RÉSOLU: Ajout de l'event NO_TARGET_FOUND pour détecter et résoudre cette situation
+
+  Scénario: Blocage drone_deploying sans cible (BUG RÉSOLU)
+    Étant donné que le FSM est en état "exploring.drone_deploying"
+    Et que assignDroneDeployingContext a retourné targetTile = "unknown"
+    Et que le guard hasUnexploredTilesInRadius retourne false
+    Et que toutes les tuiles dans exploringRadius sont explorées
+    Quand le tracker détecte l'absence de targetDroneTile valide
+    Alors le tracker envoie l'événement NO_TARGET_FOUND après 100ms
+    Et le log "⚠️  No valid target tile → sending NO_TARGET_FOUND" est émis
+
+  Scénario: Recovery avec NO_TARGET_FOUND vers relocating (FIX IMPLÉMENTÉ)
+    Étant donné que le FSM est en état "exploring.drone_deploying"
+    Et que targetDroneTile = null
+    Quand l'événement NO_TARGET_FOUND est reçu
+    Alors le FSM transite DIRECTEMENT vers "maintaining.relocating"
+    Et l'action assignShipRelocatingContext est appelée
+    Et le log "CYCLE COMPLET - ÉTAT FINAL: RELOCATING" est émis
+    Et le bot reste dans cet état final (pas de transition automatique)
+
+  Scénario: Race condition guard vs action résolu par NO_TARGET_FOUND
+    Étant donné que le guard hasUnexploredTilesInRadius trouve 1 tuile non explorée
+    Et que le FSM transite vers "exploring.drone_deploying"
+    Mais que assignDroneDeployingContext trouve 0 tuiles (désync timing)
+    Quand le tracker planifie les événements
+    Alors aucun événement DRONE_REACHES_TILE n'est planifié
+    Mais l'événement NO_TARGET_FOUND est planifié après 100ms
+    Et le bot se rétablit automatiquement vers relocating
+
+  # ============================================================================
   # SCÉNARIO PROBLÉMATIQUE #6: Tuiles vides générées (hasResources = false)
   # ============================================================================
   # OBSERVÉ: Certaines tuiles sont générées avec resources.total = 0

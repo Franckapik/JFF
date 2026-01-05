@@ -142,14 +142,27 @@ Fonctionnalité: Exploration Autonome
     Alors seules les tuiles à distance <= 2 de "3,3" sont candidates
     Et les tuiles à distance > 2 sont EXCLUES
 
-  Scénario: Aucune tuile disponible pour exploration
+  Scénario: Aucune tuile disponible pour exploration → relocating
     Étant donné que toutes les tuiles dans le rayon sont explorées
     Et que vehicle.coord = "3,3"
-    Et que config.exploringRadius = 2
+    Et que config.exploringRadius = 1
     Quand assignDroneDeployingContext est appelé
-    Alors targetDroneTile = null
-    Et le FSM transite vers "evaluating"
+    Alors targetDroneTile = "unknown"
     Et le log "No unexplored tiles in radius" est émis
+    Quand le tracker détecte l'absence de cible
+    Alors l'événement NO_TARGET_FOUND est envoyé
+    Et le FSM transite vers "maintaining.relocating"
+    Et le bot atteint son état final de cycle
+
+  Scénario: État final relocating - Fin de cycle validée
+    Étant donné que le FSM est en état "maintaining.relocating"
+    Et que relocating est configuré avec type = 'final'
+    Et que toutes les tuiles locales sont explorées/collectées
+    Alors le log "CYCLE COMPLET - ÉTAT FINAL: RELOCATING" est émis
+    Et le FSM reste dans cet état indéfiniment
+    Et aucune transition automatique n'est déclenchée
+    Et le compteur d'événements schedulés = 0
+    Et seuls les événements externes (dangers, etc.) continuent
 
   # ============================================================================
   # 🆕 SCÉNARIO: Tuile explorée mais sans ressources

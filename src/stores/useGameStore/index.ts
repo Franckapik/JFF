@@ -10,6 +10,7 @@ import type { GameStoreType } from '../../types/stores.d';
 import createClockSlice from './slices/clockSlice.ts';
 import createInitializationFlagsSlice from './slices/initializationFlagsSlice.ts';
 import createPlayerCountSlice from './slices/playerCountSlice.ts';
+import createRadiusSlice from './slices/radiusSlice.ts';
 import createUiConfigSlice from './slices/uiConfigSlice.ts';
 
 /**
@@ -23,6 +24,7 @@ const useGameStore = create<GameStoreType>((set, get) => {
     ...createPlayerCountSlice(set, get),
     ...createUiConfigSlice(set, get),
     ...createInitializationFlagsSlice(set, get),
+    ...createRadiusSlice(set, get),
   } as GameStoreType;
 });
 

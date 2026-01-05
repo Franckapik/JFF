@@ -192,3 +192,66 @@ Fonctionnalité: Maintenance
     Et le repair se termine si nécessaire (damage → 0)
     Et le FSM transite vers "evaluating"
     Et le bot est prêt pour un nouveau cycle
+
+  # ============================================================================
+  # 🆕 SCÉNARIOS: RELOCATING - État final de cycle
+  # ============================================================================
+
+  Scénario: Transition vers relocating depuis evaluating
+    Étant donné que le FSM est en état "evaluating"
+    Et que allLocalTilesExplored = true (toutes tuiles dans radius explorées)
+    Et que hasCollectibleTiles = false (aucune tuile avec ressources)
+    Et que vehicle.fuel >= fuelThreshold
+    Quand le guard shouldRelocateShip est évalué
+    Alors le guard retourne true
+    Quand l'événement NEED_RELOCATING est reçu
+    Alors le FSM transite vers "maintaining.relocating"
+    Et l'action assignShipRelocatingContext est appelée
+
+  Scénario: Logs de fin de cycle dans relocating
+    Étant donné que le FSM transite vers "maintaining.relocating"
+    Quand assignShipRelocatingContext est exécuté
+    Alors les logs suivants sont émis:
+      | Log                                                   |
+      | 🏁 [bot-X] ======================================== |
+      | 🏁 [bot-X] CYCLE COMPLET - ÉTAT FINAL: RELOCATING    |
+      | 🏁 [bot-X] Toutes les tuiles locales ont été explorées/collectées |
+      | 🏁 [bot-X] Fuel: XX, Score: XXXX                      |
+      | 🏁 [bot-X] ======================================== |
+    Et context.lastAction = 'shipRelocation_requested'
+    Et context.fsmState = 'maintaining_relocating'
+
+  Scénario: Relocating comme état final (type: 'final')
+    Étant donné que le FSM est en état "maintaining.relocating"
+    Et que relocating est configuré dans la machine avec type = 'final'
+    Alors aucune transition automatique n'existe depuis relocating
+    Et le tracker ne schedule aucun événement (0 events)
+    Et le FSM reste dans cet état jusqu'à intervention externe
+    Et le bot a complété son cycle d'exploration/collection
+
+  Scénario: PHASE 1 Validation - Pas de mouvement physique
+    Étant donné que relocating est en PHASE 1 (validation)
+    Et que le FSM est en état "maintaining.relocating"
+    Alors aucune action de déplacement n'est exécutée
+    Et targetCoord reste "unknown"
+    Et le commentaire "🚧 PHASE 1: Pas de transition" est présent
+    Et la décision gameplay (relocation vs radius++) est reportée
+
+  Scénario: Protection contre boucle infinie relocating
+    Étant donné que context.lastAction = 'shipRelocation_requested'
+    Et que le FSM est en état "evaluating"
+    Quand onEvaluatingEntry évalue shouldRelocate
+    Alors la condition justRelocated = true est détectée
+    Et NEED_RELOCATING n'est PAS envoyé immédiatement
+    Et le bot explore d'autres options (EXPLORING, COLLECTING)
+    # Note: En PHASE 1 avec type='final', cette protection n'est plus nécessaire
+
+  Scénario: Multi-bot convergence vers relocating
+    Étant donné que bot-0 et bot-1 explorent indépendamment
+    Et que chaque bot épuise ses tuiles locales
+    Quand bot-0 atteint l'état "maintaining.relocating"
+    Alors bot-0 reste dans cet état final
+    Et bot-0 affiche son score et fuel final
+    Quand bot-1 atteint l'état "maintaining.relocating"
+    Alors bot-1 reste aussi dans cet état final
+    Et les deux bots sont en état stable sans boucle
