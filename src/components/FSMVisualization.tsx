@@ -1,10 +1,12 @@
 import React from 'react';
 
 import { gridToWorld } from '../core/spatial';
+import useBotSelectionStore from '../stores/useBotSelectionStore';
 import { useTileStore } from '../stores/useTileStore';
 import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates';
 import type { FSMContext } from '../types/fsm.d';
+import BotSelector from './BotSelector';
 import PositionDisplay from './PositionDisplay';
 import TileMatrixLayout from './TileMatrixLayout';
 
@@ -26,6 +28,72 @@ function isValidSnapshot(snapshot: unknown): snapshot is {
 }
 
 /**
+ * Composant compact affichant le cycle FSM pour un seul bot
+ */
+function SingleBotCycleFlow({ botId, compact = false }: { botId: 'bot-0' | 'bot-1'; compact?: boolean }) {
+  const botStates = useXFSMStore((state) => state.botStates);
+  const botSnapshot = botStates[botId];
+  
+  const value = botSnapshot && isValidSnapshot(botSnapshot) ? botSnapshot.value : 'unknown';
+  const currentState = typeof value === 'string' ? value : JSON.stringify(value);
+  
+  const borderColor = botId === 'bot-0' ? '#22c55e' : '#3b82f6';
+  
+  const getStateInfo = (state: string) => {
+    if (state.includes('initializing')) return { label: 'INIT', color: '#ff9800', emoji: '🚀' };
+    if (state.includes('drone_deploying')) return { label: 'DEPLOY', color: '#4caf50', emoji: '🚁' };
+    if (state.includes('drone_scanning')) return { label: 'SCAN', color: '#4caf50', emoji: '📡' };
+    if (state.includes('drone_returning')) return { label: 'RETURN', color: '#4caf50', emoji: '🔙' };
+    if (state.includes('drone_docked')) return { label: 'DOCKED', color: '#4caf50', emoji: '⚓' };
+    if (state.includes('drone_destroyed')) return { label: 'DESTROYED', color: '#f44336', emoji: '💥' };
+    if (state.includes('exploring')) return { label: 'EXPLORE', color: '#4caf50', emoji: '🔍' };
+    if (state.includes('evaluating')) return { label: 'EVAL', color: '#2196f3', emoji: '🤔' };
+    if (state.includes('ship_moving')) return { label: 'MOVING', color: '#f44336', emoji: '🚢' };
+    if (state.includes('ship_collecting')) return { label: 'COLLECT', color: '#f44336', emoji: '📦' };
+    if (state.includes('ship_returning')) return { label: 'RETURN', color: '#f44336', emoji: '🔙' };
+    if (state.includes('collecting')) return { label: 'COLLECT', color: '#f44336', emoji: '📦' };
+    if (state.includes('refueling')) return { label: 'REFUEL', color: '#9c27b0', emoji: '⛽' };
+    if (state.includes('repairing')) return { label: 'REPAIR', color: '#9c27b0', emoji: '🔧' };
+    if (state.includes('depositing')) return { label: 'DEPOSIT', color: '#9c27b0', emoji: '📤' };
+    if (state.includes('maintaining')) return { label: 'MAINTAIN', color: '#9c27b0', emoji: '🛠️' };
+    return { label: 'UNKNOWN', color: '#757575', emoji: '❓' };
+  };
+  
+  const stateInfo = getStateInfo(currentState);
+  
+  return (
+    <div style={{
+      padding: compact ? '8px' : '12px',
+      backgroundColor: '#fafafa',
+      borderRadius: '6px',
+      borderLeft: `3px solid ${borderColor}`,
+      flex: 1,
+    }}>
+      <h4 style={{ margin: '0 0 6px 0', fontSize: compact ? '11px' : '12px', color: borderColor }}>
+        {botId === 'bot-0' ? '🤖 Bot-0' : '🤖 Bot-1'}
+      </h4>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '6px 10px',
+        backgroundColor: stateInfo.color,
+        color: 'white',
+        borderRadius: '4px',
+        fontSize: compact ? '11px' : '13px',
+        fontWeight: 'bold',
+      }}>
+        <span>{stateInfo.emoji}</span>
+        <span>{stateInfo.label}</span>
+      </div>
+      <div style={{ marginTop: '4px', fontSize: '9px', color: '#666', wordBreak: 'break-all' }}>
+        {currentState.length > 30 ? currentState.substring(0, 30) + '...' : currentState}
+      </div>
+    </div>
+  );
+}
+
+/**
  * FSM Visualization - Affichage ultra-basique du cycle XState
  * 
  * Connecté à Zustand (useXFSMStore) qui écoute les snapshots XState
@@ -34,6 +102,7 @@ function isValidSnapshot(snapshot: unknown): snapshot is {
 export default function FSMVisualization() {
   const botStates = useXFSMStore((state) => state.botStates);
   const activeBots = useXFSMStore((state) => state.activeBots);
+  const selectedView = useBotSelectionStore((state) => state.selectedView);
 
   // Helper pour convertir GridCoordinate en WorldPosition pour l'affichage
   const coordToWorldPos = React.useCallback((coord: GridCoordinate | null | undefined, spacing = 1.2) => {
@@ -92,83 +161,101 @@ export default function FSMVisualization() {
 
   // Debug: log essential state info on change
   React.useEffect(() => {
-    const snapshot = botStates['bot-0'];
-    if (snapshot && isValidSnapshot(snapshot)) {
-      const state = typeof snapshot.value === 'string' ? snapshot.value : JSON.stringify(snapshot.value);
-      console.log(`🔄 [FSM] State: ${state} | Status: ${snapshot.status}`);
-    }
-  }, [botStates]);
-
-  // Écouter les changements d'état du bot principal
-  React.useEffect(() => {
-    const botSnapshot = botStates['bot-0'];
-    if (!botSnapshot || !isValidSnapshot(botSnapshot)) return;
-
-    const value = botSnapshot.value;
-
-    const currentState = typeof value === 'string' ? value : JSON.stringify(value);
-
-    // Ajouter au log des événements
-    setEventLog((prev) => {
-      const newLog = [
-        {
-          time: new Date().toLocaleTimeString(),
-          event: 'STATE_CHANGE',
-          state: currentState,
-        },
-        ...prev.slice(0, 19),
-      ];
-      return newLog;
-    });
-
-    // Incrémenter le compteur de visite pour le state principal et les substates
-    setStateVisitCounts((prev) => {
-      const allStates = [
-        'initializing', 'evaluating', 'exploring', 'drone_deploying', 'drone_scanning', 'drone_returning', 'drone_docked', 'drone_destroyed',
-        'collecting', 'ship_moving_to_tile', 'ship_collecting', 'ship_returning',
-        'maintaining', 'refueling', 'repairing', 'depositing'
-      ];
-      const updated = { ...prev };
-      for (const state of allStates) {
-        if (currentState.includes(state)) {
-          updated[state] = prev[state] + 1;
-        }
+    // Log pour tous les bots actifs selon selectedView
+    const botsToLog = selectedView === 'both' ? ['bot-0', 'bot-1'] : [selectedView];
+    botsToLog.forEach(botId => {
+      const snapshot = botStates[botId];
+      if (snapshot && isValidSnapshot(snapshot)) {
+        const state = typeof snapshot.value === 'string' ? snapshot.value : JSON.stringify(snapshot.value);
+        console.log(`🔄 [FSM:${botId}] State: ${state} | Status: ${snapshot.status}`);
       }
-      return updated;
     });
+  }, [botStates, selectedView]);
 
-    // Mettre à jour les stats depuis le contexte FSM
-    const ctx = botSnapshot.context;
-    if (ctx) {
-      // Note: cycleStats est maintenant calculé depuis le TileStore, pas besoin de setCycleStats
+  // Écouter les changements d'état des bots sélectionnés
+  React.useEffect(() => {
+    const botsToTrack = selectedView === 'both' ? ['bot-0', 'bot-1'] : [selectedView];
+    
+    botsToTrack.forEach(botId => {
+      const botSnapshot = botStates[botId];
+      if (!botSnapshot || !isValidSnapshot(botSnapshot)) return;
+
+      const value = botSnapshot.value;
+      const currentState = typeof value === 'string' ? value : JSON.stringify(value);
+
+      // Ajouter au log des événements
+      setEventLog((prev) => {
+        const newLog = [
+          {
+            time: new Date().toLocaleTimeString(),
+            event: `[${botId}] STATE_CHANGE`,
+            state: currentState,
+          },
+          ...prev.slice(0, 19),
+        ];
+        return newLog;
+      });
+
+      // Incrémenter le compteur de visite pour le state principal et les substates
+      setStateVisitCounts((prev) => {
+        const allStates = [
+          'initializing', 'evaluating', 'exploring', 'drone_deploying', 'drone_scanning', 'drone_returning', 'drone_docked', 'drone_destroyed',
+          'collecting', 'ship_moving_to_tile', 'ship_collecting', 'ship_returning',
+          'maintaining', 'refueling', 'repairing', 'depositing'
+        ];
+        const updated = { ...prev };
+        for (const state of allStates) {
+          if (currentState.includes(state)) {
+            updated[state] = prev[state] + 1;
+          }
+        }
+        return updated;
+      });
+
       // Détecter si un drone a été détruit
-      if (currentState.includes('drone_destroyed')) {
+      const ctx = botSnapshot.context;
+      if (ctx && currentState.includes('drone_destroyed')) {
         const explorerDestroyed = ctx.droneFleet?.drones?.explorer?.isDestroyed;
         if (explorerDestroyed) {
           setLastDroneDestroyed({
-            type: 'explorer',
+            type: `explorer (${botId})`,
             time: new Date().toLocaleTimeString()
           });
         }
       }
-    }
-  }, [botStates]);
+    });
+  }, [botStates, selectedView]);
 
-  const botSnapshot = botStates['bot-0'];
-  if (!botSnapshot || !isValidSnapshot(botSnapshot)) {
+  // Déterminer quel(s) bot(s) afficher
+  const botsToDisplay = selectedView === 'both' ? ['bot-0', 'bot-1'] as const : [selectedView] as const;
+  
+  // Vérifier si au moins un bot est actif
+  const hasActiveBot = botsToDisplay.some(botId => {
+    const snapshot = botStates[botId];
+    return snapshot && isValidSnapshot(snapshot);
+  });
+
+  if (!hasActiveBot) {
     return (
       <div style={styles.container}>
-        <h2>🔴 FSM Not Running</h2>
-        <p>Waiting for bot-0 to start...</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2>🔴 FSM Not Running</h2>
+          <BotSelector />
+        </div>
+        <p>Waiting for bots to start...</p>
       </div>
     );
   }
 
-  const value = botSnapshot.value;
-  const context = botSnapshot.context;
+  // Pour le mode "both", on affiche les deux bots côte à côte
+  // Pour le mode single, on affiche le bot sélectionné
+  const primaryBotId = selectedView === 'both' ? 'bot-0' : selectedView;
+  const botSnapshot = botStates[primaryBotId];
+  
+  const value = botSnapshot && isValidSnapshot(botSnapshot) ? botSnapshot.value : 'unknown';
+  const context = botSnapshot && isValidSnapshot(botSnapshot) ? botSnapshot.context : null;
 
   const currentState = typeof value === 'string' ? value : JSON.stringify(value);
-
   const ctx = context;
 
   const getStateColor = (state: string) => {
@@ -182,8 +269,11 @@ export default function FSMVisualization() {
 
   return (
     <div style={styles.container}>
-      <h1>🤖 FSM Cycle Visualization</h1>
-      <p style={{ color: '#999', fontSize: '12px' }}>Connected to XState via Zustand • Real-time updates from bot-0</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <h1 style={{ margin: 0 }}>🤖 FSM Cycle Visualization</h1>
+        <BotSelector />
+      </div>
+      <p style={{ color: '#999', fontSize: '12px', marginTop: '5px' }}>Connected to XState via Zustand • Mode: {selectedView}</p>
 
       {/* DRONE DESTRUCTION ALERT */}
       {lastDroneDestroyed && (
@@ -200,10 +290,37 @@ export default function FSMVisualization() {
 
       {/* CURRENT STATE */}
       <section style={styles.section}>
-        <h2 style={{ color: getStateColor(currentState) }}>
-          📊 Current State: <code style={{ color: getStateColor(currentState) }}>{currentState}</code>
-        </h2>
-        <p>Status: {botSnapshot.status}</p>
+        <h3>📊 Current State</h3>
+        {selectedView === 'both' ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            {(['bot-0', 'bot-1'] as const).map(botId => {
+              const snap = botStates[botId];
+              if (!snap || !isValidSnapshot(snap)) return (
+                <div key={botId} style={{ padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '6px', borderLeft: `3px solid ${botId === 'bot-0' ? '#22c55e' : '#3b82f6'}` }}>
+                  <h4 style={{ margin: '0 0 5px 0', color: botId === 'bot-0' ? '#22c55e' : '#3b82f6' }}>{botId}</h4>
+                  <p style={{ margin: 0, color: '#999' }}>Not running</p>
+                </div>
+              );
+              const st = typeof snap.value === 'string' ? snap.value : JSON.stringify(snap.value);
+              return (
+                <div key={botId} style={{ padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '6px', borderLeft: `3px solid ${botId === 'bot-0' ? '#22c55e' : '#3b82f6'}` }}>
+                  <h4 style={{ margin: '0 0 5px 0', color: botId === 'bot-0' ? '#22c55e' : '#3b82f6' }}>{botId}</h4>
+                  <code style={{ color: getStateColor(st), fontSize: '11px' }}>{st}</code>
+                  <p style={{ margin: '5px 0 0 0', fontSize: '10px', color: '#666' }}>Status: {snap.status}</p>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <>
+            <h2 style={{ color: getStateColor(currentState) }}>
+              <code style={{ color: getStateColor(currentState) }}>{currentState}</code>
+            </h2>
+            {botSnapshot && isValidSnapshot(botSnapshot) && (
+              <p>Status: {botSnapshot.status}</p>
+            )}
+          </>
+        )}
       </section>
 
       {/* DRONE STATUS */}
@@ -351,10 +468,20 @@ export default function FSMVisualization() {
         )}
       </section>
 
-      {/* STATE MACHINE CYCLE */}
+      {/* STATE MACHINE CYCLE - Dual Bot View */}
       <section style={styles.section}>
         <h3>🔄 FSM Cycle Flow</h3>
-        <div style={styles.cycleFlow}>
+        {selectedView === 'both' ? (
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <SingleBotCycleFlow botId="bot-0" compact />
+            <SingleBotCycleFlow botId="bot-1" compact />
+          </div>
+        ) : (
+          <SingleBotCycleFlow botId={selectedView as 'bot-0' | 'bot-1'} />
+        )}
+        
+        {/* Detailed Flow (toujours basé sur primaryBot pour la vue détaillée) */}
+        <div style={{ ...styles.cycleFlow, marginTop: '12px' }}>
           {/* Initializing */}
           <div style={styles.stateBlock}>
             <span style={getFlowStyle('initializing', currentState)}>
@@ -502,7 +629,7 @@ export default function FSMVisualization() {
       <section style={styles.section}>
         <h3>🐛 Debug Info</h3>
         <p style={{ fontSize: '11px', color: '#999', fontFamily: 'monospace' }}>
-          Active Bots: {activeBots.join(', ')} | Snapshot Status: {botSnapshot.status} | Context Size:{' '}
+          Active Bots: {activeBots.join(', ')} | Snapshot Status: {isValidSnapshot(botSnapshot) ? botSnapshot.status : 'N/A'} | Context Size:{' '}
           {JSON.stringify(ctx).length} bytes
         </p>
       </section>

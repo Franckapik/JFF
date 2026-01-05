@@ -1,5 +1,6 @@
 import React from 'react';
 
+import useBotSelectionStore from '../stores/useBotSelectionStore';
 import { useTileStore } from '../stores/useTileStore';
 import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates.d';
@@ -12,37 +13,48 @@ import type { GridCoordinate } from '../types/coordinates.d';
  * - Ship: vert
  * - Drone: orange
  */
+type BotData = {
+  shipCoord: GridCoordinate | null;
+  baseCoord: GridCoordinate | null;
+  droneCoords: GridCoordinate[];
+};
+
 export default function TileMatrix() {
   const tiles = useTileStore((state) => state.tiles);
-  const actor = useXFSMStore((state) => state.getActor('bot-0'));
-  const [shipCoord, setShipCoord] = React.useState<GridCoordinate | null>(null);
-  const [baseCoord, setBaseCoord] = React.useState<GridCoordinate | null>(null);
-  const [droneCoords, setDroneCoords] = React.useState<GridCoordinate[]>([]);
+  const getActor = useXFSMStore((state) => state.getActor);
+  const selectedView = useBotSelectionStore((state) => state.selectedView);
+  
+  // États pour les deux bots
+  const [bot0Data, setBot0Data] = React.useState<BotData>({
+    shipCoord: null,
+    baseCoord: null,
+    droneCoords: [],
+  });
+  const [bot1Data, setBot1Data] = React.useState<BotData>({
+    shipCoord: null,
+    baseCoord: null,
+    droneCoords: [],
+  });
   const [exploringRadius, setExploringRadius] = React.useState<number>(2);
 
-  // Mettre à jour les positions du ship et drones à chaque changement d'état
+  // Mettre à jour les positions de bot-0
   React.useEffect(() => {
+    const actor = getActor('bot-0');
     if (!actor) return;
 
     const subscription = actor.subscribe((snapshot) => {
       const ctx = snapshot.context;
       
-      // Position du ship (GridCoordinate directement)
-      if (ctx.vehicle?.coord) {
-        setShipCoord(ctx.vehicle.coord);
-      }
+      const newData: BotData = {
+        shipCoord: ctx.vehicle?.coord || null,
+        baseCoord: ctx.vehicle?.baseCoord || null,
+        droneCoords: [],
+      };
 
-      // Position de la base (tuile de départ)
-      if (ctx.vehicle?.baseCoord) {
-        setBaseCoord(ctx.vehicle.baseCoord);
-      }
-
-      // Récupérer le rayon d'exploration depuis la config FSM
       if (ctx.config?.exploringRadius !== undefined) {
         setExploringRadius(ctx.config.exploringRadius);
       }
 
-      // Positions des drones (objet avec clés: explorer, combat, special)
       if (ctx.droneFleet?.drones) {
         const coords: GridCoordinate[] = [];
         const droneTypes = ['explorer', 'combat', 'special'] as const;
@@ -50,18 +62,52 @@ export default function TileMatrix() {
         for (const type of droneTypes) {
           const drone = ctx.droneFleet.drones[type];
           if (drone?.coord) {
-            // ✅ Utiliser GridCoordinate directement (plus de conversion nécessaire)
-            // Format: "explorer|3,3" pour afficher le type de drone
-            coords.push(`${type}|${drone.coord}` as any);
+            coords.push(`bot-0|${type}|${drone.coord}` as any);
           }
         }
         
-        setDroneCoords(coords);
+        newData.droneCoords = coords;
       }
+      
+      setBot0Data(newData);
     });
 
     return () => subscription.unsubscribe();
-  }, [actor]);
+  }, [getActor]);
+
+  // Mettre à jour les positions de bot-1
+  React.useEffect(() => {
+    const actor = getActor('bot-1');
+    if (!actor) return;
+
+    const subscription = actor.subscribe((snapshot) => {
+      const ctx = snapshot.context;
+      
+      const newData: BotData = {
+        shipCoord: ctx.vehicle?.coord || null,
+        baseCoord: ctx.vehicle?.baseCoord || null,
+        droneCoords: [],
+      };
+
+      if (ctx.droneFleet?.drones) {
+        const coords: GridCoordinate[] = [];
+        const droneTypes = ['explorer', 'combat', 'special'] as const;
+        
+        for (const type of droneTypes) {
+          const drone = ctx.droneFleet.drones[type];
+          if (drone?.coord) {
+            coords.push(`bot-1|${type}|${drone.coord}` as any);
+          }
+        }
+        
+        newData.droneCoords = coords;
+      }
+      
+      setBot1Data(newData);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [getActor]);
 
   // Debug: afficher les stats
   React.useEffect(() => {
@@ -99,36 +145,51 @@ export default function TileMatrix() {
   const coordIndex = new Map(sortedTiles);
 
   /**
-   * Calcule si une tuile est dans le rayon d'exploration du ship
-   * Utilise la vraie distance hexagonale avec coordonnées offset pair (q, r)
-   * Pour radius 1 autour de D4 (3,3): C4 (2,3), C5 (2,4), D5 (3,4), E4 (4,3), E3 (4,2), D3 (3,2)
-   * @pure
+   * Calcule si une tuile est dans le rayon d'exploration d'un des ships
+   * Filtre selon selectedView
    */
   const isInExplorationRadius = (coord: GridCoordinate): boolean => {
-    if (!shipCoord) return false;
+    const checkRadius = (shipCoord: GridCoordinate | null) => {
+      if (!shipCoord) return false;
+      
+      const [shipQ, shipR] = shipCoord.split(',').map(Number);
+      const [tileQ, tileR] = coord.split(',').map(Number);
+      
+      const shipS = -shipQ - shipR;
+      const tileS = -tileQ - tileR;
+      
+      const distance = (Math.abs(shipQ - tileQ) + Math.abs(shipR - tileR) + Math.abs(shipS - tileS)) / 2;
+      
+      return distance <= exploringRadius;
+    };
     
-    const [shipQ, shipR] = shipCoord.split(',').map(Number);
-    const [tileQ, tileR] = coord.split(',').map(Number);
+    // Filtrer selon selectedView
+    const showBot0 = selectedView === 'both' || selectedView === 'bot-0';
+    const showBot1 = selectedView === 'both' || selectedView === 'bot-1';
     
-    // Distance hexagonale vraie pour coordonnées offset pair
-    // En utilisant la coordonnée s = -q - r
-    const shipS = -shipQ - shipR;
-    const tileS = -tileQ - tileR;
-    
-    const distance = (Math.abs(shipQ - tileQ) + Math.abs(shipR - tileR) + Math.abs(shipS - tileS)) / 2;
-    
-    return distance <= exploringRadius;
+    return (showBot0 && checkRadius(bot0Data.shipCoord)) || (showBot1 && checkRadius(bot1Data.shipCoord));
   };
 
-  // Déterminer la couleur d'un point avec opacité selon le rayon d'exploration
+  // Déterminer la couleur et le label d'un point
   const getColor = (coord: GridCoordinate): string => {
     const inRadius = isInExplorationRadius(coord);
     
-    // Ship et drones toujours à pleine opacité
-    if (coord === shipCoord) return '#22c55e'; // vert
-    const isDrone = droneCoords.some(droneEntry => {
+    // Filtrer selon selectedView
+    const showBot0 = selectedView === 'both' || selectedView === 'bot-0';
+    const showBot1 = selectedView === 'both' || selectedView === 'bot-1';
+    
+    // Ships avec couleurs différentes
+    if (showBot0 && coord === bot0Data.shipCoord) return '#22c55e'; // vert pour bot-0
+    if (showBot1 && coord === bot1Data.shipCoord) return '#3b82f6'; // bleu pour bot-1
+    
+    // Drones filtrés selon selectedView
+    const allDroneCoords = [
+      ...(showBot0 ? bot0Data.droneCoords : []),
+      ...(showBot1 ? bot1Data.droneCoords : [])
+    ];
+    const isDrone = allDroneCoords.some(droneEntry => {
       const parts = String(droneEntry).split('|');
-      const droneCoord = parts.length > 1 ? parts[1] : parts[0];
+      const droneCoord = parts[parts.length - 1];
       return droneCoord === coord;
     });
     if (isDrone) return '#f97316'; // orange
@@ -150,17 +211,35 @@ export default function TileMatrix() {
     return 'rgba(200, 200, 200, 0.2)'; // gris très clair hors de portée
   };
 
-  // ✅ Extraire le type de drone pour un affichage texte
-  const getDroneLabel = (coord: GridCoordinate): string | null => {
-    for (const droneEntry of droneCoords) {
+  // Récupérer le label pour ship ou drone (filtré selon selectedView)
+  const getEntityLabel = (coord: GridCoordinate): string | null => {
+    const showBot0 = selectedView === 'both' || selectedView === 'bot-0';
+    const showBot1 = selectedView === 'both' || selectedView === 'bot-1';
+    
+    // Ships
+    if (showBot0 && coord === bot0Data.shipCoord) return 'S0';
+    if (showBot1 && coord === bot1Data.shipCoord) return 'S1';
+    
+    // Drones filtrés selon selectedView
+    const allDroneCoords = [
+      ...(showBot0 ? bot0Data.droneCoords : []),
+      ...(showBot1 ? bot1Data.droneCoords : [])
+    ];
+    for (const droneEntry of allDroneCoords) {
       const parts = String(droneEntry).split('|');
-      if (parts.length > 1 && parts[1] === coord) {
-        const droneType = parts[0];
-        if (droneType === 'explorer') return 'e';
-        if (droneType === 'combat') return 'c';
-        if (droneType === 'special') return 's';
+      if (parts.length >= 3) {
+        const botId = parts[0]; // bot-0 ou bot-1
+        const droneType = parts[1]; // explorer, combat, special
+        const droneCoord = parts[2];
+        
+        if (droneCoord === coord) {
+          const botNum = botId.includes('0') ? '0' : '1';
+          const typeLabel = droneType[0].toUpperCase(); // E, C, S
+          return `D${botNum}${typeLabel}`;
+        }
       }
     }
+    
     return null;
   };
 
@@ -213,9 +292,9 @@ export default function TileMatrix() {
             const { x, y } = getHexPosition(q, r);
             const color = getColor(coord as GridCoordinate);
             const label = getSimpleLabel(q, r);
-            const isBase = coord === baseCoord;  // ✅ Compare avec baseCoord (tuile de départ) et non shipCoord (position actuelle)
-            const droneLabel = getDroneLabel(coord as GridCoordinate);
-            const isDroneHere = droneLabel !== null;
+            const isBase = coord === bot0Data.baseCoord || coord === bot1Data.baseCoord;
+            const entityLabel = getEntityLabel(coord as GridCoordinate);
+            const hasEntity = entityLabel !== null;
             
             return (
               <div
@@ -243,22 +322,22 @@ export default function TileMatrix() {
                     position: 'relative',
                   }}
                 >
-                  {/* ✅ Afficher le label du drone (e, c, s) centré sur le rond */}
-                  {isDroneHere && (
+                  {/* Afficher le label (S0, S1, D0E, D1E, etc.) */}
+                  {hasEntity && (
                     <div
                       style={{
                         position: 'absolute',
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        fontSize: '8px',
+                        fontSize: '7px',
                         fontWeight: 'bold',
-                        color: '#000',
-                        textShadow: '0 0 2px white',
+                        color: '#fff',
+                        textShadow: '0 0 3px #000',
                         pointerEvents: 'none',
                       }}
                     >
-                      {droneLabel}
+                      {entityLabel}
                     </div>
                   )}
                 </div>
@@ -271,31 +350,31 @@ export default function TileMatrix() {
       <div style={styles.legend}>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: 'transparent', border: '2px solid #000' }} />
-          <span>Départ {baseCoord && <span style={styles.counter}>1</span>}</span>
+          <span>Départ</span>
+        </div>
+        <div style={styles.legendItem}>
+          <div style={{ ...styles.legendDot, backgroundColor: '#22c55e' }} />
+          <span>Ship Bot-0 (S0) {bot0Data.shipCoord && <span style={styles.counter}>1</span>}</span>
         </div>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#3b82f6' }} />
-          <span>Explorée <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.explored && !tile.collected).length}</span></span>
+          <span>Ship Bot-1 (S1) {bot1Data.shipCoord && <span style={styles.counter}>1</span>}</span>
         </div>
         <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: 'rgba(59, 130, 246, 0.5)' }} />
-          <span>Explorable (r={exploringRadius}) <span style={styles.counter}>{sortedTiles.filter(([coord]) => isInExplorationRadius(coord as GridCoordinate) && !tiles[coord]?.explored).length}</span></span>
-        </div>
-        <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: 'rgba(200, 200, 200, 0.2)', border: '1px dashed #ddd' }} />
-          <span>Hors de portée</span>
+          <div style={{ ...styles.legendDot, backgroundColor: '#f97316' }} />
+          <span>Drones (D0E, D1E) <span style={styles.counter}>{bot0Data.droneCoords.length + bot1Data.droneCoords.length}</span></span>
         </div>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#8b5cf6' }} />
           <span>Collectée <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.collected).length}</span></span>
         </div>
         <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: '#22c55e' }} />
-          <span>Ship {shipCoord && <span style={styles.counter}>1</span>}</span>
+          <div style={{ ...styles.legendDot, backgroundColor: 'rgba(59, 130, 246, 0.5)' }} />
+          <span>Explorable (r={exploringRadius})</span>
         </div>
         <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: '#f97316' }} />
-          <span>Drone (e/c/s) <span style={styles.counter}>{droneCoords.length}</span></span>
+          <div style={{ ...styles.legendDot, backgroundColor: 'rgba(200, 200, 200, 0.2)', border: '1px dashed #ddd' }} />
+          <span>Hors de portée</span>
         </div>
         <div style={styles.legendItem}>
           <div style={{ ...styles.legendDot, backgroundColor: '#9ca3af' }} />
