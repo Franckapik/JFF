@@ -169,6 +169,21 @@ export const onShipRelocatingExit = ({ context }: { context: FSMContext }) => {
   });
 };
 
+/**
+ * 🆕 PHASE 2: Action d'entrée de l'état game_over
+ * 
+ * LOG ONLY: Trace la fin de partie pour ce bot
+ */
+export const onGameOverEntry = ({ context }: { context: FSMContext }) => {
+  fsmLogger.action(`🏁🏁🏁 [${context.entityId}] ========================================`);
+  fsmLogger.action(`🏁 [${context.entityId}] GAME OVER - Maximum radius reached!`);
+  fsmLogger.action(`🏁 [${context.entityId}] Final Score: ${context.score?.resources?.total || 0}`);
+  fsmLogger.action(`🏁 [${context.entityId}] Exploration Radius: MAX (3)`);
+  fsmLogger.action(`🏁 [${context.entityId}] Vehicle Damage: ${context.vehicle?.damage || 0}%`);
+  fsmLogger.action(`🏁 [${context.entityId}] Tiles Explored: ${context.memory?.stats?.tilesExplored || 0}`);
+  fsmLogger.action(`🏁🏁🏁 [${context.entityId}] ========================================`);
+};
+
 // Placeholder pour éviter les erreurs d'import
 export const __maintenanceEffectsPlaceholder = ({ context: _context }: { context: FSMContext }) => {
 };

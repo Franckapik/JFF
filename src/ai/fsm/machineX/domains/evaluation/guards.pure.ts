@@ -10,11 +10,28 @@
  * 
  * ⚠️ EXCEPTION: hasUnexploredTilesInRadius reads from TileStore for consistency
  * with assignDroneDeployingContext action (Bug #7 fix)
+ * 
+ * 🆕 PHASE 2: Guards now read explorationRadius from GameStore (shared state)
  */
 
 import { calculateDistanceGrid } from '../../../../../core/spatial/distance.ts';
+import useGameStore from '../../../../../stores/useGameStore/index.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { XStateV5Guard } from '../../../../../types/xstate.v5.types.ts';
+
+/**
+ * 🆕 PHASE 2: Helper to get exploration radius from GameStore
+ * Falls back to context.config.exploringRadius if store not available
+ */
+const getExplorationRadius = (contextRadius?: number): number => {
+  try {
+    const gameStore = useGameStore.getState();
+    return gameStore.getExplorationRadius();
+  } catch {
+    // Fallback to context value if store not available (e.g., in tests)
+    return contextRadius ?? 1;
+  }
+};
 
 /**
  * Pure guard: Check if tiles are available in FSM context
@@ -83,7 +100,8 @@ export const canStartExploring: XStateV5Guard = ({ context }) => {
   
   // ✅ NEW Check 4: At least one unexplored tile must exist in exploration radius
   const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
-  const exploringRadius = context.config?.exploringRadius ?? 2;
+  // 🆕 PHASE 2: Use GameStore radius (shared state)
+  const exploringRadius = getExplorationRadius(context.config?.exploringRadius);
   
   if (!shipCoord) return false;
   
@@ -186,7 +204,8 @@ export const hasUnexploredTilesInRadius: XStateV5Guard = ({ context }) => {
   const tiles = context.gridInfo?.tiles || {};
   const knownTiles = context.memory?.knownTiles || [];
   const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
-  const exploringRadius = context.config?.exploringRadius ?? 2;
+  // 🆕 PHASE 2: Use GameStore radius (shared state)
+  const exploringRadius = getExplorationRadius(context.config?.exploringRadius);
   
   if (!shipCoord) {
     console.log(`❌ [hasUnexploredTilesInRadius] No ship coord`);
@@ -388,7 +407,8 @@ export const shouldCollect: XStateV5Guard = ({ context }) => {
 export const allLocalTilesExplored: XStateV5Guard = ({ context }) => {
   const tiles = context.gridInfo?.tiles || {};
   const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
-  const exploringRadius = context.config?.exploringRadius ?? 2;
+  // 🆕 PHASE 2: Use GameStore radius (shared state)
+  const exploringRadius = getExplorationRadius(context.config?.exploringRadius);
   
   if (!shipCoord || Object.keys(tiles).length === 0) return false;
   

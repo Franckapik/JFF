@@ -646,10 +646,7 @@ export function getScheduledEvents(
 /**
  * 🆕 Événements pour le sous-état 'relocating'
  * 
- * 🚧 PHASE 1: Pas d'événement à envoyer - la machine utilise `after: 2000`
- * pour retourner automatiquement à evaluating.
- * 
- * Cette fonction sera réactivée en phase 2 si on décide de faire un mouvement réel.
+ * ✅ OPTION A: Envoie RELOCATING_COMPLETE après 500ms pour visibilité UI
  */
 export function getRelocatingEvents(
   _context: FSMContext,
@@ -659,44 +656,15 @@ export function getRelocatingEvents(
   
   if (verbose) {
     // eslint-disable-next-line no-console
-    console.log(`🚢 [TRACKER] Ship relocating to new exploration area`);
-    // eslint-disable-next-line no-console
-    console.log(`   🚧 PHASE 1: No movement - using after:2000 for auto-return to evaluating`);
+    console.log(`🔄 [TRACKER] Relocating (500ms)`);
   }
   
-  // 🚧 PHASE 1: Pas d'événement - la machine gère avec `after: 2000`
-  // En phase 2, on réactivera le code ci-dessous pour le mouvement réel:
-  /*
-  const { shipPos, targetVehicleTile, spacing } = extractPositionsAndTargets(context);
-  
-  if (targetVehicleTile?.position?.coord && shipPos) {
-    const targetPos = coordToWorldPosition(targetVehicleTile.position.coord as GridCoordinate, spacing);
-    if (!targetPos) return events;
-    
-    const distance = calculateDistance(shipPos, targetPos);
-    const travelTime = calculateTravelTime(distance, DURATIONS.SHIP_SPEED);
-    
-    if (verbose) {
-      console.log(`   Target: ${targetVehicleTile.position.coord}`);
-      console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${travelTime}ms`);
-    }
-    
-    events.push({
-      event: { type: 'SHIP_REACHES_TILE' },
-      delay: travelTime,
-      reason: `Ship relocating to ${targetVehicleTile.position.coord}`
-    });
-  } else {
-    if (verbose) {
-      console.log(`   ⚠️ No relocation target, returning to evaluating`);
-    }
-    events.push({
-      event: { type: 'SHIP_REACHES_TILE' },
-      delay: 100,
-      reason: 'No relocation target'
-    });
-  }
-  */
+  // ✅ OPTION A: Délai de 500ms pour rendre l'état visible dans l'UI
+  events.push({
+    event: { type: 'RELOCATING_COMPLETE' },
+    delay: 500,
+    reason: 'Relocating complete - checking radius'
+  });
   
   return events;
 }

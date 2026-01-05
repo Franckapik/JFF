@@ -60,7 +60,11 @@ export type MachineEvents =
       tiles: Record<string, Tile>;
       spacing: number;
       radius: number;
-    };
+    }
+  // Phase 2: Radius expansion & Game Over
+  | { type: 'RADIUS_INCREASED'; newRadius: number }
+  | { type: 'GAME_OVER'; reason: 'max_radius_reached' | 'other' }
+  | { type: 'RELOCATING_COMPLETE' };
 
 /**
  * Type guard pour vérifier le type d'un événement

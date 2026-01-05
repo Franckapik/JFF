@@ -41,7 +41,12 @@ export type MachineEventType =
   | 'NEED_RELOCATING'
   
   // Événements de récupération d'erreur
-  | 'NO_TARGET_FOUND';
+  | 'NO_TARGET_FOUND'
+  
+  // Événements Phase 2: Radius & Game Over
+  | 'RADIUS_INCREASED'
+  | 'GAME_OVER'
+  | 'RELOCATING_COMPLETE';
 
 /**
  * Types d'événements avec payload pour XState v5
@@ -69,7 +74,10 @@ export type MachineEvents =
   | { type: 'NEED_COLLECTING' }
   | { type: 'NEED_MAINTENANCE' }
   | { type: 'NEED_RELOCATING' }
-  | { type: 'NO_TARGET_FOUND' };
+  | { type: 'NO_TARGET_FOUND' }
+  // Phase 2: Radius expansion & Game Over
+  | { type: 'RADIUS_INCREASED'; newRadius: number }
+  | { type: 'GAME_OVER'; reason: 'max_radius_reached' | 'other' };
 
 /**
  * Constantes d'événements pour usage dans les machines XState
@@ -110,5 +118,9 @@ export const MACHINE_EVENT_TYPES: Record<Uppercase<MachineEventType>, MachineEve
   NEED_RELOCATING: 'NEED_RELOCATING',
   
   // Événements de récupération d'erreur
-  NO_TARGET_FOUND: 'NO_TARGET_FOUND'
+  NO_TARGET_FOUND: 'NO_TARGET_FOUND',
+  
+  // Phase 2: Radius & Game Over
+  RADIUS_INCREASED: 'RADIUS_INCREASED',
+  GAME_OVER: 'GAME_OVER'
 } as const;

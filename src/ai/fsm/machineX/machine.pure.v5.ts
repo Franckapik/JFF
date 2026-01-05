@@ -32,7 +32,7 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 // Import depuis l'architecture domain-based
 // Imports par domaine pour éviter les erreurs de syntaxe
 import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection/index.ts';
-import { assignEvaluationContext, assignShipRelocationContext, assignShipRelocatedContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation/index.ts';
+import { assignEvaluationContext, assignShipRelocatedContext, assignShipRelocationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation/index.ts';
 // ✅ Phase 1: ALL guards from guards.pure.ts (no store dependencies)
 import { allLocalTilesExplored, canStartExploring, canStartExploringWithValidTarget, hasTilesAvailable, hasUnexploredTilesInRadius, shouldCollect, shouldExplore, shouldMaintain, shouldRelocateShip } from './domains/evaluation/guards.pure.ts';
 import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReadyContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneDockedEntry, onDroneDockedExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration/index.ts';
@@ -40,9 +40,9 @@ import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReady
 import { updateDronePosition, updateGridInfo, updateShipPosition } from './domains/global/index.ts';
 import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign.ts';
 import { onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects.ts';
-import { assignShipDepositResourcesContext, assignShipRefuelContext, assignShipRepairContext, assignShipRelocatingContext } from './domains/maintenance/actions.assign.ts';
-import { onMaintainingEntry, onMaintainingExit, onShipDepositingEntry, onShipDepositingExit, onShipRefuelingEntry, onShipRefuelingExit, onShipRepairingEntry, onShipRepairingExit, onShipRelocatingEntry, onShipRelocatingExit } from './domains/maintenance/actions.effects.ts';
-import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure.ts';
+import { assignShipDepositResourcesContext, assignShipRefuelContext, assignShipRelocatingContext, assignShipRepairContext } from './domains/maintenance/actions.assign.ts';
+import { onGameOverEntry, onMaintainingEntry, onMaintainingExit, onShipDepositingEntry, onShipDepositingExit, onShipRefuelingEntry, onShipRefuelingExit, onShipRelocatingEntry, onShipRelocatingExit, onShipRepairingEntry, onShipRepairingExit } from './domains/maintenance/actions.effects.ts';
+import { canIncreaseRadius, isAtMaxRadius, isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure.ts';
 
 // ✅ Phase 1: Pure guards from collection domain
 import { canCollectTile, hasMoreCollectibleTiles, isVehicleOverloaded, noMoreCollectibleTiles } from './domains/collection/guards.pure.ts';
@@ -124,6 +124,7 @@ export const machineXV5Pure = setup({
     onShipRefuelingExit,
     onShipRelocatingEntry, // 🆕 NEW: Relocating entry effect
     onShipRelocatingExit,  // 🆕 NEW: Relocating exit effect
+    onGameOverEntry, // 🆕 PHASE 2: Game over entry effect
 
     // Actions d'effets pour initializing
     onInitializingEntry,
@@ -159,7 +160,9 @@ export const machineXV5Pure = setup({
     needsRefuel,
     needsRepair,
     isShipOnBase,
-    maintenanceComplete
+    maintenanceComplete,
+    isAtMaxRadius, // 🆕 PHASE 2: Check if radius >= 3
+    canIncreaseRadius // 🆕 PHASE 2: Check if radius < 3
   },
 }).createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5QFsCGBjAFgSwHZgA0A1AVgAUBXAJzAGIBlACQEkyB9MgeXuYBVnOAOTYBVMgBEAgrwCiAbQAMAXUSgADgHtY2AC7YNuVSAAeiAEwkAnJYB0ADgAsAZgckSARnd2STu04A0IACeiO5mAL7hgWhYeISklDQMLOzMgnzMkgAyzABaMmwASjIAiiIy9LyKKkggmtp6BkamCAC0DnY2ln52dpbuTpYOCgDsIySBIQjuIw4jNhZmAGwrI2EOSyOR0Rg4+MTk1HTihUIFXDz8QqIS0vLKRvW6+oa1LRaWCl2uoxuO4+4JsFzCRhjYFID+iQVmYFC4nNsQDE9vFDkkTmc2GkMtk8gVimUKlUHrUno1XqB3iQ-DZqdCzO4lhYNoDJuYHBzwUyRgp6XZAVsokjdnEDokwDYwAA3VAAGwoqD0uCgtEEMhk4jYMgIZCynEKaQA4tVHlpnk03oh+TZ3MMmZYlgphkMRmyEGYGe4bCNrG5fJYrEt3IjkaKEkdJTL5Yq8Cq1Rq2ABhThZLIyRP8QTGknqM3k5qIMZuxlgpZ2BQKZYOBk8pxLEMi-bhmiRuUKpVx9WagCykjSskEkkEifuNVzDReBfdvNsfV5VgGQzmdmLg1sXgrlg9lacJA9DdiTbRErAxjUso0VFjNggVAMYDYEDA540QVjtAxaqKMkkicYFTYfg0xNUk80nS0ECWfobGcWY7B9OYSAULc3Q9EYnHsOtASWXwRiWakDxRMUI1PF8r2VG873wNhYHQVBcFwd9PwKRhJHoNh6ETIc1XEEDx3NCkTFCBkvgDJx3GsflYTwoEpjQjC-CDaFcPwuxCLDY9JTPC9yKgSj7zYGgdGoRjlQ-U4v2KX9-3YgAhNjR1NCcLUpRBBgcWknCcOFLF8OZfOWYsXXBXoSB5Mxem8+shVDI9xRsdANFlWUwHQDtaBkbsZEKQ0ZGHABNDjeE4Mg+LqMCXKE6Y7Bw2kmQcRlkPw5diwGL4avGMKfTMEZvHUuKI0S5LUvSvUAHU2AAMXKLI2DGyRCnSLMyrJcDXOq5w6rMBrHQdUFeta6061mLcIQZOtop2Q9UXioaUrS69YBwNQ2GQDQpVjNgdA0L7sBS5JWG-ayAKAxzQOcwSWjXG14I6AZXDwtZWt3GwXAarxbWhANgxixsbsGpL7o7GwnuwF63o+5Uvp+vR-qYQGrL-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-Rc4EXM0AA */
@@ -398,24 +401,30 @@ export const machineXV5Pure = setup({
          * 🆕 Sous-état RELOCATING - Ship bloqué (toutes tuiles locales explorées)
          * Entré via NEED_RELOCATING depuis evaluating
          * 
-         * 🚧 PHASE 1: État FINAL - les bots convergent ici et y restent
-         * Décision gameplay à prendre: relocation physique vs augmentation du radius
+         * ✅ PHASE 2: Radius expansion with penalties
+         * - If radius < 3: Increment radius, apply penalties, return to evaluating
+         * - If radius >= 3: Transition to game_over (final state)
+         * 
+         * ✅ OPTION A: Uses RELOCATING_COMPLETE event for UI visibility (500ms delay)
          */
         relocating: {
           entry: ['assignShipRelocatingContext', 'onShipRelocatingEntry'],
           exit: 'onShipRelocatingExit',
-          // 🚧 PHASE 1: Pas de transition - état final pour valider le cycle complet
-          // Les bots doivent converger ici et y rester
-          type: 'final'
-          // 🚧 PHASE 2: Réactiver les transitions pour le mouvement réel
-          // on: {
-          //   SHIP_REACHES_TILE: [
-          //     { target: 'depositing', guard: 'needsDeposit', actions: 'assignShipRelocatedContext' },
-          //     { target: 'refueling', guard: 'needsRefuel', actions: 'assignShipRelocatedContext' },
-          //     { target: 'repairing', guard: 'needsRepair', actions: 'assignShipRelocatedContext' },
-          //     { target: '#machineXV5Pure.evaluating', actions: 'assignShipRelocatedContext' }
-          //   ]
-          // }
+          // Wait for RELOCATING_COMPLETE event (sent by tracker after delay)
+          on: {
+            RELOCATING_COMPLETE: [
+              {
+                // Priority 1: Max radius reached → GAME_OVER (final state)
+                target: '#machineXV5Pure.game_over',
+                guard: 'isAtMaxRadius'
+              },
+              {
+                // Priority 2: Can increase radius → return to evaluating
+                target: '#machineXV5Pure.evaluating',
+                guard: 'canIncreaseRadius'
+              }
+            ]
+          }
         },
         
         depositing: {
@@ -492,6 +501,21 @@ export const machineXV5Pure = setup({
           guard: 'needsDeposit'
         }
       }
+    },
+
+    /**
+     * 🆕 PHASE 2: État GAME_OVER - Fin de partie pour ce bot
+     * 
+     * Atteint lorsque le bot a:
+     * - Exploré toutes les tuiles dans le radius maximum (3)
+     * - Collecté toutes les ressources disponibles
+     * - Ne peut plus s'étendre (radius >= 3)
+     * 
+     * C'est un état final - le bot ne peut plus agir.
+     */
+    game_over: {
+      type: 'final',
+      entry: 'onGameOverEntry'
     }
   }
 });
