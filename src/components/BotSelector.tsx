@@ -48,6 +48,11 @@ const styles = {
     backgroundColor: '#f8f9fa',
     borderRadius: '6px',
     border: '1px solid #e9ecef',
+    position: 'fixed',
+    top: '10px',
+    right: '20px',
+    zIndex: 1000,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
   } as React.CSSProperties,
   label: {
     fontSize: '11px',

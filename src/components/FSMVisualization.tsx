@@ -28,6 +28,72 @@ function isValidSnapshot(snapshot: unknown): snapshot is {
 }
 
 /**
+ * Composant compact affichant le cycle FSM pour un seul bot
+ */
+function SingleBotCycleFlow({ botId, compact = false }: { botId: 'bot-0' | 'bot-1'; compact?: boolean }) {
+  const botStates = useXFSMStore((state) => state.botStates);
+  const botSnapshot = botStates[botId];
+  
+  const value = botSnapshot && isValidSnapshot(botSnapshot) ? botSnapshot.value : 'unknown';
+  const currentState = typeof value === 'string' ? value : JSON.stringify(value);
+  
+  const borderColor = botId === 'bot-0' ? '#22c55e' : '#3b82f6';
+  
+  const getStateInfo = (state: string) => {
+    if (state.includes('initializing')) return { label: 'INIT', color: '#ff9800', emoji: '🚀' };
+    if (state.includes('drone_deploying')) return { label: 'DEPLOY', color: '#4caf50', emoji: '🚁' };
+    if (state.includes('drone_scanning')) return { label: 'SCAN', color: '#4caf50', emoji: '📡' };
+    if (state.includes('drone_returning')) return { label: 'RETURN', color: '#4caf50', emoji: '🔙' };
+    if (state.includes('drone_docked')) return { label: 'DOCKED', color: '#4caf50', emoji: '⚓' };
+    if (state.includes('drone_destroyed')) return { label: 'DESTROYED', color: '#f44336', emoji: '💥' };
+    if (state.includes('exploring')) return { label: 'EXPLORE', color: '#4caf50', emoji: '🔍' };
+    if (state.includes('evaluating')) return { label: 'EVAL', color: '#2196f3', emoji: '🤔' };
+    if (state.includes('ship_moving')) return { label: 'MOVING', color: '#f44336', emoji: '🚢' };
+    if (state.includes('ship_collecting')) return { label: 'COLLECT', color: '#f44336', emoji: '📦' };
+    if (state.includes('ship_returning')) return { label: 'RETURN', color: '#f44336', emoji: '🔙' };
+    if (state.includes('collecting')) return { label: 'COLLECT', color: '#f44336', emoji: '📦' };
+    if (state.includes('refueling')) return { label: 'REFUEL', color: '#9c27b0', emoji: '⛽' };
+    if (state.includes('repairing')) return { label: 'REPAIR', color: '#9c27b0', emoji: '🔧' };
+    if (state.includes('depositing')) return { label: 'DEPOSIT', color: '#9c27b0', emoji: '📤' };
+    if (state.includes('maintaining')) return { label: 'MAINTAIN', color: '#9c27b0', emoji: '🛠️' };
+    return { label: 'UNKNOWN', color: '#757575', emoji: '❓' };
+  };
+  
+  const stateInfo = getStateInfo(currentState);
+  
+  return (
+    <div style={{
+      padding: compact ? '8px' : '12px',
+      backgroundColor: '#fafafa',
+      borderRadius: '6px',
+      borderLeft: `3px solid ${borderColor}`,
+      flex: 1,
+    }}>
+      <h4 style={{ margin: '0 0 6px 0', fontSize: compact ? '11px' : '12px', color: borderColor }}>
+        {botId === 'bot-0' ? '🤖 Bot-0' : '🤖 Bot-1'}
+      </h4>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '6px 10px',
+        backgroundColor: stateInfo.color,
+        color: 'white',
+        borderRadius: '4px',
+        fontSize: compact ? '11px' : '13px',
+        fontWeight: 'bold',
+      }}>
+        <span>{stateInfo.emoji}</span>
+        <span>{stateInfo.label}</span>
+      </div>
+      <div style={{ marginTop: '4px', fontSize: '9px', color: '#666', wordBreak: 'break-all' }}>
+        {currentState.length > 30 ? currentState.substring(0, 30) + '...' : currentState}
+      </div>
+    </div>
+  );
+}
+
+/**
  * FSM Visualization - Affichage ultra-basique du cycle XState
  * 
  * Connecté à Zustand (useXFSMStore) qui écoute les snapshots XState
@@ -400,10 +466,20 @@ export default function FSMVisualization() {
         )}
       </section>
 
-      {/* STATE MACHINE CYCLE */}
+      {/* STATE MACHINE CYCLE - Dual Bot View */}
       <section style={styles.section}>
         <h3>🔄 FSM Cycle Flow</h3>
-        <div style={styles.cycleFlow}>
+        {selectedView === 'both' ? (
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <SingleBotCycleFlow botId="bot-0" compact />
+            <SingleBotCycleFlow botId="bot-1" compact />
+          </div>
+        ) : (
+          <SingleBotCycleFlow botId={selectedView as 'bot-0' | 'bot-1'} />
+        )}
+        
+        {/* Detailed Flow (toujours basé sur primaryBot pour la vue détaillée) */}
+        <div style={{ ...styles.cycleFlow, marginTop: '12px' }}>
           {/* Initializing */}
           <div style={styles.stateBlock}>
             <span style={getFlowStyle('initializing', currentState)}>

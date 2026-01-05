@@ -1,5 +1,6 @@
 import React from 'react';
 
+import useBotSelectionStore from '../stores/useBotSelectionStore';
 import { useTileStore } from '../stores/useTileStore';
 import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates.d';
@@ -21,6 +22,7 @@ type BotData = {
 export default function TileMatrix() {
   const tiles = useTileStore((state) => state.tiles);
   const getActor = useXFSMStore((state) => state.getActor);
+  const selectedView = useBotSelectionStore((state) => state.selectedView);
   
   // États pour les deux bots
   const [bot0Data, setBot0Data] = React.useState<BotData>({
@@ -144,6 +146,7 @@ export default function TileMatrix() {
 
   /**
    * Calcule si une tuile est dans le rayon d'exploration d'un des ships
+   * Filtre selon selectedView
    */
   const isInExplorationRadius = (coord: GridCoordinate): boolean => {
     const checkRadius = (shipCoord: GridCoordinate | null) => {
@@ -160,19 +163,30 @@ export default function TileMatrix() {
       return distance <= exploringRadius;
     };
     
-    return checkRadius(bot0Data.shipCoord) || checkRadius(bot1Data.shipCoord);
+    // Filtrer selon selectedView
+    const showBot0 = selectedView === 'both' || selectedView === 'bot-0';
+    const showBot1 = selectedView === 'both' || selectedView === 'bot-1';
+    
+    return (showBot0 && checkRadius(bot0Data.shipCoord)) || (showBot1 && checkRadius(bot1Data.shipCoord));
   };
 
   // Déterminer la couleur et le label d'un point
   const getColor = (coord: GridCoordinate): string => {
     const inRadius = isInExplorationRadius(coord);
     
-    // Ships avec couleurs différentes
-    if (coord === bot0Data.shipCoord) return '#22c55e'; // vert pour bot-0
-    if (coord === bot1Data.shipCoord) return '#3b82f6'; // bleu pour bot-1
+    // Filtrer selon selectedView
+    const showBot0 = selectedView === 'both' || selectedView === 'bot-0';
+    const showBot1 = selectedView === 'both' || selectedView === 'bot-1';
     
-    // Drones (on garde orange)
-    const allDroneCoords = [...bot0Data.droneCoords, ...bot1Data.droneCoords];
+    // Ships avec couleurs différentes
+    if (showBot0 && coord === bot0Data.shipCoord) return '#22c55e'; // vert pour bot-0
+    if (showBot1 && coord === bot1Data.shipCoord) return '#3b82f6'; // bleu pour bot-1
+    
+    // Drones filtrés selon selectedView
+    const allDroneCoords = [
+      ...(showBot0 ? bot0Data.droneCoords : []),
+      ...(showBot1 ? bot1Data.droneCoords : [])
+    ];
     const isDrone = allDroneCoords.some(droneEntry => {
       const parts = String(droneEntry).split('|');
       const droneCoord = parts[parts.length - 1];
@@ -197,14 +211,20 @@ export default function TileMatrix() {
     return 'rgba(200, 200, 200, 0.2)'; // gris très clair hors de portée
   };
 
-  // Récupérer le label pour ship ou drone
+  // Récupérer le label pour ship ou drone (filtré selon selectedView)
   const getEntityLabel = (coord: GridCoordinate): string | null => {
-    // Ships
-    if (coord === bot0Data.shipCoord) return 'S0';
-    if (coord === bot1Data.shipCoord) return 'S1';
+    const showBot0 = selectedView === 'both' || selectedView === 'bot-0';
+    const showBot1 = selectedView === 'both' || selectedView === 'bot-1';
     
-    // Drones
-    const allDroneCoords = [...bot0Data.droneCoords, ...bot1Data.droneCoords];
+    // Ships
+    if (showBot0 && coord === bot0Data.shipCoord) return 'S0';
+    if (showBot1 && coord === bot1Data.shipCoord) return 'S1';
+    
+    // Drones filtrés selon selectedView
+    const allDroneCoords = [
+      ...(showBot0 ? bot0Data.droneCoords : []),
+      ...(showBot1 ? bot1Data.droneCoords : [])
+    ];
     for (const droneEntry of allDroneCoords) {
       const parts = String(droneEntry).split('|');
       if (parts.length >= 3) {
