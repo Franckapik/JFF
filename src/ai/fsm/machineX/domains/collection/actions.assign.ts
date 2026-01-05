@@ -89,6 +89,7 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     
     // 1️⃣ PRIORITÉ: Chercher une tuile explorée avec ressources non collectées
     const knownTilesWithResources = knownTiles.filter(tile => 
+      tile?.collectable &&  // ✅ Check collectable property
       tile?.resources && 
       tile.resources.total > 0 && 
       !tile.collected &&
@@ -117,6 +118,7 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
       
       // Filter for explored tiles with resources only
       const exploredTiles = candidateTiles.filter(tile => 
+        tile?.collectable &&  // ✅ Check collectable property
         tile?.explored === true && 
         !tile?.collected &&
         tile?.hasResources === true
@@ -199,6 +201,28 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
 });
 
 /**
+ * Action assign pour appliquer les dégâts quand le ship atteint une tuile danger
+ * Ajoute +10% damage au vehicle.damage (max 100%)
+ */
+export const assignDangerDamageContext = createAssignAction(({ context }) => {
+  if (!context.vehicle) return {};
+  
+  const targetTile = context.vehicle.targetVehicleTile;
+  const dangerType = targetTile?.isDynamicDanger ? 'dynamic' : 'static';
+  const currentDamage = context.vehicle.damage || 0;
+  const newDamage = Math.min(100, currentDamage + 10);
+  
+  fsmLogger.warn(`💥 [${context.entityId}] Ship hit ${dangerType} danger at ${targetTile?.position?.coord}! Damage: ${currentDamage}% → ${newDamage}%`);
+  
+  return {
+    vehicle: {
+      ...context.vehicle,
+      damage: newDamage
+    }
+  };
+});
+
+/**
  * Action assign pour mettre à jour l'état du vaisseau lors de l'arrivée sur la tuile
  */
 export const assignShipCollectingContext = createAssignAction(({ context, event }) => {
@@ -216,16 +240,6 @@ export const assignShipCollectingContext = createAssignAction(({ context, event 
   const targetTileCoord = context.vehicle.targetVehicleTile?.position?.coord;
   const arrivedCoord = targetTileCoord || context.vehicle.coord;
 
-  // 🔥 DANGER COLLISION DETECTION: Vérifier s'il y a un danger dynamique sur la tuile d'arrivée
-  let damageIncrement = 0;
-  const tileStore = useTileStore.getState();
-  const arrivalTile = tileStore.getTile(arrivedCoord);
-  
-  if (arrivalTile?.isDynamicDanger) {
-    damageIncrement = 10; // 10% de dégâts pour danger dynamique
-    fsmLogger.warn(`💥 [${context?.entityId || 'unknown'}] Ship collided with dynamic danger at ${arrivedCoord}! Damage: +${damageIncrement}%`);
-  }
-
   return {
     vehicle: {
       ...context.vehicle,
@@ -233,7 +247,6 @@ export const assignShipCollectingContext = createAssignAction(({ context, event 
       isMoving: false, // ✅ IMPORTANT: Le vaisseau s'arrête pour collecter
       progress: 100, // Arrivé à destination
       currentSpeed: 0,
-      damage: Math.min(100, (context.vehicle.damage || 0) + damageIncrement), // 🔥 Appliquer les dégâts, max 100%
       visualState: 'collecting' as VehicleVisualState
     },
     fsmState: 'collecting_ship_collecting', // 🟢 Mise à jour de l'état global FSM
@@ -268,6 +281,8 @@ export const assignShipReturningContext = createAssignAction(({ context, event }
     position: { ...baseWorldPos, coord: baseCoord },
     type: 'depart',
     biome: 'station',
+    explorable: false,
+    collectable: false,
     resources: { food: 0, debris: 0, special: 0, total: 0 },
     hasResources: false
   };
@@ -433,6 +448,7 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
       
       // 1️⃣ PRIORITÉ: Chercher une autre tuile explorée avec ressources non collectées
       const remainingTilesWithResources = updatedKnownTiles.filter(tile => 
+        tile?.collectable &&  // ✅ Check collectable property
         tile?.resources && 
         tile.resources.total > 0 && 
         !tile.collected &&
@@ -456,6 +472,7 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
         const collectingRadius = context.config?.collectingRadius ?? 3;
         const candidateTiles = shipCoord ? findTilesInRadius(shipCoord, collectingRadius, updatedGridTiles) : [];
         const tilesWithResources = candidateTiles.filter(tile => 
+          tile?.collectable &&  // ✅ Check collectable property
           tile?.resources && 
           tile.resources.total > 0 && 
           !tile.collected &&
@@ -639,6 +656,7 @@ export const assignShipLoadResourcesContext = createAssignAction(({ context, eve
   if (tileCollectedFlag || remainingTileResources.total <= 0) {
     // Chercher une autre tuile explorée avec des ressources
     const remainingTiles = updatedKnownTiles.filter(tile => 
+      tile?.collectable &&  // ✅ Check collectable property
       tile?.resources && 
       tile.resources.total > 0 && 
       !tile.collected &&

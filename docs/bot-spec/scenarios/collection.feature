@@ -8,8 +8,21 @@ Fonctionnalité: Collection de Ressources
     Étant donné que le bot est initialisé
     Et que le FSM est en état "evaluating"
 
+  Scénario: Filtre des tuiles collectable=true seulement
+    Étant donné que la grille contient les tuiles explorées:
+      | coord | type     | explorable | collectable | resources.total |
+      | 5,5   | resource | true       | true        | 150             |
+      | 6,6   | danger   | true       | false       | 0               |
+      | 7,7   | resource | true       | true        | 200             |
+      | 8,8   | fuel     | false      | false       | 0               |
+    Et que memory.knownTiles contient ces tuiles marquées comme explored=true
+    Quand le guard shouldCollect est évalué
+    Alors seules les tuiles "5,5" et "7,7" sont candidates (danger et fuel filtrées)
+    Et le guard retourne true
+    
   Scénario: Collection simple d'une tuile
     Étant donné que availableTiles contient [tileA]
+    Et que tileA.collectable = true
     Et que tileA.resources = {food: 100, debris: 50, special: 0, total: 150}
     Et que vehicle.resources.total = 75
     Et que vehicle.fuel = 60
@@ -21,9 +34,10 @@ Fonctionnalité: Collection de Ressources
     Et ship.visualState devient "moving"
     Et ship.targetVehicleTile = tileA
     
-  Scénario: Chargement de ressources depuis une tuile
+  Scénario: Chargement de ressources depuis une tuile collectable
     Étant donné que ship est en état "collecting.ship_collecting"
     Et que ship est à targetVehicleTile
+    Et que targetVehicleTile.collectable = true
     Et que vehicle.resources.total = 75
     Et que vehicle.fuel = 60
     Quand l'événement SHIP_LOAD_RESOURCES est reçu avec amount={food: 100, debris: 50, special: 0}
@@ -33,6 +47,16 @@ Fonctionnalité: Collection de Ressources
     Et vehicle.fuel diminue de 1% (60 → 59)
     Et memory.stats.tilesCollected s'incrémente de 1
 
+  Scénario: Blocage de collection si tuile non-collectable
+    Étant donné que availableTiles contient [dangerTile]
+    Et que dangerTile.type = "danger"
+    Et que dangerTile.collectable = false
+    Et que dangerTile.resources = {food: 0, debris: 0, special: 0, total: 0}
+    Quand le guard canCollectTile est évalué
+    Alors le guard retourne false
+    Et le FSM ne collecte pas les ressources
+    Et ship.targetVehicleTile ne change pas
+    
   Scénario: Détection de surcharge après collection
     Étant donné que vehicle.resources.total = 1550
     Et que vehicle.maxCapacity.total = 2003
@@ -46,6 +70,7 @@ Fonctionnalité: Collection de Ressources
 
   Scénario: Collection multiple de tuiles sans surcharge
     Étant donné que availableTiles contient [tileA, tileB, tileC]
+    Et que toutes les tuiles ont collectable=true
     Et que vehicle.resources.total = 100
     Et que vehicle.maxCapacity.total = 2003
     

@@ -8,11 +8,24 @@ Fonctionnalité: Exploration Autonome
     Étant donné que le bot est initialisé
     Et que le FSM est en état "evaluating"
 
+  Scénario: Filtre des tuiles explorable=true seulement
+    Étant donné que la grille contient les tuiles:
+      | coord | type     | explorable | collectable |
+      | 5,5   | resource | true       | true        |
+      | 6,6   | fuel     | false      | false       |
+      | 7,7   | resource | true       | true        |
+      | 8,8   | obstacle | false      | false       |
+    Et que le drone est au centre de la grille
+    Quand le guard hasUnexploredTilesInRadius est évalué avec radius=3
+    Alors seules les tuiles "5,5" et "7,7" sont considérées (fuel et obstacle filtrées)
+    Et le guard retourne true
+    
   Scénario: Exploration réussie d'une tuile
     Étant donné que explorationQueue contient ["5,5", "6,6", "7,7"]
     Et que vehicle.fuel = 50
     Et que vehicle.damage = 20
     Et que drone.visualState = "docked"
+    Et que tuile "5,5" a explorable=true
     Quand le guard shouldExplore est évalué
     Alors le guard retourne true
     Quand l'événement NEED_EXPLORING est reçu
@@ -23,6 +36,7 @@ Fonctionnalité: Exploration Autonome
   Scénario: Drone scanne une tuile et découvre des ressources
     Étant donné que drone.visualState = "deploying"
     Et que le drone a atteint la tuile cible "5,5"
+    Et que tuile "5,5" a explorable=true
     Quand l'événement DRONE_REACHES_TILE est reçu
     Alors le FSM transite vers "exploring.drone_scanning"
     Et drone.visualState devient "scanning"
@@ -41,6 +55,17 @@ Fonctionnalité: Exploration Autonome
     Quand l'événement DRONE_READY_FOR_REDEPLOY est reçu
     Alors le FSM transite vers "evaluating"
     Et drone est prêt pour un nouveau déploiement
+
+  Scénario: Exploration bloquée par tuiles non-explorable
+    Étant donné que la grille contient uniquement:
+      | coord | type    | explorable | collectable |
+      | 5,5   | fuel    | false      | false       |
+      | 6,6   | repair  | false      | false       |
+      | 7,7   | depart  | false      | false       |
+    Et que le drone est au centre
+    Quand le guard hasUnexploredTilesInRadius est évalué
+    Alors le guard retourne false (aucune tuile avec explorable=true)
+    Et le FSM reste en "evaluating"
 
   Scénario: Exploration bloquée par fuel bas
     Étant donné que explorationQueue contient ["5,5"]
@@ -93,6 +118,7 @@ Fonctionnalité: Exploration Autonome
   Scénario: Cycle d'exploration complet avec plusieurs tuiles
     Étant donné que explorationQueue contient ["5,5", "6,6"]
     Et que vehicle.fuel = 50
+    Et que les tuiles cibles ont explorable=true
     
     # Première tuile
     Quand l'événement NEED_EXPLORING est reçu

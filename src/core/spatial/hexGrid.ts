@@ -177,6 +177,8 @@ export function initializeGameGrid(config: HexGridConfig): TileMap {
         type: 'food' as TileType,
         biome: 'grassland' as TileBiome,
         walkable: true,
+        explorable: true,
+        collectable: true,
         explored: false,
         collected: false,
         neighbors,

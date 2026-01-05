@@ -237,13 +237,13 @@ export const hasUnexploredTilesInRadius: XStateV5Guard = ({ context }) => {
     const coord = tile.position?.coord;
     if (!coord) return false;
     
+    // ✅ Check explorable property (static game rule)
+    if (!tile.explorable) return false;
+    
     // Exclude if explored in TileStore OR in memory
     const freshTile = freshTiles[coord];
     if (freshTile?.explored) return false;
     if (exploredCoords.has(coord as `${number},${number}`)) return false;
-    
-    // Exclude base tile
-    if (tile.type === 'depart') return false;
     
     return true;
   });
@@ -373,6 +373,7 @@ export const shouldCollect: XStateV5Guard = ({ context }) => {
   
   // Must have at least one explored tile with resources that hasn't been collected
   const hasCollectibleTiles = knownTiles.some(tile => 
+    tile?.collectable &&  // ✅ Check collectable property
     tile?.explored === true &&
     tile?.hasResources && 
     !tile?.collected && 

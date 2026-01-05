@@ -54,7 +54,11 @@ export interface Tile {
   isWalkable?: boolean;               // Alias pour compatibilité avec anciens types
   neighbors?: GridCoordinate[];       // Coordonnées des tuiles voisines
   
-  // État d'exploration et collecte
+  // Capacités statiques (règles du jeu par type)
+  explorable: boolean;                // Cette tuile PEUT être explorée par un drone ?
+  collectable: boolean;               // Cette tuile PEUT être collectée par un ship ?
+  
+  // État dynamique (progression du bot)
   explored?: boolean;                 // A été explorée ?
   exploredAt?: number;                // Timestamp d'exploration
   exploredBy?: string;                // ID de l'entité qui l'a explorée

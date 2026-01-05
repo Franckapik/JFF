@@ -31,7 +31,7 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 
 // Import depuis l'architecture domain-based
 // Imports par domaine pour éviter les erreurs de syntaxe
-import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection/index.ts';
+import { assignDangerDamageContext, assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection/index.ts';
 import { assignEvaluationContext, assignShipRelocatedContext, assignShipRelocationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation/index.ts';
 // ✅ Phase 1: ALL guards from guards.pure.ts (no store dependencies)
 import { allLocalTilesExplored, canStartExploring, canStartExploringWithValidTarget, hasTilesAvailable, hasUnexploredTilesInRadius, shouldCollect, shouldExplore, shouldMaintain, shouldRelocateShip } from './domains/evaluation/guards.pure.ts';
@@ -45,7 +45,7 @@ import { onGameOverEntry, onMaintainingEntry, onMaintainingExit, onShipDepositin
 import { canIncreaseRadius, isAtMaxRadius, isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure.ts';
 
 // ✅ Phase 1: Pure guards from collection domain
-import { canCollectTile, hasMoreCollectibleTiles, isVehicleOverloaded, noMoreCollectibleTiles } from './domains/collection/guards.pure.ts';
+import { canCollectTile, hasMoreCollectibleTiles, isVehicleOverloaded, noMoreCollectibleTiles, shouldApplyDangerDamage } from './domains/collection/guards.pure.ts';
 // ✅ Phase 1: Pure guards from initializing domain
 import { areAllEntitiesInitialized, isBasePositionInitialized, isDronePositionInitialized, isVehiclePositionInitialized } from './domains/initializing/guards.pure.ts';
 
@@ -100,6 +100,7 @@ export const machineXV5Pure = setup({
     assignShipReturningContext,
     assignShipReachedBaseContext,
     assignShipLoadResourcesContext,
+    assignDangerDamageContext, // 🆕 NEW: Apply +10% damage on danger tile
     onCollectingEntry,
     onCollectingExit,
     onShipMovingToTileEntry,
@@ -154,6 +155,7 @@ export const machineXV5Pure = setup({
     isVehicleOverloaded,
     hasMoreCollectibleTiles, // ✅ Pure: uses context.memory.knownTiles
     noMoreCollectibleTiles, // ✅ Inverse de hasMoreCollectibleTiles
+    shouldApplyDangerDamage, // 🆕 NEW: Check if ship hits danger tile
     
     // Guards du domaine MAINTENANCE (pure)
     needsDeposit,
@@ -323,11 +325,19 @@ export const machineXV5Pure = setup({
           on: {
             SHIP_REACHES_TILE: [
               {
+                // Priority 1: Ship hits danger tile → apply damage, then collect
+                target: 'ship_collecting',
+                guard: 'shouldApplyDangerDamage',
+                actions: ['assignDangerDamageContext', 'assignShipCollectingContext']
+              },
+              {
+                // Priority 2: Normal collection (no danger)
                 target: 'ship_collecting',
                 guard: 'canCollectTile',
                 actions: 'assignShipCollectingContext'
               },
               {
+                // Priority 3: Cannot collect → return to evaluating
                 target: '#machineXV5Pure.evaluating'
               }
             ]
