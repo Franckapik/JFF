@@ -1,5 +1,6 @@
 import React from 'react';
 
+import useBotSelectionStore from '../stores/useBotSelectionStore';
 import { useTileStore } from '../stores/useTileStore';
 import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates.d';
@@ -27,16 +28,18 @@ function hasValidContext(snapshot: unknown): snapshot is {
   );
 }
 
-/**
- * Composant affichant la liste des tuiles collectées
- * Permet de copier-coller facilement les données pour analyse
- */
-export default function CollectedTilesList() {
+// Composant interne pour un seul bot
+function SingleBotCollected({ 
+  botId, 
+  compact = false 
+}: { 
+  botId: 'bot-0' | 'bot-1'; 
+  compact?: boolean;
+}) {
   const tiles = useTileStore((state) => state.tiles);
   const botStates = useXFSMStore((state) => state.botStates);
-  const botSnapshot = botStates['bot-0'];
+  const botSnapshot = botStates[botId];
 
-  // Extraire le score du contexte FSM
   const scoreFromFSM = React.useMemo(() => {
     let score = { food: 0, debris: 0, special: 0, total: 0 };
     if (hasValidContext(botSnapshot)) {
@@ -45,10 +48,91 @@ export default function CollectedTilesList() {
     return score;
   }, [botSnapshot]);
 
-  // Filtrer les tuiles collectées et les trier par coordonnées
+  // Filtrer les tuiles collectées par ce bot
   const collectedTiles = React.useMemo(() => {
     return Object.entries(tiles)
-      .filter(([, tile]) => tile.collected)
+      .filter(([, tile]) => tile.collected && tile.collectedBy === botId)
+      .sort(([coordA], [coordB]) => {
+        const [aq, ar] = coordA.split(',').map(Number);
+        const [bq, br] = coordB.split(',').map(Number);
+        return aq === bq ? ar - br : aq - bq;
+      })
+      .map(([coord, tile]) => ({
+        coord: coord as GridCoordinate,
+        type: tile.type || 'unknown',
+      }));
+  }, [tiles, botId]);
+
+  const borderColor = botId === 'bot-0' ? '#22c55e' : '#3b82f6';
+
+  return (
+    <div style={{ 
+      ...styles.singleBot, 
+      borderLeftColor: borderColor,
+      flex: 1,
+    }}>
+      <h4 style={{ ...styles.botTitle, color: borderColor }}>
+        {botId === 'bot-0' ? '📦 Bot-0' : '📦 Bot-1'} ({collectedTiles.length})
+      </h4>
+      
+      <div style={styles.totalsGridCompact}>
+        <span>🍖 {scoreFromFSM.food}</span>
+        <span>🗑️ {scoreFromFSM.debris}</span>
+        <span>⭐ {scoreFromFSM.special}</span>
+        <span style={{ fontWeight: 'bold' }}>Σ {scoreFromFSM.total}</span>
+      </div>
+
+      <div style={{ ...styles.listContainer, maxHeight: compact ? '120px' : '200px' }}>
+        {collectedTiles.length === 0 ? (
+          <p style={{ color: '#999', fontSize: '10px', fontStyle: 'italic' }}>Aucune</p>
+        ) : (
+          collectedTiles.slice(0, compact ? 5 : 10).map((tile) => (
+            <div key={tile.coord} style={styles.tileItemCompact}>
+              <span style={styles.tileCoordCompact}>{tile.coord}</span>
+              <span style={styles.tileTypeCompact}>{tile.type}</span>
+            </div>
+          ))
+        )}
+        {collectedTiles.length > (compact ? 5 : 10) && (
+          <div style={{ fontSize: '9px', color: '#999', textAlign: 'center' }}>
+            +{collectedTiles.length - (compact ? 5 : 10)} autres...
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Composant affichant la liste des tuiles collectées
+ * Supporte l'affichage multi-bots selon selectedView
+ * 
+ * IMPORTANT: Tous les hooks doivent être appelés inconditionnellement
+ * pour respecter les règles des Hooks React
+ */
+export default function CollectedTilesList() {
+  const selectedView = useBotSelectionStore((state) => state.selectedView);
+  const tiles = useTileStore((state) => state.tiles);
+  const botStates = useXFSMStore((state) => state.botStates);
+
+  // Déterminer quel bot afficher en mode single (toujours calculé)
+  const singleBotId = (selectedView === 'both' ? 'bot-0' : selectedView) as 'bot-0' | 'bot-1';
+  const botSnapshot = botStates[singleBotId];
+
+  // TOUS les hooks doivent être appelés à chaque render, même en mode "both"
+  // Extraire le score du contexte FSM (utilisé en mode single)
+  const scoreFromFSM = React.useMemo(() => {
+    let score = { food: 0, debris: 0, special: 0, total: 0 };
+    if (hasValidContext(botSnapshot)) {
+      score = botSnapshot.context.score?.resources || score;
+    }
+    return score;
+  }, [botSnapshot]);
+
+  // Filtrer les tuiles collectées par ce bot (utilisé en mode single)
+  const collectedTiles = React.useMemo(() => {
+    return Object.entries(tiles)
+      .filter(([, tile]) => tile.collected && tile.collectedBy === singleBotId)
       .sort(([coordA], [coordB]) => {
         const [aq, ar] = coordA.split(',').map(Number);
         const [bq, br] = coordB.split(',').map(Number);
@@ -58,11 +142,10 @@ export default function CollectedTilesList() {
         coord: coord as GridCoordinate,
         type: tile.type || 'unknown',
         biome: tile.biome || 'unknown',
-        // Les tuiles collectées sont vidées, on ne peut pas afficher leurs ressources individuelles
         resources: { food: 0, debris: 0, special: 0, total: 0 },
         explored: tile.explored || false,
       }));
-  }, [tiles]);
+  }, [tiles, singleBotId]);
 
   // Utiliser le score global (qui contient les ressources réellement collectées)
   const totals = React.useMemo(() => {
@@ -92,12 +175,30 @@ export default function CollectedTilesList() {
   }, [collectedTiles, totals]);
 
   // Copier dans le presse-papier
-  const handleCopy = () => {
+  const handleCopy = React.useCallback(() => {
     navigator.clipboard.writeText(copyableText).then(() => {
       alert('📋 Liste copiée dans le presse-papier !');
     });
-  };
+  }, [copyableText]);
 
+  // ============================================
+  // RENDU CONDITIONNEL (après tous les hooks)
+  // ============================================
+
+  // Mode "both": afficher les deux bots côte à côte
+  if (selectedView === 'both') {
+    return (
+      <section style={styles.section}>
+        <h3 style={{ margin: '0 0 10px 0', fontSize: '14px' }}>📦 Tuiles Collectées</h3>
+        <div style={styles.dualContainer}>
+          <SingleBotCollected botId="bot-0" compact />
+          <SingleBotCollected botId="bot-1" compact />
+        </div>
+      </section>
+    );
+  }
+
+  // Mode single bot - version complète
   if (collectedTiles.length === 0) {
     return (
       <section style={styles.section}>
@@ -163,14 +264,52 @@ export default function CollectedTilesList() {
 
 const styles = {
   section: {
-    padding: '15px',
+    padding: '12px',
     backgroundColor: 'white',
     borderRadius: '8px',
     borderLeft: '4px solid #8b5cf6',
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    height: '100%',
     display: 'flex',
     flexDirection: 'column',
+  } as React.CSSProperties,
+  dualContainer: {
+    display: 'flex',
+    gap: '10px',
+  } as React.CSSProperties,
+  singleBot: {
+    padding: '8px',
+    backgroundColor: '#fafafa',
+    borderRadius: '6px',
+    borderLeft: '3px solid',
+  } as React.CSSProperties,
+  botTitle: {
+    margin: '0 0 6px 0',
+    fontSize: '11px',
+    fontWeight: 600,
+  } as React.CSSProperties,
+  totalsGridCompact: {
+    display: 'flex',
+    gap: '8px',
+    fontSize: '9px',
+    marginBottom: '6px',
+    color: '#666',
+  } as React.CSSProperties,
+  tileItemCompact: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '3px 6px',
+    marginBottom: '2px',
+    backgroundColor: '#fff',
+    borderRadius: '3px',
+    fontSize: '9px',
+    border: '1px solid #eee',
+  } as React.CSSProperties,
+  tileCoordCompact: {
+    fontWeight: 'bold',
+    color: '#333',
+  } as React.CSSProperties,
+  tileTypeCompact: {
+    color: '#999',
   } as React.CSSProperties,
   header: {
     display: 'flex',
@@ -214,10 +353,10 @@ const styles = {
   listContainer: {
     flex: 1,
     overflowY: 'auto',
-    maxHeight: '400px',
+    maxHeight: '150px',
     border: '1px solid #e5e7eb',
     borderRadius: '4px',
-    padding: '8px',
+    padding: '4px',
   } as React.CSSProperties,
   tileItem: {
     padding: '10px',

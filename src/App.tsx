@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { useSimulatedTracker } from './ai/fsm/machineX/hooks/trackers/useSimulatedTracker';
+import { useMultiSimulatedTracker, type BotActor } from './ai/fsm/machineX/hooks/trackers/useMultiSimulatedTracker';
 import FSMVisualization from './components/FSMVisualization';
 import { config } from './config';
 import useGameStore from './stores/useGameStore';
@@ -17,9 +17,9 @@ import useXFSMStore from './stores/useXFSMStore';
  * 3. Both tabs will sync via BroadcastChannel
  */
 export default function App() {
-  // Get bot actor from store for tracker
+  // Get bot actors from store for multi-bot tracker
   const getActor = useXFSMStore((state) => state.getActor);
-  const [botActor, setBotActor] = React.useState<ReturnType<typeof getActor>>(null);
+  const [botActors, setBotActors] = React.useState<BotActor[]>([]);
 
   // Initialize on mount (one-time setup, no dependencies needed)
   React.useEffect(() => {
@@ -47,14 +47,15 @@ export default function App() {
       gameStore.markTilesAsInitialized();
       // Note: markStartingTilesAsAssigned() will be called after tile assignment
 
-      // ✅ STEP 3: Create and start bot FSM (will now read tiles from tileStore)
+      // ✅ STEP 3: Create bots FSM (will now read tiles from tileStore)
       xfsmStore.addBot('bot-0');
+      xfsmStore.addBot('bot-1');
       
       // ✅ STEP 4: Manually assign starting tiles with random placement
       console.log('🎲 [App] BEFORE assignStartingTiles - existing tiles with depart type:', 
         Object.values(generatedTiles).filter(t => t.type === 'depart').length);
       
-      tileStore.assignStartingTiles(['bot-0']);
+      tileStore.assignStartingTiles(['bot-0', 'bot-1']);
       
       const tilesAfterAssignment = tileStore.tiles; // Utiliser directement tileStore.tiles
       const departTiles = Object.values(tilesAfterAssignment).filter(t => t.type === 'depart');
@@ -66,18 +67,31 @@ export default function App() {
       
       gameStore.markStartingTilesAsAssigned();
       xfsmStore.startBot('bot-0');
+      xfsmStore.startBot('bot-1');
       
-      // Get actor for tracker
-      const actor = xfsmStore.getActor('bot-0');
-      setBotActor(actor);
+      // Get actors for multi-bot tracker
+      const actor0 = xfsmStore.getActor('bot-0');
+      const actor1 = xfsmStore.getActor('bot-1');
+      
+      const actors: BotActor[] = [];
+      if (actor0) actors.push({ botId: 'bot-0', actor: actor0 });
+      if (actor1) actors.push({ botId: 'bot-1', actor: actor1 });
+      
+      setBotActors(actors);
+      
+      console.log('🤖 [App] Multi-bot tracker initialized:', {
+        bot0: !!actor0,
+        bot1: !!actor1,
+        totalBots: actors.length
+      });
     } catch (error) {
       console.error('❌ [App] Initialization error:', error);
       console.error('❌ [App] Stack trace:', error?.stack);
     }
   }, []);
 
-  // Activate simulated tracker in test mode
-  useSimulatedTracker(botActor, { 
+  // Activate multi-bot simulated tracker in test mode
+  useMultiSimulatedTracker(botActors, { 
     verbose: config.enableVerboseTracking,
     enabled: config.testMode 
   });

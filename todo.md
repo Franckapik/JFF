@@ -1,19 +1,6 @@
---TODO
-L'initialisation se fait dpeuis la scene avec un guard de controle avant de passer à evaluating. FAIT
-Le travail en cours est la position du vehicle en WorldGridPosition. Cela permet une comprehension dans le viewer des deplacements. Attention a bien surveiller les perf. FAIT
+pathfinding for ship
 
-A faire : 
-- recherche d etuiles pour l'explorzation en fonction d'un radius réel indiqué depuis le store. FAIT
 
-Je suis rendu là. J'ai commenté la fonction tileInRadius afin de comprendre comment elle fonctionne et si cette derniere utilise bien la compraison range et distance.
-
-Déja :
-shipPosition peut desormais changer de type car la position du vaisseau est de type WolrdGrid desormais. FAIT
-
-- regarder le systeme de comptage de tuiles explorées. A indiquer dans le viewzer. FAIT
-- permettre la collection en fonction du compte d'exploration selon un chiffre deifnis dans le store. FAIT
-- s'assurer que le score soit bien en place et visible depuis le viwer egalement.
-- le chemin doit ensuite vraiment se faire de tuiles en tuile pour le vehicle.
 
 Refondre la fonction permettant de calculer le chemin en fonction des tuiles pour essayer de resoudre ce probleme de decalage et eviter de donner la possibilité de faire du direct path mais plutot une erreur bloquante.
 
@@ -132,3 +119,4 @@ Base de depart aléatoire
 Connait-il deja les dangers ? 
 Ajouter un evenement plus aléatoire (nuage) dans le simulateur ? 
 Le refuel doit etre plus precoce dans le jeu
+

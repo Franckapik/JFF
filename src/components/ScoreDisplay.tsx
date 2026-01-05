@@ -1,5 +1,6 @@
 import React from 'react';
 
+import useBotSelectionStore from '../stores/useBotSelectionStore';
 import useXFSMStore from '../stores/useXFSMStore';
 
 /**
@@ -14,58 +15,99 @@ function hasValidContext(snapshot: unknown): snapshot is { context: { score?: { 
   );
 }
 
-/**
- * Component to display the current score from the FSM context
- * Shows total score and breakdown by resource type
- */
-export const ScoreDisplay: React.FC = () => {
-  // Utiliser directement le store Zustand pour récupérer le snapshot
+// Composant interne pour un seul bot
+function SingleBotScore({ botId, compact = false }: { botId: 'bot-0' | 'bot-1'; compact?: boolean }) {
   const botStates = useXFSMStore((state) => state.botStates);
-  const botSnapshot = botStates['bot-0'];
+  const botSnapshot = botStates[botId];
   
-  // Extraire le score du contexte FSM avec type safety
   let score = { food: 0, debris: 0, special: 0, total: 0 };
   if (hasValidContext(botSnapshot)) {
     score = botSnapshot.context.score?.resources || score;
   }
 
+  const borderColor = botId === 'bot-0' ? '#22c55e' : '#3b82f6';
+
   return (
     <div style={{
-      position: 'fixed',
-      top: 20,
-      right: 20,
-      background: 'rgba(0, 0, 0, 0.8)',
-      color: 'white',
-      padding: '15px',
-      borderRadius: '8px',
-      fontFamily: 'monospace',
-      fontSize: '14px',
-      minWidth: '200px',
-      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
-      zIndex: 1000
+      padding: compact ? '8px' : '10px',
+      backgroundColor: 'rgba(255,255,255,0.05)',
+      borderRadius: '6px',
+      borderLeft: `3px solid ${borderColor}`,
+      flex: 1,
     }}>
-      <h3 style={{ margin: '0 0 10px 0', color: '#4CAF50' }}>🏆 Score Global</h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+      <h4 style={{ margin: '0 0 6px 0', fontSize: compact ? '10px' : '12px', color: borderColor }}>
+        {botId === 'bot-0' ? '🏆 Bot-0' : '🏆 Bot-1'}
+      </h4>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: compact ? '10px' : '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>🍎 Food:</span>
-          <span style={{ color: '#FFB74D' }}>{score.food}</span>
+          <span>🍎</span><span style={{ color: '#FFB74D' }}>{score.food}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>🔩 Debris:</span>
-          <span style={{ color: '#90A4AE' }}>{score.debris}</span>
+          <span>🔩</span><span style={{ color: '#90A4AE' }}>{score.debris}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>⭐ Special:</span>
-          <span style={{ color: '#E1BEE7' }}>{score.special}</span>
+          <span>⭐</span><span style={{ color: '#E1BEE7' }}>{score.special}</span>
         </div>
-        <hr style={{ margin: '8px 0', border: '1px solid #555' }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
-          <span>📊 Total:</span>
-          <span style={{ color: '#4CAF50', fontSize: '16px' }}>{score.total}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', borderTop: '1px solid #555', paddingTop: '4px', marginTop: '2px' }}>
+          <span>Σ</span><span style={{ color: '#4CAF50' }}>{score.total}</span>
         </div>
       </div>
     </div>
   );
+}
+
+/**
+ * Component to display the current score from the FSM context
+ * Supports multi-bot display according to selectedView
+ */
+export const ScoreDisplay: React.FC = () => {
+  const selectedView = useBotSelectionStore((state) => state.selectedView);
+
+  // Mode "both": afficher les deux bots côte à côte
+  if (selectedView === 'both') {
+    return (
+      <div style={styles.container}>
+        <h3 style={styles.title}>🏆 Score Global</h3>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <SingleBotScore botId="bot-0" compact />
+          <SingleBotScore botId="bot-1" compact />
+        </div>
+      </div>
+    );
+  }
+
+  // Mode single bot
+  const botId = selectedView as 'bot-0' | 'bot-1';
+  
+  return (
+    <div style={styles.container}>
+      <h3 style={styles.title}>🏆 Score Global</h3>
+      <SingleBotScore botId={botId} />
+    </div>
+  );
+};
+
+const styles = {
+  container: {
+    position: 'fixed',
+    top: 20,
+    right: 20,
+    background: 'rgba(0, 0, 0, 0.85)',
+    color: 'white',
+    padding: '12px',
+    borderRadius: '8px',
+    fontFamily: 'system-ui, sans-serif',
+    fontSize: '12px',
+    minWidth: '180px',
+    maxWidth: '320px',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+    zIndex: 1000,
+  } as React.CSSProperties,
+  title: {
+    margin: '0 0 10px 0',
+    fontSize: '13px',
+    color: '#4CAF50',
+  } as React.CSSProperties,
 };
 
 export default ScoreDisplay;
