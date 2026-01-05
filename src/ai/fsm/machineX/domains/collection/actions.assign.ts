@@ -216,7 +216,16 @@ export const assignShipCollectingContext = createAssignAction(({ context, event 
   const targetTileCoord = context.vehicle.targetVehicleTile?.position?.coord;
   const arrivedCoord = targetTileCoord || context.vehicle.coord;
 
+  // 🔥 DANGER COLLISION DETECTION: Vérifier s'il y a un danger dynamique sur la tuile d'arrivée
+  let damageIncrement = 0;
+  const tileStore = useTileStore.getState();
+  const arrivalTile = tileStore.getTile(arrivedCoord);
   
+  if (arrivalTile?.isDynamicDanger) {
+    damageIncrement = 10; // 10% de dégâts pour danger dynamique
+    fsmLogger.warn(`💥 [${context?.entityId || 'unknown'}] Ship collided with dynamic danger at ${arrivedCoord}! Damage: +${damageIncrement}%`);
+  }
+
   return {
     vehicle: {
       ...context.vehicle,
@@ -224,6 +233,7 @@ export const assignShipCollectingContext = createAssignAction(({ context, event 
       isMoving: false, // ✅ IMPORTANT: Le vaisseau s'arrête pour collecter
       progress: 100, // Arrivé à destination
       currentSpeed: 0,
+      damage: Math.min(100, (context.vehicle.damage || 0) + damageIncrement), // 🔥 Appliquer les dégâts, max 100%
       visualState: 'collecting' as VehicleVisualState
     },
     fsmState: 'collecting_ship_collecting', // 🟢 Mise à jour de l'état global FSM
@@ -299,6 +309,17 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
   }
   
   const baseCoord = context.vehicle?.baseCoord || '0,0';
+  
+  // 🔥 DANGER COLLISION DETECTION: Vérifier s'il y a un danger dynamique sur la base (cas rare mais possible)
+  let damageIncrement = 0;
+  const tileStore = useTileStore.getState();
+  const baseTile = tileStore.getTile(baseCoord);
+  
+  if (baseTile?.isDynamicDanger) {
+    damageIncrement = 10; // 10% de dégâts pour danger dynamique
+    fsmLogger.warn(`💥 [${context?.entityId || 'unknown'}] Ship collided with dynamic danger at base ${baseCoord}! Damage: +${damageIncrement}%`);
+  }
+  
   fsmLogger.action(`🏠 [${context.entityId}] Ship reached base - ready for maintenance`, {
     vehicleResources: context.vehicle.resources,
     vehicleState: context.vehicle.visualState
@@ -311,6 +332,7 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
       isMoving: false, // ✅ IMPORTANT: Le vaisseau s'arrête à la base
       progress: 100, // Arrivé à la base
       currentSpeed: 0,
+      damage: Math.min(100, (context.vehicle.damage || 0) + damageIncrement), // 🔥 Appliquer les dégâts, max 100%
       targetVehicleTile: null, // Plus de cible active
       visualState: 'docked' as VehicleVisualState
     },

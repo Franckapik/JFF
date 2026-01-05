@@ -574,7 +574,7 @@ function checkAllLocalTilesExplored(context: FSMContext): boolean {
       
       // ✅ FIX: Use ONLY memory.knownTiles as source of truth
       // gridInfo.tiles.explored may not be updated in real-time
-      const isExploredInMemory = exploredCoords.has(coord as `${number},${number}`);
+      const isExploredInMemory = exploredCoords.has(coord as GridCoordinate);
       
       if (isExploredInMemory) {
         exploredInRadius++;

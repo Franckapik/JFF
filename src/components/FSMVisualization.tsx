@@ -6,6 +6,7 @@ import { useTileStore } from '../stores/useTileStore';
 import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates';
 import type { FSMContext } from '../types/fsm.d';
+
 import BotSelector from './BotSelector';
 import PositionDisplay from './PositionDisplay';
 import TileMatrixLayout from './TileMatrixLayout';
