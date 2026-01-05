@@ -81,6 +81,53 @@ Fonctionnalité: Initialisation du Bot
     Quand l'initialisation complète s'effectue
     Alors le bot est prêt pour un nouveau cycle
 
+  Scénario: Génération de tuile de départ aléatoire depuis TileStore
+    Étant donné que TileStore contient 100 tuiles générées
+    Et que aucune tuile de départ n'existe encore
+    Quand placeStartingTiles est appelé avec botCount = 1
+    Alors une tuile aléatoire est sélectionnée parmi les 100 tuiles
+    Et cette tuile est convertie en type = "depart"
+    Et cette tuile a resources = {food: 200, debris: 200, special: 0, total: 400}
+    Et cette tuile.hasResources = true
+    Et cette tuile.color = "#4CAF50" (vert)
+
+  Scénario: Tuile de départ assignée à un botId spécifique
+    Étant donné que placeStartingTiles a créé une tuile de départ à "3,3"
+    Et que activeBotIds = ["bot-0"]
+    Quand assignStartingTilesToBots est appelé
+    Alors tile["3,3"].assignedToBot = "bot-0"
+    Et bot-0 initialise sa basePosition depuis tile["3,3"].position
+    Et context.vehicle.basePosition = {x: tile["3,3"].position.x, y: 0.5, z: tile["3,3"].position.z}
+
+  Scénario: Initialisation multi-bot avec bases séparées
+    Étant donné que botCount = 2
+    Et que activeBotIds = ["bot-0", "bot-1"]
+    Quand le système initialise les bots
+    Alors placeStartingTiles crée 2 tuiles de départ aléatoires
+    Et assignStartingTilesToBots assigne startingTiles[0] à bot-0
+    Et assignStartingTilesToBots assigne startingTiles[1] à bot-1
+    Quand bot-0 s'initialise
+    Alors bot-0.context.vehicle.basePosition = startingTiles[0].position
+    Quand bot-1 s'initialise
+    Alors bot-1.context.vehicle.basePosition = startingTiles[1].position
+    Et les deux bots ont des bases différentes et indépendantes
+
+  Scénario: Tuile de départ contient des ressources initiales
+    Étant donné qu'une tuile de départ est créée à "2,4"
+    Alors tile["2,4"].type = "depart"
+    Et tile["2,4"].resources = {food: 200, debris: 200, special: 0, total: 400}
+    Et tile["2,4"].hasResources = true
+    Et le bot peut collecter ces ressources initiales si nécessaire
+
+  Scénario: Randomisation des tuiles de départ entre sessions
+    Étant donné qu'une session 1 est lancée
+    Quand placeStartingTiles génère une tuile de départ
+    Alors la coordonnée peut être par exemple "3,3"
+    Étant donné qu'une session 2 est relancée (restart)
+    Quand placeStartingTiles génère une nouvelle tuile de départ
+    Alors la coordonnée peut être différente, par exemple "7,2"
+    Et chaque session démarre depuis une position aléatoire sur la grille
+
   Plan du Scénario: Validation des positions initiales
     Étant donné que le ship s'initialise à la position <shipPos>
     Et que le drone s'initialise à la position <dronePos>

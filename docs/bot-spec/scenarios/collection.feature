@@ -311,3 +311,58 @@ Fonctionnalité: Collection de Ressources
       | 1,1 | false| false | true  | 100  | 2,2 | false| false | true  | 150  | 50   | false    | false  | Aucune tuile explorée (explored=false)    |
       | 1,1 | true | false | true  | 100  | 2,2 | true | false | true  | 150  | 15   | false    | false  | Fuel trop bas (< 20)                      |
       | 1,1 | true | false | true  | 100  | 2,2 | true | false | true  | 150  | 50   | true     | false  | Véhicule surchargé                        |
+
+  # ============================================================================
+  # 🆕 SCÉNARIOS MULTI-BOT
+  # ============================================================================
+
+  Scénario: Assignation de tuile collectée à un botId
+    Étant donné que bot-0 collecte la tuile "5,5"
+    Et que tile["5,5"].resources.total = 700
+    Quand l'événement SHIP_LOAD_RESOURCES est reçu par bot-0
+    Alors tile["5,5"].resources.total devient 0
+    Et tile["5,5"].collected = true
+    Et tile["5,5"].collectedBy = "bot-0"
+    Et memory.knownTiles["5,5"].collectedBy = "bot-0"
+
+  Scénario: Filtrage par bot des tuiles collectées
+    Étant donné que tile["5,5"].collectedBy = "bot-0"
+    Et que tile["6,6"].collectedBy = "bot-1"
+    Et que tile["7,7"].collectedBy = "bot-0"
+    Quand CollectedTilesList affiche les tuiles pour bot-0
+    Alors il filtre tiles.filter(t => t.collectedBy === "bot-0")
+    Et affiche uniquement ["5,5", "7,7"]
+    Quand CollectedTilesList affiche les tuiles pour bot-1
+    Alors il affiche uniquement ["6,6"]
+
+  Scénario: Compétition pour une même tuile - Premier arrivé
+    Étant donné que tile["8,8"] contient resources.total = 500
+    Et que bot-0 target tile["8,8"] pour collection
+    Et que bot-1 target également tile["8,8"] pour collection
+    Et que bot-0 est en route (distance = 2)
+    Et que bot-1 est en route (distance = 4)
+    Quand bot-0 atteint tile["8,8"] en premier
+    Et bot-0 collecte les ressources via SHIP_LOAD_RESOURCES
+    Alors tile["8,8"].resources.total = 0
+    Et tile["8,8"].collected = true
+    Et tile["8,8"].collectedBy = "bot-0"
+    Quand bot-1 atteint tile["8,8"]
+    Alors bot-1 détecte que tile.collected = true
+    Et le guard hasCollectibleTiles ignore tile["8,8"] pour bot-1
+    Et bot-1 cherche une tuile alternative avec hasResources = true ET collected = false
+
+  Scénario: Statistiques individuelles par bot
+    Étant donné que bot-0 a collecté 5 tuiles
+    Et que bot-1 a collecté 3 tuiles
+    Quand ScoreDisplay affiche les scores
+    Alors bot-0.memory.stats.tilesCollected = 5
+    Et bot-1.memory.stats.tilesCollected = 3
+    Et les statistiques sont isolées par context FSM
+
+  Scénario: Tuiles de départ ne peuvent pas être collectées par l'autre bot
+    Étant donné que startingTiles[0] est assignée à bot-0 avec type = "depart"
+    Et que bot-1 explore la zone
+    Quand bot-1 évalue hasCollectibleTiles
+    Alors tile avec type = "depart" est EXCLUE du filtrage
+    Et bot-1 ne peut pas collecter la base de bot-0
+    Et seules les tuiles avec type = "resource" sont collectibles

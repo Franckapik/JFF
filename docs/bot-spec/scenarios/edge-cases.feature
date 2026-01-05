@@ -163,3 +163,81 @@ Fonctionnalité: Cas Limites et Boucles Détectées
   
   # FIX #5: Éviter le double envoi d'événements par le tracker
   #         quand le FSM change d'état pendant le transit
+
+  # ============================================================================
+  # 🆕 CAS LIMITES MULTI-BOT
+  # ============================================================================
+
+  Scénario: Deux bots ciblent simultanément la même tuile
+    Étant donné que tile["5,5"].resources.total = 500
+    Et que bot-0 transite vers "collecting.ship_moving_to_tile" avec target = "5,5"
+    Et que bot-1 transite vers "collecting.ship_moving_to_tile" avec target = "5,5"
+    Et que bot-0 atteint "5,5" en premier (timestamp T1)
+    Quand bot-0 collecte tile["5,5"]
+    Alors tile["5,5"].resources.total = 0
+    Et tile["5,5"].collected = true
+    Et tile["5,5"].collectedBy = "bot-0"
+    Quand bot-1 atteint "5,5" (timestamp T2 > T1)
+    Alors bot-1 détecte tile["5,5"].collected = true
+    Et le warning "Target tile already collected by bot-0" est émis
+    Et bot-1.context.targetVehicleTile = null
+    Et bot-1 cherche une tuile alternative
+
+  Scénario: Désynchronisation contexte multi-bot et TileStore partagé
+    Étant donné que bot-0 et bot-1 partagent le même TileStore
+    Et que bot-0.memory.knownTiles["3,3"] = {resources.total: 300, collected: false}
+    Et que bot-1 collecte tile["3,3"] dans TileStore
+    Alors TileStore.tiles["3,3"] = {resources.total: 0, collected: true, collectedBy: "bot-1"}
+    Quand bot-0 évalue hasCollectibleTiles
+    Alors bot-0 lit son context.memory.knownTiles (qui n'est pas à jour)
+    Et bot-0 pense que "3,3" a encore 300 ressources
+    # BUG: bot-0 ne synchronise pas avec TileStore avant d'évaluer le guard
+    Et bot-0 cible "3,3" pour collection (INCORRECT)
+
+  Scénario: Comportement attendu - synchronisation inter-bot via TileStore
+    Étant donné que bot-0 et bot-1 partagent le même TileStore
+    Et que bot-1 collecte tile["3,3"]
+    Alors TileStore.tiles["3,3"].collected = true
+    Quand bot-0 évalue hasCollectibleTiles
+    Alors le guard doit lire TileStore.tiles["3,3"] (source de vérité)
+    Et non pas context.memory.knownTiles (cache local)
+    Et bot-0 détecte que "3,3" est collected = true
+    Et bot-0 ignore "3,3" dans sa liste de cibles
+
+  Scénario: Tuile de départ assignée doit être protégée
+    Étant donné que startingTiles[0].assignedToBot = "bot-0"
+    Et que startingTiles[0].type = "depart"
+    Et que startingTiles[0].coord = "2,2"
+    Quand bot-1 explore la zone et découvre "2,2"
+    Alors bot-1 ajoute "2,2" à memory.knownTiles
+    Quand bot-1 évalue hasCollectibleTiles
+    Alors le guard doit filtrer les tuiles avec type = "depart"
+    Et "2,2" est EXCLUE de la liste collectible pour bot-1
+    Et bot-0 peut collecter sa propre base "2,2" si nécessaire
+
+  Scénario: Gestion de collectedBy dans memory.knownTiles
+    Étant donné que bot-0 collecte tile["7,7"]
+    Alors TileStore.tiles["7,7"].collectedBy = "bot-0"
+    Quand bot-0 met à jour memory.knownTiles["7,7"]
+    Alors memory.knownTiles["7,7"].collectedBy = "bot-0"
+    Quand bot-1 découvre tile["7,7"] (déjà collectée)
+    Alors bot-1 ajoute "7,7" à son memory.knownTiles
+    Et bot-1.memory.knownTiles["7,7"].collectedBy = "bot-0"
+    Et bot-1.memory.knownTiles["7,7"].collected = true
+
+  Scénario: Race condition - Deux bots à la même distance
+    Étant donné que tile["4,4"].resources.total = 600
+    Et que bot-0 et bot-1 sont à la même distance de "4,4"
+    Quand les deux bots envoient SHIP_REACHES_TILE au même instant
+    Alors TileStore résout la race condition via premier write
+    Et le premier bot à écrire collectResources() gagne
+    Et tile["4,4"].collectedBy = premier botId à écrire
+    Et le deuxième bot détecte collected = true lors de SHIP_LOAD_RESOURCES
+
+  Scénario: Logs multi-bot avec préfixe botId pour débogage
+    Étant donné que bot-0 et bot-1 évoluent en parallèle
+    Quand bot-0 collecte tile["5,5"]
+    Alors le log contient "[bot-0] Ship collecting at 5,5"
+    Quand bot-1 collecte tile["6,6"]
+    Alors le log contient "[bot-1] Ship collecting at 6,6"
+    Et les logs permettent de tracer les actions de chaque bot indépendamment
