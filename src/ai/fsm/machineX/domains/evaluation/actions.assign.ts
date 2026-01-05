@@ -170,3 +170,31 @@ export const assignShipRelocationContext = createAssignAction(({ context }) => {
     lastAction: 'shipRelocation_toNewArea'
   };
 });
+
+/**
+ * Action assign pour mettre à jour la position du ship après relocalisation
+ * Appelé quand SHIP_REACHES_TILE est reçu dans l'état maintaining.relocating
+ */
+export const assignShipRelocatedContext = createAssignAction(({ context }) => {
+  const targetTile = context.vehicle?.targetVehicleTile;
+  const targetCoord = targetTile?.position?.coord;
+  
+  if (!targetCoord) {
+    fsmLogger.warn(`⚠️ [${context.entityId}] Cannot update position: no target coord`);
+    return {};
+  }
+  
+  fsmLogger.info(`✅ [${context.entityId}] Ship relocation complete - updating position:`, {
+    from: context.vehicle?.coord,
+    to: targetCoord
+  });
+  
+  return {
+    vehicle: {
+      ...context.vehicle,
+      coord: targetCoord,
+      position: targetTile.position
+    },
+    lastAction: 'shipRelocation_complete'
+  };
+});

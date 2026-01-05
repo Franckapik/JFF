@@ -4,8 +4,8 @@ import { useMultiSimulatedTracker, type BotActor } from './ai/fsm/machineX/hooks
 import FSMVisualization from './components/FSMVisualization';
 import { config } from './config';
 import { useDangerMovement } from './hooks/useDangerMovement';
-import useGameStore from './stores/useGameStore';
 import useBotSelectionStore from './stores/useBotSelectionStore';
+import useGameStore from './stores/useGameStore';
 import { useTileStore } from './stores/useTileStore';
 import useXFSMStore from './stores/useXFSMStore';
 

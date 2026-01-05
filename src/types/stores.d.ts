@@ -203,6 +203,18 @@ export interface ClockSliceActions {
   setClockRunning: (isRunning: boolean) => void;
 }
 
+/** Interface pour le slice de radius (PHASE 2) */
+export interface RadiusSliceActions {
+  // État du radius d'exploration partagé
+  explorationRadius: number;
+  
+  // Actions
+  getExplorationRadius: () => number;
+  incrementRadius: (botId: string) => number;
+  isAtMaxRadius: () => boolean;
+  resetRadius: () => void;
+}
+
 // ============================================================================
 // COMPOSITION DES STORES - Types globaux via intersection
 // ============================================================================
@@ -224,7 +236,8 @@ export type TileStoreType = TileBaseSliceActions &
 export type GameStoreType = PlayerCountSliceActions & 
                            InitializationFlagsSliceActions & 
                            UiConfigSliceActions & 
-                           ClockSliceActions;
+                           ClockSliceActions &
+                           RadiusSliceActions;
 
 // ============================================================================
 // XFSM STORE TYPES

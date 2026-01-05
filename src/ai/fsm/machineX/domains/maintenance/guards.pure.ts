@@ -10,6 +10,8 @@
  */
 
 import { calculateDistanceGrid } from '../../../../../core/spatial/index.ts';
+import useGameStore from '../../../../../stores/useGameStore/index.ts';
+import { MAX_EXPLORATION_RADIUS } from '../../../../../stores/useGameStore/slices/radiusSlice.ts';
 import type { XStateV5Guard } from '../../../../../types/xstate.v5.types.ts';
 
 /**
@@ -159,4 +161,39 @@ export const maintenanceComplete: XStateV5Guard = ({ context }) => {
   
   // Maintenance is complete when none of these conditions are true
   return !hasResources && !needsRepairs && !needsFuel;
+};
+
+/**
+ * 🆕 PHASE 2: Guard to check if exploration radius is at maximum
+ * 
+ * Uses GameStore to read the shared exploration radius.
+ * Returns true when radius >= MAX_EXPLORATION_RADIUS (3)
+ * 
+ * @returns true if radius is at or above maximum (GAME_OVER condition)
+ */
+export const isAtMaxRadius: XStateV5Guard = ({ context }) => {
+  const gameStore = useGameStore.getState();
+  const currentRadius = gameStore.getExplorationRadius();
+  const result = currentRadius >= MAX_EXPLORATION_RADIUS;
+  
+  console.log(`🔍 [isAtMaxRadius] ${context.entityId}: radius=${currentRadius}, max=${MAX_EXPLORATION_RADIUS}, result=${result}`);
+  
+  return result;
+};
+
+/**
+ * 🆕 PHASE 2: Guard to check if exploration radius can still be increased
+ * 
+ * Inverse of isAtMaxRadius - returns true when radius < MAX_EXPLORATION_RADIUS
+ * 
+ * @returns true if radius can be increased
+ */
+export const canIncreaseRadius: XStateV5Guard = ({ context }) => {
+  const gameStore = useGameStore.getState();
+  const currentRadius = gameStore.getExplorationRadius();
+  const result = currentRadius < MAX_EXPLORATION_RADIUS;
+  
+  console.log(`🔍 [canIncreaseRadius] ${context.entityId}: radius=${currentRadius}, max=${MAX_EXPLORATION_RADIUS}, result=${result}`);
+  
+  return result;
 };

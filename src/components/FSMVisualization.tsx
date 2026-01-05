@@ -2,6 +2,7 @@ import React from 'react';
 
 import { gridToWorld } from '../core/spatial';
 import useBotSelectionStore from '../stores/useBotSelectionStore';
+import useGameStore from '../stores/useGameStore';
 import { useTileStore } from '../stores/useTileStore';
 import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates';
@@ -41,6 +42,7 @@ function SingleBotCycleFlow({ botId, compact = false }: { botId: 'bot-0' | 'bot-
   const borderColor = botId === 'bot-0' ? '#22c55e' : '#3b82f6';
   
   const getStateInfo = (state: string) => {
+    if (state.includes('game_over')) return { label: 'GAME OVER', color: '#d32f2f', emoji: '🏁' };
     if (state.includes('initializing')) return { label: 'INIT', color: '#ff9800', emoji: '🚀' };
     if (state.includes('drone_deploying')) return { label: 'DEPLOY', color: '#4caf50', emoji: '🚁' };
     if (state.includes('drone_scanning')) return { label: 'SCAN', color: '#4caf50', emoji: '📡' };
@@ -56,6 +58,7 @@ function SingleBotCycleFlow({ botId, compact = false }: { botId: 'bot-0' | 'bot-
     if (state.includes('refueling')) return { label: 'REFUEL', color: '#9c27b0', emoji: '⛽' };
     if (state.includes('repairing')) return { label: 'REPAIR', color: '#9c27b0', emoji: '🔧' };
     if (state.includes('depositing')) return { label: 'DEPOSIT', color: '#9c27b0', emoji: '📤' };
+    if (state.includes('relocating')) return { label: 'RELOCATE', color: '#e91e63', emoji: '🔄' };
     if (state.includes('maintaining')) return { label: 'MAINTAIN', color: '#9c27b0', emoji: '🛠️' };
     return { label: 'UNKNOWN', color: '#757575', emoji: '❓' };
   };
@@ -157,6 +160,8 @@ export default function FSMVisualization() {
     refueling: 0,
     repairing: 0,
     depositing: 0,
+    relocating: 0,
+    game_over: 0, // 🆕 PHASE 2
   });
   const [lastDroneDestroyed, setLastDroneDestroyed] = React.useState<{ type: string; time: string } | null>(null);
 
@@ -202,7 +207,7 @@ export default function FSMVisualization() {
         const allStates = [
           'initializing', 'evaluating', 'exploring', 'drone_deploying', 'drone_scanning', 'drone_returning', 'drone_docked', 'drone_destroyed',
           'collecting', 'ship_moving_to_tile', 'ship_collecting', 'ship_returning',
-          'maintaining', 'refueling', 'repairing', 'depositing'
+          'maintaining', 'refueling', 'repairing', 'depositing', 'relocating', 'game_over'
         ];
         const updated = { ...prev };
         for (const state of allStates) {
@@ -537,10 +542,20 @@ export default function FSMVisualization() {
               MAINTAIN{stateVisitCounts.maintaining > 0 && <span style={styles.badge}>{stateVisitCounts.maintaining}</span>}
             </span>
             {renderSubstates(currentState, [
+              { key: 'relocating', label: '� Relocate' },
               { key: 'refueling', label: '⛽ Refuel' },
               { key: 'repairing', label: '🔧 Repair' },
               { key: 'depositing', label: '📤 Deposit' }
             ], stateVisitCounts)}
+          </div>
+
+          <span style={styles.arrow}>→</span>
+
+          {/* Game Over - PHASE 2 */}
+          <div style={styles.stateBlock}>
+            <span style={getFlowStyle('game_over', currentState)}>
+              🏁 GAME OVER{stateVisitCounts.game_over > 0 && <span style={styles.badge}>{stateVisitCounts.game_over}</span>}
+            </span>
           </div>
         </div>
       </section>
@@ -561,6 +576,12 @@ export default function FSMVisualization() {
             <tr>
               <td>Last Action:</td>
               <td style={styles.statValue}>{ctx?.lastAction || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td>🎯 Exploration Radius:</td>
+              <td style={{ ...styles.statValue, color: '#e91e63', fontWeight: 'bold' }}>
+                {useGameStore.getState().getExplorationRadius()} / 3
+              </td>
             </tr>
             <tr>
               <td>Known Tiles:</td>

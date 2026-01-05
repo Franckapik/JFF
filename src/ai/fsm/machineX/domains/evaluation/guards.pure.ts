@@ -10,11 +10,28 @@
  * 
  * ⚠️ EXCEPTION: hasUnexploredTilesInRadius reads from TileStore for consistency
  * with assignDroneDeployingContext action (Bug #7 fix)
+ * 
+ * 🆕 PHASE 2: Guards now read explorationRadius from GameStore (shared state)
  */
 
 import { calculateDistanceGrid } from '../../../../../core/spatial/distance.ts';
+import useGameStore from '../../../../../stores/useGameStore/index.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { XStateV5Guard } from '../../../../../types/xstate.v5.types.ts';
+
+/**
+ * 🆕 PHASE 2: Helper to get exploration radius from GameStore
+ * Falls back to context.config.exploringRadius if store not available
+ */
+const getExplorationRadius = (contextRadius?: number): number => {
+  try {
+    const gameStore = useGameStore.getState();
+    return gameStore.getExplorationRadius();
+  } catch {
+    // Fallback to context value if store not available (e.g., in tests)
+    return contextRadius ?? 1;
+  }
+};
 
 /**
  * Pure guard: Check if tiles are available in FSM context
@@ -83,7 +100,8 @@ export const canStartExploring: XStateV5Guard = ({ context }) => {
   
   // ✅ NEW Check 4: At least one unexplored tile must exist in exploration radius
   const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
-  const exploringRadius = context.config?.exploringRadius ?? 2;
+  // 🆕 PHASE 2: Use GameStore radius (shared state)
+  const exploringRadius = getExplorationRadius(context.config?.exploringRadius);
   
   if (!shipCoord) return false;
   
@@ -186,7 +204,8 @@ export const hasUnexploredTilesInRadius: XStateV5Guard = ({ context }) => {
   const tiles = context.gridInfo?.tiles || {};
   const knownTiles = context.memory?.knownTiles || [];
   const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
-  const exploringRadius = context.config?.exploringRadius ?? 2;
+  // 🆕 PHASE 2: Use GameStore radius (shared state)
+  const exploringRadius = getExplorationRadius(context.config?.exploringRadius);
   
   if (!shipCoord) {
     console.log(`❌ [hasUnexploredTilesInRadius] No ship coord`);
@@ -388,7 +407,8 @@ export const shouldCollect: XStateV5Guard = ({ context }) => {
 export const allLocalTilesExplored: XStateV5Guard = ({ context }) => {
   const tiles = context.gridInfo?.tiles || {};
   const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
-  const exploringRadius = context.config?.exploringRadius ?? 2;
+  // 🆕 PHASE 2: Use GameStore radius (shared state)
+  const exploringRadius = getExplorationRadius(context.config?.exploringRadius);
   
   if (!shipCoord || Object.keys(tiles).length === 0) return false;
   
@@ -411,10 +431,12 @@ export const allLocalTilesExplored: XStateV5Guard = ({ context }) => {
     const [col, row] = coord.split(',').map(Number);
     if (isNaN(col) || isNaN(row)) continue;
     
-    // Calculate distance (Manhattan or Chebyshev)
-    const distance = Math.max(Math.abs(col - shipCol), Math.abs(row - shipRow));
+    // Calculate distance (Euclidean - same as hasUnexploredTilesInRadius)
+    const dx = col - shipCol;
+    const dz = row - shipRow;
+    const distance = Math.sqrt(dx * dx + dz * dz);
     
-    if (distance <= exploringRadius) {
+    if (distance <= exploringRadius && distance > 0) {
       // Skip base tile
       if ((tile as unknown as Record<string, unknown>)?.type === 'depart') continue;
       
@@ -444,9 +466,7 @@ export const allLocalTilesExplored: XStateV5Guard = ({ context }) => {
  */
 export const shouldRelocateShip: XStateV5Guard = ({ context }) => {
   // First check if all local tiles are explored
-  if (!allLocalTilesExplored({ context } as Parameters<XStateV5Guard>[0])) {
-    return false;
-  }
+  const allExplored = allLocalTilesExplored({ context } as Parameters<XStateV5Guard>[0]);
   
   // Check no collectible tiles
   const knownTiles = context.memory?.knownTiles || [];
@@ -457,11 +477,20 @@ export const shouldRelocateShip: XStateV5Guard = ({ context }) => {
     tile?.resources?.total > 0
   );
   
-  if (hasCollectibleTiles) return false;
-  
   // Check fuel
   const fuel = context.vehicle?.fuel ?? 0;
   const fuelThreshold = context.config?.fuelThreshold ?? 20;
+  const hasFuel = fuel >= fuelThreshold;
   
-  return fuel >= fuelThreshold;
+  const result = allExplored && !hasCollectibleTiles && hasFuel;
+  
+  console.log(`🔍 [shouldRelocateShip] ${context.entityId}:`, {
+    allExplored,
+    hasCollectibleTiles,
+    hasFuel,
+    result,
+    shipCoord: context.vehicle?.coord || context.vehicle?.baseCoord
+  });
+  
+  return result;
 };

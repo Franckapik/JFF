@@ -18,6 +18,9 @@ import type { FSMContext } from "@/types/fsm.ts";
 
 import type { VehicleState } from "@/types/vehicle.js";
 
+import useGameStore from "../../../../stores/useGameStore/index.ts";
+import { INITIAL_EXPLORATION_RADIUS } from "../../../../stores/useGameStore/slices/radiusSlice.ts";
+
 // ============================================================================
 // FONCTION DE CRÉATION DU CONTEXTE TYPÉE
 // ============================================================================
@@ -88,7 +91,14 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
     },
     // selectedTileForCollection supprimé
     config: {
-      exploringRadius: 1,
+      // 🆕 PHASE 2: Read initial radius from GameStore or use constant
+      exploringRadius: (() => {
+        try {
+          return useGameStore.getState().getExplorationRadius();
+        } catch {
+          return INITIAL_EXPLORATION_RADIUS;
+        }
+      })(),
       collectingRadius: 3,
       fuelThreshold: 20,
       capacityThreshold: 80,

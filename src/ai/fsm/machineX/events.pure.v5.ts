@@ -51,14 +51,20 @@ export type MachineEvents =
   | { type: 'NEED_EXPLORING' }
   | { type: 'NEED_COLLECTING' }
   | { type: 'NEED_MAINTENANCE' }
+  | { type: 'NEED_RELOCATING' }
   | { type: 'NEED_SHIP_RELOCATION' }  // Ship must move to explore new area
+  | { type: 'NO_TARGET_FOUND' }  // Recovery: No valid target in exploring.drone_deploying
   // Phase 2: Grid synchronization event
   | {
       type: 'TILES_UPDATED';
       tiles: Record<string, Tile>;
       spacing: number;
       radius: number;
-    };
+    }
+  // Phase 2: Radius expansion & Game Over
+  | { type: 'RADIUS_INCREASED'; newRadius: number }
+  | { type: 'GAME_OVER'; reason: 'max_radius_reached' | 'other' }
+  | { type: 'RELOCATING_COMPLETE' };
 
 /**
  * Type guard pour vérifier le type d'un événement

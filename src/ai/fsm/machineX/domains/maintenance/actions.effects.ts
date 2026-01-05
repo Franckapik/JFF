@@ -142,6 +142,48 @@ export const onShipRefuelingExit = ({ context }: { context: FSMContext }) => {
   });
 };
 
+/**
+ * 🆕 Action d'entrée de l'état maintaining.relocating
+ * 
+ * LOG ONLY: Trace le début de la relocalisation du navire
+ */
+export const onShipRelocatingEntry = ({ context }: { context: FSMContext }) => {
+  const targetTile = context.vehicle?.targetVehicleTile;
+  fsmLogger.action(`🚢 [${context.entityId}] Ship RELOCATING - moving to new exploration area`, {
+    currentCoord: context.vehicle?.coord,
+    targetCoord: targetTile?.position?.coord || 'unknown',
+    fuel: context.vehicle?.fuel,
+    reason: 'All local tiles explored, no collectible tiles'
+  });
+};
+
+/**
+ * 🆕 Action de sortie de l'état maintaining.relocating
+ * 
+ * LOG ONLY: Trace la fin de la relocalisation
+ */
+export const onShipRelocatingExit = ({ context }: { context: FSMContext }) => {
+  fsmLogger.action(`✅ [${context.entityId}] Ship relocation complete`, {
+    newCoord: context.vehicle?.coord,
+    fuel: context.vehicle?.fuel
+  });
+};
+
+/**
+ * 🆕 PHASE 2: Action d'entrée de l'état game_over
+ * 
+ * LOG ONLY: Trace la fin de partie pour ce bot
+ */
+export const onGameOverEntry = ({ context }: { context: FSMContext }) => {
+  fsmLogger.action(`🏁🏁🏁 [${context.entityId}] ========================================`);
+  fsmLogger.action(`🏁 [${context.entityId}] GAME OVER - Maximum radius reached!`);
+  fsmLogger.action(`🏁 [${context.entityId}] Final Score: ${context.score?.resources?.total || 0}`);
+  fsmLogger.action(`🏁 [${context.entityId}] Exploration Radius: MAX (3)`);
+  fsmLogger.action(`🏁 [${context.entityId}] Vehicle Damage: ${context.vehicle?.damage || 0}%`);
+  fsmLogger.action(`🏁 [${context.entityId}] Tiles Explored: ${context.memory?.stats?.tilesExplored || 0}`);
+  fsmLogger.action(`🏁🏁🏁 [${context.entityId}] ========================================`);
+};
+
 // Placeholder pour éviter les erreurs d'import
 export const __maintenanceEffectsPlaceholder = ({ context: _context }: { context: FSMContext }) => {
 };

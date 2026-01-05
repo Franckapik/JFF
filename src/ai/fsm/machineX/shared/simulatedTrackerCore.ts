@@ -194,9 +194,17 @@ export function getExploringEvents(
           reason: `Drone traveling to ${targetDroneTile.position.coord}`
         });
       }
-    } else if (verbose) {
-      // eslint-disable-next-line no-console
-      console.log(`   ⚠️  No valid target tile`);
+    } else {
+      // 🆕 Recovery: Pas de cible valide → retour à evaluating
+      if (verbose) {
+        // eslint-disable-next-line no-console
+        console.log(`   ⚠️  No valid target tile → sending NO_TARGET_FOUND`);
+      }
+      events.push({
+        event: { type: 'NO_TARGET_FOUND' },
+        delay: 100, // Petit délai pour éviter boucle synchrone
+        reason: 'No unexplored tiles in radius - returning to evaluating'
+      });
     }
   } else if (subState === 'drone_scanning') {
     if (verbose) {
@@ -330,13 +338,19 @@ export function getCollectingEvents(
 
 /**
  * Détermine les événements à planifier pour un état de maintenance
+ * 🆕 Inclut maintenant le sous-état 'relocating'
  */
 export function getMaintainingEvents(
   subState: string,
-  _context: FSMContext,
+  context: FSMContext,
   verbose: boolean = false
 ): ScheduledEvent[] {
   const events: ScheduledEvent[] = [];
+  
+  // 🆕 Sous-état relocating: ship se déplace vers nouvelle zone
+  if (subState === 'relocating') {
+    return getRelocatingEvents(context, verbose);
+  }
   
   if (subState === 'depositing') {
     if (verbose) {
@@ -610,8 +624,7 @@ export function getScheduledEvents(
         return getInitializingEvents(context, verbose, tileProvider);
       case 'evaluating':
         return getEvaluatingEvents(context, verbose);
-      case 'relocating':
-        return getRelocatingEvents(context, verbose);
+      // 🆕 'relocating' est maintenant un sous-état de 'maintaining', géré dans getMaintainingEvents
       default:
         return [];
     }
@@ -631,51 +644,27 @@ export function getScheduledEvents(
 }
 
 /**
- * Détermine les événements pour l'état de relocalisation du ship
+ * 🆕 Événements pour le sous-état 'relocating'
+ * 
+ * ✅ OPTION A: Envoie RELOCATING_COMPLETE après 500ms pour visibilité UI
  */
 export function getRelocatingEvents(
-  context: FSMContext,
+  _context: FSMContext,
   verbose: boolean = false
 ): ScheduledEvent[] {
-  const { shipPos, targetVehicleTile, spacing } = extractPositionsAndTargets(context);
   const events: ScheduledEvent[] = [];
   
   if (verbose) {
     // eslint-disable-next-line no-console
-    console.log(`🚢 [TRACKER] Ship relocating to new exploration area`);
+    console.log(`🔄 [TRACKER] Relocating (500ms)`);
   }
   
-  if (targetVehicleTile?.position?.coord && shipPos) {
-    const targetPos = coordToWorldPosition(targetVehicleTile.position.coord as GridCoordinate, spacing);
-    if (!targetPos) return events;
-    
-    const distance = calculateDistance(shipPos, targetPos);
-    const travelTime = calculateTravelTime(distance, DURATIONS.SHIP_SPEED);
-    
-    if (verbose) {
-      // eslint-disable-next-line no-console
-      console.log(`   Target: ${targetVehicleTile.position.coord}`);
-      // eslint-disable-next-line no-console
-      console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${travelTime}ms`);
-    }
-    
-    events.push({
-      event: { type: 'SHIP_REACHES_TILE' },
-      delay: travelTime,
-      reason: `Ship relocating to ${targetVehicleTile.position.coord}`
-    });
-  } else {
-    // No target set - go back to evaluating immediately
-    if (verbose) {
-      // eslint-disable-next-line no-console
-      console.log(`   ⚠️ No relocation target, returning to evaluating`);
-    }
-    events.push({
-      event: { type: 'SHIP_REACHES_TILE' },
-      delay: 100,
-      reason: 'No relocation target'
-    });
-  }
+  // ✅ OPTION A: Délai de 500ms pour rendre l'état visible dans l'UI
+  events.push({
+    event: { type: 'RELOCATING_COMPLETE' },
+    delay: 500,
+    reason: 'Relocating complete - checking radius'
+  });
   
   return events;
 }

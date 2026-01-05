@@ -121,6 +121,86 @@ Fonctionnalité: Cas Limites et Boucles Détectées
     Et le cycle peut continuer
 
   # ============================================================================
+  # SCÉNARIO PROBLÉMATIQUE #5b: Blocage dans drone_deploying sans target
+  # ============================================================================
+  # OBSERVÉ: Le FSM reste bloqué dans drone_deploying avec targetDroneTile = unknown
+  # après que assignDroneDeployingContext ne trouve aucune tuile à explorer
+  # RÉSOLU: Ajout de l'event NO_TARGET_FOUND pour détecter et résoudre cette situation
+
+  Scénario: Blocage drone_deploying sans cible (RÉSOLU - Option A)
+    Étant donné que le FSM est en état "exploring.drone_deploying"
+    Et que assignDroneDeployingContext a retourné targetTile = "unknown"
+    Et que le guard hasUnexploredTilesInRadius retourne false
+    Et que toutes les tuiles dans exploringRadius sont explorées
+    Quand le tracker détecte l'absence de targetDroneTile valide
+    Alors le tracker envoie l'événement NO_TARGET_FOUND après 100ms
+    Et le log "⚠️  No valid target tile → sending NO_TARGET_FOUND" est émis
+
+  Scénario: Recovery avec NO_TARGET_FOUND vers relocating (PHASE 2)
+    Étant donné que le FSM est en état "exploring.drone_deploying"
+    Et que targetDroneTile = "unknown"
+    Quand l'événement NO_TARGET_FOUND est reçu
+    Alors le FSM transite DIRECTEMENT vers "maintaining.relocating"
+    # FIX: assignShipRelocatingContext N'EST PLUS sur la transition
+    # Elle s'exécute uniquement via l'entry de relocating
+    Et l'entry action assignShipRelocatingContext est appelée UNE FOIS
+    Et le radius est incrémenté de 1 (sauf si déjà au max)
+    Et les pénalités sont appliquées (score ÷2, damage +30%)
+    Et après 500ms, RELOCATING_COMPLETE est envoyé
+    Et le guard isAtMaxRadius/canIncreaseRadius détermine la suite
+
+  Scénario: FIX - Double exécution de assignShipRelocatingContext (CORRIGÉ)
+    # BUG AVANT: L'action était appelée 2 fois:
+    # 1. Sur la transition NO_TARGET_FOUND (actions: 'assignShipRelocatingContext')
+    # 2. Dans l'entry de relocating (entry: ['assignShipRelocatingContext', ...])
+    Étant donné que le FSM reçoit NO_TARGET_FOUND
+    Et que GameStore.explorationRadius = 1
+    Quand la transition vers "maintaining.relocating" s'exécute
+    # AVANT LE FIX:
+    # Alors assignShipRelocatingContext s'exécute (transition)
+    # Et radius passe de 1 à 2
+    # Et assignShipRelocatingContext s'exécute ENCORE (entry)
+    # Et radius passe de 2 à 3 (INCORRECT - saut d'étape)
+    
+    # APRÈS LE FIX:
+    Alors assignShipRelocatingContext s'exécute UNE SEULE FOIS (entry)
+    Et radius passe de 1 à 2 UNIQUEMENT
+    Et la progression est correcte: 1 → 2 → 3 (étape par étape)
+
+  Scénario: Validation progression radius sans saut d'étape
+    Étant donné que le bot démarre avec explorationRadius = 1
+    
+    # Première relocation
+    Quand NO_TARGET_FOUND est reçu (radius=1)
+    Alors le FSM transite vers "maintaining.relocating"
+    Et assignShipRelocatingContext s'exécute 1 fois
+    Et explorationRadius passe à 2
+    Et les logs montrent: "🔄 [RadiusSlice] bot-X increased exploration radius: 1 → 2"
+    
+    # Deuxième relocation
+    Quand NO_TARGET_FOUND est reçu (radius=2)
+    Alors le FSM transite vers "maintaining.relocating"
+    Et assignShipRelocatingContext s'exécute 1 fois
+    Et explorationRadius passe à 3
+    Et les logs montrent: "🔄 [RadiusSlice] bot-X increased exploration radius: 2 → 3"
+    
+    # Troisième relocation = GAME OVER
+    Quand NO_TARGET_FOUND est reçu (radius=3)
+    Alors le FSM transite vers "maintaining.relocating"
+    Et assignShipRelocatingContext détecte isAtMaxRadius = true
+    Et explorationRadius reste à 3
+    Et après 500ms, transition vers "game_over"
+
+  Scénario: Race condition guard vs action résolu par NO_TARGET_FOUND + Option A
+    Étant donné que le guard hasUnexploredTilesInRadius trouve 1 tuile non explorée
+    Et que le FSM transite vers "exploring.drone_deploying"
+    Mais que assignDroneDeployingContext trouve 0 tuiles (désync timing)
+    Quand le tracker planifie les événements
+    Alors aucun événement DRONE_REACHES_TILE n'est planifié
+    Mais l'événement NO_TARGET_FOUND est planifié après 100ms
+    Et le bot se rétablit automatiquement vers relocating
+
+  # ============================================================================
   # SCÉNARIO PROBLÉMATIQUE #6: Tuiles vides générées (hasResources = false)
   # ============================================================================
   # OBSERVÉ: Certaines tuiles sont générées avec resources.total = 0
