@@ -17,8 +17,6 @@ import useXFSMStore from './stores/useXFSMStore';
  * 3. Both tabs will sync via BroadcastChannel
  */
 export default function App() {
-  // Get bot actors from store for multi-bot tracker
-  const getActor = useXFSMStore((state) => state.getActor);
   const [botActors, setBotActors] = React.useState<BotActor[]>([]);
 
   // Initialize on mount (one-time setup, no dependencies needed)

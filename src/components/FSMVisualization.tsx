@@ -316,7 +316,9 @@ export default function FSMVisualization() {
             <h2 style={{ color: getStateColor(currentState) }}>
               <code style={{ color: getStateColor(currentState) }}>{currentState}</code>
             </h2>
-            <p>Status: {botSnapshot?.status}</p>
+            {botSnapshot && isValidSnapshot(botSnapshot) && (
+              <p>Status: {botSnapshot.status}</p>
+            )}
           </>
         )}
       </section>
@@ -627,7 +629,7 @@ export default function FSMVisualization() {
       <section style={styles.section}>
         <h3>🐛 Debug Info</h3>
         <p style={{ fontSize: '11px', color: '#999', fontFamily: 'monospace' }}>
-          Active Bots: {activeBots.join(', ')} | Snapshot Status: {botSnapshot.status} | Context Size:{' '}
+          Active Bots: {activeBots.join(', ')} | Snapshot Status: {isValidSnapshot(botSnapshot) ? botSnapshot.status : 'N/A'} | Context Size:{' '}
           {JSON.stringify(ctx).length} bytes
         </p>
       </section>
