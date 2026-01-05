@@ -56,6 +56,7 @@ function SingleBotCycleFlow({ botId, compact = false }: { botId: 'bot-0' | 'bot-
     if (state.includes('refueling')) return { label: 'REFUEL', color: '#9c27b0', emoji: '⛽' };
     if (state.includes('repairing')) return { label: 'REPAIR', color: '#9c27b0', emoji: '🔧' };
     if (state.includes('depositing')) return { label: 'DEPOSIT', color: '#9c27b0', emoji: '📤' };
+    if (state.includes('relocating')) return { label: 'RELOCATE', color: '#e91e63', emoji: '🚢' };
     if (state.includes('maintaining')) return { label: 'MAINTAIN', color: '#9c27b0', emoji: '🛠️' };
     return { label: 'UNKNOWN', color: '#757575', emoji: '❓' };
   };
@@ -157,6 +158,7 @@ export default function FSMVisualization() {
     refueling: 0,
     repairing: 0,
     depositing: 0,
+    relocating: 0,
   });
   const [lastDroneDestroyed, setLastDroneDestroyed] = React.useState<{ type: string; time: string } | null>(null);
 
@@ -202,7 +204,7 @@ export default function FSMVisualization() {
         const allStates = [
           'initializing', 'evaluating', 'exploring', 'drone_deploying', 'drone_scanning', 'drone_returning', 'drone_docked', 'drone_destroyed',
           'collecting', 'ship_moving_to_tile', 'ship_collecting', 'ship_returning',
-          'maintaining', 'refueling', 'repairing', 'depositing'
+          'maintaining', 'refueling', 'repairing', 'depositing', 'relocating'
         ];
         const updated = { ...prev };
         for (const state of allStates) {
@@ -537,6 +539,7 @@ export default function FSMVisualization() {
               MAINTAIN{stateVisitCounts.maintaining > 0 && <span style={styles.badge}>{stateVisitCounts.maintaining}</span>}
             </span>
             {renderSubstates(currentState, [
+              { key: 'relocating', label: '🚢 Relocate' },
               { key: 'refueling', label: '⛽ Refuel' },
               { key: 'repairing', label: '🔧 Repair' },
               { key: 'depositing', label: '📤 Deposit' }

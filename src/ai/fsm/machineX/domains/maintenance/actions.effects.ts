@@ -142,6 +142,33 @@ export const onShipRefuelingExit = ({ context }: { context: FSMContext }) => {
   });
 };
 
+/**
+ * 🆕 Action d'entrée de l'état maintaining.relocating
+ * 
+ * LOG ONLY: Trace le début de la relocalisation du navire
+ */
+export const onShipRelocatingEntry = ({ context }: { context: FSMContext }) => {
+  const targetTile = context.vehicle?.targetVehicleTile;
+  fsmLogger.action(`🚢 [${context.entityId}] Ship RELOCATING - moving to new exploration area`, {
+    currentCoord: context.vehicle?.coord,
+    targetCoord: targetTile?.position?.coord || 'unknown',
+    fuel: context.vehicle?.fuel,
+    reason: 'All local tiles explored, no collectible tiles'
+  });
+};
+
+/**
+ * 🆕 Action de sortie de l'état maintaining.relocating
+ * 
+ * LOG ONLY: Trace la fin de la relocalisation
+ */
+export const onShipRelocatingExit = ({ context }: { context: FSMContext }) => {
+  fsmLogger.action(`✅ [${context.entityId}] Ship relocation complete`, {
+    newCoord: context.vehicle?.coord,
+    fuel: context.vehicle?.fuel
+  });
+};
+
 // Placeholder pour éviter les erreurs d'import
 export const __maintenanceEffectsPlaceholder = ({ context: _context }: { context: FSMContext }) => {
 };

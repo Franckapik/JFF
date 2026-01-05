@@ -129,6 +129,23 @@ export const assignShipRefuelContext = createAssignAction(({ context }) => {
   };
 });
 
+/**
+ * 🆕 Action assign pour marquer l'entrée dans l'état relocating
+ * 🚧 PHASE 1: État FINAL - les bots convergent ici après avoir exploré toutes les tuiles locales
+ */
+export const assignShipRelocatingContext = createAssignAction(({ context }) => {
+  fsmLogger.action(`🏁 [${context.entityId}] ========================================`);
+  fsmLogger.action(`🏁 [${context.entityId}] CYCLE COMPLET - ÉTAT FINAL: RELOCATING`);
+  fsmLogger.action(`🏁 [${context.entityId}] Toutes les tuiles locales ont été explorées/collectées`);
+  fsmLogger.action(`🏁 [${context.entityId}] Fuel: ${context.vehicle?.fuel}, Score: ${context.score?.resources?.total || 0}`);
+  fsmLogger.action(`🏁 [${context.entityId}] ========================================`);
+  
+  return {
+    lastAction: 'shipRelocation_requested',
+    fsmState: 'maintaining_relocating'
+  };
+});
+
 // Placeholder pour éviter les erreurs d'import
 export const __maintenanceAssignPlaceholder = createAssignAction(({ context: _context }) => {
   return {};

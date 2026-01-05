@@ -32,7 +32,7 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 // Import depuis l'architecture domain-based
 // Imports par domaine pour éviter les erreurs de syntaxe
 import { assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection/index.ts';
-import { assignEvaluationContext, assignShipRelocationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation/index.ts';
+import { assignEvaluationContext, assignShipRelocationContext, assignShipRelocatedContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation/index.ts';
 // ✅ Phase 1: ALL guards from guards.pure.ts (no store dependencies)
 import { allLocalTilesExplored, canStartExploring, canStartExploringWithValidTarget, hasTilesAvailable, hasUnexploredTilesInRadius, shouldCollect, shouldExplore, shouldMaintain, shouldRelocateShip } from './domains/evaluation/guards.pure.ts';
 import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReadyContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneDockedEntry, onDroneDockedExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration/index.ts';
@@ -40,8 +40,8 @@ import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReady
 import { updateDronePosition, updateGridInfo, updateShipPosition } from './domains/global/index.ts';
 import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign.ts';
 import { onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects.ts';
-import { assignShipDepositResourcesContext, assignShipRefuelContext, assignShipRepairContext } from './domains/maintenance/actions.assign.ts';
-import { onMaintainingEntry, onMaintainingExit, onShipDepositingEntry, onShipDepositingExit, onShipRefuelingEntry, onShipRefuelingExit, onShipRepairingEntry, onShipRepairingExit } from './domains/maintenance/actions.effects.ts';
+import { assignShipDepositResourcesContext, assignShipRefuelContext, assignShipRepairContext, assignShipRelocatingContext } from './domains/maintenance/actions.assign.ts';
+import { onMaintainingEntry, onMaintainingExit, onShipDepositingEntry, onShipDepositingExit, onShipRefuelingEntry, onShipRefuelingExit, onShipRepairingEntry, onShipRepairingExit, onShipRelocatingEntry, onShipRelocatingExit } from './domains/maintenance/actions.effects.ts';
 import { isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure.ts';
 
 // ✅ Phase 1: Pure guards from collection domain
@@ -73,6 +73,7 @@ export const machineXV5Pure = setup({
     // Actions du domaine EVALUATION (migrées)
     assignEvaluationContext,
     assignShipRelocationContext, // ✅ NEW: Ship relocation to explore new area
+    assignShipRelocatedContext, // ✅ NEW: Update ship position after relocation
     onEvaluatingEntry,
     onEvaluatingExit, 
     
@@ -112,6 +113,7 @@ export const machineXV5Pure = setup({
     assignShipDepositResourcesContext,
     assignShipRepairContext,
     assignShipRefuelContext,
+    assignShipRelocatingContext, // 🆕 PHASE 1: Marque lastAction pour éviter boucle
     onMaintainingEntry,
     onMaintainingExit,
     onShipDepositingEntry,
@@ -120,6 +122,8 @@ export const machineXV5Pure = setup({
     onShipRepairingExit,
     onShipRefuelingEntry,
     onShipRefuelingExit,
+    onShipRelocatingEntry, // 🆕 NEW: Relocating entry effect
+    onShipRelocatingExit,  // 🆕 NEW: Relocating exit effect
 
     // Actions d'effets pour initializing
     onInitializingEntry,
@@ -217,6 +221,13 @@ export const machineXV5Pure = setup({
 
       // Transitions manuelles (en cas d'événements explicites)
       on: {
+        // 🆕 PRIORITY 1: RELOCATING (ship stuck - all local tiles explored)
+        NEED_RELOCATING: {
+          target: 'maintaining.relocating',
+          guard: 'shouldRelocateShip'
+          // 🚧 PHASE 1: Actions commentées - décision gameplay à prendre (relocation vs augmentation radius)
+          // actions: 'assignShipRelocationContext'
+        },
         NEED_EXPLORING: { 
           target: 'exploring', 
           // 🆕 Bug #7 Fix: Use combined guard to prevent stuck state
@@ -231,28 +242,7 @@ export const machineXV5Pure = setup({
         },
         NEED_MAINTENANCE: { 
           target: 'maintaining', 
-          guard: 'shouldMaintain',
-          // Ajoute ici l'action assign si besoin
-        },
-        NEED_SHIP_RELOCATION: {
-          target: 'relocating',
-          guard: 'shouldRelocateShip',
-          actions: 'assignShipRelocationContext' // ✅ NEW: Ship moves to new area
-        }
-      }
-    },
-
-    /**
-     * État RELOCATING - Ship déplace vers nouvelle zone pour exploration
-     */
-    relocating: {
-      entry: () => {
-        // eslint-disable-next-line no-console
-        console.log('🚢 [FSM] Entering RELOCATING state - ship moving to new exploration area');
-      },
-      on: {
-        SHIP_REACHES_TILE: {
-          target: 'evaluating'
+          guard: 'shouldMaintain'
         }
       }
     },
@@ -273,6 +263,12 @@ export const machineXV5Pure = setup({
             DRONE_REACHES_TILE: {
               target: 'drone_scanning',
               actions: 'assignDroneScanningContext' // MAJ contexte du drone à 'scanning'
+            },
+            // 🆕 Recovery: Si pas de cible valide → DIRECTEMENT à relocating
+            // C'est la condition de fin de cycle: aucune tuile explorable dans le rayon
+            NO_TARGET_FOUND: {
+              target: '#machineXV5Pure.maintaining.relocating',
+              actions: 'assignShipRelocatingContext'
             }
           }
         },
@@ -383,36 +379,45 @@ export const machineXV5Pure = setup({
     },
 
     /**
-     * État MAINTAINING - Gère la maintenance (dépôt, réparation, carburant)
-     * Structure simplifiée : transitions automatiques directes depuis l'état parent
+     * État MAINTAINING - Gère la maintenance (dépôt, réparation, carburant, relocalisation)
+     * 🆕 Architecture event-driven : transitions via événements explicites
+     * 
+     * Sous-états:
+     * - relocating: Ship se déplace vers nouvelle zone d'exploration
+     * - depositing: Dépose les ressources collectées
+     * - refueling: Ravitaillement en carburant
+     * - repairing: Réparation des dommages
      */
     maintaining: {
       entry: 'onMaintainingEntry',
       exit: 'onMaintainingExit',
       initial: 'depositing',
       
-      // Transitions automatiques vers les tâches de maintenance (depuis l'état parent)
-      // ⚠️ IMPORTANT: Les actions assign sont RETIRÉES d'ici pour respecter le scénario Gherkin
-      // Le dépôt/refuel/repair se fera lors de la réception des événements SHIP_DEPOSIT_COMPLETE, etc.
-      always: [
-        {
-          target: '.depositing',
-          guard: 'needsDeposit'
-        },
-        {
-          target: '.refueling',
-          guard: 'needsRefuel'
-        },
-        {
-          target: '.repairing',
-          guard: 'needsRepair'
-        },
-        {
-          target: '#machineXV5Pure.evaluating'
-        }
-      ],
-      
       states: {
+        /**
+         * 🆕 Sous-état RELOCATING - Ship bloqué (toutes tuiles locales explorées)
+         * Entré via NEED_RELOCATING depuis evaluating
+         * 
+         * 🚧 PHASE 1: État FINAL - les bots convergent ici et y restent
+         * Décision gameplay à prendre: relocation physique vs augmentation du radius
+         */
+        relocating: {
+          entry: ['assignShipRelocatingContext', 'onShipRelocatingEntry'],
+          exit: 'onShipRelocatingExit',
+          // 🚧 PHASE 1: Pas de transition - état final pour valider le cycle complet
+          // Les bots doivent converger ici et y rester
+          type: 'final'
+          // 🚧 PHASE 2: Réactiver les transitions pour le mouvement réel
+          // on: {
+          //   SHIP_REACHES_TILE: [
+          //     { target: 'depositing', guard: 'needsDeposit', actions: 'assignShipRelocatedContext' },
+          //     { target: 'refueling', guard: 'needsRefuel', actions: 'assignShipRelocatedContext' },
+          //     { target: 'repairing', guard: 'needsRepair', actions: 'assignShipRelocatedContext' },
+          //     { target: '#machineXV5Pure.evaluating', actions: 'assignShipRelocatedContext' }
+          //   ]
+          // }
+        },
+        
         depositing: {
           entry: ['onShipDepositingEntry'],
           exit: 'onShipDepositingExit',
@@ -421,16 +426,16 @@ export const machineXV5Pure = setup({
               {
                 target: 'refueling',
                 guard: 'needsRefuel',
-                actions: 'assignShipDepositResourcesContext' // ✅ Dépôt UNIQUEMENT lors de l'événement
+                actions: 'assignShipDepositResourcesContext'
               },
               {
                 target: 'repairing',
                 guard: 'needsRepair',
-                actions: 'assignShipDepositResourcesContext' // ✅ Dépôt UNIQUEMENT lors de l'événement
+                actions: 'assignShipDepositResourcesContext'
               },
               {
                 target: '#machineXV5Pure.evaluating',
-                actions: 'assignShipDepositResourcesContext' // ✅ Dépôt UNIQUEMENT lors de l'événement
+                actions: 'assignShipDepositResourcesContext'
               }
             ]
           }
@@ -464,16 +469,16 @@ export const machineXV5Pure = setup({
               {
                 target: 'depositing',
                 guard: 'needsDeposit',
-                actions: 'assignShipRefuelContext' // ✅ FIX: Ajouter l'action de refuel
+                actions: 'assignShipRefuelContext'
               },
               {
                 target: 'repairing',
                 guard: 'needsRepair',
-                actions: 'assignShipRefuelContext' // ✅ FIX: Ajouter l'action de refuel
+                actions: 'assignShipRefuelContext'
               },
               {
                 target: '#machineXV5Pure.evaluating',
-                actions: 'assignShipRefuelContext' // ✅ FIX: Ajouter l'action de refuel
+                actions: 'assignShipRefuelContext'
               }
             ]
           }

@@ -37,7 +37,11 @@ export type MachineEventType =
   // Événements de transitions d'état (evaluating)
   | 'NEED_EXPLORING'
   | 'NEED_COLLECTING'
-  | 'NEED_MAINTENANCE';
+  | 'NEED_MAINTENANCE'
+  | 'NEED_RELOCATING'
+  
+  // Événements de récupération d'erreur
+  | 'NO_TARGET_FOUND';
 
 /**
  * Types d'événements avec payload pour XState v5
@@ -63,7 +67,9 @@ export type MachineEvents =
   | { type: 'LOW_FUEL_WARNING' }
   | { type: 'NEED_EXPLORING' }
   | { type: 'NEED_COLLECTING' }
-  | { type: 'NEED_MAINTENANCE' };
+  | { type: 'NEED_MAINTENANCE' }
+  | { type: 'NEED_RELOCATING' }
+  | { type: 'NO_TARGET_FOUND' };
 
 /**
  * Constantes d'événements pour usage dans les machines XState
@@ -100,5 +106,9 @@ export const MACHINE_EVENT_TYPES: Record<Uppercase<MachineEventType>, MachineEve
   // Événements de transition
   NEED_EXPLORING: 'NEED_EXPLORING',
   NEED_COLLECTING: 'NEED_COLLECTING',
-  NEED_MAINTENANCE: 'NEED_MAINTENANCE'
+  NEED_MAINTENANCE: 'NEED_MAINTENANCE',
+  NEED_RELOCATING: 'NEED_RELOCATING',
+  
+  // Événements de récupération d'erreur
+  NO_TARGET_FOUND: 'NO_TARGET_FOUND'
 } as const;

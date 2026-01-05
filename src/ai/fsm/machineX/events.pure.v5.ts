@@ -51,7 +51,9 @@ export type MachineEvents =
   | { type: 'NEED_EXPLORING' }
   | { type: 'NEED_COLLECTING' }
   | { type: 'NEED_MAINTENANCE' }
+  | { type: 'NEED_RELOCATING' }
   | { type: 'NEED_SHIP_RELOCATION' }  // Ship must move to explore new area
+  | { type: 'NO_TARGET_FOUND' }  // Recovery: No valid target in exploring.drone_deploying
   // Phase 2: Grid synchronization event
   | {
       type: 'TILES_UPDATED';

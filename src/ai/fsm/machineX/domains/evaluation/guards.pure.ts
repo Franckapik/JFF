@@ -411,10 +411,12 @@ export const allLocalTilesExplored: XStateV5Guard = ({ context }) => {
     const [col, row] = coord.split(',').map(Number);
     if (isNaN(col) || isNaN(row)) continue;
     
-    // Calculate distance (Manhattan or Chebyshev)
-    const distance = Math.max(Math.abs(col - shipCol), Math.abs(row - shipRow));
+    // Calculate distance (Euclidean - same as hasUnexploredTilesInRadius)
+    const dx = col - shipCol;
+    const dz = row - shipRow;
+    const distance = Math.sqrt(dx * dx + dz * dz);
     
-    if (distance <= exploringRadius) {
+    if (distance <= exploringRadius && distance > 0) {
       // Skip base tile
       if ((tile as unknown as Record<string, unknown>)?.type === 'depart') continue;
       
@@ -444,9 +446,7 @@ export const allLocalTilesExplored: XStateV5Guard = ({ context }) => {
  */
 export const shouldRelocateShip: XStateV5Guard = ({ context }) => {
   // First check if all local tiles are explored
-  if (!allLocalTilesExplored({ context } as Parameters<XStateV5Guard>[0])) {
-    return false;
-  }
+  const allExplored = allLocalTilesExplored({ context } as Parameters<XStateV5Guard>[0]);
   
   // Check no collectible tiles
   const knownTiles = context.memory?.knownTiles || [];
@@ -457,11 +457,20 @@ export const shouldRelocateShip: XStateV5Guard = ({ context }) => {
     tile?.resources?.total > 0
   );
   
-  if (hasCollectibleTiles) return false;
-  
   // Check fuel
   const fuel = context.vehicle?.fuel ?? 0;
   const fuelThreshold = context.config?.fuelThreshold ?? 20;
+  const hasFuel = fuel >= fuelThreshold;
   
-  return fuel >= fuelThreshold;
+  const result = allExplored && !hasCollectibleTiles && hasFuel;
+  
+  console.log(`🔍 [shouldRelocateShip] ${context.entityId}:`, {
+    allExplored,
+    hasCollectibleTiles,
+    hasFuel,
+    result,
+    shipCoord: context.vehicle?.coord || context.vehicle?.baseCoord
+  });
+  
+  return result;
 };
