@@ -10,10 +10,11 @@
 
 import { assign } from 'xstate';
 
-import { calculateDistanceGrid, findTilesInRadius, gridToWorld, selectRandomTile } from '../../../../../core/spatial/index.ts';
+import { findPath, findTilesInRadius, gridToWorld, selectRandomTile } from '../../../../../core/spatial/index.ts';
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
+import type { GridCoordinate, TileMap } from '../../../../../types/index.ts';
 import type { VehicleVisualState } from '../../../../../types/vehicle.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
 
@@ -159,11 +160,38 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     // Mise à jour complète du contexte en une seule fois
     const targetVehicleTileObj = targetVehicleTile;
     
-    // ✅ Calculer la consommation de fuel basée sur la distance (grid-based)
-    const distance = shipCoord && targetGridCoord ? calculateDistanceGrid(shipCoord, targetGridCoord) : 0;
-    const fuelConsumption = Math.max(1, Math.floor(distance * 1.5)); // 1.5 fuel par unité de distance
+    // ========================================================================
+    // 🛤️ PATHFINDING: Calculate path from ship to target tile
+    // ========================================================================
+    const path = shipCoord 
+      ? findPath(shipCoord, targetGridCoord, tiles as TileMap) 
+      : [];
+    
+    // If no path found, ship cannot reach target (blocked by obstacles)
+    if (path.length === 0) {
+      fsmLogger.warn(`⚠️ [${context.entityId}] No walkable path to ${targetGridCoord}!`);
+      console.log(`🚫 [PATHFINDING] No path from ${shipCoord} to ${targetGridCoord} - blocked?`);
+      return {};
+    }
+    
+    // ✅ Calculate fuel based on PATH LENGTH (number of tiles traversed)
+    // Fuel consumption = 1 per tile traversed (path includes start, so -1)
+    const pathSteps = Math.max(0, path.length - 1); // Number of tiles to traverse
+    const FUEL_PER_TILE = 2; // 2 fuel per tile traversed
+    const fuelConsumption = Math.max(1, pathSteps * FUEL_PER_TILE);
     const currentFuel = context.vehicle?.fuel || 100;
     const newFuel = Math.max(0, currentFuel - fuelConsumption);
+    
+    fsmLogger.info(`🛤️ [${context.entityId}] Pathfinding result:`, {
+      pathLength: path.length,
+      pathSteps,
+      path: path.slice(0, 5).join(' → ') + (path.length > 5 ? ' ...' : ''),
+      fuelConsumption,
+      fuelRemaining: newFuel
+    });
+    
+    console.log(`🛤️ [PATHFINDING] Path: ${path.join(' → ')}`);
+    console.log(`⛽ [PATHFINDING] Fuel: ${currentFuel} - ${fuelConsumption} = ${newFuel} (${pathSteps} tiles × ${FUEL_PER_TILE}/tile)`);
     
     const updatedContext = {
       vehicle: {
@@ -174,7 +202,10 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
         progress: 0, // Reset du progrès
         currentSpeed: context.vehicle?.maxSpeed || 1,
         visualState: 'moving_to_tile' as VehicleVisualState,
-        fuel: newFuel // ✅ Déduire le fuel consommé
+        fuel: newFuel, // ✅ Déduire le fuel consommé
+        // 🛤️ PATHFINDING: Store path in context
+        currentPath: path,
+        pathIndex: 0
       },
       lastAction: 'shipMovingToTile_success',
       fsmState: 'collecting_ship_moving_to_tile', // 🟢 Mise à jour de l'état global FSM
@@ -184,12 +215,12 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
       hasVehicle: !!updatedContext.vehicle,
       targetVehicleTile: updatedContext.vehicle?.targetVehicleTile,
       isMoving: updatedContext.vehicle?.isMoving,
-      distance: distance.toFixed(2),
+      pathLength: path.length,
       fuelConsumed: fuelConsumption,
       fuelRemaining: newFuel
     });
     
-    console.log(`🚢 [SHIP MOVING] Ship moving from ${context.vehicle?.coord} to ${targetGridCoord}`);
+    console.log(`🚢 [SHIP MOVING] Ship moving from ${context.vehicle?.coord} to ${targetGridCoord} via ${path.length} tiles`);
     console.log(`🏠 [SHIP MOVING] Original base coord is: ${context.vehicle?.baseCoord} (this should stay constant!)`);
     console.log(`🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!`);
     
@@ -198,6 +229,63 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
   
   // Pour les autres événements, ne pas modifier le contexte
   return {};
+});
+
+/**
+ * 🛤️ PATHFINDING: Action assign pour avancer au prochain waypoint du chemin
+ * Appelée quand SHIP_REACHES_WAYPOINT est émis par le tracker
+ * 
+ * - Incrémente pathIndex
+ * - Met à jour vehicle.coord vers la tuile actuelle du path
+ * - Applique les dégâts si la tuile est de type danger (Option B)
+ */
+export const assignShipNextWaypointContext = createAssignAction(({ context }) => {
+  if (!context.vehicle) return {};
+  
+  const currentPath = context.vehicle.currentPath || [];
+  const currentIndex = context.vehicle.pathIndex || 0;
+  const nextIndex = currentIndex + 1;
+  
+  // Safety check: don't exceed path bounds
+  if (nextIndex >= currentPath.length) {
+    fsmLogger.warn(`⚠️ [${context.entityId}] pathIndex ${nextIndex} exceeds path length ${currentPath.length}`);
+    return {};
+  }
+  
+  const newCoord = currentPath[nextIndex] as GridCoordinate;
+  
+  // Check if this tile is a danger tile (Option B: apply damage per traversal)
+  const tiles = context.gridInfo?.tiles || {};
+  const tile = tiles[newCoord];
+  let damageIncrement = 0;
+  
+  if (tile?.type === 'danger' || tile?.isDynamicDanger) {
+    damageIncrement = 10; // +10% damage per danger tile traversal
+    fsmLogger.warn(`💥 [${context.entityId}] Ship traversing danger tile at ${newCoord}! +${damageIncrement}% damage`);
+    console.log(`💥 [PATHFINDING] Danger tile at ${newCoord}! Damage +${damageIncrement}%`);
+  }
+  
+  const currentDamage = context.vehicle.damage || 0;
+  const newDamage = Math.min(100, currentDamage + damageIncrement);
+  
+  fsmLogger.info(`🛤️ [${context.entityId}] Waypoint reached:`, {
+    waypointIndex: nextIndex,
+    totalWaypoints: currentPath.length,
+    newCoord,
+    remainingSteps: currentPath.length - nextIndex - 1,
+    damage: damageIncrement > 0 ? `${currentDamage}% → ${newDamage}%` : 'none'
+  });
+  
+  console.log(`🛤️ [PATHFINDING] Waypoint ${nextIndex}/${currentPath.length - 1}: ${newCoord}`);
+  
+  return {
+    vehicle: {
+      ...context.vehicle,
+      coord: newCoord,
+      pathIndex: nextIndex,
+      damage: newDamage
+    }
+  };
 });
 
 /**
@@ -256,6 +344,7 @@ export const assignShipCollectingContext = createAssignAction(({ context, event 
 
 /**
  * Action assign pour le retour à la base après collecte
+ * ✅ Utilise findPath() pour calculer le chemin de retour
  */
 export const assignShipReturningContext = createAssignAction(({ context, event }) => {
   fsmLogger.info(`🔄 [${context?.entityId || 'unknown'}] assignShipReturningContext called with:`, {
@@ -272,10 +361,23 @@ export const assignShipReturningContext = createAssignAction(({ context, event }
   // Coordonnée de base (pour simplifier, retour à la position initiale)
   const baseCoord = context.vehicle?.baseCoord || '0,0';
   const baseWorldPos = gridToWorld(baseCoord);
+  const currentCoord = context.vehicle.coord || '0,0';
   
   console.log(`🏠 [SHIP RETURNING] Looking for base tile at coord: ${baseCoord}`);
-  console.log(`🏠 [SHIP RETURNING] Current ship coord: ${context.vehicle.coord}`);
+  console.log(`🏠 [SHIP RETURNING] Current ship coord: ${currentCoord}`);
   console.log(`🏠 [SHIP RETURNING] baseCoord from vehicle context: ${context.vehicle?.baseCoord}`);
+  
+  // 🛤️ PATHFINDING: Calculer le chemin de retour à la base
+  const tileStore = useTileStore.getState();
+  const tiles = tileStore.tiles;
+  const path = findPath(currentCoord, baseCoord, tiles);
+  
+  console.log(`🛤️ [SHIP RETURNING] Path calculated:`, {
+    from: currentCoord,
+    to: baseCoord,
+    pathLength: path.length,
+    path: path.slice(0, 5).join(' → ') + (path.length > 5 ? '...' : '')
+  });
   
   const baseTile = {
     position: { ...baseWorldPos, coord: baseCoord },
@@ -290,18 +392,24 @@ export const assignShipReturningContext = createAssignAction(({ context, event }
   fsmLogger.info(`🔙 [${context.entityId}] Updating vehicle state to returning with target:`, {
     baseCoord,
     basePosition: baseWorldPos,
-    currentCoord: context.vehicle.coord
+    currentCoord,
+    pathLength: path.length
   });
+
+  // Note: pas de consommation de carburant pour le retour (par design)
+  // Le vaisseau revient toujours à la base même sans fuel
 
   return {
     vehicle: {
       ...context.vehicle,
-      coord: context.vehicle.coord || '0,0',
+      coord: currentCoord,
       targetVehicleTile: baseTile, // Utiliser un objet Tile complet pour la base
       isMoving: true, // ✅ IMPORTANT: Le vaisseau doit bouger vers la base
       progress: 0, // Reset du progrès pour le retour
       currentSpeed: context.vehicle?.maxSpeed || 1,
-      visualState: 'returning' as VehicleVisualState
+      visualState: 'returning' as VehicleVisualState,
+      currentPath: path,  // 🛤️ Stocker le chemin calculé
+      pathIndex: 0        // 🛤️ Commencer au début du chemin
     },
     fsmState: 'collecting_ship_returning', // 🟢 Mise à jour de l'état global FSM
   };

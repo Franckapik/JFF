@@ -31,7 +31,7 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 
 // Import depuis l'architecture domain-based
 // Imports par domaine pour éviter les erreurs de syntaxe
-import { assignDangerDamageContext, assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection/index.ts';
+import { assignDangerDamageContext, assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipNextWaypointContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection/index.ts';
 import { assignEvaluationContext, assignShipRelocatedContext, assignShipRelocationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation/index.ts';
 // ✅ Phase 1: ALL guards from guards.pure.ts (no store dependencies)
 import { allLocalTilesExplored, canStartExploring, canStartExploringWithValidTarget, hasTilesAvailable, hasUnexploredTilesInRadius, shouldCollect, shouldExplore, shouldMaintain, shouldRelocateShip } from './domains/evaluation/guards.pure.ts';
@@ -45,7 +45,7 @@ import { onGameOverEntry, onMaintainingEntry, onMaintainingExit, onShipDepositin
 import { canIncreaseRadius, isAtMaxRadius, isShipOnBase, maintenanceComplete, needsDeposit, needsRefuel, needsRepair } from './domains/maintenance/guards.pure.ts';
 
 // ✅ Phase 1: Pure guards from collection domain
-import { canCollectTile, hasMoreCollectibleTiles, isVehicleOverloaded, noMoreCollectibleTiles, shouldApplyDangerDamage } from './domains/collection/guards.pure.ts';
+import { canCollectTile, hasMoreCollectibleTiles, hasMoreWaypoints, isAtFinalWaypoint, isVehicleOverloaded, noMoreCollectibleTiles, shouldApplyDangerDamage } from './domains/collection/guards.pure.ts';
 // ✅ Phase 1: Pure guards from initializing domain
 import { areAllEntitiesInitialized, isBasePositionInitialized, isDronePositionInitialized, isVehiclePositionInitialized } from './domains/initializing/guards.pure.ts';
 
@@ -96,6 +96,7 @@ export const machineXV5Pure = setup({
     
     // Actions du domaine COLLECTION (migrées)
     assignShipMovingToTileContext,
+    assignShipNextWaypointContext, // 🛤️ PATHFINDING: Advance to next waypoint
     assignShipCollectingContext,
     assignShipReturningContext,
     assignShipReachedBaseContext,
@@ -156,6 +157,9 @@ export const machineXV5Pure = setup({
     hasMoreCollectibleTiles, // ✅ Pure: uses context.memory.knownTiles
     noMoreCollectibleTiles, // ✅ Inverse de hasMoreCollectibleTiles
     shouldApplyDangerDamage, // 🆕 NEW: Check if ship hits danger tile
+    // 🛤️ PATHFINDING guards
+    hasMoreWaypoints, // Check if ship has more tiles to traverse
+    isAtFinalWaypoint, // Check if ship reached target tile
     
     // Guards du domaine MAINTENANCE (pure)
     needsDeposit,
@@ -323,6 +327,13 @@ export const machineXV5Pure = setup({
           entry: 'onShipMovingToTileEntry',
           exit: 'onShipMovingToTileExit',
           on: {
+            // 🛤️ PATHFINDING: Handle intermediate waypoints
+            SHIP_REACHES_WAYPOINT: {
+              // Self-transition: advance to next waypoint, stay in same state
+              target: 'ship_moving_to_tile',
+              guard: 'hasMoreWaypoints',
+              actions: 'assignShipNextWaypointContext'
+            },
             SHIP_REACHES_TILE: [
               {
                 // Priority 1: Ship hits danger tile → apply damage, then collect
@@ -376,6 +387,12 @@ export const machineXV5Pure = setup({
           entry: 'onShipReturningEntry',
           exit: 'onShipReturningExit',
           on: {
+            // 🛤️ PATHFINDING: Waypoint progression during return journey
+            SHIP_REACHES_WAYPOINT: {
+              guard: 'hasMoreWaypoints',
+              actions: 'assignShipNextWaypointContext'
+              // Self-transition: stay in ship_returning, advance to next waypoint
+            },
             SHIP_REACHES_BASE: {
               target: '#machineXV5Pure.maintaining',
               actions: 'assignShipReachedBaseContext'

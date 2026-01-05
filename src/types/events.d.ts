@@ -25,6 +25,7 @@ export type MachineEventType =
   | 'DRONE_READY_FOR_REDEPLOY'
   
   // Événements ship (collecting)
+  | 'SHIP_REACHES_WAYPOINT'  // Pathfinding: intermediate tile reached
   | 'SHIP_REACHES_TILE'
   | 'SHIP_LOAD_RESOURCES'
   | 'SHIP_REACHES_BASE'
@@ -61,6 +62,7 @@ export type MachineEvents =
   | { type: 'DRONE_DESTROYED'; droneType: string; reason: 'danger' | 'collision' | 'other' }
   | { type: 'DRONE_REACHES_BASE' }
   | { type: 'DRONE_READY_FOR_REDEPLOY' }
+  | { type: 'SHIP_REACHES_WAYPOINT' }  // Pathfinding: intermediate tile reached
   | { type: 'SHIP_REACHES_TILE' }
   | { type: 'SHIP_LOAD_RESOURCES' }
   | { type: 'SHIP_REACHES_BASE' }
@@ -97,6 +99,7 @@ export const MACHINE_EVENT_TYPES: Record<Uppercase<MachineEventType>, MachineEve
   DRONE_READY_FOR_REDEPLOY: 'DRONE_READY_FOR_REDEPLOY',
   
   // Événements ship
+  SHIP_REACHES_WAYPOINT: 'SHIP_REACHES_WAYPOINT',  // Pathfinding
   SHIP_REACHES_TILE: 'SHIP_REACHES_TILE',
   SHIP_LOAD_RESOURCES: 'SHIP_LOAD_RESOURCES',
   SHIP_REACHES_BASE: 'SHIP_REACHES_BASE',

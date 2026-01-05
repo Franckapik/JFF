@@ -1,8 +1,6 @@
 * Le cloud donne-il des damages en fonction du bot desormais?
 
-* Les stations spéciales ne sont pas explorables pour le bot.
-
-* Le bot evite-il les dangers ?
+* Les conséquences des tuiles danger doivent etre mises en place.
 
 * Pathfinding à remettre en place. (BFS)
 
