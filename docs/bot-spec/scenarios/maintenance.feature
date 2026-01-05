@@ -194,64 +194,151 @@ Fonctionnalité: Maintenance
     Et le bot est prêt pour un nouveau cycle
 
   # ============================================================================
-  # 🆕 SCÉNARIOS: RELOCATING - État final de cycle
+  # 🆕 PHASE 2: RELOCATING - Radius dynamique et Game Over
   # ============================================================================
+  
+  Règle: Configuration du système de radius
+    Étant donné que INITIAL_EXPLORATION_RADIUS = 1
+    Et que MAX_EXPLORATION_RADIUS = 3
+    Et que le GameStore gère le radius partagé entre tous les bots
+    Alors tous les bots démarrent avec explorationRadius = 1
+    Et le radius peut être incrémenté jusqu'à 3 maximum
+    Et atteindre le radius max déclenche GAME_OVER
 
-  Scénario: Transition vers relocating depuis evaluating
-    Étant donné que le FSM est en état "evaluating"
-    Et que allLocalTilesExplored = true (toutes tuiles dans radius explorées)
-    Et que hasCollectibleTiles = false (aucune tuile avec ressources)
-    Et que vehicle.fuel >= fuelThreshold
-    Quand le guard shouldRelocateShip est évalué
-    Alors le guard retourne true
-    Quand l'événement NEED_RELOCATING est reçu
-    Alors le FSM transite vers "maintaining.relocating"
-    Et l'action assignShipRelocatingContext est appelée
+  Scénario: Transition NO_TARGET_FOUND vers relocating
+    Étant donné que le FSM est en état "exploring.drone_deploying"
+    Et que assignDroneDeployingContext retourne targetTile = "unknown"
+    Et que toutes les tuiles locales dans radius actuel sont explorées
+    Quand le tracker détecte l'absence de targetDroneTile valide
+    Alors le tracker envoie l'événement NO_TARGET_FOUND après 100ms
+    Et le FSM transite vers "maintaining.relocating"
+    # FIX: L'action assignShipRelocatingContext N'EST PLUS sur la transition
+    # Elle est uniquement dans l'entry du state relocating
 
-  Scénario: Logs de fin de cycle dans relocating
+  Scénario: PHASE 2 - Incrémentation du radius (radius < 3)
     Étant donné que le FSM transite vers "maintaining.relocating"
-    Quand assignShipRelocatingContext est exécuté
-    Alors les logs suivants sont émis:
+    Et que GameStore.explorationRadius = 1
+    Et que MAX_EXPLORATION_RADIUS = 3
+    Quand l'action assignShipRelocatingContext est exécutée (entry action)
+    Alors GameStore.incrementRadius() est appelé
+    Et explorationRadius passe de 1 à 2
+    Et les pénalités sont appliquées:
+      | Pénalité           | Calcul                          |
+      | Score              | score.resources ÷ 2             |
+      | Damage             | vehicle.damage + 30%            |
+    Et context.config.exploringRadius = 2 (sync avec GameStore)
+    Et les logs suivants sont émis:
       | Log                                                   |
-      | 🏁 [bot-X] ======================================== |
-      | 🏁 [bot-X] CYCLE COMPLET - ÉTAT FINAL: RELOCATING    |
-      | 🏁 [bot-X] Toutes les tuiles locales ont été explorées/collectées |
-      | 🏁 [bot-X] Fuel: XX, Score: XXXX                      |
-      | 🏁 [bot-X] ======================================== |
-    Et context.lastAction = 'shipRelocation_requested'
-    Et context.fsmState = 'maintaining_relocating'
+      | 🔄 [bot-X] RELOCATING - Checking radius expansion   |
+      | 🔄 [bot-X] Current radius: 1, Max: 3                 |
+      | 🔄 [RadiusSlice] bot-X increased exploration radius: 1 → 2 |
+      | 💥 [bot-X] PENALTIES APPLIED:                        |
+      |    - Score: XXXX → YYYY (÷2)                         |
+      |    - Damage: XX% → YY% (+30%)                        |
+      |    - Radius: 1 → 2                                   |
+    Quand le tracker envoie RELOCATING_COMPLETE après 500ms
+    Et le guard canIncreaseRadius retourne true (radius 2 < 3)
+    Alors le FSM transite vers "evaluating"
+    Et le bot continue l'exploration avec le nouveau radius
 
-  Scénario: Relocating comme état final (type: 'final')
-    Étant donné que le FSM est en état "maintaining.relocating"
-    Et que relocating est configuré dans la machine avec type = 'final'
-    Alors aucune transition automatique n'existe depuis relocating
-    Et le tracker ne schedule aucun événement (0 events)
-    Et le FSM reste dans cet état jusqu'à intervention externe
-    Et le bot a complété son cycle d'exploration/collection
+  Scénario: PHASE 2 - Game Over (radius = 3)
+    Étant donné que le FSM transite vers "maintaining.relocating"
+    Et que GameStore.explorationRadius = 3
+    Et que MAX_EXPLORATION_RADIUS = 3
+    Quand l'action assignShipRelocatingContext est exécutée
+    Alors le guard isAtMaxRadius retourne true
+    Et aucun incrementRadius() n'est appelé
+    Et les logs suivants sont émis:
+      | Log                                                   |
+      | 🔄 [bot-X] RELOCATING - Checking radius expansion   |
+      | 🔄 [bot-X] Current radius: 3, Max: 3                 |
+      | 🏁 [bot-X] MAX RADIUS REACHED - GAME OVER incoming  |
+      | 🏁 [bot-X] Final Score: XXXX                         |
+    Et context.lastAction = 'game_over_pending'
+    Quand le tracker envoie RELOCATING_COMPLETE après 500ms
+    Et le guard isAtMaxRadius retourne true (priorité 1)
+    Alors le FSM transite vers "game_over" (état final)
+    Et le status du bot devient "done"
+    Et les logs finaux sont émis:
+      | Log                                                   |
+      | 🏁🏁🏁 [bot-X] ====================================== |
+      | 🏁 [bot-X] GAME OVER - Maximum radius reached!       |
+      | 🏁 [bot-X] Final Score: XXXX                         |
+      | 🏁 [bot-X] Exploration Radius: MAX (3)               |
+      | 🏁 [bot-X] Vehicle Damage: XX%                       |
+      | 🏁 [bot-X] Tiles Explored: XX                        |
 
-  Scénario: PHASE 1 Validation - Pas de mouvement physique
-    Étant donné que relocating est en PHASE 1 (validation)
-    Et que le FSM est en état "maintaining.relocating"
-    Alors aucune action de déplacement n'est exécutée
-    Et targetCoord reste "unknown"
-    Et le commentaire "🚧 PHASE 1: Pas de transition" est présent
-    Et la décision gameplay (relocation vs radius++) est reportée
+  Scénario: Option A - État relocating visible avec délai 500ms
+    Étant donné que le FSM entre dans "maintaining.relocating"
+    Quand assignShipRelocatingContext est exécuté (entry)
+    Et onShipRelocatingEntry est exécuté (entry effect)
+    Alors le tracker détecte l'état relocating
+    Et schedule RELOCATING_COMPLETE dans 500ms
+    Et pendant ces 500ms:
+      - L'état {"maintaining":"relocating"} est visible dans les logs FSM
+      - Le counter UI peut incrémenter
+      - Les outils de debug peuvent observer l'état
+    Quand les 500ms sont écoulés
+    Alors l'événement RELOCATING_COMPLETE est envoyé
+    Et les guards isAtMaxRadius/canIncreaseRadius sont évalués
+    Et la transition appropriée est déclenchée
 
-  Scénario: Protection contre boucle infinie relocating
-    Étant donné que context.lastAction = 'shipRelocation_requested'
-    Et que le FSM est en état "evaluating"
-    Quand onEvaluatingEntry évalue shouldRelocate
-    Alors la condition justRelocated = true est détectée
-    Et NEED_RELOCATING n'est PAS envoyé immédiatement
-    Et le bot explore d'autres options (EXPLORING, COLLECTING)
-    # Note: En PHASE 1 avec type='final', cette protection n'est plus nécessaire
+  Scénario: Progression radius par étapes (1 → 2 → 3)
+    Étant donné que le bot démarre avec explorationRadius = 1
+    
+    # Première relocation
+    Quand toutes les tuiles radius=1 sont explorées
+    Et le FSM entre dans "maintaining.relocating"
+    Alors explorationRadius passe à 2
+    Et le FSM retourne à "evaluating"
+    
+    # Deuxième relocation
+    Quand toutes les tuiles radius=2 sont explorées
+    Et le FSM entre dans "maintaining.relocating"
+    Alors explorationRadius passe à 3
+    Et le FSM retourne à "evaluating"
+    
+    # Troisième relocation = GAME OVER
+    Quand toutes les tuiles radius=3 sont explorées
+    Et le FSM entre dans "maintaining.relocating"
+    Alors isAtMaxRadius = true
+    Et le FSM transite vers "game_over"
+    Et le bot termine sa partie
 
-  Scénario: Multi-bot convergence vers relocating
+  Scénario: FIX - Une seule exécution de assignShipRelocatingContext
+    Étant donné que le FSM reçoit NO_TARGET_FOUND
+    Quand la transition vers "maintaining.relocating" est déclenchée
+    Alors assignShipRelocatingContext est exécuté UNE SEULE FOIS (entry)
+    Et incrementRadius() est appelé UNE SEULE FOIS
+    Et le radius n'augmente QUE de 1 (par exemple 1→2, pas 1→3)
+    # AVANT LE FIX: L'action était sur la transition ET dans l'entry = 2 exécutions
+    # APRÈS LE FIX: L'action est uniquement dans l'entry = 1 exécution
+
+  Scénario: Multi-bot convergence vers game_over
     Étant donné que bot-0 et bot-1 explorent indépendamment
-    Et que chaque bot épuise ses tuiles locales
-    Quand bot-0 atteint l'état "maintaining.relocating"
-    Alors bot-0 reste dans cet état final
-    Et bot-0 affiche son score et fuel final
-    Quand bot-1 atteint l'état "maintaining.relocating"
-    Alors bot-1 reste aussi dans cet état final
-    Et les deux bots sont en état stable sans boucle
+    Et que les deux bots partagent le même explorationRadius via GameStore
+    Quand bot-0 incrémente le radius de 1 à 2
+    Alors bot-1 voit aussi explorationRadius = 2
+    Quand bot-1 incrémente le radius de 2 à 3
+    Alors bot-0 voit aussi explorationRadius = 3
+    Quand bot-0 atteint l'état "maintaining.relocating" avec radius=3
+    Alors bot-0 transite vers "game_over"
+    Quand bot-1 atteint l'état "maintaining.relocating" avec radius=3
+    Alors bot-1 transite vers "game_over"
+    Et les deux bots sont en état final "game_over"
+
+  Plan du Scénario: Calcul des pénalités de relocation
+    Étant donné que score.resources.total = <scoreAvant>
+    Et que vehicle.damage = <damageAvant>
+    Quand le bot entre dans "maintaining.relocating"
+    Et le radius est incrémenté
+    Alors score.resources.total = <scoreApres>
+    Et vehicle.damage = <damageApres>
+
+    Exemples:
+      | scoreAvant | damageAvant | scoreApres | damageApres | commentaire           |
+      | 1000       | 0           | 500        | 30          | Pénalités standards   |
+      | 2500       | 20          | 1250       | 50          | Damage cumulatif      |
+      | 0          | 0           | 0          | 30          | Pas de score          |
+      | 1440       | 0           | 720        | 30          | Score impair (÷2)     |
+      | 500        | 80          | 250        | 100         | Damage plafonné à 100 |
