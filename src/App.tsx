@@ -2,7 +2,6 @@ import React from 'react';
 
 import { useSimulatedTracker } from './ai/fsm/machineX/hooks/trackers/useSimulatedTracker';
 import FSMVisualization from './components/FSMVisualization';
-import ScoreDisplay from './components/ScoreDisplay';
 import { config } from './config';
 import useGameStore from './stores/useGameStore';
 import { useTileStore } from './stores/useTileStore';
@@ -85,7 +84,6 @@ export default function App() {
 
   return (
     <React.StrictMode>
-      <ScoreDisplay />
       <FSMVisualization />
     </React.StrictMode>
   );
