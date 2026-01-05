@@ -14,9 +14,9 @@
 
 * comment dynamiser la vue pour faire un affichage de battle avec un bot qui gagne ou non ? 
 
-* avoir un meilleur log beaucou moins verbeux.
+* avoir un meilleur log beaucoup moins verbeux.
   
-
+* Ajouter le total de ressources lors du hover deja existant sur les tuiles.
 
 
 
