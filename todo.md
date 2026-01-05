@@ -1,10 +1,15 @@
+* il y a un bloacage en EVAL a diagnostiquer. Visible sur main actuellement. D'ou provient-il ? Comment le resoudre via le log ? Est-ce lié a explorable undefined?
+
+* 
+
+
 * Le cloud donne-il des damages en fonction du bot desormais?
 
 * Les stations spéciales ne sont pas explorables pour le bot.
 
 * Le bot evite-il les dangers ?
 
-* Pathfinding à remettre en place. (BFS)
+* Pathfinding à remettre en place. (BFS) EN cours : meilleurs visualisation à faire, vérifier la logique et ajouter un composant montrant les paths sous forme de liste.
 
 * Le bot doit choisir/utiliser la station repair ou refuel
 
@@ -17,7 +22,6 @@
 * avoir un meilleur log beaucoup moins verbeux.
   
 * Ajouter le total de ressources lors du hover deja existant sur les tuiles.
-
 
 
 
