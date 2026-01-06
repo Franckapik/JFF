@@ -1,13 +1,14 @@
 import React from 'react';
 
 import CollectedTilesList from './CollectedTilesList';
+import RouteDisplay from './RouteDisplay';
 import ShipStatus from './ShipStatus';
 import TileMatrix from './TileMatrix';
 
 /**
  * Layout en 2 colonnes :
  * - Gauche : TileMatrix + ShipStatus (empilés)
- * - Droite : Liste des tuiles collectées
+ * - Droite : Liste des tuiles collectées + Détail des itinéraires
  */
 export default function TileMatrixLayout() {
   return (
@@ -20,9 +21,10 @@ export default function TileMatrixLayout() {
         </div>
       </div>
 
-      {/* Colonne 2: Liste des tuiles collectées */}
+      {/* Colonne 2: Liste des tuiles collectées + Itinéraires */}
       <div style={styles.rightColumn}>
         <CollectedTilesList />
+        <RouteDisplay />
       </div>
     </div>
   );
