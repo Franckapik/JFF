@@ -197,3 +197,38 @@ export const canIncreaseRadius: XStateV5Guard = ({ context }) => {
   
   return result;
 };
+
+// ============================================================================
+// 🆕 DRONE DESTRUCTION - Guards for drone purchase
+// ============================================================================
+
+/**
+ * Guard: Vérifie si le drone explorer est détruit et nécessite un achat
+ * 
+ * @returns true si le drone explorer est détruit (isDestroyed === true || isActive === false)
+ */
+export const needsDronePurchase: XStateV5Guard = ({ context }) => {
+  const drone = context.droneFleet?.drones?.explorer;
+  if (!drone) return false;
+  
+  const result = drone.isDestroyed === true || drone.isActive === false;
+  
+  console.log(`🔍 [needsDronePurchase] ${context.entityId}: isDestroyed=${drone.isDestroyed}, isActive=${drone.isActive}, result=${result}`);
+  
+  return result;
+};
+
+/**
+ * Guard: Vérifie si le bot a assez de ressources pour acheter un drone (>= 50)
+ * 
+ * @returns true si score.resources.total >= 50
+ */
+export const hasResourcesForDrone: XStateV5Guard = ({ context }) => {
+  const DRONE_COST = 50;
+  const totalResources = context.score?.resources?.total ?? 0;
+  const result = totalResources >= DRONE_COST;
+  
+  console.log(`🔍 [hasResourcesForDrone] ${context.entityId}: resources=${totalResources}, cost=${DRONE_COST}, result=${result}`);
+  
+  return result;
+};

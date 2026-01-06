@@ -36,6 +36,7 @@ export type MachineEvents =
   | { type: 'DRONE_HAS_SCANNED' }
   | { type: 'DRONE_REACHES_BASE' }
   | { type: 'DRONE_READY_FOR_REDEPLOY' }
+  | { type: 'DRONE_DESTRUCTION_ACKNOWLEDGED' }  // 🆕 Drone destruction acknowledged after delay
   // 🛤️ PATHFINDING: Ship movement through waypoints
   | { type: 'SHIP_REACHES_WAYPOINT' }  // Intermediate waypoint reached
   | { type: 'SHIP_REACHES_TILE' }      // Final destination reached
@@ -54,6 +55,7 @@ export type MachineEvents =
   | { type: 'NEED_COLLECTING' }
   | { type: 'NEED_MAINTENANCE' }
   | { type: 'NEED_RELOCATING' }
+  | { type: 'NEED_DRONE_PURCHASE' }  // 🆕 DRONE DESTRUCTION: Drone destroyed, needs purchase
   | { type: 'NEED_SHIP_RELOCATION' }  // Ship must move to explore new area
   | { type: 'NO_TARGET_FOUND' }  // Recovery: No valid target in exploring.drone_deploying
   // Phase 2: Grid synchronization event
@@ -66,7 +68,9 @@ export type MachineEvents =
   // Phase 2: Radius expansion & Game Over
   | { type: 'RADIUS_INCREASED'; newRadius: number }
   | { type: 'GAME_OVER'; reason: 'max_radius_reached' | 'other' }
-  | { type: 'RELOCATING_COMPLETE' };
+  | { type: 'RELOCATING_COMPLETE' }
+  // 🆕 DRONE DESTRUCTION: Purchase complete event
+  | { type: 'DRONE_PURCHASE_COMPLETE' };
 
 /**
  * Type guard pour vérifier le type d'un événement

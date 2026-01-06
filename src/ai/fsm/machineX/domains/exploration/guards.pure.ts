@@ -18,6 +18,7 @@ export const shouldDestroyDroneOnDanger: XStateV5Guard = ({ context, event }) =>
   
   // Vérifier le type de tuile reçu dans l'événement
   if (tileType === 'danger') {
+    console.log(`🔥 [shouldDestroyDroneOnDanger] Danger detected from event.tileType`);
     return true;
   }
   
@@ -25,7 +26,11 @@ export const shouldDestroyDroneOnDanger: XStateV5Guard = ({ context, event }) =>
   const currentDrone = context.droneFleet?.drones?.explorer;
   const targetTile = currentDrone?.targetDroneTile;
   
-  if (targetTile?.type === 'danger') {
+  const isDanger = targetTile?.type === 'danger';
+  console.log(`🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "${targetTile?.type}" → isDanger=${isDanger}`);
+  
+  if (isDanger) {
+    console.log(`🔥 [shouldDestroyDroneOnDanger] DANGER TILE CONFIRMED - Drone will be destroyed!`);
     return true;
   }
   

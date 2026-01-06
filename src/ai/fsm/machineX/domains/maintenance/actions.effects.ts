@@ -188,3 +188,40 @@ export const onGameOverEntry = ({ context }: { context: FSMContext }) => {
 export const __maintenanceEffectsPlaceholder = ({ context: _context }: { context: FSMContext }) => {
 };
 
+// ============================================================================
+// 🆕 DRONE DESTRUCTION - Entry/Exit effects for purchasing_drone state
+// ============================================================================
+
+/**
+ * 🆕 Action d'entrée de l'état maintaining.purchasing_drone
+ * 
+ * LOG ONLY: Trace le début de l'achat de drone
+ */
+export const onPurchasingDroneEntry = ({ context }: { context: FSMContext }) => {
+  const droneStatus = context.droneFleet?.drones?.explorer;
+  const resources = context.score?.resources?.total ?? 0;
+  
+  fsmLogger.action(`🛒 [${context.entityId}] PURCHASING DRONE - Starting drone acquisition`, {
+    droneDestroyed: droneStatus?.isDestroyed,
+    droneActive: droneStatus?.isActive,
+    availableResources: resources,
+    canAfford: resources >= 50,
+    penaltyIfNoResources: '+20% damage'
+  });
+};
+
+/**
+ * 🆕 Action de sortie de l'état maintaining.purchasing_drone
+ * 
+ * LOG ONLY: Trace la fin de l'achat de drone
+ */
+export const onPurchasingDroneExit = ({ context }: { context: FSMContext }) => {
+  const droneStatus = context.droneFleet?.drones?.explorer;
+  
+  fsmLogger.action(`✅ [${context.entityId}] DRONE PURCHASED - Drone is now active`, {
+    droneActive: droneStatus?.isActive,
+    droneHealth: droneStatus?.health,
+    vehicleDamage: context.vehicle?.damage
+  });
+};
+
