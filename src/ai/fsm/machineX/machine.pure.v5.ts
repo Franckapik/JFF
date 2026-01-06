@@ -34,7 +34,7 @@ import type { FSMContext } from '../../../types/fsm.d.ts';
 import { assignDangerDamageContext, assignShipCollectingContext, assignShipLoadResourcesContext, assignShipMovingToTileContext, assignShipReachedBaseContext, assignShipReturningContext, onCollectingEntry, onCollectingExit, onShipCollectingEntry, onShipCollectingExit, onShipMovingToTileEntry, onShipMovingToTileExit, onShipReturningEntry, onShipReturningExit } from './domains/collection/index.ts';
 import { assignEvaluationContext, assignShipRelocatedContext, assignShipRelocationContext, onEvaluatingEntry, onEvaluatingExit } from './domains/evaluation/index.ts';
 // ✅ Phase 1: ALL guards from guards.pure.ts (no store dependencies)
-import { allLocalTilesExplored, canStartExploring, canStartExploringWithValidTarget, hasTilesAvailable, hasUnexploredTilesInRadius, shouldCollect, shouldExplore, shouldMaintain, shouldRelocateShip } from './domains/evaluation/guards.pure.ts';
+import { allLocalTilesExplored, canStartExploring, canStartExploringWithValidTarget, hasTilesAvailable, hasUnexploredTilesInRadius, isStuckInEvaluating, shouldCollect, shouldExplore, shouldMaintain, shouldRelocateShip } from './domains/evaluation/guards.pure.ts';
 import { assignDroneDeployingContext, assignDroneDockedContext, assignDroneReadyContext, assignDroneReturningContext, assignDroneScanningContext, onDroneDeployingEntry, onDroneDeployingExit, onDroneDockedEntry, onDroneDockedExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit } from './domains/exploration/index.ts';
 // ✅ Phase 2: Import updateGridInfo for TILES_UPDATED event
 import { updateDronePosition, updateGridInfo, updateShipPosition } from './domains/global/index.ts';
@@ -149,6 +149,7 @@ export const machineXV5Pure = setup({
     shouldCollect, // ✅ Pure: uses context.gridInfo.tiles
     allLocalTilesExplored, // ✅ NEW: Check if all tiles in radius are explored
     shouldRelocateShip, // ✅ NEW: Ship must relocate to explore new area
+    isStuckInEvaluating, // 🆕 FALLBACK: Force relocation when no action possible
     
     // Guards du domaine COLLECTION (pure)
     canCollectTile,
@@ -224,6 +225,13 @@ export const machineXV5Pure = setup({
       entry: ['assignEvaluationContext', 'onEvaluatingEntry'],
       exit: 'onEvaluatingExit',
 
+      // 🆕 FALLBACK: Si aucune action n'est possible, force relocation
+      // Ceci évite les blocages dus aux race conditions entre guards
+      always: {
+        target: 'maintaining.relocating',
+        guard: 'isStuckInEvaluating'
+      },
+
       // Transitions manuelles (en cas d'événements explicites)
       on: {
         // 🆕 PRIORITY 1: RELOCATING (ship stuck - all local tiles explored)
@@ -235,9 +243,8 @@ export const machineXV5Pure = setup({
         },
         NEED_EXPLORING: { 
           target: 'exploring', 
-          // 🆕 Bug #7 Fix: Use combined guard to prevent stuck state
-          // Checks BOTH context.gridInfo.tiles AND TileStore (same as action)
-          guard: 'canStartExploringWithValidTarget',
+          // ✅ Unified: canStartExploring now guarantees valid targets via TileStore
+          guard: 'canStartExploring',
           actions: 'assignDroneDeployingContext' // MAJ contexte ici (assign)
         },
         NEED_COLLECTING: { 

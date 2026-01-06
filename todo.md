@@ -1,13 +1,8 @@
-* il y a un bloacage en EVAL a diagnostiquer. Visible sur main actuellement. D'ou provient-il ? Comment le resoudre via le log ? Est-ce lié a explorable undefined?
-
-* 
-
+* il y a un bloacage en EVAL a diagnostiquer. Visible sur main actuellement. D'ou provient-il ? Comment le resoudre via le log ? Est-ce lié a explorable undefined? NOn  peut-etre pas mais plutot au danger dynamique.
 
 * Le cloud donne-il des damages en fonction du bot desormais?
 
-* Les stations spéciales ne sont pas explorables pour le bot.
-
-* Le bot evite-il les dangers ?
+* Le bot evite-il les dangers ? PLus maintenant mais le drone destroyed est à mettre en place.
 
 * Pathfinding à remettre en place. (BFS) EN cours : meilleurs visualisation à faire, vérifier la logique et ajouter un composant montrant les paths sous forme de liste.
 

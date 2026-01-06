@@ -98,68 +98,14 @@ export const canStartExploring: XStateV5Guard = ({ context }) => {
   if (damage > DAMAGE_THRESHOLD) return false;
   if (isAtCapacity) return false;
   
-  // ✅ NEW Check 4: At least one unexplored tile must exist in exploration radius
-  const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
-  // 🆕 PHASE 2: Use GameStore radius (shared state)
-  const exploringRadius = getExplorationRadius(context.config?.exploringRadius);
-  
-  if (!shipCoord) return false;
-  
-  // Parse ship coordinate
-  const [shipCol, shipRow] = shipCoord.split(',').map(Number);
-  if (isNaN(shipCol) || isNaN(shipRow)) return false;
-  
-  // Get explored coords from memory.knownTiles - PRIMARY SOURCE OF TRUTH
-  const exploredCoords = new Set(
-    knownTiles
-      .filter(t => t?.explored)
-      .map(t => t?.position?.coord)
-  );
-  
-  // Check for at least one unexplored tile in radius
-  let hasUnexploredTile = false;
-  let tilesInRadius = 0;
-  let exploredInRadius = 0;
-  
-  for (const [coord, tile] of Object.entries(tiles)) {
-    const [col, row] = coord.split(',').map(Number);
-    if (isNaN(col) || isNaN(row)) continue;
-    
-    // Calculate distance (Chebyshev)
-    const distance = Math.max(Math.abs(col - shipCol), Math.abs(row - shipRow));
-    
-    if (distance <= exploringRadius) {
-      // Skip base tile
-      if ((tile as unknown as Record<string, unknown>)?.type === 'depart') continue;
-      
-      tilesInRadius++;
-      
-      // ✅ FIX: Use ONLY memory.knownTiles as source of truth
-      const isExploredInMemory = exploredCoords.has(coord as `${number},${number}`);
-      
-      if (isExploredInMemory) {
-        exploredInRadius++;
-      } else {
-        hasUnexploredTile = true;
-      }
-    }
-  }
-  
-  // ⚠️ If no unexplored tiles in radius, cannot start exploring
-  console.log(`🔍 [DEBUG canStartExploring] ship=${shipCoord}, radius=${exploringRadius}`, {
-    tilesInRadius,
-    exploredInRadius,
-    hasUnexploredTile,
-    exploredCoordsSize: exploredCoords.size,
-    exploredCoordsSample: Array.from(exploredCoords).slice(0, 5)
-  });
-  
-  if (!hasUnexploredTile) {
-    console.log(`❌ [DEBUG canStartExploring] BLOCKING - no unexplored tiles in radius`);
+  // ✅ Unified Check 4: Delegate target validity to hasUnexploredTilesInRadius
+  // Uses fresh TileStore + memory.knownTiles (single source of truth for exploration)
+  const hasValidTargets = hasUnexploredTilesInRadius({ context } as Parameters<XStateV5Guard>[0]);
+  if (!hasValidTargets) {
+    console.log(`❌ [canStartExploring] BLOCKING - no valid unexplored tiles in radius`);
     return false;
   }
-  
-  console.log(`✅ [DEBUG canStartExploring] ALLOWING - has unexplored tiles`);
+  console.log(`✅ [canStartExploring] ALLOWING - valid unexplored tiles available`);
   return true;
 };
 
@@ -429,13 +375,8 @@ export const allLocalTilesExplored: XStateV5Guard = ({ context }) => {
   let exploredInRadius = 0;
   
   for (const [coord, tile] of Object.entries(tiles)) {
-    const [col, row] = coord.split(',').map(Number);
-    if (isNaN(col) || isNaN(row)) continue;
-    
-    // Calculate distance (Euclidean - same as hasUnexploredTilesInRadius)
-    const dx = col - shipCol;
-    const dz = row - shipRow;
-    const distance = Math.sqrt(dx * dx + dz * dz);
+    // ✅ Use Chebyshev/grid distance for consistency with tracker
+    const distance = calculateDistanceGrid(shipCoord, coord as `${number},${number}`);
     
     if (distance <= exploringRadius && distance > 0) {
       // Skip base tile
@@ -494,4 +435,41 @@ export const shouldRelocateShip: XStateV5Guard = ({ context }) => {
   });
   
   return result;
+};
+
+/**
+ * 🆕 FALLBACK GUARD: Détecte quand le bot est bloqué dans evaluating
+ * 
+ * Retourne true quand AUCUNE des actions suivantes n'est possible:
+ * - canStartExploringWithValidTarget (exploration)
+ * - shouldCollect (collecte)
+ * - shouldMaintain (maintenance fuel/damage)
+ * 
+ * Dans ce cas, force une transition vers 'relocating' pour sortir du blocage.
+ * Ceci est un filet de sécurité pour les race conditions entre guards.
+ * 
+ * @param context FSMContext
+ * @returns true si aucune action n'est possible et le bot est bloqué
+ */
+export const isStuckInEvaluating: XStateV5Guard = ({ context }) => {
+  // Simuler l'appel aux autres guards pour vérifier si une action est possible
+  const canExplore = canStartExploringWithValidTarget({ context } as Parameters<XStateV5Guard>[0]);
+  const canCollect = shouldCollect({ context } as Parameters<XStateV5Guard>[0]);
+  const needsMaintenance = shouldMaintain({ context } as Parameters<XStateV5Guard>[0]);
+  
+  // Si aucune action possible → bot est bloqué
+  const isStuck = !canExplore && !canCollect && !needsMaintenance;
+  
+  if (isStuck) {
+    console.log(`🚨 [isStuckInEvaluating] ${context.entityId} - FALLBACK TRIGGERED:`, {
+      canExplore,
+      canCollect,
+      needsMaintenance,
+      fuel: context.vehicle?.fuel,
+      damage: context.vehicle?.damage,
+      shipCoord: context.vehicle?.coord || context.vehicle?.baseCoord
+    });
+  }
+  
+  return isStuck;
 };

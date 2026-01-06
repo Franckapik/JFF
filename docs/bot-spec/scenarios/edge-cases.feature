@@ -67,10 +67,14 @@ Fonctionnalité: Cas Limites et Boucles Détectées
     Et le cap 100% est respecté: Math.min(100, damage + 10)
 
   # ============================================================================
-  # SCÉNARIO PROBLÉMATIQUE #1: Double collecte sur tuile déjà vidée
+  # SCÉNARIO RÉSOLU: Double collecte sur tuile déjà vidée
   # ============================================================================
+  # ✅ RÉSOLU (session 2026-01-06): Le guard hasMoreCollectibleTiles exclut maintenant
+  # la tuile courante (targetVehicleTile) de la recherche pour éviter de re-sélectionner
+  # une tuile qui vient d'être vidée. De plus, noMoreCollectibleTiles transite vers
+  # evaluating au lieu de ship_moving_to_tile.
   
-  Scénario: Double collecte sur tuile déjà vidée (BUG IDENTIFIÉ)
+  Scénario: Double collecte sur tuile déjà vidée (RÉSOLU)
     Étant donné que le FSM est en état "collecting.ship_collecting"
     Et que targetVehicleTile = "2,4" avec resources.total = 429
     Et que targetVehicleTile.collectable = true
@@ -78,13 +82,10 @@ Fonctionnalité: Cas Limites et Boucles Détectées
     Alors les ressources sont collectées avec succès
     Et la tuile "2,4" a maintenant resources.total = 0
     Et tileCollectedFlag = true
-    # BUG: Au lieu de transiter vers evaluating (noMoreCollectibleTiles = true)
-    # Le FSM transite vers ship_moving_to_tile avec la MÊME tuile vide
-    Et le FSM transite vers "collecting.ship_moving_to_tile"
-    Et targetVehicleTile = "2,4" (INCORRECT - tuile déjà collectée)
-    Quand l'événement SHIP_REACHES_TILE est reçu
-    Alors le FSM tente de collecter une tuile vide
-    Et le warning "Target tile has no resources to collect" apparaît
+    # ✅ FIX: Le guard hasMoreCollectibleTiles exclut la tuile courante
+    # ✅ FIX: noMoreCollectibleTiles transite vers evaluating, pas ship_moving_to_tile
+    Et le FSM transite vers "evaluating" (via guard noMoreCollectibleTiles)
+    Et aucune tentative de re-collecte sur tuile vide
 
   Scénario: Comportement attendu après collecte complète
     Étant donné que le FSM est en état "collecting.ship_collecting"
@@ -124,27 +125,22 @@ Fonctionnalité: Cas Limites et Boucles Détectées
     Et aucun check spécial n'est nécessaire
 
   # ============================================================================
-  # SCÉNARIO PROBLÉMATIQUE #5: Blocage dans ship_moving_to_tile sans target
+  # SCÉNARIO RÉSOLU: Blocage dans ship_moving_to_tile sans target
   # ============================================================================
+  # ✅ RÉSOLU (session 2026-01-06): La machine FSM a maintenant une transition fallback
+  # dans SHIP_REACHES_TILE qui retourne à evaluating si canCollectTile retourne false.
+  # De plus, assignShipMovingToTileContext valide la cible avant de l'assigner.
   
-  Scénario: Blocage ship_moving_to_tile sans cible
+  Scénario: Blocage ship_moving_to_tile sans cible (RÉSOLU)
     Étant donné que le FSM est en état "collecting.ship_moving_to_tile"
     Et que targetVehicleTile était "2,3" mais maintenant null (après sync)
-    Et que le warning "No alternative tiles found after synchronization" a été émis
-    Quand le tracker tente de planifier SHIP_REACHES_TILE
-    Alors aucun événement n'est planifié (0 events scheduled)
-    Et le FSM reste bloqué indéfiniment dans ship_moving_to_tile
-
-  Scénario: Comportement attendu - sortie quand pas de cible
-    Étant donné que le FSM est en état "collecting.ship_moving_to_tile"
-    Et que targetVehicleTile = null
-    Quand le guard noMoreCollectibleTiles est évalué
-    Alors le guard retourne true
-    Et le FSM transite automatiquement vers "evaluating"
-    Et le cycle peut continuer
+    Quand l'événement SHIP_REACHES_TILE est reçu
+    Alors le guard canCollectTile retourne false (pas de cible)
+    Et le fallback transite vers "evaluating" (Priority 3 dans la machine)
+    Et le cycle peut continuer normalement
 
   # ============================================================================
-  # SCÉNARIO PROBLÉMATIQUE #5b: Blocage dans drone_deploying sans target
+  # SCÉNARIO RÉSOLU: Blocage dans drone_deploying sans target
   # ============================================================================
   
   Scénario: Blocage drone_deploying sans cible (RÉSOLU)
@@ -156,3 +152,32 @@ Fonctionnalité: Cas Limites et Boucles Détectées
     Alors le tracker envoie l'événement NO_TARGET_FOUND après 100ms
     Et le log "⚠️  No valid target tile → sending NO_TARGET_FOUND" est émis
     Et le FSM transite vers "maintaining.relocating"
+
+  # ============================================================================
+  # SCÉNARIO RÉSOLU: Blocage dans evaluating (race condition guards)
+  # ============================================================================
+  # ✅ RÉSOLU (session 2026-01-06): Unification des guards d'exploration.
+  # canStartExploring délègue maintenant à hasUnexploredTilesInRadius (source unique).
+  # Un fallback "always → relocating" reste en sécurité si aucune action n'est possible.
+  
+  Scénario: Blocage dans evaluating par race condition (RÉSOLU)
+    Étant donné que le FSM est en état "evaluating"
+    Et que canStartExploring utilisait context.gridInfo.tiles (snapshot)
+    Et que hasUnexploredTilesInRadius utilisait TileStore (état live)
+    Et qu'un danger dynamique modifie TileStore entre les deux évaluations
+    # AVANT: Les deux guards pouvaient diverger → boucle infinie NEED_EXPLORING
+    # APRÈS: canStartExploring délègue à hasUnexploredTilesInRadius (source unique)
+    Quand l'événement NEED_EXPLORING est reçu
+    Alors canStartExploring vérifie hasUnexploredTilesInRadius en interne
+    Et une seule source de vérité (TileStore + memory.knownTiles) est utilisée
+    Et aucune race condition n'est possible
+    
+  Scénario: Fallback isStuckInEvaluating comme filet de sécurité
+    Étant donné que le FSM est en état "evaluating"
+    Et que canStartExploring retourne false
+    Et que shouldCollect retourne false
+    Et que shouldMaintain retourne false
+    Quand la transition "always" est évaluée
+    Alors le guard isStuckInEvaluating retourne true
+    Et le FSM transite vers "maintaining.relocating"
+    Et le cycle continue (pas de blocage)
