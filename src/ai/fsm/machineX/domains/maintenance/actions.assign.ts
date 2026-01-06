@@ -210,3 +210,117 @@ export const assignShipRelocatingContext = createAssignAction(({ context }) => {
 export const __maintenanceAssignPlaceholder = createAssignAction(({ context: _context }) => {
   return {};
 });
+
+// ============================================================================
+// 🆕 DRONE DESTRUCTION - Actions for drone purchase
+// ============================================================================
+
+const DRONE_COST = 50;
+const DRONE_DAMAGE_PENALTY = 20;
+
+/**
+ * 🆕 Action assign pour l'achat d'un drone avec ressources
+ * 
+ * Coût: 50 ressources du score
+ * Réactive le drone explorer avec toutes ses propriétés
+ */
+export const assignPurchaseDroneContext = createAssignAction(({ context }) => {
+  const currentScore = context.score?.resources || { food: 0, debris: 0, special: 0, total: 0 };
+  
+  // Déduire le coût proportionnellement aux types de ressources
+  const totalResources = currentScore.total || 0;
+  const ratio = totalResources > 0 ? DRONE_COST / totalResources : 0;
+  
+  const newScore = {
+    food: Math.floor((currentScore.food || 0) * (1 - ratio)),
+    debris: Math.floor((currentScore.debris || 0) * (1 - ratio)),
+    special: Math.floor((currentScore.special || 0) * (1 - ratio)),
+    total: 0
+  };
+  newScore.total = newScore.food + newScore.debris + newScore.special;
+
+  const currentDrone = context.droneFleet?.drones?.explorer;
+  
+  // Réactiver le drone
+  const updatedDrone = {
+    ...currentDrone,
+    isActive: true,
+    isDestroyed: false,
+    visualState: 'docked' as const,
+    health: 100,
+    isMoving: false,
+    targetDroneTile: null,
+    coord: undefined // Drone retourne à la position du ship
+  };
+
+  fsmLogger.action(`🛒 [${context.entityId}] Drone PURCHASED with resources`, {
+    cost: DRONE_COST,
+    scoreBefore: currentScore.total,
+    scoreAfter: newScore.total,
+    droneStatus: 'active'
+  });
+
+  return {
+    droneFleet: {
+      ...context.droneFleet,
+      drones: {
+        ...context.droneFleet.drones,
+        explorer: updatedDrone
+      }
+    },
+    score: {
+      ...context.score,
+      resources: newScore
+    },
+    lastAction: 'drone_purchased_success',
+    fsmState: 'maintaining_purchasing_drone'
+  };
+});
+
+/**
+ * 🆕 Action assign pour l'achat d'un drone SANS ressources (pénalité de dégâts)
+ * 
+ * Pénalité: +20% dégâts au vaisseau
+ * Réactive le drone explorer gratuitement
+ */
+export const assignDroneDamagePenaltyContext = createAssignAction(({ context }) => {
+  const currentDamage = context.vehicle?.damage || 0;
+  const newDamage = Math.min(100, currentDamage + DRONE_DAMAGE_PENALTY);
+  
+  const currentDrone = context.droneFleet?.drones?.explorer;
+  
+  // Réactiver le drone gratuitement
+  const updatedDrone = {
+    ...currentDrone,
+    isActive: true,
+    isDestroyed: false,
+    visualState: 'docked' as const,
+    health: 100,
+    isMoving: false,
+    targetDroneTile: null,
+    coord: undefined
+  };
+
+  fsmLogger.action(`💥 [${context.entityId}] Drone PURCHASED with DAMAGE PENALTY`, {
+    penalty: DRONE_DAMAGE_PENALTY,
+    damageBefore: currentDamage,
+    damageAfter: newDamage,
+    droneStatus: 'active (free but ship damaged)'
+  });
+
+  return {
+    droneFleet: {
+      ...context.droneFleet,
+      drones: {
+        ...context.droneFleet.drones,
+        explorer: updatedDrone
+      }
+    },
+    vehicle: {
+      ...context.vehicle,
+      damage: newDamage
+    },
+    lastAction: 'drone_purchased_with_penalty',
+    fsmState: 'maintaining_purchasing_drone'
+  };
+});

@@ -3,6 +3,13 @@
 * Le cloud donne-il des damages en fonction du bot desormais?
 
 * Le bot evite-il les dangers ? PLus maintenant mais le drone destroyed est à mettre en place.
+  ✅ RÉSOLU : Architecture achat drone asynchrone documentée dans docs/DRONE_PURCHASE_ARCHITECTURE.md
+  - Achat instantané avec compteur dronesInConstruction
+  - Tracker gère délai de construction (3s) en arrière-plan
+  - Bot continue à agir pendant construction (collecte, maintenance)
+  - Drone activé après construction via événement DRONE_CONSTRUCTION_COMPLETE
+  
+  📋 TODO: Implémenter l'architecture (voir checklist dans doc) 
 
 * Pathfinding à remettre en place. (BFS) EN cours : meilleurs visualisation à faire, vérifier la logique et ajouter un composant montrant les paths sous forme de liste.
 
@@ -16,8 +23,7 @@
 
 * avoir un meilleur log beaucoup moins verbeux.
   
-* Ajouter le total de ressources lors du hover deja existant sur les tuiles.
-
+* 
 
 
 Quel objectif final pour le jeu?

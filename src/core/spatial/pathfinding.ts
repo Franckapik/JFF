@@ -211,8 +211,9 @@ export function findTilesInRadius(
     const tile = tiles[coord];
     if (!tile) continue;
 
-    // Add walkable, uncollected tiles (exclude start tile)
-    if (distance > 0 && tile.walkable && !tile.collected) {
+    // Add tiles that are: (walkable OR explorable) AND uncollected (exclude start tile)
+    // This allows exploration of danger tiles (explorable but not walkable)
+    if (distance > 0 && (tile.walkable || tile.explorable) && !tile.collected) {
       candidates.push(tile);
     }
 

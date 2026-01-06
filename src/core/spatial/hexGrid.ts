@@ -298,6 +298,7 @@ export function placeGameStations(
  */
 export function placeDangerTiles(tileMap: TileMap, seed?: number): TileMap {
   const foodTiles = Object.values(tileMap).filter(t => t.type === 'food');
+  // ✅ 10% danger tiles (restored after danger state testing)
   const dangerCount = Math.max(1, Math.floor(foodTiles.length * 0.1));
   
   const newTileMap = { ...tileMap };
@@ -318,7 +319,9 @@ export function placeDangerTiles(tileMap: TileMap, seed?: number): TileMap {
       ...tile,
       type: 'danger' as TileType,
       color: 'red',
-      walkable: false,
+      walkable: true,      // ✅ Ship can pass (takes damage)
+      explorable: true,    // ✅ Drone can explore (gets destroyed)
+      collectable: false,  // ❌ No resources to collect
       hasResources: false,
       resources: { food: 0, debris: 0, special: 0, total: 0 },
     };

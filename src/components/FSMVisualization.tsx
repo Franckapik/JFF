@@ -59,6 +59,7 @@ function SingleBotCycleFlow({ botId, compact = false }: { botId: 'bot-0' | 'bot-
     if (state.includes('repairing')) return { label: 'REPAIR', color: '#9c27b0', emoji: '🔧' };
     if (state.includes('depositing')) return { label: 'DEPOSIT', color: '#9c27b0', emoji: '📤' };
     if (state.includes('relocating')) return { label: 'RELOCATE', color: '#e91e63', emoji: '🔄' };
+    if (state.includes('purchasing_drone')) return { label: 'BUY DRONE', color: '#ff6b6b', emoji: '🛒' };
     if (state.includes('maintaining')) return { label: 'MAINTAIN', color: '#9c27b0', emoji: '🛠️' };
     return { label: 'UNKNOWN', color: '#757575', emoji: '❓' };
   };
@@ -161,6 +162,7 @@ export default function FSMVisualization() {
     repairing: 0,
     depositing: 0,
     relocating: 0,
+    purchasing_drone: 0, // 🆕 DRONE DESTRUCTION
     game_over: 0, // 🆕 PHASE 2
   });
   const [lastDroneDestroyed, setLastDroneDestroyed] = React.useState<{ type: string; time: string } | null>(null);
@@ -207,7 +209,7 @@ export default function FSMVisualization() {
         const allStates = [
           'initializing', 'evaluating', 'exploring', 'drone_deploying', 'drone_scanning', 'drone_returning', 'drone_docked', 'drone_destroyed',
           'collecting', 'ship_moving_to_tile', 'ship_collecting', 'ship_returning',
-          'maintaining', 'refueling', 'repairing', 'depositing', 'relocating', 'game_over'
+          'maintaining', 'refueling', 'repairing', 'depositing', 'relocating', 'purchasing_drone', 'game_over'
         ];
         const updated = { ...prev };
         for (const state of allStates) {
@@ -289,8 +291,20 @@ export default function FSMVisualization() {
             <strong>{lastDroneDestroyed.type}</strong> drone was destroyed at <strong>{lastDroneDestroyed.time}</strong>
           </p>
           <p style={{ fontSize: '12px', color: '#666', margin: '4px 0 0 0' }}>
-            Destroyed by danger tile - No information collected
+            🔥 Destroyed by danger tile - No information collected
           </p>
+          {ctx && (
+            <div style={{ marginTop: '8px', padding: '8px', backgroundColor: '#fff3e0', borderRadius: '4px' }}>
+              <p style={{ margin: '0', fontSize: '12px', fontWeight: 'bold' }}>
+                💰 Purchase Info:
+              </p>
+              <ul style={{ margin: '4px 0 0 0', paddingLeft: '20px', fontSize: '11px' }}>
+                <li>Cost: 50 resources (current: {ctx.score?.resources?.total || 0})</li>
+                <li>If insufficient: +20% damage penalty (current: {ctx.vehicle?.damage || 0}%)</li>
+                <li>State: {currentState.includes('purchasing_drone') ? '🛒 Purchasing...' : '⏳ Waiting for purchase'}</li>
+              </ul>
+            </div>
+          )}
         </section>
       )}
 
@@ -356,6 +370,13 @@ export default function FSMVisualization() {
                   <td style={{ fontWeight: 'bold', paddingRight: '8px' }}>Destroyed:</td>
                   <td style={{ color: '#ff6b6b' }}>{ctx?.droneFleet?.stats?.explorerDestroyed || 0}</td>
                 </tr>
+                {ctx?.droneFleet?.drones?.explorer?.isDestroyed && (
+                  <tr style={{ backgroundColor: '#ffebee' }}>
+                    <td colSpan={2} style={{ padding: '4px', fontSize: '10px', fontWeight: 'bold', color: '#ff6b6b' }}>
+                      ⚠️ DESTROYED - Needs Replacement
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
             <PositionDisplay
@@ -545,7 +566,8 @@ export default function FSMVisualization() {
               { key: 'relocating', label: '� Relocate' },
               { key: 'refueling', label: '⛽ Refuel' },
               { key: 'repairing', label: '🔧 Repair' },
-              { key: 'depositing', label: '📤 Deposit' }
+              { key: 'depositing', label: '📤 Deposit' },
+              { key: 'purchasing_drone', label: '🛒 Buy Drone' }
             ], stateVisitCounts)}
           </div>
 

@@ -161,6 +161,7 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
 
 /**
  * Action assign pour mettre à jour l'état du drone lors du passage en scanning
+ * ✅ Préserve le type de tuile pour la détection des danger par le guard
  */
 export const assignDroneScanningContext = createAssignAction(({ context }) => {
   const targetDroneTile = context.droneFleet?.drones?.explorer?.targetDroneTile;
@@ -168,13 +169,21 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
     return {};
   }
   const scannedCoord = targetDroneTile.position.coord;
+  
+  // 🔥 DEBUG: Log the tile type for danger detection
+  console.log(`📡 [assignDroneScanningContext] Scanning tile ${scannedCoord}, type: "${targetDroneTile.type}" (isDanger: ${targetDroneTile.type === 'danger'})`);
+  
   // Incrémentation des compteurs d'exploration (global et par cycle)
   const currentCount = typeof context.explorationCount === 'number' ? context.explorationCount : 0;
   const currentCycleCount = context.memory?.stats?.tilesExploredInCycle ?? 0;
   const updatedExplorer = {
     ...context.droneFleet.drones.explorer,
     coord: scannedCoord,
-    isMoving: false
+    isMoving: false,
+    targetDroneTile: {
+      ...targetDroneTile,
+      type: targetDroneTile.type  // ✅ Explicitly preserve type for guard evaluation
+    }
   };
 
   // ⚠️ MUTATION: Mark tile as explored in the tile store
@@ -213,8 +222,9 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
       drones: {
         ...context.droneFleet.drones,
         explorer: {
-          ...updatedExplorer,
-          targetDroneTile: null
+          ...updatedExplorer
+          // ✅ KEEP targetDroneTile for the danger detection guard!
+          // It will be cleared after DRONE_HAS_SCANNED is processed
         }
       }
     },

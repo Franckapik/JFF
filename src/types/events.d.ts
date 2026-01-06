@@ -23,6 +23,7 @@ export type MachineEventType =
   | 'DRONE_DESTROYED'
   | 'DRONE_REACHES_BASE'
   | 'DRONE_READY_FOR_REDEPLOY'
+  | 'DRONE_DESTRUCTION_ACKNOWLEDGED'  // 🆕 Drone destruction acknowledged after delay
   
   // Événements ship (collecting)
   | 'SHIP_REACHES_WAYPOINT'  // Pathfinding: intermediate tile reached
@@ -40,6 +41,7 @@ export type MachineEventType =
   | 'NEED_COLLECTING'
   | 'NEED_MAINTENANCE'
   | 'NEED_RELOCATING'
+  | 'NEED_DRONE_PURCHASE'
   
   // Événements de récupération d'erreur
   | 'NO_TARGET_FOUND'
@@ -47,7 +49,10 @@ export type MachineEventType =
   // Événements Phase 2: Radius & Game Over
   | 'RADIUS_INCREASED'
   | 'GAME_OVER'
-  | 'RELOCATING_COMPLETE';
+  | 'RELOCATING_COMPLETE'
+  
+  // 🆕 DRONE DESTRUCTION: Événements d'achat de drone
+  | 'DRONE_PURCHASE_COMPLETE';
 
 /**
  * Types d'événements avec payload pour XState v5
@@ -62,6 +67,7 @@ export type MachineEvents =
   | { type: 'DRONE_DESTROYED'; droneType: string; reason: 'danger' | 'collision' | 'other' }
   | { type: 'DRONE_REACHES_BASE' }
   | { type: 'DRONE_READY_FOR_REDEPLOY' }
+  | { type: 'DRONE_DESTRUCTION_ACKNOWLEDGED' }  // 🆕 Drone destruction acknowledged after delay
   | { type: 'SHIP_REACHES_WAYPOINT' }  // Pathfinding: intermediate tile reached
   | { type: 'SHIP_REACHES_TILE' }
   | { type: 'SHIP_LOAD_RESOURCES' }
@@ -76,10 +82,13 @@ export type MachineEvents =
   | { type: 'NEED_COLLECTING' }
   | { type: 'NEED_MAINTENANCE' }
   | { type: 'NEED_RELOCATING' }
+  | { type: 'NEED_DRONE_PURCHASE' }
   | { type: 'NO_TARGET_FOUND' }
   // Phase 2: Radius expansion & Game Over
   | { type: 'RADIUS_INCREASED'; newRadius: number }
-  | { type: 'GAME_OVER'; reason: 'max_radius_reached' | 'other' };
+  | { type: 'GAME_OVER'; reason: 'max_radius_reached' | 'other' }
+  // 🆕 DRONE DESTRUCTION: Événements d'achat de drone
+  | { type: 'DRONE_PURCHASE_COMPLETE' };
 
 /**
  * Constantes d'événements pour usage dans les machines XState
@@ -119,11 +128,15 @@ export const MACHINE_EVENT_TYPES: Record<Uppercase<MachineEventType>, MachineEve
   NEED_COLLECTING: 'NEED_COLLECTING',
   NEED_MAINTENANCE: 'NEED_MAINTENANCE',
   NEED_RELOCATING: 'NEED_RELOCATING',
+  NEED_DRONE_PURCHASE: 'NEED_DRONE_PURCHASE',
   
   // Événements de récupération d'erreur
   NO_TARGET_FOUND: 'NO_TARGET_FOUND',
   
   // Phase 2: Radius & Game Over
   RADIUS_INCREASED: 'RADIUS_INCREASED',
-  GAME_OVER: 'GAME_OVER'
+  GAME_OVER: 'GAME_OVER',
+  
+  // 🆕 DRONE DESTRUCTION: Événements d'achat de drone
+  DRONE_PURCHASE_COMPLETE: 'DRONE_PURCHASE_COMPLETE'
 } as const;

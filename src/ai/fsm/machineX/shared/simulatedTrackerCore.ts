@@ -37,6 +37,7 @@ export const DURATIONS = {
   DEPOSIT_DURATION: 1500,
   REFUEL_DURATION: 1000,
   REPAIR_DURATION: 1500,
+  PURCHASE_DRONE_DURATION: 5000,  // 🆕 Drone manufacturing time (5 seconds)
   
   // 🛤️ PATHFINDING: Temps par tile traversée
   TILE_TRAVERSAL_TIME: 400, // ms per tile
@@ -252,6 +253,18 @@ export function getExploringEvents(
       event: { type: 'DRONE_READY_FOR_REDEPLOY' },
       delay: DURATIONS.DOCK_DURATION,
       reason: 'Drone ready to redeploy after docking'
+    });
+  } else if (subState === 'drone_destroyed') {
+    if (verbose) {
+      // eslint-disable-next-line no-console
+      console.log(`💥 [TRACKER] Drone destroyed (800ms)`);
+    }
+    
+    // ✅ Délai de 800ms pour rendre l'état visible dans l'UI
+    events.push({
+      event: { type: 'DRONE_DESTRUCTION_ACKNOWLEDGED' },
+      delay: 800,
+      reason: 'Drone destruction acknowledged - evaluating next action'
     });
   }
   
@@ -487,6 +500,18 @@ export function getMaintainingEvents(
       event: { type: 'SHIP_REPAIR_COMPLETE' },
       delay: DURATIONS.REPAIR_DURATION,
       reason: 'Repairing ship'
+    });
+  } else if (subState === 'purchasing_drone') {
+    if (verbose) {
+      // eslint-disable-next-line no-console
+      console.log(`🛒 [TRACKER] Purchasing drone (${DURATIONS.PURCHASE_DRONE_DURATION}ms)`);
+    }
+    
+    // ✅ Délai de 1000ms pour rendre l'état visible dans l'UI
+    events.push({
+      event: { type: 'DRONE_PURCHASE_COMPLETE' },
+      delay: DURATIONS.PURCHASE_DRONE_DURATION,
+      reason: 'Drone purchase complete'
     });
   }
   

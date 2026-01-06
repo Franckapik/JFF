@@ -84,8 +84,10 @@ export const createTileDangerSlice = (set: any, get: any): TileDangerState & Til
     // Modifier la tuile pour la rendre dangereuse
     state.updateTile(coord, {
       type: 'danger',
-      walkable: false,
-      color: '#ff0000', // Rouge vif pour danger dynamique
+      walkable: true,      // ✅ Ship can pass (takes damage)
+      explorable: true,    // ✅ Drone can explore (gets destroyed)
+      collectable: false,  // ❌ No resources to collect
+      color: '#ff0000',    // Rouge vif pour danger dynamique
       isDynamicDanger: true,
       dangerId: id,
     });
@@ -171,7 +173,9 @@ export const createTileDangerSlice = (set: any, get: any): TileDangerState & Til
 
     state.updateTile(newCoord, {
       type: 'danger',
-      walkable: false,
+      walkable: true,      // ✅ Ship can pass (takes damage)
+      explorable: true,    // ✅ Drone can explore (gets destroyed)
+      collectable: false,  // ❌ No resources to collect
       color: '#ff0000',
       isDynamicDanger: true,
       dangerId,

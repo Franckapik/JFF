@@ -69,6 +69,7 @@ export const assignInjectTileData = assign({
  * Envoie un événement selon la situation du contexte
  * 
  * PRIORITÉS (ordre d'évaluation):
+ * 0. NEED_DRONE_PURCHASE - Si drone détruit (destroyed) ou failed (needs replacement)
  * 1. NEED_MAINTENANCE - Si fuel < 30% ou damage > 50%
  * 2. NEED_RELOCATING - Si toutes tuiles locales explorées ET pas de collectibles ET fuel OK
  * 3. NEED_COLLECTING - Si tuiles collectibles disponibles ET ship pas plein
@@ -79,7 +80,9 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
   const vehicle = context?.vehicle;
   const fuel = vehicle?.fuel || 100;
   const damage = vehicle?.damage || 0;
-  const isDroneAvailable = context.droneFleet?.drones?.explorer?.visualState === 'docked';
+  const droneState = context.droneFleet?.drones?.explorer?.visualState;
+  const isDroneAvailable = droneState === 'docked';
+  const needsDronePurchase = droneState === 'failed' || droneState === 'destroyed';
   
   // ✅ FIX: Check which tiles have resources and are not collected
   const knownTiles = context.memory?.knownTiles || [];
@@ -164,8 +167,16 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
                         context.lastAction === 'shipRelocation_complete';
   
   setTimeout(() => {
+    // PRIORITY 0: Drone purchase (drone destroyed/failed)
+    if (needsDronePurchase) {
+      fsmLogger.info(`[Evaluating] → NEED_DRONE_PURCHASE (drone needs replacement)`, {
+        droneState,
+        destroyedCount: context.droneFleet?.drones?.explorer?.stats?.totalDestroyed
+      });
+      self.send({ type: 'NEED_DRONE_PURCHASE' } as MachineEvents);
+    }
     // PRIORITY 1: Maintenance urgente
-    if (fuel < 30 || damage > 50) {
+    else if (fuel < 30 || damage > 50) {
       fsmLogger.info(`[Evaluating] → NEED_MAINTENANCE (maintenance needed)`);
       self.send({ type: 'NEED_MAINTENANCE' } as MachineEvents);
     }

@@ -253,6 +253,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
    */
   placeDangerTiles: (tileMap: TileMap): TileMap => {
     const tiles = Object.values(tileMap) as Tile[];
+    // ✅ 10% danger tiles (restored after danger state testing)
     const dangerCount = Math.max(1, Math.floor(tiles.length * 0.1));
     
     // Créer une copie du TileMap pour éviter la mutation
@@ -266,9 +267,9 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
           ...tile,
           type: 'danger' as TileType,
           color: "red",
-          walkable: false,
-          explorable: true,    // danger tiles SONT explorables (le bot ne connaît pas le danger)
-          collectable: false,  // danger tiles ne sont PAS collectables
+          walkable: true,      // ✅ Ship can pass (takes damage)
+          explorable: true,    // ✅ Drone can explore (gets destroyed)
+          collectable: false,  // ❌ No resources to collect
           hasResources: false,
           resources: { food: 0, debris: 0, special: 0, total: 0 }
         };
