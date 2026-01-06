@@ -220,3 +220,39 @@ export const shouldApplyDangerDamage: XStateV5Guard = ({ context }) => {
   
   return isDanger;
 };
+
+// ========================================================================
+// 🛤️ PATHFINDING GUARDS
+// ========================================================================
+
+/**
+ * Guard: Check if ship has more waypoints to traverse before reaching target
+ * Returns true if pathIndex < path.length - 1 (more waypoints ahead)
+ */
+export const hasMoreWaypoints: XStateV5Guard = ({ context }) => {
+  const path = context.vehicle?.currentPath || [];
+  const pathIndex = context.vehicle?.pathIndex ?? 0;
+  
+  // Path includes start position, so we have more waypoints if index < length - 1
+  const hasMore = pathIndex < path.length - 1;
+  
+  console.log(`🛤️ [hasMoreWaypoints] pathIndex=${pathIndex}, pathLength=${path.length}, hasMore=${hasMore}`);
+  
+  return hasMore;
+};
+
+/**
+ * Guard: Check if ship has reached final waypoint (target tile)
+ * Returns true if pathIndex >= path.length - 1 (at final destination)
+ */
+export const isAtFinalWaypoint: XStateV5Guard = ({ context }) => {
+  const path = context.vehicle?.currentPath || [];
+  const pathIndex = context.vehicle?.pathIndex ?? 0;
+  
+  // At final waypoint if index >= length - 1
+  const isAtFinal = pathIndex >= path.length - 1;
+  
+  console.log(`🏁 [isAtFinalWaypoint] pathIndex=${pathIndex}, pathLength=${path.length}, isAtFinal=${isAtFinal}`);
+  
+  return isAtFinal;
+};

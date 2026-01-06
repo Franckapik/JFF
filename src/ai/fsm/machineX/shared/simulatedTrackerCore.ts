@@ -37,6 +37,9 @@ export const DURATIONS = {
   DEPOSIT_DURATION: 1500,
   REFUEL_DURATION: 1000,
   REPAIR_DURATION: 1500,
+  
+  // 🛤️ PATHFINDING: Temps par tile traversée
+  TILE_TRAVERSAL_TIME: 400, // ms per tile
 } as const;
 
 // ========================================
@@ -257,6 +260,7 @@ export function getExploringEvents(
 
 /**
  * Détermine les événements à planifier pour un état de collecte
+ * 🛤️ PATHFINDING: Now uses vehicle.currentPath and vehicle.pathIndex
  */
 export function getCollectingEvents(
   subState: string,
@@ -272,29 +276,87 @@ export function getCollectingEvents(
       console.log(`🚢 [TRACKER] Ship moving`);
     }
     
-    if (targetVehicleTile?.position?.coord && shipPos) {
-      const targetPos = coordToWorldPosition(targetVehicleTile.position.coord as GridCoordinate, spacing);
-      if (!targetPos) return events;
-      const distance = calculateDistance(shipPos, targetPos);
-      const travelTime = calculateTravelTime(distance, DURATIONS.SHIP_SPEED);
-      
-      // ✅ FIX: Si la distance est pratiquement nulle (bot déjà sur place)
-      // programmer l'événement immédiatement pour éviter les boucles
-      const isAlreadyOnTile = distance < 0.01; // Tolérance de 0.01 unité
-      const effectiveDelay = isAlreadyOnTile ? 0 : travelTime;
+    // 🛤️ PATHFINDING: Check if we have a path to traverse
+    const currentPath = context.vehicle?.currentPath || [];
+    const pathIndex = context.vehicle?.pathIndex ?? 0;
+    
+    if (currentPath.length > 0) {
+      // We have a path - emit ALL remaining waypoints with cumulative delays
+      const remainingSteps = currentPath.length - pathIndex - 1;
       
       if (verbose) {
-      // eslint-disable-next-line no-console
-        console.log(`   Target: ${targetVehicleTile.position.coord}`);
-      // eslint-disable-next-line no-console
-        console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${effectiveDelay}ms${isAlreadyOnTile ? ' (already on tile)' : ''}`);
+        // eslint-disable-next-line no-console
+        console.log(`🛤️ [TRACKER] Pathfinding: ${remainingSteps} steps remaining (from index ${pathIndex} to ${currentPath.length - 1})`);
       }
       
-      events.push({
-        event: { type: 'SHIP_REACHES_TILE' },
-        delay: effectiveDelay,
-        reason: `Ship traveling to ${targetVehicleTile.position.coord}`
-      });
+      // Emit all waypoint events with cumulative delays
+      for (let step = 1; step <= remainingSteps; step++) {
+        const waypointIndex = pathIndex + step;
+        const isLastWaypoint = waypointIndex === currentPath.length - 1;
+        const delay = step * DURATIONS.TILE_TRAVERSAL_TIME;
+        const targetCoord = currentPath[waypointIndex];
+        
+        if (isLastWaypoint) {
+          // Final waypoint - emit SHIP_REACHES_TILE
+          events.push({
+            event: { type: 'SHIP_REACHES_TILE' },
+            delay,
+            reason: `Ship reaching final destination ${targetCoord}`
+          });
+          if (verbose) {
+            // eslint-disable-next-line no-console
+            console.log(`   → SHIP_REACHES_TILE at ${delay}ms (waypoint ${waypointIndex})`);
+          }
+        } else {
+          // Intermediate waypoint - emit SHIP_REACHES_WAYPOINT
+          events.push({
+            event: { type: 'SHIP_REACHES_WAYPOINT' },
+            delay,
+            reason: `Ship reaching waypoint ${waypointIndex}: ${targetCoord}`
+          });
+          if (verbose) {
+            // eslint-disable-next-line no-console
+            console.log(`   → SHIP_REACHES_WAYPOINT at ${delay}ms (waypoint ${waypointIndex})`);
+          }
+        }
+      }
+      
+      // If no remaining steps, we're already at destination
+      if (remainingSteps <= 0) {
+        if (verbose) {
+          // eslint-disable-next-line no-console
+          console.log(`⚠️ [TRACKER] Already at path end, emitting SHIP_REACHES_TILE`);
+        }
+        events.push({
+          event: { type: 'SHIP_REACHES_TILE' },
+          delay: 100,
+          reason: 'Ship already at path end'
+        });
+      }
+    } else {
+      // Legacy fallback: no path, use direct distance calculation
+      if (targetVehicleTile?.position?.coord && shipPos) {
+        const targetPos = coordToWorldPosition(targetVehicleTile.position.coord as GridCoordinate, spacing);
+        if (!targetPos) return events;
+        const distance = calculateDistance(shipPos, targetPos);
+        const travelTime = calculateTravelTime(distance, DURATIONS.SHIP_SPEED);
+        
+        const isAlreadyOnTile = distance < 0.01;
+        const effectiveDelay = isAlreadyOnTile ? 0 : travelTime;
+        
+        if (verbose) {
+          // eslint-disable-next-line no-console
+          console.log(`   [LEGACY] Target: ${targetVehicleTile.position.coord}`);
+          // eslint-disable-next-line no-console
+          console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${effectiveDelay}ms${isAlreadyOnTile ? ' (already on tile)' : ''}`);
+        }
+        
+        events.push({
+          event: { type: 'SHIP_REACHES_TILE' },
+          delay: effectiveDelay,
+          reason: `Ship traveling to ${targetVehicleTile.position.coord}`
+        });
+      }
     }
   } else if (subState === 'ship_collecting') {
     if (verbose) {
@@ -313,23 +375,64 @@ export function getCollectingEvents(
   } else if (subState === 'ship_returning') {
     if (verbose) {
       // eslint-disable-next-line no-console
-      console.log(`🔙 [TRACKER] Ship returning`);
+      console.log(`🔙 [TRACKER] Ship returning via pathfinding`);
     }
     
-    if (basePos && shipPos) {
-      const distance = calculateDistance(shipPos, basePos);
-      const travelTime = calculateTravelTime(distance, DURATIONS.SHIP_SPEED);
+    // 🛤️ PATHFINDING: Use the calculated path for return journey
+    const currentPath = context.vehicle?.currentPath || [];
+    const pathIndex = context.vehicle?.pathIndex || 0;
+    const remainingSteps = currentPath.length - pathIndex - 1;
+    
+    if (currentPath.length > 0 && remainingSteps > 0) {
+      // Path exists - emit waypoint events for each step
+      if (verbose) {
+        // eslint-disable-next-line no-console
+        console.log(`🛤️ [TRACKER] Return path: ${remainingSteps} steps remaining (index ${pathIndex}/${currentPath.length - 1})`);
+      }
       
-      // ✅ FIX: Si la distance est pratiquement nulle (ship déjà à la base)
-      // programmer l'événement immédiatement pour éviter les boucles
-      const isAlreadyAtBase = distance < 0.01; // Tolérance de 0.01 unité
-      const effectiveDelay = isAlreadyAtBase ? 0 : travelTime;
-      
-      events.push({
-        event: { type: 'SHIP_REACHES_BASE' },
-        delay: effectiveDelay,
-        reason: 'Ship returning to base'
-      });
+      // Emit SHIP_REACHES_WAYPOINT for intermediate tiles
+      for (let i = 1; i <= remainingSteps; i++) {
+        const isLastStep = i === remainingSteps;
+        const delay = i * DURATIONS.TILE_TRAVERSAL_TIME;
+        
+        if (isLastStep) {
+          // Final step: emit SHIP_REACHES_BASE
+          events.push({
+            event: { type: 'SHIP_REACHES_BASE' },
+            delay,
+            reason: `Ship reaches base (final waypoint)`
+          });
+        } else {
+          // Intermediate step: emit SHIP_REACHES_WAYPOINT
+          events.push({
+            event: { type: 'SHIP_REACHES_WAYPOINT' },
+            delay,
+            reason: `Ship reaches return waypoint ${pathIndex + i}/${currentPath.length - 1}`
+          });
+        }
+      }
+    } else {
+      // No path or already at destination - use direct distance as fallback
+      if (basePos && shipPos) {
+        const distance = calculateDistance(shipPos, basePos);
+        const travelTime = calculateTravelTime(distance, DURATIONS.SHIP_SPEED);
+        
+        // ✅ FIX: Si la distance est pratiquement nulle (ship déjà à la base)
+        // programmer l'événement immédiatement pour éviter les boucles
+        const isAlreadyAtBase = distance < 0.01; // Tolérance de 0.01 unité
+        const effectiveDelay = isAlreadyAtBase ? 0 : travelTime;
+        
+        if (verbose) {
+          // eslint-disable-next-line no-console
+          console.log(`🔙 [TRACKER] Fallback: Direct distance ${distance.toFixed(2)}, delay ${effectiveDelay}ms`);
+        }
+        
+        events.push({
+          event: { type: 'SHIP_REACHES_BASE' },
+          delay: effectiveDelay,
+          reason: 'Ship returning to base (direct)'
+        });
+      }
     }
   }
   

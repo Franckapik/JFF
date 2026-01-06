@@ -36,7 +36,9 @@ export type MachineEvents =
   | { type: 'DRONE_HAS_SCANNED' }
   | { type: 'DRONE_REACHES_BASE' }
   | { type: 'DRONE_READY_FOR_REDEPLOY' }
-  | { type: 'SHIP_REACHES_TILE' }
+  // 🛤️ PATHFINDING: Ship movement through waypoints
+  | { type: 'SHIP_REACHES_WAYPOINT' }  // Intermediate waypoint reached
+  | { type: 'SHIP_REACHES_TILE' }      // Final destination reached
   | { type: 'SHIP_LOAD_RESOURCES' }
   | { type: 'SHIP_REACHES_BASE' }
   | { type: 'SHIP_START_DEPOSIT' }

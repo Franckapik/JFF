@@ -51,7 +51,6 @@ export interface Tile {
   
   // État de navigation
   walkable?: boolean;                 // Peut-on marcher dessus ? (optionnel pour compatibilité)
-  isWalkable?: boolean;               // Alias pour compatibilité avec anciens types
   neighbors?: GridCoordinate[];       // Coordonnées des tuiles voisines
   
   // Capacités statiques (règles du jeu par type)

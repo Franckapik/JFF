@@ -41,5 +41,13 @@ export interface VehicleState {
   currentSpeed: number;
   maxCapacity: ResourceStats;
   visualState: VehicleVisualState;
+  
+  // ========================================================================
+  // PATHFINDING - Ship moves through intermediate tiles
+  // ========================================================================
+  /** Current path from ship coord to target tile (BFS result) */
+  currentPath: import('./coordinates').GridCoordinate[];
+  /** Current index in the path (0 = start, path.length-1 = target) */
+  pathIndex: number;
 }
 

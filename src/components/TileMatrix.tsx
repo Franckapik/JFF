@@ -17,6 +17,13 @@ type BotData = {
   shipCoord: GridCoordinate | null;
   baseCoord: GridCoordinate | null;
   droneCoords: GridCoordinate[];
+  // 🛤️ PATHFINDING: Current path for visualization
+  currentPath: GridCoordinate[];
+  pathIndex: number;
+  // 🛤️ PATHFINDING: Previous paths for history
+  previousPaths: GridCoordinate[][];
+  // 🛤️ PATHFINDING: History of progression numbers per tile (coordinate -> [numbers])
+  tileProgressHistory: Map<GridCoordinate, number[]>;
 };
 
 export default function TileMatrix() {
@@ -29,11 +36,19 @@ export default function TileMatrix() {
     shipCoord: null,
     baseCoord: null,
     droneCoords: [],
+    currentPath: [],
+    pathIndex: 0,
+    previousPaths: [],
+    tileProgressHistory: new Map(),
   });
   const [bot1Data, setBot1Data] = React.useState<BotData>({
     shipCoord: null,
     baseCoord: null,
     droneCoords: [],
+    currentPath: [],
+    pathIndex: 0,
+    previousPaths: [],
+    tileProgressHistory: new Map(),
   });
   const [exploringRadius, setExploringRadius] = React.useState<number>(2);
 
@@ -45,31 +60,60 @@ export default function TileMatrix() {
     const subscription = actor.subscribe((snapshot) => {
       const ctx = snapshot.context;
       
-      const newData: BotData = {
-        shipCoord: ctx.vehicle?.coord || null,
-        baseCoord: ctx.vehicle?.baseCoord || null,
-        droneCoords: [],
-      };
-
-      if (ctx.config?.exploringRadius !== undefined) {
-        setExploringRadius(ctx.config.exploringRadius);
-      }
-
-      if (ctx.droneFleet?.drones) {
-        const coords: GridCoordinate[] = [];
-        const droneTypes = ['explorer', 'combat', 'special'] as const;
+      setBot0Data((prevData) => {
+        const newPath = ctx.vehicle?.currentPath || [];
+        const newPathIndex = ctx.vehicle?.pathIndex ?? 0;
         
-        for (const type of droneTypes) {
-          const drone = ctx.droneFleet.drones[type];
-          if (drone?.coord) {
-            coords.push(`bot-0|${type}|${drone.coord}` as any);
+        // Si le chemin a changé, ajouter l'ancien chemin à l'historique
+        let previousPaths = prevData.previousPaths;
+        if (newPath.length > 0 && 
+            (newPath.length !== prevData.currentPath.length || 
+             newPath.some((coord, idx) => coord !== prevData.currentPath[idx]))) {
+          // Garder seulement les 3 derniers chemins
+          previousPaths = [...prevData.previousPaths, prevData.currentPath].slice(-3);
+        }
+        
+        // Mettre à jour l'historique de progression pour chaque tuile
+        const tileProgressHistory = new Map(prevData.tileProgressHistory);
+        for (let i = 0; i < newPath.length; i++) {
+          const coord = newPath[i];
+          const currentProgresses = tileProgressHistory.get(coord) || [];
+          // Ajouter le numéro de progression si ce n'est pas déjà présent
+          if (!currentProgresses.includes(i + 1)) {
+            tileProgressHistory.set(coord, [...currentProgresses, i + 1]);
           }
         }
         
-        newData.droneCoords = coords;
-      }
-      
-      setBot0Data(newData);
+        const newData: BotData = {
+          shipCoord: ctx.vehicle?.coord || null,
+          baseCoord: ctx.vehicle?.baseCoord || null,
+          droneCoords: [],
+          currentPath: newPath,
+          pathIndex: newPathIndex,
+          previousPaths,
+          tileProgressHistory,
+        };
+
+        if (ctx.config?.exploringRadius !== undefined) {
+          setExploringRadius(ctx.config.exploringRadius);
+        }
+
+        if (ctx.droneFleet?.drones) {
+          const coords: GridCoordinate[] = [];
+          const droneTypes = ['explorer', 'combat', 'special'] as const;
+          
+          for (const type of droneTypes) {
+            const drone = ctx.droneFleet.drones[type];
+            if (drone?.coord) {
+              coords.push(`bot-0|${type}|${drone.coord}` as any);
+            }
+          }
+          
+          newData.droneCoords = coords;
+        }
+        
+        return newData;
+      });
     });
 
     return () => subscription.unsubscribe();
@@ -83,27 +127,56 @@ export default function TileMatrix() {
     const subscription = actor.subscribe((snapshot) => {
       const ctx = snapshot.context;
       
-      const newData: BotData = {
-        shipCoord: ctx.vehicle?.coord || null,
-        baseCoord: ctx.vehicle?.baseCoord || null,
-        droneCoords: [],
-      };
-
-      if (ctx.droneFleet?.drones) {
-        const coords: GridCoordinate[] = [];
-        const droneTypes = ['explorer', 'combat', 'special'] as const;
+      setBot1Data((prevData) => {
+        const newPath = ctx.vehicle?.currentPath || [];
+        const newPathIndex = ctx.vehicle?.pathIndex ?? 0;
         
-        for (const type of droneTypes) {
-          const drone = ctx.droneFleet.drones[type];
-          if (drone?.coord) {
-            coords.push(`bot-1|${type}|${drone.coord}` as any);
+        // Si le chemin a changé, ajouter l'ancien chemin à l'historique
+        let previousPaths = prevData.previousPaths;
+        if (newPath.length > 0 && 
+            (newPath.length !== prevData.currentPath.length || 
+             newPath.some((coord, idx) => coord !== prevData.currentPath[idx]))) {
+          // Garder seulement les 3 derniers chemins
+          previousPaths = [...prevData.previousPaths, prevData.currentPath].slice(-3);
+        }
+        
+        // Mettre à jour l'historique de progression pour chaque tuile
+        const tileProgressHistory = new Map(prevData.tileProgressHistory);
+        for (let i = 0; i < newPath.length; i++) {
+          const coord = newPath[i];
+          const currentProgresses = tileProgressHistory.get(coord) || [];
+          // Ajouter le numéro de progression si ce n'est pas déjà présent
+          if (!currentProgresses.includes(i + 1)) {
+            tileProgressHistory.set(coord, [...currentProgresses, i + 1]);
           }
         }
         
-        newData.droneCoords = coords;
-      }
-      
-      setBot1Data(newData);
+        const newData: BotData = {
+          shipCoord: ctx.vehicle?.coord || null,
+          baseCoord: ctx.vehicle?.baseCoord || null,
+          droneCoords: [],
+          currentPath: newPath,
+          pathIndex: newPathIndex,
+          previousPaths,
+          tileProgressHistory,
+        };
+
+        if (ctx.droneFleet?.drones) {
+          const coords: GridCoordinate[] = [];
+          const droneTypes = ['explorer', 'combat', 'special'] as const;
+          
+          for (const type of droneTypes) {
+            const drone = ctx.droneFleet.drones[type];
+            if (drone?.coord) {
+              coords.push(`bot-1|${type}|${drone.coord}` as any);
+            }
+          }
+          
+          newData.droneCoords = coords;
+        }
+        
+        return newData;
+      });
     });
 
     return () => subscription.unsubscribe();
@@ -170,6 +243,47 @@ export default function TileMatrix() {
     return (showBot0 && checkRadius(bot0Data.shipCoord)) || (showBot1 && checkRadius(bot1Data.shipCoord));
   };
 
+  // Obtenir le type de tuile et sa légende
+  const getTileLegend = (coord: GridCoordinate): { icon: string; label: string } => {
+    const showBot0 = selectedView === 'both' || selectedView === 'bot-0';
+    const showBot1 = selectedView === 'both' || selectedView === 'bot-1';
+    
+    // 1. Véhicules et entités (priorité absolue)
+    if (showBot0 && coord === bot0Data.baseCoord) return { icon: '🏠', label: 'Base/Départ' };
+    if (showBot1 && coord === bot1Data.baseCoord) return { icon: '🏠', label: 'Base/Départ' };
+    if (showBot0 && coord === bot0Data.shipCoord) return { icon: '🚢', label: 'Ship Bot-0' };
+    if (showBot1 && coord === bot1Data.shipCoord) return { icon: '🚢', label: 'Ship Bot-1' };
+    
+    const allDroneCoords = [
+      ...(showBot0 ? bot0Data.droneCoords : []),
+      ...(showBot1 ? bot1Data.droneCoords : [])
+    ];
+    if (allDroneCoords.some(droneEntry => String(droneEntry).split('|')[String(droneEntry).split('|').length - 1] === coord)) {
+      return { icon: '🛰️', label: 'Drone' };
+    }
+    
+    const tile = coordIndex.get(coord);
+    
+    // 2. Types statiques de tuiles spécialisées (priorité sur les états dynamiques)
+    if (tile?.type === 'depart') return { icon: '🏠', label: 'Base/Départ' };
+    if (tile?.type === 'fuel') return { icon: '⛽', label: 'Carburant' };
+    if (tile?.type === 'repair') return { icon: '🔧', label: 'Réparation' };
+    if (tile?.type === 'obstacle') return { icon: '⬛', label: 'Obstacle' };
+    if (tile?.type === 'danger') return { icon: '⚠️', label: 'Danger' };
+    if (tile?.type === 'empty') return { icon: '⬜', label: 'Vide' };
+    
+    // 3. Tuiles de ressources (type 'resource') - États dynamiques
+    if (tile?.type === 'resource') {
+      if (tile?.collected) return { icon: '✨', label: 'Collectée' };
+      if (tile?.explored) return { icon: '🔍', label: 'Explorée' };
+      // Tuile resource non explorée = ressource disponible
+      return { icon: '💎', label: 'Ressource' };
+    }
+    
+    // 4. Fallback pour tuiles inconnues (ne devrait jamais arriver)
+    return { icon: '❓', label: 'Inconnu' };
+  };
+
   // Déterminer la couleur et le label d'un point
   const getColor = (coord: GridCoordinate): string => {
     const inRadius = isInExplorationRadius(coord);
@@ -209,6 +323,40 @@ export default function TileMatrix() {
     if (inRadius) return 'rgba(59, 130, 246, 0.5)'; // bleu semi-transparent dans le radius
     
     return 'rgba(200, 200, 200, 0.2)'; // gris très clair hors de portée
+  };
+
+  // 🛤️ PATHFINDING: Check if a tile is on the current path
+  const getPathInfo = (coord: GridCoordinate): { isOnPath: boolean; botId: 'bot-0' | 'bot-1' | null; isVisited: boolean; isFuture: boolean } => {
+    const showBot0 = selectedView === 'both' || selectedView === 'bot-0';
+    const showBot1 = selectedView === 'both' || selectedView === 'bot-1';
+    
+    // Check bot-0 path
+    if (showBot0 && bot0Data.currentPath.length > 0) {
+      const pathIndex = bot0Data.currentPath.indexOf(coord);
+      if (pathIndex !== -1) {
+        return {
+          isOnPath: true,
+          botId: 'bot-0',
+          isVisited: pathIndex <= bot0Data.pathIndex,
+          isFuture: pathIndex > bot0Data.pathIndex,
+        };
+      }
+    }
+    
+    // Check bot-1 path
+    if (showBot1 && bot1Data.currentPath.length > 0) {
+      const pathIndex = bot1Data.currentPath.indexOf(coord);
+      if (pathIndex !== -1) {
+        return {
+          isOnPath: true,
+          botId: 'bot-1',
+          isVisited: pathIndex <= bot1Data.pathIndex,
+          isFuture: pathIndex > bot1Data.pathIndex,
+        };
+      }
+    }
+    
+    return { isOnPath: false, botId: null, isVisited: false, isFuture: false };
   };
 
   // Récupérer le label pour ship ou drone (filtré selon selectedView)
@@ -277,6 +425,101 @@ export default function TileMatrix() {
   const hexMaxX = Math.max(...hexPositions.map(p => p.x));
   const hexMaxY = Math.max(...hexPositions.map(p => p.y));
 
+  /**
+   * Generate SVG path lines between waypoints
+   * Returns SVG elements for the path visualization with improved styling
+   * Includes previous paths with reduced opacity for history
+   */
+  const renderPathLines = (botData: BotData, botColor: string, botId: string): React.ReactElement[] | null => {
+    if (botData.currentPath.length < 2 && botData.previousPaths.length === 0) return null;
+    
+    const showBot = selectedView === 'both' || selectedView === botId;
+    if (!showBot) return null;
+    
+    const pathLines: React.ReactElement[] = [];
+    
+    // Afficher les chemins précédents avec faible opacité
+    botData.previousPaths.forEach((previousPath, pathHistoryIndex) => {
+      for (let i = 0; i < previousPath.length - 1; i++) {
+        const fromCoord = previousPath[i];
+        const toCoord = previousPath[i + 1];
+        
+        const [fromQ, fromR] = fromCoord.split(',').map(Number);
+        const [toQ, toR] = toCoord.split(',').map(Number);
+        
+        const fromPos = getHexPosition(fromQ, fromR);
+        const toPos = getHexPosition(toQ, toR);
+        
+        // Opacité décroissante pour l'historique
+        const historyOpacity = 0.15 + (pathHistoryIndex * 0.05);
+        
+        pathLines.push(
+          <line
+            key={`${botId}-history-${pathHistoryIndex}-${i}`}
+            x1={fromPos.x + 50 + 9}
+            y1={fromPos.y + 50 + 9}
+            x2={toPos.x + 50 + 9}
+            y2={toPos.y + 50 + 9}
+            stroke={botColor}
+            strokeWidth={2}
+            strokeOpacity={historyOpacity}
+            strokeLinecap="round"
+          />
+        );
+      }
+    });
+    
+    // Afficher le chemin actuel
+    if (botData.currentPath.length >= 2) {
+      for (let i = 0; i < botData.currentPath.length - 1; i++) {
+        const fromCoord = botData.currentPath[i];
+        const toCoord = botData.currentPath[i + 1];
+        
+        const [fromQ, fromR] = fromCoord.split(',').map(Number);
+        const [toQ, toR] = toCoord.split(',').map(Number);
+        
+        const fromPos = getHexPosition(fromQ, fromR);
+        const toPos = getHexPosition(toQ, toR);
+        
+        const isVisited = i < botData.pathIndex;
+        const isCurrent = i === botData.pathIndex;
+        
+        // Ligne arrière-plan pour la lisibilité
+        pathLines.push(
+          <line
+            key={`${botId}-path-bg-${i}`}
+            x1={fromPos.x + 50 + 9}
+            y1={fromPos.y + 50 + 9}
+            x2={toPos.x + 50 + 9}
+            y2={toPos.y + 50 + 9}
+            stroke="#000"
+            strokeWidth={isCurrent ? 6 : 3}
+            strokeOpacity={0.2}
+            strokeLinecap="round"
+          />
+        );
+        
+        // Ligne principale
+        pathLines.push(
+          <line
+            key={`${botId}-path-${i}`}
+            x1={fromPos.x + 50 + 9}
+            y1={fromPos.y + 50 + 9}
+            x2={toPos.x + 50 + 9}
+            y2={toPos.y + 50 + 9}
+            stroke={botColor}
+            strokeWidth={isCurrent ? 4 : 3}
+            strokeOpacity={isVisited ? 0.4 : 1}
+            strokeDasharray={isVisited ? '0' : '0'}
+            strokeLinecap="round"
+          />
+        );
+      }
+    }
+    
+    return pathLines;
+  };
+
   return (
     <section style={styles.section}>
       <h3>🗺️ Tile Matrix (Hexagonal)</h3>
@@ -285,6 +528,21 @@ export default function TileMatrix() {
         width: `${hexMaxX + 100}px`,
         height: `${hexMaxY + 100}px`,
       }}>
+        {/* 🛤️ SVG layer for path lines */}
+        <svg
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        >
+          {renderPathLines(bot0Data, '#22c55e', 'bot-0')}
+          {renderPathLines(bot1Data, '#3b82f6', 'bot-1')}
+        </svg>
         {/* Tuiles */}
         <div style={{ position: 'relative', zIndex: 2 }}>
           {sortedTiles.map(([coord]) => {
@@ -295,6 +553,21 @@ export default function TileMatrix() {
             const isBase = coord === bot0Data.baseCoord || coord === bot1Data.baseCoord;
             const entityLabel = getEntityLabel(coord as GridCoordinate);
             const hasEntity = entityLabel !== null;
+            const tile = coordIndex.get(coord);
+            const tileLegend = getTileLegend(coord as GridCoordinate);
+            
+            // 🛤️ PATHFINDING: Check if tile is on current path
+            const pathInfo = getPathInfo(coord as GridCoordinate);
+            const pathBorderColor = pathInfo.isOnPath 
+              ? (pathInfo.botId === 'bot-0' ? '#22c55e' : '#3b82f6')
+              : 'transparent';
+            const pathBorderWidth = pathInfo.isOnPath ? 3 : 0;
+            
+            // Calculer les ressources totales de la tuile
+            const tileResources = React.useMemo(() => {
+              const total = (tile?.resources?.total ?? 0);
+              return total;
+            }, [tile]);
             
             return (
               <div
@@ -309,8 +582,83 @@ export default function TileMatrix() {
                   gap: '3px',
                   transition: 'opacity 0.2s ease',
                 }}
-                title={`${label} (${coord})`}
               >
+                {/* Tooltip personnalisé */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '100%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    marginBottom: '8px',
+                    opacity: 0,
+                    pointerEvents: 'none',
+                    transition: 'opacity 0.2s ease',
+                    zIndex: 1000,
+                  }}
+                  className="tile-tooltip"
+                >
+                  <div
+                    style={{
+                      backgroundColor: '#fff',
+                      borderRadius: '6px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      minWidth: '140px',
+                    }}
+                  >
+                    {/* Header avec label et légende */}
+                    <div
+                      style={{
+                        backgroundColor: color.includes('rgba') ? '#f5f5f5' : color,
+                        color: color.includes('rgba') ? '#333' : '#fff',
+                        padding: '6px 10px',
+                        fontWeight: 'bold',
+                        fontSize: '11px',
+                        borderBottom: '1px solid rgba(0,0,0,0.1)',
+                      }}
+                    >
+                      <div>{label}</div>
+                      <div style={{ fontSize: '9px', fontWeight: 'normal', opacity: 0.85, marginTop: '2px' }}>
+                        {tileLegend.icon} {tileLegend.label}
+                      </div>
+                    </div>
+                    
+                    {/* Contenu */}
+                    <div style={{ padding: '8px 10px', fontSize: '10px', color: '#666' }}>
+                      <div style={{ marginBottom: '4px' }}>
+                        <span style={{ color: '#999' }}>Coord:</span> {coord}
+                      </div>
+                      {tileResources > 0 && (
+                        <div>
+                          <span style={{ color: '#999' }}>Ressources:</span> {tileResources}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Trigger pour le tooltip */}
+                <div
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    const tooltip = e.currentTarget.parentElement?.querySelector('.tile-tooltip') as HTMLElement;
+                    if (tooltip) tooltip.style.opacity = '1';
+                  }}
+                  onMouseLeave={(e) => {
+                    const tooltip = e.currentTarget.parentElement?.querySelector('.tile-tooltip') as HTMLElement;
+                    if (tooltip) tooltip.style.opacity = '0';
+                  }}
+                >
                 <div
                   style={{
                     ...styles.dot,
@@ -318,10 +666,31 @@ export default function TileMatrix() {
                     borderColor: color.includes('rgba(200') ? '#ddd' : 'transparent',
                     borderWidth: color.includes('rgba(200') ? '1px' : '0px',
                     borderStyle: 'dashed',
-                    outline: isBase ? '2px solid #000' : 'none',
+                    outline: isBase ? '2px solid #000' : 
+                             pathInfo.isOnPath ? `${pathBorderWidth}px solid ${pathBorderColor}` : 'none',
+                    boxShadow: pathInfo.isOnPath ? `0 0 8px ${pathBorderColor}88` : 'none',
                     position: 'relative',
                   }}
                 >
+                  {/* 🛤️ PATHFINDING: Show path step indicator */}
+                  {pathInfo.isOnPath && !hasEntity && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        fontSize: '8px',
+                        fontWeight: 'bold',
+                        color: pathBorderColor,
+                        textShadow: '0 0 3px #fff',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      {pathInfo.isVisited ? '✓' : '●'}
+                    </div>
+                  )}
+                  
                   {/* Afficher le label (S0, S1, D0E, D1E, etc.) */}
                   {hasEntity && (
                     <div
@@ -341,60 +710,15 @@ export default function TileMatrix() {
                     </div>
                   )}
                 </div>
-                <div style={styles.label}>{label}</div>
+                </div>
+                
+                {/* Label sous la tuile (A1, B2, etc.) avec légère opacité */}
+                <div style={{ ...styles.label, opacity: 0.6 }}>
+                  {label}
+                </div>
               </div>
             );
           })}
-        </div>
-      </div>
-      <div style={styles.legend}>
-        <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: 'transparent', border: '2px solid #000' }} />
-          <span>Départ</span>
-        </div>
-        <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: '#22c55e' }} />
-          <span>Ship Bot-0 (S0) {bot0Data.shipCoord && <span style={styles.counter}>1</span>}</span>
-        </div>
-        <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: '#3b82f6' }} />
-          <span>Ship Bot-1 (S1) {bot1Data.shipCoord && <span style={styles.counter}>1</span>}</span>
-        </div>
-        <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: '#f97316' }} />
-          <span>Drones (D0E, D1E) <span style={styles.counter}>{bot0Data.droneCoords.length + bot1Data.droneCoords.length}</span></span>
-        </div>
-        <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: '#8b5cf6' }} />
-          <span>Collectée <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.collected).length}</span></span>
-        </div>
-        <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: 'rgba(59, 130, 246, 0.5)' }} />
-          <span>Explorable (r={exploringRadius})</span>
-        </div>
-        <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: 'rgba(200, 200, 200, 0.2)', border: '1px dashed #ddd' }} />
-          <span>Hors de portée</span>
-        </div>
-        <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: '#9ca3af' }} />
-          <span>Empty <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.type === 'empty').length}</span></span>
-        </div>
-        <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: '#000000' }} />
-          <span>Obstacle <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.type === 'obstacle').length}</span></span>
-        </div>
-        <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: '#f32ad1ff' }} />
-          <span>⛽ Carburant <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.type === 'fuel').length}</span></span>
-        </div>
-        <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: '#bd259cff' }} />
-          <span>🔧 Réparation <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.type === 'repair').length}</span></span>
-        </div>
-        <div style={styles.legendItem}>
-          <div style={{ ...styles.legendDot, backgroundColor: '#ef4444' }} />
-          <span>⚠️ Danger <span style={styles.counter}>{sortedTiles.filter(([, tile]) => tile.type === 'danger').length}</span></span>
         </div>
       </div>
     </section>
@@ -414,9 +738,9 @@ const styles = {
     position: 'relative',
     borderRadius: '4px',
     border: '1px solid #ddd',
-    backgroundColor: '#fafafa',
+    backgroundColor: 'transparent',
     overflow: 'auto',
-    maxHeight: '600px',
+    maxHeight: '90vh',
   } as React.CSSProperties,
   cellContainer: {
     display: 'flex',

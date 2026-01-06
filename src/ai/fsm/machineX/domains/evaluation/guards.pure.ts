@@ -149,7 +149,8 @@ export const canStartExploringWithValidTarget: XStateV5Guard = (args) => {
 export const hasUnexploredTilesInRadius: XStateV5Guard = ({ context }) => {
   const tiles = context.gridInfo?.tiles || {};
   const knownTiles = context.memory?.knownTiles || [];
-  const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
+  // 🛤️ PATHFINDING FIX: Always use baseCoord for exploration (even if ship moved to collect)
+  const shipCoord = context.vehicle?.baseCoord;
   // 🆕 PHASE 2: Use GameStore radius (shared state)
   const exploringRadius = getExplorationRadius(context.config?.exploringRadius);
   

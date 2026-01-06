@@ -52,6 +52,9 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
       currentSpeed: 0,
       maxCapacity: { food: 200, debris: 1800, special: 3, total: 2003 },
       visualState: "uninitialized" as VehicleVisualState,
+      // 🛤️ PATHFINDING: Initialize path properties
+      currentPath: [],
+      pathIndex: 0,
     },
     fsmState: "evaluating" as FSMState,
     explorationQueue: [],
