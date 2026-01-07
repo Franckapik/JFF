@@ -394,7 +394,7 @@ export const assignShipMovingToFuelStationContext = createAssignAction(({ contex
   
   // Calculate fuel consumption for pathfinding
   const pathSteps = Math.max(0, path.length - 1);
-  const FUEL_PER_TILE = 2;
+  const FUEL_PER_TILE = 8; // 🆕 INCREASED: 8 fuel per tile to test station decisions
   const fuelConsumption = Math.max(1, pathSteps * FUEL_PER_TILE);
   const currentFuel = context.vehicle?.fuel || 100;
   const newFuel = Math.max(0, currentFuel - fuelConsumption);
@@ -452,7 +452,7 @@ export const assignShipMovingToRepairStationContext = createAssignAction(({ cont
   
   // Calculate fuel consumption for pathfinding
   const pathSteps = Math.max(0, path.length - 1);
-  const FUEL_PER_TILE = 2;
+  const FUEL_PER_TILE = 8; // 🆕 INCREASED: 8 fuel per tile to test station decisions
   const fuelConsumption = Math.max(1, pathSteps * FUEL_PER_TILE);
   const currentFuel = context.vehicle?.fuel || 100;
   const newFuel = Math.max(0, currentFuel - fuelConsumption);
