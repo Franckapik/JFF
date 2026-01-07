@@ -100,6 +100,13 @@ export const assignShipRepairContext = createAssignAction(({ context }) => {
     return {};
   }
   
+  const damageBefore = context.vehicle?.damage || 0;
+  const damageAfter = 0;
+  
+  console.log(`🔧 [assignShipRepairContext] ${context.entityId}: SHIP REPAIRED`);
+  console.log(`   Damage: ${damageBefore.toFixed(1)}% → ${damageAfter.toFixed(1)}%`);
+  console.log(`   Repair completed: 100% damage removed`);
+  
   return {
     vehicle: {
       ...context.vehicle,
@@ -119,6 +126,13 @@ export const assignShipRefuelContext = createAssignAction(({ context }) => {
   if (!context.vehicle) {
     return {};
   }
+  
+  const fuelBefore = context.vehicle?.fuel || 0;
+  const fuelAfter = 100;
+  
+  console.log(`⛽ [assignShipRefuelContext] ${context.entityId}: SHIP REFUELED`);
+  console.log(`   Fuel: ${fuelBefore.toFixed(1)}% → ${fuelAfter.toFixed(1)}%`);
+  console.log(`   Fuel added: ${(fuelAfter - fuelBefore).toFixed(1)}%`);
   
   return {
     vehicle: {
@@ -376,6 +390,7 @@ export const assignShipMovingToFuelStationContext = createAssignAction(({ contex
   
   if (!nearestStation) {
     fsmLogger.warn(`⚠️ [${context.entityId}] No fuel station found!`);
+    console.log(`❌ [assignShipMovingToFuelStationContext] ${context.entityId}: No station available`);
     return {};
   }
   
@@ -389,6 +404,7 @@ export const assignShipMovingToFuelStationContext = createAssignAction(({ contex
   
   if (path.length === 0) {
     fsmLogger.warn(`⚠️ [${context.entityId}] No path to fuel station at ${targetCoord}!`);
+    console.log(`❌ [assignShipMovingToFuelStationContext] ${context.entityId}: No path to station at ${targetCoord}`);
     return {};
   }
   
@@ -398,6 +414,14 @@ export const assignShipMovingToFuelStationContext = createAssignAction(({ contex
   const fuelConsumption = Math.max(1, pathSteps * FUEL_PER_TILE);
   const currentFuel = context.vehicle?.fuel || 100;
   const newFuel = Math.max(0, currentFuel - fuelConsumption);
+  
+  // 🆕 Logs enrichis
+  console.log(`✅ [assignShipMovingToFuelStationContext] ${context.entityId}: NAVIGATING TO FUEL STATION`);
+  console.log(`   Station Location: ${targetCoord}`);
+  console.log(`   Path Length: ${path.length} tiles`);
+  console.log(`   Fuel Consumption: ${fuelConsumption} (${pathSteps} tiles × ${FUEL_PER_TILE}/tile)`);
+  console.log(`   Current Fuel: ${currentFuel.toFixed(1)} → ${newFuel.toFixed(1)} after travel`);
+  console.log(`   Route: ${path.slice(0, 5).join(' → ')}${path.length > 5 ? '...' : ''}`);
   
   fsmLogger.info(`⛽ [${context.entityId}] Moving to FUEL STATION:`, {
     stationCoord: targetCoord,
@@ -434,6 +458,7 @@ export const assignShipMovingToRepairStationContext = createAssignAction(({ cont
   
   if (!nearestStation) {
     fsmLogger.warn(`⚠️ [${context.entityId}] No repair station found!`);
+    console.log(`❌ [assignShipMovingToRepairStationContext] ${context.entityId}: No station available`);
     return {};
   }
   
@@ -447,6 +472,7 @@ export const assignShipMovingToRepairStationContext = createAssignAction(({ cont
   
   if (path.length === 0) {
     fsmLogger.warn(`⚠️ [${context.entityId}] No path to repair station at ${targetCoord}!`);
+    console.log(`❌ [assignShipMovingToRepairStationContext] ${context.entityId}: No path to station at ${targetCoord}`);
     return {};
   }
   
@@ -456,6 +482,14 @@ export const assignShipMovingToRepairStationContext = createAssignAction(({ cont
   const fuelConsumption = Math.max(1, pathSteps * FUEL_PER_TILE);
   const currentFuel = context.vehicle?.fuel || 100;
   const newFuel = Math.max(0, currentFuel - fuelConsumption);
+  
+  // 🆕 Logs enrichis
+  console.log(`✅ [assignShipMovingToRepairStationContext] ${context.entityId}: NAVIGATING TO REPAIR STATION`);
+  console.log(`   Station Location: ${targetCoord}`);
+  console.log(`   Path Length: ${path.length} tiles`);
+  console.log(`   Fuel Consumption: ${fuelConsumption} (${pathSteps} tiles × ${FUEL_PER_TILE}/tile)`);
+  console.log(`   Current Fuel: ${currentFuel.toFixed(1)} → ${newFuel.toFixed(1)} after travel`);
+  console.log(`   Route: ${path.slice(0, 5).join(' → ')}${path.length > 5 ? '...' : ''}`);
   
   fsmLogger.info(`🔧 [${context.entityId}] Moving to REPAIR STATION:`, {
     stationCoord: targetCoord,
@@ -488,6 +522,11 @@ export const assignShipMovingToRepairStationContext = createAssignAction(({ cont
  * Clear les flags isMovingToStation et passe en mode refueling
  */
 export const assignShipAtFuelStationContext = createAssignAction(({ context }) => {
+  console.log(`✅ [assignShipAtFuelStationContext] ${context.entityId}: ARRIVED at FUEL STATION`);
+  console.log(`   Location: ${context.vehicle?.targetVehicleTile?.position?.coord}`);
+  console.log(`   Current Fuel: ${context.vehicle?.fuel?.toFixed(1)}%`);
+  console.log(`   Entering REFUELING mode...`);
+  
   fsmLogger.info(`⛽ [${context.entityId}] Ship ARRIVED at FUEL STATION`);
   
   return {
@@ -508,6 +547,11 @@ export const assignShipAtFuelStationContext = createAssignAction(({ context }) =
  * Clear les flags isMovingToStation et passe en mode repairing
  */
 export const assignShipAtRepairStationContext = createAssignAction(({ context }) => {
+  console.log(`✅ [assignShipAtRepairStationContext] ${context.entityId}: ARRIVED at REPAIR STATION`);
+  console.log(`   Location: ${context.vehicle?.targetVehicleTile?.position?.coord}`);
+  console.log(`   Current Damage: ${context.vehicle?.damage?.toFixed(1)}%`);
+  console.log(`   Entering REPAIRING mode...`);
+  
   fsmLogger.info(`🔧 [${context.entityId}] Ship ARRIVED at REPAIR STATION`);
   
   return {

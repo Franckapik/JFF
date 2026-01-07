@@ -293,17 +293,20 @@ export const shouldUseFuelStation: XStateV5Guard = ({ context }) => {
   const needsRefuel = fuel < REFUEL_THRESHOLD;
   
   if (!needsRefuel) {
+    console.log(`⛽ [shouldUseFuelStation] ${context.entityId}: SKIP - fuel=${fuel.toFixed(1)}% >= threshold=${REFUEL_THRESHOLD}%`);
     return false;
   }
 
   // Chercher la station fuel la plus proche
   const nearestStation = findNearestStationOfType(context, 'fuel');
   if (!nearestStation) {
+    console.log(`⛽ [shouldUseFuelStation] ${context.entityId}: SKIP - no fuel station available (fuel=${fuel.toFixed(1)}%)`);
     return false;
   }
 
   // Comparer distances: station vs base
   if (!context.vehicle?.coord || !context.vehicle?.baseCoord) {
+    console.log(`⛽ [shouldUseFuelStation] ${context.entityId}: SKIP - missing coordinates`);
     return false;
   }
 
@@ -312,7 +315,19 @@ export const shouldUseFuelStation: XStateV5Guard = ({ context }) => {
 
   const result = distToStation < distToBase;
   
-  console.log(`🔍 [shouldUseFuelStation] ${context.entityId}: fuel=${fuel.toFixed(1)}%, distStation=${distToStation.toFixed(1)}, distBase=${distToBase.toFixed(1)}, result=${result}`);
+  // 🆕 Logs enrichis avec analyse
+  if (result) {
+    console.log(`✅ [shouldUseFuelStation] ${context.entityId}: CHOOSE STATION`);
+    console.log(`   Fuel: ${fuel.toFixed(1)}% (threshold: ${REFUEL_THRESHOLD}%)`);
+    console.log(`   Distance to FUEL STATION: ${distToStation.toFixed(1)}`);
+    console.log(`   Distance to BASE: ${distToBase.toFixed(1)}`);
+    console.log(`   SAVINGS: ${(distToBase - distToStation).toFixed(1)} (${(((distToBase - distToStation) / distToBase) * 100).toFixed(0)}% shorter)`);
+  } else {
+    console.log(`❌ [shouldUseFuelStation] ${context.entityId}: SKIP (base closer)`);
+    console.log(`   Fuel: ${fuel.toFixed(1)}%`);
+    console.log(`   Distance to FUEL STATION: ${distToStation.toFixed(1)}`);
+    console.log(`   Distance to BASE: ${distToBase.toFixed(1)}`);
+  }
   
   return result;
 };
@@ -334,17 +349,20 @@ export const shouldUseRepairStation: XStateV5Guard = ({ context }) => {
   const needsRepair = damage > REPAIR_THRESHOLD;
   
   if (!needsRepair) {
+    console.log(`🔧 [shouldUseRepairStation] ${context.entityId}: SKIP - damage=${damage.toFixed(1)}% <= threshold=${REPAIR_THRESHOLD}%`);
     return false;
   }
 
   // Chercher la station repair la plus proche
   const nearestStation = findNearestStationOfType(context, 'repair');
   if (!nearestStation) {
+    console.log(`🔧 [shouldUseRepairStation] ${context.entityId}: SKIP - no repair station available (damage=${damage.toFixed(1)}%)`);
     return false;
   }
 
   // Comparer distances: station vs base
   if (!context.vehicle?.coord || !context.vehicle?.baseCoord) {
+    console.log(`🔧 [shouldUseRepairStation] ${context.entityId}: SKIP - missing coordinates`);
     return false;
   }
 
@@ -353,7 +371,19 @@ export const shouldUseRepairStation: XStateV5Guard = ({ context }) => {
 
   const result = distToStation < distToBase;
   
-  console.log(`🔍 [shouldUseRepairStation] ${context.entityId}: damage=${damage.toFixed(1)}%, distStation=${distToStation.toFixed(1)}, distBase=${distToBase.toFixed(1)}, result=${result}`);
+  // 🆕 Logs enrichis avec analyse
+  if (result) {
+    console.log(`✅ [shouldUseRepairStation] ${context.entityId}: CHOOSE STATION`);
+    console.log(`   Damage: ${damage.toFixed(1)}% (threshold: ${REPAIR_THRESHOLD}%)`);
+    console.log(`   Distance to REPAIR STATION: ${distToStation.toFixed(1)}`);
+    console.log(`   Distance to BASE: ${distToBase.toFixed(1)}`);
+    console.log(`   SAVINGS: ${(distToBase - distToStation).toFixed(1)} (${(((distToBase - distToStation) / distToBase) * 100).toFixed(0)}% shorter)`);
+  } else {
+    console.log(`❌ [shouldUseRepairStation] ${context.entityId}: SKIP (base closer)`);
+    console.log(`   Damage: ${damage.toFixed(1)}%`);
+    console.log(`   Distance to REPAIR STATION: ${distToStation.toFixed(1)}`);
+    console.log(`   Distance to BASE: ${distToBase.toFixed(1)}`);
+  }
   
   return result;
 };
@@ -369,7 +399,9 @@ export const isMovingToFuelStation: XStateV5Guard = ({ context }) => {
   const result = context.vehicle?.isMovingToStation === true && 
                  context.vehicle?.stationType === 'fuel';
   
-  console.log(`🔍 [isMovingToFuelStation] ${context.entityId}: isMovingToStation=${context.vehicle?.isMovingToStation}, stationType=${context.vehicle?.stationType}, result=${result}`);
+  if (result) {
+    console.log(`⛽ [isMovingToFuelStation] ${context.entityId}: TRUE - navigating to FUEL STATION at ${context.vehicle?.targetVehicleTile?.position?.coord}`);
+  }
   
   return result;
 };
@@ -385,7 +417,9 @@ export const isMovingToRepairStation: XStateV5Guard = ({ context }) => {
   const result = context.vehicle?.isMovingToStation === true && 
                  context.vehicle?.stationType === 'repair';
   
-  console.log(`🔍 [isMovingToRepairStation] ${context.entityId}: isMovingToStation=${context.vehicle?.isMovingToStation}, stationType=${context.vehicle?.stationType}, result=${result}`);
+  if (result) {
+    console.log(`🔧 [isMovingToRepairStation] ${context.entityId}: TRUE - navigating to REPAIR STATION at ${context.vehicle?.targetVehicleTile?.position?.coord}`);
+  }
   
   return result;
 };
