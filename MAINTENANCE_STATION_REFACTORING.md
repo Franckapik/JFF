@@ -46,7 +46,64 @@ collecting.ship_moving_to_tile → SHIP_REACHES_TILE → [
 
 ---
 
-## 📋 Table of Contents
+## � Phase 2: Testing & Optimization - ✅ COMPLÉTÉE
+
+### ✅ Étape 1: Augmentation de la consommation de fuel
+
+**Raison**: Avec une consommation basse (2 fuel/tile), les stations ne sont pas assez fréquemment utilisées pour observer les décisions.
+
+**Changement**:
+- `FUEL_PER_TILE: 2` → `FUEL_PER_TILE: 8` (4x plus)
+- Affecte les 3 endroits:
+  - `collection/actions.assign.ts` (mouvement vers ressources)
+  - `maintenance/actions.assign.ts` (2x mouvement vers stations fuel/repair)
+
+**Impact**: Le vaisseau aura besoin de carburant beaucoup plus souvent, forçant les décisions de stations vs base.
+
+### ✅ Étape 2: Amélioration de la visibilité UI
+
+**ShipStatus** - Nouveau champ "Target":
+```tsx
+Target: ⛽ FUEL STATION  // En orange si c'est une station
+Target: 🔧 REPAIR STATION
+Target: 📦 RESOURCE
+```
+
+**RouteDisplay** - Améliorations:
+- Affiche le type de destination dans le label de progression (ex: `2/5 ⛽`)
+- Marque la destination finale avec:
+  - Emoji du type (⛽, 🔧, 📦, ⚠️)
+  - Fond orange si c'est une station
+  - Bordure orange pour meilleure visibilité
+
+### 🎯 Résultat observable en runtime
+
+Maintenant on peut voir clairement:
+1. **Décision de station**: ShipStatus affiche "Target: ⛽ FUEL STATION" au lieu de "📦 RESOURCE"
+2. **Chemin vers station**: RouteDisplay montre le chemin avec emoji ⛽ et bordure orange
+3. **Progression**: Le label `2/5 ⛽` indique une station comme destination
+
+### 🔄 Commits de Phase 2
+
+- `079a186` - perf: increase fuel consumption & improve station visibility in UI
+
+---
+
+## 📊 Résumé des changements totaux
+
+| Fichier | Type | Changement |
+|---------|------|-----------|
+| `src/ai/fsm/machineX/domains/maintenance/guards.pure.ts` | Guards | +4 guards (stations) |
+| `src/ai/fsm/machineX/domains/maintenance/actions.assign.ts` | Actions | +4 actions (stations), augmentation fuel ✅ |
+| `src/ai/fsm/machineX/domains/collection/actions.assign.ts` | Actions | augmentation fuel ✅ |
+| `src/types/vehicle.d.ts` | Type | +2 champs (isMovingToStation, stationType) |
+| `src/ai/fsm/machineX/machine.pure.v5.ts` | FSM | transitions modifiées |
+| `src/components/ShipStatus.tsx` | UI | affichage destination ✅ |
+| `src/components/RouteDisplay.tsx` | UI | indicateurs station ✅ |
+
+---
+
+## �📋 Table of Contents
 
 1. [Situation Actuelle](#situation-actuelle)
 2. [Problèmes Identifiés](#problèmes-identifiés)
