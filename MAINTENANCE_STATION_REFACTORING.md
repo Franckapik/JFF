@@ -491,153 +491,322 @@ tracker.send({
 
 ---
 
-## 🏆 Recommandation Finale
+## 🏆 Recommandation Finale: Option A Simplifiée ✅
 
-### ✅ **Option A: Event-Driven Unifié**
+**Choix**: Sans `planning` ni `navigating` states - **Décision dans `evaluating`**
 
-**Raison**: Meilleur équilibre entre simplicité, clarté et extensibilité.
+**Raison**: Meilleur balance entre simplicité, clarté et maintenabilité.
 
-#### Architecture Proposée
+### Architecture Proposée
+
+#### 1️⃣ Décision dans `evaluating` (où les autres choix sont faits)
 
 ```typescript
-// 1. Décision en amont (dans evaluating ou nouveau sous-état planning)
 evaluating: {
   on: {
-    NEED_MAINTENANCE: {
-      target: 'maintaining.planning',
-      actions: 'assignMaintenancePlanContext' // Décide destination ici
-    }
+    NEED_MAINTENANCE: [
+      {
+        // Priority 1: Station fuel est plus proche que la base?
+        target: 'collecting.ship_moving_to_tile',
+        guard: 'shouldUseFuelStation',
+        actions: 'assignShipMovingToFuelStationContext'
+      },
+      {
+        // Priority 2: Station repair est plus proche que la base?
+        target: 'collecting.ship_moving_to_tile',
+        guard: 'shouldUseRepairStation',
+        actions: 'assignShipMovingToRepairStationContext'
+      },
+      {
+        // Default: Retour à la base (maintenance classique)
+        target: 'maintaining.depositing'
+      }
+    ]
   }
 }
+```
 
-// 2. Planning décide de la cible
-maintaining: {
-  initial: 'planning',
+#### 2️⃣ Navigation vers station (réutilise `ship_moving_to_tile`)
+
+```typescript
+collecting: {
   states: {
-    planning: {
-      entry: 'assignMaintenanceTargetContext', // Calcule meilleure destination
-      always: [
-        { target: 'navigating', guard: 'needsNavigation' }, // Station loin
-        { target: 'depositing' } // Base (déjà sur place)
-      ]
-    },
-    
-    // 3. Navigation partagée (si station loin)
-    navigating: {
+    ship_moving_to_tile: {
+      entry: 'onShipMovingToTileEntry',
       on: {
         SHIP_REACHES_WAYPOINT: {
           guard: 'hasMoreWaypoints',
           actions: 'assignShipNextWaypointContext'
         },
-        SHIP_REACHES_MAINTENANCE_POINT: [
-          { target: 'refueling', guard: 'pointTypeIs_fuel' },
-          { target: 'repairing', guard: 'pointTypeIs_repair' },
-          { target: 'depositing', guard: 'pointTypeIs_base' }
+        SHIP_REACHES_TILE: [
+          {
+            // C'est une station fuel?
+            target: '#machineXV5Pure.maintaining.refueling',
+            guard: 'isMovingToFuelStation',
+            actions: 'assignShipAtFuelStationContext'
+          },
+          {
+            // C'est une station repair?
+            target: '#machineXV5Pure.maintaining.repairing',
+            guard: 'isMovingToRepairStation',
+            actions: 'assignShipAtRepairStationContext'
+          },
+          {
+            // Normal: c'est une tuile de ressource
+            target: 'ship_collecting',
+            guard: 'canCollectTile',
+            actions: 'assignShipCollectingContext'
+          }
         ]
       }
-    },
-    
-    // 4. Actions de maintenance (flow actuel)
-    depositing: { /* inchangé */ },
-    refueling: { /* inchangé */ },
-    repairing: { /* inchangé */ }
+    }
   }
 }
-
-// game_over (inchangé)
-game_over: { type: 'final' }
 ```
 
-#### Pourquoi cette approche?
-
-- ✅ **Décision upstream** : `planning` calcule la meilleure destination
-- ✅ **Réutilise `navigating`** : pattern identique à `ship_moving_to_tile`
-- ✅ **Event-driven clair** : `SHIP_REACHES_MAINTENANCE_POINT` avec payload explicite
-- ✅ **Backward compatible** : Si pas de station proche, flow actuel inchangé
-- ✅ **Pas de duplication** : refuel/repair logic reste identique (base ou station)
-
-#### Guard Decision Logic
+#### 3️⃣ Maintenance actions (INCHANGÉ - logique identique base/station)
 
 ```typescript
-// Dans planning.entry (assignMaintenanceTargetContext)
-const needsDeposit = resources > 100;
-const needsRefuel = fuel < 30;
-const needsRepair = damage > 50;
+maintaining: {
+  initial: 'depositing',
+  states: {
+    depositing: { /* inchangé */ },
+    refueling: { /* inchangé - même logique peu importe source */ },
+    repairing: { /* inchangé - même logique peu importe source */ }
+  }
+}
+```
 
-// Quelle action d'abord?
-if (needsDeposit) {
-  // Toujours à la base (où stocker les ressources?)
-  targetPoint = 'base';
-} else if (needsRefuel) {
-  // Chercher station fuel la plus proche vs base
-  const nearestFuelStation = findNearestStation(context, 'fuel');
-  const distToStation = distance(ship, nearestFuelStation);
-  const distToBase = distance(ship, baseCoord);
-  targetPoint = distToStation < distToBase ? nearestFuelStation : 'base';
-} else if (needsRepair) {
-  // Chercher station repair la plus proche vs base
-  const nearestRepairStation = findNearestStation(context, 'repair');
-  const distToStation = distance(ship, nearestRepairStation);
-  const distToBase = distance(ship, baseCoord);
-  targetPoint = distToStation < distToBase ? nearestRepairStation : 'base';
+### Pourquoi cette approche?
+
+- ✅ **Zéro nouveau state** : Pas de `planning`, pas de `navigating`
+- ✅ **Décision centralisée** : `evaluating` décide où aller (comme pour explore/collect)
+- ✅ **Réutilise 100% du code** : `ship_moving_to_tile` déjà testé et travaillant
+- ✅ **Logique refuel/repair unique** : Inchangée, peu importe source (base vs station)
+- ✅ **Très clair** : Flux linéaire, pattern reconnaissable
+- ✅ **Extensible** : Ajouter station = juste 1 guard de décision
+
+### Context Markers (pour tracker les stations)
+
+```typescript
+// Dans assignShipMovingToFuelStationContext
+vehicle: {
+  ...,
+  targetVehicleTile: stationFuelTile,
+  isMovingToStation: true,    // ← Flag pour détecter en SHIP_REACHES_TILE
+  stationType: 'fuel'          // ← Type de station ('fuel' ou 'repair')
+}
+
+// Dans assignShipAtFuelStationContext (quand on arrive)
+vehicle: {
+  ...,
+  isMovingToStation: false,    // ← Clear flag
+  visualState: 'refueling'
 }
 ```
 
 ---
 
-## 📝 Prochaines Étapes
+## 📝 Plan d'Implémentation Concret
 
-### Phase 1: Implémentation Minimale (Option A)
+### Phase 1: Core Implementation (2-3 heures)
 
-1. **Créer les nouveaux types d'événements**:
-   - `SHIP_REACHES_MAINTENANCE_POINT` dans `src/types/events.d.ts`
-   - Payload: `{ type, pointType: 'base' | 'fuel_station' | 'repair_station', coord }`
+#### Step 1: Ajouter Guards de Décision
+**File**: `src/ai/fsm/machineX/domains/maintenance/guards.pure.ts`
 
-2. **Ajouter guards**:
-   - `isAtFuelStation`, `isAtRepairStation`, `isAtBase` dans `src/ai/fsm/machineX/domains/maintenance/guards.pure.ts`
+Ajouter 4 nouveaux guards:
+```typescript
+// Décide si station fuel est plus proche que base
+export const shouldUseFuelStation: XStateV5Guard = ({ context }) => {
+  const needsRefuel = (context.vehicle?.fuel ?? 100) < 30;
+  if (!needsRefuel) return false;
+  
+  const nearest = findNearestStationOfType(context, 'fuel');
+  if (!nearest) return false;
+  
+  const distStation = distance(context.vehicle?.coord, nearest.coord);
+  const distBase = distance(context.vehicle?.coord, context.vehicle?.baseCoord);
+  return distStation < distBase;
+};
 
-3. **Modifier le machine**:
-   - Ajouter sous-état `planning` à `maintaining`
-   - Ajouter sous-état `navigating` à `maintaining`
-   - Modifier transitions de `ship_returning` pour utiliser `SHIP_REACHES_MAINTENANCE_POINT`
+// Pareil pour repair
+export const shouldUseRepairStation: XStateV5Guard = ({ context }) => { /* ... */ };
 
-4. **Modifier le tracker**:
-   - `useSimulatedTracker.ts` : ajouter logique pour décider destination
-   - Envoyer `SHIP_REACHES_MAINTENANCE_POINT` au lieu de `SHIP_REACHES_BASE`
+// Détecte si on navigue vers une station
+export const isMovingToFuelStation: XStateV5Guard = ({ context }) =>
+  context.vehicle?.isMovingToStation && context.vehicle?.stationType === 'fuel';
 
-5. **Ajouter actions**:
-   - `assignMaintenancePlanContext` (décide destination)
-   - `assignMaintenanceTargetContext` (calcule trajet si nécessaire)
+export const isMovingToRepairStation: XStateV5Guard = ({ context }) =>
+  context.vehicle?.isMovingToStation && context.vehicle?.stationType === 'repair';
+```
 
-### Phase 2: Optimisations
+#### Step 2: Ajouter Actions
+**File**: `src/ai/fsm/machineX/domains/maintenance/actions.assign.ts`
 
-1. **Pathfinding vers stations**:
-   - `findNearestFuelStation(context)` → garde le plus proche
-   - `findNearestRepairStation(context)` → garde le plus proche
-   - Ajouter guard `needsNavigation` (station loin de la position actuelle)
+Ajouter 4 nouvelles actions:
+```typescript
+// Quand on décide d'aller à une station fuel
+export const assignShipMovingToFuelStationContext = createAssignAction(
+  ({ context }) => {
+    const station = findNearestStationOfType(context, 'fuel');
+    return {
+      vehicle: {
+        ...context.vehicle,
+        targetVehicleTile: station,
+        isMovingToStation: true,  // ← FLAG
+        stationType: 'fuel'       // ← TYPE
+      },
+      // Rest: pathfinding similar to assignShipMovingToTileContext
+    };
+  }
+);
 
-2. **Avantages stations** (gameplay):
-   - Station fuel : refuel 100% (vs 100% à la base)
-   - Station repair : repair -5% damage bonus
-   - Stations avec cooldown ou capacité limitée?
+export const assignShipMovingToRepairStationContext = createAssignAction(/* ... */);
+export const assignShipAtFuelStationContext = createAssignAction(/* ... */);
+export const assignShipAtRepairStationContext = createAssignAction(/* ... */);
+```
 
-3. **Edge cases**:
-   - Station détruite / visitée (cooldown)?
-   - Aucune station dans le radius?
-   - Fuel critique (< 8%) : override, aller à plus proche station?
+#### Step 3: Modifier la Machine
+**File**: `src/ai/fsm/machineX/machine.pure.v5.ts`
 
-4. **Scénarios Gherkin**:
-   - Créer `maintenance-stations.feature` spécifiant:
-     - "Maintenance à une station proche"
-     - "Retour à la base quand station loin"
-     - "Refuel à station vs repair à base"
-     - Edge cases
+**Dans `evaluating` state - ajouter nouvelle transition:**
+```typescript
+on: {
+  // ... existing transitions ...
+  NEED_MAINTENANCE: [
+    {
+      target: 'collecting.ship_moving_to_tile',
+      guard: 'shouldUseFuelStation',
+      actions: 'assignShipMovingToFuelStationContext'
+    },
+    {
+      target: 'collecting.ship_moving_to_tile',
+      guard: 'shouldUseRepairStation',
+      actions: 'assignShipMovingToRepairStationContext'
+    },
+    {
+      target: 'maintaining.depositing'  // Default
+    }
+  ]
+}
+```
 
-### Phase 3: Testing & Validation
+**Dans `collecting.ship_moving_to_tile` state - ajouter transitions:**
+```typescript
+SHIP_REACHES_TILE: [
+  {
+    // NEW: Station fuel reached
+    target: '#machineXV5Pure.maintaining.refueling',
+    guard: 'isMovingToFuelStation',
+    actions: 'assignShipAtFuelStationContext'
+  },
+  {
+    // NEW: Station repair reached
+    target: '#machineXV5Pure.maintaining.repairing',
+    guard: 'isMovingToRepairStation',
+    actions: 'assignShipAtRepairStationContext'
+  },
+  {
+    // Existing: Normal resource collection
+    target: 'ship_collecting',
+    guard: 'canCollectTile',
+    actions: 'assignShipCollectingContext'
+  },
+  // ... rest existing ...
+]
+```
 
-1. **Unit tests** : Guards `isAtFuelStation`, `isAtRepairStation`, `isAtBase`
-2. **Integration tests** : Flow complet (evaluating → maintaining → station → refuel → evaluating)
-3. **Scenario validation** : Tous les `.feature` doivent passer
+**Dans `setup()` - ajouter actions et guards:**
+```typescript
+actions: {
+  // ... existing ...
+  assignShipMovingToFuelStationContext,
+  assignShipMovingToRepairStationContext,
+  assignShipAtFuelStationContext,
+  assignShipAtRepairStationContext,
+},
+guards: {
+  // ... existing ...
+  shouldUseFuelStation,
+  shouldUseRepairStation,
+  isMovingToFuelStation,
+  isMovingToRepairStation,
+}
+```
+
+### Phase 2: Scénarios & Validation (1 heure)
+
+#### Step 4: Créer Scénarios Gherkin
+**File**: `docs/bot-spec/scenarios/maintenance-stations.feature` (NEW)
+
+3 scénarios clés:
+1. **Refuel à station fuel proche** - distance 2 vs base 5
+2. **Retour à base si station loin** - distance 8 vs base 3
+3. **Pas de station** - aucune station disponible → base
+
+#### Step 5: Mettre à jour Doc Existante
+**File**: `docs/bot-spec/scenarios/maintenance.feature`
+
+Ajouter note: "Ces scénarios testent le flow SANS stations (retour direct base)"
+
+### Phase 3: Testing (1-2 heures)
+
+#### Step 6: Unit Tests
+**File**: `src/ai/fsm/machineX/domains/maintenance/__tests__/guards.test.ts`
+
+Test pour chaque guard:
+- `shouldUseFuelStation`: false si fuel >= 30, false si no station, true si closer
+- `shouldUseRepairStation`: false si damage <= 50, false si no station, true si closer
+- `isMovingToFuelStation`: check context flags
+- `isMovingToRepairStation`: check context flags
+
+#### Step 7: Integration Tests
+**File**: `src/ai/fsm/machineX/__tests__/integration-maintenance-stations.test.ts`
+
+Test les flows complets:
+- NEED_MAINTENANCE + shouldUseFuelStation=true → ship_moving_to_tile → refueling
+- NEED_MAINTENANCE + shouldUseFuelStation=false → depositing
+
+#### Step 8: Run All Tests
+```bash
+npm run test:scenarios -- maintenance
+npm run test:scenarios -- maintenance-stations
+npm run test  # Full suite
+```
+
+### Phase 4: (Future) Gameplay Enhancements
+
+**À implémenter plus tard:**
+
+1. **Station advantages**:
+   - Faster refuel (800ms vs 1000ms)?
+   - Better repair (-10% damage bonus)?
+
+2. **Fuel critical mode**:
+   - If fuel <= 8%: force CLOSEST station (any type)
+
+3. **Station properties**:
+   - Cooldown after use?
+   - Capacity limits?
+
+### 📊 Summary des Changements
+
+| File | Changes | Type |
+|------|---------|------|
+| `guards.pure.ts` | +4 guards | NEW |
+| `actions.assign.ts` | +4 actions | NEW |
+| `machine.pure.v5.ts` | +1 transition (evaluating), +2 transitions (collecting) | MOD |
+| `maintenance.feature` | +1 note | UPD |
+| `maintenance-stations.feature` | +3 scenarios | NEW |
+| **Everything else** | **NONE** | ✅ **SAFE** |
+
+**Fichiers INCHANGÉS**: Logique refueling, repairing, depositing maintenue intacte!
+
+### ⏱️ Temps Total Estimé: **4-6 heures**
+
+- Phase 1 (implem): 2-3h
+- Phase 2 (scénarios): 1h
+- Phase 3 (tests): 1-2h
 
 ---
 

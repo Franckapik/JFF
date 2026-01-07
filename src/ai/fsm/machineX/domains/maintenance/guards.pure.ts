@@ -232,3 +232,160 @@ export const hasResourcesForDrone: XStateV5Guard = ({ context }) => {
   
   return result;
 };
+
+// ============================================================================
+// 🆕 STATION SUPPORT - Guards for maintenance stations
+// ============================================================================
+
+/**
+ * Helper: Trouve la station la plus proche d'un type donné
+ * 
+ * @param context FSMContext contenant gridInfo et position du vaisseau
+ * @param stationType Type de station recherché ('fuel' ou 'repair')
+ * @returns La tuile station la plus proche ou null
+ */
+function findNearestStationOfType(context: import('../../../../../types/fsm.d.ts').FSMContext, stationType: 'fuel' | 'repair'): import('../../../../../types/tile.d.ts').Tile | null {
+  if (!context.gridInfo?.tiles || !context.vehicle?.coord) {
+    return null;
+  }
+
+  const stations = Object.values(context.gridInfo.tiles).filter(
+    (tile): tile is import('../../../../../types/tile.d.ts').Tile => 
+      tile !== null && 
+      typeof tile === 'object' && 
+      'type' in tile && 
+      tile.type === stationType
+  );
+
+  if (stations.length === 0) {
+    return null;
+  }
+
+  // Trouver la station la plus proche
+  let nearestStation: import('../../../../../types/tile.d.ts').Tile | null = null;
+  let minDistance = Infinity;
+
+  for (const station of stations) {
+    const distance = calculateDistanceGrid(context.vehicle.coord, station.position.coord);
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestStation = station;
+    }
+  }
+
+  return nearestStation;
+}
+
+/**
+ * Guard: Vérifie si une station fuel est plus proche que la base
+ * 
+ * Retourne true si:
+ * - Le vaisseau a besoin de carburant (fuel < 30%)
+ * - Une station fuel existe
+ * - La station fuel est plus proche que la base
+ * 
+ * @returns true si la station fuel doit être utilisée
+ */
+export const shouldUseFuelStation: XStateV5Guard = ({ context }) => {
+  // Vérifier si refuel nécessaire
+  const fuel = context.vehicle?.fuel ?? 100;
+  const REFUEL_THRESHOLD = 30;
+  const needsRefuel = fuel < REFUEL_THRESHOLD;
+  
+  if (!needsRefuel) {
+    return false;
+  }
+
+  // Chercher la station fuel la plus proche
+  const nearestStation = findNearestStationOfType(context, 'fuel');
+  if (!nearestStation) {
+    return false;
+  }
+
+  // Comparer distances: station vs base
+  if (!context.vehicle?.coord || !context.vehicle?.baseCoord) {
+    return false;
+  }
+
+  const distToStation = calculateDistanceGrid(context.vehicle.coord, nearestStation.position.coord);
+  const distToBase = calculateDistanceGrid(context.vehicle.coord, context.vehicle.baseCoord);
+
+  const result = distToStation < distToBase;
+  
+  console.log(`🔍 [shouldUseFuelStation] ${context.entityId}: fuel=${fuel.toFixed(1)}%, distStation=${distToStation.toFixed(1)}, distBase=${distToBase.toFixed(1)}, result=${result}`);
+  
+  return result;
+};
+
+/**
+ * Guard: Vérifie si une station repair est plus proche que la base
+ * 
+ * Retourne true si:
+ * - Le vaisseau a besoin de réparations (damage > 50%)
+ * - Une station repair existe
+ * - La station repair est plus proche que la base
+ * 
+ * @returns true si la station repair doit être utilisée
+ */
+export const shouldUseRepairStation: XStateV5Guard = ({ context }) => {
+  // Vérifier si repair nécessaire
+  const damage = context.vehicle?.damage ?? 0;
+  const REPAIR_THRESHOLD = 50;
+  const needsRepair = damage > REPAIR_THRESHOLD;
+  
+  if (!needsRepair) {
+    return false;
+  }
+
+  // Chercher la station repair la plus proche
+  const nearestStation = findNearestStationOfType(context, 'repair');
+  if (!nearestStation) {
+    return false;
+  }
+
+  // Comparer distances: station vs base
+  if (!context.vehicle?.coord || !context.vehicle?.baseCoord) {
+    return false;
+  }
+
+  const distToStation = calculateDistanceGrid(context.vehicle.coord, nearestStation.position.coord);
+  const distToBase = calculateDistanceGrid(context.vehicle.coord, context.vehicle.baseCoord);
+
+  const result = distToStation < distToBase;
+  
+  console.log(`🔍 [shouldUseRepairStation] ${context.entityId}: damage=${damage.toFixed(1)}%, distStation=${distToStation.toFixed(1)}, distBase=${distToBase.toFixed(1)}, result=${result}`);
+  
+  return result;
+};
+
+/**
+ * Guard: Vérifie si le vaisseau est en train de naviguer vers une station fuel
+ * 
+ * Utilise les flags context.vehicle.isMovingToStation et context.vehicle.stationType
+ * 
+ * @returns true si le vaisseau navigue vers une station fuel
+ */
+export const isMovingToFuelStation: XStateV5Guard = ({ context }) => {
+  const result = context.vehicle?.isMovingToStation === true && 
+                 context.vehicle?.stationType === 'fuel';
+  
+  console.log(`🔍 [isMovingToFuelStation] ${context.entityId}: isMovingToStation=${context.vehicle?.isMovingToStation}, stationType=${context.vehicle?.stationType}, result=${result}`);
+  
+  return result;
+};
+
+/**
+ * Guard: Vérifie si le vaisseau est en train de naviguer vers une station repair
+ * 
+ * Utilise les flags context.vehicle.isMovingToStation et context.vehicle.stationType
+ * 
+ * @returns true si le vaisseau navigue vers une station repair
+ */
+export const isMovingToRepairStation: XStateV5Guard = ({ context }) => {
+  const result = context.vehicle?.isMovingToStation === true && 
+                 context.vehicle?.stationType === 'repair';
+  
+  console.log(`🔍 [isMovingToRepairStation] ${context.entityId}: isMovingToStation=${context.vehicle?.isMovingToStation}, stationType=${context.vehicle?.stationType}, result=${result}`);
+  
+  return result;
+};

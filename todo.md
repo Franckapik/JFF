@@ -1,8 +1,6 @@
-* il y a un bloacage en EVAL a diagnostiquer. Visible sur main actuellement. D'ou provient-il ? Comment le resoudre via le log ? Est-ce lié a explorable undefined? NOn  peut-etre pas mais plutot au danger dynamique.
-
 * Le cloud donne-il des damages en fonction du bot desormais?
 
-* Le bot doit choisir/utiliser la station repair ou refuel
+* Le bot doit choisir/utiliser la station repair ou refuel. Mettre en place la strategie pour utiliser les bons sous etats.
 
 * assurer les memes conditions de départ.
 
@@ -11,8 +9,6 @@
 * comment dynamiser la vue pour faire un affichage de battle avec un bot qui gagne ou non ? 
 
 * avoir un meilleur log beaucoup moins verbeux.
-  
-* 
 
 
 Quel objectif final pour le jeu?
