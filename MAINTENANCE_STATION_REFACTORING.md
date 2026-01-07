@@ -2,7 +2,47 @@
 
 **Date**: 6 janvier 2026  
 **Topic**: Refactoring du système de maintenance (refuel/repair) avec intégration des tuiles stations  
-**Status**: Planning Phase - En attente de décision d'architecture
+**Status**: ✅ **IMPLÉMENTÉ** - Phase 1 complète (Core Implementation)
+
+---
+
+## 🎉 RÉSUMÉ D'IMPLÉMENTATION
+
+### ✅ Phase 1: Core Implementation - TERMINÉE
+
+**Commit**: `c55fe94` - feat: add maintenance station support (fuel & repair)
+
+**Fichiers modifiés**:
+1. ✅ [guards.pure.ts](src/ai/fsm/machineX/domains/maintenance/guards.pure.ts) - +4 guards (shouldUseFuelStation, shouldUseRepairStation, isMovingToFuelStation, isMovingToRepairStation)
+2. ✅ [actions.assign.ts](src/ai/fsm/machineX/domains/maintenance/actions.assign.ts) - +4 actions (assignShipMovingToFuelStationContext, assignShipMovingToRepairStationContext, assignShipAtFuelStationContext, assignShipAtRepairStationContext)
+3. ✅ [vehicle.d.ts](src/types/vehicle.d.ts) - +2 champs (isMovingToStation, stationType)
+4. ✅ [machine.pure.v5.ts](src/ai/fsm/machineX/machine.pure.v5.ts) - Transitions modifiées (evaluating + ship_moving_to_tile)
+
+**Résultats**:
+- ✅ **0 erreurs TypeScript** - Compilation réussie
+- ✅ **Option A Simplifiée** - Implémentée tel que recommandé
+- ✅ **Zéro nouveaux états** - Réutilise ship_moving_to_tile
+- ✅ **Pathfinding intégré** - Calcul automatique des chemins vers stations
+
+### 🎯 Architecture Finale
+
+```typescript
+evaluating → NEED_MAINTENANCE → [
+  shouldUseFuelStation? → collecting.ship_moving_to_tile (vers station fuel)
+  shouldUseRepairStation? → collecting.ship_moving_to_tile (vers station repair)
+  default → maintaining.depositing (vers base)
+]
+
+collecting.ship_moving_to_tile → SHIP_REACHES_TILE → [
+  isMovingToFuelStation? → maintaining.refueling (arrivée station fuel)
+  isMovingToRepairStation? → maintaining.repairing (arrivée station repair)
+  canCollectTile? → ship_collecting (collecte normale)
+]
+```
+
+**Décision centralisée**: Tout se passe dans `evaluating`, comme pour explore/collect
+**Navigation réutilisée**: Le state `ship_moving_to_tile` gère indifféremment ressources et stations
+**Logique de maintenance inchangée**: `refueling` et `repairing` fonctionnent pareil à la base ou en station
 
 ---
 
