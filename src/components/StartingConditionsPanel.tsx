@@ -44,16 +44,16 @@ export default function StartingConditionsPanel() {
       ruleCount++;
     }
 
-    // Station access rules
+    // Station access rules - skip if unreachable (999)
     const fuelRule = result.rules.find(r => r.rule === 'fuelAccess');
-    if (fuelRule && fuelRule.status === 'PASS') {
+    if (fuelRule && fuelRule.status === 'PASS' && fuelRule.value !== 999) {
       const margin = ((fuelRule.threshold - fuelRule.value) / fuelRule.threshold) * 100;
       totalMargin += Math.min(margin, 100);
       ruleCount++;
     }
 
     const repairRule = result.rules.find(r => r.rule === 'repairAccess');
-    if (repairRule && repairRule.status === 'PASS') {
+    if (repairRule && repairRule.status === 'PASS' && repairRule.value !== 999) {
       const margin = ((repairRule.threshold - repairRule.value) / repairRule.threshold) * 100;
       totalMargin += Math.min(margin, 100);
       ruleCount++;
@@ -69,6 +69,35 @@ export default function StartingConditionsPanel() {
   const { score: fairnessScore, stars } = calculateFairnessScore();
 
   const renderMarginBar = (value: number, threshold: number, isInverse: boolean = false) => {
+    // Handle unreachable stations (value = 999)
+    if (value === 999) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
+          <div
+            style={{
+              width: '200px',
+              height: '6px',
+              backgroundColor: '#e0e0e0',
+              borderRadius: '3px',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#F44336',
+                transition: 'width 0.3s ease',
+              }}
+            />
+          </div>
+          <span style={{ fontSize: '12px', minWidth: '60px', color: '#F44336', fontWeight: 'bold' }}>
+            UNREACHABLE
+          </span>
+        </div>
+      );
+    }
+
     // For spawn distance: value >= threshold (higher is better)
     // For percentages: value <= threshold (lower is better)
     let percentage = 0;
@@ -117,9 +146,15 @@ export default function StartingConditionsPanel() {
   };
 
   const renderStatus = (rule: FairnessRuleResult): string => {
+    const value = rule.value;
+
+    // Handle unreachable stations (value = 999)
+    if (value === 999) {
+      return '❌ UNREACHABLE';
+    }
+
     if (rule.status !== 'PASS') return '❌ CRITICAL';
 
-    const value = rule.value;
     const threshold = rule.threshold;
 
     // For spawn distance (higher is better)

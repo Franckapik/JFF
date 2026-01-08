@@ -360,7 +360,9 @@ const createTileFairnessSlice = (_set: unknown, get: () => TileStoreType): TileF
       currentRing = nextRing;
     }
 
-    return Infinity;
+    // Return 999 instead of Infinity for unreachable stations (for display purposes)
+    // This indicates the station is either not placed or not accessible
+    return 999;
   },
 
   /**
@@ -379,10 +381,12 @@ const createTileFairnessSlice = (_set: unknown, get: () => TileStoreType): TileF
         get().calculateStationAccess(tileMap, spawn, stationType)
       );
 
-      const maxDist = Math.max(...distances.filter(d => d !== Infinity));
-      const minDist = Math.min(...distances);
-      const difference = maxDist - minDist;
-      const passed = difference <= DEFAULT_FAIRNESS_THRESHOLDS.maxStationAccessDiff;
+      // Filter out 999 (unreachable) values for max calculation
+      const reachableDistances = distances.filter(d => d !== 999);
+      const maxDist = reachableDistances.length > 0 ? Math.max(...reachableDistances) : 999;
+      const minDist = reachableDistances.length > 0 ? Math.min(...reachableDistances) : 999;
+      const difference = reachableDistances.length > 0 ? maxDist - minDist : 999;
+      const passed = difference <= DEFAULT_FAIRNESS_THRESHOLDS.maxStationAccessDiff && difference !== 999;
 
       results.push({
         rule: `${stationType}Access`,
