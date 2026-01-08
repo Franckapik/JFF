@@ -34,6 +34,7 @@ export interface TileBaseSliceActions {
   updateTile: (coord: GridCoordinate, updates: Partial<Tile>) => void;
   updateTileState: (coord: GridCoordinate, updates: Partial<Tile>) => void;
   clearTiles: () => void;
+  setLastFairnessValidation: (validation: FairnessValidationResult | null) => void;
 }
 
 /** Interface pour le slice de coordonnées */

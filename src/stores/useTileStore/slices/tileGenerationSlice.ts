@@ -637,10 +637,8 @@ BOT ASSIGNMENT:
       get().updateTile(coord as GridCoordinate, finalTileMap[coord as GridCoordinate]);
     });
 
-    // 8. Save fairness validation result for UI display
-    set((state: any) => ({
-      lastFairnessValidation: validation,
-    }));
+    // 8. Save fairness validation result for UI display via dedicated action
+    get().setLastFairnessValidation(validation);
     
     fsmLogger.game(`
 FINAL TILE COMPOSITION:

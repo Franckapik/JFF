@@ -19,12 +19,15 @@
  * - hoveredTile : tuile actuellement survolée
  */
 
+
 import type {
   GridCoordinate,
   Tile,
   TileMap
 } from '../../../types/index.ts';
+
 import type { TileBaseSliceActions, TileStoreType } from '../../../types/stores.d.ts';
+
 import type { FairnessValidationResult } from './tileFairnessSlice.ts';
 
 // =========================================================================
@@ -158,6 +161,14 @@ const createTileBaseSlice = (set: any, get: () => TileStoreType): TileBaseSliceA
      * Remet l'état des tuiles à un objet vide
      */
     clearTiles: (): void => set({ tiles: {} }),
+
+    /**
+     * Sauvegarde les résultats de validation d'équité pour l'affichage UI
+     * @param validation - Résultats de la validation fairness
+     */
+    setLastFairnessValidation: (validation: FairnessValidationResult | null): void => {
+      set({ lastFairnessValidation: validation });
+    },
 
   } as TileBaseSliceActions;
 };
