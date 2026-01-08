@@ -121,13 +121,52 @@ export interface TileMarkSliceActions {
 /** Interface pour le slice de génération */
 export interface TileGenerationSliceActions {
   // Génération et initialisation
-  initializeGameGrid: (radius: number, spacing: number) => TileMap;
-  placeGameStations: (tileMap: TileMap, radius: number) => TileMap;
-  placeEmptyTiles: (tileMap: TileMap, emptyRatio?: number) => TileMap;
-  placeObstacleTiles: (tileMap: TileMap) => TileMap;
-  placeDangerTiles: (tileMap: TileMap) => TileMap;
-  placeStartingTiles: (tileMap: TileMap, botCount: number) => TileMap;
-  assignStartingTiles: (activeBotIds: string[]) => void;
+  initializeGameGrid: (radius: number, spacing: number, seed?: number) => TileMap;
+  placeGameStations: (tileMap: TileMap, radius: number, seed?: number, spawns?: GridCoordinate[]) => TileMap;
+  placeEmptyTiles: (tileMap: TileMap, emptyRatio?: number, seed?: number, spawns?: GridCoordinate[]) => TileMap;
+  placeObstacleTiles: (tileMap: TileMap, seed?: number, spawns?: GridCoordinate[]) => TileMap;
+  placeDangerTiles: (tileMap: TileMap, seed?: number, spawns?: GridCoordinate[]) => TileMap;
+  placeStartingTiles: (tileMap: TileMap, botCount: number, seed?: number) => TileMap;
+  assignStartingTiles: (activeBotIds: string[], seed?: number) => void;
+}
+
+/** Interface pour le slice d'équité (fairness) */
+export interface TileFairnessSliceActions {
+  // Seeded Random Number Generator
+  createSeededRandom: (seed: number) => () => number;
+  
+  // Validation des spawns
+  calculateHexDistance: (coord1: GridCoordinate, coord2: GridCoordinate) => number;
+  validateSpawnDistance: (spawns: GridCoordinate[], radius: number) => import('../stores/useTileStore/slices/tileFairnessSlice.ts').FairnessRuleResult;
+  
+  // Balance des ressources
+  getNeighborResources: (tileMap: TileMap, coord: GridCoordinate, radius: number) => number;
+  validateResourceBalance: (tileMap: TileMap, spawns: GridCoordinate[]) => import('../stores/useTileStore/slices/tileFairnessSlice.ts').FairnessRuleResult;
+  
+  // Accès aux stations
+  calculateStationAccess: (tileMap: TileMap, spawn: GridCoordinate, stationType: 'fuel' | 'repair') => number;
+  validateStationAccess: (tileMap: TileMap, spawns: GridCoordinate[]) => import('../stores/useTileStore/slices/tileFairnessSlice.ts').FairnessRuleResult[];
+  
+  // Équité du terrain
+  getWalkablePercent: (tileMap: TileMap, coord: GridCoordinate, radius: number) => number;
+  validateTerrainFairness: (tileMap: TileMap, spawns: GridCoordinate[]) => import('../stores/useTileStore/slices/tileFairnessSlice.ts').FairnessRuleResult;
+  
+  // Orchestration
+  validateMapFairness: (
+    tileMap: TileMap, 
+    spawns: GridCoordinate[], 
+    radius: number, 
+    seed: number, 
+    attempt: number
+  ) => import('../stores/useTileStore/slices/tileFairnessSlice.ts').FairnessValidationResult;
+  
+  // Placement avec validation
+  placeStartingTilesWithFairness: (
+    tileMap: TileMap, 
+    botCount: number, 
+    radius: number, 
+    seed: number
+  ) => { tileMap: TileMap; spawns: GridCoordinate[]; validation: import('../stores/useTileStore/slices/tileFairnessSlice.ts').FairnessValidationResult };
 }
 
 /** Interface pour le slice des dangers dynamiques */
@@ -215,6 +254,18 @@ export interface RadiusSliceActions {
   resetRadius: () => void;
 }
 
+/** Interface pour le slice de seed (FAIRNESS) */
+export interface SeedSliceActions {
+  // État du seed de génération
+  mapSeed: number | null;
+  
+  // Actions
+  generateSeed: () => number;
+  setSeed: (seed: number) => void;
+  getSeed: () => number | null;
+  resetSeed: () => void;
+}
+
 // ============================================================================
 // COMPOSITION DES STORES - Types globaux via intersection
 // ============================================================================
@@ -227,6 +278,7 @@ export type TileStoreType = TileBaseSliceActions &
                            TileFilterSliceActions & 
                            TileMarkSliceActions & 
                            TileGenerationSliceActions &
+                           TileFairnessSliceActions &
                            TileDangerSliceActions;
 // ============================================================================
 // GAME STORE SLICE INTERFACES
@@ -237,7 +289,8 @@ export type GameStoreType = PlayerCountSliceActions &
                            InitializationFlagsSliceActions & 
                            UiConfigSliceActions & 
                            ClockSliceActions &
-                           RadiusSliceActions;
+                           RadiusSliceActions &
+                           SeedSliceActions;
 
 // ============================================================================
 // XFSM STORE TYPES

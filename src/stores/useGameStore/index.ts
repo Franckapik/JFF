@@ -11,6 +11,7 @@ import createClockSlice from './slices/clockSlice.ts';
 import createInitializationFlagsSlice from './slices/initializationFlagsSlice.ts';
 import createPlayerCountSlice from './slices/playerCountSlice.ts';
 import createRadiusSlice from './slices/radiusSlice.ts';
+import createSeedSlice from './slices/seedSlice.ts';
 import createUiConfigSlice from './slices/uiConfigSlice.ts';
 
 /**
@@ -25,6 +26,7 @@ const useGameStore = create<GameStoreType>((set, get) => {
     ...createUiConfigSlice(set, get),
     ...createInitializationFlagsSlice(set, get),
     ...createRadiusSlice(set, get),
+    ...createSeedSlice(set, get),
   } as GameStoreType;
 });
 

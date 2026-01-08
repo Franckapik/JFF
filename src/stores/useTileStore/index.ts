@@ -57,6 +57,9 @@ import createTileGenerationSlice from './slices/tileGenerationSlice.ts';
 // Import du slice des dangers dynamiques
 import { createTileDangerSlice } from './slices/tileDangerSlice.ts';
 
+// Import du slice d'équité (fairness)
+import createTileFairnessSlice from './slices/tileFairnessSlice.ts';
+
 // =========================================================================
 // STORE PRINCIPAL
 // =========================================================================
@@ -99,6 +102,9 @@ export const useTileStore = create<TileStoreType>((set, get) => ({
   
   // Slice de génération : création des grilles hexagonales
   ...createTileGenerationSlice(set, get),
+  
+  // Slice d'équité : validation fairness multi-bot
+  ...createTileFairnessSlice(set, get),
   
   // Slice des dangers : gestion des dangers dynamiques
   ...createTileDangerSlice(set, get),
