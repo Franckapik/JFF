@@ -13,12 +13,19 @@
 🚀 Browser log server listening on http://localhost:5123/log
 [32m✔[0m [33mConsole Ninja[0m extension is connected to [33mVite[0m, see [36mhttps://tinyurl.com/2vt8jxzw[0m
 
+<<<<<<< HEAD
   VITE v5.4.19  ready in 1593 ms
+=======
+  VITE v5.4.19  ready in 1667 ms
+>>>>>>> initialRules
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: use --host to expose
   ➜  press h + enter to show help
+[browser:/] 🔥 [DANGER] Dynamic danger dynamic-danger-1 moved to 4,5
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":24,"collected":19,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":true,"collected":true},{"coord":"0,5","explored":true,"collected":true}]}
 [browser:/] 🔗 [App] View mode initialized from URL: both
+<<<<<<< HEAD
 [browser:/] 🎲 [App] BEFORE assignStartingTiles - existing tiles with depart type: 0
 [browser:/] 🎲 [TileGeneration] placeStartingTiles - available resource tiles: 21
 [browser:/] 🎲 [App] Tiles generated: {"tilesCount":37,"radius":3,"spacing":-0.2,"tileCoords":["0,3","0,4","0,5","0,6","1,2"]}
@@ -26,6 +33,242 @@
 [browser:/] 🎲 [TileGeneration] Selected tiles for starting positions: ["5,3","3,1"]
 [browser:/] 🎮 GAME [23:00:42] [TileGeneration] Tuile de départ assignée à bot-0:3,1|-1.7320508075688772,-3
 [browser:/] 🎮 GAME [23:00:42] [TileGeneration] Tuile de départ assignée à bot-1:5,3|3.4641016151377544,0
+=======
+[browser:/] 🎲 [App] Tiles generated: {"tilesCount":37,"radius":3,"spacing":-0.2,"tileCoords":["0,3","0,4","0,5","0,6","1,2"]}
+[browser:/] 🎲 [App] BEFORE assignStartingTiles - existing tiles with depart type: 0
+[browser:/] 🎮 GAME [22:44:21] 
+╔════════════════════════════════════════════════════════════════╗
+║         TILE GENERATION ORCHESTRATION - DETAILED LOG            ║
+╚════════════════════════════════════════════════════════════════╝
+Initial Conditions:
+  • Seed: 1767908661872
+  • Grid Radius: 3
+  • Active Bots: [bot-0, bot-1]
+  • Total Tiles Before: 37
+
+[browser:/] 🎮 GAME [22:44:21] 
+╔════════════════════════════════════════════════════════════════╗
+║            STARTING FAIRNESS-AWARE MAP GENERATION              ║
+║  Seed: 1767908661872 | Max Attempts: 10 | Bot Count: 2      ║
+╚════════════════════════════════════════════════════════════════╝
+
+[browser:/] 🎮 GAME [22:44:21] [Fairness] Attempt 1/10: Testing seed=1767908661872, spawns=[4,3, 5,2]
+[browser:/] 🎮 GAME [22:44:21] 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 FAIRNESS VALIDATION - Attempt 1 (Seed: 1767908661872)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status: ❌ INVALID
+
+📏 SPAWN DISTANCE
+  • Metric: 1.0 tiles
+  • Threshold: ≥ 3.0 tiles
+  • Result: ❌ FAIL
+  • Details: Spawn distance 1.0 < 3.0 threshold
+
+💰 RESOURCE BALANCE (Radius 1)
+  • Metric: 28.0% difference
+  • Threshold: ≤ 35%
+  • Result: ✅ PASS
+  • Details: Resources: 3230 vs 2327 (28.0% diff)
+
+⛽ FUEL STATION ACCESS
+  • Metric: 1 tiles difference
+  • Threshold: ≤ 2 tiles
+  • Result: ✅ PASS
+  • Details: fuel distances: 3 tiles vs 4 tiles (max distance: 4, min: 3)
+
+🔧 REPAIR STATION ACCESS
+  • Metric: 0 tiles difference
+  • Threshold: ≤ 2 tiles
+  • Result: ✅ PASS
+  • Details: repair distances: 3 tiles vs 3 tiles (max distance: 3, min: 3)
+
+🌍 TERRAIN FAIRNESS (Radius 2, Walkable %)
+  • Metric: 0.0% difference
+  • Threshold: ≤ 20%
+  • Result: ✅ PASS
+  • Details: Walkable %: 100.0 vs 100.0 (diff: 0.0%)
+
+⚠️ ISSUES FOUND:
+  • Spawn distance too close: 1.0 < 3.0
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[browser:/] 🎮 GAME [22:44:21] [Fairness] Attempt 2/10: Testing seed=1767908661873, spawns=[5,0, 5,2]
+[browser:/] 🎮 GAME [22:44:21] 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 FAIRNESS VALIDATION - Attempt 2 (Seed: 1767908661873)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status: ❌ INVALID
+
+📏 SPAWN DISTANCE
+  • Metric: 2.0 tiles
+  • Threshold: ≥ 3.0 tiles
+  • Result: ❌ FAIL
+  • Details: Spawn distance 2.0 < 3.0 threshold
+
+💰 RESOURCE BALANCE (Radius 1)
+  • Metric: 2.8% difference
+  • Threshold: ≤ 35%
+  • Result: ✅ PASS
+  • Details: Resources: 2880 vs 2800 (2.8% diff)
+
+⛽ FUEL STATION ACCESS
+  • Metric: 1 tiles difference
+  • Threshold: ≤ 2 tiles
+  • Result: ✅ PASS
+  • Details: fuel distances: 5 tiles vs 4 tiles (max distance: 5, min: 4)
+
+🔧 REPAIR STATION ACCESS
+  • Metric: 0 tiles difference
+  • Threshold: ≤ 2 tiles
+  • Result: ✅ PASS
+  • Details: repair distances: 3 tiles vs 3 tiles (max distance: 3, min: 3)
+
+🌍 TERRAIN FAIRNESS (Radius 2, Walkable %)
+  • Metric: 0.0% difference
+  • Threshold: ≤ 20%
+  • Result: ✅ PASS
+  • Details: Walkable %: 100.0 vs 100.0 (diff: 0.0%)
+
+⚠️ ISSUES FOUND:
+  • Spawn distance too close: 2.0 < 3.0
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[browser:/] 🎮 GAME [22:44:21] [Fairness] Attempt 3/10: Testing seed=1767908661874, spawns=[3,2, 1,6]
+[browser:/] 🎮 GAME [22:44:21] 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 FAIRNESS VALIDATION - Attempt 3 (Seed: 1767908661874)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status: ❌ INVALID
+
+📏 SPAWN DISTANCE
+  • Metric: 4.0 tiles
+  • Threshold: ≥ 3.0 tiles
+  • Result: ✅ PASS
+  • Details: Spawn distance 4.0 >= 3.0 threshold
+
+💰 RESOURCE BALANCE (Radius 1)
+  • Metric: 10.4% difference
+  • Threshold: ≤ 35%
+  • Result: ✅ PASS
+  • Details: Resources: 2697 vs 3011 (10.4% diff)
+
+⛽ FUEL STATION ACCESS
+  • Metric: 4 tiles difference
+  • Threshold: ≤ 2 tiles
+  • Result: ❌ FAIL
+  • Details: fuel distances: 2 tiles vs 6 tiles (max distance: 6, min: 2)
+
+🔧 REPAIR STATION ACCESS
+  • Metric: 0 tiles difference
+  • Threshold: ≤ 2 tiles
+  • Result: ✅ PASS
+  • Details: repair distances: 2 tiles vs 2 tiles (max distance: 2, min: 2)
+
+🌍 TERRAIN FAIRNESS (Radius 2, Walkable %)
+  • Metric: 0.0% difference
+  • Threshold: ≤ 20%
+  • Result: ✅ PASS
+  • Details: Walkable %: 100.0 vs 100.0 (diff: 0.0%)
+
+⚠️ ISSUES FOUND:
+  • fuelAccess imbalance: 4 tiles > 2 threshold
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[browser:/] 🎮 GAME [22:44:21] [Fairness] Attempt 4/10: Testing seed=1767908661875, spawns=[1,6, 4,4]
+[browser:/] 🎮 GAME [22:44:21] 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 FAIRNESS VALIDATION - Attempt 4 (Seed: 1767908661875)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status: ✅ VALID
+
+📏 SPAWN DISTANCE
+  • Metric: 3.0 tiles
+  • Threshold: ≥ 3.0 tiles
+  • Result: ✅ PASS
+  • Details: Spawn distance 3.0 >= 3.0 threshold
+
+💰 RESOURCE BALANCE (Radius 1)
+  • Metric: 27.6% difference
+  • Threshold: ≤ 35%
+  • Result: ✅ PASS
+  • Details: Resources: 3011 vs 4161 (27.6% diff)
+
+⛽ FUEL STATION ACCESS
+  • Metric: 0 tiles difference
+  • Threshold: ≤ 2 tiles
+  • Result: ✅ PASS
+  • Details: fuel distances: 2 tiles vs 2 tiles (max distance: 2, min: 2)
+
+🔧 REPAIR STATION ACCESS
+  • Metric: 1 tiles difference
+  • Threshold: ≤ 2 tiles
+  • Result: ✅ PASS
+  • Details: repair distances: 4 tiles vs 5 tiles (max distance: 5, min: 4)
+
+🌍 TERRAIN FAIRNESS (Radius 2, Walkable %)
+  • Metric: 0.0% difference
+  • Threshold: ≤ 20%
+  • Result: ✅ PASS
+  • Details: Walkable %: 100.0 vs 100.0 (diff: 0.0%)
+
+✨ All fairness rules satisfied!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[browser:/] 🎮 GAME [22:44:21] 
+✅ SUCCESS: Map validated after 4 attempt(s)!
+Seed: 1767908661875
+Spawns: [1,6, 4,4]
+Metrics Summary:
+  • Spawn Distance: 3.0 tiles
+  • Resource Difference: 27.6%
+  • Fuel Access Difference: 0 tiles
+  • Repair Access Difference: 1 tiles
+  • Terrain Difference: 0.0%
+
+[browser:/] 🎮 GAME [22:44:21]      ✓ Empty tiles placed: 3
+[browser:/] 🎮 GAME [22:44:21]   2️⃣ Placing obstacle tiles (avoiding spawn radius 1)...
+[browser:/] 🎮 GAME [22:44:21] 
+SPAWN PLACEMENT RESULTS:
+  ✅ Spawns Placed: [1,6, 4,4]
+  📊 Fairness Status: ✅ ALL RULES PASSED
+  
+KEY METRICS:
+  • Spawn Min Distance: 3.0 tiles
+  • Resource Balance: 27.6% difference
+  • Fuel Access Diff: 0 tiles
+  • Repair Access Diff: 1 tiles
+  • Terrain Fairness: 0.0% difference
+
+[browser:/] 🎮 GAME [22:44:21] 
+SPECIAL TILES PLACEMENT:
+  1️⃣ Placing empty tiles (avoiding spawn radius 1)...
+[browser:/] 🎮 GAME [22:44:21]      ✓ Obstacle tiles placed: 4
+[browser:/] 🎮 GAME [22:44:21]   3️⃣ Placing danger tiles (avoiding spawn radius 1)...
+[browser:/] 🎮 GAME [22:44:21]      ✓ Danger tiles placed: 1
+[browser:/] 🎮 GAME [22:44:21]   4️⃣ Stations (placed during fairness validation):
+[browser:/] 🎮 GAME [22:44:21]      ✓ Fuel stations: 1
+[browser:/] 🎮 GAME [22:44:21]      ✓ Repair stations: 1
+[browser:/] 🎮 GAME [22:44:21] 
+BOT ASSIGNMENT:
+  Assigning spawn tiles to active bots:
+[browser:/] 🎮 GAME [22:44:21]     ✓ bot-0 → Coord: 1,6 | Pos: (-0.87, 4.50) | Resources: 250 (F:100, D:100, S:50)
+[browser:/] 🎮 GAME [22:44:21]     ✓ bot-1 → Coord: 4,4 | Pos: (2.60, 1.50) | Resources: 250 (F:100, D:100, S:50)
+[browser:/] 🎮 GAME [22:44:21] 
+FINAL TILE COMPOSITION:
+  • Total Tiles: 37
+  • Depart (Spawn): 2
+  • Resource: 25
+  • Empty: 3
+  • Obstacle: 4
+  • Danger: 1
+  • Fuel Station: 1
+  • Repair Station: 1
+  
+✅ TILE GENERATION COMPLETE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+>>>>>>> initialRules
 [browser:/] 🎲 [App] AFTER assignStartingTiles: {"departTilesCount":0,"departTileCoords":[]}
 [browser:/] 🤖 [App] Multi-bot tracker initialized: {"bot0":true,"bot1":true,"totalBots":2}
 [browser:/] 🔥 [DANGER] Dynamic danger movement system started (37 tiles available)
@@ -52,6 +295,7 @@
 [browser:/] 📌 [TRACKER:bot-1] DRONE_INITIALIZE_REQUEST in 100ms
 [browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
 [browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_INITIALIZE_REQUEST (Initialize ship)
+<<<<<<< HEAD
 [browser:/] ⚠️ WARN [23:00:42] 🚢 [bot-0] No tile found at position, using worldToGrid fallback
 [browser:/] {
   "initialPosition": {
@@ -70,9 +314,16 @@
 [browser:/] {
   "initialPosition": {
     "x": 4,
+=======
+[browser:/] ⚠️ WARN [22:44:22] 🚢 [bot-0] No tile found at position, using worldToGrid fallback
+[browser:/] {
+  "initialPosition": {
+    "x": 0.8,
+>>>>>>> initialRules
     "y": 0.5,
     "z": 2.4000000000000004
   },
+<<<<<<< HEAD
   "calculatedCoord": "5,3"
 }
 [browser:/] 🏠 [SHIP INIT FALLBACK] Ship baseCoord set to: 5,3 (this should be the starting tile!)
@@ -86,6 +337,35 @@
   "droneType": "explorer"
 }
 [browser:/] 🔵 INFO [23:00:42] [Evaluating] Conditions
+=======
+  "calculatedCoord": "1,6"
+}
+[browser:/] 🏠 [SHIP INIT FALLBACK] Ship baseCoord set to: 1,6 (this should be the starting tile!)
+[browser:/] 🏠 [SHIP INIT FALLBACK] Setting vehicle.baseCoord = 1,6 (THIS SHOULD NEVER CHANGE)
+[browser:/] 🔄 [FSM:bot-0] State: initializing | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: initializing | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_INITIALIZE_REQUEST (Initialize ship)
+[browser:/] ⚠️ WARN [22:44:22] 🚢 [bot-1] No tile found at position, using worldToGrid fallback
+[browser:/] {
+  "initialPosition": {
+    "x": 3.2,
+    "y": 0.5,
+    "z": 3.2
+  },
+  "calculatedCoord": "4,4"
+}
+[browser:/] 🏠 [SHIP INIT FALLBACK] Ship baseCoord set to: 4,4 (this should be the starting tile!)
+[browser:/] 🏠 [SHIP INIT FALLBACK] Setting vehicle.baseCoord = 4,4 (THIS SHOULD NEVER CHANGE)
+[browser:/] 🔄 [FSM:bot-0] State: initializing | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: initializing | Status: active
+[browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_INITIALIZE_REQUEST (Initialize drone)
+[browser:/] 🔧 CONTEXT [22:44:22] 🛸 [bot-0] Processing explorer drone init request
+[browser:/] {
+  "shipCoord": "1,6",
+  "droneType": "explorer"
+}
+[browser:/] 🔵 INFO [22:44:22] [Evaluating] Conditions
+>>>>>>> initialRules
 [browser:/] {
   "fuel": 100,
   "damage": 0,
@@ -99,9 +379,15 @@
   "droneState": "docked",
   "knownTilesCount": 0
 }
+<<<<<<< HEAD
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=3,1, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":0,"result":true}
 [browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=3,1, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":0,"result":true}
+=======
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":0,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":0,"result":true}
+>>>>>>> initialRules
 [browser:/] 📋 [TRACKER] State: evaluating
 [browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 0, cycle: 0/3)
 [browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: "evaluating"
@@ -109,6 +395,7 @@
 [browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: initializing | Status: active
 [browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_INITIALIZE_REQUEST (Initialize drone)
+<<<<<<< HEAD
 [browser:/] 🔧 CONTEXT [23:00:42] 🛸 [bot-1] Processing explorer drone init request
 [browser:/] {
   "shipCoord": "5,3",
@@ -117,23 +404,43 @@
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=5,3, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":0,"result":true}
 [browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=5,3, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":0,"result":true}
+=======
+[browser:/] 🔧 CONTEXT [22:44:22] 🛸 [bot-1] Processing explorer drone init request
+[browser:/] {
+  "shipCoord": "4,4",
+  "droneType": "explorer"
+}
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":4,"exploredCoordsSize":0,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":4,"exploredCoordsSize":0,"result":true}
+>>>>>>> initialRules
 [browser:/] 📋 [TRACKER] State: evaluating
 [browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 0, cycle: 0/3)
 [browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: "evaluating"
 [browser:/] 📌 [TRACKER:bot-1] NEED_EXPLORING in 100ms
 [browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:42] [Evaluating] → NEED_EXPLORING (no collectible tiles or ship at capacity)
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=3,1, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":0,"result":true}
 [browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
 [browser:/] 🔍 [DEBUG assignDroneDeployingContext] ship=3,1, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":0,"exploredCoordsSample":[],"candidatesSample":["4,1:explored=false","2,1:explored=false","3,2:explored=false","3,0:explored=false"]}
 [browser:/] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 2,1
 [browser:/] 🔵 INFO [23:00:42] ✅ [bot-0] Drone deploying with fuel consumption:
+=======
+[browser:/] 🔵 INFO [22:44:22] [Evaluating] → NEED_EXPLORING (no collectible tiles or ship at capacity)
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":0,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [DEBUG assignDroneDeployingContext] ship=1,6, radius=1 {"candidatesCount":4,"unexploredCount":4,"exploredCoordsSize":0,"exploredCoordsSample":[],"candidatesSample":["2,6:explored=false","0,6:explored=false","1,5:explored=false","2,5:explored=false"]}
+[browser:/] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 2,5
+[browser:/] 🔵 INFO [22:44:22] ✅ [bot-0] Drone deploying with fuel consumption:
+>>>>>>> initialRules
 [browser:/] {
-  "distance": "1.00",
+  "distance": "1.41",
   "fuelConsumed": 1,
   "fuelRemaining": 99
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:00:42] 🚁 [bot-0] Entrée dans l'état DRONE_DEPLOYING
 [browser:/] {
   "targetTile": "2,1"
@@ -151,11 +458,31 @@
 [browser:/] 🔍 [DEBUG assignDroneDeployingContext] ship=5,3, radius=1 {"candidatesCount":5,"unexploredCount":5,"exploredCoordsSize":0,"exploredCoordsSample":[],"candidatesSample":["4,3:explored=false","5,4:explored=false","5,2:explored=false","6,2:explored=false","4,4:explored=false"]}
 [browser:/] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 6,2
 [browser:/] 🔵 INFO [23:00:42] ✅ [bot-1] Drone deploying with fuel consumption:
+=======
+[browser:/] 🟠 ACTION [22:44:22] 🚁 [bot-0] Entrée dans l'état DRONE_DEPLOYING
+[browser:/] {
+  "targetTile": "2,5"
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
+[browser:/] 🛸 [TRACKER] Drone → 2,5
+[browser:/]    Distance: 1.13 units, Travel time: 565.6854249492383ms
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_deploying"}
+[browser:/] 📌 [TRACKER:bot-0] DRONE_REACHES_TILE in 565.6854249492383ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
+[browser:/] ⚠️ [TRACKER:bot-0] NEED_EXPLORING canceled - state changed
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":4,"exploredCoordsSize":0,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [DEBUG assignDroneDeployingContext] ship=4,4, radius=1 {"candidatesCount":6,"unexploredCount":6,"exploredCoordsSize":0,"exploredCoordsSample":[],"candidatesSample":["5,4:explored=false","3,4:explored=false","4,5:explored=false","4,3:explored=false","5,3:explored=false"]}
+[browser:/] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 3,4
+[browser:/] 🔵 INFO [22:44:22] ✅ [bot-1] Drone deploying with fuel consumption:
+>>>>>>> initialRules
 [browser:/] {
   "distance": "1.41",
   "fuelConsumed": 1,
   "fuelRemaining": 99
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:00:42] 🚁 [bot-1] Entrée dans l'état DRONE_DEPLOYING
 [browser:/] {
   "targetTile": "6,2"
@@ -163,6 +490,15 @@
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
 [browser:/]    Distance: 1.13 units, Travel time: 565.6854249492384ms
 [browser:/] 🛸 [TRACKER] Drone → 6,2
+=======
+[browser:/] 🟠 ACTION [22:44:22] 🚁 [bot-1] Entrée dans l'état DRONE_DEPLOYING
+[browser:/] {
+  "targetTile": "3,4"
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
+[browser:/] 🛸 [TRACKER] Drone → 3,4
+[browser:/]    Distance: 0.80 units, Travel time: 500ms
+>>>>>>> initialRules
 [browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"exploring":"drone_deploying"}
 [browser:/] 📌 [TRACKER:bot-1] DRONE_REACHES_TILE in 565.6854249492384ms
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
@@ -170,11 +506,19 @@
 [browser:/] ⚠️ [TRACKER:bot-1] NEED_EXPLORING canceled - state changed
 [browser:/] 🔥 [DANGER] Dynamic danger spawned at 6,1
 [browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+<<<<<<< HEAD
 [browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_REACHES_TILE (Drone traveling to 2,1)
 [browser:/] 📡 [assignDroneScanningContext] Scanning tile 2,1, type: "resource" (isDanger: false)
 [browser:/] 🟠 ACTION [23:00:42] 📡 [bot-0] Entrée dans l'état DRONE_SCANNING
 [browser:/] {
   "scannedTile": "2,1",
+=======
+[browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_REACHES_TILE (Drone traveling to 2,5)
+[browser:/] 📡 [assignDroneScanningContext] Scanning tile 2,5, type: "resource" (isDanger: false)
+[browser:/] 🟠 ACTION [22:44:22] 📡 [bot-0] Entrée dans l'état DRONE_SCANNING
+[browser:/] {
+  "scannedTile": "2,5",
+>>>>>>> initialRules
   "explorationCount": 1
 }
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_scanning"}
@@ -184,11 +528,19 @@
 [browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":1,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_scanning"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_deploying"} | Status: active
+<<<<<<< HEAD
 [browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_REACHES_TILE (Drone traveling to 6,2)
 [browser:/] 📡 [assignDroneScanningContext] Scanning tile 6,2, type: "resource" (isDanger: false)
 [browser:/] 🟠 ACTION [23:00:43] 📡 [bot-1] Entrée dans l'état DRONE_SCANNING
 [browser:/] {
   "scannedTile": "6,2",
+=======
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_REACHES_TILE (Drone traveling to 3,4)
+[browser:/] 📡 [assignDroneScanningContext] Scanning tile 3,4, type: "resource" (isDanger: false)
+[browser:/] 🟠 ACTION [22:44:22] 📡 [bot-1] Entrée dans l'état DRONE_SCANNING
+[browser:/] {
+  "scannedTile": "3,4",
+>>>>>>> initialRules
   "explorationCount": 1
 }
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_scanning"}
@@ -199,14 +551,68 @@
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_scanning"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
 [browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_HAS_SCANNED (Scanning tile)
+<<<<<<< HEAD
 [browser:/] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "resource" → isDanger=false
 [browser:/] 🔵 INFO [23:00:43] 🔄 [bot-0] assignDroneReturningContext called with:
+=======
+[browser:/] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "resource" → isDanger=false
+[browser:/] 🔵 INFO [22:44:23] 🔄 [bot-0] assignDroneReturningContext called with:
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "DRONE_HAS_SCANNED",
   "currentDroneState": "deploying"
 }
+[browser:/] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 1,6
+[browser:/] 🏠 [DRONE RETURNING] Current ship coord: 1,6
+[browser:/] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 1,6
+[browser:/] 🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!
+[browser:/] 🔵 INFO [22:44:23] 🔙 [bot-0] Updating drone state to returning with targetDroneTile (base)
+[browser:/] {
+  "baseTile": {
+    "position": {
+      "x": 0.8,
+      "y": 0.2,
+      "z": 4.800000000000001,
+      "coord": "1,6"
+    },
+    "coord": "1,6",
+    "type": "depart",
+    "biome": "station",
+    "explorable": false,
+    "collectable": false,
+    "resources": {
+      "food": 0,
+      "debris": 0,
+      "special": 0,
+      "total": 0
+    },
+    "hasResources": false
+  }
+}
+[browser:/] 🟠 ACTION [22:44:23] 🔙 [bot-0] Entrée dans l'état DRONE_RETURNING
+[browser:/] {
+  "baseCoord": "1,6",
+  "tilesExploredInCycle": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_returning"}
+[browser:/] 🏠 [TRACKER] Drone returning
+[browser:/]    Distance: 1.13 units, Travel time: 565.6854249492383ms
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_returning"}
+[browser:/] 📌 [TRACKER:bot-0] DRONE_REACHES_BASE in 565.6854249492383ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:/] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "resource" → isDanger=false
+[browser:/] 🔵 INFO [22:44:23] 🔄 [bot-1] assignDroneReturningContext called with:
+>>>>>>> initialRules
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_HAS_SCANNED",
+  "currentDroneState": "deploying"
+}
+<<<<<<< HEAD
 [browser:/] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 3,1
 [browser:/] 🏠 [DRONE RETURNING] Current ship coord: 3,1
 [browser:/] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 3,1
@@ -221,6 +627,22 @@
       "coord": "3,1"
     },
     "coord": "3,1",
+=======
+[browser:/] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 4,4
+[browser:/] 🏠 [DRONE RETURNING] Current ship coord: 4,4
+[browser:/] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 4,4
+[browser:/] 🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!
+[browser:/] 🔵 INFO [22:44:23] 🔙 [bot-1] Updating drone state to returning with targetDroneTile (base)
+[browser:/] {
+  "baseTile": {
+    "position": {
+      "x": 3.2,
+      "y": 0.2,
+      "z": 3.2,
+      "coord": "4,4"
+    },
+    "coord": "4,4",
+>>>>>>> initialRules
     "type": "depart",
     "biome": "station",
     "explorable": false,
@@ -234,15 +656,22 @@
     "hasResources": false
   }
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:00:43] 🔙 [bot-0] Entrée dans l'état DRONE_RETURNING
 [browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_returning"}
 [browser:/] {
   "baseCoord": "3,1",
+=======
+[browser:/] 🟠 ACTION [22:44:23] 🔙 [bot-1] Entrée dans l'état DRONE_RETURNING
+[browser:/] {
+  "baseCoord": "4,4",
+>>>>>>> initialRules
   "tilesExploredInCycle": 1
 }
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_returning"}
 [browser:/] 🏠 [TRACKER] Drone returning
 [browser:/]    Distance: 0.80 units, Travel time: 500ms
+<<<<<<< HEAD
 [browser:/] 📌 [TRACKER:bot-0] DRONE_REACHES_BASE in 500ms
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
@@ -296,15 +725,29 @@
 [browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
 [browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_REACHES_BASE (Drone returning to base)
 [browser:/] 🔵 INFO [23:00:44] 🔄 [bot-0] assignDroneDockedContext called with:
+=======
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"exploring":"drone_returning"}
+[browser:/] 📌 [TRACKER:bot-1] DRONE_REACHES_BASE in 500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_REACHES_BASE (Drone returning to base)
+[browser:/] 🔵 INFO [22:44:24] 🔄 [bot-0] assignDroneDockedContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "DRONE_REACHES_BASE",
   "currentDroneState": "returning"
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:00:44] ⚓ [bot-0] Entrée dans l'état DRONE_DOCKED
 [browser:/] {
   "dockedTile": "2,1",
+=======
+[browser:/] 🟠 ACTION [22:44:24] ⚓ [bot-0] Entrée dans l'état DRONE_DOCKED
+[browser:/] {
+  "dockedTile": "2,5",
+>>>>>>> initialRules
   "totalExploredThisCycle": 1
 }
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_docked"}
@@ -314,16 +757,26 @@
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_docked"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
 [browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_REACHES_BASE (Drone returning to base)
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:44] 🔄 [bot-1] assignDroneDockedContext called with:
+=======
+[browser:/] 🔵 INFO [22:44:24] 🔄 [bot-1] assignDroneDockedContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "DRONE_REACHES_BASE",
   "currentDroneState": "returning"
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:00:44] ⚓ [bot-1] Entrée dans l'état DRONE_DOCKED
 [browser:/] {
   "dockedTile": "6,2",
+=======
+[browser:/] 🟠 ACTION [22:44:24] ⚓ [bot-1] Entrée dans l'état DRONE_DOCKED
+[browser:/] {
+  "dockedTile": "3,4",
+>>>>>>> initialRules
   "totalExploredThisCycle": 1
 }
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_docked"}
@@ -333,13 +786,21 @@
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_docked"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_docked"} | Status: active
 [browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:44] 🔄 [bot-0] assignDroneReadyContext called - transition to evaluating with:
+=======
+[browser:/] 🔵 INFO [22:44:24] 🔄 [bot-0] assignDroneReadyContext called - transition to evaluating with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "DRONE_READY_FOR_REDEPLOY"
 }
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:44] [Evaluating] Conditions
+=======
+[browser:/] 🔵 INFO [22:44:24] [Evaluating] Conditions
+>>>>>>> initialRules
 [browser:/] {
   "fuel": 99,
   "damage": 0,
@@ -353,6 +814,7 @@
   "droneState": "docked",
   "knownTilesCount": 1
 }
+<<<<<<< HEAD
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=3,1, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":1,"result":true}
 [browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=3,1, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":1,"result":true}
@@ -367,6 +829,37 @@
   "tilesCount": 1
 }
 [browser:/] 🔵 INFO [23:00:44] 🔄 [bot-0] assignShipMovingToTileContext called with:
+=======
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":1,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":1,"result":true}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 1, cycle: 1/3)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER:bot-0] NEED_EXPLORING in 100ms
+[browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_docked"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
+[browser:/] 🔵 INFO [22:44:24] 🔄 [bot-1] assignDroneReadyContext called - transition to evaluating with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_READY_FOR_REDEPLOY"
+}
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":1,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":1,"result":true}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 1, cycle: 1/3)
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER:bot-1] NEED_EXPLORING in 100ms
+[browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
+[browser:/] 🔵 INFO [22:44:24] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:/] {
+  "tilesCount": 1
+}
+[browser:/] 🔵 INFO [22:44:24] 🔄 [bot-0] assignShipMovingToTileContext called with:
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
@@ -390,6 +883,135 @@
     "explorationCount"
   ]
 }
+[browser:/] 🔵 INFO [22:44:24] 🎯 [bot-0] Targeting explored tile with resources:
+[browser:/] {
+  "coord": "2,5",
+  "resources": {
+    "food": 64,
+    "debris": 309,
+    "special": 1,
+    "total": 374
+  },
+  "totalKnownTiles": 1,
+  "tilesWithResources": 1
+}
+[browser:/] 🔵 INFO [22:44:24] 🚢 [bot-0] Setting ship target for collection:
+[browser:/] {
+  "targetPosition": {
+    "x": 0,
+    "y": 0.5,
+    "z": 3,
+    "coord": "2,5"
+  },
+  "targetGridCoord": "2,5",
+  "currentCoord": "1,6",
+  "coordinateCheck": {
+    "original": {
+      "x": 0,
+      "y": 0.5,
+      "z": 3,
+      "coord": "2,5"
+    },
+    "recalculated": {
+      "x": 0,
+      "y": 0.5,
+      "z": 3,
+      "coord": "2,5"
+    },
+    "areConsistent": true
+  }
+}
+[browser:/] 🔵 INFO [22:44:24] 🛤️ [bot-0] Pathfinding result:
+[browser:/] {
+  "pathLength": 2,
+  "pathSteps": 1,
+  "path": "1,6 → 2,5",
+  "fuelConsumption": 2,
+  "fuelRemaining": 97
+}
+[browser:/] 🛤️ [PATHFINDING] Path: 1,6 → 2,5
+[browser:/] ⛽ [PATHFINDING] Fuel: 99 - 2 = 97 (1 tiles × 2/tile)
+[browser:/] 🔵 INFO [22:44:24] ✅ [bot-0] Ship movement setup result:
+[browser:/] {
+  "hasVehicle": true,
+  "targetVehicleTile": {
+    "position": {
+      "x": 0,
+      "y": 0.5,
+      "z": 3,
+      "coord": "2,5"
+    },
+    "type": "resource",
+    "biome": "grassland",
+    "walkable": true,
+    "explorable": true,
+    "collectable": true,
+    "explored": true,
+    "collected": false,
+    "neighbors": [
+      "3,5",
+      "1,5",
+      "2,6",
+      "2,4",
+      "3,4",
+      "1,6"
+    ],
+    "resources": {
+      "food": 64,
+      "debris": 309,
+      "special": 1,
+      "total": 374
+    },
+    "hasResources": true,
+    "color": "#c5e549",
+    "exploredAt": 1767908662878,
+    "exploredBy": "bot-0"
+  },
+  "isMoving": true,
+  "pathLength": 2,
+  "fuelConsumed": 2,
+  "fuelRemaining": 97
+}
+[browser:/] 🚢 [SHIP MOVING] Ship moving from 1,6 to 2,5 via 2 tiles
+[browser:/] 🏠 [SHIP MOVING] Original base coord is: 1,6 (this should stay constant!)
+[browser:/] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
+[browser:/] 📋 [TRACKER] State: {"collecting":"ship_moving_to_tile"}
+[browser:/] 🚢 [TRACKER] Ship moving
+[browser:/] 🛤️ [TRACKER] Pathfinding: 1 steps remaining (from index 0 to 1)
+[browser:/]    → SHIP_REACHES_TILE at 400ms (waypoint 1)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"collecting":"ship_moving_to_tile"}
+[browser:/] 📌 [TRACKER:bot-0] SHIP_REACHES_TILE in 400ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
+[browser:/] ⚠️ [TRACKER:bot-0] NEED_EXPLORING canceled - state changed
+[browser:/] 🔥 [DANGER] Dynamic danger dynamic-danger-1 moved to 1,5
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":2,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🔵 INFO [22:44:25] 🔄 [bot-1] assignShipMovingToTileContext called with:
+>>>>>>> initialRules
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "NEED_COLLECTING",
+  "contextKeys": [
+    "entityId",
+    "entityType",
+    "autonomousMode",
+    "vehicle",
+    "fsmState",
+    "explorationQueue",
+    "lastAction",
+    "error",
+    "timestamps",
+    "score",
+    "memory",
+    "explorationCycle",
+    "config",
+    "droneFleet",
+    "gridInfo",
+    "explorationCount"
+  ]
+}
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:44] 🎯 [bot-0] Targeting explored tile with resources:
 [browser:/] {
   "coord": "2,1",
@@ -398,10 +1020,21 @@
     "debris": 794,
     "special": 2,
     "total": 816
+=======
+[browser:/] 🔵 INFO [22:44:25] 🎯 [bot-1] Targeting explored tile with resources:
+[browser:/] {
+  "coord": "3,4",
+  "resources": {
+    "food": 19,
+    "debris": 958,
+    "special": 0,
+    "total": 977
+>>>>>>> initialRules
   },
   "totalKnownTiles": 1,
   "tilesWithResources": 1
 }
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:44] 🚢 [bot-0] Setting ship target for collection:
 [browser:/] {
   "targetPosition": {
@@ -424,10 +1057,35 @@
       "y": 0.5,
       "z": -3,
       "coord": "2,1"
+=======
+[browser:/] 🔵 INFO [22:44:25] 🚢 [bot-1] Setting ship target for collection:
+[browser:/] {
+  "targetPosition": {
+    "x": 0.8660254037844386,
+    "y": 0.5,
+    "z": 1.5,
+    "coord": "3,4"
+  },
+  "targetGridCoord": "3,4",
+  "currentCoord": "4,4",
+  "coordinateCheck": {
+    "original": {
+      "x": 0.8660254037844386,
+      "y": 0.5,
+      "z": 1.5,
+      "coord": "3,4"
+    },
+    "recalculated": {
+      "x": 0.8660254037844386,
+      "y": 0.5,
+      "z": 1.5,
+      "coord": "3,4"
+>>>>>>> initialRules
     },
     "areConsistent": true
   }
 }
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:44] 🛤️ [bot-0] Pathfinding result:
 [browser:/] {
   "pathLength": 2,
@@ -439,14 +1097,34 @@
 [browser:/] 🛤️ [PATHFINDING] Path: 3,1 → 2,1
 [browser:/] ⛽ [PATHFINDING] Fuel: 99 - 2 = 97 (1 tiles × 2/tile)
 [browser:/] 🔵 INFO [23:00:44] ✅ [bot-0] Ship movement setup result:
+=======
+[browser:/] 🔵 INFO [22:44:25] 🛤️ [bot-1] Pathfinding result:
+[browser:/] {
+  "pathLength": 2,
+  "pathSteps": 1,
+  "path": "4,4 → 3,4",
+  "fuelConsumption": 2,
+  "fuelRemaining": 97
+}
+[browser:/] 🛤️ [PATHFINDING] Path: 4,4 → 3,4
+[browser:/] ⛽ [PATHFINDING] Fuel: 99 - 2 = 97 (1 tiles × 2/tile)
+[browser:/] 🔵 INFO [22:44:25] ✅ [bot-1] Ship movement setup result:
+>>>>>>> initialRules
 [browser:/] {
   "hasVehicle": true,
   "targetVehicleTile": {
     "position": {
+<<<<<<< HEAD
       "x": -3.4641016151377544,
       "y": 0.5,
       "z": -3,
       "coord": "2,1"
+=======
+      "x": 0.8660254037844386,
+      "y": 0.5,
+      "z": 1.5,
+      "coord": "3,4"
+>>>>>>> initialRules
     },
     "type": "resource",
     "biome": "grassland",
@@ -456,6 +1134,7 @@
     "explored": true,
     "collected": false,
     "neighbors": [
+<<<<<<< HEAD
       "3,1",
       "2,2",
       "3,0",
@@ -471,22 +1150,45 @@
     "color": "#ce8c99",
     "exploredAt": 1767823242944,
     "exploredBy": "bot-0"
+=======
+      "4,4",
+      "2,4",
+      "3,5",
+      "3,3",
+      "4,3",
+      "2,5"
+    ],
+    "resources": {
+      "food": 19,
+      "debris": 958,
+      "special": 0,
+      "total": 977
+    },
+    "hasResources": true,
+    "color": "#ff873d",
+    "exploredAt": 1767908662911,
+    "exploredBy": "bot-1"
+>>>>>>> initialRules
   },
   "isMoving": true,
   "pathLength": 2,
   "fuelConsumed": 2,
   "fuelRemaining": 97
 }
+<<<<<<< HEAD
 [browser:/] 🚢 [SHIP MOVING] Ship moving from 3,1 to 2,1 via 2 tiles
 [browser:/] 🏠 [SHIP MOVING] Original base coord is: 3,1 (this should stay constant!)
+=======
+[browser:/] 🚢 [SHIP MOVING] Ship moving from 4,4 to 3,4 via 2 tiles
+[browser:/] 🏠 [SHIP MOVING] Original base coord is: 4,4 (this should stay constant!)
+>>>>>>> initialRules
 [browser:/] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
 [browser:/] 📋 [TRACKER] State: {"collecting":"ship_moving_to_tile"}
 [browser:/] 🚢 [TRACKER] Ship moving
 [browser:/] 🛤️ [TRACKER] Pathfinding: 1 steps remaining (from index 0 to 1)
 [browser:/]    → SHIP_REACHES_TILE at 400ms (waypoint 1)
-[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"collecting":"ship_moving_to_tile"}
-[browser:/] 📌 [TRACKER:bot-0] SHIP_REACHES_TILE in 400ms
 [browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+<<<<<<< HEAD
 [browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_docked"} | Status: active
 [browser:/] ⚠️ [TRACKER:bot-0] NEED_EXPLORING canceled - state changed
 [browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
@@ -635,6 +1337,15 @@
 [browser:/] 🔍 [isMovingToRepairStation] bot-0: isMovingToStation=undefined, stationType=undefined, result=false
 [browser:/] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"2,1","hasResources":true,"currentResources":{"food":0,"debris":0,"special":0,"total":0},"totalResources":0,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
 [browser:/] 🔵 INFO [23:00:45] 🔄 [bot-0] assignShipCollectingContext called with:
+=======
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"collecting":"ship_moving_to_tile"}
+[browser:/] 📌 [TRACKER:bot-1] SHIP_REACHES_TILE in 400ms
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:/] ⚠️ [TRACKER:bot-1] NEED_EXPLORING canceled - state changed
+[browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 2,5)
+[browser:/] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"2,5","hasResources":true,"currentResources":{"food":0,"debris":0,"special":0,"total":0},"totalResources":0,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:/] 🔵 INFO [22:44:25] 🔄 [bot-0] assignShipCollectingContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
@@ -648,11 +1359,17 @@
 [browser:/] 📌 [TRACKER:bot-0] SHIP_LOAD_RESOURCES in 1200ms
 [browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_moving_to_tile"} | Status: active
+<<<<<<< HEAD
 [browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_REACHES_TILE (Ship reaching final destination 6,2)
 [browser:/] 🔍 [isMovingToFuelStation] bot-1: isMovingToStation=undefined, stationType=undefined, result=false
 [browser:/] 🔍 [isMovingToRepairStation] bot-1: isMovingToStation=undefined, stationType=undefined, result=false
 [browser:/] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"6,2","hasResources":true,"currentResources":{"food":0,"debris":0,"special":0,"total":0},"totalResources":0,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
 [browser:/] 🔵 INFO [23:00:45] 🔄 [bot-1] assignShipCollectingContext called with:
+=======
+[browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_REACHES_TILE (Ship reaching final destination 3,4)
+[browser:/] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"3,4","hasResources":true,"currentResources":{"food":0,"debris":0,"special":0,"total":0},"totalResources":0,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:/] 🔵 INFO [22:44:25] 🔄 [bot-1] assignShipCollectingContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
@@ -667,12 +1384,17 @@
 [browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_collecting"} | Status: active
 [browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:00:46] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+=======
+[browser:/] 🟠 ACTION [22:44:26] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "SHIP_LOAD_RESOURCES"
 }
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:46] [TileResourceSlice] Ressources collectées de 2,1 par bot-0:
 [browser:/] {
   "food": 20,
@@ -683,6 +1405,18 @@
 [browser:/] 🟠 ACTION [23:00:46] 📦 [bot-0] Resources transferred from tile:
 [browser:/] {
   "tileCoord": "2,1",
+=======
+[browser:/] 🔵 INFO [22:44:26] [TileResourceSlice] Ressources collectées de 2,5 par bot-0:
+[browser:/] {
+  "food": 64,
+  "debris": 309,
+  "special": 1,
+  "total": 374
+}
+[browser:/] 🟠 ACTION [22:44:26] 📦 [bot-0] Resources transferred from tile:
+[browser:/] {
+  "tileCoord": "2,5",
+>>>>>>> initialRules
   "tileResourcesAfter": {
     "food": 0,
     "debris": 0,
@@ -691,10 +1425,17 @@
   },
   "tileCollectedFlag": true,
   "collected": {
+<<<<<<< HEAD
     "food": 20,
     "debris": 794,
     "special": 2,
     "total": 816
+=======
+    "food": 64,
+    "debris": 309,
+    "special": 1,
+    "total": 374
+>>>>>>> initialRules
   },
   "vehicleResourcesBefore": {
     "food": 0,
@@ -703,6 +1444,7 @@
     "total": 0
   },
   "vehicleResourcesAfter": {
+<<<<<<< HEAD
     "food": 20,
     "debris": 794,
     "special": 2,
@@ -710,11 +1452,28 @@
   },
   "vehicleCapacity": "816/2003",
   "capacityUsed": "41%",
+=======
+    "food": 64,
+    "debris": 309,
+    "special": 1,
+    "total": 374
+  },
+  "vehicleCapacity": "374/2003",
+  "capacityUsed": "19%",
+>>>>>>> initialRules
   "isNearFull": false,
   "tileIsEmpty": true,
   "shouldReturn": true
 }
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:46] [Evaluating] Conditions
+=======
+[browser:/] 🔵 INFO [22:44:26] [Evaluating] Conditions
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":1,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":1,"result":true}
+[browser:/] 📋 [TRACKER] State: evaluating
+>>>>>>> initialRules
 [browser:/] {
   "fuel": 96,
   "damage": 0,
@@ -728,16 +1487,20 @@
   "droneState": "docked",
   "knownTilesCount": 1
 }
+<<<<<<< HEAD
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=3,1, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":1,"result":true}
 [browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=3,1, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":1,"result":true}
 [browser:/] 📋 [TRACKER] State: evaluating
+=======
+>>>>>>> initialRules
 [browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 0, cycle: 0/3)
 [browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: "evaluating"
 [browser:/] 📌 [TRACKER:bot-0] NEED_EXPLORING in 100ms
 [browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":2,"collected":1,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
 [browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_collecting"} | Status: active
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:46] [Evaluating] → NEED_EXPLORING (no collectible tiles or ship at capacity)
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=3,1, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":1,"result":true}
 [browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
@@ -763,11 +1526,16 @@
 [browser:/] ⚠️ [TRACKER:bot-0] NEED_EXPLORING canceled - state changed
 [browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
 [browser:/] 🟠 ACTION [23:00:46] 🔄 [bot-1] assignShipLoadResourcesContext called with:
+=======
+[browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:/] 🟠 ACTION [22:44:26] 🔄 [bot-1] assignShipLoadResourcesContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "SHIP_LOAD_RESOURCES"
 }
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:46] [TileResourceSlice] Ressources collectées de 6,2 par bot-1:
 [browser:/] {
   "food": 29,
@@ -778,6 +1546,18 @@
 [browser:/] 🟠 ACTION [23:00:46] 📦 [bot-1] Resources transferred from tile:
 [browser:/] {
   "tileCoord": "6,2",
+=======
+[browser:/] 🔵 INFO [22:44:26] [TileResourceSlice] Ressources collectées de 3,4 par bot-1:
+[browser:/] {
+  "food": 19,
+  "debris": 958,
+  "special": 0,
+  "total": 977
+}
+[browser:/] 🟠 ACTION [22:44:26] 📦 [bot-1] Resources transferred from tile:
+[browser:/] {
+  "tileCoord": "3,4",
+>>>>>>> initialRules
   "tileResourcesAfter": {
     "food": 0,
     "debris": 0,
@@ -786,10 +1566,17 @@
   },
   "tileCollectedFlag": true,
   "collected": {
+<<<<<<< HEAD
     "food": 29,
     "debris": 485,
     "special": 0,
     "total": 514
+=======
+    "food": 19,
+    "debris": 958,
+    "special": 0,
+    "total": 977
+>>>>>>> initialRules
   },
   "vehicleResourcesBefore": {
     "food": 0,
@@ -798,6 +1585,7 @@
     "total": 0
   },
   "vehicleResourcesAfter": {
+<<<<<<< HEAD
     "food": 29,
     "debris": 485,
     "special": 0,
@@ -805,18 +1593,34 @@
   },
   "vehicleCapacity": "514/2003",
   "capacityUsed": "26%",
+=======
+    "food": 19,
+    "debris": 958,
+    "special": 0,
+    "total": 977
+  },
+  "vehicleCapacity": "977/2003",
+  "capacityUsed": "49%",
+>>>>>>> initialRules
   "isNearFull": false,
   "tileIsEmpty": true,
   "shouldReturn": true
 }
+<<<<<<< HEAD
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=5,3, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":1,"result":true}
 [browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=5,3, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":1,"result":true}
+=======
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":1,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":1,"result":true}
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: "evaluating"
+>>>>>>> initialRules
 [browser:/] 📋 [TRACKER] State: evaluating
 [browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 0, cycle: 0/3)
-[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: "evaluating"
 [browser:/] 📌 [TRACKER:bot-1] NEED_EXPLORING in 100ms
 [browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":2,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+<<<<<<< HEAD
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=5,3, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":1,"result":true}
@@ -824,23 +1628,65 @@
 [browser:/] 🔍 [DEBUG assignDroneDeployingContext] ship=6,2, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":1,"exploredCoordsSample":["6,2"],"candidatesSample":["5,2:explored=false","6,1:explored=false","5,3:explored=false"]}
 [browser:/] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 5,2
 [browser:/] 🔵 INFO [23:00:46] ✅ [bot-1] Drone deploying with fuel consumption:
+=======
+[browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
+[browser:/] 🔵 INFO [22:44:26] [Evaluating] → NEED_EXPLORING (no collectible tiles or ship at capacity)
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":1,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [DEBUG assignDroneDeployingContext] ship=2,5, radius=1 {"candidatesCount":6,"unexploredCount":5,"exploredCoordsSize":1,"exploredCoordsSample":["2,5"],"candidatesSample":["3,5:explored=false","1,5:explored=false","2,6:explored=false","2,4:explored=false","3,4:explored=true"]}
+[browser:/] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 1,6
+[browser:/] 🔵 INFO [22:44:26] ✅ [bot-0] Drone deploying with fuel consumption:
+[browser:/] {
+  "distance": "1.41",
+  "fuelConsumed": 1,
+  "fuelRemaining": 95
+}
+[browser:/] 🟠 ACTION [22:44:26] 🚁 [bot-0] Entrée dans l'état DRONE_DEPLOYING
+[browser:/] {
+  "targetTile": "1,6"
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
+[browser:/] 🛸 [TRACKER] Drone → 1,6
+[browser:/]    Distance: 1.13 units, Travel time: 565.6854249492383ms
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_deploying"}
+[browser:/] 📌 [TRACKER:bot-0] DRONE_REACHES_TILE in 565.6854249492383ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
+[browser:/] ⚠️ [TRACKER:bot-0] NEED_EXPLORING canceled - state changed
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":1,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [DEBUG assignDroneDeployingContext] ship=3,4, radius=1 {"candidatesCount":6,"unexploredCount":5,"exploredCoordsSize":1,"exploredCoordsSample":["3,4"],"candidatesSample":["4,4:explored=false","2,4:explored=false","3,5:explored=false","3,3:explored=false","4,3:explored=false"]}
+[browser:/] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 4,4
+[browser:/] 🔵 INFO [22:44:26] ✅ [bot-1] Drone deploying with fuel consumption:
+>>>>>>> initialRules
 [browser:/] {
   "distance": "1.00",
   "fuelConsumed": 1,
   "fuelRemaining": 95
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:00:46] 🚁 [bot-1] Entrée dans l'état DRONE_DEPLOYING
 [browser:/] {
   "targetTile": "5,2"
 }
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
 [browser:/] 🛸 [TRACKER] Drone → 5,2
+=======
+[browser:/] 🟠 ACTION [22:44:26] 🚁 [bot-1] Entrée dans l'état DRONE_DEPLOYING
+[browser:/] {
+  "targetTile": "4,4"
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
+[browser:/] 🛸 [TRACKER] Drone → 4,4
+>>>>>>> initialRules
 [browser:/]    Distance: 0.80 units, Travel time: 500ms
 [browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"exploring":"drone_deploying"}
 [browser:/] 📌 [TRACKER:bot-1] DRONE_REACHES_TILE in 500ms
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_deploying"} | Status: active
 [browser:/] ⚠️ [TRACKER:bot-1] NEED_EXPLORING canceled - state changed
+<<<<<<< HEAD
 [browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_REACHES_TILE (Drone traveling to 3,1)
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_scanning"}
 [browser:/] 🔍 [TRACKER] Scanning (800ms)
@@ -860,6 +1706,27 @@
 [browser:/] 🟠 ACTION [23:00:47] 📡 [bot-1] Entrée dans l'état DRONE_SCANNING
 [browser:/] {
   "scannedTile": "5,2",
+=======
+[browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_REACHES_TILE (Drone traveling to 1,6)
+[browser:/] 📡 [assignDroneScanningContext] Scanning tile 1,6, type: "resource" (isDanger: false)
+[browser:/] 🟠 ACTION [22:44:27] 📡 [bot-0] Entrée dans l'état DRONE_SCANNING
+[browser:/] {
+  "scannedTile": "1,6",
+  "explorationCount": 2
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_scanning"}
+[browser:/] 🔍 [TRACKER] Scanning (800ms)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_scanning"}
+[browser:/] 📌 [TRACKER:bot-0] DRONE_HAS_SCANNED in 800ms
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":3,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_REACHES_TILE (Drone traveling to 4,4)
+[browser:/] 📡 [assignDroneScanningContext] Scanning tile 4,4, type: "resource" (isDanger: false)
+[browser:/] 🟠 ACTION [22:44:27] 📡 [bot-1] Entrée dans l'état DRONE_SCANNING
+[browser:/] {
+  "scannedTile": "4,4",
+>>>>>>> initialRules
   "explorationCount": 2
 }
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_scanning"}
@@ -869,15 +1736,24 @@
 [browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":4,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_scanning"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+<<<<<<< HEAD
 [browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_HAS_SCANNED (Scanning tile)
 [browser:/] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "resource" → isDanger=false
 [browser:/] 🔵 INFO [23:00:47] 🔄 [bot-0] assignDroneReturningContext called with:
+=======
+[browser:/] 🔥 [DANGER] Dynamic danger dynamic-danger-1 moved to 0,5
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":4,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:/] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "resource" → isDanger=false
+[browser:/] 🔵 INFO [22:44:28] 🔄 [bot-0] assignDroneReturningContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "DRONE_HAS_SCANNED",
   "currentDroneState": "deploying"
 }
+<<<<<<< HEAD
 [browser:/] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 3,1
 [browser:/] 🏠 [DRONE RETURNING] Current ship coord: 2,1
 [browser:/] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 3,1
@@ -892,6 +1768,23 @@
       "coord": "3,1"
     },
     "coord": "3,1",
+=======
+[browser:/] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 1,6
+[browser:/] 🏠 [DRONE RETURNING] Current ship coord: 2,5
+[browser:/] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 1,6
+[browser:/] 🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!
+[browser:/] 🔵 INFO [22:44:28] 🔙 [bot-0] Updating drone state to returning with targetDroneTile (base)
+[browser:/] 🟠 ACTION [22:44:28] 🔙 [bot-0] Entrée dans l'état DRONE_RETURNING
+[browser:/] {
+  "baseTile": {
+    "position": {
+      "x": 0.8,
+      "y": 0.2,
+      "z": 4.800000000000001,
+      "coord": "1,6"
+    },
+    "coord": "1,6",
+>>>>>>> initialRules
     "type": "depart",
     "biome": "station",
     "explorable": false,
@@ -905,9 +1798,62 @@
     "hasResources": false
   }
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:00:47] 🔙 [bot-0] Entrée dans l'état DRONE_RETURNING
 [browser:/] {
   "baseCoord": "3,1",
+=======
+[browser:/] {
+  "baseCoord": "1,6",
+  "tilesExploredInCycle": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_returning"}
+[browser:/] 🏠 [TRACKER] Drone returning
+[browser:/]    Distance: 0.00 units, Travel time: 500ms
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_returning"}
+[browser:/] 📌 [TRACKER:bot-0] DRONE_REACHES_BASE in 500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:/] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "resource" → isDanger=false
+[browser:/] 🔵 INFO [22:44:28] 🔄 [bot-1] assignDroneReturningContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_HAS_SCANNED",
+  "currentDroneState": "deploying"
+}
+[browser:/] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 4,4
+[browser:/] 🏠 [DRONE RETURNING] Current ship coord: 3,4
+[browser:/] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 4,4
+[browser:/] 🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!
+[browser:/] 🔵 INFO [22:44:28] 🔙 [bot-1] Updating drone state to returning with targetDroneTile (base)
+[browser:/] {
+  "baseTile": {
+    "position": {
+      "x": 3.2,
+      "y": 0.2,
+      "z": 3.2,
+      "coord": "4,4"
+    },
+    "coord": "4,4",
+    "type": "depart",
+    "biome": "station",
+    "explorable": false,
+    "collectable": false,
+    "resources": {
+      "food": 0,
+      "debris": 0,
+      "special": 0,
+      "total": 0
+    },
+    "hasResources": false
+  }
+}
+[browser:/] 🟠 ACTION [22:44:28] 🔙 [bot-1] Entrée dans l'état DRONE_RETURNING
+[browser:/] {
+  "baseCoord": "4,4",
+>>>>>>> initialRules
   "tilesExploredInCycle": 1
 }
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_returning"}
@@ -968,16 +1914,26 @@
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
 [browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_REACHES_BASE (Drone returning to base)
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:48] 🔄 [bot-0] assignDroneDockedContext called with:
+=======
+[browser:/] 🔵 INFO [22:44:28] 🔄 [bot-0] assignDroneDockedContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "DRONE_REACHES_BASE",
   "currentDroneState": "returning"
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:00:48] ⚓ [bot-0] Entrée dans l'état DRONE_DOCKED
 [browser:/] {
   "dockedTile": "3,1",
+=======
+[browser:/] 🟠 ACTION [22:44:28] ⚓ [bot-0] Entrée dans l'état DRONE_DOCKED
+[browser:/] {
+  "dockedTile": "1,6",
+>>>>>>> initialRules
   "totalExploredThisCycle": 1
 }
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_docked"}
@@ -987,16 +1943,26 @@
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_docked"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
 [browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_REACHES_BASE (Drone returning to base)
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:48] 🔄 [bot-1] assignDroneDockedContext called with:
+=======
+[browser:/] 🔵 INFO [22:44:28] 🔄 [bot-1] assignDroneDockedContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "DRONE_REACHES_BASE",
   "currentDroneState": "returning"
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:00:48] ⚓ [bot-1] Entrée dans l'état DRONE_DOCKED
 [browser:/] {
   "dockedTile": "5,2",
+=======
+[browser:/] 🟠 ACTION [22:44:28] ⚓ [bot-1] Entrée dans l'état DRONE_DOCKED
+[browser:/] {
+  "dockedTile": "4,4",
+>>>>>>> initialRules
   "totalExploredThisCycle": 1
 }
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_docked"}
@@ -1006,13 +1972,21 @@
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_docked"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_docked"} | Status: active
 [browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:48] 🔄 [bot-0] assignDroneReadyContext called - transition to evaluating with:
+=======
+[browser:/] 🔵 INFO [22:44:29] 🔄 [bot-0] assignDroneReadyContext called - transition to evaluating with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "DRONE_READY_FOR_REDEPLOY"
 }
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:48] [Evaluating] Conditions
+=======
+[browser:/] 🔵 INFO [22:44:29] [Evaluating] Conditions
+>>>>>>> initialRules
 [browser:/] {
   "fuel": 95,
   "damage": 0,
@@ -1026,6 +2000,7 @@
   "droneState": "docked",
   "knownTilesCount": 2
 }
+<<<<<<< HEAD
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=3,1, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":2,"result":true}
 [browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=3,1, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":2,"result":true}
@@ -1040,6 +2015,38 @@
   "tilesCount": 1
 }
 [browser:/] 🔵 INFO [23:00:49] 🔄 [bot-0] assignShipMovingToTileContext called with:
+=======
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":2,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":2,"result":true}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 1, cycle: 1/3)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER:bot-0] NEED_EXPLORING in 100ms
+[browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_docked"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
+[browser:/] 🔵 INFO [22:44:29] 🔄 [bot-1] assignDroneReadyContext called - transition to evaluating with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_READY_FOR_REDEPLOY"
+}
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":2,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":2,"result":true}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 1, cycle: 1/3)
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER:bot-1] NEED_EXPLORING in 100ms
+[browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
+[browser:/] 🔵 INFO [22:44:29] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:/] {
+  "tilesCount": 1
+}
+[browser:/] 🔵 INFO [22:44:29] 🔄 [bot-0] assignShipMovingToTileContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
@@ -1064,6 +2071,7 @@
     "shouldReturnToBase"
   ]
 }
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:49] 🎯 [bot-0] Targeting explored tile with resources:
 [browser:/] {
   "coord": "3,1",
@@ -1072,10 +2080,21 @@
     "debris": 424,
     "special": 2,
     "total": 491
+=======
+[browser:/] 🔵 INFO [22:44:29] 🎯 [bot-0] Targeting explored tile with resources:
+[browser:/] {
+  "coord": "1,6",
+  "resources": {
+    "food": 58,
+    "debris": 369,
+    "special": 0,
+    "total": 427
+>>>>>>> initialRules
   },
   "totalKnownTiles": 2,
   "tilesWithResources": 1
 }
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:49] 🚢 [bot-0] Setting ship target for collection:
 [browser:/] {
   "targetPosition": {
@@ -1098,10 +2117,35 @@
       "y": 0.5,
       "z": -3,
       "coord": "3,1"
+=======
+[browser:/] 🔵 INFO [22:44:29] 🚢 [bot-0] Setting ship target for collection:
+[browser:/] {
+  "targetPosition": {
+    "x": -0.8660254037844384,
+    "y": 0.5,
+    "z": 4.5,
+    "coord": "1,6"
+  },
+  "targetGridCoord": "1,6",
+  "currentCoord": "2,5",
+  "coordinateCheck": {
+    "original": {
+      "x": -0.8660254037844384,
+      "y": 0.5,
+      "z": 4.5,
+      "coord": "1,6"
+    },
+    "recalculated": {
+      "x": -0.8660254037844384,
+      "y": 0.5,
+      "z": 4.5,
+      "coord": "1,6"
+>>>>>>> initialRules
     },
     "areConsistent": true
   }
 }
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:49] 🛤️ [bot-0] Pathfinding result:
 [browser:/] {
   "pathLength": 2,
@@ -1113,14 +2157,34 @@
 [browser:/] 🛤️ [PATHFINDING] Path: 2,1 → 3,1
 [browser:/] ⛽ [PATHFINDING] Fuel: 95 - 2 = 93 (1 tiles × 2/tile)
 [browser:/] 🔵 INFO [23:00:49] ✅ [bot-0] Ship movement setup result:
+=======
+[browser:/] 🔵 INFO [22:44:29] 🛤️ [bot-0] Pathfinding result:
+[browser:/] {
+  "pathLength": 2,
+  "pathSteps": 1,
+  "path": "2,5 → 1,6",
+  "fuelConsumption": 2,
+  "fuelRemaining": 93
+}
+[browser:/] 🛤️ [PATHFINDING] Path: 2,5 → 1,6
+[browser:/] ⛽ [PATHFINDING] Fuel: 95 - 2 = 93 (1 tiles × 2/tile)
+[browser:/] 🔵 INFO [22:44:29] ✅ [bot-0] Ship movement setup result:
+>>>>>>> initialRules
 [browser:/] {
   "hasVehicle": true,
   "targetVehicleTile": {
     "position": {
+<<<<<<< HEAD
       "x": -1.7320508075688772,
       "y": 0.5,
       "z": -3,
       "coord": "3,1"
+=======
+      "x": -0.8660254037844384,
+      "y": 0.5,
+      "z": 4.5,
+      "coord": "1,6"
+>>>>>>> initialRules
     },
     "type": "resource",
     "biome": "grassland",
@@ -1130,6 +2194,7 @@
     "explored": true,
     "collected": false,
     "neighbors": [
+<<<<<<< HEAD
       "4,1",
       "2,1",
       "3,2",
@@ -1288,6 +2353,148 @@
     "hasResources": true,
     "color": "#8d08e4",
     "exploredAt": 1767823247349,
+=======
+      "2,6",
+      "0,6",
+      "1,5",
+      "2,5"
+    ],
+    "resources": {
+      "food": 58,
+      "debris": 369,
+      "special": 0,
+      "total": 427
+    },
+    "hasResources": true,
+    "color": "#f3c43a",
+    "exploredAt": 1767908667394,
+    "exploredBy": "bot-0"
+  },
+  "isMoving": true,
+  "pathLength": 2,
+  "fuelConsumed": 2,
+  "fuelRemaining": 93
+}
+[browser:/] 🚢 [SHIP MOVING] Ship moving from 2,5 to 1,6 via 2 tiles
+[browser:/] 🏠 [SHIP MOVING] Original base coord is: 1,6 (this should stay constant!)
+[browser:/] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
+[browser:/] 📋 [TRACKER] State: {"collecting":"ship_moving_to_tile"}
+[browser:/] 🚢 [TRACKER] Ship moving
+[browser:/] 🛤️ [TRACKER] Pathfinding: 1 steps remaining (from index 0 to 1)
+[browser:/]    → SHIP_REACHES_TILE at 400ms (waypoint 1)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"collecting":"ship_moving_to_tile"}
+[browser:/] 📌 [TRACKER:bot-0] SHIP_REACHES_TILE in 400ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
+[browser:/] ⚠️ [TRACKER:bot-0] NEED_EXPLORING canceled - state changed
+[browser:/] 🔵 INFO [22:44:29] 🔄 [bot-1] assignShipMovingToTileContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "NEED_COLLECTING",
+  "contextKeys": [
+    "entityId",
+    "entityType",
+    "autonomousMode",
+    "vehicle",
+    "fsmState",
+    "explorationQueue",
+    "lastAction",
+    "error",
+    "timestamps",
+    "score",
+    "memory",
+    "explorationCycle",
+    "config",
+    "droneFleet",
+    "gridInfo",
+    "explorationCount",
+    "shouldReturnToBase"
+  ]
+}
+[browser:/] 🔵 INFO [22:44:29] 🎯 [bot-1] Targeting explored tile with resources:
+[browser:/] {
+  "coord": "4,4",
+  "resources": {
+    "food": 41,
+    "debris": 770,
+    "special": 0,
+    "total": 811
+  },
+  "totalKnownTiles": 2,
+  "tilesWithResources": 1
+}
+[browser:/] 🔵 INFO [22:44:29] 🚢 [bot-1] Setting ship target for collection:
+[browser:/] {
+  "targetPosition": {
+    "x": 2.598076211353316,
+    "y": 0.5,
+    "z": 1.5,
+    "coord": "4,4"
+  },
+  "targetGridCoord": "4,4",
+  "currentCoord": "3,4",
+  "coordinateCheck": {
+    "original": {
+      "x": 2.598076211353316,
+      "y": 0.5,
+      "z": 1.5,
+      "coord": "4,4"
+    },
+    "recalculated": {
+      "x": 2.598076211353316,
+      "y": 0.5,
+      "z": 1.5,
+      "coord": "4,4"
+    },
+    "areConsistent": true
+  }
+}
+[browser:/] 🔵 INFO [22:44:29] 🛤️ [bot-1] Pathfinding result:
+[browser:/] {
+  "pathLength": 2,
+  "pathSteps": 1,
+  "path": "3,4 → 4,4",
+  "fuelConsumption": 2,
+  "fuelRemaining": 93
+}
+[browser:/] 🛤️ [PATHFINDING] Path: 3,4 → 4,4
+[browser:/] 🔵 INFO [22:44:29] ✅ [bot-1] Ship movement setup result:
+[browser:/] ⛽ [PATHFINDING] Fuel: 95 - 2 = 93 (1 tiles × 2/tile)
+[browser:/] {
+  "hasVehicle": true,
+  "targetVehicleTile": {
+    "position": {
+      "x": 2.598076211353316,
+      "y": 0.5,
+      "z": 1.5,
+      "coord": "4,4"
+    },
+    "type": "resource",
+    "biome": "grassland",
+    "walkable": true,
+    "explorable": true,
+    "collectable": true,
+    "explored": true,
+    "collected": false,
+    "neighbors": [
+      "5,4",
+      "3,4",
+      "4,5",
+      "4,3",
+      "5,3",
+      "3,5"
+    ],
+    "resources": {
+      "food": 41,
+      "debris": 770,
+      "special": 0,
+      "total": 811
+    },
+    "hasResources": true,
+    "color": "#438a8f",
+    "exploredAt": 1767908667425,
+>>>>>>> initialRules
     "exploredBy": "bot-1"
   },
   "isMoving": true,
@@ -1295,8 +2502,13 @@
   "fuelConsumed": 2,
   "fuelRemaining": 93
 }
+<<<<<<< HEAD
 [browser:/] 🚢 [SHIP MOVING] Ship moving from 6,2 to 5,2 via 2 tiles
 [browser:/] 🏠 [SHIP MOVING] Original base coord is: 5,3 (this should stay constant!)
+=======
+[browser:/] 🚢 [SHIP MOVING] Ship moving from 3,4 to 4,4 via 2 tiles
+[browser:/] 🏠 [SHIP MOVING] Original base coord is: 4,4 (this should stay constant!)
+>>>>>>> initialRules
 [browser:/] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
 [browser:/] 📋 [TRACKER] State: {"collecting":"ship_moving_to_tile"}
 [browser:/] 🚢 [TRACKER] Ship moving
@@ -1307,11 +2519,17 @@
 [browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_moving_to_tile"} | Status: active
 [browser:/] ⚠️ [TRACKER:bot-1] NEED_EXPLORING canceled - state changed
+<<<<<<< HEAD
 [browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 3,1)
 [browser:/] 🔍 [isMovingToFuelStation] bot-0: isMovingToStation=undefined, stationType=undefined, result=false
 [browser:/] 🔍 [isMovingToRepairStation] bot-0: isMovingToStation=undefined, stationType=undefined, result=false
 [browser:/] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"3,1","hasResources":true,"currentResources":{"food":20,"debris":794,"special":2,"total":816},"totalResources":816,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
 [browser:/] 🔵 INFO [23:00:49] 🔄 [bot-0] assignShipCollectingContext called with:
+=======
+[browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 1,6)
+[browser:/] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"1,6","hasResources":true,"currentResources":{"food":64,"debris":309,"special":1,"total":374},"totalResources":374,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:/] 🔵 INFO [22:44:29] 🔄 [bot-0] assignShipCollectingContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
@@ -1319,6 +2537,7 @@
   "currentVehicleState": true
 }
 [browser:/] 📋 [TRACKER] State: {"collecting":"ship_collecting"}
+<<<<<<< HEAD
 [browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"collecting":"ship_collecting"}
 [browser:/] 📌 [TRACKER:bot-0] SHIP_LOAD_RESOURCES in 1200ms
 [browser:/] 
@@ -1330,6 +2549,17 @@
 [browser:/] 🔍 [isMovingToRepairStation] bot-1: isMovingToStation=undefined, stationType=undefined, result=false
 [browser:/] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"5,2","hasResources":true,"currentResources":{"food":29,"debris":485,"special":0,"total":514},"totalResources":514,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
 [browser:/] 🔵 INFO [23:00:49] 🔄 [bot-1] assignShipCollectingContext called with:
+=======
+[browser:/] 
+🚢 [TRACKER-CORE] ship_collecting (1200ms)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"collecting":"ship_collecting"}
+[browser:/] 📌 [TRACKER:bot-0] SHIP_LOAD_RESOURCES in 1200ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,4)
+[browser:/] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"4,4","hasResources":true,"currentResources":{"food":19,"debris":958,"special":0,"total":977},"totalResources":977,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:/] 🔵 INFO [22:44:29] 🔄 [bot-1] assignShipCollectingContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
@@ -1343,23 +2573,40 @@
 [browser:/] 📌 [TRACKER:bot-1] SHIP_LOAD_RESOURCES in 1200ms
 [browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_collecting"} | Status: active
+<<<<<<< HEAD
 [browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
 [browser:/] 🟠 ACTION [23:00:50] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+=======
+[browser:/] 🔥 [DANGER] Dynamic danger dynamic-danger-1 moved to 0,4
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":4,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:/] 🟠 ACTION [22:44:31] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "SHIP_LOAD_RESOURCES"
 }
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:50] [TileResourceSlice] Ressources collectées de 3,1 par bot-0:
+=======
+[browser:/] 🔵 INFO [22:44:31] [TileResourceSlice] Ressources collectées de 1,6 par bot-0:
+>>>>>>> initialRules
 [browser:/] {
   "food": 100,
   "debris": 100,
   "special": 50,
   "total": 250
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:00:50] 📦 [bot-0] Resources transferred from tile:
 [browser:/] {
   "tileCoord": "3,1",
+=======
+[browser:/] 🟠 ACTION [22:44:31] 📦 [bot-0] Resources transferred from tile:
+[browser:/] {
+  "tileCoord": "1,6",
+>>>>>>> initialRules
   "tileResourcesAfter": {
     "food": 0,
     "debris": 0,
@@ -1374,6 +2621,7 @@
     "total": 250
   },
   "vehicleResourcesBefore": {
+<<<<<<< HEAD
     "food": 20,
     "debris": 794,
     "special": 2,
@@ -1387,17 +2635,109 @@
   },
   "vehicleCapacity": "1066/2003",
   "capacityUsed": "53%",
+=======
+    "food": 64,
+    "debris": 309,
+    "special": 1,
+    "total": 374
+  },
+  "vehicleResourcesAfter": {
+    "food": 164,
+    "debris": 409,
+    "special": 51,
+    "total": 624
+  },
+  "vehicleCapacity": "624/2003",
+  "capacityUsed": "31%",
+>>>>>>> initialRules
   "isNearFull": false,
   "tileIsEmpty": true,
   "shouldReturn": true
 }
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:00:50] 🔄 [bot-0] assignShipReturningContext called with:
+=======
+[browser:/] 🔵 INFO [22:44:31] [Evaluating] Conditions
+[browser:/] {
+  "fuel": 92,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": false,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 2
+}
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":2,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":2,"result":true}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 0, cycle: 0/3)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER:bot-0] NEED_EXPLORING in 100ms
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":4,"collected":3,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:/] 🟠 ACTION [22:44:31] 🔄 [bot-1] assignShipLoadResourcesContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:/] 🔵 INFO [22:44:31] [TileResourceSlice] Ressources collectées de 4,4 par bot-1:
+[browser:/] {
+  "food": 100,
+  "debris": 100,
+  "special": 50,
+  "total": 250
+}
+[browser:/] 🟠 ACTION [22:44:31] 📦 [bot-1] Resources transferred from tile:
+[browser:/] {
+  "tileCoord": "4,4",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 100,
+    "debris": 100,
+    "special": 50,
+    "total": 250
+  },
+  "vehicleResourcesBefore": {
+    "food": 19,
+    "debris": 958,
+    "special": 0,
+    "total": 977
+  },
+  "vehicleResourcesAfter": {
+    "food": 119,
+    "debris": 1058,
+    "special": 50,
+    "total": 1227
+  },
+  "vehicleCapacity": "1227/2003",
+  "capacityUsed": "61%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:/] 🔵 INFO [22:44:31] 🔄 [bot-1] assignShipReturningContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "SHIP_LOAD_RESOURCES",
   "currentVehicleState": false
 }
+<<<<<<< HEAD
 [browser:/] 🏠 [SHIP RETURNING] Looking for base tile at coord: 3,1
 [browser:/] 🏠 [SHIP RETURNING] Current ship coord: 3,1
 [browser:/] {
@@ -1408,6 +2748,21 @@
     "z": 0.8
   },
   "currentCoord": "3,1",
+=======
+[browser:/] 🏠 [SHIP RETURNING] Looking for base tile at coord: 4,4
+[browser:/] 🏠 [SHIP RETURNING] Current ship coord: 4,4
+[browser:/] 🏠 [SHIP RETURNING] baseCoord from vehicle context: 4,4
+[browser:/] 🛤️ [SHIP RETURNING] Path calculated: {"from":"4,4","to":"4,4","pathLength":1,"path":"4,4"}
+[browser:/] 🔵 INFO [22:44:31] 🔙 [bot-1] Updating vehicle state to returning with target:
+[browser:/] {
+  "baseCoord": "4,4",
+  "basePosition": {
+    "x": 3.2,
+    "y": 0.5,
+    "z": 3.2
+  },
+  "currentCoord": "4,4",
+>>>>>>> initialRules
   "pathLength": 1
 }
 [browser:/] 🏠 [SHIP RETURNING] baseCoord from vehicle context: 3,1
@@ -1416,6 +2771,7 @@
 [browser:/] 📋 [TRACKER] State: {"collecting":"ship_returning"}
 [browser:/] 🔙 [TRACKER] Ship returning via pathfinding
 [browser:/] 🔙 [TRACKER] Fallback: Direct distance 0.00, delay 0ms
+<<<<<<< HEAD
 [browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"collecting":"ship_returning"}
 [browser:/] 📌 [TRACKER:bot-0] SHIP_REACHES_BASE in 0ms
 [browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":4,"collected":3,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
@@ -1423,12 +2779,45 @@
 [browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_collecting"} | Status: active
 [browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_REACHES_BASE (Ship returning to base (direct))
 [browser:/] 🟠 ACTION [23:00:50] 🔄 [bot-0] assignShipReachedBaseContext called with:
+=======
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"collecting":"ship_returning"}
+[browser:/] 📌 [TRACKER:bot-1] SHIP_REACHES_BASE in 0ms
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":4,"collected":4,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_returning"} | Status: active
+[browser:/] 🔵 INFO [22:44:31] [Evaluating] → NEED_EXPLORING (no collectible tiles or ship at capacity)
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":3,"exploredCoordsSize":2,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [DEBUG assignDroneDeployingContext] ship=1,6, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":2,"exploredCoordsSample":["2,5","1,6"],"candidatesSample":["2,6:explored=false","0,6:explored=false","1,5:explored=false","2,5:explored=true"]}
+[browser:/] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 1,5
+[browser:/] 🔵 INFO [22:44:31] ✅ [bot-0] Drone deploying with fuel consumption:
+[browser:/] {
+  "distance": "1.00",
+  "fuelConsumed": 1,
+  "fuelRemaining": 91
+}
+[browser:/] 🟠 ACTION [22:44:31] 🚁 [bot-0] Entrée dans l'état DRONE_DEPLOYING
+[browser:/] {
+  "targetTile": "1,5"
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
+[browser:/] 🛸 [TRACKER] Drone → 1,5
+[browser:/]    Distance: 0.80 units, Travel time: 500ms
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_deploying"}
+[browser:/] 📌 [TRACKER:bot-0] DRONE_REACHES_TILE in 500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_returning"} | Status: active
+[browser:/] ⚠️ [TRACKER:bot-0] NEED_EXPLORING canceled - state changed
+[browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_REACHES_BASE (Ship returning to base (direct))
+[browser:/] 🟠 ACTION [22:44:31] 🔄 [bot-1] assignShipReachedBaseContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "SHIP_REACHES_BASE",
   "currentVehicleState": true
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:00:50] 🏠 [bot-0] Ship reached base - ready for maintenance
 [browser:/] {
   "vehicleResources": {
@@ -1440,11 +2829,28 @@
   "vehicleState": "returning"
 }
 [browser:/] 🟠 ACTION [23:00:50] 🔧 [bot-0] Entrée dans l'état MAINTAINING
+=======
+[browser:/] 🟠 ACTION [22:44:31] 🏠 [bot-1] Ship reached base - ready for maintenance
+[browser:/] {
+  "vehicleResources": {
+    "food": 119,
+    "debris": 1058,
+    "special": 50,
+    "total": 1227
+  },
+  "vehicleState": "returning"
+}
+[browser:/] 🟠 ACTION [22:44:31] 🔧 [bot-1] Entrée dans l'état MAINTAINING
+>>>>>>> initialRules
 [browser:/] {
   "vehicleState": {
     "fuel": 92,
     "damage": 0,
+<<<<<<< HEAD
     "resources": 1066
+=======
+    "resources": 1227
+>>>>>>> initialRules
   },
   "maintenanceTasks": {
     "needsFuel": true,
@@ -1452,6 +2858,7 @@
     "needsDeposit": true
   }
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:00:50] 📦 [bot-0] Dépôt des ressources
 [browser:/] {
   "resourcesDeposited": {
@@ -3074,6 +4481,15 @@
     "debris": 1495,
     "special": 3,
     "total": 1638
+=======
+[browser:/] 🟠 ACTION [22:44:31] 📦 [bot-1] Dépôt des ressources
+[browser:/] {
+  "resourcesDeposited": {
+    "food": 119,
+    "debris": 1058,
+    "special": 50,
+    "total": 1227
+>>>>>>> initialRules
   },
   "currentScore": {
     "food": 0,
@@ -3088,6 +4504,7 @@
 [browser:/] 📌 [TRACKER:bot-1] SHIP_DEPOSIT_COMPLETE in 1500ms
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"maintaining":"depositing"} | Status: active
+<<<<<<< HEAD
 [browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_REACHES_TILE (Drone traveling to 5,1)
 [browser:/] 📡 [assignDroneScanningContext] Scanning tile 5,1, type: "resource" (isDanger: false)
 [browser:/] 🟠 ACTION [23:01:01] 📡 [bot-0] Entrée dans l'état DRONE_SCANNING
@@ -3105,12 +4522,32 @@
 [browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_HAS_SCANNED (Scanning tile)
 [browser:/] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "resource" → isDanger=false
 [browser:/] 🔵 INFO [23:01:02] 🔄 [bot-0] assignDroneReturningContext called with:
+=======
+[browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_REACHES_TILE (Drone traveling to 1,5)
+[browser:/] 🔍 [TRACKER] Scanning (800ms)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_scanning"}
+[browser:/] 📌 [TRACKER:bot-0] DRONE_HAS_SCANNED in 800ms
+[browser:/] 📡 [assignDroneScanningContext] Scanning tile 1,5, type: "resource" (isDanger: false)
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_scanning"}
+[browser:/] 🟠 ACTION [22:44:31] 📡 [bot-0] Entrée dans l'état DRONE_SCANNING
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":5,"collected":4,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] {
+  "scannedTile": "1,5",
+  "explorationCount": 3
+}
+[browser:/] 🔄 [FSM:bot-1] State: {"maintaining":"depositing"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:/] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "resource" → isDanger=false
+[browser:/] 🔵 INFO [22:44:32] 🔄 [bot-0] assignDroneReturningContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "DRONE_HAS_SCANNED",
   "currentDroneState": "deploying"
 }
+<<<<<<< HEAD
 [browser:/] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 3,1
 [browser:/] 🏠 [DRONE RETURNING] Current ship coord: 5,0
 [browser:/] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 3,1
@@ -3125,6 +4562,22 @@
       "coord": "3,1"
     },
     "coord": "3,1",
+=======
+[browser:/] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 1,6
+[browser:/] 🏠 [DRONE RETURNING] Current ship coord: 1,6
+[browser:/] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 1,6
+[browser:/] 🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!
+[browser:/] 🔵 INFO [22:44:32] 🔙 [bot-0] Updating drone state to returning with targetDroneTile (base)
+[browser:/] {
+  "baseTile": {
+    "position": {
+      "x": 0.8,
+      "y": 0.2,
+      "z": 4.800000000000001,
+      "coord": "1,6"
+    },
+    "coord": "1,6",
+>>>>>>> initialRules
     "type": "depart",
     "biome": "station",
     "explorable": false,
@@ -3138,6 +4591,7 @@
     "hasResources": false
   }
 }
+<<<<<<< HEAD
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_returning"}
 [browser:/] 🟠 ACTION [23:01:02] 🔙 [bot-0] Entrée dans l'état DRONE_RETURNING
 [browser:/] 🏠 [TRACKER] Drone returning
@@ -3938,6 +5392,22 @@
 [browser:/] ⚠️ [TRACKER:bot-1] NEED_EXPLORING canceled - state changed
 [browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_DEPOSIT_COMPLETE (Depositing resources)
 [browser:/] 🟠 ACTION [23:01:07] ✅ [bot-0] Ressources déposées avec succès
+=======
+[browser:/] 🟠 ACTION [22:44:32] 🔙 [bot-0] Entrée dans l'état DRONE_RETURNING
+[browser:/] {
+  "baseCoord": "1,6",
+  "tilesExploredInCycle": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_returning"}
+[browser:/] 🏠 [TRACKER] Drone returning
+[browser:/]    Distance: 0.80 units, Travel time: 500ms
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_returning"}
+[browser:/] 📌 [TRACKER:bot-0] DRONE_REACHES_BASE in 500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"maintaining":"depositing"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_DEPOSIT_COMPLETE (Depositing resources)
+[browser:/] 🟠 ACTION [22:44:32] ✅ [bot-1] Ressources déposées avec succès
+>>>>>>> initialRules
 [browser:/] {
   "score": {
     "food": 120,
@@ -3946,6 +5416,7 @@
     "total": 1066
   },
   "vehicleResources": {
+<<<<<<< HEAD
     "food": 69,
     "debris": 1408,
     "special": 1,
@@ -3961,11 +5432,29 @@
   }
 }
 [browser:/] 🟠 ACTION [23:01:07] 🔄 [bot-0] assignShipDepositResourcesContext called with:
+=======
+    "food": 119,
+    "debris": 1058,
+    "special": 50,
+    "total": 1227
+  }
+}
+[browser:/] 🟠 ACTION [22:44:32] ✅ [bot-1] Sortie de l'état MAINTAINING
+[browser:/] {
+  "vehicleState": {
+    "fuel": 92,
+    "damage": 0,
+    "resources": 1227
+  }
+}
+[browser:/] 🟠 ACTION [22:44:32] 🔄 [bot-1] assignShipDepositResourcesContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "SHIP_DEPOSIT_COMPLETE"
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:01:07] 💰 [bot-0] Depositing resources at base:
 [browser:/] {
   "resourcesDeposited": {
@@ -3989,10 +5478,36 @@
   "totalGained": 1478
 }
 [browser:/] 🔵 INFO [23:01:07] 🔄 [bot-0] Resetting exploration cycle counter after deposit
+=======
+[browser:/] 🟠 ACTION [22:44:32] 💰 [bot-1] Depositing resources at base:
+[browser:/] {
+  "resourcesDeposited": {
+    "food": 119,
+    "debris": 1058,
+    "special": 50,
+    "total": 1227
+  },
+  "scoreBefore": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "scoreAfter": {
+    "food": 119,
+    "debris": 1058,
+    "special": 50,
+    "total": 1227
+  },
+  "totalGained": 1227
+}
+[browser:/] 🔵 INFO [22:44:32] 🔄 [bot-1] Resetting exploration cycle counter after deposit
+>>>>>>> initialRules
 [browser:/] {
   "previousCount": 1,
   "newCount": 0
 }
+<<<<<<< HEAD
 [browser:/] 📋 [TRACKER] State: evaluating
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=3,1, radius=1 {"candidatesCount":4,"unexploredCount":1,"exploredCoordsSize":5,"result":true}
 [browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
@@ -4316,11 +5831,85 @@
 [browser:/] {
   "scannedTile": "5,3",
   "explorationCount": 7
+=======
+[browser:/] 🔵 INFO [22:44:32] [Evaluating] Conditions
+[browser:/] {
+  "fuel": 92,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": false,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 2
+}
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":2,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":2,"result":true}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 0, cycle: 0/3)
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER:bot-1] NEED_EXPLORING in 100ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
+[browser:/] 🔵 INFO [22:44:32] [Evaluating] → NEED_EXPLORING (no collectible tiles or ship at capacity)
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":2,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [DEBUG assignDroneDeployingContext] ship=4,4, radius=1 {"candidatesCount":6,"unexploredCount":5,"exploredCoordsSize":2,"exploredCoordsSample":["3,4","4,4"],"candidatesSample":["5,4:explored=false","3,4:explored=true","4,5:explored=false","4,3:explored=false","5,3:explored=false"]}
+[browser:/] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 5,4
+[browser:/] 🔵 INFO [22:44:32] ✅ [bot-1] Drone deploying with fuel consumption:
+[browser:/] {
+  "distance": "1.00",
+  "fuelConsumed": 1,
+  "fuelRemaining": 91
+}
+[browser:/] 🟠 ACTION [22:44:32] 🚁 [bot-1] Entrée dans l'état DRONE_DEPLOYING
+[browser:/] {
+  "targetTile": "5,4"
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
+[browser:/] 🛸 [TRACKER] Drone → 5,4
+[browser:/]    Distance: 0.80 units, Travel time: 500ms
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"exploring":"drone_deploying"}
+[browser:/] 📌 [TRACKER:bot-1] DRONE_REACHES_TILE in 500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] ⚠️ [TRACKER:bot-1] NEED_EXPLORING canceled - state changed
+[browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_REACHES_BASE (Drone returning to base)
+[browser:/] 🔵 INFO [22:44:33] 🔄 [bot-0] assignDroneDockedContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_REACHES_BASE",
+  "currentDroneState": "returning"
+}
+[browser:/] 🟠 ACTION [22:44:33] ⚓ [bot-0] Entrée dans l'état DRONE_DOCKED
+[browser:/] {
+  "dockedTile": "1,5",
+  "totalExploredThisCycle": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_docked"}
+[browser:/] ⚓ [TRACKER] Drone docking (500ms)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_docked"}
+[browser:/] 📌 [TRACKER:bot-0] DRONE_READY_FOR_REDEPLOY in 500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_docked"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_REACHES_TILE (Drone traveling to 5,4)
+[browser:/] 📡 [assignDroneScanningContext] Scanning tile 5,4, type: "resource" (isDanger: false)
+[browser:/] 🟠 ACTION [22:44:33] 📡 [bot-1] Entrée dans l'état DRONE_SCANNING
+[browser:/] {
+  "scannedTile": "5,4",
+  "explorationCount": 3
+>>>>>>> initialRules
 }
 [browser:/] 📋 [TRACKER] State: {"exploring":"drone_scanning"}
 [browser:/] 🔍 [TRACKER] Scanning (800ms)
 [browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"exploring":"drone_scanning"}
 [browser:/] 📌 [TRACKER:bot-1] DRONE_HAS_SCANNED in 800ms
+<<<<<<< HEAD
 [browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":13,"collected":10,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
 [browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
@@ -4449,13 +6038,257 @@
 [browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
 [browser:/] 🔵 INFO [23:01:12] 🔄 [bot-1] assignDroneReadyContext called - transition to evaluating with:
 [browser:/] {
+=======
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":6,"collected":4,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_docked"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
+[browser:/] 🔵 INFO [22:44:33] 🔄 [bot-0] assignDroneReadyContext called - transition to evaluating with:
+[browser:/] {
   "hasContext": true,
   "hasEvent": true,
   "eventType": "DRONE_READY_FOR_REDEPLOY"
 }
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":2,"exploredCoordsSize":3,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":2,"exploredCoordsSize":3,"result":true}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 1, cycle: 1/3)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER:bot-0] NEED_EXPLORING in 100ms
+[browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] 🔵 INFO [22:44:33] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:/] {
+  "tilesCount": 1
+}
+[browser:/] 🔵 INFO [22:44:33] 🔄 [bot-0] assignShipMovingToTileContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "NEED_COLLECTING",
+  "contextKeys": [
+    "entityId",
+    "entityType",
+    "autonomousMode",
+    "vehicle",
+    "fsmState",
+    "explorationQueue",
+    "lastAction",
+    "error",
+    "timestamps",
+    "score",
+    "memory",
+    "explorationCycle",
+    "config",
+    "droneFleet",
+    "gridInfo",
+    "explorationCount",
+    "shouldReturnToBase"
+  ]
+}
+[browser:/] 🔵 INFO [22:44:33] 🎯 [bot-0] Targeting explored tile with resources:
+[browser:/] {
+  "coord": "1,5",
+  "resources": {
+    "food": 59,
+    "debris": 962,
+    "special": 0,
+    "total": 1021
+  },
+  "totalKnownTiles": 3,
+  "tilesWithResources": 1
+}
+[browser:/] 🔵 INFO [22:44:33] 🚢 [bot-0] Setting ship target for collection:
+[browser:/] {
+  "targetPosition": {
+    "x": -1.7320508075688772,
+    "y": 0.5,
+    "z": 3,
+    "coord": "1,5"
+  },
+  "targetGridCoord": "1,5",
+  "currentCoord": "1,6",
+  "coordinateCheck": {
+    "original": {
+      "x": -1.7320508075688772,
+      "y": 0.5,
+      "z": 3,
+      "coord": "1,5"
+    },
+    "recalculated": {
+      "x": -1.7320508075688772,
+      "y": 0.5,
+      "z": 3,
+      "coord": "1,5"
+    },
+    "areConsistent": true
+  }
+}
+[browser:/] 🔵 INFO [22:44:33] 🛤️ [bot-0] Pathfinding result:
+[browser:/] {
+  "pathLength": 2,
+  "pathSteps": 1,
+  "path": "1,6 → 1,5",
+  "fuelConsumption": 2,
+  "fuelRemaining": 89
+}
+[browser:/] 🛤️ [PATHFINDING] Path: 1,6 → 1,5
+[browser:/] ⛽ [PATHFINDING] Fuel: 91 - 2 = 89 (1 tiles × 2/tile)
+[browser:/] 🔵 INFO [22:44:33] ✅ [bot-0] Ship movement setup result:
+[browser:/] {
+  "hasVehicle": true,
+  "targetVehicleTile": {
+    "position": {
+      "x": -1.7320508075688772,
+      "y": 0.5,
+      "z": 3,
+      "coord": "1,5"
+    },
+    "type": "resource",
+    "biome": "grassland",
+    "walkable": true,
+    "explorable": true,
+    "collectable": true,
+    "explored": true,
+    "collected": false,
+    "neighbors": [
+      "2,5",
+      "0,5",
+      "1,6",
+      "1,4",
+      "2,4",
+      "0,6"
+    ],
+    "resources": {
+      "food": 59,
+      "debris": 962,
+      "special": 0,
+      "total": 1021
+    },
+    "hasResources": true,
+    "color": "#8bec45",
+    "exploredAt": 1767908671712,
+    "exploredBy": "bot-0"
+  },
+  "isMoving": true,
+  "pathLength": 2,
+  "fuelConsumed": 2,
+  "fuelRemaining": 89
+}
+[browser:/] 🚢 [SHIP MOVING] Ship moving from 1,6 to 1,5 via 2 tiles
+[browser:/] 🏠 [SHIP MOVING] Original base coord is: 1,6 (this should stay constant!)
+[browser:/] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
+[browser:/] 📋 [TRACKER] State: {"collecting":"ship_moving_to_tile"}
+[browser:/] 🚢 [TRACKER] Ship moving
+[browser:/] 🛤️ [TRACKER] Pathfinding: 1 steps remaining (from index 0 to 1)
+[browser:/]    → SHIP_REACHES_TILE at 400ms (waypoint 1)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"collecting":"ship_moving_to_tile"}
+[browser:/] 📌 [TRACKER:bot-0] SHIP_REACHES_TILE in 400ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] ⚠️ [TRACKER:bot-0] NEED_EXPLORING canceled - state changed
+[browser:/] 🔥 [DANGER] Dynamic danger dynamic-danger-1 moved to 1,3
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":6,"collected":4,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 1,5)
+[browser:/] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"1,5","hasResources":true,"currentResources":{"food":164,"debris":409,"special":51,"total":624},"totalResources":624,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:/] 🔵 INFO [22:44:34] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": true
+}
+[browser:/] 📋 [TRACKER] State: {"collecting":"ship_collecting"}
+[browser:/] 
+🚢 [TRACKER-CORE] ship_collecting (1200ms)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"collecting":"ship_collecting"}
+[browser:/] 📌 [TRACKER:bot-0] SHIP_LOAD_RESOURCES in 1200ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:/] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "resource" → isDanger=false
+[browser:/] 🔵 INFO [22:44:34] 🔄 [bot-1] assignDroneReturningContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_HAS_SCANNED",
+  "currentDroneState": "deploying"
+}
+[browser:/] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 4,4
+[browser:/] 🏠 [DRONE RETURNING] Current ship coord: 4,4
+[browser:/] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 4,4
+[browser:/] 🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!
+[browser:/] 🔵 INFO [22:44:34] 🔙 [bot-1] Updating drone state to returning with targetDroneTile (base)
+[browser:/] {
+  "baseTile": {
+    "position": {
+      "x": 3.2,
+      "y": 0.2,
+      "z": 3.2,
+      "coord": "4,4"
+    },
+    "coord": "4,4",
+    "type": "depart",
+    "biome": "station",
+    "explorable": false,
+    "collectable": false,
+    "resources": {
+      "food": 0,
+      "debris": 0,
+      "special": 0,
+      "total": 0
+    },
+    "hasResources": false
+  }
+}
+[browser:/] 🟠 ACTION [22:44:34] 🔙 [bot-1] Entrée dans l'état DRONE_RETURNING
+[browser:/] {
+  "baseCoord": "4,4",
+  "tilesExploredInCycle": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_returning"}
+[browser:/] 🏠 [TRACKER] Drone returning
+[browser:/]    Distance: 0.80 units, Travel time: 500ms
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"exploring":"drone_returning"}
+[browser:/] 📌 [TRACKER:bot-1] DRONE_REACHES_BASE in 500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_REACHES_BASE (Drone returning to base)
+[browser:/] 🔵 INFO [22:44:34] 🔄 [bot-1] assignDroneDockedContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_REACHES_BASE",
+  "currentDroneState": "returning"
+}
+[browser:/] 🟠 ACTION [22:44:34] ⚓ [bot-1] Entrée dans l'état DRONE_DOCKED
+[browser:/] {
+  "dockedTile": "5,4",
+  "totalExploredThisCycle": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_docked"}
+[browser:/] ⚓ [TRACKER] Drone docking (500ms)
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"exploring":"drone_docked"}
+[browser:/] 📌 [TRACKER:bot-1] DRONE_READY_FOR_REDEPLOY in 500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_docked"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
+[browser:/] 🔵 INFO [22:44:35] 🔄 [bot-1] assignDroneReadyContext called - transition to evaluating with:
+[browser:/] {
+>>>>>>> initialRules
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_READY_FOR_REDEPLOY"
+}
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:01:12] [Evaluating] Conditions
 [browser:/] {
   "fuel": 78,
+=======
+[browser:/] 🔵 INFO [22:44:35] [Evaluating] Conditions
+[browser:/] {
+  "fuel": 91,
   "damage": 0,
   "needsMaintenance": false,
   "hasUnexploredInRadius": true,
@@ -4465,6 +6298,368 @@
   "isDroneAvailable": true,
   "explorationQueueLength": 0,
   "droneState": "docked",
+  "knownTilesCount": 3
+}
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":3,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":3,"result":true}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 1, cycle: 1/3)
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER:bot-1] NEED_EXPLORING in 100ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
+[browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:/] 🟠 ACTION [22:44:35] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:/] 🔵 INFO [22:44:35] [TileResourceSlice] Ressources collectées de 1,5 par bot-0:
+[browser:/] {
+  "food": 59,
+  "debris": 962,
+  "special": 0,
+  "total": 1021
+}
+[browser:/] 🟠 ACTION [22:44:35] 📦 [bot-0] Resources transferred from tile:
+[browser:/] {
+  "tileCoord": "1,5",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 59,
+    "debris": 962,
+    "special": 0,
+    "total": 1021
+  },
+  "vehicleResourcesBefore": {
+    "food": 164,
+    "debris": 409,
+    "special": 51,
+    "total": 624
+  },
+  "vehicleResourcesAfter": {
+    "food": 223,
+    "debris": 1371,
+    "special": 51,
+    "total": 1645
+  },
+  "vehicleCapacity": "1645/2003",
+  "capacityUsed": "82%",
+  "isNearFull": true,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":2,"exploredCoordsSize":3,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":2,"exploredCoordsSize":3,"result":true}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 0, cycle: 0/3)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER:bot-0] NEED_EXPLORING in 100ms
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":6,"collected":5,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
+[browser:/] 🔵 INFO [22:44:35] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:/] {
+  "tilesCount": 1
+}
+[browser:/] 🔵 INFO [22:44:35] 🔄 [bot-1] assignShipMovingToTileContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "NEED_COLLECTING",
+  "contextKeys": [
+    "entityId",
+    "entityType",
+    "autonomousMode",
+    "vehicle",
+    "fsmState",
+    "explorationQueue",
+    "lastAction",
+    "error",
+    "timestamps",
+    "score",
+    "memory",
+    "explorationCycle",
+    "config",
+    "droneFleet",
+    "gridInfo",
+    "explorationCount",
+    "shouldReturnToBase"
+  ]
+}
+[browser:/] 🔵 INFO [22:44:35] 🎯 [bot-1] Targeting explored tile with resources:
+[browser:/] {
+  "coord": "5,4",
+  "resources": {
+    "food": 63,
+    "debris": 987,
+    "special": 0,
+    "total": 1050
+  },
+  "totalKnownTiles": 3,
+  "tilesWithResources": 1
+}
+[browser:/] 🔵 INFO [22:44:35] 🚢 [bot-1] Setting ship target for collection:
+[browser:/] {
+  "targetPosition": {
+    "x": 4.330127018922193,
+    "y": 0.5,
+    "z": 1.5,
+    "coord": "5,4"
+  },
+  "targetGridCoord": "5,4",
+  "currentCoord": "4,4",
+  "coordinateCheck": {
+    "original": {
+      "x": 4.330127018922193,
+      "y": 0.5,
+      "z": 1.5,
+      "coord": "5,4"
+    },
+    "recalculated": {
+      "x": 4.330127018922193,
+      "y": 0.5,
+      "z": 1.5,
+      "coord": "5,4"
+    },
+    "areConsistent": true
+  }
+}
+[browser:/] 🔵 INFO [22:44:35] 🛤️ [bot-1] Pathfinding result:
+[browser:/] {
+  "pathLength": 2,
+  "pathSteps": 1,
+  "path": "4,4 → 5,4",
+  "fuelConsumption": 2,
+  "fuelRemaining": 89
+}
+[browser:/] 🛤️ [PATHFINDING] Path: 4,4 → 5,4
+[browser:/] ⛽ [PATHFINDING] Fuel: 91 - 2 = 89 (1 tiles × 2/tile)
+[browser:/] 🔵 INFO [22:44:35] ✅ [bot-1] Ship movement setup result:
+[browser:/] {
+  "hasVehicle": true,
+  "targetVehicleTile": {
+    "position": {
+      "x": 4.330127018922193,
+      "y": 0.5,
+      "z": 1.5,
+      "coord": "5,4"
+    },
+    "type": "resource",
+    "biome": "grassland",
+    "walkable": true,
+    "explorable": true,
+    "collectable": true,
+    "explored": true,
+    "collected": false,
+    "neighbors": [
+      "4,4",
+      "5,3",
+      "6,3",
+      "4,5"
+    ],
+    "resources": {
+      "food": 63,
+      "debris": 987,
+      "special": 0,
+      "total": 1050
+    },
+    "hasResources": true,
+    "color": "#ed435f",
+    "exploredAt": 1767908673349,
+    "exploredBy": "bot-1"
+  },
+  "isMoving": true,
+  "pathLength": 2,
+  "fuelConsumed": 2,
+  "fuelRemaining": 89
+}
+[browser:/] 🚢 [SHIP MOVING] Ship moving from 4,4 to 5,4 via 2 tiles
+[browser:/] 🏠 [SHIP MOVING] Original base coord is: 4,4 (this should stay constant!)
+[browser:/] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
+[browser:/] 📋 [TRACKER] State: {"collecting":"ship_moving_to_tile"}
+[browser:/] 🚢 [TRACKER] Ship moving
+[browser:/] 🛤️ [TRACKER] Pathfinding: 1 steps remaining (from index 0 to 1)
+[browser:/]    → SHIP_REACHES_TILE at 400ms (waypoint 1)
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"collecting":"ship_moving_to_tile"}
+[browser:/] 📌 [TRACKER:bot-1] SHIP_REACHES_TILE in 400ms
+[browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:/] ⚠️ [TRACKER:bot-1] NEED_EXPLORING canceled - state changed
+[browser:/] 🔵 INFO [22:44:35] [Evaluating] → NEED_EXPLORING (no collectible tiles or ship at capacity)
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":2,"exploredCoordsSize":3,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [DEBUG assignDroneDeployingContext] ship=1,5, radius=1 {"candidatesCount":6,"unexploredCount":4,"exploredCoordsSize":3,"exploredCoordsSample":["2,5","1,6","1,5"],"candidatesSample":["2,5:explored=true","0,5:explored=false","1,6:explored=true","1,4:explored=false","2,4:explored=false"]}
+[browser:/] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 1,4
+[browser:/] 🔵 INFO [22:44:35] ✅ [bot-0] Drone deploying with fuel consumption:
+[browser:/] {
+  "distance": "1.00",
+  "fuelConsumed": 1,
+  "fuelRemaining": 87
+}
+[browser:/] 🟠 ACTION [22:44:35] 🚁 [bot-0] Entrée dans l'état DRONE_DEPLOYING
+[browser:/] {
+  "targetTile": "1,4"
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
+[browser:/] 🛸 [TRACKER] Drone → 1,4
+[browser:/]    Distance: 0.80 units, Travel time: 500ms
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_deploying"}
+[browser:/] 📌 [TRACKER:bot-0] DRONE_REACHES_TILE in 500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:/] ⚠️ [TRACKER:bot-0] NEED_EXPLORING canceled - state changed
+[browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_REACHES_TILE (Ship reaching final destination 5,4)
+[browser:/] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"5,4","hasResources":true,"currentResources":{"food":0,"debris":0,"special":0,"total":0},"totalResources":0,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:/] 🔵 INFO [22:44:35] 🔄 [bot-1] assignShipCollectingContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": true
+}
+[browser:/] 📋 [TRACKER] State: {"collecting":"ship_collecting"}
+[browser:/] 
+🚢 [TRACKER-CORE] ship_collecting (1200ms)
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"collecting":"ship_collecting"}
+[browser:/] 📌 [TRACKER:bot-1] SHIP_LOAD_RESOURCES in 1200ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_REACHES_TILE (Drone traveling to 1,4)
+[browser:/] 📡 [assignDroneScanningContext] Scanning tile 1,4, type: "resource" (isDanger: false)
+[browser:/] 🟠 ACTION [22:44:35] 📡 [bot-0] Entrée dans l'état DRONE_SCANNING
+[browser:/] {
+  "scannedTile": "1,4",
+  "explorationCount": 4
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_scanning"}
+[browser:/] 🔍 [TRACKER] Scanning (800ms)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_scanning"}
+[browser:/] 📌 [TRACKER:bot-0] DRONE_HAS_SCANNED in 800ms
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":7,"collected":5,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:/] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "resource" → isDanger=false
+[browser:/] 🔵 INFO [22:44:36] 🔄 [bot-0] assignDroneReturningContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_HAS_SCANNED",
+  "currentDroneState": "deploying"
+}
+[browser:/] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 1,6
+[browser:/] 🏠 [DRONE RETURNING] Current ship coord: 1,5
+[browser:/] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 1,6
+[browser:/] 🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!
+[browser:/] 🔵 INFO [22:44:36] 🔙 [bot-0] Updating drone state to returning with targetDroneTile (base)
+[browser:/] {
+  "baseTile": {
+    "position": {
+      "x": 0.8,
+      "y": 0.2,
+      "z": 4.800000000000001,
+      "coord": "1,6"
+    },
+    "coord": "1,6",
+    "type": "depart",
+    "biome": "station",
+    "explorable": false,
+    "collectable": false,
+    "resources": {
+      "food": 0,
+      "debris": 0,
+      "special": 0,
+      "total": 0
+    },
+    "hasResources": false
+  }
+}
+[browser:/] 🟠 ACTION [22:44:36] 🔙 [bot-0] Entrée dans l'état DRONE_RETURNING
+[browser:/] {
+  "baseCoord": "1,6",
+  "tilesExploredInCycle": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_returning"}
+[browser:/] 🏠 [TRACKER] Drone returning
+[browser:/]    Distance: 1.60 units, Travel time: 800.0000000000002ms
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_returning"}
+[browser:/] 📌 [TRACKER:bot-0] DRONE_REACHES_BASE in 800.0000000000002ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🔥 [DANGER] Dynamic danger dynamic-danger-1 moved to 1,2
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":7,"collected":5,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:/] 🟠 ACTION [22:44:36] 🔄 [bot-1] assignShipLoadResourcesContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:/] 🔵 INFO [22:44:36] [TileResourceSlice] Ressources collectées de 5,4 par bot-1:
+[browser:/] {
+  "food": 63,
+  "debris": 987,
+  "special": 0,
+  "total": 1050
+}
+[browser:/] 🟠 ACTION [22:44:36] 📦 [bot-1] Resources transferred from tile:
+[browser:/] {
+  "tileCoord": "5,4",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 63,
+    "debris": 987,
+    "special": 0,
+    "total": 1050
+  },
+  "vehicleResourcesBefore": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "vehicleResourcesAfter": {
+    "food": 63,
+    "debris": 987,
+    "special": 0,
+    "total": 1050
+  },
+  "vehicleCapacity": "1050/2003",
+  "capacityUsed": "52%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:/] 🔵 INFO [22:44:36] [Evaluating] Conditions
+[browser:/] {
+  "fuel": 88,
+>>>>>>> initialRules
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+<<<<<<< HEAD
   "knownTilesCount": 7
 }
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=5,3, radius=2 {"candidatesCount":9,"unexploredCount":3,"exploredCoordsSize":7,"result":true}
@@ -4723,12 +6918,341 @@
   "hasUnexploredInRadius": true,
   "shouldRelocate": false,
   "hasCollectibleTiles": false,
+=======
+  "knownTilesCount": 3
+}
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":3,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":3,"result":true}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 0, cycle: 0/3)
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER:bot-1] NEED_EXPLORING in 100ms
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":7,"collected":6,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
+[browser:/] 🔵 INFO [22:44:37] [Evaluating] → NEED_EXPLORING (no collectible tiles or ship at capacity)
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":3,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [DEBUG assignDroneDeployingContext] ship=5,4, radius=1 {"candidatesCount":4,"unexploredCount":3,"exploredCoordsSize":3,"exploredCoordsSample":["3,4","4,4","5,4"],"candidatesSample":["4,4:explored=true","5,3:explored=false","6,3:explored=false","4,5:explored=false"]}
+[browser:/] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 5,3
+[browser:/] 🔵 INFO [22:44:37] ✅ [bot-1] Drone deploying with fuel consumption:
+[browser:/] {
+  "distance": "1.00",
+  "fuelConsumed": 1,
+  "fuelRemaining": 87
+}
+[browser:/] 🟠 ACTION [22:44:37] 🚁 [bot-1] Entrée dans l'état DRONE_DEPLOYING
+[browser:/] {
+  "targetTile": "5,3"
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_deploying"}
+[browser:/] 🛸 [TRACKER] Drone → 5,3
+[browser:/]    Distance: 0.80 units, Travel time: 500ms
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"exploring":"drone_deploying"}
+[browser:/] 📌 [TRACKER:bot-1] DRONE_REACHES_TILE in 500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] ⚠️ [TRACKER:bot-1] NEED_EXPLORING canceled - state changed
+[browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_REACHES_BASE (Drone returning to base)
+[browser:/] 🔵 INFO [22:44:37] 🔄 [bot-0] assignDroneDockedContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_REACHES_BASE",
+  "currentDroneState": "returning"
+}
+[browser:/] 🟠 ACTION [22:44:37] ⚓ [bot-0] Entrée dans l'état DRONE_DOCKED
+[browser:/] {
+  "dockedTile": "1,4",
+  "totalExploredThisCycle": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_docked"}
+[browser:/] ⚓ [TRACKER] Drone docking (500ms)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"exploring":"drone_docked"}
+[browser:/] 📌 [TRACKER:bot-0] DRONE_READY_FOR_REDEPLOY in 500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_docked"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_deploying"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_REACHES_TILE (Drone traveling to 5,3)
+[browser:/] 📡 [assignDroneScanningContext] Scanning tile 5,3, type: "resource" (isDanger: false)
+[browser:/] 🟠 ACTION [22:44:37] 📡 [bot-1] Entrée dans l'état DRONE_SCANNING
+[browser:/] {
+  "scannedTile": "5,3",
+  "explorationCount": 4
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_scanning"}
+[browser:/] 🔍 [TRACKER] Scanning (800ms)
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"exploring":"drone_scanning"}
+[browser:/] 📌 [TRACKER:bot-1] DRONE_HAS_SCANNED in 800ms
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":8,"collected":6,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_docked"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
+[browser:/] 🔵 INFO [22:44:38] 🔄 [bot-0] assignDroneReadyContext called - transition to evaluating with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_READY_FOR_REDEPLOY"
+}
+[browser:/] 🔵 INFO [22:44:38] [Evaluating] Conditions
+[browser:/] {
+  "fuel": 87,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
   "isShipNotFull": true,
   "isDroneAvailable": true,
   "explorationQueueLength": 0,
   "droneState": "docked",
-  "knownTilesCount": 7
+  "knownTilesCount": 4
 }
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":2,"exploredCoordsSize":4,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=1 {"candidatesCount":3,"unexploredCount":2,"exploredCoordsSize":4,"result":true}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 1, cycle: 1/3)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER:bot-0] NEED_EXPLORING in 100ms
+[browser:/] 🔄 [FSM:bot-0] State: evaluating | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] 🔵 INFO [22:44:38] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:/] {
+  "tilesCount": 1
+}
+[browser:/] 🔵 INFO [22:44:38] 🔄 [bot-0] assignShipMovingToTileContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "NEED_COLLECTING",
+  "contextKeys": [
+    "entityId",
+    "entityType",
+    "autonomousMode",
+    "vehicle",
+    "fsmState",
+    "explorationQueue",
+    "lastAction",
+    "error",
+    "timestamps",
+    "score",
+    "memory",
+    "explorationCycle",
+    "config",
+    "droneFleet",
+    "gridInfo",
+    "explorationCount",
+    "shouldReturnToBase"
+  ]
+}
+[browser:/] 🔵 INFO [22:44:38] 🎯 [bot-0] Targeting explored tile with resources:
+[browser:/] {
+  "coord": "1,4",
+  "resources": {
+    "food": 54,
+    "debris": 178,
+    "special": 0,
+    "total": 232
+  },
+  "totalKnownTiles": 4,
+  "tilesWithResources": 1
+}
+[browser:/] 🔵 INFO [22:44:38] 🚢 [bot-0] Setting ship target for collection:
+[browser:/] {
+  "targetPosition": {
+    "x": -2.598076211353316,
+    "y": 0.5,
+    "z": 1.5,
+    "coord": "1,4"
+  },
+  "targetGridCoord": "1,4",
+  "currentCoord": "1,5",
+  "coordinateCheck": {
+    "original": {
+      "x": -2.598076211353316,
+      "y": 0.5,
+      "z": 1.5,
+      "coord": "1,4"
+    },
+    "recalculated": {
+      "x": -2.598076211353316,
+      "y": 0.5,
+      "z": 1.5,
+      "coord": "1,4"
+    },
+    "areConsistent": true
+  }
+}
+[browser:/] 🔵 INFO [22:44:38] 🛤️ [bot-0] Pathfinding result:
+[browser:/] {
+  "pathLength": 2,
+  "pathSteps": 1,
+  "path": "1,5 → 1,4",
+  "fuelConsumption": 2,
+  "fuelRemaining": 85
+}
+[browser:/] ⛽ [PATHFINDING] Fuel: 87 - 2 = 85 (1 tiles × 2/tile)
+[browser:/] 🛤️ [PATHFINDING] Path: 1,5 → 1,4
+[browser:/] 🔵 INFO [22:44:38] ✅ [bot-0] Ship movement setup result:
+[browser:/] {
+  "hasVehicle": true,
+  "targetVehicleTile": {
+    "position": {
+      "x": -2.598076211353316,
+      "y": 0.5,
+      "z": 1.5,
+      "coord": "1,4"
+    },
+    "type": "resource",
+    "biome": "grassland",
+    "walkable": true,
+    "explorable": true,
+    "collectable": true,
+    "explored": true,
+    "collected": false,
+    "neighbors": [
+      "2,4",
+      "0,4",
+      "1,5",
+      "1,3",
+      "2,3",
+      "0,5"
+    ],
+    "resources": {
+      "food": 54,
+      "debris": 178,
+      "special": 0,
+      "total": 232
+    },
+    "hasResources": true,
+    "color": "#fe244a",
+    "exploredAt": 1767908675887,
+    "exploredBy": "bot-0"
+  },
+  "isMoving": true,
+  "pathLength": 2,
+  "fuelConsumed": 2,
+  "fuelRemaining": 85
+}
+[browser:/] 🚢 [SHIP MOVING] Ship moving from 1,5 to 1,4 via 2 tiles
+[browser:/] 🏠 [SHIP MOVING] Original base coord is: 1,6 (this should stay constant!)
+[browser:/] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
+[browser:/] 📋 [TRACKER] State: {"collecting":"ship_moving_to_tile"}
+[browser:/] 🚢 [TRACKER] Ship moving
+[browser:/] 🛤️ [TRACKER] Pathfinding: 1 steps remaining (from index 0 to 1)
+[browser:/]    → SHIP_REACHES_TILE at 400ms (waypoint 1)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"collecting":"ship_moving_to_tile"}
+[browser:/] 📌 [TRACKER:bot-0] SHIP_REACHES_TILE in 400ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:/] ⚠️ [TRACKER:bot-0] NEED_EXPLORING canceled - state changed
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:/] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "resource" → isDanger=false
+[browser:/] 🔵 INFO [22:44:38] 🔄 [bot-1] assignDroneReturningContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_HAS_SCANNED",
+  "currentDroneState": "deploying"
+}
+[browser:/] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 4,4
+[browser:/] 🏠 [DRONE RETURNING] Current ship coord: 5,4
+[browser:/] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 4,4
+[browser:/] 🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!
+[browser:/] 🔵 INFO [22:44:38] 🔙 [bot-1] Updating drone state to returning with targetDroneTile (base)
+[browser:/] {
+  "baseTile": {
+    "position": {
+      "x": 3.2,
+      "y": 0.2,
+      "z": 3.2,
+      "coord": "4,4"
+    },
+    "coord": "4,4",
+    "type": "depart",
+    "biome": "station",
+    "explorable": false,
+    "collectable": false,
+    "resources": {
+      "food": 0,
+      "debris": 0,
+      "special": 0,
+      "total": 0
+    },
+    "hasResources": false
+  }
+}
+[browser:/] 🟠 ACTION [22:44:38] 🔙 [bot-1] Entrée dans l'état DRONE_RETURNING
+[browser:/] {
+  "baseCoord": "4,4",
+  "tilesExploredInCycle": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_returning"}
+[browser:/] 🏠 [TRACKER] Drone returning
+[browser:/]    Distance: 1.13 units, Travel time: 565.6854249492379ms
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"exploring":"drone_returning"}
+[browser:/] 📌 [TRACKER:bot-1] DRONE_REACHES_BASE in 565.6854249492379ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 1,4)
+[browser:/] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"1,4","hasResources":true,"currentResources":{"food":223,"debris":1371,"special":51,"total":1645},"totalResources":1645,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:/] 🔵 INFO [22:44:38] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": true
+}
+[browser:/] 📋 [TRACKER] State: {"collecting":"ship_collecting"}
+[browser:/] 
+🚢 [TRACKER-CORE] ship_collecting (1200ms)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"collecting":"ship_collecting"}
+[browser:/] 📌 [TRACKER:bot-0] SHIP_LOAD_RESOURCES in 1200ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_REACHES_BASE (Drone returning to base)
+[browser:/] 🔵 INFO [22:44:38] 🔄 [bot-1] assignDroneDockedContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_REACHES_BASE",
+  "currentDroneState": "returning"
+}
+[browser:/] 🟠 ACTION [22:44:38] ⚓ [bot-1] Entrée dans l'état DRONE_DOCKED
+[browser:/] {
+  "dockedTile": "5,3",
+  "totalExploredThisCycle": 1
+}
+[browser:/] 📋 [TRACKER] State: {"exploring":"drone_docked"}
+[browser:/] ⚓ [TRACKER] Drone docking (500ms)
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"exploring":"drone_docked"}
+[browser:/] 📌 [TRACKER:bot-1] DRONE_READY_FOR_REDEPLOY in 500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"exploring":"drone_docked"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
+[browser:/] 🔵 INFO [22:44:39] 🔄 [bot-1] assignDroneReadyContext called - transition to evaluating with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_READY_FOR_REDEPLOY"
+}
+[browser:/] 🔵 INFO [22:44:39] [Evaluating] Conditions
+[browser:/] {
+  "fuel": 87,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": false,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
+>>>>>>> initialRules
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 4
+}
+<<<<<<< HEAD
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=5,3, radius=2 {"candidatesCount":9,"unexploredCount":3,"exploredCoordsSize":7,"result":true}
 [browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
 [browser:/] 🔍 [hasUnexploredTilesInRadius] ship=5,3, radius=2 {"candidatesCount":9,"unexploredCount":3,"exploredCoordsSize":7,"result":true}
@@ -5174,10 +7698,85 @@
       "y": 0.5,
       "z": 1.5,
       "coord": "4,4"
+=======
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":4,"result":true}
+[browser:/] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:/] 🔍 [hasUnexploredTilesInRadius] ship=4,4, radius=1 {"candidatesCount":4,"unexploredCount":2,"exploredCoordsSize":4,"result":true}
+[browser:/] 📋 [TRACKER] State: evaluating
+[browser:/] 🔧 [TRACKER] NEED_EXPLORING (collectible: 1, cycle: 1/3)
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: "evaluating"
+[browser:/] 📌 [TRACKER:bot-1] NEED_EXPLORING in 100ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: evaluating | Status: active
+[browser:/] 🔵 INFO [22:44:39] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:/] {
+  "tilesCount": 1
+}
+[browser:/] 🔵 INFO [22:44:39] 🔄 [bot-1] assignShipMovingToTileContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "NEED_COLLECTING",
+  "contextKeys": [
+    "entityId",
+    "entityType",
+    "autonomousMode",
+    "vehicle",
+    "fsmState",
+    "explorationQueue",
+    "lastAction",
+    "error",
+    "timestamps",
+    "score",
+    "memory",
+    "explorationCycle",
+    "config",
+    "droneFleet",
+    "gridInfo",
+    "explorationCount",
+    "shouldReturnToBase"
+  ]
+}
+[browser:/] 🔵 INFO [22:44:39] 🎯 [bot-1] Targeting explored tile with resources:
+[browser:/] {
+  "coord": "5,3",
+  "resources": {
+    "food": 0,
+    "debris": 602,
+    "special": 1,
+    "total": 603
+  },
+  "totalKnownTiles": 4,
+  "tilesWithResources": 1
+}
+[browser:/] 🔵 INFO [22:44:39] 🚢 [bot-1] Setting ship target for collection:
+[browser:/] {
+  "targetPosition": {
+    "x": 3.4641016151377544,
+    "y": 0.5,
+    "z": 0,
+    "coord": "5,3"
+  },
+  "targetGridCoord": "5,3",
+  "currentCoord": "5,4",
+  "coordinateCheck": {
+    "original": {
+      "x": 3.4641016151377544,
+      "y": 0.5,
+      "z": 0,
+      "coord": "5,3"
+    },
+    "recalculated": {
+      "x": 3.4641016151377544,
+      "y": 0.5,
+      "z": 0,
+      "coord": "5,3"
+>>>>>>> initialRules
     },
     "areConsistent": true
   }
 }
+<<<<<<< HEAD
 [browser:/] 🔵 INFO [23:01:19] 🛤️ [bot-1] Pathfinding result:
 [browser:/] {
   "pathLength": 2,
@@ -5189,14 +7788,34 @@
 [browser:/] 🛤️ [PATHFINDING] Path: 5,3 → 4,4
 [browser:/] ⛽ [PATHFINDING] Fuel: 73 - 2 = 71 (1 tiles × 2/tile)
 [browser:/] 🔵 INFO [23:01:19] ✅ [bot-1] Ship movement setup result:
+=======
+[browser:/] 🔵 INFO [22:44:39] 🛤️ [bot-1] Pathfinding result:
+[browser:/] {
+  "pathLength": 2,
+  "pathSteps": 1,
+  "path": "5,4 → 5,3",
+  "fuelConsumption": 2,
+  "fuelRemaining": 85
+}
+[browser:/] 🛤️ [PATHFINDING] Path: 5,4 → 5,3
+[browser:/] ⛽ [PATHFINDING] Fuel: 87 - 2 = 85 (1 tiles × 2/tile)
+[browser:/] 🔵 INFO [22:44:39] ✅ [bot-1] Ship movement setup result:
+>>>>>>> initialRules
 [browser:/] {
   "hasVehicle": true,
   "targetVehicleTile": {
     "position": {
+<<<<<<< HEAD
       "x": 2.598076211353316,
       "y": 0.5,
       "z": 1.5,
       "coord": "4,4"
+=======
+      "x": 3.4641016151377544,
+      "y": 0.5,
+      "z": 0,
+      "coord": "5,3"
+>>>>>>> initialRules
     },
     "type": "resource",
     "biome": "grassland",
@@ -5206,6 +7825,7 @@
     "explored": true,
     "collected": false,
     "neighbors": [
+<<<<<<< HEAD
       "5,4",
       "3,4",
       "4,5",
@@ -5222,15 +7842,40 @@
     "hasResources": true,
     "color": "#9efbf5",
     "exploredAt": 1767823277739,
+=======
+      "6,3",
+      "4,3",
+      "5,4",
+      "5,2",
+      "6,2",
+      "4,4"
+    ],
+    "resources": {
+      "food": 0,
+      "debris": 602,
+      "special": 1,
+      "total": 603
+    },
+    "hasResources": true,
+    "color": "#10d99a",
+    "exploredAt": 1767908677561,
+>>>>>>> initialRules
     "exploredBy": "bot-1"
   },
   "isMoving": true,
   "pathLength": 2,
   "fuelConsumed": 2,
+<<<<<<< HEAD
   "fuelRemaining": 71
 }
 [browser:/] 🚢 [SHIP MOVING] Ship moving from 5,3 to 4,4 via 2 tiles
 [browser:/] 🏠 [SHIP MOVING] Original base coord is: 5,3 (this should stay constant!)
+=======
+  "fuelRemaining": 85
+}
+[browser:/] 🚢 [SHIP MOVING] Ship moving from 5,4 to 5,3 via 2 tiles
+[browser:/] 🏠 [SHIP MOVING] Original base coord is: 4,4 (this should stay constant!)
+>>>>>>> initialRules
 [browser:/] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
 [browser:/] 📋 [TRACKER] State: {"collecting":"ship_moving_to_tile"}
 [browser:/] 🚢 [TRACKER] Ship moving
@@ -5238,6 +7883,7 @@
 [browser:/]    → SHIP_REACHES_TILE at 400ms (waypoint 1)
 [browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"collecting":"ship_moving_to_tile"}
 [browser:/] 📌 [TRACKER:bot-1] SHIP_REACHES_TILE in 400ms
+<<<<<<< HEAD
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_destroyed"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_moving_to_tile"} | Status: active
 [browser:/] ⚠️ [TRACKER:bot-1] NEED_EXPLORING canceled - state changed
@@ -5246,6 +7892,111 @@
 [browser:/] 🔍 [isMovingToRepairStation] bot-1: isMovingToStation=undefined, stationType=undefined, result=false
 [browser:/] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"4,4","hasResources":true,"currentResources":{"food":137,"debris":854,"special":51,"total":1042},"totalResources":1042,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
 [browser:/] 🔵 INFO [23:01:20] 🔄 [bot-1] assignShipCollectingContext called with:
+=======
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:/] ⚠️ [TRACKER:bot-1] NEED_EXPLORING canceled - state changed
+[browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:/] 🟠 ACTION [22:44:39] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:/] ⚠️ WARN [22:44:39] ⚠️ [bot-0] Target tile has no resources to collect
+[browser:/] {
+  "coord": "1,4",
+  "tileExists": true,
+  "resources": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "useStore": true,
+  "hasTileStoreData": true,
+  "contextTiles": [
+    "0,3",
+    "0,4",
+    "0,5",
+    "0,6",
+    "1,2",
+    "1,3",
+    "1,4",
+    "1,5",
+    "1,6",
+    "2,1",
+    "2,2",
+    "2,3",
+    "2,4",
+    "2,5",
+    "2,6",
+    "3,0",
+    "3,1",
+    "3,2",
+    "3,3",
+    "3,4",
+    "3,5",
+    "3,6",
+    "4,0",
+    "4,1",
+    "4,2",
+    "4,3",
+    "4,4",
+    "4,5",
+    "5,0",
+    "5,1",
+    "5,2",
+    "5,3",
+    "5,4",
+    "6,0",
+    "6,1",
+    "6,2",
+    "6,3"
+  ]
+}
+[browser:/] 🔵 INFO [22:44:39] 🔄 [bot-0] Synchronizing FSM context with empty tile
+[browser:/] {
+  "tileCoord": "1,4",
+  "updatedKnownTilesCount": 4
+}
+[browser:/] ⚠️ WARN [22:44:39] ⚠️ [bot-0] No alternative tiles found after synchronization
+[browser:/] 🔵 INFO [22:44:39] 🔄 [bot-0] assignShipReturningContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES",
+  "currentVehicleState": false
+}
+[browser:/] 🏠 [SHIP RETURNING] Looking for base tile at coord: 1,6
+[browser:/] 🏠 [SHIP RETURNING] Current ship coord: 1,4
+[browser:/] 🏠 [SHIP RETURNING] baseCoord from vehicle context: 1,6
+[browser:/] 🛤️ [SHIP RETURNING] Path calculated: {"from":"1,4","to":"1,6","pathLength":3,"path":"1,4 → 1,5 → 1,6"}
+[browser:/] 🔵 INFO [22:44:39] 🔙 [bot-0] Updating vehicle state to returning with target:
+[browser:/] {
+  "baseCoord": "1,6",
+  "basePosition": {
+    "x": 0.8,
+    "y": 0.5,
+    "z": 4.800000000000001
+  },
+  "currentCoord": "1,4",
+  "pathLength": 3
+}
+[browser:/] 📋 [TRACKER] State: {"collecting":"ship_returning"}
+[browser:/] 🔙 [TRACKER] Ship returning via pathfinding
+[browser:/] 🛤️ [TRACKER] Return path: 2 steps remaining (index 0/2)
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 2 events for: {"collecting":"ship_returning"}
+[browser:/] 📌 [TRACKER:bot-0] SHIP_REACHES_WAYPOINT in 400ms
+[browser:/] 📌 [TRACKER:bot-0] SHIP_REACHES_BASE in 800ms
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_returning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:/] 🔥 [DANGER] Dynamic danger dynamic-danger-1 moved to 1,3
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":8,"collected":6,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_REACHES_TILE (Ship reaching final destination 5,3)
+[browser:/] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"5,3","hasResources":true,"currentResources":{"food":63,"debris":987,"special":0,"total":1050},"totalResources":1050,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:/] 🔵 INFO [22:44:39] 🔄 [bot-1] assignShipCollectingContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
@@ -5257,6 +8008,7 @@
 🚢 [TRACKER-CORE] ship_collecting (1200ms)
 [browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"collecting":"ship_collecting"}
 [browser:/] 📌 [TRACKER:bot-1] SHIP_LOAD_RESOURCES in 1200ms
+<<<<<<< HEAD
 [browser:/] 🔄 [FSM:bot-0] State: {"exploring":"drone_destroyed"} | Status: active
 [browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_collecting"} | Status: active
 [browser:/] 🤖 [TRACKER:bot-0] Sending: DRONE_DESTRUCTION_ACKNOWLEDGED (Drone destruction acknowledged - evaluating next action)
@@ -5280,13 +8032,55 @@
     "fuel": 77,
     "damage": 30,
     "resources": 0
+=======
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_returning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaches return waypoint 1/2)
+[browser:/] 🛤️ [hasMoreWaypoints] pathIndex=0, pathLength=3, hasMore=true
+[browser:/] 🔵 INFO [22:44:40] 🛤️ [bot-0] Waypoint reached:
+[browser:/] {
+  "waypointIndex": 1,
+  "totalWaypoints": 3,
+  "newCoord": "1,5",
+  "remainingSteps": 1,
+  "damage": "none"
+}
+[browser:/] 🛤️ [PATHFINDING] Waypoint 1/2: 1,5
+[browser:/] 🔄 [FSM:bot-0] State: {"collecting":"ship_returning"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-0] Sending: SHIP_REACHES_BASE (Ship reaches base (final waypoint))
+[browser:/] 🟠 ACTION [22:44:40] 🔄 [bot-0] assignShipReachedBaseContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_BASE",
+  "currentVehicleState": true
+}
+[browser:/] 🟠 ACTION [22:44:40] 🏠 [bot-0] Ship reached base - ready for maintenance
+[browser:/] {
+  "vehicleResources": {
+    "food": 223,
+    "debris": 1371,
+    "special": 51,
+    "total": 1645
+  },
+  "vehicleState": "returning"
+}
+[browser:/] 🟠 ACTION [22:44:40] 🔧 [bot-0] Entrée dans l'état MAINTAINING
+[browser:/] {
+  "vehicleState": {
+    "fuel": 85,
+    "damage": 0,
+    "resources": 1645
+>>>>>>> initialRules
   },
   "maintenanceTasks": {
     "needsFuel": true,
-    "needsRepair": true,
-    "needsDeposit": false
+    "needsRepair": false,
+    "needsDeposit": true
   }
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:01:20] 🛒 [bot-0] PURCHASING DRONE - Starting drone acquisition
 [browser:/] 📋 [TRACKER] State: {"maintaining":"purchasing_drone"}
 [browser:/] 🛒 [TRACKER] Purchasing drone (5000ms)
@@ -5322,10 +8116,22 @@
 [browser:/] {
   "tileCoord": "4,4",
   "tileResourcesAfter": {
+=======
+[browser:/] 🟠 ACTION [22:44:40] 📦 [bot-0] Dépôt des ressources
+[browser:/] {
+  "resourcesDeposited": {
+    "food": 223,
+    "debris": 1371,
+    "special": 51,
+    "total": 1645
+  },
+  "currentScore": {
+>>>>>>> initialRules
     "food": 0,
     "debris": 0,
     "special": 0,
     "total": 0
+<<<<<<< HEAD
   },
   "tileCollectedFlag": true,
   "collected": {
@@ -5426,10 +8232,13 @@
     "debris": 1495,
     "special": 3,
     "total": 1638
+=======
+>>>>>>> initialRules
   }
 }
 [browser:/] 📋 [TRACKER] State: {"maintaining":"depositing"}
 [browser:/] 💰 [TRACKER] Depositing (1500ms)
+<<<<<<< HEAD
 [browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"maintaining":"depositing"}
 [browser:/] 📌 [TRACKER:bot-1] SHIP_DEPOSIT_COMPLETE in 1500ms
 [browser:/] 🔄 [FSM:bot-0] State: {"maintaining":"purchasing_drone"} | Status: active
@@ -5459,11 +8268,20 @@
   }
 }
 [browser:/] 🟠 ACTION [23:01:23] 🔄 [bot-1] assignShipDepositResourcesContext called with:
+=======
+[browser:/] 📋 [TRACKER:bot-0] Scheduling 1 events for: {"maintaining":"depositing"}
+[browser:/] 📌 [TRACKER:bot-0] SHIP_DEPOSIT_COMPLETE in 1500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"maintaining":"depositing"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_collecting"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:/] 🟠 ACTION [22:44:41] 🔄 [bot-1] assignShipLoadResourcesContext called with:
+>>>>>>> initialRules
 [browser:/] {
   "hasContext": true,
   "hasEvent": true,
-  "eventType": "SHIP_DEPOSIT_COMPLETE"
+  "eventType": "SHIP_LOAD_RESOURCES"
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:01:23] 💰 [bot-1] Depositing resources at base:
 [browser:/] {
   "resourcesDeposited": {
@@ -5928,13 +8746,111 @@
     "fuel": 75,
     "damage": 30,
     "resources": 0
+=======
+[browser:/] 🔵 INFO [22:44:41] [TileResourceSlice] Ressources collectées de 5,3 par bot-1:
+[browser:/] {
+  "food": 0,
+  "debris": 602,
+  "special": 1,
+  "total": 603
+}
+[browser:/] 🟠 ACTION [22:44:41] 📦 [bot-1] Resources transferred from tile:
+[browser:/] {
+  "tileCoord": "5,3",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 0,
+    "debris": 602,
+    "special": 1,
+    "total": 603
+  },
+  "vehicleResourcesBefore": {
+    "food": 63,
+    "debris": 987,
+    "special": 0,
+    "total": 1050
+  },
+  "vehicleResourcesAfter": {
+    "food": 63,
+    "debris": 1589,
+    "special": 1,
+    "total": 1653
+  },
+  "vehicleCapacity": "1653/2003",
+  "capacityUsed": "83%",
+  "isNearFull": true,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:/] 🔵 INFO [22:44:41] 🔄 [bot-1] assignShipReturningContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES",
+  "currentVehicleState": false
+}
+[browser:/] 🏠 [SHIP RETURNING] Looking for base tile at coord: 4,4
+[browser:/] 🏠 [SHIP RETURNING] Current ship coord: 5,3
+[browser:/] 🏠 [SHIP RETURNING] baseCoord from vehicle context: 4,4
+[browser:/] 🛤️ [SHIP RETURNING] Path calculated: {"from":"5,3","to":"4,4","pathLength":2,"path":"5,3 → 4,4"}
+[browser:/] 🔵 INFO [22:44:41] 🔙 [bot-1] Updating vehicle state to returning with target:
+[browser:/] {
+  "baseCoord": "4,4",
+  "basePosition": {
+    "x": 3.2,
+    "y": 0.5,
+    "z": 3.2
+  },
+  "currentCoord": "5,3",
+  "pathLength": 2
+}
+[browser:/] 📋 [TRACKER] State: {"collecting":"ship_returning"}
+[browser:/] 🔙 [TRACKER] Ship returning via pathfinding
+[browser:/] 🛤️ [TRACKER] Return path: 1 steps remaining (index 0/1)
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"collecting":"ship_returning"}
+[browser:/] 📌 [TRACKER:bot-1] SHIP_REACHES_BASE in 400ms
+[browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":8,"collected":7,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:/] 🔄 [FSM:bot-0] State: {"maintaining":"depositing"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"collecting":"ship_returning"} | Status: active
+[browser:/] 🤖 [TRACKER:bot-1] Sending: SHIP_REACHES_BASE (Ship reaches base (final waypoint))
+[browser:/] 🟠 ACTION [22:44:41] 🔄 [bot-1] assignShipReachedBaseContext called with:
+[browser:/] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_BASE",
+  "currentVehicleState": true
+}
+[browser:/] 🟠 ACTION [22:44:41] 🏠 [bot-1] Ship reached base - ready for maintenance
+[browser:/] {
+  "vehicleResources": {
+    "food": 63,
+    "debris": 1589,
+    "special": 1,
+    "total": 1653
+  },
+  "vehicleState": "returning"
+}
+[browser:/] 🟠 ACTION [22:44:41] 🔧 [bot-1] Entrée dans l'état MAINTAINING
+[browser:/] {
+  "vehicleState": {
+    "fuel": 84,
+    "damage": 0,
+    "resources": 1653
+>>>>>>> initialRules
   },
   "maintenanceTasks": {
     "needsFuel": true,
-    "needsRepair": true,
-    "needsDeposit": false
+    "needsRepair": false,
+    "needsDeposit": true
   }
 }
+<<<<<<< HEAD
 [browser:/] 🟠 ACTION [23:01:34] 🔄 [bot-0] ========================================
 [browser:/] 🟠 ACTION [23:01:34] 🔄 [bot-0] RELOCATING - Checking radius expansion
 [browser:/] 🟠 ACTION [23:01:34] 🔄 [bot-0] Current radius: 3, Max: 3
@@ -5991,3 +8907,26 @@
 [browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":19,"collected":12,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
 [browser:/] 🔥 [DANGER] Dynamic danger dynamic-danger-1 moved to 5,3
 [browser:/] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":19,"collected":12,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+=======
+[browser:/] 🟠 ACTION [22:44:41] 📦 [bot-1] Dépôt des ressources
+[browser:/] {
+  "resourcesDeposited": {
+    "food": 63,
+    "debris": 1589,
+    "special": 1,
+    "total": 1653
+  },
+  "currentScore": {
+    "food": 119,
+    "debris": 1058,
+    "special": 50,
+    "total": 1227
+  }
+}
+[browser:/] 📋 [TRACKER] State: {"maintaining":"depositing"}
+[browser:/] 💰 [TRACKER] Depositing (1500ms)
+[browser:/] 📋 [TRACKER:bot-1] Scheduling 1 events for: {"maintaining":"depositing"}
+[browser:/] 📌 [TRACKER:bot-1] SHIP_DEPOSIT_COMPLETE in 1500ms
+[browser:/] 🔄 [FSM:bot-0] State: {"maintaining":"depositing"} | Status: active
+[browser:/] 🔄 [FSM:bot-1] State: {"maintaining":"depositing"} | Status: active
+>>>>>>> initialRules
