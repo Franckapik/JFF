@@ -548,7 +548,16 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
     const radius = get().radius;
     const effectiveSeed = seed ?? Date.now();
     
-    fsmLogger.game(`🎯 [TileGeneration] Starting fairness-aware generation with seed=${effectiveSeed}`);
+    fsmLogger.game(`
+╔════════════════════════════════════════════════════════════════╗
+║         TILE GENERATION ORCHESTRATION - DETAILED LOG            ║
+╚════════════════════════════════════════════════════════════════╝
+Initial Conditions:
+  • Seed: ${effectiveSeed}
+  • Grid Radius: ${radius}
+  • Active Bots: [${activeBotIds.join(', ')}]
+  • Total Tiles Before: ${Object.keys(currentTiles).length}
+`);
     
     // 1. Placer les tuiles de départ avec validation d'équité
     const { tileMap: tilesWithSpawns, spawns, validation } = get().placeStartingTilesWithFairness(
@@ -559,16 +568,44 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
     );
     
     // Log validation result
-    fsmLogger.game(`🎯 [Fairness] Validation: ${validation.valid ? '✅ PASS' : '⚠️ BEST EFFORT'}`);
-    fsmLogger.game(`🎯 [Fairness] Metrics: distance=${validation.metrics.spawnDistance.toFixed(1)}, resources=${validation.metrics.resourceDifference.toFixed(1)}%, terrain=${validation.metrics.terrainDifference.toFixed(1)}%`);
+    fsmLogger.game(`
+SPAWN PLACEMENT RESULTS:
+  ✅ Spawns Placed: [${spawns.join(', ')}]
+  📊 Fairness Status: ${validation.valid ? '✅ ALL RULES PASSED' : '⚠️ BEST EFFORT'}
+  
+KEY METRICS:
+  • Spawn Min Distance: ${validation.metrics.spawnDistance.toFixed(1)} tiles
+  • Resource Balance: ${validation.metrics.resourceDifference.toFixed(1)}% difference
+  • Fuel Access Diff: ${validation.metrics.fuelAccessDiff} tiles
+  • Repair Access Diff: ${validation.metrics.repairAccessDiff} tiles
+  • Terrain Fairness: ${validation.metrics.terrainDifference.toFixed(1)}% difference
+`);
     
     // 2. Placer les autres types de tuiles (en évitant les zones de spawn)
+    fsmLogger.game(`
+SPECIAL TILES PLACEMENT:
+  1️⃣ Placing empty tiles (avoiding spawn radius 1)...`);
     let updatedTileMap = get().placeEmptyTiles(tilesWithSpawns, 0.15, effectiveSeed, spawns);
+    const emptyCount = Object.values(updatedTileMap).filter((t: Tile) => t.type === 'empty').length;
+    fsmLogger.game(`     ✓ Empty tiles placed: ${emptyCount}`);
+    
+    fsmLogger.game(`  2️⃣ Placing obstacle tiles (avoiding spawn radius 1)...`);
     updatedTileMap = get().placeObstacleTiles(updatedTileMap, effectiveSeed, spawns);
+    const obstacleCount = Object.values(updatedTileMap).filter((t: Tile) => t.type === 'obstacle').length;
+    fsmLogger.game(`     ✓ Obstacle tiles placed: ${obstacleCount}`);
+    
+    fsmLogger.game(`  3️⃣ Placing danger tiles (avoiding spawn radius 1)...`);
     updatedTileMap = get().placeDangerTiles(updatedTileMap, effectiveSeed, spawns);
+    const dangerCount = Object.values(updatedTileMap).filter((t: Tile) => t.type === 'danger').length;
+    fsmLogger.game(`     ✓ Danger tiles placed: ${dangerCount}`);
     
     // 3. Placer les stations (équidistantes des spawns)
+    fsmLogger.game(`  4️⃣ Placing stations (equidistant from spawns, avoiding spawn radius 2)...`);
     updatedTileMap = get().placeGameStations(updatedTileMap, radius, effectiveSeed, spawns);
+    const fuelCount = Object.values(updatedTileMap).filter((t: Tile) => t.type === 'fuel').length;
+    const repairCount = Object.values(updatedTileMap).filter((t: Tile) => t.type === 'repair').length;
+    fsmLogger.game(`     ✓ Fuel stations placed: ${fuelCount}`);
+    fsmLogger.game(`     ✓ Repair stations placed: ${repairCount}`);
     
     // 4. Récupérer les tuiles de départ depuis le TileMap
     const startingTiles = Object.values(updatedTileMap).filter(
@@ -579,6 +616,9 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
     const finalTileMap = { ...updatedTileMap };
     
     // 6. Assigner les tuiles aux bots actifs
+    fsmLogger.game(`
+BOT ASSIGNMENT:
+  Assigning spawn tiles to active bots:`);
     activeBotIds.forEach((botId, index) => {
       if (index < startingTiles.length) {
         const tile = startingTiles[index];
@@ -588,7 +628,7 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
         };
         finalTileMap[tile.position.coord] = updatedTile;
         
-        fsmLogger.game(`[TileGeneration] Tuile de départ assignée à ${botId}:${tile.position.coord} (${tile.position.x.toFixed(1)}, ${tile.position.z.toFixed(1)})`);
+        fsmLogger.game(`    ✓ ${botId} → Coord: ${tile.position.coord} | Pos: (${tile.position.x.toFixed(2)}, ${tile.position.z.toFixed(2)}) | Resources: 250 (F:100, D:100, S:50)`);
       }
     });
     
@@ -597,7 +637,20 @@ const createTileGenerationSlice = (_set: unknown, get: () => TileStoreType): Til
       get().updateTile(coord as GridCoordinate, finalTileMap[coord as GridCoordinate]);
     });
     
-    fsmLogger.game(`🎯 [TileGeneration] Generation complete. Seed=${effectiveSeed}, Spawns=${spawns.join(', ')}`);
+    fsmLogger.game(`
+FINAL TILE COMPOSITION:
+  • Total Tiles: ${Object.keys(finalTileMap).length}
+  • Depart (Spawn): ${startingTiles.length}
+  • Resource: ${Object.values(finalTileMap).filter((t: Tile) => t.type === 'resource').length}
+  • Empty: ${emptyCount}
+  • Obstacle: ${obstacleCount}
+  • Danger: ${dangerCount}
+  • Fuel Station: ${fuelCount}
+  • Repair Station: ${repairCount}
+  
+✅ TILE GENERATION COMPLETE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`);
   },
 
 });

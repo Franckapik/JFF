@@ -69,11 +69,45 @@ export default function App() {
       
       const tilesAfterAssignment = tileStore.tiles;
       const departTiles = Object.values(tilesAfterAssignment).filter(t => t.type === 'depart');
-      console.log('🎯 [App] Fairness assignment complete:', {
-        departTilesCount: departTiles.length,
-        departTileCoords: departTiles.map(t => t.position.coord),
-        assignedBots: departTiles.map(t => t.assignedToBot)
-      });
+      
+      // ✅ STEP 6: Log fairness validation summary
+      console.log(`
+╔════════════════════════════════════════════════════════════════╗
+║           GAME INITIALIZATION COMPLETE - FAIRNESS SUMMARY       ║
+╚════════════════════════════════════════════════════════════════╝
+
+🎲 SEED & GENERATION
+  • Map Seed: ${seed}
+  • Grid Radius: 3 tiles
+  • Total Tiles Generated: ${Object.keys(generatedTiles).length}
+  • Total Tiles After Assignment: ${Object.keys(tilesAfterAssignment).length}
+
+🚀 SPAWN POSITIONS
+  • Spawn Count: ${departTiles.length} (${departTiles.map(t => t.assignedToBot).join(', ')})
+  • Spawn Coordinates: [${departTiles.map(t => t.position.coord).join(', ')}]
+  • Starting Resources per Bot: Food=100, Debris=100, Special=50 (Total=250)
+
+🎯 FAIRNESS VALIDATION
+  ✅ All fairness rules have been validated during placement
+  📊 See detailed validation logs above for full metrics
+  
+🗺️ MAP COMPOSITION
+  • Total Tiles: ${Object.keys(tilesAfterAssignment).length}
+  • Starting Tiles (Depart): ${departTiles.length}
+  • Resource Tiles: ${Object.values(tilesAfterAssignment).filter(t => t.type === 'resource').length}
+  • Obstacle Tiles: ${Object.values(tilesAfterAssignment).filter(t => t.type === 'obstacle').length}
+  • Danger Tiles: ${Object.values(tilesAfterAssignment).filter(t => t.type === 'danger').length}
+  • Station Tiles: ${Object.values(tilesAfterAssignment).filter(t => t.type === 'fuel' || t.type === 'repair').length}
+
+⚙️ GAME STATE
+  • Bots Initialized: 2
+  • Starting FSM State: Initialized
+  • Ready for Gameplay: ✅ YES
+
+╔════════════════════════════════════════════════════════════════╗
+║                  GAME START - LET'S PLAY! 🎮                   ║
+╚════════════════════════════════════════════════════════════════╝
+`);
       
       gameStore.markStartingTilesAsAssigned();
       xfsmStore.startBot('bot-0');

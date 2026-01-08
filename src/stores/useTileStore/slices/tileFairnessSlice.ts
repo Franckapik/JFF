@@ -550,11 +550,48 @@ const createTileFairnessSlice = (_set: unknown, get: () => TileStoreType): TileF
       issues,
     };
 
-    // Log validation result
-    fsmLogger.game(`[Fairness] Attempt ${attempt} (seed=${seed}): ${result.valid ? '✅ VALID' : '❌ INVALID'}`);
-    if (issues.length > 0) {
-      fsmLogger.game(`[Fairness] Issues: ${issues.join(', ')}`);
-    }
+    // Log detailed validation result with all metrics
+    const status = result.valid ? '✅ VALID' : '❌ INVALID';
+    fsmLogger.game(`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 FAIRNESS VALIDATION - Attempt ${attempt} (Seed: ${seed})
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status: ${status}
+
+📏 SPAWN DISTANCE
+  • Metric: ${spawnDistanceResult.value.toFixed(1)} tiles
+  • Threshold: ≥ ${spawnDistanceResult.threshold.toFixed(1)} tiles
+  • Result: ${spawnDistanceResult.status === 'PASS' ? '✅ PASS' : '❌ FAIL'}
+  • Details: ${spawnDistanceResult.details}
+
+💰 RESOURCE BALANCE (Radius 1)
+  • Metric: ${resourceResult.value.toFixed(1)}% difference
+  • Threshold: ≤ ${resourceResult.threshold}%
+  • Result: ${resourceResult.status === 'PASS' ? '✅ PASS' : '❌ FAIL'}
+  • Details: ${resourceResult.details}
+
+⛽ FUEL STATION ACCESS
+  • Metric: ${fuelResult?.value ?? 0} tiles difference
+  • Threshold: ≤ ${fuelResult?.threshold ?? 0} tiles
+  • Result: ${fuelResult?.status === 'PASS' ? '✅ PASS' : '❌ FAIL'}
+  • Details: ${fuelResult?.details ?? 'N/A'}
+
+🔧 REPAIR STATION ACCESS
+  • Metric: ${repairResult?.value ?? 0} tiles difference
+  • Threshold: ≤ ${repairResult?.threshold ?? 0} tiles
+  • Result: ${repairResult?.status === 'PASS' ? '✅ PASS' : '❌ FAIL'}
+  • Details: ${repairResult?.details ?? 'N/A'}
+
+🌍 TERRAIN FAIRNESS (Radius 2, Walkable %)
+  • Metric: ${terrainResult.value.toFixed(1)}% difference
+  • Threshold: ≤ ${terrainResult.threshold}%
+  • Result: ${terrainResult.status === 'PASS' ? '✅ PASS' : '❌ FAIL'}
+  • Details: ${terrainResult.details}
+
+${issues.length > 0 ? `⚠️ ISSUES FOUND:
+  ${issues.map(issue => `• ${issue}`).join('\n  ')}` : '✨ All fairness rules satisfied!'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`);
 
     return result;
   },
@@ -583,6 +620,13 @@ const createTileFairnessSlice = (_set: unknown, get: () => TileStoreType): TileF
     let currentSeed = seed;
     let bestResult: { tileMap: TileMap; spawns: GridCoordinate[]; validation: FairnessValidationResult } | null = null;
 
+    fsmLogger.game(`
+╔════════════════════════════════════════════════════════════════╗
+║            STARTING FAIRNESS-AWARE MAP GENERATION              ║
+║  Seed: ${seed} | Max Attempts: ${MAX_ATTEMPTS} | Bot Count: ${botCount}      ║
+╚════════════════════════════════════════════════════════════════╝
+`);
+
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       const random = get().createSeededRandom(currentSeed);
 
@@ -600,6 +644,8 @@ const createTileFairnessSlice = (_set: unknown, get: () => TileStoreType): TileF
       // Select spawn tiles
       const selectedTiles = shuffledTiles.slice(0, botCount);
       const spawns = selectedTiles.map(t => t.position.coord);
+
+      fsmLogger.game(`[Fairness] Attempt ${attempt}/${MAX_ATTEMPTS}: Testing seed=${currentSeed}, spawns=[${spawns.join(', ')}]`);
 
       // Create new tile map with starting tiles
       const newTileMap = { ...tileMap };
@@ -629,7 +675,17 @@ const createTileFairnessSlice = (_set: unknown, get: () => TileStoreType): TileF
       }
 
       if (validation.valid) {
-        fsmLogger.game(`[Fairness] ✅ Map validated after ${attempt} attempt(s) with seed=${currentSeed}`);
+        fsmLogger.game(`
+✅ SUCCESS: Map validated after ${attempt} attempt(s)!
+Seed: ${currentSeed}
+Spawns: [${spawns.join(', ')}]
+Metrics Summary:
+  • Spawn Distance: ${validation.metrics.spawnDistance.toFixed(1)} tiles
+  • Resource Difference: ${validation.metrics.resourceDifference.toFixed(1)}%
+  • Fuel Access Difference: ${validation.metrics.fuelAccessDiff} tiles
+  • Repair Access Difference: ${validation.metrics.repairAccessDiff} tiles
+  • Terrain Difference: ${validation.metrics.terrainDifference.toFixed(1)}%
+`);
         return { tileMap: newTileMap, spawns, validation };
       }
 
@@ -638,7 +694,13 @@ const createTileFairnessSlice = (_set: unknown, get: () => TileStoreType): TileF
     }
 
     // Return best result after max attempts
-    fsmLogger.game(`[Fairness] ⚠️ Max attempts reached, using best available map (${bestResult!.validation.issues.length} issues)`);
+    fsmLogger.game(`
+⚠️ MAX ATTEMPTS REACHED
+Best result found with ${bestResult!.validation.issues.length} issue(s)
+Using seed: ${bestResult!.validation.seed}
+Spawns: [${bestResult!.spawns.join(', ')}]
+Issues: ${bestResult!.validation.issues.join(', ')}
+`);
     return bestResult!;
   },
 
