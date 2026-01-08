@@ -8,6 +8,7 @@ import type { DroneVisualState } from './drone.d';
 import type { BotSnapshot, EmptyBotState, FSMEvent } from './fsm.d';
 import type { ResourceStats } from './resources.d';
 import type { Path, Tile, TileMap, TileType, TileWithDistance } from './tile.d';
+import type { FairnessValidationResult } from '../stores/useTileStore/slices/tileFairnessSlice';
 
 // ============================================================================
 // SLICE INTERFACES - Actions et état pour chaque slice
@@ -23,6 +24,7 @@ export interface TileBaseSliceActions {
   selectedTile: GridCoordinate | null;
   autoExploreEnabled: boolean;
   debugMode: boolean;
+  lastFairnessValidation: FairnessValidationResult | null;
 
   // Actions de base
   updateHoveredTile: (coord: GridCoordinate | null) => void;

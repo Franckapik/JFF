@@ -25,6 +25,7 @@ import type {
   TileMap
 } from '../../../types/index.ts';
 import type { TileBaseSliceActions, TileStoreType } from '../../../types/stores.d.ts';
+import type { FairnessValidationResult } from './tileFairnessSlice.ts';
 
 // =========================================================================
 // SLICE PRINCIPAL
@@ -57,6 +58,12 @@ const createTileBaseSlice = (set: any, get: () => TileStoreType): TileBaseSliceA
      * Coordonnée de la tuile actuellement survolée
      */
     hoveredTile: null,
+
+    /**
+     * Derniers résultats de validation d'équité (fairness)
+     * Utilisés pour afficher les conditions de départ
+     */
+    lastFairnessValidation: null as FairnessValidationResult | null,
 
     // =====================================================================
     // ACTIONS PUBLIQUES - GESTION DE L'ÉTAT

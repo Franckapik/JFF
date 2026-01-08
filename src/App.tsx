@@ -2,6 +2,7 @@ import React from 'react';
 
 import { useMultiSimulatedTracker, type BotActor } from './ai/fsm/machineX/hooks/trackers/useMultiSimulatedTracker';
 import FSMVisualization from './components/FSMVisualization';
+import StartingConditionsPanel from './components/StartingConditionsPanel';
 import { config } from './config';
 import { useDangerMovement } from './hooks/useDangerMovement';
 import useBotSelectionStore from './stores/useBotSelectionStore';
@@ -145,7 +146,12 @@ export default function App() {
 
   return (
     <React.StrictMode>
-      <FSMVisualization />
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <StartingConditionsPanel />
+        <div style={{ flex: 1, overflow: 'auto' }}>
+          <FSMVisualization />
+        </div>
+      </div>
     </React.StrictMode>
   );
 }

@@ -66,7 +66,17 @@ export interface FairnessThresholds {
 
 /** Configuration par défaut des seuils */
 export const DEFAULT_FAIRNESS_THRESHOLDS: FairnessThresholds = {
-  minSpawnDistanceMultiplier: 1.5,
+  minSpawnDistanceMultiplier: 1.0,      // 3.0 tiles instead of 4.5 (more achievable)
+  maxResourceDifferencePercent: 35,      // 30% → 35% (slightly more lenient)
+  maxStationAccessDiff: 2,               // 1 → 2 tiles (much more achievable)
+  maxTerrainDifferencePercent: 20,       // 15% → 20% (slightly more lenient)
+  resourceCheckRadius: 1,
+  terrainCheckRadius: 2,
+};
+
+/** Strict fairness thresholds (for competitive mode) */
+export const STRICT_FAIRNESS_THRESHOLDS: FairnessThresholds = {
+  minSpawnDistanceMultiplier: 1.5,      // 4.5 tiles
   maxResourceDifferencePercent: 30,
   maxStationAccessDiff: 1,
   maxTerrainDifferencePercent: 15,
