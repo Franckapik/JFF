@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import type { FairnessValidationResult, FairnessRuleResult } from '../stores/useTileStore/slices/tileFairnessSlice.ts';
 
 import { useTileStore } from '../stores/useTileStore/index.ts';
@@ -5,8 +7,10 @@ import { useTileStore } from '../stores/useTileStore/index.ts';
 /**
  * Component displaying starting conditions fairness analysis
  * Shows all 5 fairness metrics with visual indicators and margins
+ * Collapsible panel for better UX
  */
 export default function StartingConditionsPanel() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const fairnessData = useTileStore((state) => state.lastFairnessValidation);
   const tiles = useTileStore((state) => state.tiles);
 
@@ -174,27 +178,56 @@ export default function StartingConditionsPanel() {
         backgroundColor: '#1a1a1a',
         border: '2px solid #4CAF50',
         borderRadius: '8px',
-        padding: '20px',
-        marginBottom: '20px',
+        margin: '10px',
         fontFamily: 'monospace',
         fontSize: '13px',
         color: '#e0e0e0',
+        overflow: 'hidden',
+        transition: 'all 0.3s ease',
       }}
     >
-      {/* Header */}
-      <div style={{ marginBottom: '15px' }}>
-        <h2 style={{ margin: '0 0 5px 0', color: '#4CAF50', fontSize: '16px' }}>
-          🎯 STARTING CONDITIONS ANALYSIS
-        </h2>
-        <div style={{ fontSize: '12px', color: '#888', marginBottom: '10px' }}>
-          Seed: {result.seed} | Mode: BALANCED | Attempt: {result.attempt}/10
+      {/* Collapsible Header */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '12px 16px',
+          backgroundColor: '#0d0d0d',
+          borderBottom: isCollapsed ? 'none' : '1px solid #333',
+          cursor: 'pointer',
+          userSelect: 'none',
+        }}
+        onClick={() => setIsCollapsed(!isCollapsed)}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '18px' }}>{isCollapsed ? '▶' : '▼'}</span>
+          <div>
+            <h2 style={{ margin: '0', color: '#4CAF50', fontSize: '14px', fontWeight: 'bold' }}>
+              🎯 STARTING CONDITIONS ANALYSIS
+            </h2>
+            <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>
+              Seed: {result.seed} | Mode: BALANCED | Attempt: {result.attempt}/10
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
+              {stars.toString().repeat(fairnessScore > 50 ? fairnessScore / 20 : 1)}
+            </div>
+            <div style={{ fontSize: '11px', color: '#888' }}>{fairnessScore}% Fair</div>
+          </div>
         </div>
       </div>
 
-      {/* Each Rule */}
-      {result.rules.map((rule: FairnessRuleResult, index: number) => (
-        <div
-          key={index}
+      {/* Collapsible Content */}
+      {!isCollapsed && (
+        <div style={{ padding: '16px' }}>
+          {/* Each Rule */}
+          {result.rules.map((rule: FairnessRuleResult, index: number) => (
+            <div
+              key={index}
           style={{
             marginBottom: '15px',
             paddingBottom: '15px',
@@ -247,17 +280,17 @@ export default function StartingConditionsPanel() {
         </div>
       ))}
 
-      {/* Fairness Score Summary */}
-      <div
-        style={{
-          marginTop: '15px',
-          paddingTop: '15px',
-          borderTop: '2px solid #4CAF50',
-          backgroundColor: '#222',
-          padding: '12px',
-          borderRadius: '4px',
-        }}
-      >
+          {/* Fairness Score Summary */}
+          <div
+            style={{
+              marginTop: '15px',
+              paddingTop: '15px',
+              borderTop: '2px solid #4CAF50',
+              backgroundColor: '#222',
+              padding: '12px',
+              borderRadius: '4px',
+            }}
+          >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span style={{ color: '#FFD700', fontWeight: 'bold' }}>📊 OVERALL FAIRNESS SCORE</span>
@@ -310,6 +343,8 @@ export default function StartingConditionsPanel() {
           }}
         >
           ⚠️ Issues: {result.issues.join(' | ')}
+        </div>
+      )}
         </div>
       )}
     </div>

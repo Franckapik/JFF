@@ -146,8 +146,12 @@ export default function App() {
 
   return (
     <React.StrictMode>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-        <StartingConditionsPanel />
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0a0a0a' }}>
+        {/* Fairness Analysis Panel - Collapsible at top */}
+        <div style={{ maxHeight: '400px', overflowY: 'auto', borderBottom: '1px solid #333' }}>
+          <StartingConditionsPanel />
+        </div>
+        {/* Main FSM Visualization - Flex fill remaining space */}
         <div style={{ flex: 1, overflow: 'auto' }}>
           <FSMVisualization />
         </div>
