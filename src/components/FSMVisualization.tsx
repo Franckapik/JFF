@@ -4,10 +4,10 @@ import { gridToWorld } from '../core/spatial';
 import useBotSelectionStore from '../stores/useBotSelectionStore';
 import useGameStore from '../stores/useGameStore';
 import { useTileStore } from '../stores/useTileStore';
+import type { FairnessRuleResult, FairnessValidationResult } from '../stores/useTileStore/slices/tileFairnessSlice.ts';
 import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates';
 import type { FSMContext } from '../types/fsm.d';
-import type { FairnessValidationResult, FairnessRuleResult } from '../stores/useTileStore/slices/tileFairnessSlice.ts';
 
 import BotSelector from './BotSelector';
 import PositionDisplay from './PositionDisplay';
@@ -834,64 +834,93 @@ function StartingConditionsSection() {
   const calculateBotFavor = (): { favoredBot: string; advantage: string; reason: string } => {
     let bot0Score = 0;
     let bot1Score = 0;
+    const reasons: string[] = [];
 
-    // Resource Balance: Check which spawn has more resources nearby
+    // Resource Balance: Parse "Resources: 150 vs 200 (25% diff)"
     const resourceRule = result.rules.find(r => r.rule === 'resourceBalance');
-    if (resourceRule && resourceRule.details) {
-      // Details typically indicate which bot benefits if imbalanced
-      if (resourceRule.details.includes('bot-0') || resourceRule.details.includes('higher')) {
-        bot0Score += 10;
-      } else if (resourceRule.details.includes('bot-1') || resourceRule.details.includes('lower')) {
-        bot1Score += 10;
+    if (resourceRule && resourceRule.details && resourceRule.status === 'PASS') {
+      // Extract numbers: "Resources: 150 vs 200 ..."
+      const match = resourceRule.details.match(/Resources:\s*(\d+)\s*vs\s*(\d+)/);
+      if (match) {
+        const res0 = parseInt(match[1], 10);
+        const res1 = parseInt(match[2], 10);
+        if (res0 > res1) {
+          bot0Score += 20;
+          reasons.push(`Bot-0 has more resources (${res0} vs ${res1})`);
+        } else if (res1 > res0) {
+          bot1Score += 20;
+          reasons.push(`Bot-1 has more resources (${res1} vs ${res0})`);
+        }
       }
     }
 
-    // Fuel Access: Check asymmetric distances
+    // Fuel Access: Parse "fuel distances: 2 tiles vs 3 tiles (max distance: 3, min: 2)"
     const fuelRule = result.rules.find(r => r.rule === 'fuelAccess');
-    if (fuelRule && fuelRule.details && fuelRule.value !== 999) {
-      if (fuelRule.details.includes('closer') || fuelRule.details.includes('bot-0')) {
-        bot0Score += 5;
-      } else if (fuelRule.details.includes('bot-1')) {
-        bot1Score += 5;
+    if (fuelRule && fuelRule.details && fuelRule.value !== 999 && fuelRule.status === 'PASS') {
+      const match = fuelRule.details.match(/fuel distances:\s*(\d+)\s*tiles\s*vs\s*(\d+)\s*tiles/);
+      if (match) {
+        const fuel0 = parseInt(match[1], 10);
+        const fuel1 = parseInt(match[2], 10);
+        if (fuel0 < fuel1) {
+          bot0Score += 15;
+          reasons.push(`Bot-0 is closer to fuel (${fuel0} vs ${fuel1} tiles)`);
+        } else if (fuel1 < fuel0) {
+          bot1Score += 15;
+          reasons.push(`Bot-1 is closer to fuel (${fuel1} vs ${fuel0} tiles)`);
+        }
       }
     }
 
-    // Repair Access: Check asymmetric distances
+    // Repair Access: Parse "repair distances: 2 tiles vs 4 tiles ..."
     const repairRule = result.rules.find(r => r.rule === 'repairAccess');
-    if (repairRule && repairRule.details && repairRule.value !== 999) {
-      if (repairRule.details.includes('closer') || repairRule.details.includes('bot-0')) {
-        bot0Score += 5;
-      } else if (repairRule.details.includes('bot-1')) {
-        bot1Score += 5;
+    if (repairRule && repairRule.details && repairRule.value !== 999 && repairRule.status === 'PASS') {
+      const match = repairRule.details.match(/repair distances:\s*(\d+)\s*tiles\s*vs\s*(\d+)\s*tiles/);
+      if (match) {
+        const repair0 = parseInt(match[1], 10);
+        const repair1 = parseInt(match[2], 10);
+        if (repair0 < repair1) {
+          bot0Score += 15;
+          reasons.push(`Bot-0 is closer to repair (${repair0} vs ${repair1} tiles)`);
+        } else if (repair1 < repair0) {
+          bot1Score += 15;
+          reasons.push(`Bot-1 is closer to repair (${repair1} vs ${repair0} tiles)`);
+        }
       }
     }
 
-    // Terrain Fairness: Check which spawn has more walkable terrain
+    // Terrain Fairness: Parse "Terrain walkable: 65% vs 55% (10% diff)"
     const terrainRule = result.rules.find(r => r.rule === 'terrainFairness');
-    if (terrainRule && terrainRule.details) {
-      if (terrainRule.details.includes('bot-0') || terrainRule.details.includes('higher')) {
-        bot0Score += 10;
-      } else if (terrainRule.details.includes('bot-1') || terrainRule.details.includes('lower')) {
-        bot1Score += 10;
+    if (terrainRule && terrainRule.details && terrainRule.status === 'PASS') {
+      const match = terrainRule.details.match(/Terrain walkable:\s*([\d.]+)%\s*vs\s*([\d.]+)%/);
+      if (match) {
+        const terrain0 = parseFloat(match[1]);
+        const terrain1 = parseFloat(match[2]);
+        if (terrain0 > terrain1) {
+          bot0Score += 20;
+          reasons.push(`Bot-0 has more walkable terrain (${terrain0.toFixed(1)}% vs ${terrain1.toFixed(1)}%)`);
+        } else if (terrain1 > terrain0) {
+          bot1Score += 20;
+          reasons.push(`Bot-1 has more walkable terrain (${terrain1.toFixed(1)}% vs ${terrain0.toFixed(1)}%)`);
+        }
       }
     }
 
     if (bot0Score > bot1Score) {
       return {
         favoredBot: '🤖 Bot-0',
-        advantage: `${bot0Score - bot1Score}% advantage`,
-        reason: 'Better resource access and/or terrain coverage'
+        advantage: `+${bot0Score - bot1Score} points`,
+        reason: reasons.length > 0 ? reasons.join(' • ') : 'Better starting conditions'
       };
     } else if (bot1Score > bot0Score) {
       return {
         favoredBot: '🤖 Bot-1',
-        advantage: `${bot1Score - bot0Score}% advantage`,
-        reason: 'Better resource access and/or terrain coverage'
+        advantage: `+${bot1Score - bot0Score} points`,
+        reason: reasons.length > 0 ? reasons.join(' • ') : 'Better starting conditions'
       };
     } else {
       return {
         favoredBot: '⚖️ Perfectly Balanced',
-        advantage: 'Equal conditions',
+        advantage: 'No advantage',
         reason: 'Both bots have equivalent starting conditions'
       };
     }

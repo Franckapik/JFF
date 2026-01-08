@@ -17,9 +17,9 @@
  */
 
 import type {
-  GridCoordinate,
-  Tile,
-  TileMap,
+    GridCoordinate,
+    Tile,
+    TileMap,
 } from '../../../types/index.ts';
 import type { TileStoreType } from '../../../types/stores.d.ts';
 
