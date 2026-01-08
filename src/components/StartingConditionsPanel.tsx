@@ -1,31 +1,21 @@
-import { useState } from 'react';
-
-import type { FairnessValidationResult, FairnessRuleResult } from '../stores/useTileStore/slices/tileFairnessSlice.ts';
+import React from 'react';
 
 import { useTileStore } from '../stores/useTileStore/index.ts';
+import type { FairnessValidationResult } from '../stores/useTileStore/slices/tileFairnessSlice.ts';
 
-/**
- * Component displaying starting conditions fairness analysis
- * Shows all 5 fairness metrics with visual indicators and margins
- * Collapsible panel for better UX
- */
-export default function StartingConditionsPanel() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+function StartingConditionsDisplay({ compact = false }: { compact?: boolean }) {
   const fairnessData = useTileStore((state) => state.lastFairnessValidation);
-  const tiles = useTileStore((state) => state.tiles);
 
-  if (!fairnessData || !tiles) {
+  if (!fairnessData) {
     return null;
   }
 
   const result = fairnessData as FairnessValidationResult;
 
-  // Calculate overall fairness score (0-100) based on margins to thresholds
   const calculateFairnessScore = (): { score: number; stars: number } => {
     let totalMargin = 0;
     let ruleCount = 0;
 
-    // Spawn distance: metric >= threshold means margin = (metric - threshold) / threshold * 100
     const spawnRule = result.rules.find(r => r.rule === 'spawnDistance');
     if (spawnRule && spawnRule.status === 'PASS') {
       const margin = ((spawnRule.value - spawnRule.threshold) / spawnRule.threshold) * 100;
@@ -33,7 +23,6 @@ export default function StartingConditionsPanel() {
       ruleCount++;
     }
 
-    // For percentages (resource, terrain): margin = threshold - metric
     const resourceRule = result.rules.find(r => r.rule === 'resourceBalance');
     if (resourceRule && resourceRule.status === 'PASS') {
       const margin = ((resourceRule.threshold - resourceRule.value) / resourceRule.threshold) * 100;
@@ -48,7 +37,6 @@ export default function StartingConditionsPanel() {
       ruleCount++;
     }
 
-    // Station access rules - skip if unreachable (999)
     const fuelRule = result.rules.find(r => r.rule === 'fuelAccess');
     if (fuelRule && fuelRule.status === 'PASS' && fuelRule.value !== 999) {
       const margin = ((fuelRule.threshold - fuelRule.value) / fuelRule.threshold) * 100;
@@ -64,289 +52,130 @@ export default function StartingConditionsPanel() {
     }
 
     const avgMargin = ruleCount > 0 ? totalMargin / ruleCount : 0;
-    const score = Math.round(50 + (avgMargin / 2)); // Score 50-100 based on margin
+    const score = Math.round(50 + (avgMargin / 2));
     const stars = score >= 90 ? 5 : score >= 75 ? 4 : score >= 60 ? 3 : score >= 45 ? 2 : 1;
 
     return { score: Math.min(score, 100), stars };
   };
 
   const { score: fairnessScore, stars } = calculateFairnessScore();
-
-  const renderMarginBar = (value: number, threshold: number, isInverse: boolean = false) => {
-    // Handle unreachable stations (value = 999)
-    if (value === 999) {
-      return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
-          <div
-            style={{
-              width: '200px',
-              height: '6px',
-              backgroundColor: '#e0e0e0',
-              borderRadius: '3px',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                backgroundColor: '#F44336',
-                transition: 'width 0.3s ease',
-              }}
-            />
-          </div>
-          <span style={{ fontSize: '12px', minWidth: '60px', color: '#F44336', fontWeight: 'bold' }}>
-            UNREACHABLE
-          </span>
-        </div>
-      );
-    }
-
-    // For spawn distance: value >= threshold (higher is better)
-    // For percentages: value <= threshold (lower is better)
-    let percentage = 0;
-    if (isInverse) {
-      // For distances and other "lower is better" metrics
-      percentage = Math.min((value / threshold) * 100, 100);
-    } else {
-      // For "higher is better" (margin above threshold)
-      percentage = Math.min(((threshold - value) / threshold) * 100, 100);
-    }
-
-    const color =
-      percentage >= 75
-        ? '#4CAF50' // Green - excellent
-        : percentage >= 50
-          ? '#FFC107' // Yellow - good
-          : percentage >= 25
-            ? '#FF9800' // Orange - tight
-            : '#F44336'; // Red - critical
-
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
-        <div
-          style={{
-            width: '200px',
-            height: '6px',
-            backgroundColor: '#e0e0e0',
-            borderRadius: '3px',
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              width: `${percentage}%`,
-              height: '100%',
-              backgroundColor: color,
-              transition: 'width 0.3s ease',
-            }}
-          />
-        </div>
-        <span style={{ fontSize: '12px', minWidth: '60px', color: color, fontWeight: 'bold' }}>
-          {percentage.toFixed(0)}%
-        </span>
-      </div>
-    );
-  };
-
-  const renderStatus = (rule: FairnessRuleResult): string => {
-    const value = rule.value;
-
-    // Handle unreachable stations (value = 999)
-    if (value === 999) {
-      return '❌ UNREACHABLE';
-    }
-
-    if (rule.status !== 'PASS') return '❌ CRITICAL';
-
-    const threshold = rule.threshold;
-
-    // For spawn distance (higher is better)
-    if (rule.rule === 'spawnDistance') {
-      const margin = ((value - threshold) / threshold) * 100;
-      return margin >= 50 ? '✅ EXCELLENT' : margin >= 25 ? '✅ FAVORABLE' : '⚠️ TIGHT';
-    }
-
-    // For percentages (lower is better)
-    const margin = ((threshold - value) / threshold) * 100;
-    return margin >= 50 ? '✅ EXCELLENT' : margin >= 25 ? '✅ FAVORABLE' : '⚠️ TIGHT';
-  };
+  const passedRules = result.rules.filter(r => r.status === 'PASS').length;
+  const totalRules = result.rules.length;
 
   return (
-    <div
-      style={{
-        backgroundColor: '#1a1a1a',
-        border: '2px solid #4CAF50',
-        borderRadius: '8px',
-        margin: '10px',
-        fontFamily: 'monospace',
-        fontSize: '13px',
-        color: '#e0e0e0',
-        overflow: 'hidden',
-        transition: 'all 0.3s ease',
-      }}
-    >
-      {/* Collapsible Header */}
-      <div
-        style={{
+    <div style={{
+      padding: compact ? '8px' : '12px',
+      backgroundColor: 'rgba(0, 0, 0, 0.05)',
+      borderLeft: `3px solid #4CAF50`,
+      borderRadius: '6px',
+      flex: 1,
+    }}>
+      <h4 style={{ margin: '0 0 8px 0', fontSize: compact ? '11px' : '12px', color: '#4CAF50' }}>
+        🎯 Starting Conditions
+      </h4>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? '4px' : '6px' }}>
+        <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '12px 16px',
-          backgroundColor: '#0d0d0d',
-          borderBottom: isCollapsed ? 'none' : '1px solid #333',
-          cursor: 'pointer',
-          userSelect: 'none',
-        }}
-        onClick={() => setIsCollapsed(!isCollapsed)}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '18px' }}>{isCollapsed ? '▶' : '▼'}</span>
-          <div>
-            <h2 style={{ margin: '0', color: '#4CAF50', fontSize: '14px', fontWeight: 'bold' }}>
-              🎯 STARTING CONDITIONS ANALYSIS
-            </h2>
-            <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>
-              Seed: {result.seed} | Mode: BALANCED | Attempt: {result.attempt}/10
-            </div>
-          </div>
+          fontSize: compact ? '9px' : '11px',
+          padding: '2px 4px',
+          backgroundColor: 'rgba(76, 175, 80, 0.05)',
+          borderRadius: '3px',
+        }}>
+          <span>Fairness Score</span>
+          <span style={{ color: fairnessScore >= 75 ? '#4CAF50' : fairnessScore >= 50 ? '#FFC107' : '#F44336', fontWeight: 'bold' }}>
+            {fairnessScore}/100
+          </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
-              {stars.toString().repeat(fairnessScore > 50 ? fairnessScore / 20 : 1)}
-            </div>
-            <div style={{ fontSize: '11px', color: '#888' }}>{fairnessScore}% Fair</div>
-          </div>
+
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          fontSize: compact ? '9px' : '11px',
+          padding: '2px 4px',
+          backgroundColor: 'rgba(76, 175, 80, 0.05)',
+          borderRadius: '3px',
+        }}>
+          <span>Rules Passed</span>
+          <span style={{ color: passedRules === totalRules ? '#4CAF50' : '#FFC107', fontWeight: 'bold' }}>
+            {passedRules}/{totalRules}
+          </span>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          fontSize: compact ? '9px' : '11px',
+          padding: '2px 4px',
+          backgroundColor: 'rgba(76, 175, 80, 0.05)',
+          borderRadius: '3px',
+        }}>
+          <span>Seed</span>
+          <span style={{ fontWeight: 'bold' }}>{result.seed}</span>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          fontSize: compact ? '9px' : '11px',
+          padding: '2px 4px',
+          backgroundColor: 'rgba(76, 175, 80, 0.05)',
+          borderRadius: '3px',
+        }}>
+          <span>Status</span>
+          <span style={{ color: result.valid ? '#4CAF50' : '#F44336', fontWeight: 'bold' }}>
+            {result.valid ? '✅ VALID' : '❌ ISSUES'}
+          </span>
         </div>
       </div>
 
-      {/* Collapsible Content */}
-      {!isCollapsed && (
-        <div style={{ padding: '16px' }}>
-          {/* Each Rule */}
-          {result.rules.map((rule: FairnessRuleResult, index: number) => (
-            <div
-              key={index}
-          style={{
-            marginBottom: '15px',
-            paddingBottom: '15px',
-            borderBottom:
-              index < result.rules.length - 1 ? '1px solid #333' : 'none',
-          }}
-        >
-          {/* Rule Title */}
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ color: '#FFD700', fontWeight: 'bold' }}>
-              {rule.rule === 'spawnDistance' && '📏 SPAWN DISTANCE'}
-              {rule.rule === 'resourceBalance' && '💰 RESOURCE BALANCE'}
-              {rule.rule === 'fuelAccess' && '⛽ FUEL STATION ACCESS'}
-              {rule.rule === 'repairAccess' && '🔧 REPAIR STATION ACCESS'}
-              {rule.rule === 'terrainFairness' && '🌍 TERRAIN FAIRNESS'}
-            </span>
-            <span style={{ marginLeft: '10px', color: '#888', fontSize: '11px' }}>
-              {rule.details}
-            </span>
-          </div>
-
-          {/* Metrics */}
-          <div style={{ marginLeft: '10px', fontSize: '12px', marginBottom: '8px' }}>
-            <div style={{ color: '#aaa' }}>
-              Metric:{' '}
-              <span style={{ color: '#fff' }}>
-                {rule.value.toFixed(rule.rule.includes('Distance') ? 1 : rule.rule.includes('Access') ? 0 : 1)}
-                {rule.rule.includes('Difference') ? '%' : rule.rule.includes('Access') ? ' tiles' : ' tiles'}
-              </span>
-              {' | Threshold: '}
-              <span style={{ color: '#fff' }}>
-                {rule.rule === 'spawnDistance' ? '≥' : '≤'}{' '}
-                {rule.threshold.toFixed(rule.rule.includes('Difference') ? 0 : 1)}
-                {rule.rule.includes('Difference') ? '%' : ' tiles'}
-              </span>
-            </div>
-
-            {/* Progress Bar */}
-            {renderMarginBar(
-              rule.value,
-              rule.threshold,
-              rule.rule === 'spawnDistance',
-            )}
-
-            {/* Status */}
-            <div style={{ marginTop: '5px', fontSize: '12px', fontWeight: 'bold' }}>
-              Status: {renderStatus(rule)}
-            </div>
-          </div>
-        </div>
-      ))}
-
-          {/* Fairness Score Summary */}
-          <div
-            style={{
-              marginTop: '15px',
-              paddingTop: '15px',
-              borderTop: '2px solid #4CAF50',
-              backgroundColor: '#222',
-              padding: '12px',
-              borderRadius: '4px',
-            }}
-          >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <span style={{ color: '#FFD700', fontWeight: 'bold' }}>📊 OVERALL FAIRNESS SCORE</span>
-            <div style={{ fontSize: '12px', color: '#888', marginTop: '3px' }}>
-              Based on safety margins to thresholds
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div
-              style={{
-                fontSize: '28px',
-                fontWeight: 'bold',
-                color: fairnessScore >= 75 ? '#4CAF50' : fairnessScore >= 50 ? '#FFC107' : '#F44336',
-              }}
-            >
-              {fairnessScore}/100
-            </div>
-            <div style={{ fontSize: '18px', marginTop: '2px' }}>
-              {'⭐'.repeat(stars)}
-              {'☆'.repeat(5 - stars)}
-            </div>
-          </div>
-        </div>
+      <div style={{
+        marginTop: '6px',
+        paddingTop: '6px',
+        borderTop: '1px solid #ddd',
+        display: 'flex',
+        justifyContent: 'space-between',
+        fontSize: compact ? '9px' : '10px',
+      }}>
+        <span>Rating:</span>
+        <span>{('⭐'.repeat(stars)) + ('☆'.repeat(5 - stars))}</span>
       </div>
-
-      {/* Footer Info */}
-      {result.valid && (
-        <div
-          style={{
-            marginTop: '10px',
-            padding: '8px',
-            backgroundColor: '#1b3a1b',
-            borderLeft: '3px solid #4CAF50',
-            fontSize: '12px',
-            color: '#90EE90',
-          }}
-        >
-          ✅ All fairness rules satisfied! Both bots start in balanced conditions.
-        </div>
-      )}
-      {!result.valid && result.issues.length > 0 && (
-        <div
-          style={{
-            marginTop: '10px',
-            padding: '8px',
-            backgroundColor: '#3a1b1b',
-            borderLeft: '3px solid #F44336',
-            fontSize: '12px',
-            color: '#FFB6B6',
-          }}
-        >
-          ⚠️ Issues: {result.issues.join(' | ')}
-        </div>
-      )}
-        </div>
-      )}
     </div>
   );
 }
+
+export const StartingConditionsPanel = () => {
+  return (
+    <div style={styles.container}>
+      <h3 style={styles.title}>🎯 Starting Conditions</h3>
+      <StartingConditionsDisplay />
+    </div>
+  );
+};
+
+const styles = {
+  container: {
+    position: 'fixed',
+    top: 20,
+    left: 400,
+    background: 'rgba(255, 255, 255, 0.95)',
+    color: '#333',
+    padding: '12px',
+    borderRadius: '8px',
+    fontFamily: 'system-ui, sans-serif',
+    fontSize: '12px',
+    minWidth: '200px',
+    maxWidth: '350px',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+    zIndex: 1000,
+    border: '1px solid #e0e0e0',
+  } as React.CSSProperties,
+  title: {
+    margin: '0 0 10px 0',
+    fontSize: '13px',
+    color: '#4CAF50',
+  } as React.CSSProperties,
+};
+
+export default StartingConditionsPanel;

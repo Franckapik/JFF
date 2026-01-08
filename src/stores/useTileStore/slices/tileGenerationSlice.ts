@@ -582,6 +582,8 @@ KEY METRICS:
 `);
     
     // 2. Placer les autres types de tuiles (en évitant les zones de spawn)
+    // Note: Les stations sont DÉJÀ placées dans placeStartingTilesWithFairness 
+    // pour permettre leur validation avant confirmation
     fsmLogger.game(`
 SPECIAL TILES PLACEMENT:
   1️⃣ Placing empty tiles (avoiding spawn radius 1)...`);
@@ -599,13 +601,12 @@ SPECIAL TILES PLACEMENT:
     const dangerCount = Object.values(updatedTileMap).filter((t: Tile) => t.type === 'danger').length;
     fsmLogger.game(`     ✓ Danger tiles placed: ${dangerCount}`);
     
-    // 3. Placer les stations (équidistantes des spawns)
-    fsmLogger.game(`  4️⃣ Placing stations (equidistant from spawns, avoiding spawn radius 2)...`);
-    updatedTileMap = get().placeGameStations(updatedTileMap, radius, effectiveSeed, spawns);
+    // 3. Get station counts (stations already placed in fairness validation step)
     const fuelCount = Object.values(updatedTileMap).filter((t: Tile) => t.type === 'fuel').length;
     const repairCount = Object.values(updatedTileMap).filter((t: Tile) => t.type === 'repair').length;
-    fsmLogger.game(`     ✓ Fuel stations placed: ${fuelCount}`);
-    fsmLogger.game(`     ✓ Repair stations placed: ${repairCount}`);
+    fsmLogger.game(`  4️⃣ Stations (placed during fairness validation):`);
+    fsmLogger.game(`     ✓ Fuel stations: ${fuelCount}`);
+    fsmLogger.game(`     ✓ Repair stations: ${repairCount}`);
     
     // 4. Récupérer les tuiles de départ depuis le TileMap
     const startingTiles = Object.values(updatedTileMap).filter(

@@ -7,6 +7,7 @@ import { useTileStore } from '../stores/useTileStore';
 import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates';
 import type { FSMContext } from '../types/fsm.d';
+import type { FairnessValidationResult, FairnessRuleResult } from '../stores/useTileStore/slices/tileFairnessSlice.ts';
 
 import BotSelector from './BotSelector';
 import PositionDisplay from './PositionDisplay';
@@ -343,6 +344,9 @@ export default function FSMVisualization() {
         )}
       </section>
 
+      {/* STARTING CONDITIONS - FAIRNESS ANALYSIS */}
+      <StartingConditionsSection />
+
       {/* DRONE STATUS */}
       <section style={styles.section}>
         <h3>🚁 Drone Status (All Types)</h3>
@@ -678,6 +682,372 @@ export default function FSMVisualization() {
         </p>
       </section>
     </div>
+  );
+}
+
+// ============================================================
+// STARTING CONDITIONS SECTION
+// ============================================================
+
+function StartingConditionsSection() {
+  const fairnessData = useTileStore((state) => state.lastFairnessValidation);
+
+  if (!fairnessData) {
+    return null;
+  }
+
+  const result = fairnessData as FairnessValidationResult;
+
+  const calculateFairnessScore = (): { score: number; stars: number } => {
+    let totalMargin = 0;
+    let ruleCount = 0;
+
+    const spawnRule = result.rules.find(r => r.rule === 'spawnDistance');
+    if (spawnRule && spawnRule.status === 'PASS') {
+      const margin = ((spawnRule.value - spawnRule.threshold) / spawnRule.threshold) * 100;
+      totalMargin += Math.min(margin, 100);
+      ruleCount++;
+    }
+
+    const resourceRule = result.rules.find(r => r.rule === 'resourceBalance');
+    if (resourceRule && resourceRule.status === 'PASS') {
+      const margin = ((resourceRule.threshold - resourceRule.value) / resourceRule.threshold) * 100;
+      totalMargin += Math.min(margin, 100);
+      ruleCount++;
+    }
+
+    const terrainRule = result.rules.find(r => r.rule === 'terrainFairness');
+    if (terrainRule && terrainRule.status === 'PASS') {
+      const margin = ((terrainRule.threshold - terrainRule.value) / terrainRule.threshold) * 100;
+      totalMargin += Math.min(margin, 100);
+      ruleCount++;
+    }
+
+    const fuelRule = result.rules.find(r => r.rule === 'fuelAccess');
+    if (fuelRule && fuelRule.status === 'PASS' && fuelRule.value !== 999) {
+      const margin = ((fuelRule.threshold - fuelRule.value) / fuelRule.threshold) * 100;
+      totalMargin += Math.min(margin, 100);
+      ruleCount++;
+    }
+
+    const repairRule = result.rules.find(r => r.rule === 'repairAccess');
+    if (repairRule && repairRule.status === 'PASS' && repairRule.value !== 999) {
+      const margin = ((repairRule.threshold - repairRule.value) / repairRule.threshold) * 100;
+      totalMargin += Math.min(margin, 100);
+      ruleCount++;
+    }
+
+    const avgMargin = ruleCount > 0 ? totalMargin / ruleCount : 0;
+    const score = Math.round(50 + (avgMargin / 2));
+    const stars = score >= 90 ? 5 : score >= 75 ? 4 : score >= 60 ? 3 : score >= 45 ? 2 : 1;
+
+    return { score: Math.min(score, 100), stars };
+  };
+
+  const { score: fairnessScore, stars } = calculateFairnessScore();
+  const passedRules = result.rules.filter(r => r.status === 'PASS').length;
+  const totalRules = result.rules.length;
+
+  const getRuleIcon = (rule: string) => {
+    if (rule === 'spawnDistance') return '📏';
+    if (rule === 'resourceBalance') return '💰';
+    if (rule === 'fuelAccess') return '⛽';
+    if (rule === 'repairAccess') return '🔧';
+    if (rule === 'terrainFairness') return '🌍';
+    return '📋';
+  };
+
+  const getRuleLabel = (rule: string) => {
+    if (rule === 'spawnDistance') return 'Spawn Distance';
+    if (rule === 'resourceBalance') return 'Resource Balance';
+    if (rule === 'fuelAccess') return 'Fuel Access';
+    if (rule === 'repairAccess') return 'Repair Access';
+    if (rule === 'terrainFairness') return 'Terrain Fairness';
+    return rule;
+  };
+
+  const getStatusColor = (ruleResult: FairnessRuleResult) => {
+    if (ruleResult.value === 999) return '#F44336';
+    if (ruleResult.status !== 'PASS') return '#F44336';
+    
+    const threshold = ruleResult.threshold;
+    const value = ruleResult.value;
+    
+    if (ruleResult.rule === 'spawnDistance') {
+      const margin = ((value - threshold) / threshold) * 100;
+      return margin >= 50 ? '#4CAF50' : margin >= 25 ? '#FFC107' : '#FF9800';
+    }
+    
+    const margin = ((threshold - value) / threshold) * 100;
+    return margin >= 50 ? '#4CAF50' : margin >= 25 ? '#FFC107' : '#FF9800';
+  };
+
+  const getStatusLabel = (ruleResult: FairnessRuleResult) => {
+    if (ruleResult.value === 999) return 'NOT PLACED';
+    if (ruleResult.status !== 'PASS') return 'FAIL';
+    
+    const threshold = ruleResult.threshold;
+    const value = ruleResult.value;
+    
+    if (ruleResult.rule === 'spawnDistance') {
+      const margin = ((value - threshold) / threshold) * 100;
+      return margin >= 50 ? 'EXCELLENT' : margin >= 25 ? 'GOOD' : 'TIGHT';
+    }
+    
+    const margin = ((threshold - value) / threshold) * 100;
+    return margin >= 50 ? 'EXCELLENT' : margin >= 25 ? 'GOOD' : 'TIGHT';
+  };
+
+  const getValueWithUnit = (rule: FairnessRuleResult): string => {
+    if (rule.value === 999) return 'N/A';
+    
+    // ResourceBalance and TerrainFairness are already percentages
+    if (rule.rule === 'resourceBalance' || rule.rule === 'terrainFairness') {
+      return `${rule.value.toFixed(1)}%`;
+    }
+    
+    // Station access (fuelAccess, repairAccess) are in tiles
+    if (rule.rule === 'fuelAccess' || rule.rule === 'repairAccess') {
+      return `${rule.value} tile${rule.value !== 1 ? 's' : ''}`;
+    }
+    
+    // Spawn distance is in tiles
+    return `${rule.value.toFixed(1)} tile${rule.value !== 1 ? 's' : ''}`;
+  };
+
+  const getThresholdWithUnit = (rule: FairnessRuleResult): string => {
+    // ResourceBalance and TerrainFairness are already percentages
+    if (rule.rule === 'resourceBalance' || rule.rule === 'terrainFairness') {
+      return `${rule.threshold}%`;
+    }
+    
+    // Station access (fuelAccess, repairAccess) are in tiles
+    if (rule.rule === 'fuelAccess' || rule.rule === 'repairAccess') {
+      return `${rule.threshold} tile${rule.threshold !== 1 ? 's' : ''}`;
+    }
+    
+    // Spawn distance is in tiles
+    return `${rule.threshold.toFixed(1)} tile${rule.threshold !== 1 ? 's' : ''}`;
+  };
+
+  // Determine which bot is favored by the starting conditions
+  const calculateBotFavor = (): { favoredBot: string; advantage: string; reason: string } => {
+    let bot0Score = 0;
+    let bot1Score = 0;
+
+    // Resource Balance: Check which spawn has more resources nearby
+    const resourceRule = result.rules.find(r => r.rule === 'resourceBalance');
+    if (resourceRule && resourceRule.details) {
+      // Details typically indicate which bot benefits if imbalanced
+      if (resourceRule.details.includes('bot-0') || resourceRule.details.includes('higher')) {
+        bot0Score += 10;
+      } else if (resourceRule.details.includes('bot-1') || resourceRule.details.includes('lower')) {
+        bot1Score += 10;
+      }
+    }
+
+    // Fuel Access: Check asymmetric distances
+    const fuelRule = result.rules.find(r => r.rule === 'fuelAccess');
+    if (fuelRule && fuelRule.details && fuelRule.value !== 999) {
+      if (fuelRule.details.includes('closer') || fuelRule.details.includes('bot-0')) {
+        bot0Score += 5;
+      } else if (fuelRule.details.includes('bot-1')) {
+        bot1Score += 5;
+      }
+    }
+
+    // Repair Access: Check asymmetric distances
+    const repairRule = result.rules.find(r => r.rule === 'repairAccess');
+    if (repairRule && repairRule.details && repairRule.value !== 999) {
+      if (repairRule.details.includes('closer') || repairRule.details.includes('bot-0')) {
+        bot0Score += 5;
+      } else if (repairRule.details.includes('bot-1')) {
+        bot1Score += 5;
+      }
+    }
+
+    // Terrain Fairness: Check which spawn has more walkable terrain
+    const terrainRule = result.rules.find(r => r.rule === 'terrainFairness');
+    if (terrainRule && terrainRule.details) {
+      if (terrainRule.details.includes('bot-0') || terrainRule.details.includes('higher')) {
+        bot0Score += 10;
+      } else if (terrainRule.details.includes('bot-1') || terrainRule.details.includes('lower')) {
+        bot1Score += 10;
+      }
+    }
+
+    if (bot0Score > bot1Score) {
+      return {
+        favoredBot: '🤖 Bot-0',
+        advantage: `${bot0Score - bot1Score}% advantage`,
+        reason: 'Better resource access and/or terrain coverage'
+      };
+    } else if (bot1Score > bot0Score) {
+      return {
+        favoredBot: '🤖 Bot-1',
+        advantage: `${bot1Score - bot0Score}% advantage`,
+        reason: 'Better resource access and/or terrain coverage'
+      };
+    } else {
+      return {
+        favoredBot: '⚖️ Perfectly Balanced',
+        advantage: 'Equal conditions',
+        reason: 'Both bots have equivalent starting conditions'
+      };
+    }
+  };
+
+  const botFavor = calculateBotFavor();
+
+  return (
+    <section style={styles.section}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+        <h3 style={{ margin: 0 }}>🎯 Starting Conditions - Fairness Analysis</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ fontSize: '12px', color: '#666' }}>
+            Seed: <strong>{result.seed}</strong> | Attempt: <strong>{result.attempt}/10</strong>
+          </div>
+          <div style={{ 
+            padding: '4px 12px', 
+            backgroundColor: fairnessScore >= 75 ? '#e8f5e9' : fairnessScore >= 50 ? '#fff3e0' : '#ffebee',
+            borderRadius: '4px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            color: fairnessScore >= 75 ? '#4CAF50' : fairnessScore >= 50 ? '#FF9800' : '#F44336'
+          }}>
+            {fairnessScore}/100 {'⭐'.repeat(stars)}{'☆'.repeat(5 - stars)}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+        {result.rules.map((rule: FairnessRuleResult, index: number) => (
+          <div 
+            key={index}
+            style={{
+              border: '1px solid #ddd',
+              padding: '12px',
+              borderRadius: '6px',
+              backgroundColor: '#f5f5f5',
+              borderLeft: `4px solid ${getStatusColor(rule)}`
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '16px' }}>{getRuleIcon(rule.rule)}</span>
+                <strong style={{ fontSize: '13px' }}>{getRuleLabel(rule.rule)}</strong>
+              </div>
+              <span 
+                style={{ 
+                  fontSize: '10px', 
+                  fontWeight: 'bold',
+                  padding: '2px 8px',
+                  borderRadius: '3px',
+                  backgroundColor: getStatusColor(rule),
+                  color: 'white'
+                }}
+              >
+                {getStatusLabel(rule)}
+              </span>
+            </div>
+
+            <table style={{ width: '100%', fontSize: '12px' }}>
+              <tbody>
+                <tr>
+                  <td style={{ paddingRight: '8px', color: '#666' }}>
+                    {rule.rule === 'fuelAccess' || rule.rule === 'repairAccess' ? 'Difference:' : 'Value:'}
+                  </td>
+                  <td style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>
+                    {getValueWithUnit(rule)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ paddingRight: '8px', color: '#666' }}>Threshold:</td>
+                  <td style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>
+                    {rule.rule === 'spawnDistance' ? '≥' : '≤'} {getThresholdWithUnit(rule)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ paddingRight: '8px', color: '#666' }}>Details:</td>
+                  <td style={{ fontSize: '11px', color: '#888' }}>{rule.details}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        ))}
+
+        {/* 6th Card: Bot Favorability Analysis */}
+        <div 
+          style={{
+            border: '1px solid #ddd',
+            padding: '12px',
+            borderRadius: '6px',
+            backgroundColor: '#f5f5f5',
+            borderLeft: `4px solid ${botFavor.favoredBot.includes('Balanced') ? '#4CAF50' : '#FF9800'}`
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '16px' }}>⚔️</span>
+              <strong style={{ fontSize: '13px' }}>Advantage Analysis</strong>
+            </div>
+            <span 
+              style={{ 
+                fontSize: '10px', 
+                fontWeight: 'bold',
+                padding: '2px 8px',
+                borderRadius: '3px',
+                backgroundColor: botFavor.favoredBot.includes('Balanced') ? '#4CAF50' : '#FF9800',
+                color: 'white'
+              }}
+            >
+              {botFavor.favoredBot.includes('Balanced') ? 'FAIR' : 'FAVORED'}
+            </span>
+          </div>
+
+          <table style={{ width: '100%', fontSize: '12px' }}>
+            <tbody>
+              <tr>
+                <td style={{ paddingRight: '8px', color: '#666' }}>Favored Bot:</td>
+                <td style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>
+                  {botFavor.favoredBot}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ paddingRight: '8px', color: '#666' }}>Advantage:</td>
+                <td style={{ fontWeight: 'bold', fontFamily: 'monospace' }}>
+                  {botFavor.advantage}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ paddingRight: '8px', color: '#666' }}>Reason:</td>
+                <td style={{ fontSize: '11px', color: '#888' }}>{botFavor.reason}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style={{ 
+        marginTop: '12px', 
+        padding: '10px', 
+        backgroundColor: result.valid ? '#e8f5e9' : '#ffebee',
+        borderRadius: '4px',
+        border: `1px solid ${result.valid ? '#4CAF50' : '#F44336'}`,
+        fontSize: '13px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <span>
+          {result.valid ? '✅ All fairness rules satisfied!' : '⚠️ Some rules need attention'}
+          {!result.valid && result.issues.length > 0 && ` - ${result.issues.join(', ')}`}
+        </span>
+        <span style={{ fontWeight: 'bold', color: result.valid ? '#4CAF50' : '#F44336' }}>
+          {passedRules}/{totalRules} rules passed
+        </span>
+      </div>
+    </section>
   );
 }
 

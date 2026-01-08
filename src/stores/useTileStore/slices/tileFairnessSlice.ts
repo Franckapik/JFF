@@ -68,7 +68,7 @@ export interface FairnessThresholds {
 export const DEFAULT_FAIRNESS_THRESHOLDS: FairnessThresholds = {
   minSpawnDistanceMultiplier: 1.0,      // 3.0 tiles instead of 4.5 (more achievable)
   maxResourceDifferencePercent: 35,      // 30% → 35% (slightly more lenient)
-  maxStationAccessDiff: 2,               // 1 → 2 tiles (much more achievable)
+  maxStationAccessDiff: 1,               // Strict: 1 tile max difference for stations
   maxTerrainDifferencePercent: 20,       // 15% → 20% (slightly more lenient)
   resourceCheckRadius: 1,
   terrainCheckRadius: 2,
@@ -318,12 +318,22 @@ const createTileFairnessSlice = (_set: unknown, get: () => TileStoreType): TileF
 
   /**
    * Calcule la distance vers la station la plus proche d'un type donné
-   * Utilise BFS pour trouver le chemin le plus court
+   * Utilise BFS (Breadth-First Search) pour trouver le chemin le plus court
+   * traversant uniquement les tuiles walkables (sauf la station elle-même)
    * 
-   * @param tileMap - Carte des tuiles
-   * @param spawn - Coordonnée de départ
-   * @param stationType - Type de station ('fuel' ou 'repair')
-   * @returns Distance en tuiles, ou Infinity si non trouvée
+   * IMPORTANT: Cette fonction cherche PHYSIQUEMENT les tuiles de type 'fuel' ou 'repair'
+   * qui DOIVENT être placées pendant l'initialisation. Si aucune n'est trouvée,
+   * retourne 999 (non accessible/non placée).
+   * 
+   * @param tileMap - Carte des tuiles (source de vérité pour emplacements)
+   * @param spawn - Coordonnée de départ du bot
+   * @param stationType - Type de station cherchée: 'fuel' ou 'repair'
+   * @returns Distance en tuiles (nombre d'étapes), ou 999 si non trouvée/non accessible
+   * 
+   * @example
+   * // Si station trouvée à 3 tuiles: retourne 3
+   * // Si station non placée: retourne 999
+   * // Si station existe mais inaccessible (entourée d'obstacles): retourne 999
    */
   calculateStationAccess: (tileMap: TileMap, spawn: GridCoordinate, stationType: 'fuel' | 'repair'): number => {
     const visited = new Set<GridCoordinate>([spawn]);
@@ -345,12 +355,13 @@ const createTileFairnessSlice = (_set: unknown, get: () => TileStoreType): TileF
           const neighborTile = tileMap[neighborCoord];
           if (!neighborTile) continue;
 
-          // Found station of requested type
+          // ✅ FOUND: Station de type demandé
           if (neighborTile.type === stationType) {
             return distance;
           }
 
-          // Continue BFS only through walkable tiles
+          // ✅ CONTINUE BFS: Seulement par tuiles walkables
+          // Les obstacles et danger bloquent le passage
           if (neighborTile.walkable) {
             nextRing.push(neighborCoord);
           }
@@ -360,41 +371,71 @@ const createTileFairnessSlice = (_set: unknown, get: () => TileStoreType): TileF
       currentRing = nextRing;
     }
 
-    // Return 999 instead of Infinity for unreachable stations (for display purposes)
-    // This indicates the station is either not placed or not accessible
+    // ❌ NOT FOUND: Station non placée OU non accessible (999 = marker spécial)
     return 999;
   },
 
   /**
    * Valide que l'accès aux stations est équitable pour tous les spawns
-   * Différence maximum = 1 tuile
    * 
-   * @param tileMap - Carte des tuiles
-   * @param spawns - Liste des coordonnées de spawn
-   * @returns Tableau de résultats (fuel et repair)
+   * Règle: La différence de distance entre le spawn le plus proche et le plus loin
+   * NE DOIT PAS dépasser maxStationAccessDiff tuiles (actuellement 1)
+   * 
+   * Cas spéciaux:
+   * - Si station non placée pour UN spawn: FAIL (999 détecté)
+   * - Si station non accessible pour UN spawn: FAIL (999 détecté)
+   * - Si tous les spawns peuvent accéder: vérifie la différence de distance
+   * 
+   * @param tileMap - Carte des tuiles (où les stations sont placées physiquement)
+   * @param spawns - Liste des coordonnées de spawn des bots
+   * @returns Tableau avec 2 résultats [FuelAccess, RepairAccess]
+   * 
+   * @example
+   * // Scenario 1: Stations correctement placées
+   * // Bot-0 → Fuel à 2 tuiles, Bot-1 → Fuel à 3 tuiles → diff = 1 ✅ PASS
+   * 
+   * // Scenario 2: Station non placée
+   * // Bot-0 → Fuel à 999 tuiles, Bot-1 → Fuel à 2 tuiles → 999 détecté ❌ FAIL
+   * 
+   * // Scenario 3: Trop loin
+   * // Bot-0 → Fuel à 1 tuile, Bot-1 → Fuel à 5 tuiles → diff = 4 > 2 ❌ FAIL
    */
   validateStationAccess: (tileMap: TileMap, spawns: GridCoordinate[]): FairnessRuleResult[] => {
     const results: FairnessRuleResult[] = [];
 
     for (const stationType of ['fuel', 'repair'] as const) {
+      // Calculer les distances pour chaque spawn
       const distances = spawns.map(spawn => 
         get().calculateStationAccess(tileMap, spawn, stationType)
       );
 
-      // Filter out 999 (unreachable) values for max calculation
-      const reachableDistances = distances.filter(d => d !== 999);
-      const maxDist = reachableDistances.length > 0 ? Math.max(...reachableDistances) : 999;
-      const minDist = reachableDistances.length > 0 ? Math.min(...reachableDistances) : 999;
-      const difference = reachableDistances.length > 0 ? maxDist - minDist : 999;
-      const passed = difference <= DEFAULT_FAIRNESS_THRESHOLDS.maxStationAccessDiff && difference !== 999;
+      // Vérifier si une station est inaccessible (999 = signal d'erreur)
+      const hasUnreachable = distances.includes(999);
+      
+      if (hasUnreachable) {
+        // Station non placée ou inaccessible pour au moins un spawn
+        results.push({
+          rule: `${stationType}Access`,
+          value: 999, // Signal spécial: station non disponible
+          threshold: DEFAULT_FAIRNESS_THRESHOLDS.maxStationAccessDiff,
+          status: 'FAIL',
+          details: `${stationType} station missing or unreachable. Distances: ${distances.join(' vs ')}`,
+        });
+      } else {
+        // Tous les spawns peuvent accéder: vérifier l'équité de distance
+        const maxDist = Math.max(...distances);
+        const minDist = Math.min(...distances);
+        const difference = maxDist - minDist;
+        const passed = difference <= DEFAULT_FAIRNESS_THRESHOLDS.maxStationAccessDiff;
 
-      results.push({
-        rule: `${stationType}Access`,
-        value: difference,
-        threshold: DEFAULT_FAIRNESS_THRESHOLDS.maxStationAccessDiff,
-        status: passed ? 'PASS' : 'FAIL',
-        details: `${stationType} distances: ${distances.join(' vs ')} (diff: ${difference})`,
-      });
+        results.push({
+          rule: `${stationType}Access`,
+          value: difference, // La différence (doit être ≤ seuil)
+          threshold: DEFAULT_FAIRNESS_THRESHOLDS.maxStationAccessDiff,
+          status: passed ? 'PASS' : 'FAIL',
+          details: `${stationType} distances: ${distances.map(d => d + ' tiles').join(' vs ')} (max distance: ${maxDist}, min: ${minDist})`,
+        });
+      }
     }
 
     return results;
@@ -680,12 +721,17 @@ ${issues.length > 0 ? `⚠️ ISSUES FOUND:
         };
       }
 
-      // Validate
-      const validation = get().validateMapFairness(newTileMap, spawns, radius, currentSeed, attempt);
+      // ⚠️ CRITICAL: Place stations BEFORE validation so they can be found during fairness check
+      // This ensures validateStationAccess() can find fuel/repair stations (avoids 999 "not found")
+      // Note: placeGameStations is from tileGenerationSlice, accessible via Zustand's combined store
+      const tilesWithStations = (get() as TileStoreType).placeGameStations(newTileMap, radius, currentSeed, spawns);
+
+      // Validate (now with stations present)
+      const validation = get().validateMapFairness(tilesWithStations, spawns, radius, currentSeed, attempt);
 
       // Store best result (even if invalid, for fallback)
       if (!bestResult || validation.issues.length < bestResult.validation.issues.length) {
-        bestResult = { tileMap: newTileMap, spawns, validation };
+        bestResult = { tileMap: tilesWithStations, spawns, validation };
       }
 
       if (validation.valid) {
@@ -700,7 +746,7 @@ Metrics Summary:
   • Repair Access Difference: ${validation.metrics.repairAccessDiff} tiles
   • Terrain Difference: ${validation.metrics.terrainDifference.toFixed(1)}%
 `);
-        return { tileMap: newTileMap, spawns, validation };
+        return { tileMap: tilesWithStations, spawns, validation };
       }
 
       // Try next seed

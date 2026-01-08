@@ -2,7 +2,6 @@ import React from 'react';
 
 import { useMultiSimulatedTracker, type BotActor } from './ai/fsm/machineX/hooks/trackers/useMultiSimulatedTracker';
 import FSMVisualization from './components/FSMVisualization';
-import StartingConditionsPanel from './components/StartingConditionsPanel';
 import { config } from './config';
 import { useDangerMovement } from './hooks/useDangerMovement';
 import useBotSelectionStore from './stores/useBotSelectionStore';
@@ -34,81 +33,42 @@ export default function App() {
       const tileStore = useTileStore.getState();
       const xfsmStore = useXFSMStore.getState();
 
-      // ✅ STEP 1: Generate seed for deterministic map generation
-      const seed = gameStore.generateSeed();
-      console.log('🎲 [App] Map seed generated:', seed);
-
-      // ✅ STEP 2: Generate tiles with seed (base grid only, no special tiles yet)
+      // ✅ STEP 1: Generate tiles FIRST
       const radius = 3;
       const spacing = -0.2;
-      const generatedTiles = tileStore.initializeGameGrid(radius, spacing, seed);
+      const generatedTiles = tileStore.initializeGameGrid(radius, spacing);
       tileStore.setTiles(generatedTiles);
       
       console.log('🎲 [App] Tiles generated:', {
         tilesCount: Object.keys(generatedTiles).length,
         radius,
         spacing,
-        seed,
         tileCoords: Object.keys(generatedTiles).slice(0, 5)
       });
 
-      // ✅ STEP 3: Initialize game state flags (except starting tiles)
+      // ✅ STEP 2: Initialize game state flags (except starting tiles)
       gameStore.markPlayersAsInitialized();
       gameStore.markBotsAsInitialized();
       gameStore.markTilesAsInitialized();
       // Note: markStartingTilesAsAssigned() will be called after tile assignment
 
-      // ✅ STEP 4: Create bots FSM (will now read tiles from tileStore)
+      // ✅ STEP 3: Create bots FSM (will now read tiles from tileStore)
       xfsmStore.addBot('bot-0');
       xfsmStore.addBot('bot-1');
       
-      // ✅ STEP 5: Assign starting tiles with fairness validation
-      // This will: place spawns with fairness checks, then obstacles/danger/stations
-      console.log('🎯 [App] Starting fairness-aware tile assignment...');
+      // ✅ STEP 4: Manually assign starting tiles with random placement
+      console.log('🎲 [App] BEFORE assignStartingTiles - existing tiles with depart type:', 
+        Object.values(generatedTiles).filter(t => t.type === 'depart').length);
       
-      tileStore.assignStartingTiles(['bot-0', 'bot-1'], seed);
+      tileStore.assignStartingTiles(['bot-0', 'bot-1']);
       
-      const tilesAfterAssignment = tileStore.tiles;
+      const tilesAfterAssignment = tileStore.tiles; // Utiliser directement tileStore.tiles
       const departTiles = Object.values(tilesAfterAssignment).filter(t => t.type === 'depart');
-      
-      // ✅ STEP 6: Log fairness validation summary
-      console.log(`
-╔════════════════════════════════════════════════════════════════╗
-║           GAME INITIALIZATION COMPLETE - FAIRNESS SUMMARY       ║
-╚════════════════════════════════════════════════════════════════╝
-
-🎲 SEED & GENERATION
-  • Map Seed: ${seed}
-  • Grid Radius: 3 tiles
-  • Total Tiles Generated: ${Object.keys(generatedTiles).length}
-  • Total Tiles After Assignment: ${Object.keys(tilesAfterAssignment).length}
-
-🚀 SPAWN POSITIONS
-  • Spawn Count: ${departTiles.length} (${departTiles.map(t => t.assignedToBot).join(', ')})
-  • Spawn Coordinates: [${departTiles.map(t => t.position.coord).join(', ')}]
-  • Starting Resources per Bot: Food=100, Debris=100, Special=50 (Total=250)
-
-🎯 FAIRNESS VALIDATION
-  ✅ All fairness rules have been validated during placement
-  📊 See detailed validation logs above for full metrics
-  
-🗺️ MAP COMPOSITION
-  • Total Tiles: ${Object.keys(tilesAfterAssignment).length}
-  • Starting Tiles (Depart): ${departTiles.length}
-  • Resource Tiles: ${Object.values(tilesAfterAssignment).filter(t => t.type === 'resource').length}
-  • Obstacle Tiles: ${Object.values(tilesAfterAssignment).filter(t => t.type === 'obstacle').length}
-  • Danger Tiles: ${Object.values(tilesAfterAssignment).filter(t => t.type === 'danger').length}
-  • Station Tiles: ${Object.values(tilesAfterAssignment).filter(t => t.type === 'fuel' || t.type === 'repair').length}
-
-⚙️ GAME STATE
-  • Bots Initialized: 2
-  • Starting FSM State: Initialized
-  • Ready for Gameplay: ✅ YES
-
-╔════════════════════════════════════════════════════════════════╗
-║                  GAME START - LET'S PLAY! 🎮                   ║
-╚════════════════════════════════════════════════════════════════╝
-`);
+      console.log('🎲 [App] AFTER assignStartingTiles:', {
+        departTilesCount: departTiles.length,
+        departTileCoords: departTiles.map(t => t.position.coord),
+        assignedBot: departTiles.find(t => t.assignedToBot)?.assignedToBot
+      });
       
       gameStore.markStartingTilesAsAssigned();
       xfsmStore.startBot('bot-0');
@@ -146,16 +106,7 @@ export default function App() {
 
   return (
     <React.StrictMode>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0a0a0a' }}>
-        {/* Fairness Analysis Panel - Collapsible at top */}
-        <div style={{ maxHeight: '400px', overflowY: 'auto', borderBottom: '1px solid #333' }}>
-          <StartingConditionsPanel />
-        </div>
-        {/* Main FSM Visualization - Flex fill remaining space */}
-        <div style={{ flex: 1, overflow: 'auto' }}>
-          <FSMVisualization />
-        </div>
-      </div>
+      <FSMVisualization />
     </React.StrictMode>
   );
 }
