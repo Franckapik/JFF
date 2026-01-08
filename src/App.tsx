@@ -33,41 +33,46 @@ export default function App() {
       const tileStore = useTileStore.getState();
       const xfsmStore = useXFSMStore.getState();
 
-      // ✅ STEP 1: Generate tiles FIRST
+      // ✅ STEP 1: Generate seed for deterministic map generation
+      const seed = gameStore.generateSeed();
+      console.log('🎲 [App] Map seed generated:', seed);
+
+      // ✅ STEP 2: Generate tiles with seed (base grid only, no special tiles yet)
       const radius = 3;
       const spacing = -0.2;
-      const generatedTiles = tileStore.initializeGameGrid(radius, spacing);
+      const generatedTiles = tileStore.initializeGameGrid(radius, spacing, seed);
       tileStore.setTiles(generatedTiles);
       
       console.log('🎲 [App] Tiles generated:', {
         tilesCount: Object.keys(generatedTiles).length,
         radius,
         spacing,
+        seed,
         tileCoords: Object.keys(generatedTiles).slice(0, 5)
       });
 
-      // ✅ STEP 2: Initialize game state flags (except starting tiles)
+      // ✅ STEP 3: Initialize game state flags (except starting tiles)
       gameStore.markPlayersAsInitialized();
       gameStore.markBotsAsInitialized();
       gameStore.markTilesAsInitialized();
       // Note: markStartingTilesAsAssigned() will be called after tile assignment
 
-      // ✅ STEP 3: Create bots FSM (will now read tiles from tileStore)
+      // ✅ STEP 4: Create bots FSM (will now read tiles from tileStore)
       xfsmStore.addBot('bot-0');
       xfsmStore.addBot('bot-1');
       
-      // ✅ STEP 4: Manually assign starting tiles with random placement
-      console.log('🎲 [App] BEFORE assignStartingTiles - existing tiles with depart type:', 
-        Object.values(generatedTiles).filter(t => t.type === 'depart').length);
+      // ✅ STEP 5: Assign starting tiles with fairness validation
+      // This will: place spawns with fairness checks, then obstacles/danger/stations
+      console.log('🎯 [App] Starting fairness-aware tile assignment...');
       
-      tileStore.assignStartingTiles(['bot-0', 'bot-1']);
+      tileStore.assignStartingTiles(['bot-0', 'bot-1'], seed);
       
-      const tilesAfterAssignment = tileStore.tiles; // Utiliser directement tileStore.tiles
+      const tilesAfterAssignment = tileStore.tiles;
       const departTiles = Object.values(tilesAfterAssignment).filter(t => t.type === 'depart');
-      console.log('🎲 [App] AFTER assignStartingTiles:', {
+      console.log('🎯 [App] Fairness assignment complete:', {
         departTilesCount: departTiles.length,
         departTileCoords: departTiles.map(t => t.position.coord),
-        assignedBot: departTiles.find(t => t.assignedToBot)?.assignedToBot
+        assignedBots: departTiles.map(t => t.assignedToBot)
       });
       
       gameStore.markStartingTilesAsAssigned();
