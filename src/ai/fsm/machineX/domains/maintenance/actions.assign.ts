@@ -100,6 +100,13 @@ export const assignShipRepairContext = createAssignAction(({ context }) => {
     return {};
   }
   
+  const damageBefore = context.vehicle?.damage || 0;
+  const damageAfter = 0;
+  
+  console.log(`🔧 [assignShipRepairContext] ${context.entityId}: SHIP REPAIRED`);
+  console.log(`   Damage: ${damageBefore.toFixed(1)}% → ${damageAfter.toFixed(1)}%`);
+  console.log(`   Repair completed: 100% damage removed`);
+  
   return {
     vehicle: {
       ...context.vehicle,
@@ -119,6 +126,13 @@ export const assignShipRefuelContext = createAssignAction(({ context }) => {
   if (!context.vehicle) {
     return {};
   }
+  
+  const fuelBefore = context.vehicle?.fuel || 0;
+  const fuelAfter = 100;
+  
+  console.log(`⛽ [assignShipRefuelContext] ${context.entityId}: SHIP REFUELED`);
+  console.log(`   Fuel: ${fuelBefore.toFixed(1)}% → ${fuelAfter.toFixed(1)}%`);
+  console.log(`   Fuel added: ${(fuelAfter - fuelBefore).toFixed(1)}%`);
   
   return {
     vehicle: {
@@ -322,5 +336,233 @@ export const assignDroneDamagePenaltyContext = createAssignAction(({ context }) 
     },
     lastAction: 'drone_purchased_with_penalty',
     fsmState: 'maintaining_purchasing_drone'
+  };
+});
+
+// ============================================================================
+// 🆕 STATION SUPPORT - Actions for maintenance stations
+// ============================================================================
+
+/**
+ * Helper function to find nearest station of given type
+ */
+function findNearestStationOfType(
+  context: FSMContext, 
+  stationType: 'fuel' | 'repair'
+): import('../../../../../types/tile.d.ts').Tile | null {
+  const tiles = context.gridInfo?.tiles || {};
+  const shipCoord = context.vehicle?.coord;
+  
+  if (!shipCoord) return null;
+  
+  const stations = Object.values(tiles).filter(
+    (tile): tile is import('../../../../../types/tile.d.ts').Tile => 
+      tile !== null && 
+      typeof tile === 'object' && 
+      'type' in tile && 
+      tile.type === stationType
+  );
+  
+  if (stations.length === 0) return null;
+  
+  // Find closest station using calculateDistanceGrid
+  const { calculateDistanceGrid } = require('../../../../../core/spatial/index.ts');
+  let nearestStation: import('../../../../../types/tile.d.ts').Tile | null = null;
+  let minDistance = Infinity;
+  
+  for (const station of stations) {
+    const distance = calculateDistanceGrid(shipCoord, station.position.coord);
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestStation = station;
+    }
+  }
+  
+  return nearestStation;
+}
+
+/**
+ * Action assign pour naviguer vers une station fuel
+ * Similaire à assignShipMovingToTileContext, mais cible une station fuel
+ */
+export const assignShipMovingToFuelStationContext = createAssignAction(({ context }) => {
+  const nearestStation = findNearestStationOfType(context, 'fuel');
+  
+  if (!nearestStation) {
+    fsmLogger.warn(`⚠️ [${context.entityId}] No fuel station found!`);
+    console.log(`❌ [assignShipMovingToFuelStationContext] ${context.entityId}: No station available`);
+    return {};
+  }
+  
+  const shipCoord = context.vehicle?.coord;
+  const targetCoord = nearestStation.position.coord;
+  const tiles = context.gridInfo?.tiles || {};
+  
+  // Calculate path to station
+  const { findPath } = require('../../../../../core/spatial/index.ts');
+  const path = shipCoord ? findPath(shipCoord, targetCoord, tiles) : [];
+  
+  if (path.length === 0) {
+    fsmLogger.warn(`⚠️ [${context.entityId}] No path to fuel station at ${targetCoord}!`);
+    console.log(`❌ [assignShipMovingToFuelStationContext] ${context.entityId}: No path to station at ${targetCoord}`);
+    return {};
+  }
+  
+  // Calculate fuel consumption for pathfinding
+  const pathSteps = Math.max(0, path.length - 1);
+  const FUEL_PER_TILE = 8; // 🆕 INCREASED: 8 fuel per tile to test station decisions
+  const fuelConsumption = Math.max(1, pathSteps * FUEL_PER_TILE);
+  const currentFuel = context.vehicle?.fuel || 100;
+  const newFuel = Math.max(0, currentFuel - fuelConsumption);
+  
+  // 🆕 Logs enrichis
+  console.log(`✅ [assignShipMovingToFuelStationContext] ${context.entityId}: NAVIGATING TO FUEL STATION`);
+  console.log(`   Station Location: ${targetCoord}`);
+  console.log(`   Path Length: ${path.length} tiles`);
+  console.log(`   Fuel Consumption: ${fuelConsumption} (${pathSteps} tiles × ${FUEL_PER_TILE}/tile)`);
+  console.log(`   Current Fuel: ${currentFuel.toFixed(1)} → ${newFuel.toFixed(1)} after travel`);
+  console.log(`   Route: ${path.slice(0, 5).join(' → ')}${path.length > 5 ? '...' : ''}`);
+  
+  fsmLogger.info(`⛽ [${context.entityId}] Moving to FUEL STATION:`, {
+    stationCoord: targetCoord,
+    pathLength: path.length,
+    fuelConsumption,
+    fuelRemaining: newFuel
+  });
+  
+  return {
+    vehicle: {
+      ...context.vehicle,
+      coord: shipCoord || '0,0',
+      targetVehicleTile: nearestStation,
+      isMoving: true,
+      progress: 0,
+      visualState: 'moving_to_tile' as VehicleVisualState,
+      fuel: newFuel,
+      currentPath: path,
+      pathIndex: 0,
+      isMovingToStation: true,
+      stationType: 'fuel' as const
+    },
+    lastAction: 'ship_moving_to_fuel_station',
+    fsmState: 'collecting_ship_moving_to_tile'
+  };
+});
+
+/**
+ * Action assign pour naviguer vers une station repair
+ * Similaire à assignShipMovingToTileContext, mais cible une station repair
+ */
+export const assignShipMovingToRepairStationContext = createAssignAction(({ context }) => {
+  const nearestStation = findNearestStationOfType(context, 'repair');
+  
+  if (!nearestStation) {
+    fsmLogger.warn(`⚠️ [${context.entityId}] No repair station found!`);
+    console.log(`❌ [assignShipMovingToRepairStationContext] ${context.entityId}: No station available`);
+    return {};
+  }
+  
+  const shipCoord = context.vehicle?.coord;
+  const targetCoord = nearestStation.position.coord;
+  const tiles = context.gridInfo?.tiles || {};
+  
+  // Calculate path to station
+  const { findPath } = require('../../../../../core/spatial/index.ts');
+  const path = shipCoord ? findPath(shipCoord, targetCoord, tiles) : [];
+  
+  if (path.length === 0) {
+    fsmLogger.warn(`⚠️ [${context.entityId}] No path to repair station at ${targetCoord}!`);
+    console.log(`❌ [assignShipMovingToRepairStationContext] ${context.entityId}: No path to station at ${targetCoord}`);
+    return {};
+  }
+  
+  // Calculate fuel consumption for pathfinding
+  const pathSteps = Math.max(0, path.length - 1);
+  const FUEL_PER_TILE = 8; // 🆕 INCREASED: 8 fuel per tile to test station decisions
+  const fuelConsumption = Math.max(1, pathSteps * FUEL_PER_TILE);
+  const currentFuel = context.vehicle?.fuel || 100;
+  const newFuel = Math.max(0, currentFuel - fuelConsumption);
+  
+  // 🆕 Logs enrichis
+  console.log(`✅ [assignShipMovingToRepairStationContext] ${context.entityId}: NAVIGATING TO REPAIR STATION`);
+  console.log(`   Station Location: ${targetCoord}`);
+  console.log(`   Path Length: ${path.length} tiles`);
+  console.log(`   Fuel Consumption: ${fuelConsumption} (${pathSteps} tiles × ${FUEL_PER_TILE}/tile)`);
+  console.log(`   Current Fuel: ${currentFuel.toFixed(1)} → ${newFuel.toFixed(1)} after travel`);
+  console.log(`   Route: ${path.slice(0, 5).join(' → ')}${path.length > 5 ? '...' : ''}`);
+  
+  fsmLogger.info(`🔧 [${context.entityId}] Moving to REPAIR STATION:`, {
+    stationCoord: targetCoord,
+    pathLength: path.length,
+    fuelConsumption,
+    fuelRemaining: newFuel
+  });
+  
+  return {
+    vehicle: {
+      ...context.vehicle,
+      coord: shipCoord || '0,0',
+      targetVehicleTile: nearestStation,
+      isMoving: true,
+      progress: 0,
+      visualState: 'moving_to_tile' as VehicleVisualState,
+      fuel: newFuel,
+      currentPath: path,
+      pathIndex: 0,
+      isMovingToStation: true,
+      stationType: 'repair' as const
+    },
+    lastAction: 'ship_moving_to_repair_station',
+    fsmState: 'collecting_ship_moving_to_tile'
+  };
+});
+
+/**
+ * Action assign quand le vaisseau arrive à une station fuel
+ * Clear les flags isMovingToStation et passe en mode refueling
+ */
+export const assignShipAtFuelStationContext = createAssignAction(({ context }) => {
+  console.log(`✅ [assignShipAtFuelStationContext] ${context.entityId}: ARRIVED at FUEL STATION`);
+  console.log(`   Location: ${context.vehicle?.targetVehicleTile?.position?.coord}`);
+  console.log(`   Current Fuel: ${context.vehicle?.fuel?.toFixed(1)}%`);
+  console.log(`   Entering REFUELING mode...`);
+  
+  fsmLogger.info(`⛽ [${context.entityId}] Ship ARRIVED at FUEL STATION`);
+  
+  return {
+    vehicle: {
+      ...context.vehicle,
+      isMovingToStation: false,
+      stationType: undefined,
+      isMoving: false,
+      visualState: 'maintaining' as VehicleVisualState
+    },
+    lastAction: 'ship_at_fuel_station',
+    fsmState: 'maintaining_refueling'
+  };
+});
+
+/**
+ * Action assign quand le vaisseau arrive à une station repair
+ * Clear les flags isMovingToStation et passe en mode repairing
+ */
+export const assignShipAtRepairStationContext = createAssignAction(({ context }) => {
+  console.log(`✅ [assignShipAtRepairStationContext] ${context.entityId}: ARRIVED at REPAIR STATION`);
+  console.log(`   Location: ${context.vehicle?.targetVehicleTile?.position?.coord}`);
+  console.log(`   Current Damage: ${context.vehicle?.damage?.toFixed(1)}%`);
+  console.log(`   Entering REPAIRING mode...`);
+  
+  fsmLogger.info(`🔧 [${context.entityId}] Ship ARRIVED at REPAIR STATION`);
+  
+  return {
+    vehicle: {
+      ...context.vehicle,
+      isMovingToStation: false,
+      stationType: undefined,
+      isMoving: false,
+      visualState: 'maintaining' as VehicleVisualState
+    },
+    lastAction: 'ship_at_repair_station',
+    fsmState: 'maintaining_repairing'
   };
 });

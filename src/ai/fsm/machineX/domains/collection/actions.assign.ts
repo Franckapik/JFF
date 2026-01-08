@@ -177,7 +177,7 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     // ✅ Calculate fuel based on PATH LENGTH (number of tiles traversed)
     // Fuel consumption = 1 per tile traversed (path includes start, so -1)
     const pathSteps = Math.max(0, path.length - 1); // Number of tiles to traverse
-    const FUEL_PER_TILE = 2; // 2 fuel per tile traversed
+    const FUEL_PER_TILE = 8; // 🆕 INCREASED: 8 fuel per tile to test station decisions
     const fuelConsumption = Math.max(1, pathSteps * FUEL_PER_TILE);
     const currentFuel = context.vehicle?.fuel || 100;
     const newFuel = Math.max(0, currentFuel - fuelConsumption);

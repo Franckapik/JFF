@@ -1,19 +1,6 @@
-* il y a un bloacage en EVAL a diagnostiquer. Visible sur main actuellement. D'ou provient-il ? Comment le resoudre via le log ? Est-ce lié a explorable undefined? NOn  peut-etre pas mais plutot au danger dynamique.
-
 * Le cloud donne-il des damages en fonction du bot desormais?
 
-* Le bot evite-il les dangers ? PLus maintenant mais le drone destroyed est à mettre en place.
-  ✅ RÉSOLU : Architecture achat drone asynchrone documentée dans docs/DRONE_PURCHASE_ARCHITECTURE.md
-  - Achat instantané avec compteur dronesInConstruction
-  - Tracker gère délai de construction (3s) en arrière-plan
-  - Bot continue à agir pendant construction (collecte, maintenance)
-  - Drone activé après construction via événement DRONE_CONSTRUCTION_COMPLETE
-  
-  📋 TODO: Implémenter l'architecture (voir checklist dans doc) 
-
-* Pathfinding à remettre en place. (BFS) EN cours : meilleurs visualisation à faire, vérifier la logique et ajouter un composant montrant les paths sous forme de liste.
-
-* Le bot doit choisir/utiliser la station repair ou refuel
+* Le bot doit choisir/utiliser la station repair ou refuel. Mettre en place la strategie pour utiliser les bons sous etats.
 
 * assurer les memes conditions de départ.
 
@@ -22,8 +9,13 @@
 * comment dynamiser la vue pour faire un affichage de battle avec un bot qui gagne ou non ? 
 
 * avoir un meilleur log beaucoup moins verbeux.
-  
-* 
+
+
+Le danger dynamique pourrait renvoyer plutot un drone vers une tuile aléatoire ? C'est plus fun et serait considéré comme un brouillard electromagnetique. Cela peut avoir des conséquences positives et negatives. Ce nuage pourrait etre plus gros (trois tuiles?)
+
+
+
+
 
 
 Quel objectif final pour le jeu?

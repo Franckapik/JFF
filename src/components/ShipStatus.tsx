@@ -81,6 +81,17 @@ function SingleBotStatus({
   const labelStyle = compact ? styles.labelCompact : styles.label;
   const valueStyle = compact ? styles.valueCompact : styles.value;
 
+  // 🆕 Détecter le type de destination
+  const isMovingToStation = ctx?.vehicle?.isMovingToStation === true;
+  const stationType = ctx?.vehicle?.stationType;
+  const destinationLabel = isMovingToStation 
+    ? `${stationType === 'fuel' ? '⛽' : '🔧'} ${stationType?.toUpperCase()} STATION`
+    : ctx?.vehicle?.targetVehicleTile?.type === 'resource'
+    ? '📦 RESOURCE'
+    : ctx?.vehicle?.targetVehicleTile?.type === 'danger'
+    ? '⚠️ DANGER'
+    : 'N/A';
+
   return (
     <div style={{ ...styles.singleBot, borderLeftColor: borderColor }}>
       <h4 style={styles.botTitle}>{botId === 'bot-0' ? '🚢 Bot-0' : '🚢 Bot-1'}</h4>
@@ -96,6 +107,12 @@ function SingleBotStatus({
         <span style={labelStyle}>Resources:</span>
         <span style={valueStyle}>{ctx?.vehicle?.resources?.total || 0}</span>
         {renderBar((ctx?.vehicle?.resources?.total || 0) / (ctx?.vehicle?.maxCapacity?.total || 1000), compact)}
+        
+        {/* 🆕 STATION SUPPORT: Afficher le type de destination */}
+        <span style={labelStyle}>Target:</span>
+        <span style={{ ...valueStyle, color: isMovingToStation ? '#ff6b00' : '#666' }}>
+          {destinationLabel}
+        </span>
       </div>
       <PositionDisplay
         title="Position"

@@ -49,5 +49,13 @@ export interface VehicleState {
   currentPath: import('./coordinates').GridCoordinate[];
   /** Current index in the path (0 = start, path.length-1 = target) */
   pathIndex: number;
+  
+  // ========================================================================
+  // STATION SUPPORT - Ship can navigate to maintenance stations
+  // ========================================================================
+  /** Flag indicating if ship is moving to a maintenance station */
+  isMovingToStation?: boolean;
+  /** Type of station being targeted ('fuel' or 'repair') */
+  stationType?: 'fuel' | 'repair';
 }
 

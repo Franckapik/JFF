@@ -22,7 +22,11 @@ function getSimpleCoordLabel(coord: GridCoordinate): string {
 
 function SingleBotRoute({ botId }: { botId: 'bot-0' | 'bot-1' }) {
   const getActor = useXFSMStore((state) => state.getActor);
-  const [routeData, setRouteData] = React.useState<RouteData>({
+  const [routeData, setRouteData] = React.useState<RouteData & {
+    isMovingToStation?: boolean;
+    stationType?: 'fuel' | 'repair';
+    targetTileType?: string;
+  }>({
     currentPath: [],
     pathIndex: 0,
     shipCoord: null,
@@ -38,6 +42,9 @@ function SingleBotRoute({ botId }: { botId: 'bot-0' | 'bot-1' }) {
         currentPath: ctx.vehicle?.currentPath || [],
         pathIndex: ctx.vehicle?.pathIndex ?? 0,
         shipCoord: ctx.vehicle?.coord || null,
+        isMovingToStation: ctx.vehicle?.isMovingToStation,
+        stationType: ctx.vehicle?.stationType,
+        targetTileType: ctx.vehicle?.targetVehicleTile?.type,
       });
     });
 
@@ -50,14 +57,21 @@ function SingleBotRoute({ botId }: { botId: 'bot-0' | 'bot-1' }) {
     return null;
   }
 
+  // 🆕 Déterminer le type de destination pour afficher un label
+  const destinationEmoji = routeData.isMovingToStation
+    ? routeData.stationType === 'fuel' ? '⛽' : '🔧'
+    : routeData.targetTileType === 'resource' ? '📦'
+    : routeData.targetTileType === 'danger' ? '⚠️'
+    : '🎯';
+
   return (
     <div style={styles.routeItem}>
       <div style={styles.routeHeader}>
         <span style={{ ...styles.routeTitle, color: borderColor }}>
           {botId === 'bot-0' ? '🛣️ Bot-0' : '🛣️ Bot-1'}
         </span>
-        <span style={styles.progressLabel}>
-          {routeData.pathIndex + 1}/{routeData.currentPath.length}
+        <span style={{ ...styles.progressLabel, color: routeData.isMovingToStation ? '#ff6b00' : '#666' }}>
+          {routeData.pathIndex + 1}/{routeData.currentPath.length} {destinationEmoji}
         </span>
       </div>
       
@@ -66,6 +80,7 @@ function SingleBotRoute({ botId }: { botId: 'bot-0' | 'bot-1' }) {
           const simpleLabel = getSimpleCoordLabel(coord);
           const isCurrent = idx === routeData.pathIndex;
           const isVisited = idx < routeData.pathIndex;
+          const isTarget = idx === routeData.currentPath.length - 1;
           
           return (
             <React.Fragment key={`${botId}-${idx}`}>
@@ -74,7 +89,19 @@ function SingleBotRoute({ botId }: { botId: 'bot-0' | 'bot-1' }) {
                   {simpleLabel}
                 </span>
               )}
-              {!isCurrent && (
+              {!isCurrent && isTarget && (
+                // 🆕 STATION SUPPORT: Marquer la destination avec couleur orange si station
+                <span style={{ 
+                  ...styles.pathCoord, 
+                  opacity: isVisited ? 0.5 : 1, 
+                  color: '#333',
+                  backgroundColor: routeData.isMovingToStation ? '#fff3e0' : 'transparent',
+                  border: routeData.isMovingToStation ? '2px solid #ff6b00' : 'none'
+                }}>
+                  {destinationEmoji} {simpleLabel}
+                </span>
+              )}
+              {!isCurrent && !isTarget && (
                 <span style={{ ...styles.pathCoord, opacity: isVisited ? 0.5 : 1, color: '#333' }}>
                   {simpleLabel}
                 </span>
