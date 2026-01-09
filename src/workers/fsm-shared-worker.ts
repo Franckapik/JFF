@@ -305,11 +305,15 @@ function handleSnapshot(botId: BotId, snapshot: any): void {
     });
   }
   
-  // Create tile provider from stored tiles (with minimal typing)
+  // ✅ Phase 5 Migration: Use context.gridInfo.tiles as source of truth
+  // The FSM context is now the single source of truth for tiles after INIT
+  const contextTiles = context?.gridInfo?.tiles || tilesStore;
+  
+  // Create tile provider from context tiles (with minimal typing)
   const tileProvider = {
-    tiles: tilesStore,
+    tiles: contextTiles,
     findAssignedDepartTile: (entityId: string) => {
-      return Object.values(tilesStore).find(
+      return Object.values(contextTiles).find(
         (t) => {
           const tile = t as { type?: string; assignedToBot?: string };
           return tile.type === 'depart' && tile.assignedToBot === entityId;

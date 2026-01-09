@@ -20,8 +20,11 @@ export * from './evaluation/index.ts';
 // Domaine exploration (COMPLET - assignDroneDeployingContext migré)
 export * from './exploration/index.ts';
 
-// Domaine collection (TODO: migrer les actions collection)
+// Domaine collection (COMPLET - Phase 5 migration, useTileStore removed)
 export * from './collection/index.ts';
 
 // Domaine maintenance (TODO: migrer les actions maintenance)
 export * from './maintenance/index.ts';
+
+// Domaine tiles (NEW - Phase 5: gestion des tiles dans le contexte FSM)
+export * from './tiles/index.ts';

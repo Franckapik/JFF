@@ -1,6 +1,64 @@
 # Intégration TileStore dans le contexte FSM XState
 
-## 📋 Analyse du problème
+## � MIGRATION COMPLÈTE - Phase 5
+
+**Statut : ✅ TERMINÉE**  
+**Date : 9 janvier 2026**
+
+### Résumé des modifications
+
+Le worker FSM est désormais **autonome vis-à-vis du TileStore**. Toutes les opérations de lecture et mutation des tiles passent par le contexte FSM (`context.gridInfo.tiles` et `context.memory.knownTiles`).
+
+### Fichiers créés
+
+| Fichier | Description |
+|---------|-------------|
+| `src/ai/fsm/machineX/domains/tiles/index.ts` | Export du domaine tiles |
+| `src/ai/fsm/machineX/domains/tiles/helpers.pure.ts` | Helpers purs pour manipulation des tiles |
+| `src/ai/fsm/machineX/domains/tiles/actions.assign.ts` | Actions XState assign pour mutations |
+
+### Fichiers modifiés
+
+| Fichier | Modifications |
+|---------|---------------|
+| `src/ai/fsm/machineX/domains/collection/actions.assign.ts` | Suppression de `useTileStore.getState()`, utilisation des helpers purs |
+| `src/workers/fsm-shared-worker.ts` | Utilisation de `context.gridInfo.tiles` au lieu de `tilesStore` |
+| `src/ai/fsm/machineX/domains/index.ts` | Export du nouveau domaine tiles |
+
+### Architecture finale
+
+```
+context.gridInfo.tiles  ← Source de vérité unique pour les tiles dans le FSM
+         ↑
+         │ Mutations via actions assign
+         │
+┌────────┴────────┐
+│   tiles domain  │
+│  helpers.pure   │ ← Fonctions pures de calcul
+│ actions.assign  │ ← Actions XState pour mutations
+└─────────────────┘
+         │
+         │ Utilisé par
+         ↓
+┌─────────────────────────────────────┐
+│       collection/actions.assign     │
+│ - assignShipLoadResourcesContext    │
+│ - assignShipReturningContext        │
+│ - assignShipReachedBaseContext      │
+└─────────────────────────────────────┘
+         │
+         │ Contexte partagé via
+         ↓
+┌─────────────────────────────────────┐
+│         fsm-shared-worker.ts        │
+│ - handleSnapshot utilise context    │
+│ - Plus de dépendance à tilesStore   │
+└─────────────────────────────────────┘
+```
+
+---
+
+## �📋 Analyse du problème
 
 Le `useTileStore` actuel utilise Zustand et combine 9 slices différents pour gérer :
 - Génération de grille hexagonale
