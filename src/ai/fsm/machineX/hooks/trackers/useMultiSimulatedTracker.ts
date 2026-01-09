@@ -14,8 +14,8 @@
 import { useEffect, useRef } from 'react';
 import type { Actor } from 'xstate';
 
-import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
+import type { Tile } from '../../../../../types/tile.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
 import type { machineXV5Pure } from '../../machine.pure.v5.ts';
 import { getScheduledEvents, type TileProvider } from '../../shared/simulatedTrackerCore.ts';
@@ -147,13 +147,13 @@ export function useMultiSimulatedTracker(
         if (stateStr === lastStateRef.current.get(botId)) return;
         lastStateRef.current.set(botId, stateStr);
 
-        // Récupérer les tiles à jour
-        const currentTiles = useTileStore.getState().tiles;
+        // Récupérer les tiles depuis le contexte FSM (TileStore a été supprimé)
+        const currentTiles = (snapshot.context?.gridInfo?.tiles || {}) as Record<string, Tile>;
         const tileProvider: TileProvider = {
           tiles: currentTiles,
-          findAssignedDepartTile: (entityId: string) => {
+          findAssignedDepartTile: (entityId: string): Tile | undefined => {
             return Object.values(currentTiles).find(
-              tile => tile.type === 'depart' && tile.assignedToBot === entityId
+              (tile: Tile) => tile.type === 'depart' && tile.assignedToBot === entityId
             );
           }
         };

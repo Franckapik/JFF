@@ -23,8 +23,16 @@
 import React from 'react';
 
 import { UIProvider, useUI } from '../contexts/UIContext';
+import {
+    assignStartingTilesToBots,
+    initializeGameGrid,
+    placeDangerTiles,
+    placeEmptyTiles,
+    placeGameStations,
+    placeObstacleTiles,
+    placeStartingTiles
+} from '../core/spatial/hexGrid';
 import { useSharedWorkerStore } from '../stores/useSharedWorkerStore';
-import { useTileStore } from '../stores/useTileStore';
 
 // =========================================================================
 // TYPES
@@ -393,11 +401,6 @@ export default function SharedView({ viewId }: SharedViewProps) {
   const isConnected = useSharedWorkerStore((s) => s.isConnected);
   const isInitialized = useSharedWorkerStore((s) => s.isInitialized);
   
-  // Initialize tiles (needed for game logic)
-  const initializeGameGrid = useTileStore((s) => s.initializeGameGrid);
-  const setTiles = useTileStore((s) => s.setTiles);
-  const assignStartingTiles = useTileStore((s) => s.assignStartingTiles);
-  
   // Connect to worker on mount
   React.useEffect(() => {
     connect();
@@ -409,20 +412,40 @@ export default function SharedView({ viewId }: SharedViewProps) {
     
     // Only vue1 initializes the game
     if (viewId === 'vue1') {
-      // Generate tiles
+      // Generate tiles using complete orchestration pipeline
       const radius = 3;
       const spacing = -0.2;
-      const generatedTiles = initializeGameGrid(radius, spacing);
-      setTiles(generatedTiles);
-      assignStartingTiles(['bot-0', 'bot-1']);
+      const seed = Date.now();
+      const botCount = 2; // Default to 2 bots for multi-bot setup
       
-      // Get updated tiles and send to worker
-      const currentTiles = useTileStore.getState().tiles;
-      initGame(currentTiles);
+      // Step 1: Initialize base grid
+      let tiles = initializeGameGrid({ radius, spacing, seed });
       
-      console.log(`🎮 [${viewId.toUpperCase()}] Game initialized with ${Object.keys(currentTiles).length} tiles`);
+      // Step 2: Place empty tiles (15%)
+      tiles = placeEmptyTiles(tiles, 0.15, seed);
+      
+      // Step 3: Place obstacles (20%)
+      tiles = placeObstacleTiles(tiles, seed);
+      
+      // Step 4: Place danger tiles (10%)
+      tiles = placeDangerTiles(tiles, seed);
+      
+      // Step 5: Place starting tiles (1 per bot)
+      tiles = placeStartingTiles(tiles, botCount, seed);
+      
+      // Step 6: Place stations (fuel + repair)
+      tiles = placeGameStations(tiles, { radius, seed });
+      
+      // Step 7: Assign starting tiles to bots
+      const botIds = ['bot-0', 'bot-1'];
+      tiles = assignStartingTilesToBots(tiles, botIds);
+      
+      // Send to worker
+      initGame(tiles);
+      
+      console.log(`🎮 [${viewId.toUpperCase()}] Game initialized with ${Object.keys(tiles).length} tiles`);
     }
-  }, [isConnected, isInitialized, viewId, initializeGameGrid, setTiles, assignStartingTiles, initGame]);
+  }, [isConnected, isInitialized, viewId, initGame]);
   
   // Poll for state updates periodically (backup mechanism)
   const requestState = useSharedWorkerStore((s) => s.requestState);

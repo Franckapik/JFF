@@ -1,9 +1,9 @@
 import React from 'react';
 
-import { useBotStates } from '../hooks/useBotState.ts';
 import { useUI } from '../contexts/UIContext';
-import { useTileStore } from '../stores/useTileStore';
+import { useBotStates } from '../hooks/useBotState.ts';
 import type { GridCoordinate } from '../types/coordinates.d';
+import type { Tile } from '../types/tile.d';
 
 /**
  * ✅ Phase 4 Migration: Now uses useBotStates hook (auto-switches between worker/xfsm)
@@ -40,7 +40,6 @@ function SingleBotCollected({
   botId: 'bot-0' | 'bot-1'; 
   compact?: boolean;
 }) {
-  const tiles = useTileStore((state) => state.tiles);
   // ✅ Phase 4: Use unified hook instead of useXFSMStore directly
   const botStates = useBotStates();
   const botSnapshot = botStates[botId];
@@ -55,18 +54,20 @@ function SingleBotCollected({
 
   // Filtrer les tuiles collectées par ce bot
   const collectedTiles = React.useMemo(() => {
+    if (!hasValidContext(botSnapshot)) return [];
+    const tiles = botSnapshot.context?.gridInfo?.tiles || {};
     return Object.entries(tiles)
-      .filter(([, tile]) => tile.collected && tile.collectedBy === botId)
+      .filter(([, tile]: [string, Tile]) => tile.collected && tile.collectedBy === botId)
       .sort(([coordA], [coordB]) => {
         const [aq, ar] = coordA.split(',').map(Number);
         const [bq, br] = coordB.split(',').map(Number);
         return aq === bq ? ar - br : aq - bq;
       })
-      .map(([coord, tile]) => ({
+      .map(([coord, tile]: [string, Tile]) => ({
         coord: coord as GridCoordinate,
         type: tile.type || 'unknown',
       }));
-  }, [tiles, botId]);
+  }, [botSnapshot, botId]);
 
   const borderColor = botId === 'bot-0' ? '#22c55e' : '#3b82f6';
 
@@ -119,7 +120,6 @@ function SingleBotCollected({
  */
 export default function CollectedTilesList() {
   const { selectedView } = useUI();
-  const tiles = useTileStore((state) => state.tiles);
   // ✅ Phase 4: Use unified hook instead of useXFSMStore directly
   const botStates = useBotStates();
 
@@ -139,21 +139,23 @@ export default function CollectedTilesList() {
 
   // Filtrer les tuiles collectées par ce bot (utilisé en mode single)
   const collectedTiles = React.useMemo(() => {
+    if (!hasValidContext(botSnapshot)) return [];
+    const tiles = botSnapshot.context?.gridInfo?.tiles || {};
     return Object.entries(tiles)
-      .filter(([, tile]) => tile.collected && tile.collectedBy === singleBotId)
+      .filter(([, tile]: [string, Tile]) => tile.collected && tile.collectedBy === singleBotId)
       .sort(([coordA], [coordB]) => {
         const [aq, ar] = coordA.split(',').map(Number);
         const [bq, br] = coordB.split(',').map(Number);
         return aq === bq ? ar - br : aq - bq;
       })
-      .map(([coord, tile]) => ({
+      .map(([coord, tile]: [string, Tile]) => ({
         coord: coord as GridCoordinate,
         type: tile.type || 'unknown',
         biome: tile.biome || 'unknown',
         resources: { food: 0, debris: 0, special: 0, total: 0 },
         explored: tile.explored || false,
       }));
-  }, [tiles, singleBotId]);
+  }, [botSnapshot, singleBotId]);
 
   // Utiliser le score global (qui contient les ressources réellement collectées)
   const totals = React.useMemo(() => {

@@ -8,7 +8,6 @@
  * Ce module gère le routing simple pour les différentes vues:
  * 
  * Routes:
- * - / : Vue legacy (app originale avec instances FSM locales Zustand)
  * - /vue1 : Vue simple connectée au SharedWorker (bot cards)
  * - /vue2 : Vue complète avec visualisation FSM détaillée
  * 
@@ -30,7 +29,6 @@
 
 import React from 'react';
 
-import App from './App';
 import SharedFSMVisualization from './components/SharedFSMVisualization';
 import SharedView from './components/SharedView';
 
@@ -38,7 +36,7 @@ import SharedView from './components/SharedView';
 // TYPES
 // =========================================================================
 
-type RouteKey = 'legacy' | 'vue1' | 'vue2';
+type RouteKey = 'vue1' | 'vue2';
 
 interface RouteConfig {
   path: string;
@@ -51,11 +49,6 @@ interface RouteConfig {
 // =========================================================================
 
 const routes: Record<RouteKey, RouteConfig> = {
-  legacy: {
-    path: '/',
-    component: <App />,
-    title: 'FSM Game - Legacy Mode'
-  },
   vue1: {
     path: '/vue1',
     component: <SharedView viewId="vue1" />,
@@ -76,9 +69,9 @@ function matchRoute(pathname: string): RouteKey {
   // Normalize path (remove trailing slash)
   const normalizedPath = pathname.replace(/\/$/, '') || '/';
   
-  if (normalizedPath === '/vue1') return 'vue1';
   if (normalizedPath === '/vue2') return 'vue2';
-  return 'legacy';
+  // Default to vue1 for both / and /vue1
+  return 'vue1';
 }
 
 export default function AppRouter() {
@@ -157,7 +150,7 @@ function DevNavigation({ currentRoute }: { currentRoute: RouteKey }) {
               fontWeight: currentRoute === key ? 'bold' : 'normal'
             }}
           >
-            {config.path === '/' ? 'Legacy' : config.path.slice(1).toUpperCase()}
+            {config.path === '/vue1' ? 'Vue 1' : 'Vue 2'}
           </button>
         ))}
       </div>

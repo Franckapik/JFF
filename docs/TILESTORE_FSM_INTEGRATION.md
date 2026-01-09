@@ -290,9 +290,38 @@ assignTileUpdate: assign(({ context, event }) => {
 
 ### Fonctions pures (hors FSM)
 
-Les fonctions de calcul restent pures et séparées :
+Les fonctions de calcul restent pures et séparées dans `src/core/spatial/`:
 
 ```typescript
+// src/core/spatial/hexGrid.ts - Complete tile generation pipeline
+export function initializeGameGrid(config: { radius: number; spacing: number; seed: number }): GridTileMap {
+  // Base hexagonal grid generation
+}
+
+export function placeGameStations(tiles: GridTileMap, config: { radius: number; seed: number }): GridTileMap {
+  // Place fuel and repair stations
+}
+
+export function placeDangerTiles(tiles: GridTileMap, seed: number): GridTileMap {
+  // Place danger tiles (10% of grid)
+}
+
+export function placeObstacleTiles(tiles: GridTileMap, seed: number): GridTileMap {
+  // Place obstacle tiles (20% of grid)
+}
+
+export function placeEmptyTiles(tiles: GridTileMap, ratio: number, seed: number): GridTileMap {
+  // Place empty tiles (default 15%)
+}
+
+export function placeStartingTiles(tiles: GridTileMap, botCount: number, seed: number): GridTileMap {
+  // Place starting positions for bots
+}
+
+export function assignStartingTilesToBots(tiles: GridTileMap, botIds: string[]): GridTileMap {
+  // Assign specific starting tiles to each bot
+}
+
 // src/core/spatial/pure/pathfinding.ts
 export function findPath(
   tiles: TileMap, 
@@ -301,14 +330,6 @@ export function findPath(
   options?: PathfindingOptions
 ): GridCoordinate[] {
   // Algorithme A* ou Dijkstra
-}
-
-// src/core/spatial/pure/hexGrid.ts
-export function generateHexGrid(
-  radius: number, 
-  spacing: number
-): TileMap {
-  // Génération hexagonale
 }
 
 // src/core/spatial/pure/distance.ts
@@ -320,23 +341,47 @@ export function calculateDistance(
 }
 ```
 
-Ces fonctions sont **importées et utilisées dans les actions** :
+Ces fonctions sont **importées et utilisées dans SharedView pour l'initialisation** :
 
 ```typescript
-import { findPath } from '../core/spatial/pure/pathfinding';
-import { generateHexGrid } from '../core/spatial/pure/hexGrid';
+import { 
+  initializeGameGrid, 
+  placeGameStations, 
+  placeDangerTiles, 
+  placeEmptyTiles,
+  placeObstacleTiles,
+  placeStartingTiles,
+  assignStartingTilesToBots
+} from '../core/spatial/hexGrid';
 
-const actions = {
-  assignGeneratedTiles: assign(({ event }) => {
-    const tiles = generateHexGrid(event.radius, event.spacing);
-    return { tiles };
-  }),
-  
-  calculatePathAndAssign: assign(({ context, event }) => {
-    const path = findPath(context.tiles, event.start, event.end);
-    return { currentPath: path };
-  })
-};
+// Vue1 initializes the game with complete tile orchestration
+const seed = Date.now();
+const botCount = 2;
+const botIds = ['bot-0', 'bot-1'];
+
+// Step 1: Initialize base grid
+let tiles = initializeGameGrid({ radius, spacing, seed });
+
+// Step 2: Place empty tiles (15%)
+tiles = placeEmptyTiles(tiles, 0.15, seed);
+
+// Step 3: Place obstacles (20%)
+tiles = placeObstacleTiles(tiles, seed);
+
+// Step 4: Place danger tiles (10%)
+tiles = placeDangerTiles(tiles, seed);
+
+// Step 5: Place starting tiles (1 per bot)
+tiles = placeStartingTiles(tiles, botCount, seed);
+
+// Step 6: Place stations (fuel + repair)
+tiles = placeGameStations(tiles, { radius, seed });
+
+// Step 7: Assign starting tiles to bots
+tiles = assignStartingTilesToBots(tiles, botIds);
+
+// Send to worker
+initGame(tiles);
 ```
 
 ---

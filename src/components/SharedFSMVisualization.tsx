@@ -31,14 +31,31 @@ import React from 'react';
 import { UIProvider, useUI } from '../contexts/UIContext';
 import { gridToWorld } from '../core/spatial';
 import { useSharedWorkerStore } from '../stores/useSharedWorkerStore';
-import { useTileStore } from '../stores/useTileStore';
-import type { FairnessRuleResult, FairnessValidationResult } from '../stores/useTileStore/slices/tileFairnessSlice.ts';
 import type { GridCoordinate } from '../types/coordinates';
 import type { FSMContext } from '../types/fsm.d';
 
 import BotSelector from './BotSelector';
-import PositionDisplay from './PositionDisplay';
 import TileMatrixLayout from './TileMatrixLayout';
+
+// =========================================================================
+// POSITION DISPLAY COMPONENT (inline, replacing deleted PositionDisplay.tsx)
+// =========================================================================
+function PositionDisplay({
+  title,
+  worldPosition,
+  gridCoord,
+}: {
+  title: string;
+  worldPosition?: { x: number; y: number; z: number };
+  gridCoord?: GridCoordinate | null;
+}) {
+  return (
+    <div style={{ fontSize: '11px', color: '#666' }}>
+      <strong>{title}:</strong> {gridCoord || 'N/A'}
+      {worldPosition && ` (${worldPosition.x.toFixed(1)}, ${worldPosition.y.toFixed(1)}, ${worldPosition.z.toFixed(1)})`}
+    </div>
+  );
+}
 
 // =========================================================================
 // SYNC HEADER COMPONENT (from SharedView)
@@ -333,22 +350,26 @@ function SharedFSMVisualizationContent() {
   // États pour le log des transitions
   const [eventLog, setEventLog] = React.useState<Array<{ time: string; event: string; state: string }>>([]);
   
-  // Statistiques d'exploration unifiées depuis le TileStore (source de vérité unique)
-  const tiles = useTileStore((state) => state.tiles);
+  // Statistiques d'exploration depuis le FSM context
   const cycleStats = React.useMemo(() => {
     let totalTiles = 0;
     let exploredTiles = 0;
     let collectedTiles = 0;
     let collectedButNotExplored = 0;
     
-    Object.values(tiles).forEach((tile) => {
-      totalTiles++;
-      if (tile.explored === true) exploredTiles++;
-      if (tile.collected === true) {
-        collectedTiles++;
-        if (tile.explored !== true) collectedButNotExplored++;
-      }
-    });
+    // Récupérer les tuiles depuis le premier bot actif
+    const firstActiveBotId = activeBots?.[0];
+    if (firstActiveBotId && botStates[firstActiveBotId]?.context?.gridInfo?.tiles) {
+      const tiles = botStates[firstActiveBotId].context.gridInfo.tiles;
+      Object.values(tiles).forEach((tile) => {
+        totalTiles++;
+        if (tile.explored === true) exploredTiles++;
+        if (tile.collected === true) {
+          collectedTiles++;
+          if (tile.explored !== true) collectedButNotExplored++;
+        }
+      });
+    }
     
     return {
       tilesExplored: exploredTiles,
@@ -358,7 +379,7 @@ function SharedFSMVisualizationContent() {
       explorationRate: totalTiles > 0 ? ((exploredTiles / totalTiles) * 100).toFixed(1) : '0.0',
       hasIssue: collectedButNotExplored > 0
     };
-  }, [tiles]);
+  }, [botStates, activeBots]);
   
   const [stateVisitCounts, setStateVisitCounts] = React.useState<Record<string, number>>({
     initializing: 0,
@@ -596,7 +617,8 @@ function SharedFSMVisualizationContent() {
       </section>
 
       {/* STARTING CONDITIONS - FAIRNESS ANALYSIS */}
-      <StartingConditionsSection />
+      {/* TEMPORARILY DISABLED: Fairness analysis requires data from deleted TileStore */}
+      {/* <StartingConditionsSection /> */}
 
       {/* DRONE STATUS */}
       <section style={styles.section}>
@@ -916,347 +938,6 @@ function SharedFSMVisualizationContent() {
         </p>
       </section>
     </div>
-  );
-}
-
-// ============================================================
-// STARTING CONDITIONS SECTION
-// ============================================================
-
-function StartingConditionsSection() {
-  const fairnessData = useTileStore((state) => state.lastFairnessValidation);
-
-  if (!fairnessData) {
-    return null;
-  }
-
-  const result = fairnessData as FairnessValidationResult;
-
-  const calculateFairnessScore = (): { score: number; stars: number } => {
-    let totalMargin = 0;
-    let ruleCount = 0;
-
-    const spawnRule = result.rules.find(r => r.rule === 'spawnDistance');
-    if (spawnRule && spawnRule.status === 'PASS') {
-      const margin = ((spawnRule.value - spawnRule.threshold) / spawnRule.threshold) * 100;
-      totalMargin += Math.min(margin, 100);
-      ruleCount++;
-    }
-
-    const resourceRule = result.rules.find(r => r.rule === 'resourceBalance');
-    if (resourceRule && resourceRule.status === 'PASS') {
-      const margin = ((resourceRule.threshold - resourceRule.value) / resourceRule.threshold) * 100;
-      totalMargin += Math.min(margin, 100);
-      ruleCount++;
-    }
-
-    const terrainRule = result.rules.find(r => r.rule === 'terrainFairness');
-    if (terrainRule && terrainRule.status === 'PASS') {
-      const margin = ((terrainRule.threshold - terrainRule.value) / terrainRule.threshold) * 100;
-      totalMargin += Math.min(margin, 100);
-      ruleCount++;
-    }
-
-    const fuelRule = result.rules.find(r => r.rule === 'fuelAccess');
-    if (fuelRule && fuelRule.status === 'PASS' && fuelRule.value !== 999) {
-      const margin = ((fuelRule.threshold - fuelRule.value) / fuelRule.threshold) * 100;
-      totalMargin += Math.min(margin, 100);
-      ruleCount++;
-    }
-
-    const repairRule = result.rules.find(r => r.rule === 'repairAccess');
-    if (repairRule && repairRule.status === 'PASS' && repairRule.value !== 999) {
-      const margin = ((repairRule.threshold - repairRule.value) / repairRule.threshold) * 100;
-      totalMargin += Math.min(margin, 100);
-      ruleCount++;
-    }
-
-    const avgMargin = ruleCount > 0 ? totalMargin / ruleCount : 0;
-    const score = Math.round(50 + (avgMargin / 2));
-    const stars = score >= 90 ? 5 : score >= 75 ? 4 : score >= 60 ? 3 : score >= 45 ? 2 : 1;
-
-    return { score: Math.min(score, 100), stars };
-  };
-
-  const { score: fairnessScore, stars } = calculateFairnessScore();
-  const passedRules = result.rules.filter(r => r.status === 'PASS').length;
-  const totalRules = result.rules.length;
-
-  const getRuleIcon = (rule: string) => {
-    if (rule === 'spawnDistance') return '📏';
-    if (rule === 'resourceBalance') return '💰';
-    if (rule === 'fuelAccess') return '⛽';
-    if (rule === 'repairAccess') return '🔧';
-    if (rule === 'terrainFairness') return '🌍';
-    return '📋';
-  };
-
-  const getRuleLabel = (rule: string) => {
-    if (rule === 'spawnDistance') return 'Spawn Distance';
-    if (rule === 'resourceBalance') return 'Resource Balance';
-    if (rule === 'fuelAccess') return 'Fuel Access';
-    if (rule === 'repairAccess') return 'Repair Access';
-    if (rule === 'terrainFairness') return 'Terrain Fairness';
-    return rule;
-  };
-
-  const getStatusColor = (ruleResult: FairnessRuleResult) => {
-    if (ruleResult.value === 999) return '#F44336';
-    if (ruleResult.status !== 'PASS') return '#F44336';
-    
-    const threshold = ruleResult.threshold;
-    const value = ruleResult.value;
-    
-    if (ruleResult.rule === 'spawnDistance') {
-      const margin = ((value - threshold) / threshold) * 100;
-      return margin >= 50 ? '#4CAF50' : margin >= 25 ? '#FFC107' : '#FF9800';
-    }
-    
-    const margin = ((threshold - value) / threshold) * 100;
-    return margin >= 50 ? '#4CAF50' : margin >= 25 ? '#FFC107' : '#FF9800';
-  };
-
-  const getStatusLabel = (ruleResult: FairnessRuleResult) => {
-    if (ruleResult.value === 999) return 'NOT PLACED';
-    if (ruleResult.status !== 'PASS') return 'FAIL';
-    
-    const threshold = ruleResult.threshold;
-    const value = ruleResult.value;
-    
-    if (ruleResult.rule === 'spawnDistance') {
-      const margin = ((value - threshold) / threshold) * 100;
-      return margin >= 50 ? 'EXCELLENT' : margin >= 25 ? 'GOOD' : 'TIGHT';
-    }
-    
-    const margin = ((threshold - value) / threshold) * 100;
-    return margin >= 50 ? 'EXCELLENT' : margin >= 25 ? 'GOOD' : 'TIGHT';
-  };
-
-  const getValueWithUnit = (rule: FairnessRuleResult): string => {
-    if (rule.value === 999) return 'N/A';
-    
-    if (rule.rule === 'resourceBalance' || rule.rule === 'terrainFairness') {
-      return `${rule.value.toFixed(1)}%`;
-    }
-    
-    if (rule.rule === 'fuelAccess' || rule.rule === 'repairAccess') {
-      return `${rule.value} tile${rule.value !== 1 ? 's' : ''}`;
-    }
-    
-    return `${rule.value.toFixed(1)} tile${rule.value !== 1 ? 's' : ''}`;
-  };
-
-  const getThresholdWithUnit = (rule: FairnessRuleResult): string => {
-    if (rule.rule === 'resourceBalance' || rule.rule === 'terrainFairness') {
-      return `${rule.threshold}%`;
-    }
-    
-    if (rule.rule === 'fuelAccess' || rule.rule === 'repairAccess') {
-      return `${rule.threshold} tile${rule.threshold !== 1 ? 's' : ''}`;
-    }
-    
-    return `${rule.threshold.toFixed(1)} tile${rule.threshold !== 1 ? 's' : ''}`;
-  };
-
-  // Determine which bot is favored by the starting conditions
-  const calculateBotFavor = (): { favoredBot: string; advantage: string; reason: string } => {
-    let bot0Score = 0;
-    let bot1Score = 0;
-    const reasons: string[] = [];
-
-    const resourceRule = result.rules.find(r => r.rule === 'resourceBalance');
-    if (resourceRule && resourceRule.details && resourceRule.status === 'PASS') {
-      const match = resourceRule.details.match(/Resources:\s*(\d+)\s*vs\s*(\d+)/);
-      if (match) {
-        const res0 = parseInt(match[1], 10);
-        const res1 = parseInt(match[2], 10);
-        if (res0 > res1) {
-          bot0Score++;
-          reasons.push('More resources');
-        } else if (res1 > res0) {
-          bot1Score++;
-          reasons.push('More resources');
-        }
-      }
-    }
-
-    const fuelRule = result.rules.find(r => r.rule === 'fuelAccess');
-    if (fuelRule && fuelRule.details && fuelRule.value !== 999 && fuelRule.status === 'PASS') {
-      const match = fuelRule.details.match(/fuel distances:\s*(\d+)\s*tiles\s*vs\s*(\d+)\s*tiles/);
-      if (match) {
-        const fuel0 = parseInt(match[1], 10);
-        const fuel1 = parseInt(match[2], 10);
-        if (fuel0 < fuel1) {
-          bot0Score++;
-          reasons.push('Closer fuel');
-        } else if (fuel1 < fuel0) {
-          bot1Score++;
-          reasons.push('Closer fuel');
-        }
-      }
-    }
-
-    const repairRule = result.rules.find(r => r.rule === 'repairAccess');
-    if (repairRule && repairRule.details && repairRule.value !== 999 && repairRule.status === 'PASS') {
-      const match = repairRule.details.match(/repair distances:\s*(\d+)\s*tiles\s*vs\s*(\d+)\s*tiles/);
-      if (match) {
-        const repair0 = parseInt(match[1], 10);
-        const repair1 = parseInt(match[2], 10);
-        if (repair0 < repair1) {
-          bot0Score++;
-          reasons.push('Closer repair');
-        } else if (repair1 < repair0) {
-          bot1Score++;
-          reasons.push('Closer repair');
-        }
-      }
-    }
-
-    const terrainRule = result.rules.find(r => r.rule === 'terrainFairness');
-    if (terrainRule && terrainRule.details && terrainRule.status === 'PASS') {
-      const match = terrainRule.details.match(/Terrain walkable:\s*([\d.]+)%\s*vs\s*([\d.]+)%/);
-      if (match) {
-        const terrain0 = parseFloat(match[1]);
-        const terrain1 = parseFloat(match[2]);
-        if (terrain0 > terrain1) {
-          bot0Score++;
-          reasons.push('Better terrain');
-        } else if (terrain1 > terrain0) {
-          bot1Score++;
-          reasons.push('Better terrain');
-        }
-      }
-    }
-
-    if (bot0Score > bot1Score) {
-      return {
-        favoredBot: '🤖 Bot-0',
-        advantage: `+${bot0Score - bot1Score} points`,
-        reason: reasons.length > 0 ? reasons.join(' • ') : 'Better starting conditions'
-      };
-    } else if (bot1Score > bot0Score) {
-      return {
-        favoredBot: '🤖 Bot-1',
-        advantage: `+${bot1Score - bot0Score} points`,
-        reason: reasons.length > 0 ? reasons.join(' • ') : 'Better starting conditions'
-      };
-    } else {
-      return {
-        favoredBot: '⚖️ Perfectly Balanced',
-        advantage: 'No advantage',
-        reason: 'Both bots have equivalent starting conditions'
-      };
-    }
-  };
-
-  const botFavor = calculateBotFavor();
-
-  return (
-    <section style={styles.section}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-        <h3 style={{ margin: 0 }}>🎯 Starting Conditions - Fairness Analysis</h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ fontSize: '20px' }}>
-            {'⭐'.repeat(stars)}
-          </div>
-          <div style={{
-            backgroundColor: fairnessScore >= 75 ? '#4CAF50' : fairnessScore >= 50 ? '#FFC107' : '#F44336',
-            color: 'white',
-            padding: '4px 12px',
-            borderRadius: '12px',
-            fontWeight: 'bold',
-            fontSize: '14px'
-          }}>
-            {fairnessScore}/100
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
-        {result.rules.map((rule: FairnessRuleResult, index: number) => (
-          <div 
-            key={index}
-            style={{
-              border: '1px solid #ddd',
-              padding: '12px',
-              borderRadius: '6px',
-              backgroundColor: '#f5f5f5',
-              borderLeft: `4px solid ${getStatusColor(rule)}`
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <h4 style={{ margin: 0, fontSize: '13px', color: '#333' }}>
-                {getRuleIcon(rule.rule)} {getRuleLabel(rule.rule)}
-              </h4>
-              <span style={{
-                fontSize: '9px',
-                fontWeight: 'bold',
-                padding: '2px 6px',
-                borderRadius: '8px',
-                backgroundColor: getStatusColor(rule),
-                color: 'white'
-              }}>
-                {getStatusLabel(rule)}
-              </span>
-            </div>
-            <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>
-              <strong>Value:</strong> {getValueWithUnit(rule)}
-            </div>
-            <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>
-              <strong>Threshold:</strong> {getThresholdWithUnit(rule)}
-            </div>
-            {rule.details && (
-              <div style={{ fontSize: '10px', color: '#999', marginTop: '6px', fontStyle: 'italic' }}>
-                {rule.details}
-              </div>
-            )}
-          </div>
-        ))}
-
-        {/* Bot Favor Card */}
-        <div 
-          style={{
-            border: '1px solid #ddd',
-            padding: '12px',
-            borderRadius: '6px',
-            backgroundColor: '#f5f5f5',
-            borderLeft: `4px solid ${botFavor.favoredBot.includes('Balanced') ? '#4CAF50' : '#FF9800'}`
-          }}
-        >
-          <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#333' }}>
-            ⚖️ Starting Advantage
-          </h4>
-          <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '4px', color: '#333' }}>
-            {botFavor.favoredBot}
-          </div>
-          <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>
-            <strong>Advantage:</strong> {botFavor.advantage}
-          </div>
-          <div style={{ fontSize: '10px', color: '#999', fontStyle: 'italic' }}>
-            {botFavor.reason}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ 
-        marginTop: '12px', 
-        padding: '10px', 
-        backgroundColor: result.valid ? '#e8f5e9' : '#ffebee',
-        borderRadius: '4px',
-        border: `1px solid ${result.valid ? '#4CAF50' : '#F44336'}`,
-        fontSize: '13px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <span>
-          {result.valid ? '✅ All fairness rules passed' : '❌ Some fairness rules failed'}
-        </span>
-        <span style={{ fontWeight: 'bold', color: result.valid ? '#4CAF50' : '#F44336' }}>
-          {passedRules}/{totalRules} rules passed
-        </span>
-      </div>
-    </section>
   );
 }
 

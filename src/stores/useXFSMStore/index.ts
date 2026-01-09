@@ -25,7 +25,6 @@ import type {
     XFSMStoreActions,
     XFSMStoreState
 } from '../../types/fsm.d.ts';
-import { useTileStore } from '../useTileStore/index.ts';
 
 // État vide par défaut pour un bot non initialisé
 const EMPTY_BOT_STATE: EmptyBotState = { 
@@ -51,36 +50,17 @@ const useXFSMStore = create<XFSMStore>((set, get) => {
    * Crée et enregistre un nouvel acteur XState pour un bot donné
    * (ou retourne l'acteur existant si déjà créé)
    * ✅ Phase 7 (Option C): Pre-initialize context with valid positions from depart tile
+   * ✅ Phase 8: Tiles are now injected by SharedView via window.__INITIAL_TILES__
    */
   const createBotActor = (botId: BotId): Actor<typeof machineXV5Pure> => {
     if (actors.has(botId)) return actors.get(botId)!;
     
-    // ✅ Get depart tile BEFORE creating context to avoid race condition
-    const tileStore = useTileStore.getState();
-    const { tiles, spacing, radius } = tileStore;
-    
-    let departTile = null;
-    
-    if (tiles && Object.keys(tiles).length > 0) {
-      departTile = Object.values(tiles).find(
-        tile => tile.type === 'depart' && tile.assignedToBot === botId
-      );
-    }
-    
-    // ✅ Create context without pre-injecting positions
-    // Let the FSM initialization flow handle entity initialization via DRONE/SHIP_INITIALIZE_REQUEST
+    // ✅ Create context without pre-injecting positions from TileStore
+    // (TileStore has been deleted - all tiles are now generated in SharedView)
     const botContext = createMachineContext(botId, 'auto');
     
-    // ✅ Inject grid info immediately (tiles are needed for exploration planning)
-    if (tiles) {
-      botContext.gridInfo = {
-        tiles,
-        spacing: spacing ?? 1.2,
-        radius: radius ?? 3,
-        departTileCoord: departTile?.position?.coord,
-        syncedAt: Date.now(),
-      };
-    }
+    // Note: Grid info (tiles, spacing, radius) will be injected during FSM initialization
+    // via the INIT event sent from SharedView which contains the generated tiles
     
     // Configuration conditionnelle de l'inspection
     const actorConfig = { 

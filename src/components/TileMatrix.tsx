@@ -1,8 +1,7 @@
 import React from 'react';
 
-import { useBotStates } from '../hooks/useBotState.ts';
 import { useUI } from '../contexts/UIContext';
-import { useTileStore } from '../stores/useTileStore';
+import { useBotStates } from '../hooks/useBotState.ts';
 import type { GridCoordinate } from '../types/coordinates.d';
 import type { FSMContext } from '../types/fsm.d';
 
@@ -89,10 +88,20 @@ function extractBotDataWithHistory(
 }
 
 export default function TileMatrix() {
-  const tiles = useTileStore((state) => state.tiles);
   // ✅ Phase 5: Use unified hook instead of getActor subscription
   const botStates = useBotStates();
   const { selectedView } = useUI();
+  
+  // Get tiles from the selected bot's FSM context
+  const displayBotId = (selectedView === 'both' ? 'bot-0' : selectedView) as 'bot-0' | 'bot-1';
+  const displayBotSnapshot = botStates[displayBotId];
+  const tiles = React.useMemo(() => {
+    if (displayBotSnapshot && 'context' in displayBotSnapshot) {
+      const context = displayBotSnapshot.context as FSMContext;
+      return context.gridInfo?.tiles || {};
+    }
+    return {};
+  }, [displayBotSnapshot]);
   
   // États pour les deux bots
   const [bot0Data, setBot0Data] = React.useState<BotData>({

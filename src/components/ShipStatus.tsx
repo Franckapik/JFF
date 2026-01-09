@@ -1,12 +1,30 @@
 import React from 'react';
 
+import { useUI } from '../contexts/UIContext';
 import { gridToWorld } from '../core/spatial';
 import { useBotStates } from '../hooks/useBotState.ts';
-import { useUI } from '../contexts/UIContext';
 import type { GridCoordinate } from '../types/coordinates.d';
 import type { FSMContext } from '../types/fsm.d';
 
-import PositionDisplay from './PositionDisplay';
+/**
+ * Simple inline PositionDisplay component (replacing deleted PositionDisplay.tsx)
+ */
+function PositionDisplay({
+  title,
+  worldPosition,
+  gridCoord,
+}: {
+  title: string;
+  worldPosition?: { x: number; y: number; z: number };
+  gridCoord?: GridCoordinate | null;
+}) {
+  return (
+    <div style={{ fontSize: '11px', color: '#666' }}>
+      <strong>{title}:</strong> {gridCoord || 'N/A'}
+      {worldPosition && ` (${worldPosition.x.toFixed(1)}, ${worldPosition.y.toFixed(1)}, ${worldPosition.z.toFixed(1)})`}
+    </div>
+  );
+}
 
 /**
  * ✅ Phase 4 Migration: Now uses useBotStates hook (auto-switches between worker/xfsm)
