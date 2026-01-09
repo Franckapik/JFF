@@ -13,16 +13,16 @@ import { assign } from 'xstate';
 
 import { findPath, findTilesInRadius, gridToWorld, selectRandomTile } from '../../../../../core/spatial/index.ts';
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
-import {
-  getTileFromContext,
-  collectResourcesFromTile,
-  findTileWithResources,
-  updateTileInContext,
-} from '../tiles/helpers.pure.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { GridCoordinate, TileMap } from '../../../../../types/index.ts';
 import type { VehicleVisualState } from '../../../../../types/vehicle.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
+import {
+    collectResourcesFromTile,
+    findTileWithResources,
+    getTileFromContext,
+    updateTileInContext,
+} from '../tiles/helpers.pure.ts';
 
 // Helper pour typage assign compatible XState v5
 function createAssignAction(

@@ -3,13 +3,29 @@
  * APP ROUTER - Routing pour les vues SharedWorker
  * ==========================================================================
  * 
+ * ✅ Phase 5 Migration: Worker 100% autonome
+ * 
  * Ce module gère le routing simple pour les différentes vues:
- * - / : Vue legacy (app originale avec instances FSM locales)
- * - /vue1 : Vue 1 connectée au SharedWorker
- * - /vue2 : Vue 2 connectée au SharedWorker (future: canvas R3F)
+ * 
+ * Routes:
+ * - / : Vue legacy (app originale avec instances FSM locales Zustand)
+ * - /vue1 : Vue simple connectée au SharedWorker (bot cards)
+ * - /vue2 : Vue complète avec visualisation FSM détaillée
+ * 
+ * Architecture:
+ * - Worker autonome: FSM pure sans dépendances React
+ * - Vue1/Vue2: Consommateurs via useSharedWorkerStore
+ * - Synchronisation: Multi-onglets via BroadcastChannel
+ * 
+ * Test de synchronisation:
+ * 1. Ouvrir /vue1 dans un onglet
+ * 2. Ouvrir /vue2 dans un autre onglet
+ * 3. Observer: même instanceId, updateCounter, états FSM
  * 
  * Pas de dépendance à react-router pour rester léger.
  * Utilise un simple switch basé sur window.location.pathname.
+ * 
+ * @see docs/SHARED_WORKER_VIEWS_ARCHITECTURE.md
  */
 
 import React from 'react';

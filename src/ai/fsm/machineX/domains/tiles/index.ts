@@ -15,20 +15,13 @@
 
 // Actions assign pour mutations de tiles
 export {
-  assignTileExplored,
-  assignTileCollected,
-  assignTileResourcesDeducted,
-  assignTilesGenerated,
-  assignTileUpdated,
+    assignTileCollected, assignTileExplored, assignTileResourcesDeducted, assignTileUpdated, assignTilesGenerated
 } from './actions.assign.ts';
 
 // Helpers purs pour calculs et sélection
 export {
-  collectResourcesFromTile,
-  markTileExplored,
-  markTileCollected,
-  deductResourcesFromTile,
-  findTileWithResources,
-  getTileFromContext,
-  updateTileInContext,
+    collectResourcesFromTile, deductResourcesFromTile,
+    findTileWithResources,
+    getTileFromContext, markTileCollected, markTileExplored, updateTileInContext
 } from './helpers.pure.ts';
+

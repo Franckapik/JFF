@@ -12,7 +12,7 @@
  */
 
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
-import type { Tile, TileMap, GridCoordinate } from '../../../../../types/index.ts';
+import type { GridCoordinate, Tile, TileMap } from '../../../../../types/index.ts';
 import type { ResourceStats } from '../../../../../types/resources.ts';
 
 // =========================================================================

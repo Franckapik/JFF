@@ -3,16 +3,33 @@
  * SHARED FSM VISUALIZATION - Version SharedWorker de FSMVisualization
  * ==========================================================================
  * 
- * Ce composant affiche exactement les mêmes informations que FSMVisualization
- * mais récupère les données depuis le SharedWorker au lieu de Zustand local.
+ * ✅ Phase 5 Migration: Worker 100% autonome - Visualisation complète
  * 
- * Utilise useSharedWorkerStore pour la synchronisation multi-onglets.
+ * Ce composant affiche toutes les informations FSM depuis le SharedWorker
+ * autonome (aucune dépendance store React dans le worker).
+ * 
+ * Sections:
+ * - Current State: États FSM actuels des bots
+ * - Starting Conditions: Analyse de fairness (spawn, resources, terrain)
+ * - Drone Status: État des 3 types de drones
+ * - Tile Matrix: Grille hexagonale interactive
+ * - Cycle Statistics: Métriques exploration/collecte
+ * - FSM Cycle Flow: Diagramme visuel des états
+ * - Context Memory: Snapshot du contexte FSM
+ * - Event Log: Historique des transitions
+ * 
+ * Données:
+ * - FSM State: useSharedWorkerStore (botStates, updateCounter, instanceId)
+ * - Tiles/Fairness: useTileStore (local copy pour UI uniquement)
+ * 
+ * @see docs/SHARED_WORKER_VIEWS_ARCHITECTURE.md
+ * @see docs/FSM_ARCHITECTURE_DIAGRAM.md
  */
 
 import React from 'react';
 
 import { gridToWorld } from '../core/spatial';
-import { useUI } from '../contexts/UIContext';
+import { UIProvider, useUI } from '../contexts/UIContext';
 import { useSharedWorkerStore } from '../stores/useSharedWorkerStore';
 import { useTileStore } from '../stores/useTileStore';
 import type { FairnessRuleResult, FairnessValidationResult } from '../stores/useTileStore/slices/tileFairnessSlice.ts';
@@ -71,6 +88,21 @@ function SyncHeader() {
           <span>VUE2</span>
         </div>
         
+        {/* ✅ Phase 5: Worker Autonomy Badge */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          backgroundColor: '#059669',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '11px',
+          fontWeight: '600'
+        }}>
+          <span>✅</span>
+          <span>Worker Autonome</span>
+        </div>
+        
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -80,6 +112,7 @@ function SyncHeader() {
           borderRadius: '12px',
           fontSize: '12px'
         }}>
+
           <span style={{
             width: '8px',
             height: '8px',
@@ -206,9 +239,12 @@ function isValidSnapshot(snapshot: unknown): snapshot is {
 
 /**
  * Composant compact affichant le cycle FSM pour un seul bot
+ * 
+ * ✅ Phase 5: Récupère l'état depuis SharedWorker (worker autonome)
+ * Plus de dépendance à useXFSMStore local - tout vient du worker.
  */
 function SingleBotCycleFlow({ botId, compact = false }: { botId: 'bot-0' | 'bot-1'; compact?: boolean }) {
-  // 🔄 CHANGEMENT: Récupération depuis SharedWorker
+  // ✅ Phase 5: SharedWorker autonome - single source of truth
   const botStates = useSharedWorkerStore((state) => state.botStates);
   const botSnapshot = botStates[botId];
   
@@ -1421,17 +1457,19 @@ export default function SharedFSMVisualization() {
   }, [isConnected, requestState]);
   
   return (
-    <div style={{ paddingTop: '80px' }}>
-      <SyncHeader />
-      <SharedFSMVisualizationContent />
-      
-      {/* CSS for pulse animation */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      `}</style>
-    </div>
+    <UIProvider>
+      <div style={{ paddingTop: '80px' }}>
+        <SyncHeader />
+        <SharedFSMVisualizationContent />
+        
+        {/* CSS for pulse animation */}
+        <style>{`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+        `}</style>
+      </div>
+    </UIProvider>
   );
 }

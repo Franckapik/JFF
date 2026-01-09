@@ -15,13 +15,13 @@ import { assign } from 'xstate';
 
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
-import type { Tile, TileMap, GridCoordinate } from '../../../../../types/index.ts';
+import type { GridCoordinate, Tile, TileMap } from '../../../../../types/index.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
 
 import {
-  markTileExplored,
-  markTileCollected,
-  updateTileInContext,
+    markTileCollected,
+    markTileExplored,
+    updateTileInContext,
 } from './helpers.pure.ts';
 
 // Helper pour typage assign compatible XState v5

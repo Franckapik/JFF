@@ -3,15 +3,26 @@
  * SHARED VIEW COMPONENT - Vue synchronisée via SharedWorker
  * ==========================================================================
  * 
- * Composant wrapper qui affiche FSMVisualization avec les données
- * du SharedWorker au lieu du store local.
+ * ✅ Phase 5 Migration: Worker 100% autonome
  * 
- * Affiche également le compteur d'updates et l'ID d'instance
- * comme preuve de synchronisation.
+ * Ce composant affiche les données FSM provenant du SharedWorker autonome.
+ * Le worker ne dépend d'aucun store/context React et contient toute la
+ * logique FSM (machineXV5Pure).
+ * 
+ * Architecture:
+ * - Worker: FSM autonome (context.gridInfo.tiles, gameConfigStore local)
+ * - Vue1/Vue2: Consommateurs via useSharedWorkerStore
+ * - Synchronisation: BroadcastChannel (STATE_UPDATE)
+ * 
+ * Affiche le compteur d'updates et l'ID d'instance comme preuve de sync.
+ * 
+ * @see docs/SHARED_WORKER_VIEWS_ARCHITECTURE.md
+ * @see docs/FSM_ARCHITECTURE_DIAGRAM.md
  */
 
 import React from 'react';
 
+import { UIProvider } from '../contexts/UIContext';
 import { useSharedWorkerStore } from '../stores/useSharedWorkerStore';
 import { useTileStore } from '../stores/useTileStore';
 import { useUI } from '../contexts/UIContext';
@@ -72,6 +83,21 @@ function SyncHeader({ viewId }: { viewId: string }) {
           <span>{viewId.toUpperCase()}</span>
         </div>
         
+        {/* ✅ Phase 5: Worker Autonomy Badge */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          backgroundColor: '#059669',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '11px',
+          fontWeight: '600'
+        }}>
+          <span>✅</span>
+          <span>Worker Autonome</span>
+        </div>
+        
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -81,6 +107,7 @@ function SyncHeader({ viewId }: { viewId: string }) {
           borderRadius: '12px',
           fontSize: '12px'
         }}>
+
           <span style={{
             width: '8px',
             height: '8px',
@@ -411,17 +438,19 @@ export default function SharedView({ viewId }: SharedViewProps) {
   }, [isConnected, requestState]);
   
   return (
-    <div style={{ paddingTop: '60px' }}>
-      <SyncHeader viewId={viewId} />
-      <SharedFSMVisualization />
-      
-      {/* CSS for pulse animation */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      `}</style>
-    </div>
+    <UIProvider>
+      <div style={{ paddingTop: '60px' }}>
+        <SyncHeader viewId={viewId} />
+        <SharedFSMVisualization />
+        
+        {/* CSS for pulse animation */}
+        <style>{`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+        `}</style>
+      </div>
+    </UIProvider>
   );
 }
