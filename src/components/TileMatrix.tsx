@@ -122,7 +122,7 @@ export default function TileMatrix() {
     previousPaths: [],
     tileProgressHistory: new Map(),
   });
-  const [exploringRadius, setExploringRadius] = React.useState<number>(2);
+  const [exploringRadius, setExploringRadius] = React.useState<number>(1); // 🔧 SPEC: Initial radius = 1
 
   // ✅ Phase 5: Extract context from unified hook
   const bot0Context = React.useMemo(() => {

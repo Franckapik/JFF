@@ -382,7 +382,7 @@ export const allLocalTilesExplored: XStateV5Guard = ({ context }) => {
   let exploredInRadius = 0;
   
   for (const [coord, tile] of Object.entries(tiles)) {
-    // ✅ Use Chebyshev/grid distance for consistency with tracker
+    // ✅ Use Euclidean distance for consistency with tracker and other guards
     const distance = calculateDistanceGrid(shipCoord, coord as `${number},${number}`);
     
     if (distance <= exploringRadius && distance > 0) {

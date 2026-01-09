@@ -239,6 +239,11 @@ function clearTimers(botId: BotId): void {
 function resetBots(): void {
   console.log('🔄 [WORKER] Resetting all bots...');
   
+  // ✅ CRITICAL FIX: Clear tiles to force regeneration
+  // This ensures spawns are recalculated with different fairness metrics
+  tilesStore = {};
+  console.log('🗑️ [WORKER] Cleared tilesStore to force map regeneration');
+  
   // Clear timers for all bots
   actors.forEach((_, botId) => {
     clearTimers(botId);
@@ -326,6 +331,20 @@ function handleSnapshot(botId: BotId, snapshot: any): void {
   if (!context) return;
   
   try {
+    // 🔍 DEBUG: Log context state for exploring transitions
+    if (typeof state === 'object' && 'exploring' in state) {
+      const exploringSubState = (state as Record<string, unknown>).exploring;
+      const hasDroneTarget = !!context.droneFleet?.drones?.explorer?.targetDroneTile;
+      const targetCoord = context.droneFleet?.drones?.explorer?.targetDroneTile?.position?.coord;
+      
+      console.log(`🔍 [WORKER:${botId}] EXPLORING STATE DEBUG:`, {
+        subState: exploringSubState,
+        hasDroneTarget,
+        targetCoord,
+        droneCoord: context.droneFleet?.drones?.explorer?.coord
+      });
+    }
+    
     const scheduledEvents = getScheduledEvents(
       state,
       context,
@@ -367,8 +386,11 @@ function createBot(botId: BotId): void {
       syncedAt: Date.now(),
     };
     
-    // 2. CRITICAL: Populate memory.knownTiles (FSM source of truth)
-    botContext.memory.knownTiles = Object.values(tilesStore);
+    // 2. ✅ FIX: Do NOT populate memory.knownTiles initially!
+    // memory.knownTiles should ONLY contain tiles that have been explored by the drone
+    // Pre-populating this breaks the exploration logic and makes bots think they have collectible tiles
+    // before exploring anything
+    botContext.memory.knownTiles = []; // Empty at start - tiles added via DRONE_HAS_SCANNED
     
     // DEBUG: Check tile structure
     const sampleTile = Object.values(tilesStore)[0] as any;

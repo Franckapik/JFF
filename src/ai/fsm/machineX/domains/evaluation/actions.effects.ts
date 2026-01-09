@@ -93,7 +93,7 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
   // ✅ Phase 3 Migration: Use FSM context only (no TileStore)
   const tiles = context.gridInfo?.tiles || {};
   const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
-  const exploringRadius = context.config?.exploringRadius ?? 2;
+  const exploringRadius = context.config?.exploringRadius ?? 1; // 🔧 SPEC: Initial radius = 1
   
   // Helper: euclidean distance (same as calculateDistanceGrid in guard)
   const calculateDistance = (coordA: string, coordB: string): number => {

@@ -60,8 +60,29 @@ export {
 export {
     assignStartingTilesToBots,
     calculateHexNeighbors,
-    calculateHexPosition, generateRandomColor, generateTileResources, getStationCount, initializeGameGrid, placeDangerTiles, placeGameStations, placeStartingTiles
+    calculateHexPosition, generateRandomColor, generateTileResources, getStationCount, initializeGameGrid, placeDangerTiles, placeEmptyTiles, placeGameStations, placeObstacleTiles, placeStartingTiles
 } from './hexGrid.ts';
+
+// ============================================================================
+// FAIRNESS VALIDATION
+// ============================================================================
+
+export {
+    calculateHexDistance,
+    calculateStationAccess,
+    createSeededRandom,
+    DEFAULT_FAIRNESS_THRESHOLDS,
+    getNeighborResources,
+    getWalkablePercent,
+    STRICT_FAIRNESS_THRESHOLDS,
+    validateMapFairness,
+    validateResourceBalance,
+    validateSpawnDistance,
+    validateStationAccess,
+    validateTerrainFairness
+} from './fairness.ts';
+
+export type { FairnessThresholds } from './fairness.ts';
 
 // ============================================================================
 // PATHFINDING ALGORITHMS

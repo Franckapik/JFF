@@ -12,7 +12,7 @@ import type { FSMContext, FSMState } from '../../../../types/fsm.d.ts';
 import type { VehicleVisualState } from '../../../../types/vehicle.d.ts';
 
 // Constante de rayon d'exploration initial
-const INITIAL_EXPLORATION_RADIUS = 2;
+const INITIAL_EXPLORATION_RADIUS = 1; // 🔧 SPEC: Initial radius = 1
 
 /**
  * Crée le contexte FSM initial pour le SharedWorker

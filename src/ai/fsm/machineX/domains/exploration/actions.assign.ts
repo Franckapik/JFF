@@ -39,7 +39,7 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
     return {};
   }
   
-  const range = context.config?.exploringRadius ?? 2;
+  const range = context.config?.exploringRadius ?? 1; // 🔧 SPEC: Initial radius = 1
   
   // ⚠️ GUARD: Vérifier que gridInfo contient des tiles
   if (Object.keys(tiles).length === 0) {
@@ -212,6 +212,20 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
       )
     : [...existingKnownTiles, exploredTile];
 
+  // 🔧 SYNCHRONIZATION FIX: Update gridInfo.tiles with explored status
+  // This ensures UI components reading gridInfo.tiles see correct exploration state
+  const updatedGridInfoTiles = context.gridInfo?.tiles
+    ? {
+        ...context.gridInfo.tiles,
+        [scannedCoord]: {
+          ...context.gridInfo.tiles[scannedCoord],
+          explored: true,
+          exploredAt: Date.now(),
+          exploredBy: context.entityId
+        }
+      }
+    : {};
+
   return {
     droneFleet: {
       ...context.droneFleet,
@@ -223,6 +237,11 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
           // It will be cleared after DRONE_HAS_SCANNED is processed
         }
       }
+    },
+    gridInfo: {
+      ...context.gridInfo,
+      tiles: updatedGridInfoTiles,
+      syncedAt: Date.now()
     },
     memory: {
       ...context.memory,

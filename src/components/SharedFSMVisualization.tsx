@@ -30,9 +30,12 @@ import React from 'react';
 
 import { UIProvider, useUI } from '../contexts/UIContext';
 import { gridToWorld } from '../core/spatial';
+import { validateMapFairness } from '../core/spatial/fairness';
 import { useSharedWorkerStore } from '../stores/useSharedWorkerStore';
 import type { GridCoordinate } from '../types/coordinates';
+import type { FairnessRuleResult } from '../types/fairness';
 import type { FSMContext } from '../types/fsm.d';
+import type { TileMap } from '../types/tile';
 
 import BotSelector from './BotSelector';
 import TileMatrixLayout from './TileMatrixLayout';
@@ -54,6 +57,368 @@ function PositionDisplay({
       <strong>{title}:</strong> {gridCoord || 'N/A'}
       {worldPosition && ` (${worldPosition.x.toFixed(1)}, ${worldPosition.y.toFixed(1)}, ${worldPosition.z.toFixed(1)})`}
     </div>
+  );
+}
+
+// ============================================================
+// STARTING CONDITIONS SECTION - FAIRNESS ANALYSIS
+// ============================================================
+
+function StartingConditionsSection() {
+  const botStates = useSharedWorkerStore((s) => s.botStates);
+  
+  // Gather tiles and spawns from bot contexts
+  const bot0Context = botStates['bot-0']?.context as FSMContext | undefined;
+  const bot1Context = botStates['bot-1']?.context as FSMContext | undefined;
+  
+  const tileMap = (bot0Context?.gridInfo?.tiles || bot1Context?.gridInfo?.tiles || {}) as TileMap;
+  const radius = bot0Context?.gridInfo?.radius || 3;
+  
+  // Find spawn tiles (type === 'depart')
+  const spawns: GridCoordinate[] = Object.values(tileMap)
+    .filter((tile) => tile && tile.type === 'depart')
+    .map((tile) => tile!.position.coord);
+  
+  // No fairness analysis if not enough data
+  if (spawns.length < 2 || Object.keys(tileMap).length === 0) {
+    return (
+      <section style={styles.section}>
+        <h3 style={{ margin: 0 }}>🎯 Starting Conditions - Fairness Analysis</h3>
+        <p style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
+          Waiting for game initialization... (Need {2 - spawns.length} more spawn{spawns.length === 1 ? '' : 's'})
+        </p>
+      </section>
+    );
+  }
+  
+  // Calculate fairness
+  const fairnessResult = validateMapFairness(tileMap, spawns, radius);
+  
+  const calculateFairnessScore = (): { score: number; stars: number } => {
+    let totalMargin = 0;
+    let ruleCount = 0;
+
+    const spawnRule = fairnessResult.rules.find(r => r.rule === 'spawnDistance');
+    if (spawnRule && spawnRule.status === 'PASS') {
+      const margin = ((spawnRule.value - spawnRule.threshold) / spawnRule.threshold) * 100;
+      totalMargin += Math.min(margin, 100);
+      ruleCount++;
+    }
+
+    const resourceRule = fairnessResult.rules.find(r => r.rule === 'resourceBalance');
+    if (resourceRule && resourceRule.status === 'PASS') {
+      const margin = ((resourceRule.threshold - resourceRule.value) / resourceRule.threshold) * 100;
+      totalMargin += Math.min(margin, 100);
+      ruleCount++;
+    }
+
+    const terrainRule = fairnessResult.rules.find(r => r.rule === 'terrainFairness');
+    if (terrainRule && terrainRule.status === 'PASS') {
+      const margin = ((terrainRule.threshold - terrainRule.value) / terrainRule.threshold) * 100;
+      totalMargin += Math.min(margin, 100);
+      ruleCount++;
+    }
+
+    const fuelRule = fairnessResult.rules.find(r => r.rule === 'fuelAccess');
+    if (fuelRule && fuelRule.status === 'PASS' && fuelRule.value !== 999) {
+      const margin = ((fuelRule.threshold - fuelRule.value) / fuelRule.threshold) * 100;
+      totalMargin += Math.min(margin, 100);
+      ruleCount++;
+    }
+
+    const repairRule = fairnessResult.rules.find(r => r.rule === 'repairAccess');
+    if (repairRule && repairRule.status === 'PASS' && repairRule.value !== 999) {
+      const margin = ((repairRule.threshold - repairRule.value) / repairRule.threshold) * 100;
+      totalMargin += Math.min(margin, 100);
+      ruleCount++;
+    }
+
+    const avgMargin = ruleCount > 0 ? totalMargin / ruleCount : 0;
+    const score = Math.round(50 + (avgMargin / 2));
+    const stars = score >= 90 ? 5 : score >= 75 ? 4 : score >= 60 ? 3 : score >= 45 ? 2 : 1;
+    
+    return { score: Math.min(score, 100), stars };
+  };
+
+  const { score: fairnessScore, stars } = calculateFairnessScore();
+  const passedRules = fairnessResult.rules.filter(r => r.status === 'PASS').length;
+  const totalRules = fairnessResult.rules.length;
+
+  const getRuleIcon = (rule: string) => {
+    if (rule === 'spawnDistance') return '📏';
+    if (rule === 'resourceBalance') return '💰';
+    if (rule === 'fuelAccess') return '⛽';
+    if (rule === 'repairAccess') return '🔧';
+    if (rule === 'terrainFairness') return '🌍';
+    return '📋';
+  };
+
+  const getRuleLabel = (rule: string) => {
+    if (rule === 'spawnDistance') return 'Spawn Distance';
+    if (rule === 'resourceBalance') return 'Resource Balance';
+    if (rule === 'fuelAccess') return 'Fuel Access';
+    if (rule === 'repairAccess') return 'Repair Access';
+    if (rule === 'terrainFairness') return 'Terrain Fairness';
+    return rule;
+  };
+
+  const getStatusColor = (ruleResult: FairnessRuleResult) => {
+    if (ruleResult.value === 999) return '#F44336';
+    if (ruleResult.status !== 'PASS') return '#F44336';
+    
+    const threshold = ruleResult.threshold;
+    const value = ruleResult.value;
+    
+    if (ruleResult.rule === 'spawnDistance') {
+      const margin = ((value - threshold) / threshold) * 100;
+      return margin >= 50 ? '#4CAF50' : margin >= 25 ? '#FFC107' : '#FF9800';
+    }
+    
+    const margin = ((threshold - value) / threshold) * 100;
+    return margin >= 50 ? '#4CAF50' : margin >= 25 ? '#FFC107' : '#FF9800';
+  };
+
+  const getStatusLabel = (ruleResult: FairnessRuleResult) => {
+    if (ruleResult.value === 999) return 'NOT PLACED';
+    if (ruleResult.status !== 'PASS') return 'FAIL';
+    
+    const threshold = ruleResult.threshold;
+    const value = ruleResult.value;
+    
+    if (ruleResult.rule === 'spawnDistance') {
+      const margin = ((value - threshold) / threshold) * 100;
+      return margin >= 50 ? 'EXCELLENT' : margin >= 25 ? 'GOOD' : 'TIGHT';
+    }
+    
+    const margin = ((threshold - value) / threshold) * 100;
+    return margin >= 50 ? 'EXCELLENT' : margin >= 25 ? 'GOOD' : 'TIGHT';
+  };
+
+  const getValueWithUnit = (rule: FairnessRuleResult): string => {
+    if (rule.value === 999) return 'N/A';
+    
+    if (rule.rule === 'resourceBalance' || rule.rule === 'terrainFairness') {
+      return `${rule.value.toFixed(1)}%`;
+    }
+    
+    if (rule.rule === 'fuelAccess' || rule.rule === 'repairAccess') {
+      return `${rule.value} tile${rule.value !== 1 ? 's' : ''}`;
+    }
+    
+    return `${rule.value.toFixed(1)} tile${rule.value !== 1 ? 's' : ''}`;
+  };
+
+  const getThresholdWithUnit = (rule: FairnessRuleResult): string => {
+    if (rule.rule === 'resourceBalance' || rule.rule === 'terrainFairness') {
+      return `${rule.threshold}%`;
+    }
+    
+    if (rule.rule === 'fuelAccess' || rule.rule === 'repairAccess') {
+      return `${rule.threshold} tile${rule.threshold !== 1 ? 's' : ''}`;
+    }
+    
+    return `${rule.threshold.toFixed(1)} tile${rule.threshold !== 1 ? 's' : ''}`;
+  };
+
+  // Determine which bot is favored
+  const calculateBotFavor = (): { favoredBot: string; advantage: string; reason: string } => {
+    let bot0Score = 0;
+    let bot1Score = 0;
+    const reasons: string[] = [];
+
+    const resourceRule = fairnessResult.rules.find(r => r.rule === 'resourceBalance');
+    if (resourceRule && resourceRule.details && resourceRule.status === 'PASS') {
+      const match = resourceRule.details.match(/Resources:\s*(\d+)\s*vs\s*(\d+)/);
+      if (match) {
+        const res0 = parseInt(match[1], 10);
+        const res1 = parseInt(match[2], 10);
+        if (res0 > res1) {
+          bot0Score++;
+          reasons.push('More resources');
+        } else if (res1 > res0) {
+          bot1Score++;
+          reasons.push('More resources');
+        }
+      }
+    }
+
+    const fuelRule = fairnessResult.rules.find(r => r.rule === 'fuelAccess');
+    if (fuelRule && fuelRule.details && fuelRule.value !== 999 && fuelRule.status === 'PASS') {
+      const match = fuelRule.details.match(/fuel distances:\s*(\d+)\s*tiles\s*vs\s*(\d+)\s*tiles/);
+      if (match) {
+        const fuel0 = parseInt(match[1], 10);
+        const fuel1 = parseInt(match[2], 10);
+        if (fuel0 < fuel1) {
+          bot0Score++;
+          reasons.push('Closer fuel');
+        } else if (fuel1 < fuel0) {
+          bot1Score++;
+          reasons.push('Closer fuel');
+        }
+      }
+    }
+
+    const repairRule = fairnessResult.rules.find(r => r.rule === 'repairAccess');
+    if (repairRule && repairRule.details && repairRule.value !== 999 && repairRule.status === 'PASS') {
+      const match = repairRule.details.match(/repair distances:\s*(\d+)\s*tiles\s*vs\s*(\d+)\s*tiles/);
+      if (match) {
+        const repair0 = parseInt(match[1], 10);
+        const repair1 = parseInt(match[2], 10);
+        if (repair0 < repair1) {
+          bot0Score++;
+          reasons.push('Closer repair');
+        } else if (repair1 < repair0) {
+          bot1Score++;
+          reasons.push('Closer repair');
+        }
+      }
+    }
+
+    const terrainRule = fairnessResult.rules.find(r => r.rule === 'terrainFairness');
+    if (terrainRule && terrainRule.details && terrainRule.status === 'PASS') {
+      const match = terrainRule.details.match(/Terrain walkable:\s*([\d.]+)%\s*vs\s*([\d.]+)%/);
+      if (match) {
+        const terrain0 = parseFloat(match[1]);
+        const terrain1 = parseFloat(match[2]);
+        if (terrain0 > terrain1) {
+          bot0Score++;
+          reasons.push('Better terrain');
+        } else if (terrain1 > terrain0) {
+          bot1Score++;
+          reasons.push('Better terrain');
+        }
+      }
+    }
+
+    if (bot0Score > bot1Score) {
+      return {
+        favoredBot: '🤖 Bot-0',
+        advantage: `+${bot0Score - bot1Score} points`,
+        reason: reasons.length > 0 ? reasons.join(' • ') : 'Better starting conditions'
+      };
+    } else if (bot1Score > bot0Score) {
+      return {
+        favoredBot: '🤖 Bot-1',
+        advantage: `+${bot1Score - bot0Score} points`,
+        reason: reasons.length > 0 ? reasons.join(' • ') : 'Better starting conditions'
+      };
+    } else {
+      return {
+        favoredBot: '⚖️ Perfectly Balanced',
+        advantage: 'No advantage',
+        reason: 'Both bots have equivalent starting conditions'
+      };
+    }
+  };
+
+  const botFavor = calculateBotFavor();
+
+  return (
+    <section style={styles.section}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+        <h3 style={{ margin: 0 }}>🎯 Starting Conditions - Fairness Analysis</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ fontSize: '20px' }}>
+            {'⭐'.repeat(stars)}
+          </div>
+          <div style={{
+            backgroundColor: fairnessScore >= 75 ? '#4CAF50' : fairnessScore >= 50 ? '#FFC107' : '#F44336',
+            color: 'white',
+            padding: '4px 12px',
+            borderRadius: '12px',
+            fontWeight: 'bold',
+            fontSize: '14px'
+          }}>
+            {fairnessScore}/100
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+        {fairnessResult.rules.map((rule: FairnessRuleResult, index: number) => (
+          <div 
+            key={index}
+            style={{
+              border: '1px solid #ddd',
+              padding: '12px',
+              borderRadius: '6px',
+              backgroundColor: '#f5f5f5',
+              borderLeft: `4px solid ${getStatusColor(rule)}`
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h4 style={{ margin: 0, fontSize: '13px', color: '#333' }}>
+                {getRuleIcon(rule.rule)} {getRuleLabel(rule.rule)}
+              </h4>
+              <span style={{
+                fontSize: '9px',
+                fontWeight: 'bold',
+                padding: '2px 6px',
+                borderRadius: '8px',
+                backgroundColor: getStatusColor(rule),
+                color: 'white'
+              }}>
+                {getStatusLabel(rule)}
+              </span>
+            </div>
+            <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>
+              <strong>Value:</strong> {getValueWithUnit(rule)}
+            </div>
+            <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>
+              <strong>Threshold:</strong> {getThresholdWithUnit(rule)}
+            </div>
+            {rule.details && (
+              <div style={{ fontSize: '10px', color: '#999', marginTop: '6px', fontStyle: 'italic' }}>
+                {rule.details}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Bot Favor Card */}
+        <div 
+          style={{
+            border: '1px solid #ddd',
+            padding: '12px',
+            borderRadius: '6px',
+            backgroundColor: '#f5f5f5',
+            borderLeft: `4px solid ${botFavor.favoredBot.includes('Balanced') ? '#4CAF50' : '#FF9800'}`
+          }}
+        >
+          <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#333' }}>
+            ⚖️ Starting Advantage
+          </h4>
+          <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '4px', color: '#333' }}>
+            {botFavor.favoredBot}
+          </div>
+          <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>
+            <strong>Advantage:</strong> {botFavor.advantage}
+          </div>
+          <div style={{ fontSize: '10px', color: '#999', fontStyle: 'italic' }}>
+            {botFavor.reason}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ 
+        marginTop: '12px', 
+        padding: '10px', 
+        backgroundColor: fairnessResult.valid ? '#e8f5e9' : '#ffebee',
+        borderRadius: '4px',
+        border: `1px solid ${fairnessResult.valid ? '#4CAF50' : '#F44336'}`,
+        fontSize: '13px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <span>
+          {fairnessResult.valid ? '✅ All fairness rules passed' : '❌ Some fairness rules failed'}
+        </span>
+        <span style={{ fontWeight: 'bold', color: fairnessResult.valid ? '#4CAF50' : '#F44336' }}>
+          {passedRules}/{totalRules} rules passed
+        </span>
+      </div>
+    </section>
   );
 }
 
@@ -104,6 +469,45 @@ function SyncHeader() {
           <span>📺</span>
           <span>VUE2</span>
         </div>
+        
+        {/* ✅ MOVED TO FRONT: Reset Game Button - Most Important Action */}
+        <button
+          onClick={() => resetGame()}
+          style={{
+            backgroundColor: '#f97316',
+            color: 'white',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'all 0.2s',
+            opacity: isConnected ? 1 : 0.5,
+            pointerEvents: isConnected ? 'auto' : 'none',
+            boxShadow: isConnected ? '0 4px 12px rgba(249, 115, 22, 0.4)' : 'none',
+            transform: isConnected ? 'scale(1)' : 'scale(0.95)'
+          }}
+          onMouseOver={(e) => {
+            if (isConnected) {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#ea580c';
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 6px 16px rgba(249, 115, 22, 0.6)';
+              (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.05)';
+            }
+          }}
+          onMouseOut={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#f97316';
+            (e.currentTarget as HTMLButtonElement).style.boxShadow = isConnected ? '0 4px 12px rgba(249, 115, 22, 0.4)' : 'none';
+            (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';
+          }}
+          title="Reset the game - Generates new map with different spawn fairness"
+        >
+          <span style={{ fontSize: '16px' }}>🔄</span>
+          <span>Reset Game</span>
+        </button>
         
         {/* ✅ Phase 5: Worker Autonomy Badge */}
         <div style={{
@@ -200,38 +604,6 @@ function SyncHeader() {
             </div>
           </div>
         )}
-        
-        <button
-          onClick={() => resetGame()}
-          style={{
-            backgroundColor: '#ef4444',
-            color: 'white',
-            border: 'none',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            fontSize: '13px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            transition: 'background-color 0.2s',
-            opacity: isConnected ? 1 : 0.5,
-            pointerEvents: isConnected ? 'auto' : 'none'
-          }}
-          onMouseOver={(e) => {
-            if (isConnected) {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#dc2626';
-            }
-          }}
-          onMouseOut={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#ef4444';
-          }}
-          title="Reset the game without killing the worker"
-        >
-          <span>🔄</span>
-          <span>Reset Game</span>
-        </button>
       </div>
     </div>
   );
@@ -382,25 +754,32 @@ function SharedFSMVisualizationContent() {
   }, [botStates, activeBots]);
   
   const [stateVisitCounts, setStateVisitCounts] = React.useState<Record<string, number>>({
+    // Main states
     initializing: 0,
     evaluating: 0,
     exploring: 0,
+    collecting: 0,
+    maintaining: 0,
+    game_over: 0,
+    
+    // Exploration substates
     drone_deploying: 0,
     drone_scanning: 0,
     drone_returning: 0,
     drone_docked: 0,
-    drone_destroyed: 0,
-    collecting: 0,
+    drone_destroyed: 0, // 🆕 DRONE DESTRUCTION: Drone hit danger tile
+    
+    // Collection substates
     ship_moving_to_tile: 0,
     ship_collecting: 0,
     ship_returning: 0,
-    maintaining: 0,
+    
+    // Maintenance substates
+    depositing: 0,
     refueling: 0,
     repairing: 0,
-    depositing: 0,
-    relocating: 0,
-    purchasing_drone: 0,
-    game_over: 0,
+    relocating: 0, // 🆕 RELOCATION: Ship blocked by explored tiles
+    purchasing_drone: 0, // 🆕 DRONE PURCHASE: Replacing destroyed drone
   });
   
   const [lastDroneDestroyed, setLastDroneDestroyed] = React.useState<{ type: string; time: string } | null>(null);
@@ -617,8 +996,7 @@ function SharedFSMVisualizationContent() {
       </section>
 
       {/* STARTING CONDITIONS - FAIRNESS ANALYSIS */}
-      {/* TEMPORARILY DISABLED: Fairness analysis requires data from deleted TileStore */}
-      {/* <StartingConditionsSection /> */}
+      <StartingConditionsSection />
 
       {/* DRONE STATUS */}
       <section style={styles.section}>
@@ -761,12 +1139,46 @@ function SharedFSMVisualizationContent() {
         )}
         
         {/* Detailed Flow (toujours basé sur primaryBot pour la vue détaillée) */}
-        <div style={{ ...styles.cycleFlow, marginTop: '12px' }}>
+        <div style={{ ...styles.cycleFlow, marginTop: '12px', overflow: 'auto' }}>
           {/* Initializing */}
           <div style={styles.stateBlock}>
             <div style={getFlowStyle('initializing', currentState)}>
               🚀 INIT
             </div>
+            {currentState.includes('initializing') && (
+              <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <div style={{
+                  padding: '3px 6px',
+                  borderRadius: '2px',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  backgroundColor: (ctx?.shipPosition !== null && ctx?.shipPosition !== undefined) ? '#c8e6c9' : '#ffcccc',
+                  color: (ctx?.shipPosition !== null && ctx?.shipPosition !== undefined) ? '#2e7d32' : '#c62828',
+                }}>
+                  {(ctx?.shipPosition !== null && ctx?.shipPosition !== undefined) ? '✅' : '⏳'} Ship
+                </div>
+                <div style={{
+                  padding: '3px 6px',
+                  borderRadius: '2px',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  backgroundColor: (ctx?.droneFleet?.drones?.explorer?.coord) ? '#c8e6c9' : '#ffcccc',
+                  color: (ctx?.droneFleet?.drones?.explorer?.coord) ? '#2e7d32' : '#c62828',
+                }}>
+                  {(ctx?.droneFleet?.drones?.explorer?.coord) ? '✅' : '⏳'} Drone
+                </div>
+                <div style={{
+                  padding: '3px 6px',
+                  borderRadius: '2px',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  backgroundColor: (ctx?.basePosition) ? '#c8e6c9' : '#ffcccc',
+                  color: (ctx?.basePosition) ? '#2e7d32' : '#c62828',
+                }}>
+                  {(ctx?.basePosition) ? '✅' : '⏳'} Base
+                </div>
+              </div>
+            )}
           </div>
 
           <span style={styles.arrow}>→</span>
@@ -776,11 +1188,59 @@ function SharedFSMVisualizationContent() {
             <div style={getFlowStyle('evaluating', currentState)}>
               🤔 EVAL
             </div>
+            {currentState.includes('evaluating') && (
+              <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <div style={{
+                  padding: '3px 6px',
+                  borderRadius: '2px',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#e3f2fd',
+                  color: '#1565c0',
+                  border: '1px solid #90caf9'
+                }}>
+                  📊 Credits: {ctx?.credits || 0}
+                </div>
+                <div style={{
+                  padding: '3px 6px',
+                  borderRadius: '2px',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#f3e5f5',
+                  color: '#6a1b9a',
+                  border: '1px solid #ce93d8'
+                }}>
+                  ⛽ Fuel: {ctx?.fuel?.toFixed(0) || 0}%
+                </div>
+                <div style={{
+                  padding: '3px 6px',
+                  borderRadius: '2px',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#fff3e0',
+                  color: '#e65100',
+                  border: '1px solid #ffb74d'
+                }}>
+                  💪 Health: {ctx?.health?.toFixed(0) || 0}%
+                </div>
+                <div style={{
+                  padding: '3px 6px',
+                  borderRadius: '2px',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#f1f8e9',
+                  color: '#33691e',
+                  border: '1px solid #aed581'
+                }}>
+                  🔍 Radius: {ctx?.gridInfo?.radius || 1}
+                </div>
+              </div>
+            )}
           </div>
 
           <span style={styles.arrow}>→</span>
 
-          {/* Exploring (with drone substates) */}
+          {/* Exploring (with drone substates including drone_destroyed) */}
           <div style={styles.stateBlock}>
             <div style={getFlowStyle('exploring', currentState)}>
               🔍 EXPLORE
@@ -789,7 +1249,8 @@ function SharedFSMVisualizationContent() {
               { key: 'drone_deploying', label: '🚁 Deploy' },
               { key: 'drone_scanning', label: '📡 Scan' },
               { key: 'drone_returning', label: '🔙 Return' },
-              { key: 'drone_docked', label: '⚓ Docked' }
+              { key: 'drone_docked', label: '⚓ Docked' },
+              { key: 'drone_destroyed', label: '💥 Destroyed' }
             ], stateVisitCounts)}
           </div>
 
@@ -809,25 +1270,114 @@ function SharedFSMVisualizationContent() {
 
           <span style={styles.arrow}>→</span>
 
-          {/* Maintaining (with maintenance substates) */}
+          {/* Maintaining (with maintenance substates including relocating and purchasing_drone) */}
           <div style={styles.stateBlock}>
             <div style={getFlowStyle('maintaining', currentState)}>
               🛠️ MAINTAIN
             </div>
             {renderSubstates(currentState, [
+              { key: 'depositing', label: '📤 Deposit' },
               { key: 'refueling', label: '⛽ Refuel' },
               { key: 'repairing', label: '🔧 Repair' },
-              { key: 'depositing', label: '📤 Deposit' },
-              { key: 'relocating', label: '🔄 Relocate' }
+              { key: 'relocating', label: '🔄 Relocate' },
+              { key: 'purchasing_drone', label: '🛒 Buy Drone' }
             ], stateVisitCounts)}
           </div>
 
           <span style={styles.arrow}>→</span>
 
-          {/* Back to Evaluating */}
+          {/* Game Over (final state with summary) */}
+          <div style={styles.stateBlock}>
+            <div style={getFlowStyle('game_over', currentState)}>
+              🏁 GAME OVER
+            </div>
+            {currentState.includes('game_over') && (
+              <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <div style={{
+                  padding: '3px 6px',
+                  borderRadius: '2px',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#e8f5e9',
+                  color: '#1b5e20',
+                }}>
+                  🎯 Explored: {cycleStats.tilesExplored}/{cycleStats.totalTiles}
+                </div>
+                <div style={{
+                  padding: '3px 6px',
+                  borderRadius: '2px',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#fff3e0',
+                  color: '#e65100',
+                }}>
+                  📦 Collected: {cycleStats.resourcesCollected}
+                </div>
+                <div style={{
+                  padding: '3px 6px',
+                  borderRadius: '2px',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#f3e5f5',
+                  color: '#4a148c',
+                }}>
+                  💰 Final Score: {ctx?.credits || 0}
+                </div>
+                <div style={{
+                  padding: '3px 6px',
+                  borderRadius: '2px',
+                  fontSize: '9px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#c8e6c9',
+                  color: '#1b5e20',
+                }}>
+                  ✨ Radius: {ctx?.gridInfo?.radius || 1}/3
+                </div>
+              </div>
+            )}
+          </div>
+
+          <span style={styles.arrow}>↻</span>
+
+          {/* Back to Evaluating (loop) */}
           <div style={styles.stateBlock}>
             <div style={getFlowStyle('evaluating', currentState)}>
-              🔄 LOOP
+              🔄 EVAL
+            </div>
+          </div>
+        </div>
+        
+        {/* State Hierarchy Legend */}
+        <div style={{
+          marginTop: '16px',
+          padding: '12px',
+          backgroundColor: '#f0f7ff',
+          borderRadius: '6px',
+          border: '1px solid #90caf9',
+          fontSize: '12px'
+        }}>
+          <h4 style={{ margin: '0 0 8px 0', color: '#1976d2' }}>📋 States Hierarchy</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px' }}>
+            <div>
+              <strong>Main States:</strong>
+              <ul style={{ margin: '4px 0 0 0', paddingLeft: '16px' }}>
+                <li>🚀 INITIALIZING - Boot sequence</li>
+                <li>🤔 EVALUATING - Decision logic</li>
+                <li>🔍 EXPLORING - Drone deployment</li>
+                <li>📦 COLLECTING - Resource gathering</li>
+                <li>🛠️ MAINTAINING - Refuel/repair/deposit</li>
+                <li>🏁 GAME OVER - Final state</li>
+              </ul>
+            </div>
+            <div>
+              <strong>Key Substates:</strong>
+              <ul style={{ margin: '4px 0 0 0', paddingLeft: '16px' }}>
+                <li>🚁 DRONE: Deploy → Scan → Return → Docked</li>
+                <li>💥 DRONE DESTROYED - Hit danger tile</li>
+                <li>🚢 SHIP: Moving → Collecting → Returning</li>
+                <li>🔄 RELOCATING - Expand exploration radius</li>
+                <li>🛒 PURCHASING DRONE - Replace destroyed</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -879,6 +1429,64 @@ function SharedFSMVisualizationContent() {
             </tr>
           </tbody>
         </table>
+      </section>
+
+      {/* STATE VISIT STATISTICS */}
+      <section style={styles.section}>
+        <h3>📊 State Visit Counters</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+          {/* Main States */}
+          <div style={{ borderRadius: '6px', padding: '10px', backgroundColor: '#f5f5f5', border: '1px solid #ddd' }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '12px', color: '#333' }}>🏛️ Main States</div>
+            {['initializing', 'evaluating', 'exploring', 'collecting', 'maintaining', 'game_over'].map(state => (
+              <div key={state} style={{ fontSize: '11px', padding: '3px 0', display: 'flex', justifyContent: 'space-between' }}>
+                <span>{state}:</span>
+                <strong style={{ color: stateVisitCounts[state] > 0 ? '#ff9800' : '#999' }}>
+                  {stateVisitCounts[state] || 0}
+                </strong>
+              </div>
+            ))}
+          </div>
+
+          {/* Exploration Substates */}
+          <div style={{ borderRadius: '6px', padding: '10px', backgroundColor: '#e8f5e9', border: '1px solid #81c784' }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '12px', color: '#2e7d32' }}>🚁 Exploration</div>
+            {['drone_deploying', 'drone_scanning', 'drone_returning', 'drone_docked', 'drone_destroyed'].map(state => (
+              <div key={state} style={{ fontSize: '11px', padding: '3px 0', display: 'flex', justifyContent: 'space-between' }}>
+                <span>{state}:</span>
+                <strong style={{ color: stateVisitCounts[state] > 0 ? '#4caf50' : '#999' }}>
+                  {stateVisitCounts[state] || 0}
+                </strong>
+              </div>
+            ))}
+          </div>
+
+          {/* Collection Substates */}
+          <div style={{ borderRadius: '6px', padding: '10px', backgroundColor: '#ffebee', border: '1px solid #ef5350' }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '12px', color: '#c62828' }}>📦 Collection</div>
+            {['ship_moving_to_tile', 'ship_collecting', 'ship_returning'].map(state => (
+              <div key={state} style={{ fontSize: '11px', padding: '3px 0', display: 'flex', justifyContent: 'space-between' }}>
+                <span>{state}:</span>
+                <strong style={{ color: stateVisitCounts[state] > 0 ? '#f44336' : '#999' }}>
+                  {stateVisitCounts[state] || 0}
+                </strong>
+              </div>
+            ))}
+          </div>
+
+          {/* Maintenance Substates */}
+          <div style={{ borderRadius: '6px', padding: '10px', backgroundColor: '#f3e5f5', border: '1px solid #9c27b0' }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '12px', color: '#6a1b9a' }}>🛠️ Maintenance</div>
+            {['depositing', 'refueling', 'repairing', 'relocating', 'purchasing_drone'].map(state => (
+              <div key={state} style={{ fontSize: '11px', padding: '3px 0', display: 'flex', justifyContent: 'space-between' }}>
+                <span>{state}:</span>
+                <strong style={{ color: stateVisitCounts[state] > 0 ? '#9c27b0' : '#999' }}>
+                  {stateVisitCounts[state] || 0}
+                </strong>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* EVENT LOG */}
