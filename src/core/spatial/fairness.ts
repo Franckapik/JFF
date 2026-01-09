@@ -17,11 +17,11 @@
  * @pure All functions are pure (no side effects)
  */
 
-import type {
-  GridCoordinate,
-  TileMap,
-} from '../../types/index.ts';
 import type { FairnessRuleResult, FairnessValidationResult } from '../../types/fairness.ts';
+import type {
+    GridCoordinate,
+    TileMap,
+} from '../../types/index.ts';
 
 // =========================================================================
 // TYPES DE CONFIGURATION

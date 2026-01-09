@@ -68,14 +68,10 @@ export {
 // ============================================================================
 
 export {
-    calculateHexDistance,
+    DEFAULT_FAIRNESS_THRESHOLDS, STRICT_FAIRNESS_THRESHOLDS, calculateHexDistance,
     calculateStationAccess,
-    createSeededRandom,
-    DEFAULT_FAIRNESS_THRESHOLDS,
-    getNeighborResources,
-    getWalkablePercent,
-    STRICT_FAIRNESS_THRESHOLDS,
-    validateMapFairness,
+    createSeededRandom, getNeighborResources,
+    getWalkablePercent, validateMapFairness,
     validateResourceBalance,
     validateSpawnDistance,
     validateStationAccess,

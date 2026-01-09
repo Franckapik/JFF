@@ -23,7 +23,7 @@ import { createWorkerContext } from '../ai/fsm/machineX/context/workerContext.ts
 import { botInitialContexts } from '../ai/fsm/machineX/domains/initializing/actions.workerContext.ts';
 import { machineXV5Pure } from '../ai/fsm/machineX/machine.pure.v5.ts';
 import {
-  getScheduledEvents
+    getScheduledEvents
 } from '../ai/fsm/machineX/shared/simulatedTrackerCore.ts';
 import { setupLogForwarder } from '../logger/logForwarder.ts';
 
