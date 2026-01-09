@@ -31,8 +31,8 @@
 import React from 'react';
 
 import App from './App';
-import SharedView from './components/SharedView';
 import SharedFSMVisualization from './components/SharedFSMVisualization';
+import SharedView from './components/SharedView';
 
 // =========================================================================
 // TYPES

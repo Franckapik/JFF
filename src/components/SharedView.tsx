@@ -22,10 +22,9 @@
 
 import React from 'react';
 
-import { UIProvider } from '../contexts/UIContext';
+import { UIProvider, useUI } from '../contexts/UIContext';
 import { useSharedWorkerStore } from '../stores/useSharedWorkerStore';
 import { useTileStore } from '../stores/useTileStore';
-import { useUI } from '../contexts/UIContext';
 
 // =========================================================================
 // TYPES

@@ -28,8 +28,8 @@
 
 import React from 'react';
 
-import { gridToWorld } from '../core/spatial';
 import { UIProvider, useUI } from '../contexts/UIContext';
+import { gridToWorld } from '../core/spatial';
 import { useSharedWorkerStore } from '../stores/useSharedWorkerStore';
 import { useTileStore } from '../stores/useTileStore';
 import type { FairnessRuleResult, FairnessValidationResult } from '../stores/useTileStore/slices/tileFairnessSlice.ts';
