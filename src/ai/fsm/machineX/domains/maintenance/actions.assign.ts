@@ -14,11 +14,11 @@
 
 import { assign } from 'xstate';
 
+import { calculateDistanceGrid, findPath } from '../../../../../core/spatial/index.ts';
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { VehicleVisualState } from '../../../../../types/vehicle.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
-import { calculateDistanceGrid, findPath } from '../../../../../core/spatial/index.ts';
 
 // Constant for maximum exploration radius (migrated from radiusSlice)
 const MAX_EXPLORATION_RADIUS = 3;
