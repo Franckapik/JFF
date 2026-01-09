@@ -41,7 +41,7 @@ interface DynamicDanger {
  */
 export function useDangerMovement() {
   const dynamicDangersRef = useRef<Map<string, DynamicDanger>>(new Map());
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
   /**
    * Trouve une tuile voisine walkable aléatoire

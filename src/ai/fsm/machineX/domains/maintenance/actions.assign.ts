@@ -18,6 +18,7 @@ import fsmLogger from '../../../../../logger/fsmLogger.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { VehicleVisualState } from '../../../../../types/vehicle.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
+import { calculateDistanceGrid, findPath } from '../../../../../core/spatial/index.ts';
 
 // Constant for maximum exploration radius (migrated from radiusSlice)
 const MAX_EXPLORATION_RADIUS = 3;
@@ -371,7 +372,6 @@ function findNearestStationOfType(
   if (stations.length === 0) return null;
   
   // Find closest station using calculateDistanceGrid
-  const { calculateDistanceGrid } = require('../../../../../core/spatial/index.ts');
   let nearestStation: import('../../../../../types/tile.d.ts').Tile | null = null;
   let minDistance = Infinity;
   
@@ -404,7 +404,6 @@ export const assignShipMovingToFuelStationContext = createAssignAction(({ contex
   const tiles = context.gridInfo?.tiles || {};
   
   // Calculate path to station
-  const { findPath } = require('../../../../../core/spatial/index.ts');
   const path = shipCoord ? findPath(shipCoord, targetCoord, tiles) : [];
   
   if (path.length === 0) {
@@ -472,7 +471,6 @@ export const assignShipMovingToRepairStationContext = createAssignAction(({ cont
   const tiles = context.gridInfo?.tiles || {};
   
   // Calculate path to station
-  const { findPath } = require('../../../../../core/spatial/index.ts');
   const path = shipCoord ? findPath(shipCoord, targetCoord, tiles) : [];
   
   if (path.length === 0) {
