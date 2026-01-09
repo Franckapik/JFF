@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { gridToWorld } from '../core/spatial';
+import { useBotStates } from '../hooks/useBotState.ts';
 import useBotSelectionStore from '../stores/useBotSelectionStore';
 import useGameStore from '../stores/useGameStore';
 import { useTileStore } from '../stores/useTileStore';
@@ -12,6 +13,11 @@ import type { FSMContext } from '../types/fsm.d';
 import BotSelector from './BotSelector';
 import PositionDisplay from './PositionDisplay';
 import TileMatrixLayout from './TileMatrixLayout';
+
+/**
+ * ✅ Phase 4 Migration: Uses useBotStates hook for state access
+ * Note: useXFSMStore kept for activeBots (will be migrated in Phase 5)
+ */
 
 /**
  * Type guard pour vérifier si un snapshot est un XState snapshot valide
@@ -34,7 +40,8 @@ function isValidSnapshot(snapshot: unknown): snapshot is {
  * Composant compact affichant le cycle FSM pour un seul bot
  */
 function SingleBotCycleFlow({ botId, compact = false }: { botId: 'bot-0' | 'bot-1'; compact?: boolean }) {
-  const botStates = useXFSMStore((state) => state.botStates);
+  // ✅ Phase 4: Use unified hook
+  const botStates = useBotStates();
   const botSnapshot = botStates[botId];
   
   const value = botSnapshot && isValidSnapshot(botSnapshot) ? botSnapshot.value : 'unknown';
@@ -102,11 +109,13 @@ function SingleBotCycleFlow({ botId, compact = false }: { botId: 'bot-0' | 'bot-
 /**
  * FSM Visualization - Affichage ultra-basique du cycle XState
  * 
- * Connecté à Zustand (useXFSMStore) qui écoute les snapshots XState
- * Affiche l'état FSM et contexte en temps réel
+ * ✅ Phase 4 Migration: Uses useBotStates hook
+ * Note: useXFSMStore.activeBots kept for now (will be migrated in Phase 5)
  */
 export default function FSMVisualization() {
-  const botStates = useXFSMStore((state) => state.botStates);
+  // ✅ Phase 4: Use unified hook for botStates
+  const botStates = useBotStates();
+  // Keep activeBots from useXFSMStore for now (Phase 5 will migrate this)
   const activeBots = useXFSMStore((state) => state.activeBots);
   const selectedView = useBotSelectionStore((state) => state.selectedView);
 

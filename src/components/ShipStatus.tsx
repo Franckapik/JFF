@@ -1,12 +1,16 @@
 import React from 'react';
 
 import { gridToWorld } from '../core/spatial';
+import { useBotStates } from '../hooks/useBotState.ts';
 import useBotSelectionStore from '../stores/useBotSelectionStore';
-import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates.d';
 import type { FSMContext } from '../types/fsm.d';
 
 import PositionDisplay from './PositionDisplay';
+
+/**
+ * ✅ Phase 4 Migration: Now uses useBotStates hook (auto-switches between worker/xfsm)
+ */
 
 /**
  * Type guard pour vérifier si un snapshot est un XState snapshot valide
@@ -60,7 +64,8 @@ function SingleBotStatus({
   compact?: boolean;
   borderColor?: string;
 }) {
-  const botStates = useXFSMStore((state) => state.botStates);
+  // ✅ Phase 4: Use unified hook instead of useXFSMStore directly
+  const botStates = useBotStates();
   
   const coordToWorldPos = React.useCallback((coord: GridCoordinate | null | undefined, spacing = 1.2) => {
     if (!coord) return undefined;

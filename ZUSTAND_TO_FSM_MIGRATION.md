@@ -40,10 +40,19 @@ Les vues afficheront uniquement les données du contexte FSM. Suppression finale
 > Ces mutations seront supprimées en Phase 5 (bascule finale)
 
 ## Phase 4: XFSMStore → Worker pattern unifié
-- [ ] Composants s'abonnent via useSharedWorkerStore
-- [ ] Hook `useFSMContext(botId)` retourne context depuis worker
-- [ ] Supprimer dépendance XFSMStore dans composants critiques
-- [ ] **COMMIT 4**
+- [x] Créer hook `useFSMContext(botId)` retournant context/state/send
+- [x] Créer hook `useBotState()` abstraction compatible XFSMStore/SharedWorkerStore
+- [x] Créer hook `useBotStates()` drop-in replacement pour `useXFSMStore.botStates`
+- [x] Mode 'auto': utilise Worker si connecté, fallback vers XFSMStore
+- [x] Migrer composants UI vers useBotStates:
+  - ScoreDisplay.tsx
+  - DroneStatsDisplay.tsx
+  - CollectedTilesList.tsx
+  - ShipStatus.tsx
+  - FSMVisualization.tsx
+  - RouteDisplay.tsx (refactoré sans subscription)
+- [ ] TileMatrix.tsx garde getActor (historique complexe - Phase 5)
+- [ ] **COMMIT 4** (en cours)
 
 ## Phase 5: Bascule finale
 - [ ] Désactiver stores Zustand (flag LEGACY_STORES=false)
@@ -81,8 +90,9 @@ Les vues afficheront uniquement les données du contexte FSM. Suppression finale
 - [x] Analysis complete
 - [x] Phase 1 complete (COMMIT 1: 8d87657)
 - [x] Phase 2 complete (COMMIT 2: 6b69056)
-- [x] Phase 3 in progress - useTileStore removed from:
-  - evaluation/guards.pure.ts
-  - evaluation/actions.effects.ts
-  - exploration/actions.assign.ts
-  - Note: collection/actions.assign.ts keeps mutations for UI sync (Phase 5)
+- [x] Phase 3 complete (COMMIT 3: 19cb00f) - useTileStore removed from FSM guards/actions
+- [x] Phase 4 in progress - New hooks created:
+  - src/hooks/useFSMContext.ts
+  - src/hooks/useBotState.ts
+  - src/hooks/index.ts
+  - 6 composants migrés vers useBotStates

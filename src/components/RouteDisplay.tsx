@@ -1,8 +1,12 @@
 import React from 'react';
 
+import { useBotStates } from '../hooks/useBotState.ts';
 import useBotSelectionStore from '../stores/useBotSelectionStore';
-import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates.d';
+
+/**
+ * ✅ Phase 4 Migration: Uses useBotStates hook instead of getActor subscription
+ */
 
 type RouteData = {
   currentPath: GridCoordinate[];
@@ -21,35 +25,32 @@ function getSimpleCoordLabel(coord: GridCoordinate): string {
 }
 
 function SingleBotRoute({ botId }: { botId: 'bot-0' | 'bot-1' }) {
-  const getActor = useXFSMStore((state) => state.getActor);
-  const [routeData, setRouteData] = React.useState<RouteData & {
-    isMovingToStation?: boolean;
-    stationType?: 'fuel' | 'repair';
-    targetTileType?: string;
-  }>({
-    currentPath: [],
-    pathIndex: 0,
-    shipCoord: null,
-  });
-
-  React.useEffect(() => {
-    const actor = getActor(botId);
-    if (!actor) return;
-
-    const subscription = actor.subscribe((snapshot) => {
-      const ctx = snapshot.context;
-      setRouteData({
-        currentPath: ctx.vehicle?.currentPath || [],
-        pathIndex: ctx.vehicle?.pathIndex ?? 0,
-        shipCoord: ctx.vehicle?.coord || null,
-        isMovingToStation: ctx.vehicle?.isMovingToStation,
-        stationType: ctx.vehicle?.stationType,
-        targetTileType: ctx.vehicle?.targetVehicleTile?.type,
-      });
-    });
-
-    return () => subscription.unsubscribe();
-  }, [getActor, botId]);
+  // ✅ Phase 4: Use unified hook - data is already synchronized
+  const botStates = useBotStates();
+  
+  // Extract route data directly from context (no subscription needed)
+  const routeData = React.useMemo(() => {
+    const snapshot = botStates[botId];
+    if (!snapshot || !('context' in snapshot)) {
+      return {
+        currentPath: [] as GridCoordinate[],
+        pathIndex: 0,
+        shipCoord: null as GridCoordinate | null,
+        isMovingToStation: undefined,
+        stationType: undefined as 'fuel' | 'repair' | undefined,
+        targetTileType: undefined as string | undefined,
+      };
+    }
+    const ctx = snapshot.context as any;
+    return {
+      currentPath: ctx.vehicle?.currentPath || [],
+      pathIndex: ctx.vehicle?.pathIndex ?? 0,
+      shipCoord: ctx.vehicle?.coord || null,
+      isMovingToStation: ctx.vehicle?.isMovingToStation,
+      stationType: ctx.vehicle?.stationType,
+      targetTileType: ctx.vehicle?.targetVehicleTile?.type,
+    };
+  }, [botStates, botId]);
 
   const borderColor = botId === 'bot-0' ? '#22c55e' : '#3b82f6';
 

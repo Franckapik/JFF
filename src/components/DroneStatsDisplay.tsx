@@ -1,8 +1,12 @@
 import React from 'react';
 
+import { useBotStates } from '../hooks/useBotState.ts';
 import useBotSelectionStore from '../stores/useBotSelectionStore';
-import useXFSMStore from '../stores/useXFSMStore';
 import type { FSMContext } from '../types/fsm.d';
+
+/**
+ * ✅ Phase 4 Migration: Now uses useBotStates hook (auto-switches between worker/xfsm)
+ */
 
 /**
  * Type guard pour vérifier si un snapshot a un contexte valide
@@ -30,7 +34,8 @@ function SingleDroneStats({
   botId: 'bot-0' | 'bot-1'; 
   compact?: boolean;
 }) {
-  const botStates = useXFSMStore((state) => state.botStates);
+  // ✅ Phase 4: Use unified hook instead of useXFSMStore directly
+  const botStates = useBotStates();
   const botSnapshot = botStates[botId];
 
   let droneStats = {

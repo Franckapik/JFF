@@ -1,9 +1,13 @@
 import React from 'react';
 
+import { useBotStates } from '../hooks/useBotState.ts';
 import useBotSelectionStore from '../stores/useBotSelectionStore';
 import { useTileStore } from '../stores/useTileStore';
-import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates.d';
+
+/**
+ * ✅ Phase 4 Migration: Now uses useBotStates hook (auto-switches between worker/xfsm)
+ */
 
 /**
  * Type guard pour vérifier si un snapshot a un contexte valide avec score
@@ -37,7 +41,8 @@ function SingleBotCollected({
   compact?: boolean;
 }) {
   const tiles = useTileStore((state) => state.tiles);
-  const botStates = useXFSMStore((state) => state.botStates);
+  // ✅ Phase 4: Use unified hook instead of useXFSMStore directly
+  const botStates = useBotStates();
   const botSnapshot = botStates[botId];
 
   const scoreFromFSM = React.useMemo(() => {
@@ -109,11 +114,14 @@ function SingleBotCollected({
  * 
  * IMPORTANT: Tous les hooks doivent être appelés inconditionnellement
  * pour respecter les règles des Hooks React
+ * 
+ * ✅ Phase 4 Migration: Uses useBotStates hook
  */
 export default function CollectedTilesList() {
   const selectedView = useBotSelectionStore((state) => state.selectedView);
   const tiles = useTileStore((state) => state.tiles);
-  const botStates = useXFSMStore((state) => state.botStates);
+  // ✅ Phase 4: Use unified hook instead of useXFSMStore directly
+  const botStates = useBotStates();
 
   // Déterminer quel bot afficher en mode single (toujours calculé)
   const singleBotId = (selectedView === 'both' ? 'bot-0' : selectedView) as 'bot-0' | 'bot-1';
