@@ -12,7 +12,7 @@
 import React from 'react';
 
 import { gridToWorld } from '../core/spatial';
-import useBotSelectionStore from '../stores/useBotSelectionStore';
+import { useUI } from '../contexts/UIContext';
 import { useSharedWorkerStore } from '../stores/useSharedWorkerStore';
 import { useTileStore } from '../stores/useTileStore';
 import type { FairnessRuleResult, FairnessValidationResult } from '../stores/useTileStore/slices/tileFairnessSlice.ts';
@@ -286,7 +286,7 @@ function SharedFSMVisualizationContent() {
   const instanceId = useSharedWorkerStore((state) => state.instanceId);
   const updateCounter = useSharedWorkerStore((state) => state.updateCounter);
   
-  const selectedView = useBotSelectionStore((state) => state.selectedView);
+  const { selectedView } = useUI();
 
   // Helper pour convertir GridCoordinate en WorldPosition pour l'affichage
   const coordToWorldPos = React.useCallback((coord: GridCoordinate | null | undefined, spacing = 1.2) => {

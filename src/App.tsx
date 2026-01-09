@@ -3,8 +3,8 @@ import React from 'react';
 import { useMultiSimulatedTracker, type BotActor } from './ai/fsm/machineX/hooks/trackers/useMultiSimulatedTracker';
 import FSMVisualization from './components/FSMVisualization';
 import { config } from './config';
+import { UIProvider } from './contexts/UIContext';
 import { useDangerMovement } from './hooks/useDangerMovement';
-import useBotSelectionStore from './stores/useBotSelectionStore';
 import useGameStore from './stores/useGameStore';
 import { useTileStore } from './stores/useTileStore';
 import useXFSMStore from './stores/useXFSMStore';
@@ -24,10 +24,7 @@ export default function App() {
   // Initialize on mount (one-time setup, no dependencies needed)
   React.useEffect(() => {
     try {
-      // 🔗 Initialize view mode from URL parameter
-      const botSelectionStore = useBotSelectionStore.getState();
-      botSelectionStore.initializeFromUrl();
-      console.log('🔗 [App] View mode initialized from URL:', botSelectionStore.selectedView);
+      // Note: View mode is now initialized by UIProvider automatically
 
       const gameStore = useGameStore.getState();
       const tileStore = useTileStore.getState();
@@ -105,8 +102,10 @@ export default function App() {
   useDangerMovement();
 
   return (
-    <React.StrictMode>
-      <FSMVisualization />
-    </React.StrictMode>
+    <UIProvider>
+      <React.StrictMode>
+        <FSMVisualization />
+      </React.StrictMode>
+    </UIProvider>
   );
 }

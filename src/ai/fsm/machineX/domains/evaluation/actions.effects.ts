@@ -169,7 +169,7 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
     if (needsDronePurchase) {
       fsmLogger.info(`[Evaluating] → NEED_DRONE_PURCHASE (drone needs replacement)`, {
         droneState,
-        destroyedCount: context.droneFleet?.drones?.explorer?.stats?.totalDestroyed
+        destroyedCount: context.droneFleet?.stats?.explorerDestroyed ?? 0
       });
       self.send({ type: 'NEED_DRONE_PURCHASE' } as MachineEvents);
     }

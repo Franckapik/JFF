@@ -2,7 +2,7 @@ import React from 'react';
 
 import { gridToWorld } from '../core/spatial';
 import { useBotStates, useActiveBots } from '../hooks/useBotState.ts';
-import useBotSelectionStore from '../stores/useBotSelectionStore';
+import { useUI } from '../contexts/UIContext';
 import { useTileStore } from '../stores/useTileStore';
 import type { FairnessRuleResult, FairnessValidationResult } from '../stores/useTileStore/slices/tileFairnessSlice.ts';
 import type { GridCoordinate } from '../types/coordinates';
@@ -113,7 +113,7 @@ export default function FSMVisualization() {
   // ✅ Phase 5: Use unified hooks for all FSM data
   const botStates = useBotStates();
   const activeBots = useActiveBots();
-  const selectedView = useBotSelectionStore((state) => state.selectedView);
+  const { selectedView } = useUI();
 
   // Helper pour convertir GridCoordinate en WorldPosition pour l'affichage
   const coordToWorldPos = React.useCallback((coord: GridCoordinate | null | undefined, spacing = 1.2) => {

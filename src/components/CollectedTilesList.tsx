@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { useBotStates } from '../hooks/useBotState.ts';
-import useBotSelectionStore from '../stores/useBotSelectionStore';
+import { useUI } from '../contexts/UIContext';
 import { useTileStore } from '../stores/useTileStore';
 import type { GridCoordinate } from '../types/coordinates.d';
 
@@ -118,7 +118,7 @@ function SingleBotCollected({
  * ✅ Phase 4 Migration: Uses useBotStates hook
  */
 export default function CollectedTilesList() {
-  const selectedView = useBotSelectionStore((state) => state.selectedView);
+  const { selectedView } = useUI();
   const tiles = useTileStore((state) => state.tiles);
   // ✅ Phase 4: Use unified hook instead of useXFSMStore directly
   const botStates = useBotStates();

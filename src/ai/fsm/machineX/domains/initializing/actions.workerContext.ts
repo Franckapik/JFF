@@ -26,7 +26,7 @@ export const botInitialContexts = new Map<string, FSMContext>();
  * ✅ Usage: Call this in the machine's initializing.entry before other actions
  */
 export const initializeBotContextFromWorker = assign<FSMContext, MachineEvents, object, MachineEvents, never>(
-  ({ context, event }: { context: FSMContext; event: MachineEvents }) => {
+  ({ context }: { context: FSMContext; event: MachineEvents }) => {
     // Try to get the initial context for this bot
     // The botId is stored in context.entityId
     const botId = context.entityId;

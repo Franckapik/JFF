@@ -1,18 +1,19 @@
 import React from 'react';
 
 import { useBotStates } from '../hooks/useBotState.ts';
-import useBotSelectionStore from '../stores/useBotSelectionStore';
+import { useUI } from '../contexts/UIContext';
 import type { GridCoordinate } from '../types/coordinates.d';
 
 /**
  * ✅ Phase 4 Migration: Uses useBotStates hook instead of getActor subscription
  */
 
-type RouteData = {
-  currentPath: GridCoordinate[];
-  pathIndex: number;
-  shipCoord: GridCoordinate | null;
-};
+// Unused type kept for documentation purposes
+// type RouteData = {
+//   currentPath: GridCoordinate[];
+//   pathIndex: number;
+//   shipCoord: GridCoordinate | null;
+// };
 
 /**
  * Convertir les coordonnées q,r en format simple (A1, B2, ...)
@@ -123,7 +124,7 @@ function SingleBotRoute({ botId }: { botId: 'bot-0' | 'bot-1' }) {
  * Format: A1 - A2 - B2 (actuelle surlignée)
  */
 export default function RouteDisplay() {
-  const selectedView = useBotSelectionStore((state) => state.selectedView);
+  const { selectedView } = useUI();
 
   const showBot0 = selectedView === 'both' || selectedView === 'bot-0';
   const showBot1 = selectedView === 'both' || selectedView === 'bot-1';

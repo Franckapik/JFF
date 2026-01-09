@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { useBotStates } from '../hooks/useBotState.ts';
-import useBotSelectionStore from '../stores/useBotSelectionStore';
+import { useUI } from '../contexts/UIContext';
 import type { FSMContext } from '../types/fsm.d';
 
 /**
@@ -117,7 +117,7 @@ function SingleDroneStats({
  * Supporte l'affichage multi-bots selon selectedView
  */
 export const DroneStatsDisplay: React.FC = () => {
-  const selectedView = useBotSelectionStore((state) => state.selectedView);
+  const { selectedView } = useUI();
 
   // Mode "both": afficher les deux bots côte à côte
   if (selectedView === 'both') {

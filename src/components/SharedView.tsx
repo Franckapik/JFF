@@ -14,7 +14,7 @@ import React from 'react';
 
 import { useSharedWorkerStore } from '../stores/useSharedWorkerStore';
 import { useTileStore } from '../stores/useTileStore';
-import useBotSelectionStore from '../stores/useBotSelectionStore';
+import { useUI } from '../contexts/UIContext';
 
 // =========================================================================
 // TYPES
@@ -194,7 +194,7 @@ function SyncHeader({ viewId }: { viewId: string }) {
 
 function SharedFSMVisualization() {
   const botStates = useSharedWorkerStore((s) => s.botStates);
-  const selectedView = useBotSelectionStore((s) => s.selectedView);
+  const { selectedView } = useUI();
   
   // Determine which bots to display
   const botsToDisplay = selectedView === 'both' 

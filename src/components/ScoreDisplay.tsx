@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { useBotStates } from '../hooks/useBotState.ts';
-import useBotSelectionStore from '../stores/useBotSelectionStore';
+import { useUI } from '../contexts/UIContext';
 
 /**
  * ✅ Phase 4 Migration: Now uses useBotStates hook (auto-switches between worker/xfsm)
@@ -66,7 +66,7 @@ function SingleBotScore({ botId, compact = false }: { botId: 'bot-0' | 'bot-1'; 
  * Supports multi-bot display according to selectedView
  */
 export const ScoreDisplay: React.FC = () => {
-  const selectedView = useBotSelectionStore((state) => state.selectedView);
+  const { selectedView } = useUI();
 
   // Mode "both": afficher les deux bots côte à côte
   if (selectedView === 'both') {
