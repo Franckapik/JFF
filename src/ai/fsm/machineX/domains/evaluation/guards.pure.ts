@@ -8,14 +8,11 @@
  * 
  * All guards follow the pattern: GuardPredicate<FSMContext, MachineEvents>
  * 
- * ⚠️ EXCEPTION: hasUnexploredTilesInRadius reads from TileStore for consistency
- * with assignDroneDeployingContext action (Bug #7 fix)
- * 
+ * ✅ Phase 3 Migration: All guards now read ONLY from FSM context (no TileStore)
  * ✅ Phase 2 Migration: Guards now read explorationRadius from context.config (pure)
  */
 
 import { calculateDistanceGrid } from '../../../../../core/spatial/distance.ts';
-import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { XStateV5Guard } from '../../../../../types/xstate.v5.types.ts';
 
 /**
@@ -154,9 +151,9 @@ export const hasUnexploredTilesInRadius: XStateV5Guard = ({ context }) => {
     return false;
   }
   
-  // ✅ PRIORITY: Use context.gridInfo.tiles directly (always available)
-  // TileStore is only used as fallback when context doesn't have tiles
-  const freshTiles = Object.keys(tiles).length > 0 ? tiles : (useTileStore.getState()?.tiles || {});
+  // ✅ Phase 3 Migration: Use context.gridInfo.tiles ONLY (no TileStore fallback)
+  // Worker always has tiles in context, no need for external store access
+  const freshTiles = tiles;
   
   // Build explored coords set from memory.knownTiles (same as action)
   const exploredCoords = new Set(

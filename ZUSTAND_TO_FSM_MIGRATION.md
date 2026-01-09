@@ -16,8 +16,8 @@ Les vues afficheront uniquement les données du contexte FSM. Suppression finale
 - [x] Créer actions FSM: `updateGameConfig`, `toggleClock`, `selectView`
 - [x] Créer événements: `GAME_CONFIG_UPDATE`, `CLOCK_TOGGLE`, `VIEW_SELECT`
 - [x] Worker stocke gameConfig et envoie aux bots
-- [ ] Composants lisent context.gameConfig en parallèle des stores
-- [ ] **COMMIT 1**
+- [x] Composants lisent context.gameConfig en parallèle des stores
+- [x] **COMMIT 1** ✅ (8d87657)
 
 ## Phase 2: Radius critique → FSM context
 - [x] Ajouter `explorationRadius` dans FSMContext.config (déjà présent ✓)
@@ -26,14 +26,18 @@ Les vues afficheront uniquement les données du contexte FSM. Suppression finale
 - [x] Action `syncRadius` dans global domain
 - [x] Worker détecte changement radius et broadcast aux autres bots
 - [x] Supprimer imports useGameStore des fichiers FSM
-- [x] **COMMIT 2**
+- [x] **COMMIT 2** ✅ (6b69056)
 
 ## Phase 3: TileStore utilities → pure functions
-- [ ] Créer `src/core/spatial/pure/pathfinding.ts` (findPath, calculatePathDistance)
-- [ ] Créer `src/core/spatial/pure/tileQueries.ts` (getWalkableTiles, tileInRadius)
-- [ ] Worker importe directement ces modules purs
-- [ ] FSM actions/guards utilisent context.gridInfo.tiles + fonctions pures
-- [ ] **COMMIT 3**
+- [x] Vérifier `src/core/spatial/pure/` existant (pathfinding, distance)
+- [x] Supprimer useTileStore de `exploration/actions.assign.ts` (markTileAsExplored)
+- [x] Supprimer useTileStore de `evaluation/actions.effects.ts` (freshTiles)
+- [x] Supprimer useTileStore de `evaluation/guards.pure.ts` (hasUnexploredTilesInRadius)
+- [x] FSM actions/guards utilisent SEULEMENT context.gridInfo.tiles + context.memory.knownTiles
+- [ ] **COMMIT 3** (en cours)
+
+> Note: `collection/actions.assign.ts` garde useTileStore pour mutations UI (syncro vers stores)
+> Ces mutations seront supprimées en Phase 5 (bascule finale)
 
 ## Phase 4: XFSMStore → Worker pattern unifié
 - [ ] Composants s'abonnent via useSharedWorkerStore
@@ -75,4 +79,10 @@ Les vues afficheront uniquement les données du contexte FSM. Suppression finale
 
 ## Current Progress
 - [x] Analysis complete
-- [ ] Phase 1 in progress
+- [x] Phase 1 complete (COMMIT 1: 8d87657)
+- [x] Phase 2 complete (COMMIT 2: 6b69056)
+- [x] Phase 3 in progress - useTileStore removed from:
+  - evaluation/guards.pure.ts
+  - evaluation/actions.effects.ts
+  - exploration/actions.assign.ts
+  - Note: collection/actions.assign.ts keeps mutations for UI sync (Phase 5)
