@@ -3,7 +3,6 @@ import React from 'react';
 import { gridToWorld } from '../core/spatial';
 import { useBotStates, useActiveBots } from '../hooks/useBotState.ts';
 import useBotSelectionStore from '../stores/useBotSelectionStore';
-import useGameStore from '../stores/useGameStore';
 import { useTileStore } from '../stores/useTileStore';
 import type { FairnessRuleResult, FairnessValidationResult } from '../stores/useTileStore/slices/tileFairnessSlice.ts';
 import type { GridCoordinate } from '../types/coordinates';
@@ -612,7 +611,7 @@ export default function FSMVisualization() {
             <tr>
               <td>🎯 Exploration Radius:</td>
               <td style={{ ...styles.statValue, color: '#e91e63', fontWeight: 'bold' }}>
-                {useGameStore.getState().getExplorationRadius()} / 3
+                {ctx?.config?.exploringRadius ?? 1} / 3
               </td>
             </tr>
             <tr>

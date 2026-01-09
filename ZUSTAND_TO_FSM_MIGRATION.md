@@ -57,15 +57,21 @@ Les vues afficheront uniquement les données du contexte FSM. Suppression finale
 - [x] Créer hook `useActiveBots()` pour liste bots actifs
 - [x] Migrer FSMVisualization.tsx vers useActiveBots (plus de useXFSMStore)
 - [x] Migrer TileMatrix.tsx vers useBotStates (refactoré avec helper function)
-- [ ] Tous composants UI utilisent hooks unifiés
-- [ ] App.tsx garde useXFSMStore pour l'initialisation (mode legacy)
-- [ ] **COMMIT 5** (en cours)
+- [x] Tous composants UI utilisent hooks unifiés
+- [x] App.tsx garde useXFSMStore pour l'initialisation (mode legacy)
+- [x] **COMMIT 5** ✅ (0985f2e)
 
 ## Phase 6: Cleanup
-- [ ] Supprimer fichiers stores Zustand inutilisés
-- [ ] Supprimer imports orphelins
-- [ ] Vérification TS errors
-- [ ] **COMMIT 6 (FINAL)**
+- [x] Supprimer usePlayerStore (unused - aucun import)
+- [x] Supprimer import useGameStore de FSMVisualization.tsx
+- [x] Vérification TS errors - OK
+- [x] Stores conservés:
+  - useBotSelectionStore (sélection UI)
+  - useGameStore (orchestrateur App.tsx uniquement)
+  - useSharedWorkerStore (architecture cible)
+  - useTileStore (données de carte pour visualisation)
+  - useXFSMStore (initialisation + fallback)
+- [x] **COMMIT 6 (FINAL)** ✅
 
 ---
 
@@ -93,8 +99,25 @@ Les vues afficheront uniquement les données du contexte FSM. Suppression finale
 - [x] Phase 2 complete (COMMIT 2: 6b69056)
 - [x] Phase 3 complete (COMMIT 3: 19cb00f) - useTileStore removed from FSM guards/actions
 - [x] Phase 4 complete (COMMIT 4: 6730496) - New hooks created, 6 composants migrés
-- [x] Phase 5 in progress:
-  - useActiveBots hook created
-  - FSMVisualization.tsx fully migrated
-  - TileMatrix.tsx fully migrated (no more getActor subscription)
-  - All UI components now use unified hooks
+- [x] Phase 5 complete (COMMIT 5: 0985f2e) - Full UI migration to unified hooks
+- [x] Phase 6 complete (COMMIT 6: FINAL) - Cleanup: usePlayerStore deleted, orphan imports removed
+
+## Final Architecture
+
+### Hooks unifiés (src/hooks/)
+- `useFSMContext(botId)` - Accès complet au contexte FSM avec send()
+- `useBotState()` - Compatibilité layer (auto-mode Worker/XFSMStore)
+- `useBotStates()` - Drop-in replacement pour useXFSMStore.botStates
+- `useActiveBots()` - Liste des bots actifs
+
+### Stores conservés
+| Store | Rôle | Raison |
+|-------|------|--------|
+| useBotSelectionStore | Sélection bot UI | Non lié FSM |
+| useGameStore | Orchestrateur init | App.tsx only |
+| useSharedWorkerStore | Connexion Worker | Architecture cible |
+| useTileStore | Données carte | Visualisation tiles |
+| useXFSMStore | Init + fallback | Legacy + fallback |
+
+### Store supprimé
+- ~~usePlayerStore~~ - Aucun usage dans le codebase
