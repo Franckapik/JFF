@@ -249,3 +249,26 @@ export const selectView = createAssignAction(({ context, event }) => {
     } as typeof context.gameConfig,
   };
 });
+
+// ========================================================================
+// 🔄 PHASE 2 MIGRATION: Radius sync action
+// ========================================================================
+
+/**
+ * Action assign pour synchroniser le radius entre les bots
+ * Appelée par le worker quand un bot incrémente son radius
+ */
+export const syncRadius = createAssignAction(({ context, event }) => {
+  if (event.type !== 'RADIUS_SYNC') return context;
+  
+  const { newRadius } = event;
+  
+  fsmLogger.context(`🔄 [${context.entityId}] Syncing radius to ${newRadius}`);
+  
+  return {
+    config: {
+      ...context.config,
+      exploringRadius: newRadius,
+    },
+  };
+});

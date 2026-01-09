@@ -20,12 +20,13 @@ Les vues afficheront uniquement les données du contexte FSM. Suppression finale
 - [ ] **COMMIT 1**
 
 ## Phase 2: Radius critique → FSM context
-- [ ] Ajouter `explorationRadius` dans FSMContext.config (déjà présent ✓)
-- [ ] Remplacer appel `useGameStore.getState().getExplorationRadius()` par context
-- [ ] Événement `RADIUS_UPDATE` pour sync depuis UI
-- [ ] Action `assignRadiusUpdate` 
-- [ ] Worker envoie radius via INIT message
-- [ ] **COMMIT 2**
+- [x] Ajouter `explorationRadius` dans FSMContext.config (déjà présent ✓)
+- [x] Remplacer appel `useGameStore.getState().getExplorationRadius()` par context
+- [x] Événement `RADIUS_SYNC` pour sync entre bots
+- [x] Action `syncRadius` dans global domain
+- [x] Worker détecte changement radius et broadcast aux autres bots
+- [x] Supprimer imports useGameStore des fichiers FSM
+- [x] **COMMIT 2**
 
 ## Phase 3: TileStore utilities → pure functions
 - [ ] Créer `src/core/spatial/pure/pathfinding.ts` (findPath, calculatePathDistance)

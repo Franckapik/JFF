@@ -67,6 +67,7 @@ export type MachineEvents =
     }
   // Phase 2: Radius expansion & Game Over
   | { type: 'RADIUS_INCREASED'; newRadius: number }
+  | { type: 'RADIUS_SYNC'; newRadius: number }  // ✅ Phase 2: Sync radius between bots
   | { type: 'GAME_OVER'; reason: 'max_radius_reached' | 'other' }
   | { type: 'RELOCATING_COMPLETE' }
   // 🆕 DRONE DESTRUCTION: Purchase complete event

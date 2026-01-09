@@ -6,6 +6,8 @@
  * Version TypeScript du contexte FSM avec types stricts et sécurisés.
  * Utilise les types partagés du dossier src/types/ pour la cohérence.
  *
+ * ✅ Phase 2 Migration: Removed useGameStore dependency
+ *
  * @author Migration TypeScript Phase 2
  * @version 3.0.0
  */
@@ -18,8 +20,8 @@ import type { FSMContext } from "@/types/fsm.ts";
 
 import type { VehicleState } from "@/types/vehicle.js";
 
-import useGameStore from "../../../../stores/useGameStore/index.ts";
-import { INITIAL_EXPLORATION_RADIUS } from "../../../../stores/useGameStore/slices/radiusSlice.ts";
+// Constant for initial exploration radius (migrated from radiusSlice)
+const INITIAL_EXPLORATION_RADIUS = 1;
 
 // ============================================================================
 // FONCTION DE CRÉATION DU CONTEXTE TYPÉE
@@ -94,14 +96,8 @@ export const createMachineContext = (entityId: string, entityType: EntityType = 
     },
     // selectedTileForCollection supprimé
     config: {
-      // 🆕 PHASE 2: Read initial radius from GameStore or use constant
-      exploringRadius: (() => {
-        try {
-          return useGameStore.getState().getExplorationRadius();
-        } catch {
-          return INITIAL_EXPLORATION_RADIUS;
-        }
-      })(),
+      // ✅ Phase 2 Migration: Use constant directly (no GameStore dependency)
+      exploringRadius: INITIAL_EXPLORATION_RADIUS,
       collectingRadius: 3,
       fuelThreshold: 20,
       capacityThreshold: 80,

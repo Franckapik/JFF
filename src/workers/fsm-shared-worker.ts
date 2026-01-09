@@ -124,6 +124,9 @@ let gameConfigStore: {
   selectedView: 'both',
 };
 
+// ✅ Phase 2 Migration: Shared radius tracking for multi-bot sync
+let sharedExplorationRadius = 1;
+
 // =========================================================================
 // HELPER: Broadcast to all connected views
 // =========================================================================
@@ -282,6 +285,26 @@ function handleSnapshot(botId: BotId, snapshot: any): void {
   clearTimers(botId);
   lastStateMap.set(botId, stateStr);
   
+  // ✅ Phase 2 Migration: Check if radius changed and sync to other bots
+  const context = snapshot.context;
+  if (context?.config?.exploringRadius && context.config.exploringRadius !== sharedExplorationRadius) {
+    const newRadius = context.config.exploringRadius;
+    console.log(`🔄 [WORKER] Radius changed by ${botId}: ${sharedExplorationRadius} → ${newRadius}`);
+    sharedExplorationRadius = newRadius;
+    
+    // Sync to all OTHER bots
+    actors.forEach((actor, otherBotId) => {
+      if (otherBotId !== botId) {
+        try {
+          actor.send({ type: 'RADIUS_SYNC', newRadius });
+          console.log(`🔄 [WORKER] Synced radius ${newRadius} to ${otherBotId}`);
+        } catch (e) {
+          console.error(`[WORKER] Error syncing radius to ${otherBotId}:`, e);
+        }
+      }
+    });
+  }
+  
   // Create tile provider from stored tiles (with minimal typing)
   const tileProvider = {
     tiles: tilesStore,
@@ -295,8 +318,7 @@ function handleSnapshot(botId: BotId, snapshot: any): void {
     }
   };
   
-  // Obtenir les événements à planifier
-  const context = snapshot.context;
+  // Obtenir les événements à planifier (context already defined above)
   if (!context) return;
   
   try {

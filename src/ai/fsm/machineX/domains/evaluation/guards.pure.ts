@@ -11,26 +11,19 @@
  * ⚠️ EXCEPTION: hasUnexploredTilesInRadius reads from TileStore for consistency
  * with assignDroneDeployingContext action (Bug #7 fix)
  * 
- * 🆕 PHASE 2: Guards now read explorationRadius from GameStore (shared state)
+ * ✅ Phase 2 Migration: Guards now read explorationRadius from context.config (pure)
  */
 
 import { calculateDistanceGrid } from '../../../../../core/spatial/distance.ts';
-import useGameStore from '../../../../../stores/useGameStore/index.ts';
 import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { XStateV5Guard } from '../../../../../types/xstate.v5.types.ts';
 
 /**
- * 🆕 PHASE 2: Helper to get exploration radius from GameStore
- * Falls back to context.config.exploringRadius if store not available
+ * ✅ Phase 2 Migration: Helper to get exploration radius from context
+ * Pure function - no store dependencies
  */
 const getExplorationRadius = (contextRadius?: number): number => {
-  try {
-    const gameStore = useGameStore.getState();
-    return gameStore.getExplorationRadius();
-  } catch {
-    // Fallback to context value if store not available (e.g., in tests)
-    return contextRadius ?? 1;
-  }
+  return contextRadius ?? 1;
 };
 
 /**

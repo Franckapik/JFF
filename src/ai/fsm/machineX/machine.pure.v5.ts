@@ -38,7 +38,8 @@ import { allLocalTilesExplored, canStartExploring, canStartExploringWithValidTar
 import { assignDroneDeployingContext, assignDroneDestroyedContext, assignDroneDockedContext, assignDroneReadyContext, assignDroneReturningContext, assignDroneScanningContext, isDroneDestroyed, onDroneDeployingEntry, onDroneDeployingExit, onDroneDestroyedEntry, onDroneDestroyedExit, onDroneDockedEntry, onDroneDockedExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit, shouldDestroyDroneOnDanger } from './domains/exploration/index.ts';
 // ✅ Phase 2: Import updateGridInfo for TILES_UPDATED event
 // ✅ Phase 1 Migration: Import game config actions
-import { selectView, toggleClock, updateDronePosition, updateGameConfig, updateGridInfo, updateShipPosition } from './domains/global/index.ts';
+// ✅ Phase 2 Migration: Import radius sync action
+import { selectView, syncRadius, toggleClock, updateDronePosition, updateGameConfig, updateGridInfo, updateShipPosition } from './domains/global/index.ts';
 import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign.ts';
 import { initializeBotContextFromWorker, onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects.ts';
 import { assignDroneDamagePenaltyContext, assignPurchaseDroneContext, assignShipAtFuelStationContext, assignShipAtRepairStationContext, assignShipDepositResourcesContext, assignShipMovingToFuelStationContext, assignShipMovingToRepairStationContext, assignShipRefuelContext, assignShipRelocatingContext, assignShipRepairContext } from './domains/maintenance/actions.assign.ts';
@@ -72,6 +73,8 @@ export const machineXV5Pure = setup({
     updateGameConfig,
     toggleClock,
     selectView,
+    // ✅ Phase 2 Migration: Radius sync action
+    syncRadius,
     
     // Actions du domaine INITIALIZING
     initializeBotContextFromWorker, // ✅ NEW: Initialize context from worker for SharedWorker mode
@@ -240,6 +243,10 @@ export const machineXV5Pure = setup({
     },
     VIEW_SELECT: {
       actions: 'selectView'
+    },
+    // ✅ Phase 2 Migration: Radius sync event handler
+    RADIUS_SYNC: {
+      actions: 'syncRadius'
     }
   },
 
