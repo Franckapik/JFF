@@ -37,13 +37,13 @@
 import React from 'react';
 
 import {
-  assignStartingTilesToBots,
-  initializeGameGrid,
-  placeDangerTiles,
-  placeEmptyTiles,
-  placeGameStations,
-  placeObstacleTiles,
-  placeStartingTiles,
+    assignStartingTilesToBots,
+    initializeGameGrid,
+    placeDangerTiles,
+    placeEmptyTiles,
+    placeGameStations,
+    placeObstacleTiles,
+    placeStartingTiles,
 } from '../core/spatial/hexGrid';
 import { useSharedWorkerStore } from '../stores/useSharedWorkerStore';
 
