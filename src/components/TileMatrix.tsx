@@ -564,10 +564,7 @@ export default function TileMatrix() {
             const pathBorderWidth = pathInfo.isOnPath ? 3 : 0;
             
             // Calculer les ressources totales de la tuile
-            const tileResources = React.useMemo(() => {
-              const total = (tile?.resources?.total ?? 0);
-              return total;
-            }, [tile]);
+            const tileResources = (tile?.resources?.total ?? 0);
             
             return (
               <div

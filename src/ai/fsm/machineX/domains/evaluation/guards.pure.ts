@@ -147,6 +147,8 @@ export const canStartExploringWithValidTarget: XStateV5Guard = (args) => {
  * @returns true if at least one unexplored tile exists that can be targeted
  */
 export const hasUnexploredTilesInRadius: XStateV5Guard = ({ context }) => {
+  // Read tiles: prioritize context.gridInfo.tiles (always available in worker)
+  // Fall back to TileStore only if context doesn't have tiles
   const tiles = context.gridInfo?.tiles || {};
   const knownTiles = context.memory?.knownTiles || [];
   // 🛤️ PATHFINDING FIX: Always use baseCoord for exploration (even if ship moved to collect)
@@ -159,9 +161,9 @@ export const hasUnexploredTilesInRadius: XStateV5Guard = ({ context }) => {
     return false;
   }
   
-  // Read fresh tiles from TileStore (same as action)
-  const tileStoreState = useTileStore.getState();
-  const freshTiles = tileStoreState?.tiles || tiles;
+  // ✅ PRIORITY: Use context.gridInfo.tiles directly (always available)
+  // TileStore is only used as fallback when context doesn't have tiles
+  const freshTiles = Object.keys(tiles).length > 0 ? tiles : (useTileStore.getState()?.tiles || {});
   
   // Build explored coords set from memory.knownTiles (same as action)
   const exploredCoords = new Set(
@@ -201,8 +203,22 @@ export const hasUnexploredTilesInRadius: XStateV5Guard = ({ context }) => {
     candidatesCount: candidateTiles.length,
     unexploredCount: unexploredTiles.length,
     exploredCoordsSize: exploredCoords.size,
+    freshTilesCount: Object.keys(freshTiles).length,
+    shipCoord,
     result
   });
+  
+  if (candidateTiles.length === 0 && Object.keys(freshTiles).length > 0) {
+    console.log(`⚠️ [hasUnexploredTilesInRadius] No candidates found! Sample tile:`, 
+      Object.entries(freshTiles).slice(0, 1).map(([coord, t]: any) => ({
+        coord,
+        hasPosition: !!t?.position,
+        hasCoord: !!t?.position?.coord,
+        explorable: t?.explorable,
+        explored: t?.explored
+      }))
+    );
+  }
   
   return result;
 };

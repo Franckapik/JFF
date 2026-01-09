@@ -39,7 +39,7 @@ import { assignDroneDeployingContext, assignDroneDestroyedContext, assignDroneDo
 // ✅ Phase 2: Import updateGridInfo for TILES_UPDATED event
 import { updateDronePosition, updateGridInfo, updateShipPosition } from './domains/global/index.ts';
 import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign.ts';
-import { onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects.ts';
+import { initializeBotContextFromWorker, onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects.ts';
 import { assignDroneDamagePenaltyContext, assignPurchaseDroneContext, assignShipAtFuelStationContext, assignShipAtRepairStationContext, assignShipDepositResourcesContext, assignShipMovingToFuelStationContext, assignShipMovingToRepairStationContext, assignShipRefuelContext, assignShipRelocatingContext, assignShipRepairContext } from './domains/maintenance/actions.assign.ts';
 import { onGameOverEntry, onMaintainingEntry, onMaintainingExit, onPurchasingDroneEntry, onPurchasingDroneExit, onShipDepositingEntry, onShipDepositingExit, onShipRefuelingEntry, onShipRefuelingExit, onShipRelocatingEntry, onShipRelocatingExit, onShipRepairingEntry, onShipRepairingExit } from './domains/maintenance/actions.effects.ts';
 import { canIncreaseRadius, hasResourcesForDrone, isAtMaxRadius, isMovingToFuelStation, isMovingToRepairStation, isShipOnBase, maintenanceComplete, needsDeposit, needsDronePurchase, needsRefuel, needsRepair, shouldUseFuelStation, shouldUseRepairStation } from './domains/maintenance/guards.pure.ts';
@@ -67,8 +67,13 @@ export const machineXV5Pure = setup({
     updateShipPosition,
     updateDronePosition,
     updateGridInfo, // ✅ Phase 2: Grid sync action
+    
+    // Actions du domaine INITIALIZING
+    initializeBotContextFromWorker, // ✅ NEW: Initialize context from worker for SharedWorker mode
     processDroneInitRequest,
     processShipInitRequest,
+    onInitializingEntry,
+    onInitializingExit,
     
     // Actions du domaine EVALUATION (migrées)
     assignEvaluationContext,
@@ -141,10 +146,6 @@ export const machineXV5Pure = setup({
     onShipRelocatingEntry, // 🆕 NEW: Relocating entry effect
     onShipRelocatingExit,  // 🆕 NEW: Relocating exit effect
     onGameOverEntry, // 🆕 PHASE 2: Game over entry effect
-
-    // Actions d'effets pour initializing
-    onInitializingEntry,
-    onInitializingExit,
   },
   guards: {
     // ✅ Phase 1: All guards from guards.pure.ts (no store dependencies)
@@ -232,7 +233,7 @@ export const machineXV5Pure = setup({
      * État INITIALIZING - Initialise le vaisseau et le drone
      */
     initializing: {
-      entry: 'onInitializingEntry',
+      entry: ['initializeBotContextFromWorker', 'onInitializingEntry'],
       exit: 'onInitializingExit',
       on: {
         SHIP_INITIALIZE_REQUEST: {

@@ -15,6 +15,24 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    open: true
+    open: true,
+    // Handle SPA routing - serve index.html for all routes
+    // This is handled automatically by Vite's dev server
+  },
+  worker: {
+    // Enable ES modules for workers (SharedWorker support)
+    format: 'es'
+  },
+  build: {
+    // Ensure workers are properly bundled
+    rollupOptions: {
+      output: {
+        // Proper chunking for workers
+        manualChunks: {
+          xstate: ['xstate'],
+          zustand: ['zustand']
+        }
+      }
+    }
   }
 })
