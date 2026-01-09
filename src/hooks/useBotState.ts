@@ -127,4 +127,22 @@ export function useBotStates(): BotStatesMap {
   return botStates;
 }
 
+/**
+ * ✅ Phase 5: Hook to get active bots list
+ * Works with both useXFSMStore and useSharedWorkerStore
+ */
+export function useActiveBots(): BotId[] {
+  const xfsmActiveBots = useXFSMStore((state) => state.activeBots);
+  const workerActiveBots = useSharedWorkerStore((state) => state.activeBots);
+  const workerConnected = useSharedWorkerStore((state) => state.isConnected);
+  
+  return useMemo(() => {
+    // Use worker if connected and has data
+    if (workerConnected && workerActiveBots && workerActiveBots.length > 0) {
+      return workerActiveBots as BotId[];
+    }
+    return xfsmActiveBots;
+  }, [workerConnected, workerActiveBots, xfsmActiveBots]);
+}
+
 export default useBotState;

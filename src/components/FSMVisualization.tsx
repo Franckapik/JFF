@@ -1,12 +1,11 @@
 import React from 'react';
 
 import { gridToWorld } from '../core/spatial';
-import { useBotStates } from '../hooks/useBotState.ts';
+import { useBotStates, useActiveBots } from '../hooks/useBotState.ts';
 import useBotSelectionStore from '../stores/useBotSelectionStore';
 import useGameStore from '../stores/useGameStore';
 import { useTileStore } from '../stores/useTileStore';
 import type { FairnessRuleResult, FairnessValidationResult } from '../stores/useTileStore/slices/tileFairnessSlice.ts';
-import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates';
 import type { FSMContext } from '../types/fsm.d';
 
@@ -15,8 +14,8 @@ import PositionDisplay from './PositionDisplay';
 import TileMatrixLayout from './TileMatrixLayout';
 
 /**
- * ✅ Phase 4 Migration: Uses useBotStates hook for state access
- * Note: useXFSMStore kept for activeBots (will be migrated in Phase 5)
+ * ✅ Phase 5 Migration: Uses useBotStates + useActiveBots hooks
+ * No more direct useXFSMStore dependency
  */
 
 /**
@@ -109,14 +108,12 @@ function SingleBotCycleFlow({ botId, compact = false }: { botId: 'bot-0' | 'bot-
 /**
  * FSM Visualization - Affichage ultra-basique du cycle XState
  * 
- * ✅ Phase 4 Migration: Uses useBotStates hook
- * Note: useXFSMStore.activeBots kept for now (will be migrated in Phase 5)
+ * ✅ Phase 5 Migration: Uses unified hooks (useBotStates + useActiveBots)
  */
 export default function FSMVisualization() {
-  // ✅ Phase 4: Use unified hook for botStates
+  // ✅ Phase 5: Use unified hooks for all FSM data
   const botStates = useBotStates();
-  // Keep activeBots from useXFSMStore for now (Phase 5 will migrate this)
-  const activeBots = useXFSMStore((state) => state.activeBots);
+  const activeBots = useActiveBots();
   const selectedView = useBotSelectionStore((state) => state.selectedView);
 
   // Helper pour convertir GridCoordinate en WorldPosition pour l'affichage

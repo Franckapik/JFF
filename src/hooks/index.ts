@@ -17,7 +17,8 @@ export {
 // Bot State hooks (Phase 4 - compatibility layer)
 export { 
   useBotState, 
-  useBotStates 
+  useBotStates,
+  useActiveBots 
 } from './useBotState.ts';
 
 // Other hooks

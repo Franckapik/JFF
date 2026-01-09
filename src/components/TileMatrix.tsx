@@ -1,11 +1,14 @@
 import React from 'react';
 
+import { useBotStates } from '../hooks/useBotState.ts';
 import useBotSelectionStore from '../stores/useBotSelectionStore';
 import { useTileStore } from '../stores/useTileStore';
-import useXFSMStore from '../stores/useXFSMStore';
 import type { GridCoordinate } from '../types/coordinates.d';
+import type { FSMContext } from '../types/fsm.d';
 
 /**
+ * ✅ Phase 5 Migration: Uses useBotStates hook instead of getActor subscription
+ * 
  * Composant minimaliste: matrice de points représentant les tuiles
  * - Tuile vide: noir
  * - Tuile explorée: bleu
@@ -26,9 +29,69 @@ type BotData = {
   tileProgressHistory: Map<GridCoordinate, number[]>;
 };
 
+/**
+ * Helper to extract bot data from context and update history
+ */
+function extractBotDataWithHistory(
+  ctx: FSMContext | null,
+  prevData: BotData,
+  botId: 'bot-0' | 'bot-1'
+): BotData {
+  if (!ctx) return prevData;
+  
+  const newPath = ctx.vehicle?.currentPath || [];
+  const newPathIndex = ctx.vehicle?.pathIndex ?? 0;
+  
+  // Si le chemin a changé, ajouter l'ancien chemin à l'historique
+  let previousPaths = prevData.previousPaths;
+  if (newPath.length > 0 && 
+      (newPath.length !== prevData.currentPath.length || 
+       newPath.some((coord, idx) => coord !== prevData.currentPath[idx]))) {
+    // Garder seulement les 3 derniers chemins
+    previousPaths = [...prevData.previousPaths, prevData.currentPath].slice(-3);
+  }
+  
+  // Mettre à jour l'historique de progression pour chaque tuile
+  const tileProgressHistory = new Map(prevData.tileProgressHistory);
+  for (let i = 0; i < newPath.length; i++) {
+    const coord = newPath[i];
+    const currentProgresses = tileProgressHistory.get(coord) || [];
+    if (!currentProgresses.includes(i + 1)) {
+      tileProgressHistory.set(coord, [...currentProgresses, i + 1]);
+    }
+  }
+  
+  const newData: BotData = {
+    shipCoord: ctx.vehicle?.coord || null,
+    baseCoord: ctx.vehicle?.baseCoord || null,
+    droneCoords: [],
+    currentPath: newPath,
+    pathIndex: newPathIndex,
+    previousPaths,
+    tileProgressHistory,
+  };
+
+  if (ctx.droneFleet?.drones) {
+    const coords: GridCoordinate[] = [];
+    const droneTypes = ['explorer', 'combat', 'special'] as const;
+    
+    for (const type of droneTypes) {
+      const drone = ctx.droneFleet.drones[type];
+      if (drone?.coord) {
+        coords.push(`${botId}|${type}|${drone.coord}` as any);
+      }
+    }
+    
+    newData.droneCoords = coords;
+  }
+  
+  return newData;
+}
+
 export default function TileMatrix() {
   const tiles = useTileStore((state) => state.tiles);
-  const getActor = useXFSMStore((state) => state.getActor);
+  // ✅ Phase 5: Use unified hook instead of getActor subscription
+  const botStates = useBotStates();
   const selectedView = useBotSelectionStore((state) => state.selectedView);
   
   // États pour les deux bots
@@ -52,135 +115,40 @@ export default function TileMatrix() {
   });
   const [exploringRadius, setExploringRadius] = React.useState<number>(2);
 
+  // ✅ Phase 5: Extract context from unified hook
+  const bot0Context = React.useMemo(() => {
+    const snapshot = botStates['bot-0'];
+    if (snapshot && 'context' in snapshot) {
+      return snapshot.context as FSMContext;
+    }
+    return null;
+  }, [botStates]);
+  
+  const bot1Context = React.useMemo(() => {
+    const snapshot = botStates['bot-1'];
+    if (snapshot && 'context' in snapshot) {
+      return snapshot.context as FSMContext;
+    }
+    return null;
+  }, [botStates]);
+
   // Mettre à jour les positions de bot-0
   React.useEffect(() => {
-    const actor = getActor('bot-0');
-    if (!actor) return;
-
-    const subscription = actor.subscribe((snapshot) => {
-      const ctx = snapshot.context;
-      
-      setBot0Data((prevData) => {
-        const newPath = ctx.vehicle?.currentPath || [];
-        const newPathIndex = ctx.vehicle?.pathIndex ?? 0;
-        
-        // Si le chemin a changé, ajouter l'ancien chemin à l'historique
-        let previousPaths = prevData.previousPaths;
-        if (newPath.length > 0 && 
-            (newPath.length !== prevData.currentPath.length || 
-             newPath.some((coord, idx) => coord !== prevData.currentPath[idx]))) {
-          // Garder seulement les 3 derniers chemins
-          previousPaths = [...prevData.previousPaths, prevData.currentPath].slice(-3);
-        }
-        
-        // Mettre à jour l'historique de progression pour chaque tuile
-        const tileProgressHistory = new Map(prevData.tileProgressHistory);
-        for (let i = 0; i < newPath.length; i++) {
-          const coord = newPath[i];
-          const currentProgresses = tileProgressHistory.get(coord) || [];
-          // Ajouter le numéro de progression si ce n'est pas déjà présent
-          if (!currentProgresses.includes(i + 1)) {
-            tileProgressHistory.set(coord, [...currentProgresses, i + 1]);
-          }
-        }
-        
-        const newData: BotData = {
-          shipCoord: ctx.vehicle?.coord || null,
-          baseCoord: ctx.vehicle?.baseCoord || null,
-          droneCoords: [],
-          currentPath: newPath,
-          pathIndex: newPathIndex,
-          previousPaths,
-          tileProgressHistory,
-        };
-
-        if (ctx.config?.exploringRadius !== undefined) {
-          setExploringRadius(ctx.config.exploringRadius);
-        }
-
-        if (ctx.droneFleet?.drones) {
-          const coords: GridCoordinate[] = [];
-          const droneTypes = ['explorer', 'combat', 'special'] as const;
-          
-          for (const type of droneTypes) {
-            const drone = ctx.droneFleet.drones[type];
-            if (drone?.coord) {
-              coords.push(`bot-0|${type}|${drone.coord}` as any);
-            }
-          }
-          
-          newData.droneCoords = coords;
-        }
-        
-        return newData;
-      });
-    });
-
-    return () => subscription.unsubscribe();
-  }, [getActor]);
+    if (!bot0Context) return;
+    
+    setBot0Data((prevData) => extractBotDataWithHistory(bot0Context, prevData, 'bot-0'));
+    
+    if (bot0Context.config?.exploringRadius !== undefined) {
+      setExploringRadius(bot0Context.config.exploringRadius);
+    }
+  }, [bot0Context]);
 
   // Mettre à jour les positions de bot-1
   React.useEffect(() => {
-    const actor = getActor('bot-1');
-    if (!actor) return;
-
-    const subscription = actor.subscribe((snapshot) => {
-      const ctx = snapshot.context;
-      
-      setBot1Data((prevData) => {
-        const newPath = ctx.vehicle?.currentPath || [];
-        const newPathIndex = ctx.vehicle?.pathIndex ?? 0;
-        
-        // Si le chemin a changé, ajouter l'ancien chemin à l'historique
-        let previousPaths = prevData.previousPaths;
-        if (newPath.length > 0 && 
-            (newPath.length !== prevData.currentPath.length || 
-             newPath.some((coord, idx) => coord !== prevData.currentPath[idx]))) {
-          // Garder seulement les 3 derniers chemins
-          previousPaths = [...prevData.previousPaths, prevData.currentPath].slice(-3);
-        }
-        
-        // Mettre à jour l'historique de progression pour chaque tuile
-        const tileProgressHistory = new Map(prevData.tileProgressHistory);
-        for (let i = 0; i < newPath.length; i++) {
-          const coord = newPath[i];
-          const currentProgresses = tileProgressHistory.get(coord) || [];
-          // Ajouter le numéro de progression si ce n'est pas déjà présent
-          if (!currentProgresses.includes(i + 1)) {
-            tileProgressHistory.set(coord, [...currentProgresses, i + 1]);
-          }
-        }
-        
-        const newData: BotData = {
-          shipCoord: ctx.vehicle?.coord || null,
-          baseCoord: ctx.vehicle?.baseCoord || null,
-          droneCoords: [],
-          currentPath: newPath,
-          pathIndex: newPathIndex,
-          previousPaths,
-          tileProgressHistory,
-        };
-
-        if (ctx.droneFleet?.drones) {
-          const coords: GridCoordinate[] = [];
-          const droneTypes = ['explorer', 'combat', 'special'] as const;
-          
-          for (const type of droneTypes) {
-            const drone = ctx.droneFleet.drones[type];
-            if (drone?.coord) {
-              coords.push(`bot-1|${type}|${drone.coord}` as any);
-            }
-          }
-          
-          newData.droneCoords = coords;
-        }
-        
-        return newData;
-      });
-    });
-
-    return () => subscription.unsubscribe();
-  }, [getActor]);
+    if (!bot1Context) return;
+    
+    setBot1Data((prevData) => extractBotDataWithHistory(bot1Context, prevData, 'bot-1'));
+  }, [bot1Context]);
 
   // Debug: afficher les stats
   React.useEffect(() => {
