@@ -1,9 +1,5 @@
 * Le cloud donne-il des damages en fonction du bot desormais?
 
-* Le bot doit choisir/utiliser la station repair ou refuel. Mettre en place la strategie pour utiliser les bons sous etats.
-
-* assurer les memes conditions de départ.
-
 * est-il possible d'avoir un mode ultra rapide? 
 
 * comment dynamiser la vue pour faire un affichage de battle avec un bot qui gagne ou non ? 
@@ -17,6 +13,8 @@ Une possibilité de modifier le terrain ?
 
 Un module de perception des mines serait vraiment interessant. Serais-ce une carte techno?
 Une téléportation serais interressante peut-etre ? Quel interet finalement ? Une augmentation de vitesse de vaisseau/drone serais plus sympa.
+
+A quel moment vais-je passer au design ? J'aime de plus en plus la logique sur ce projet qui se complexifie.
 
 
 
