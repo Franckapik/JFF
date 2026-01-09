@@ -37,7 +37,8 @@ import { assignEvaluationContext, assignShipRelocatedContext, assignShipRelocati
 import { allLocalTilesExplored, canStartExploring, canStartExploringWithValidTarget, hasTilesAvailable, hasUnexploredTilesInRadius, isStuckInEvaluating, shouldCollect, shouldExplore, shouldMaintain, shouldRelocateShip } from './domains/evaluation/guards.pure.ts';
 import { assignDroneDeployingContext, assignDroneDestroyedContext, assignDroneDockedContext, assignDroneReadyContext, assignDroneReturningContext, assignDroneScanningContext, isDroneDestroyed, onDroneDeployingEntry, onDroneDeployingExit, onDroneDestroyedEntry, onDroneDestroyedExit, onDroneDockedEntry, onDroneDockedExit, onDroneReturningEntry, onDroneReturningExit, onDroneScanningEntry, onDroneScanningExit, onExploringEntry, onExploringExit, shouldDestroyDroneOnDanger } from './domains/exploration/index.ts';
 // ✅ Phase 2: Import updateGridInfo for TILES_UPDATED event
-import { updateDronePosition, updateGridInfo, updateShipPosition } from './domains/global/index.ts';
+// ✅ Phase 1 Migration: Import game config actions
+import { selectView, toggleClock, updateDronePosition, updateGameConfig, updateGridInfo, updateShipPosition } from './domains/global/index.ts';
 import { processDroneInitRequest, processShipInitRequest } from './domains/initializing/actions.assign.ts';
 import { initializeBotContextFromWorker, onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects.ts';
 import { assignDroneDamagePenaltyContext, assignPurchaseDroneContext, assignShipAtFuelStationContext, assignShipAtRepairStationContext, assignShipDepositResourcesContext, assignShipMovingToFuelStationContext, assignShipMovingToRepairStationContext, assignShipRefuelContext, assignShipRelocatingContext, assignShipRepairContext } from './domains/maintenance/actions.assign.ts';
@@ -67,6 +68,10 @@ export const machineXV5Pure = setup({
     updateShipPosition,
     updateDronePosition,
     updateGridInfo, // ✅ Phase 2: Grid sync action
+    // ✅ Phase 1 Migration: Game config actions
+    updateGameConfig,
+    toggleClock,
+    selectView,
     
     // Actions du domaine INITIALIZING
     initializeBotContextFromWorker, // ✅ NEW: Initialize context from worker for SharedWorker mode
@@ -225,6 +230,16 @@ export const machineXV5Pure = setup({
     // ✅ Phase 2: Grid sync event handler
     TILES_UPDATED: {
       actions: 'updateGridInfo'
+    },
+    // ✅ Phase 1 Migration: Game config event handlers
+    GAME_CONFIG_UPDATE: {
+      actions: 'updateGameConfig'
+    },
+    CLOCK_TOGGLE: {
+      actions: 'toggleClock'
+    },
+    VIEW_SELECT: {
+      actions: 'selectView'
     }
   },
 

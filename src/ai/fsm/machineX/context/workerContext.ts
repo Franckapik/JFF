@@ -140,5 +140,20 @@ export function createWorkerContext(entityId: string, entityType: 'auto' | 'play
         specialDestroyed: 0,
       },
     },
+    // ✅ Phase 1 Migration: Game config (replaces Zustand stores)
+    gameConfig: {
+      isClockRunning: false,
+      playerCount: 1,
+      botCount: 2,
+      mapSeed: null,
+      botColors: ['red', 'orange', 'green', 'purple', 'teal', 'brown', 'magenta', 'cyan'],
+      humanPlayerColor: 'blue',
+      playersInitialized: false,
+      botsInitialized: false,
+      tilesInitialized: false,
+      startingTilesAssigned: false,
+      fleetPositionsInitialized: {},
+      selectedView: 'both',
+    },
   };
 }

@@ -56,6 +56,14 @@ interface WorkerMessage {
   botId?: BotId;
   event?: MachineEventsMinimal;
   tiles?: Record<string, unknown>;
+  // ✅ Phase 1 Migration: Game config from Zustand stores
+  gameConfig?: {
+    isClockRunning?: boolean;
+    playerCount?: number;
+    botCount?: number;
+    mapSeed?: number | null;
+    selectedView?: 'bot-0' | 'bot-1' | 'both';
+  };
 }
 
 interface BotStateData {
@@ -100,6 +108,21 @@ const connectedPorts: MessagePort[] = [];
 // ⚠️ Note: tilesStore est injecté une seule fois à l'INIT
 // La vraie source de vérité après init est context.memory.knownTiles + context.gridInfo.tiles
 let tilesStore: Record<string, unknown> = {};
+
+// ✅ Phase 1 Migration: Game config store (replaces Zustand)
+let gameConfigStore: {
+  isClockRunning: boolean;
+  playerCount: number;
+  botCount: number;
+  mapSeed: number | null;
+  selectedView: 'bot-0' | 'bot-1' | 'both';
+} = {
+  isClockRunning: false,
+  playerCount: 1,
+  botCount: 2,
+  mapSeed: null,
+  selectedView: 'both',
+};
 
 // =========================================================================
 // HELPER: Broadcast to all connected views
@@ -431,11 +454,29 @@ function handleMessage(port: MessagePort, message: WorkerMessage): void {
         console.log(`📦 [WORKER] Tiles received: ${Object.keys(tilesStore).length}`);
       }
       
+      // ✅ Phase 1 Migration: Store game config
+      if (message.gameConfig) {
+        gameConfigStore = { ...gameConfigStore, ...message.gameConfig };
+        console.log(`⚙️ [WORKER] Game config received:`, gameConfigStore);
+      }
+      
       // Create and start bots
       createBot('bot-0');
       createBot('bot-1');
       startBot('bot-0');
       startBot('bot-1');
+      
+      // ✅ Phase 1 Migration: Send initial game config to bots
+      if (message.gameConfig) {
+        actors.forEach((actor, botId) => {
+          try {
+            actor.send({ type: 'GAME_CONFIG_UPDATE', config: gameConfigStore });
+            console.log(`⚙️ [WORKER] Sent GAME_CONFIG_UPDATE to ${botId}`);
+          } catch (e) {
+            console.error(`[WORKER] Error sending game config to ${botId}:`, e);
+          }
+        });
+      }
       
       // Broadcast initial state
       broadcastState();
