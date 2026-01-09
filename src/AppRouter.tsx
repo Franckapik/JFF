@@ -3,34 +3,45 @@
  * APP ROUTER - Routing pour les vues SharedWorker
  * ==========================================================================
  * 
- * ✅ Phase 5 Migration: Worker 100% autonome
+ * ✅ Phase 5 Migration: Worker 100% autonome + Initialisation déléguée
  * 
- * Ce module gère le routing simple pour les différentes vues:
+ * Ce module gère le routing simple pour les différentes vues.
+ * L'initialisation du SharedWorker est déléguée au composant GameInitializer.
  * 
  * Routes:
- * - /vue1 : Vue simple connectée au SharedWorker (bot cards)
+ * - /vue1 : Vue R3F connectée au SharedWorker (scene 3D simple)
  * - /vue2 : Vue complète avec visualisation FSM détaillée
  * 
  * Architecture:
  * - Worker autonome: FSM pure sans dépendances React
- * - Vue1/Vue2: Consommateurs via useSharedWorkerStore
+ * - GameInitializer: Gère connexion + initialisation (composant dédié)
+ * - AppRouter: Routing et navigation uniquement
+ * - Vue1/Vue2: Consommateurs purs via useSharedWorkerStore
  * - Synchronisation: Multi-onglets via BroadcastChannel
  * 
+ * Avantages de la séparation:
+ * - Responsabilités claires (SRP)
+ * - GameInitializer réutilisable
+ * - AppRouter focalisé sur le routing
+ * - Plus facile à tester et maintenir
+ * 
  * Test de synchronisation:
- * 1. Ouvrir /vue1 dans un onglet
- * 2. Ouvrir /vue2 dans un autre onglet
+ * 1. Ouvrir /vue1 OU /vue2 en premier (les deux fonctionnent)
+ * 2. Ouvrir l'autre vue dans un autre onglet
  * 3. Observer: même instanceId, updateCounter, états FSM
  * 
  * Pas de dépendance à react-router pour rester léger.
  * Utilise un simple switch basé sur window.location.pathname.
  * 
  * @see docs/SHARED_WORKER_VIEWS_ARCHITECTURE.md
+ * @see components/GameInitializer.tsx
  */
 
 import React from 'react';
 
+import GameInitializer from './components/GameInitializer';
 import SharedFSMVisualization from './components/SharedFSMVisualization';
-import SharedView from './components/SharedView';
+import Vue1R3F from './components/Vue1R3F';
 
 // =========================================================================
 // TYPES
@@ -51,8 +62,8 @@ interface RouteConfig {
 const routes: Record<RouteKey, RouteConfig> = {
   vue1: {
     path: '/vue1',
-    component: <SharedView viewId="vue1" />,
-    title: 'FSM Game - Vue 1 (SharedWorker)'
+    component: <Vue1R3F />,
+    title: 'FSM Game - Vue 1 R3F (SharedWorker)'
   },
   vue2: {
     path: '/vue2',
@@ -99,6 +110,10 @@ export default function AppRouter() {
   
   return (
     <>
+      {/* Centralized game initialization - handles worker connection and tile generation */}
+      <GameInitializer />
+      
+      {/* Current route view */}
       {route.component}
       
       {/* Development navigation helper */}

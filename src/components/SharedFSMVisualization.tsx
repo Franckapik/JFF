@@ -1721,18 +1721,23 @@ const styles = {
 
 /**
  * Main component that handles SharedWorker connection and displays FSM visualization
+ * 
+ * Note: AppRouter handles the initial connection and game initialization.
+ * This component only ensures connection and polls for state updates.
  */
 export default function SharedFSMVisualization() {
   const connect = useSharedWorkerStore((s) => s.connect);
   const isConnected = useSharedWorkerStore((s) => s.isConnected);
   const requestState = useSharedWorkerStore((s) => s.requestState);
   
-  // Connect to worker on mount
+  // Ensure connection (AppRouter should already be connected, but this is a safety net)
   React.useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('🔌 [VUE2] Connecting to SharedWorker...');
-    connect();
-  }, [connect]);
+    if (!isConnected) {
+      // eslint-disable-next-line no-console
+      console.log('🔌 [VUE2] Ensuring SharedWorker connection...');
+      connect();
+    }
+  }, [connect, isConnected]);
   
   // Poll for state updates periodically (backup mechanism)
   React.useEffect(() => {

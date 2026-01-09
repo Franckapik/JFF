@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { getTileColor, TILE_STATE_COLORS } from '../config/tileColors';
 import { useUI } from '../contexts/UIContext';
 import { useBotStates } from '../hooks/useBotState.ts';
 import type { GridCoordinate } from '../types/coordinates.d';
@@ -249,11 +250,11 @@ export default function TileMatrix() {
     if (tile?.type === 'danger') return { icon: '⚠️', label: 'Danger' };
     if (tile?.type === 'empty') return { icon: '⬜', label: 'Vide' };
     
-    // 3. Tuiles de ressources (type 'resource') - États dynamiques
-    if (tile?.type === 'resource') {
+    // 3. Tuiles de ressources (type 'resource' ou 'food') - États dynamiques
+    if (tile?.type === 'resource' || tile?.type === 'food') {
       if (tile?.collected) return { icon: '✨', label: 'Collectée' };
       if (tile?.explored) return { icon: '🔍', label: 'Explorée' };
-      // Tuile resource non explorée = ressource disponible
+      // Tuile resource/food non explorée = ressource disponible
       return { icon: '💎', label: 'Ressource' };
     }
     
@@ -287,17 +288,24 @@ export default function TileMatrix() {
     
     const tile = coordIndex.get(coord);
     
-    // Appliquer l'opacité selon la portée
-    if (tile?.type === 'fuel') return inRadius ? '#f32ad1ff' : 'rgba(243, 42, 209, 0.3)';
-    if (tile?.type === 'repair') return inRadius ? '#bd259cff' : 'rgba(189, 37, 156, 0.3)';
-    if (tile?.type === 'obstacle') return inRadius ? '#000000' : 'rgba(0, 0, 0, 0.3)';
-    if (tile?.type === 'danger') return inRadius ? '#ef4444' : 'rgba(239, 68, 68, 0.3)';
-    if (tile?.type === 'empty') return inRadius ? '#9ca3af' : 'rgba(156, 163, 175, 0.3)';
-    if (tile?.collected) return inRadius ? '#8b5cf6' : 'rgba(139, 92, 246, 0.3)'; // violet
-    if (tile?.explored) return inRadius ? '#3b82f6' : 'rgba(59, 130, 246, 0.3)'; // bleu
+    // Get base color from tile type
+    const baseColor = tile ? getTileColor(tile.type) : getTileColor('empty');
     
-    // Tuiles non explorées
-    if (inRadius) return 'rgba(59, 130, 246, 0.5)'; // bleu semi-transparent dans le radius
+    // Override with state colors if explored/collected
+    if (tile?.collected) {
+      return inRadius ? TILE_STATE_COLORS.collected : `${TILE_STATE_COLORS.collected}4d`; // 30% opacity
+    }
+    if (tile?.explored) {
+      return inRadius ? TILE_STATE_COLORS.explored : `${TILE_STATE_COLORS.explored}4d`; // 30% opacity
+    }
+    
+    // Apply opacity based on exploration radius
+    if (!inRadius) {
+      // Convert hex to rgba with 30% opacity
+      return `${baseColor}4d`;
+    }
+    
+    return baseColor;
     
     return 'rgba(200, 200, 200, 0.2)'; // gris très clair hors de portée
   };

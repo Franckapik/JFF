@@ -19,13 +19,14 @@ import type { ResourceStats } from './resources';
 
 /** Types de tuiles disponibles dans le jeu */
 export type TileType = 
-  | 'empty'
-  | 'resource'
-  | 'obstacle'
-  | 'danger'
-  | 'fuel'
-  | 'repair'
-  | 'depart';
+  | 'empty'      // Tuile vide (pas de ressources)
+  | 'food'       // Tuile de ressources collectables (type par défaut)
+  | 'resource'   // Alias de 'food' pour compatibilité
+  | 'obstacle'   // Obstacle (non franchissable)
+  | 'danger'     // Tuile dangereuse (cause des dégâts)
+  | 'fuel'       // Station de carburant
+  | 'repair'     // Station de réparation
+  | 'depart';    // Tuile de départ d'un bot
 
 /** Biome/environnement de la tuile */
 export type TileBiome = 
