@@ -21,9 +21,19 @@ Une téléportation serais interressante peut-etre ? Quel interet finalement ? U
 
 A quel moment vais-je passer au design ? J'aime de plus en plus la logique sur ce projet qui se complexifie.
 
+La seule regle importante de ce projet, c'est de s'amuser. A partir du moment où je reflechie trop c'est que j'ai perdu le jeu. Comment le présenter ? Comment doit-il etre le meilleur, etc... La vraie question est comment ne pas perdre ce projet en WIP car il ne m'interesse plus, le jugeant imparfait ou bien à coté. 
+Il s'apelle just for fun, et maintenant que je vois son potentiel, je veux lui faire avoir mille design différent, je veux qu'il soit puissant, ...
+Peut-etre pourrais-je montrer ma capacité à faire quelque chose de complet dans sa diversité. C'est pourquoi l'idée d'avoir de la physique m'interesse par ex. Mais est-ce une manière de contourner le design car ce dernier ferme trop les portes?
 
+J'aime l'idée de mélanger la matière du quotidien : le bois ou le papier avec le numérique et la 3D.
+j'aime l'idée de symbole, de design, et de petites animations pour signifier qur qu'on mélange un jeu d'apparence très classique jeu de société avec des evenements sur les tuiles.
+J'aime un personnage en mouvement, peut-etre d'apparence comme un pion, mais qui s'anime un peu plus.
+J'aime la subitilité, impressioner par la surprise, rendre illusion, faire une forme de trompe l'oeil 2D/3D. 
+Il ets vrai que le rendu ne sera pas photorealiste, ce ne sera pas non plus une video ou une animation. Mais il peut eveiller la curiosité et l'interaction.
 
+J'apprend à jouer avec les bots. Je dois trouver des regles de la composition. Du mouvement de camera vers d'autres angles et avoir des compos sympa avec un menu subtils vers mes autres créations. Des elements à la bruno simon pour sugerer les activités en portfolio. Je peux oublier tous ce qui a été imaginé avant sauf une suele regle : m'amuser et ne pas perdre mon imagination, qu'importe le rendu.
 
+Faire du spiralaire.
 
 Quel objectif final pour le jeu?
 - montrer aux autres

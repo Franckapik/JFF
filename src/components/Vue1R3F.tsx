@@ -39,6 +39,39 @@ import type { GridCoordinate } from '../types/coordinates.d';
 import type { Tile } from '../types/tile.d';
 
 // =========================================================================
+// MAP/PAPER STYLE COLOR PALETTE
+// =========================================================================
+
+function getMapStyleColor(baseColor: string): string {
+  // Convert game colors to historical map/parchment tones inspired by hex map aesthetics
+  const mapPalette: Record<string, string> = {
+    // Primary resources (food/grassland) - olive greens and khaki tones
+    '#22c55e': '#A4AC86',  // bright green → olive-khaki
+    '#16a34a': '#8B8C6D',  // darker green → muted olive
+    '#4a7c23': '#7B8B5F',  // grassland → sage green
+    
+    // Obstacles/desert - warm browns and taupes
+    '#92400e': '#A67C52',  // brown → warm tan-brown
+    
+    // Empty/wasteland - ochre and beige range
+    '#6b7280': '#D4C5A9',  // gray → soft ochre-beige
+    '#1a1a1a': '#6B6B5F',  // dark → taupe-gray
+    '#9ca3af': '#E8D4B0',  // light gray → warm beige
+    
+    // Water/special - blue-grays and slate tones
+    '#3498db': '#7A8B9F',  // blue → slate-blue
+    '#8b5cf6': '#8B7BA6',  // purple → muted mauve
+  };
+  return mapPalette[baseColor] || baseColor;
+}
+
+// Procedural noise function for texture variation
+function hash(x: number, y: number): number {
+  let h = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+  return h - Math.floor(h);
+}
+
+// =========================================================================
 // WORKER UI WRAPPER COMPONENT
 // =========================================================================
 
@@ -221,32 +254,46 @@ function WorkerUIWrapper() {
 // =========================================================================
 
 function HexagonalTile({ position, tile }: { position: { x: number; y: number; z: number }; tile: Tile }) {
-  // Get tile color based on type
-  const tileColor = getTileColor(tile.type);
+  // Get tile color based on type and convert to map style
+  const baseColor = getTileColor(tile.type);
+  const mapColor = getMapStyleColor(baseColor);
+  
+  // Add subtle variation using procedural noise
+  const noiseVariation = hash(position.x * 10, position.z * 10);
 
   return (
     <group position={[position.x, position.y, position.z]}>
-      {/* Main hexagonal tile - flat on XZ plane */}
+      {/* Main hexagonal tile - flat on XZ plane with paper effect */}
       <mesh rotation={[0, 0, 0]}>
         <cylinderGeometry args={[1, 1, 0.2, 6]} />
-        <meshToonMaterial 
-          color={tileColor}
+        <meshStandardMaterial 
+          color={mapColor}
+          roughness={0.8}
+          metalness={0.0}
+          flatShading={false}
+          transparent={true}
+          opacity={0.85}
         />
       </mesh>
       
-      {/* Edge lines for borders */}
+      {/* Edge lines for sketchy borders */}
       <lineSegments rotation={[0, 0, 0]}>
         <edgesGeometry args={[new THREE.CylinderGeometry(1, 1, 0.2, 6)]} />
-        <lineBasicMaterial color="#1a1a1a" linewidth={3} />
+        <lineBasicMaterial 
+          color="#5C4033" 
+          linewidth={2}
+          transparent={true}
+          opacity={0.7}
+        />
       </lineSegments>
       
-      {/* Outline mesh (scaled slightly larger) */}
-      <mesh rotation={[0, 0, 0]} scale={1.05}>
+      {/* Subtle outline for depth */}
+      <mesh rotation={[0, 0, 0]} scale={1.08}>
         <cylinderGeometry args={[1, 1, 0.2, 6]} />
         <meshBasicMaterial 
-          color="#000000"
+          color="#3E3B36"
           transparent={true}
-          opacity={0.2}
+          opacity={0.1}
         />
       </mesh>
     </group>
@@ -480,11 +527,28 @@ function CanvasContent() {
       {/* Axes Helper - X (red), Y (green), Z (blue) */}
       <axesHelper args={[10]} />
       
-      {/* Lighting setup for toon shading */}
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[8, 8, 8]} intensity={1.2} />
-      <directionalLight position={[-8, -8, -8]} intensity={0.5} />
-      <pointLight position={[0, 5, 0]} intensity={0.6} color="#ffffff" />
+      {/* Lighting setup for paper/map effect - warm and diffuse */}
+      <ambientLight intensity={0.75} color="#E8D4B0" />
+      {/* Warm directional light simulating natural/candle light */}
+      <directionalLight 
+        position={[10, 12, 8]} 
+        intensity={1.3} 
+        color="#F5DEB3"
+        castShadow={true}
+      />
+      {/* Soft fill light from opposite side */}
+      <directionalLight 
+        position={[-10, -8, -6]} 
+        intensity={0.6} 
+        color="#D4A574"
+      />
+      {/* Subtle top light for depth */}
+      <pointLight 
+        position={[0, 6, 0]} 
+        intensity={0.8} 
+        color="#F0E68C"
+        distance={30}
+      />
       
       {/* Tile Grid from Worker */}
       <TileGridRenderer />
@@ -528,7 +592,7 @@ function Vue1R3FContent() {
       }}>
         <Canvas
           camera={{ position: [3, 4, 5], fov: 50 }}
-          style={{ width: '100%', height: '100%', background: '#0f172a' }}
+          style={{ width: '100%', height: '100%', background: '#e7d9bf' }}
         >
           <CanvasContent />
         </Canvas>
