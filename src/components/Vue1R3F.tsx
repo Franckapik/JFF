@@ -264,179 +264,7 @@ function hash(x: number, y: number): number {
 // WORKER UI WRAPPER COMPONENT
 // =========================================================================
 
-function WorkerUIWrapper() {
-  const instanceId = useSharedWorkerStore((s) => s.instanceId);
-  const updateCounter = useSharedWorkerStore((s) => s.updateCounter);
-  const isConnected = useSharedWorkerStore((s) => s.isConnected);
-  const lastUpdateTimestamp = useSharedWorkerStore((s) => s.lastUpdateTimestamp);
-  const resetGame = useSharedWorkerStore((s) => s.resetGame);
 
-  const timeSinceUpdate = lastUpdateTimestamp
-    ? Math.round((Date.now() - lastUpdateTimestamp) / 1000)
-    : null;
-
-  return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-      color: 'white',
-      padding: '12px 20px',
-      zIndex: 9999,
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-      borderBottom: '2px solid #0f3460'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          backgroundColor: '#22c55e',
-          padding: '6px 16px',
-          borderRadius: '20px',
-          fontWeight: 'bold',
-          fontSize: '14px'
-        }}>
-          <span>📺</span>
-          <span>VUE 1 R3F</span>
-        </div>
-
-        {/* ✅ Phase 5: Worker Autonomy Badge */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          backgroundColor: '#059669',
-          padding: '4px 12px',
-          borderRadius: '12px',
-          fontSize: '11px',
-          fontWeight: 'bold',
-          textTransform: 'uppercase'
-        }}>
-          <span style={{
-            display: 'inline-block',
-            width: '6px',
-            height: '6px',
-            backgroundColor: '#10b981',
-            borderRadius: '50%',
-            animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-          }} />
-          🤖 Worker
-        </div>
-
-        {/* Connection Status */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          backgroundColor: isConnected ? '#065f46' : '#7f1d1d',
-          padding: '4px 12px',
-          borderRadius: '12px',
-          fontSize: '11px',
-          fontWeight: 'bold'
-        }}>
-          <span style={{
-            display: 'inline-block',
-            width: '6px',
-            height: '6px',
-            backgroundColor: isConnected ? '#10b981' : '#ef4444',
-            borderRadius: '50%'
-          }} />
-          {isConnected ? 'CONNECTED' : 'DISCONNECTED'}
-        </div>
-
-        {/* Instance ID */}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '10px', color: '#9ca3af', marginBottom: '2px' }}>
-            INSTANCE ID
-          </div>
-          <div style={{
-            fontFamily: 'monospace',
-            fontSize: '13px',
-            fontWeight: 'bold',
-            backgroundColor: '#374151',
-            padding: '4px 12px',
-            borderRadius: '6px',
-            letterSpacing: '0.5px'
-          }}>
-            {instanceId || '---'}
-          </div>
-        </div>
-
-        {/* Update Counter */}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '10px', color: '#9ca3af', marginBottom: '2px' }}>
-            UPDATES
-          </div>
-          <div style={{
-            fontFamily: 'monospace',
-            fontSize: '18px',
-            fontWeight: 'bold',
-            color: '#fbbf24',
-            backgroundColor: '#374151',
-            padding: '2px 12px',
-            borderRadius: '6px',
-            minWidth: '60px'
-          }}>
-            {updateCounter}
-          </div>
-        </div>
-
-        {timeSinceUpdate !== null && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '10px', color: '#9ca3af', marginBottom: '2px' }}>
-              LAST UPDATE
-            </div>
-            <div style={{
-              fontSize: '12px',
-              color: '#9ca3af'
-            }}>
-              {timeSinceUpdate}s ago
-            </div>
-          </div>
-        )}
-
-        <button
-          onClick={() => resetGame()}
-          style={{
-            backgroundColor: '#ef4444',
-            color: 'white',
-            border: 'none',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            fontSize: '13px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            transition: 'background-color 0.2s',
-            opacity: isConnected ? 1 : 0.5,
-            pointerEvents: isConnected ? 'auto' : 'none'
-          }}
-          onMouseOver={(e) => {
-            if (isConnected) {
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#dc2626';
-            }
-          }}
-          onMouseOut={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#ef4444';
-          }}
-          title="Reset the game without killing the worker"
-        >
-          <span>🔄</span>
-          <span>Reset Game</span>
-        </button>
-      </div>
-    </div>
-  );
-}
 
 // =========================================================================
 // HEXAGONAL TILE COMPONENT WITH TOON SHADER
@@ -445,10 +273,10 @@ function WorkerUIWrapper() {
 function HexagonalTile({ position, tile }: { position: { x: number; y: number; z: number }; tile: Tile }) {
   // Get tile color based on type and convert to map style
   const baseColor = getTileColor(tile.type);
-  const mapColor = getMapStyleColor(baseColor);
+  getMapStyleColor(baseColor); // Process color for consistency even if not used
   
   // Add subtle variation using procedural noise
-  const noiseVariation = hash(position.x * 10, position.z * 10);
+  hash(position.x * 10, position.z * 10); // Compute variation for consistency even if not used
 
   return (
     <group position={[position.x, position.y, position.z]}>
@@ -880,38 +708,14 @@ function Vue1R3FContent() {
     <div style={{
       width: '100vw',
       height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
       backgroundColor: '#1a1a2e'
     }}>
-      {/* Worker UI Wrapper at the top */}
-      <WorkerUIWrapper />
-
-      {/* R3F Canvas - offset by header height */}
-      <div style={{
-        flex: 1,
-        marginTop: '60px',
-        width: '100%'
-      }}>
-        <Canvas
-          camera={{ position: [3, 4, 5], fov: 50 }}
-          style={{ width: '100%', height: '100%', background: '#e7d9bf' }}
-        >
-          <CanvasContent />
-        </Canvas>
-      </div>
-
-      {/* Style for pulse animation */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.5;
-          }
-        }
-      `}</style>
+      <Canvas
+        camera={{ position: [3, 4, 5], fov: 50 }}
+        style={{ width: '100%', height: '100%', background: '#e7d9bf' }}
+      >
+        <CanvasContent />
+      </Canvas>
     </div>
   );
 }
