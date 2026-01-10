@@ -8,29 +8,19 @@
  * 
  * All guards follow the pattern: GuardPredicate<FSMContext, MachineEvents>
  * 
- * ⚠️ EXCEPTION: hasUnexploredTilesInRadius reads from TileStore for consistency
- * with assignDroneDeployingContext action (Bug #7 fix)
- * 
- * 🆕 PHASE 2: Guards now read explorationRadius from GameStore (shared state)
+ * ✅ Phase 3 Migration: All guards now read ONLY from FSM context (no TileStore)
+ * ✅ Phase 2 Migration: Guards now read explorationRadius from context.config (pure)
  */
 
 import { calculateDistanceGrid } from '../../../../../core/spatial/distance.ts';
-import useGameStore from '../../../../../stores/useGameStore/index.ts';
-import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { XStateV5Guard } from '../../../../../types/xstate.v5.types.ts';
 
 /**
- * 🆕 PHASE 2: Helper to get exploration radius from GameStore
- * Falls back to context.config.exploringRadius if store not available
+ * ✅ Phase 2 Migration: Helper to get exploration radius from context
+ * Pure function - no store dependencies
  */
 const getExplorationRadius = (contextRadius?: number): number => {
-  try {
-    const gameStore = useGameStore.getState();
-    return gameStore.getExplorationRadius();
-  } catch {
-    // Fallback to context value if store not available (e.g., in tests)
-    return contextRadius ?? 1;
-  }
+  return contextRadius ?? 1;
 };
 
 /**
@@ -147,6 +137,8 @@ export const canStartExploringWithValidTarget: XStateV5Guard = (args) => {
  * @returns true if at least one unexplored tile exists that can be targeted
  */
 export const hasUnexploredTilesInRadius: XStateV5Guard = ({ context }) => {
+  // Read tiles: prioritize context.gridInfo.tiles (always available in worker)
+  // Fall back to TileStore only if context doesn't have tiles
   const tiles = context.gridInfo?.tiles || {};
   const knownTiles = context.memory?.knownTiles || [];
   // 🛤️ PATHFINDING FIX: Always use baseCoord for exploration (even if ship moved to collect)
@@ -159,9 +151,9 @@ export const hasUnexploredTilesInRadius: XStateV5Guard = ({ context }) => {
     return false;
   }
   
-  // Read fresh tiles from TileStore (same as action)
-  const tileStoreState = useTileStore.getState();
-  const freshTiles = tileStoreState?.tiles || tiles;
+  // ✅ Phase 3 Migration: Use context.gridInfo.tiles ONLY (no TileStore fallback)
+  // Worker always has tiles in context, no need for external store access
+  const freshTiles = tiles;
   
   // Build explored coords set from memory.knownTiles (same as action)
   const exploredCoords = new Set(
@@ -201,8 +193,22 @@ export const hasUnexploredTilesInRadius: XStateV5Guard = ({ context }) => {
     candidatesCount: candidateTiles.length,
     unexploredCount: unexploredTiles.length,
     exploredCoordsSize: exploredCoords.size,
+    freshTilesCount: Object.keys(freshTiles).length,
+    shipCoord,
     result
   });
+  
+  if (candidateTiles.length === 0 && Object.keys(freshTiles).length > 0) {
+    console.log(`⚠️ [hasUnexploredTilesInRadius] No candidates found! Sample tile:`, 
+      Object.entries(freshTiles).slice(0, 1).map(([coord, t]: any) => ({
+        coord,
+        hasPosition: !!t?.position,
+        hasCoord: !!t?.position?.coord,
+        explorable: t?.explorable,
+        explored: t?.explored
+      }))
+    );
+  }
   
   return result;
 };
@@ -376,7 +382,7 @@ export const allLocalTilesExplored: XStateV5Guard = ({ context }) => {
   let exploredInRadius = 0;
   
   for (const [coord, tile] of Object.entries(tiles)) {
-    // ✅ Use Chebyshev/grid distance for consistency with tracker
+    // ✅ Use Euclidean distance for consistency with tracker and other guards
     const distance = calculateDistanceGrid(shipCoord, coord as `${number},${number}`);
     
     if (distance <= exploringRadius && distance > 0) {

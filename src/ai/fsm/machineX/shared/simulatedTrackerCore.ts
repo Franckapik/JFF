@@ -176,6 +176,15 @@ export function getExploringEvents(
       console.log(`🛸 [TRACKER] Drone → ${targetDroneTile.position?.coord || 'unknown'}`);
     }
     
+    // 🔍 DEBUG: Always log to understand why events might not be scheduled
+    if (!targetDroneTile) {
+      console.log(`⚠️ [TRACKER] drone_deploying: No targetDroneTile in context`);
+    } else if (!targetDroneTile.position) {
+      console.log(`⚠️ [TRACKER] drone_deploying: targetDroneTile has no position`, targetDroneTile);
+    } else if (!targetDroneTile.position.coord) {
+      console.log(`⚠️ [TRACKER] drone_deploying: targetDroneTile.position has no coord`, targetDroneTile.position);
+    }
+    
     if (targetDroneTile?.position?.coord) {
       const targetPos = coordToWorldPosition(targetDroneTile.position.coord as GridCoordinate, spacing);
       if (targetPos) {
@@ -683,7 +692,7 @@ export function getEvaluatingEvents(
 function checkAllLocalTilesExplored(context: FSMContext): boolean {
   const tiles = context.gridInfo?.tiles || {};
   const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
-  const exploringRadius = context.config?.exploringRadius ?? 2;
+  const exploringRadius = context.config?.exploringRadius ?? 1; // 🔧 SPEC: Initial radius = 1
   
   if (!shipCoord || Object.keys(tiles).length === 0) return false;
   
@@ -706,8 +715,10 @@ function checkAllLocalTilesExplored(context: FSMContext): boolean {
     const [col, row] = coord.split(',').map(Number);
     if (isNaN(col) || isNaN(row)) continue;
     
-    // Calculate distance (Chebyshev)
-    const distance = Math.max(Math.abs(col - shipCol), Math.abs(row - shipRow));
+    // 🔧 FIX: Use Euclidean distance (same as hasUnexploredTilesInRadius guard)
+    const dx = col - shipCol;
+    const dz = row - shipRow;
+    const distance = Math.sqrt(dx * dx + dz * dz);
     
     if (distance <= exploringRadius) {
       // ✅ Skip non-explorable tiles (depart, fuel, repair, obstacle)

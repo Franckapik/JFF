@@ -1,12 +1,34 @@
 import React from 'react';
 
+import { useUI } from '../contexts/UIContext';
 import { gridToWorld } from '../core/spatial';
-import useBotSelectionStore from '../stores/useBotSelectionStore';
-import useXFSMStore from '../stores/useXFSMStore';
+import { useBotStates } from '../hooks/useBotState.ts';
 import type { GridCoordinate } from '../types/coordinates.d';
 import type { FSMContext } from '../types/fsm.d';
 
-import PositionDisplay from './PositionDisplay';
+/**
+ * Simple inline PositionDisplay component (replacing deleted PositionDisplay.tsx)
+ */
+function PositionDisplay({
+  title,
+  worldPosition,
+  gridCoord,
+}: {
+  title: string;
+  worldPosition?: { x: number; y: number; z: number };
+  gridCoord?: GridCoordinate | null;
+}) {
+  return (
+    <div style={{ fontSize: '11px', color: '#666' }}>
+      <strong>{title}:</strong> {gridCoord || 'N/A'}
+      {worldPosition && ` (${worldPosition.x.toFixed(1)}, ${worldPosition.y.toFixed(1)}, ${worldPosition.z.toFixed(1)})`}
+    </div>
+  );
+}
+
+/**
+ * ✅ Phase 4 Migration: Now uses useBotStates hook (auto-switches between worker/xfsm)
+ */
 
 /**
  * Type guard pour vérifier si un snapshot est un XState snapshot valide
@@ -60,7 +82,8 @@ function SingleBotStatus({
   compact?: boolean;
   borderColor?: string;
 }) {
-  const botStates = useXFSMStore((state) => state.botStates);
+  // ✅ Phase 4: Use unified hook instead of useXFSMStore directly
+  const botStates = useBotStates();
   
   const coordToWorldPos = React.useCallback((coord: GridCoordinate | null | undefined, spacing = 1.2) => {
     if (!coord) return undefined;
@@ -128,7 +151,7 @@ function SingleBotStatus({
  * Supporte l'affichage multi-bots selon selectedView
  */
 export default function ShipStatus() {
-  const selectedView = useBotSelectionStore((state) => state.selectedView);
+  const { selectedView } = useUI();
   
   // Mode "both": afficher les deux bots côte à côte
   if (selectedView === 'both') {

@@ -8,16 +8,20 @@
  * - depositResources (si c'est une action assign)
  * - repairVehicle (si c'est une action assign)
  * - refuelVehicle (si c'est une action assign)
+ * 
+ * ✅ Phase 2 Migration: Now reads explorationRadius from context.config
  */
 
 import { assign } from 'xstate';
 
+import { calculateDistanceGrid, findPath } from '../../../../../core/spatial/index.ts';
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
-import useGameStore from '../../../../../stores/useGameStore/index.ts';
-import { MAX_EXPLORATION_RADIUS } from '../../../../../stores/useGameStore/slices/radiusSlice.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { VehicleVisualState } from '../../../../../types/vehicle.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
+
+// Constant for maximum exploration radius (migrated from radiusSlice)
+const MAX_EXPLORATION_RADIUS = 3;
 
 // Helper pour typage assign compatible XState v5
 function createAssignAction(
@@ -155,10 +159,12 @@ export const assignShipRefuelContext = createAssignAction(({ context }) => {
  * Pénalités:
  * - Score resources: divisé par 2
  * - Vehicle damage: +30%
+ * 
+ * ✅ Phase 2 Migration: Uses context.config.exploringRadius instead of GameStore
  */
 export const assignShipRelocatingContext = createAssignAction(({ context }) => {
-  const gameStore = useGameStore.getState();
-  const currentRadius = gameStore.getExplorationRadius();
+  // ✅ Phase 2: Read radius from context instead of GameStore
+  const currentRadius = context.config?.exploringRadius ?? 1;
   
   fsmLogger.action(`🔄 [${context.entityId}] ========================================`);
   fsmLogger.action(`🔄 [${context.entityId}] RELOCATING - Checking radius expansion`);
@@ -177,8 +183,8 @@ export const assignShipRelocatingContext = createAssignAction(({ context }) => {
     };
   }
   
-  // Increment radius via GameStore
-  const newRadius = gameStore.incrementRadius(context.entityId);
+  // ✅ Phase 2: Increment radius directly in context
+  const newRadius = currentRadius + 1;
   
   // Apply penalties: score / 2
   const currentScore = context.score?.resources || { food: 0, debris: 0, special: 0, total: 0 };
@@ -210,7 +216,7 @@ export const assignShipRelocatingContext = createAssignAction(({ context }) => {
       ...context.score,
       resources: penalizedScore
     },
-    // Update config with new radius (sync with GameStore)
+    // ✅ Phase 2: Update config with new radius (pure context update)
     config: {
       ...context.config,
       exploringRadius: newRadius
@@ -366,7 +372,6 @@ function findNearestStationOfType(
   if (stations.length === 0) return null;
   
   // Find closest station using calculateDistanceGrid
-  const { calculateDistanceGrid } = require('../../../../../core/spatial/index.ts');
   let nearestStation: import('../../../../../types/tile.d.ts').Tile | null = null;
   let minDistance = Infinity;
   
@@ -399,7 +404,6 @@ export const assignShipMovingToFuelStationContext = createAssignAction(({ contex
   const tiles = context.gridInfo?.tiles || {};
   
   // Calculate path to station
-  const { findPath } = require('../../../../../core/spatial/index.ts');
   const path = shipCoord ? findPath(shipCoord, targetCoord, tiles) : [];
   
   if (path.length === 0) {
@@ -410,7 +414,7 @@ export const assignShipMovingToFuelStationContext = createAssignAction(({ contex
   
   // Calculate fuel consumption for pathfinding
   const pathSteps = Math.max(0, path.length - 1);
-  const FUEL_PER_TILE = 8; // 🆕 INCREASED: 8 fuel per tile to test station decisions
+  const FUEL_PER_TILE = 1; // 🔧 SPEC: 1% fuel per tile (collection.feature line 56)
   const fuelConsumption = Math.max(1, pathSteps * FUEL_PER_TILE);
   const currentFuel = context.vehicle?.fuel || 100;
   const newFuel = Math.max(0, currentFuel - fuelConsumption);
@@ -467,7 +471,6 @@ export const assignShipMovingToRepairStationContext = createAssignAction(({ cont
   const tiles = context.gridInfo?.tiles || {};
   
   // Calculate path to station
-  const { findPath } = require('../../../../../core/spatial/index.ts');
   const path = shipCoord ? findPath(shipCoord, targetCoord, tiles) : [];
   
   if (path.length === 0) {
@@ -478,7 +481,7 @@ export const assignShipMovingToRepairStationContext = createAssignAction(({ cont
   
   // Calculate fuel consumption for pathfinding
   const pathSteps = Math.max(0, path.length - 1);
-  const FUEL_PER_TILE = 8; // 🆕 INCREASED: 8 fuel per tile to test station decisions
+  const FUEL_PER_TILE = 1; // 🔧 SPEC: 1% fuel per tile (collection.feature line 56)
   const fuelConsumption = Math.max(1, pathSteps * FUEL_PER_TILE);
   const currentFuel = context.vehicle?.fuel || 100;
   const newFuel = Math.max(0, currentFuel - fuelConsumption);

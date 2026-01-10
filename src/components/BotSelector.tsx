@@ -1,14 +1,13 @@
 import React from 'react';
 
-import useBotSelectionStore, { type BotViewMode } from '../stores/useBotSelectionStore';
+import { useUI, type BotViewMode } from '../contexts/UIContext';
 
 /**
  * Composant de sélection de vue bot
  * Permet de basculer entre bot-0, bot-1 ou les deux
  */
 export default function BotSelector() {
-  const selectedView = useBotSelectionStore((state) => state.selectedView);
-  const setSelectedView = useBotSelectionStore((state) => state.setSelectedView);
+  const { selectedView, setSelectedView } = useUI();
 
   const options: { value: BotViewMode; label: string; color: string }[] = [
     { value: 'bot-0', label: 'Bot-0', color: '#22c55e' },

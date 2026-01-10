@@ -108,6 +108,36 @@ export interface FSMConfig {
   enableLogging: boolean;
 }
 
+/** 
+ * Configuration globale du jeu (migrée depuis GameStore)
+ * Phase 1 migration: stores simples → FSM context
+ */
+export interface GameConfig {
+  // Clock state (from clockSlice)
+  isClockRunning: boolean;
+  
+  // Player counts (from playerCountSlice)  
+  playerCount: number;
+  botCount: number;
+  
+  // Map seed (from seedSlice)
+  mapSeed: number | null;
+  
+  // UI colors (from uiConfigSlice)
+  botColors: string[];
+  humanPlayerColor: string;
+  
+  // Initialization flags (from initializationFlagsSlice)
+  playersInitialized: boolean;
+  botsInitialized: boolean;
+  tilesInitialized: boolean;
+  startingTilesAssigned: boolean;
+  fleetPositionsInitialized: Record<string, boolean>;
+  
+  // View selection (from useBotSelectionStore)
+  selectedView: 'bot-0' | 'bot-1' | 'both';
+}
+
 /** Score de l'entité (extrait de initialContext.ts) */
 export interface EntityScore {
   resources: ResourceStats;
@@ -145,6 +175,9 @@ export interface FSMContext {
 
   // Configuration
   config: FSMConfig;
+
+  // Configuration globale du jeu (migrée depuis GameStore - Phase 1)
+  gameConfig?: GameConfig;
 
   // Système de drones
   droneFleet: DroneFleet;

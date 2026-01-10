@@ -1,11 +1,14 @@
 import React from 'react';
 
-import useBotSelectionStore from '../stores/useBotSelectionStore';
-import { useTileStore } from '../stores/useTileStore';
-import useXFSMStore from '../stores/useXFSMStore';
+import { getTileColor, TILE_STATE_COLORS } from '../config/tileColors';
+import { useUI } from '../contexts/UIContext';
+import { useBotStates } from '../hooks/useBotState.ts';
 import type { GridCoordinate } from '../types/coordinates.d';
+import type { FSMContext } from '../types/fsm.d';
 
 /**
+ * ✅ Phase 5 Migration: Uses useBotStates hook instead of getActor subscription
+ * 
  * Composant minimaliste: matrice de points représentant les tuiles
  * - Tuile vide: noir
  * - Tuile explorée: bleu
@@ -26,10 +29,80 @@ type BotData = {
   tileProgressHistory: Map<GridCoordinate, number[]>;
 };
 
+/**
+ * Helper to extract bot data from context and update history
+ */
+function extractBotDataWithHistory(
+  ctx: FSMContext | null,
+  prevData: BotData,
+  botId: 'bot-0' | 'bot-1'
+): BotData {
+  if (!ctx) return prevData;
+  
+  const newPath = ctx.vehicle?.currentPath || [];
+  const newPathIndex = ctx.vehicle?.pathIndex ?? 0;
+  
+  // Si le chemin a changé, ajouter l'ancien chemin à l'historique
+  let previousPaths = prevData.previousPaths;
+  if (newPath.length > 0 && 
+      (newPath.length !== prevData.currentPath.length || 
+       newPath.some((coord, idx) => coord !== prevData.currentPath[idx]))) {
+    // Garder seulement les 3 derniers chemins
+    previousPaths = [...prevData.previousPaths, prevData.currentPath].slice(-3);
+  }
+  
+  // Mettre à jour l'historique de progression pour chaque tuile
+  const tileProgressHistory = new Map(prevData.tileProgressHistory);
+  for (let i = 0; i < newPath.length; i++) {
+    const coord = newPath[i];
+    const currentProgresses = tileProgressHistory.get(coord) || [];
+    if (!currentProgresses.includes(i + 1)) {
+      tileProgressHistory.set(coord, [...currentProgresses, i + 1]);
+    }
+  }
+  
+  const newData: BotData = {
+    shipCoord: ctx.vehicle?.coord || null,
+    baseCoord: ctx.vehicle?.baseCoord || null,
+    droneCoords: [],
+    currentPath: newPath,
+    pathIndex: newPathIndex,
+    previousPaths,
+    tileProgressHistory,
+  };
+
+  if (ctx.droneFleet?.drones) {
+    const coords: GridCoordinate[] = [];
+    const droneTypes = ['explorer', 'combat', 'special'] as const;
+    
+    for (const type of droneTypes) {
+      const drone = ctx.droneFleet.drones[type];
+      if (drone?.coord) {
+        coords.push(`${botId}|${type}|${drone.coord}` as any);
+      }
+    }
+    
+    newData.droneCoords = coords;
+  }
+  
+  return newData;
+}
+
 export default function TileMatrix() {
-  const tiles = useTileStore((state) => state.tiles);
-  const getActor = useXFSMStore((state) => state.getActor);
-  const selectedView = useBotSelectionStore((state) => state.selectedView);
+  // ✅ Phase 5: Use unified hook instead of getActor subscription
+  const botStates = useBotStates();
+  const { selectedView } = useUI();
+  
+  // Get tiles from the selected bot's FSM context
+  const displayBotId = (selectedView === 'both' ? 'bot-0' : selectedView) as 'bot-0' | 'bot-1';
+  const displayBotSnapshot = botStates[displayBotId];
+  const tiles = React.useMemo(() => {
+    if (displayBotSnapshot && 'context' in displayBotSnapshot) {
+      const context = displayBotSnapshot.context as FSMContext;
+      return context.gridInfo?.tiles || {};
+    }
+    return {};
+  }, [displayBotSnapshot]);
   
   // États pour les deux bots
   const [bot0Data, setBot0Data] = React.useState<BotData>({
@@ -50,137 +123,42 @@ export default function TileMatrix() {
     previousPaths: [],
     tileProgressHistory: new Map(),
   });
-  const [exploringRadius, setExploringRadius] = React.useState<number>(2);
+  const [exploringRadius, setExploringRadius] = React.useState<number>(1); // 🔧 SPEC: Initial radius = 1
+
+  // ✅ Phase 5: Extract context from unified hook
+  const bot0Context = React.useMemo(() => {
+    const snapshot = botStates['bot-0'];
+    if (snapshot && 'context' in snapshot) {
+      return snapshot.context as FSMContext;
+    }
+    return null;
+  }, [botStates]);
+  
+  const bot1Context = React.useMemo(() => {
+    const snapshot = botStates['bot-1'];
+    if (snapshot && 'context' in snapshot) {
+      return snapshot.context as FSMContext;
+    }
+    return null;
+  }, [botStates]);
 
   // Mettre à jour les positions de bot-0
   React.useEffect(() => {
-    const actor = getActor('bot-0');
-    if (!actor) return;
-
-    const subscription = actor.subscribe((snapshot) => {
-      const ctx = snapshot.context;
-      
-      setBot0Data((prevData) => {
-        const newPath = ctx.vehicle?.currentPath || [];
-        const newPathIndex = ctx.vehicle?.pathIndex ?? 0;
-        
-        // Si le chemin a changé, ajouter l'ancien chemin à l'historique
-        let previousPaths = prevData.previousPaths;
-        if (newPath.length > 0 && 
-            (newPath.length !== prevData.currentPath.length || 
-             newPath.some((coord, idx) => coord !== prevData.currentPath[idx]))) {
-          // Garder seulement les 3 derniers chemins
-          previousPaths = [...prevData.previousPaths, prevData.currentPath].slice(-3);
-        }
-        
-        // Mettre à jour l'historique de progression pour chaque tuile
-        const tileProgressHistory = new Map(prevData.tileProgressHistory);
-        for (let i = 0; i < newPath.length; i++) {
-          const coord = newPath[i];
-          const currentProgresses = tileProgressHistory.get(coord) || [];
-          // Ajouter le numéro de progression si ce n'est pas déjà présent
-          if (!currentProgresses.includes(i + 1)) {
-            tileProgressHistory.set(coord, [...currentProgresses, i + 1]);
-          }
-        }
-        
-        const newData: BotData = {
-          shipCoord: ctx.vehicle?.coord || null,
-          baseCoord: ctx.vehicle?.baseCoord || null,
-          droneCoords: [],
-          currentPath: newPath,
-          pathIndex: newPathIndex,
-          previousPaths,
-          tileProgressHistory,
-        };
-
-        if (ctx.config?.exploringRadius !== undefined) {
-          setExploringRadius(ctx.config.exploringRadius);
-        }
-
-        if (ctx.droneFleet?.drones) {
-          const coords: GridCoordinate[] = [];
-          const droneTypes = ['explorer', 'combat', 'special'] as const;
-          
-          for (const type of droneTypes) {
-            const drone = ctx.droneFleet.drones[type];
-            if (drone?.coord) {
-              coords.push(`bot-0|${type}|${drone.coord}` as any);
-            }
-          }
-          
-          newData.droneCoords = coords;
-        }
-        
-        return newData;
-      });
-    });
-
-    return () => subscription.unsubscribe();
-  }, [getActor]);
+    if (!bot0Context) return;
+    
+    setBot0Data((prevData) => extractBotDataWithHistory(bot0Context, prevData, 'bot-0'));
+    
+    if (bot0Context.config?.exploringRadius !== undefined) {
+      setExploringRadius(bot0Context.config.exploringRadius);
+    }
+  }, [bot0Context]);
 
   // Mettre à jour les positions de bot-1
   React.useEffect(() => {
-    const actor = getActor('bot-1');
-    if (!actor) return;
-
-    const subscription = actor.subscribe((snapshot) => {
-      const ctx = snapshot.context;
-      
-      setBot1Data((prevData) => {
-        const newPath = ctx.vehicle?.currentPath || [];
-        const newPathIndex = ctx.vehicle?.pathIndex ?? 0;
-        
-        // Si le chemin a changé, ajouter l'ancien chemin à l'historique
-        let previousPaths = prevData.previousPaths;
-        if (newPath.length > 0 && 
-            (newPath.length !== prevData.currentPath.length || 
-             newPath.some((coord, idx) => coord !== prevData.currentPath[idx]))) {
-          // Garder seulement les 3 derniers chemins
-          previousPaths = [...prevData.previousPaths, prevData.currentPath].slice(-3);
-        }
-        
-        // Mettre à jour l'historique de progression pour chaque tuile
-        const tileProgressHistory = new Map(prevData.tileProgressHistory);
-        for (let i = 0; i < newPath.length; i++) {
-          const coord = newPath[i];
-          const currentProgresses = tileProgressHistory.get(coord) || [];
-          // Ajouter le numéro de progression si ce n'est pas déjà présent
-          if (!currentProgresses.includes(i + 1)) {
-            tileProgressHistory.set(coord, [...currentProgresses, i + 1]);
-          }
-        }
-        
-        const newData: BotData = {
-          shipCoord: ctx.vehicle?.coord || null,
-          baseCoord: ctx.vehicle?.baseCoord || null,
-          droneCoords: [],
-          currentPath: newPath,
-          pathIndex: newPathIndex,
-          previousPaths,
-          tileProgressHistory,
-        };
-
-        if (ctx.droneFleet?.drones) {
-          const coords: GridCoordinate[] = [];
-          const droneTypes = ['explorer', 'combat', 'special'] as const;
-          
-          for (const type of droneTypes) {
-            const drone = ctx.droneFleet.drones[type];
-            if (drone?.coord) {
-              coords.push(`bot-1|${type}|${drone.coord}` as any);
-            }
-          }
-          
-          newData.droneCoords = coords;
-        }
-        
-        return newData;
-      });
-    });
-
-    return () => subscription.unsubscribe();
-  }, [getActor]);
+    if (!bot1Context) return;
+    
+    setBot1Data((prevData) => extractBotDataWithHistory(bot1Context, prevData, 'bot-1'));
+  }, [bot1Context]);
 
   // Debug: afficher les stats
   React.useEffect(() => {
@@ -272,11 +250,11 @@ export default function TileMatrix() {
     if (tile?.type === 'danger') return { icon: '⚠️', label: 'Danger' };
     if (tile?.type === 'empty') return { icon: '⬜', label: 'Vide' };
     
-    // 3. Tuiles de ressources (type 'resource') - États dynamiques
-    if (tile?.type === 'resource') {
+    // 3. Tuiles de ressources (type 'resource' ou 'food') - États dynamiques
+    if (tile?.type === 'resource' || tile?.type === 'food') {
       if (tile?.collected) return { icon: '✨', label: 'Collectée' };
       if (tile?.explored) return { icon: '🔍', label: 'Explorée' };
-      // Tuile resource non explorée = ressource disponible
+      // Tuile resource/food non explorée = ressource disponible
       return { icon: '💎', label: 'Ressource' };
     }
     
@@ -310,17 +288,24 @@ export default function TileMatrix() {
     
     const tile = coordIndex.get(coord);
     
-    // Appliquer l'opacité selon la portée
-    if (tile?.type === 'fuel') return inRadius ? '#f32ad1ff' : 'rgba(243, 42, 209, 0.3)';
-    if (tile?.type === 'repair') return inRadius ? '#bd259cff' : 'rgba(189, 37, 156, 0.3)';
-    if (tile?.type === 'obstacle') return inRadius ? '#000000' : 'rgba(0, 0, 0, 0.3)';
-    if (tile?.type === 'danger') return inRadius ? '#ef4444' : 'rgba(239, 68, 68, 0.3)';
-    if (tile?.type === 'empty') return inRadius ? '#9ca3af' : 'rgba(156, 163, 175, 0.3)';
-    if (tile?.collected) return inRadius ? '#8b5cf6' : 'rgba(139, 92, 246, 0.3)'; // violet
-    if (tile?.explored) return inRadius ? '#3b82f6' : 'rgba(59, 130, 246, 0.3)'; // bleu
+    // Get base color from tile type
+    const baseColor = tile ? getTileColor(tile.type) : getTileColor('empty');
     
-    // Tuiles non explorées
-    if (inRadius) return 'rgba(59, 130, 246, 0.5)'; // bleu semi-transparent dans le radius
+    // Override with state colors if explored/collected
+    if (tile?.collected) {
+      return inRadius ? TILE_STATE_COLORS.collected : `${TILE_STATE_COLORS.collected}4d`; // 30% opacity
+    }
+    if (tile?.explored) {
+      return inRadius ? TILE_STATE_COLORS.explored : `${TILE_STATE_COLORS.explored}4d`; // 30% opacity
+    }
+    
+    // Apply opacity based on exploration radius
+    if (!inRadius) {
+      // Convert hex to rgba with 30% opacity
+      return `${baseColor}4d`;
+    }
+    
+    return baseColor;
     
     return 'rgba(200, 200, 200, 0.2)'; // gris très clair hors de portée
   };
@@ -564,10 +549,7 @@ export default function TileMatrix() {
             const pathBorderWidth = pathInfo.isOnPath ? 3 : 0;
             
             // Calculer les ressources totales de la tuile
-            const tileResources = React.useMemo(() => {
-              const total = (tile?.resources?.total ?? 0);
-              return total;
-            }, [tile]);
+            const tileResources = (tile?.resources?.total ?? 0);
             
             return (
               <div

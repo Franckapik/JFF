@@ -67,10 +67,17 @@ export type MachineEvents =
     }
   // Phase 2: Radius expansion & Game Over
   | { type: 'RADIUS_INCREASED'; newRadius: number }
+  | { type: 'RADIUS_SYNC'; newRadius: number }  // ✅ Phase 2: Sync radius between bots
   | { type: 'GAME_OVER'; reason: 'max_radius_reached' | 'other' }
   | { type: 'RELOCATING_COMPLETE' }
   // 🆕 DRONE DESTRUCTION: Purchase complete event
-  | { type: 'DRONE_PURCHASE_COMPLETE' };
+  | { type: 'DRONE_PURCHASE_COMPLETE' }
+  // ========================================================================
+  // 🔄 PHASE 1 MIGRATION: Game config events (from Zustand stores)
+  // ========================================================================
+  | { type: 'GAME_CONFIG_UPDATE'; config: Partial<import('../../../types/fsm.d').GameConfig> }
+  | { type: 'CLOCK_TOGGLE'; isRunning: boolean }
+  | { type: 'VIEW_SELECT'; view: 'bot-0' | 'bot-1' | 'both' };
 
 /**
  * Type guard pour vérifier le type d'un événement

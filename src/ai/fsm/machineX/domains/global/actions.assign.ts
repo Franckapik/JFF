@@ -172,3 +172,103 @@ export const updateGridInfo = createAssignAction(({ context, event }) => {
     },
   };
 });
+
+// ========================================================================
+// 🔄 PHASE 1 MIGRATION: Game config actions (from Zustand stores)
+// ========================================================================
+
+/**
+ * Action assign pour mettre à jour la configuration globale du jeu
+ * Remplace les stores Zustand: clock, playerCount, seed, uiConfig, initFlags, botSelection
+ */
+export const updateGameConfig = createAssignAction(({ context, event }) => {
+  if (event.type !== 'GAME_CONFIG_UPDATE') return context;
+  
+  const { config } = event;
+  
+  fsmLogger.context(`⚙️ [${context.entityId}] Updating gameConfig`, config);
+  
+  return {
+    gameConfig: {
+      // Defaults
+      isClockRunning: false,
+      playerCount: 1,
+      botCount: 2,
+      mapSeed: null,
+      botColors: ['red', 'orange', 'green', 'purple', 'teal', 'brown', 'magenta', 'cyan'],
+      humanPlayerColor: 'blue',
+      playersInitialized: false,
+      botsInitialized: false,
+      tilesInitialized: false,
+      startingTilesAssigned: false,
+      fleetPositionsInitialized: {},
+      selectedView: 'both',
+      // Merge existing
+      ...context.gameConfig,
+      // Apply update
+      ...config,
+    },
+  };
+});
+
+/**
+ * Action assign pour basculer l'état de l'horloge
+ */
+export const toggleClock = createAssignAction(({ context, event }) => {
+  if (event.type !== 'CLOCK_TOGGLE') return context;
+  
+  const { isRunning } = event;
+  
+  return {
+    gameConfig: {
+      ...context.gameConfig,
+      isClockRunning: isRunning,
+    } as typeof context.gameConfig,
+  };
+});
+
+/**
+ * Action assign pour changer la vue sélectionnée
+ */
+export const selectView = createAssignAction(({ context, event }) => {
+  if (event.type !== 'VIEW_SELECT') return context;
+  
+  const { view } = event;
+  
+  // Update URL without reload (only in browser context)
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    params.set('view', view);
+    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+  }
+  
+  return {
+    gameConfig: {
+      ...context.gameConfig,
+      selectedView: view,
+    } as typeof context.gameConfig,
+  };
+});
+
+// ========================================================================
+// 🔄 PHASE 2 MIGRATION: Radius sync action
+// ========================================================================
+
+/**
+ * Action assign pour synchroniser le radius entre les bots
+ * Appelée par le worker quand un bot incrémente son radius
+ */
+export const syncRadius = createAssignAction(({ context, event }) => {
+  if (event.type !== 'RADIUS_SYNC') return context;
+  
+  const { newRadius } = event;
+  
+  fsmLogger.context(`🔄 [${context.entityId}] Syncing radius to ${newRadius}`);
+  
+  return {
+    config: {
+      ...context.config,
+      exploringRadius: newRadius,
+    },
+  };
+});

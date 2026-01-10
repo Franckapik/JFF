@@ -1,13 +1,28 @@
 import React from 'react';
 
-import { useTileStore } from '../stores/useTileStore';
+import { useBotStates } from '../hooks/useBotState.ts';
+import type { Tile } from '../types/tile.d';
 
 /**
  * Indicateur visuel pour détecter les doublons d'exploration
  * Affiche si des tuiles sont collectées sans avoir été explorées par les drones
  */
 export const ExplorationIndicator: React.FC = () => {
-  const tiles = useTileStore((state) => state.tiles);
+  const botStates = useBotStates();
+  
+  // Récupérer les tuiles depuis le premier bot actif
+  const tiles = React.useMemo(() => {
+    // Prendre les tuiles du premier bot disponible
+    const bot0 = botStates['bot-0'];
+    if (bot0 && 'context' in bot0) {
+      return (bot0.context as any).gridInfo?.tiles || {};
+    }
+    const bot1 = botStates['bot-1'];
+    if (bot1 && 'context' in bot1) {
+      return (bot1.context as any).gridInfo?.tiles || {};
+    }
+    return {};
+  }, [botStates]);
 
   // Analyser les tuiles pour détecter les problèmes
   const stats = React.useMemo(() => {
@@ -17,7 +32,7 @@ export const ExplorationIndicator: React.FC = () => {
     let collectedButNotExplored = 0;
     
     // Analyser les tuiles du store
-    Object.values(tiles).forEach((tile) => {
+    Object.values(tiles).forEach((tile: Tile) => {
       totalTiles++;
       
       if (tile.explored === true) {

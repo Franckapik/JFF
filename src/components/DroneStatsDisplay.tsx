@@ -1,8 +1,12 @@
 import React from 'react';
 
-import useBotSelectionStore from '../stores/useBotSelectionStore';
-import useXFSMStore from '../stores/useXFSMStore';
+import { useBotStates } from '../hooks/useBotState.ts';
+import { useUI } from '../contexts/UIContext';
 import type { FSMContext } from '../types/fsm.d';
+
+/**
+ * ✅ Phase 4 Migration: Now uses useBotStates hook (auto-switches between worker/xfsm)
+ */
 
 /**
  * Type guard pour vérifier si un snapshot a un contexte valide
@@ -30,7 +34,8 @@ function SingleDroneStats({
   botId: 'bot-0' | 'bot-1'; 
   compact?: boolean;
 }) {
-  const botStates = useXFSMStore((state) => state.botStates);
+  // ✅ Phase 4: Use unified hook instead of useXFSMStore directly
+  const botStates = useBotStates();
   const botSnapshot = botStates[botId];
 
   let droneStats = {
@@ -112,7 +117,7 @@ function SingleDroneStats({
  * Supporte l'affichage multi-bots selon selectedView
  */
 export const DroneStatsDisplay: React.FC = () => {
-  const selectedView = useBotSelectionStore((state) => state.selectedView);
+  const { selectedView } = useUI();
 
   // Mode "both": afficher les deux bots côte à côte
   if (selectedView === 'both') {

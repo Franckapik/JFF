@@ -1,9 +1,13 @@
 import React from 'react';
 
-import useBotSelectionStore from '../stores/useBotSelectionStore';
-import { useTileStore } from '../stores/useTileStore';
-import useXFSMStore from '../stores/useXFSMStore';
+import { useUI } from '../contexts/UIContext';
+import { useBotStates } from '../hooks/useBotState.ts';
 import type { GridCoordinate } from '../types/coordinates.d';
+import type { Tile } from '../types/tile.d';
+
+/**
+ * ✅ Phase 4 Migration: Now uses useBotStates hook (auto-switches between worker/xfsm)
+ */
 
 /**
  * Type guard pour vérifier si un snapshot a un contexte valide avec score
@@ -36,8 +40,8 @@ function SingleBotCollected({
   botId: 'bot-0' | 'bot-1'; 
   compact?: boolean;
 }) {
-  const tiles = useTileStore((state) => state.tiles);
-  const botStates = useXFSMStore((state) => state.botStates);
+  // ✅ Phase 4: Use unified hook instead of useXFSMStore directly
+  const botStates = useBotStates();
   const botSnapshot = botStates[botId];
 
   const scoreFromFSM = React.useMemo(() => {
@@ -50,18 +54,20 @@ function SingleBotCollected({
 
   // Filtrer les tuiles collectées par ce bot
   const collectedTiles = React.useMemo(() => {
+    if (!hasValidContext(botSnapshot)) return [];
+    const tiles = botSnapshot.context?.gridInfo?.tiles || {};
     return Object.entries(tiles)
-      .filter(([, tile]) => tile.collected && tile.collectedBy === botId)
+      .filter(([, tile]: [string, Tile]) => tile.collected && tile.collectedBy === botId)
       .sort(([coordA], [coordB]) => {
         const [aq, ar] = coordA.split(',').map(Number);
         const [bq, br] = coordB.split(',').map(Number);
         return aq === bq ? ar - br : aq - bq;
       })
-      .map(([coord, tile]) => ({
+      .map(([coord, tile]: [string, Tile]) => ({
         coord: coord as GridCoordinate,
         type: tile.type || 'unknown',
       }));
-  }, [tiles, botId]);
+  }, [botSnapshot, botId]);
 
   const borderColor = botId === 'bot-0' ? '#22c55e' : '#3b82f6';
 
@@ -109,11 +115,13 @@ function SingleBotCollected({
  * 
  * IMPORTANT: Tous les hooks doivent être appelés inconditionnellement
  * pour respecter les règles des Hooks React
+ * 
+ * ✅ Phase 4 Migration: Uses useBotStates hook
  */
 export default function CollectedTilesList() {
-  const selectedView = useBotSelectionStore((state) => state.selectedView);
-  const tiles = useTileStore((state) => state.tiles);
-  const botStates = useXFSMStore((state) => state.botStates);
+  const { selectedView } = useUI();
+  // ✅ Phase 4: Use unified hook instead of useXFSMStore directly
+  const botStates = useBotStates();
 
   // Déterminer quel bot afficher en mode single (toujours calculé)
   const singleBotId = (selectedView === 'both' ? 'bot-0' : selectedView) as 'bot-0' | 'bot-1';
@@ -131,21 +139,23 @@ export default function CollectedTilesList() {
 
   // Filtrer les tuiles collectées par ce bot (utilisé en mode single)
   const collectedTiles = React.useMemo(() => {
+    if (!hasValidContext(botSnapshot)) return [];
+    const tiles = botSnapshot.context?.gridInfo?.tiles || {};
     return Object.entries(tiles)
-      .filter(([, tile]) => tile.collected && tile.collectedBy === singleBotId)
+      .filter(([, tile]: [string, Tile]) => tile.collected && tile.collectedBy === singleBotId)
       .sort(([coordA], [coordB]) => {
         const [aq, ar] = coordA.split(',').map(Number);
         const [bq, br] = coordB.split(',').map(Number);
         return aq === bq ? ar - br : aq - bq;
       })
-      .map(([coord, tile]) => ({
+      .map(([coord, tile]: [string, Tile]) => ({
         coord: coord as GridCoordinate,
         type: tile.type || 'unknown',
         biome: tile.biome || 'unknown',
         resources: { food: 0, debris: 0, special: 0, total: 0 },
         explored: tile.explored || false,
       }));
-  }, [tiles, singleBotId]);
+  }, [botSnapshot, singleBotId]);
 
   // Utiliser le score global (qui contient les ressources réellement collectées)
   const totals = React.useMemo(() => {

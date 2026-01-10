@@ -14,7 +14,7 @@ import type { GridCoordinate, WorldPosition } from './coordinates';
 // ============================================================================
 
 /** États visuels des drones pour R3F et animations */
-export type DroneVisualState = 'uninitialized' | 'docked' | 'deploying' | 'scanning' | 'returning' | 'failed';
+export type DroneVisualState = 'uninitialized' | 'docked' | 'deploying' | 'scanning' | 'returning' | 'failed' | 'destroyed';
 
 /** États FSM des drones pour la logique XState */
 export type DroneFSMState = 'drone_deploying' | 'drone_scanning' | 'drone_returning' | 'drone_docked';

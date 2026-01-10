@@ -1,7 +1,11 @@
 import React from 'react';
 
-import useBotSelectionStore from '../stores/useBotSelectionStore';
-import useXFSMStore from '../stores/useXFSMStore';
+import { useBotStates } from '../hooks/useBotState.ts';
+import { useUI } from '../contexts/UIContext';
+
+/**
+ * ✅ Phase 4 Migration: Now uses useBotStates hook (auto-switches between worker/xfsm)
+ */
 
 /**
  * Type guard pour vérifier si un snapshot a un contexte valide
@@ -17,7 +21,8 @@ function hasValidContext(snapshot: unknown): snapshot is { context: { score?: { 
 
 // Composant interne pour un seul bot
 function SingleBotScore({ botId, compact = false }: { botId: 'bot-0' | 'bot-1'; compact?: boolean }) {
-  const botStates = useXFSMStore((state) => state.botStates);
+  // ✅ Phase 4: Use unified hook instead of useXFSMStore directly
+  const botStates = useBotStates();
   const botSnapshot = botStates[botId];
   
   let score = { food: 0, debris: 0, special: 0, total: 0 };
@@ -61,7 +66,7 @@ function SingleBotScore({ botId, compact = false }: { botId: 'bot-0' | 'bot-1'; 
  * Supports multi-bot display according to selectedView
  */
 export const ScoreDisplay: React.FC = () => {
-  const selectedView = useBotSelectionStore((state) => state.selectedView);
+  const { selectedView } = useUI();
 
   // Mode "both": afficher les deux bots côte à côte
   if (selectedView === 'both') {

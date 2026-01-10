@@ -7,12 +7,12 @@
  * Actions pour effets de bord (logging, API calls, notifications)
  * 
  * ✅ Phase 4: Uses context.gridInfo and pure spatial functions
+ * ✅ Phase 3 Migration: Removed useTileStore dependency
  */
 
 import type { ActorRef } from 'xstate';
 
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
-import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
 
@@ -90,12 +90,10 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
     tile?.hasResources && !tile.collected && tile.resources?.total > 0
   );
   
-  // 🆕 Check if ship is stuck using TileStore (EXACT same logic as hasUnexploredTilesInRadius guard)
-  const tileStoreState = useTileStore.getState();
+  // ✅ Phase 3 Migration: Use FSM context only (no TileStore)
   const tiles = context.gridInfo?.tiles || {};
-  const freshTiles = tileStoreState?.tiles || tiles;
   const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
-  const exploringRadius = context.config?.exploringRadius ?? 2;
+  const exploringRadius = context.config?.exploringRadius ?? 1; // 🔧 SPEC: Initial radius = 1
   
   // Helper: euclidean distance (same as calculateDistanceGrid in guard)
   const calculateDistance = (coordA: string, coordB: string): number => {
@@ -108,7 +106,7 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
   };
   
   let hasUnexploredInRadius = false;
-  if (shipCoord && Object.keys(freshTiles).length > 0) {
+  if (shipCoord && Object.keys(tiles).length > 0) {
     // Build explored coords set from memory.knownTiles (same as guard)
     const exploredCoords = new Set(
       knownTiles
@@ -118,7 +116,7 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
     );
     
     // Get candidate tiles in radius (same as guard - using euclidean distance)
-    const candidateTiles = Object.entries(freshTiles)
+    const candidateTiles = Object.entries(tiles)
       .filter(([coord]) => {
         const distance = calculateDistance(shipCoord, coord);
         return distance <= exploringRadius && distance > 0;
@@ -130,9 +128,9 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
       const coord = (tile as any).position?.coord;
       if (!coord) continue;
       
-      // Exclude if explored in TileStore OR in memory
-      const freshTile = freshTiles[coord as keyof typeof freshTiles];
-      if ((freshTile as any)?.explored) continue;
+      // Exclude if explored in context.gridInfo OR in memory
+      const contextTile = tiles[coord as keyof typeof tiles];
+      if ((contextTile as any)?.explored) continue;
       if (exploredCoords.has(coord as `${number},${number}`)) continue;
       
       // Exclude base tile
@@ -171,7 +169,7 @@ export const onEvaluatingEntry = ({ context, self }: { context: FSMContext, self
     if (needsDronePurchase) {
       fsmLogger.info(`[Evaluating] → NEED_DRONE_PURCHASE (drone needs replacement)`, {
         droneState,
-        destroyedCount: context.droneFleet?.drones?.explorer?.stats?.totalDestroyed
+        destroyedCount: context.droneFleet?.stats?.explorerDestroyed ?? 0
       });
       self.send({ type: 'NEED_DRONE_PURCHASE' } as MachineEvents);
     }

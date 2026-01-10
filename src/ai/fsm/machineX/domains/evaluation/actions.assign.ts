@@ -25,16 +25,21 @@ function createAssignAction(
 /**
  * Assign action pour l'évaluation initiale du contexte
  * Réinitialise le compteur d'exploration si toutes les tuiles connues sont collectées
+ * OU après chaque retour depuis l'état exploring (cycle complet)
  */
 export const assignEvaluationContext = createAssignAction(({ context: _context, event: _event }) => {
+  
+  // 🔧 FIX: Reset exploration counter after completing a full exploration cycle
+  // This allows continuous exploration instead of blocking after 2 explorations
+  const shouldResetCounter = 
+    (_context.memory?.stats?.tilesExploredInCycle ?? 0) > 0;
   
   // ✅ FIX: Vérifier si toutes les tuiles connues ont été collectées
   const knownTiles = _context.memory?.knownTiles || [];
   const allTilesCollected = knownTiles.length > 0 && knownTiles.every(tile => tile.collected || !tile.hasResources);
   
-  // Si toutes les tuiles sont collectées, réinitialiser le compteur d'exploration
-  // pour permettre un nouveau cycle d'exploration
-  if (allTilesCollected && (_context.memory?.stats?.tilesExploredInCycle ?? 0) > 0) {
+  // Si toutes les tuiles sont collectées OU si on revient d'un cycle d'exploration
+  if (shouldResetCounter || allTilesCollected) {
     return {
       memory: {
         ..._context.memory,
@@ -43,7 +48,7 @@ export const assignEvaluationContext = createAssignAction(({ context: _context, 
           tilesExploredInCycle: 0
         }
       },
-      lastAction: 'evaluationCycleReset_allTilesCollected'
+      lastAction: allTilesCollected ? 'evaluationCycleReset_allTilesCollected' : 'evaluationCycleReset_afterExploration'
     };
   }
   
@@ -64,7 +69,7 @@ export const assignEvaluationContext = createAssignAction(({ context: _context, 
 export const assignShipRelocationContext = createAssignAction(({ context }) => {
   const tiles = context.gridInfo?.tiles || {};
   const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
-  const exploringRadius = context.config?.exploringRadius ?? 2;
+  const exploringRadius = context.config?.exploringRadius ?? 1; // 🔧 SPEC: Initial radius = 1
   
   if (!shipCoord || Object.keys(tiles).length === 0) {
     fsmLogger.warn(`⚠️ [${context.entityId}] Cannot relocate: no tiles or ship coord`);

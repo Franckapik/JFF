@@ -3,16 +3,16 @@
  * EXPLORATION DOMAIN - Actions de mise à jour du contexte (assign)
  * ==========================================================================
  * ✅ Phase 4: Pure actions - uses context.gridInfo instead of useTileStore
+ * ✅ Phase 3 Migration: Removed useTileStore dependency entirely
  * 
- * NOTE: useTileStore is kept for mutation operations (markTileAsExplored)
- * which require modifying the tile store directly.
+ * Tile exploration is now tracked exclusively in context.memory.knownTiles
+ * The worker broadcasts state changes to UI which can update its local view
  */
 
 import { assign } from 'xstate';
 
 import { calculateDistanceGrid, findTilesInRadius, gridToWorld, selectRandomTile } from '../../../../../core/spatial/index.ts';
 import fsmLogger from '../../../../../logger/fsmLogger.ts';
-import { useTileStore } from '../../../../../stores/useTileStore/index.ts';
 import type { DroneVisualState } from '../../../../../types/drone.ts';
 import type { FSMContext } from '../../../../../types/fsm.d.ts';
 import type { MachineEvents } from '../../events.pure.v5.ts';
@@ -27,6 +27,7 @@ function createAssignAction(
 /**
  * Action assign pour le déploiement de drone en exploration
  * ✅ Phase 4: Uses context.gridInfo.tiles instead of useTileStore.getState()
+ * ✅ Phase 3 Migration: Uses only context data (no store dependency)
  * ✅ Fix Bug #6: Exclut les tuiles déjà explorées de la sélection
  */
 export const assignDroneDeployingContext = createAssignAction(({ context }) => {
@@ -38,16 +39,16 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
     return {};
   }
   
-  const range = context.config?.exploringRadius ?? 2;
+  const range = context.config?.exploringRadius ?? 1; // 🔧 SPEC: Initial radius = 1
   
   // ⚠️ GUARD: Vérifier que gridInfo contient des tiles
   if (Object.keys(tiles).length === 0) {
     return {};
   }
   
-  // ✅ Get fresh tile state from TileStore for accurate explored status
-  const tileStoreState = typeof useTileStore !== 'undefined' && useTileStore.getState ? useTileStore.getState() : null;
-  const freshTiles = tileStoreState?.tiles || tiles;
+  // ✅ Phase 3 Migration: Use context data only (no store access)
+  // Combine gridInfo.tiles with memory.knownTiles for exploration status
+  const freshTiles = tiles;
   
   // ✅ Get explored tiles from memory.knownTiles for additional safety
   const exploredCoords = new Set(
@@ -66,7 +67,7 @@ export const assignDroneDeployingContext = createAssignAction(({ context }) => {
     // ✅ Check explorable property (static game rule)
     if (!tile.explorable) return false;
     
-    // Exclure si marqué explored dans TileStore OU dans memory.knownTiles
+    // Exclure si marqué explored dans gridInfo OU dans memory.knownTiles
     const freshTile = freshTiles[coord];
     if (freshTile?.explored) return false;
     if (exploredCoords.has(coord)) return false;
@@ -186,13 +187,8 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
     }
   };
 
-  // ⚠️ MUTATION: Mark tile as explored in the tile store
-  if (targetDroneTile?.position?.coord) {
-    const tileStoreState = typeof useTileStore !== 'undefined' && useTileStore.getState ? useTileStore.getState() : null;
-    if (tileStoreState?.markTileAsExplored) {
-      tileStoreState.markTileAsExplored(targetDroneTile.position.coord, context.entityId);
-    }
-  }
+  // ✅ Phase 3 Migration: Tile exploration tracked in context.memory.knownTiles only
+  // No TileStore mutation needed - context is the source of truth for FSM
 
   // ✅ Mark tile as explored with proper flags for collection guard
   const exploredTile = {
@@ -216,6 +212,20 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
       )
     : [...existingKnownTiles, exploredTile];
 
+  // 🔧 SYNCHRONIZATION FIX: Update gridInfo.tiles with explored status
+  // This ensures UI components reading gridInfo.tiles see correct exploration state
+  const updatedGridInfoTiles = context.gridInfo?.tiles
+    ? {
+        ...context.gridInfo.tiles,
+        [scannedCoord]: {
+          ...context.gridInfo.tiles[scannedCoord],
+          explored: true,
+          exploredAt: Date.now(),
+          exploredBy: context.entityId
+        }
+      }
+    : {};
+
   return {
     droneFleet: {
       ...context.droneFleet,
@@ -227,6 +237,11 @@ export const assignDroneScanningContext = createAssignAction(({ context }) => {
           // It will be cleared after DRONE_HAS_SCANNED is processed
         }
       }
+    },
+    gridInfo: {
+      ...context.gridInfo,
+      tiles: updatedGridInfoTiles,
+      syncedAt: Date.now()
     },
     memory: {
       ...context.memory,

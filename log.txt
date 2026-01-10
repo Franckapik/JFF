@@ -1,0 +1,4264 @@
+
+> react-three-vite@1.0.2 dev:all
+> npm-run-all -p log:server dev
+
+
+> react-three-vite@1.0.2 log:server
+> node scripts/log-server.mjs
+
+
+> react-three-vite@1.0.2 dev
+> vite
+
+🚀 Browser log server listening on http://localhost:5123/log
+[32m✔[0m [33mConsole Ninja[0m extension is connected to [33mVite[0m, see [36mhttps://tinyurl.com/2vt8jxzw[0m
+
+  VITE v5.4.19  ready in 1612 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: game_over | Status: done
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:browser:/vue2] 🔌 [VUE2] Connecting to SharedWorker...
+[browser:browser:/vue2] 🔌 [STORE] Creating SharedWorker...
+[browser:browser:/vue2] 🔌 [STORE] Worker URL: http://localhost:5173/src/workers/fsm-shared-worker.ts
+[browser:worker] 🔌 [WORKER] Port connected. Instance: fsm-1767991545011-essa1bj7f
+[browser:browser:/vue2] 🔌 [STORE] Connecting to SharedWorker...
+[browser:worker] [WORKER] Received message: {"type":"CONNECT","typeOf":"string","rawMessage":{"type":"CONNECT"}}
+[browser:worker] 🔌 [WORKER] New view connected. Total: 13
+[browser:browser:/vue2] 🔌 [STORE] Connected to worker. Instance: fsm-1767991545011-essa1bj7f
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: game_over | Status: done
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:browser:/vue2] 🔄 [STORE] Sending reset command to worker...
+[browser:browser:/vue2] 🔄 [STORE] Message content: {"type":"RESET"}
+[browser:worker] [WORKER] Received message: {"type":"RESET","typeOf":"string","rawMessage":{"type":"RESET"}}
+[browser:worker] 🔄 [WORKER] Resetting all bots...
+[browser:worker] ✅ [WORKER] Bot bot-0 created with 37 tiles in gridInfo AND memory.knownTiles
+[browser:worker]    🔍 Sample tile structure: neighbors=true, position=true, coord=true
+[browser:worker] ✅ [initializeBotContextFromWorker] Merging initial context for bot-0 {"hasGridInfo":true,"tilesCount":37,"hasKnownTiles":true,"knownTilesCount":37}
+[browser:worker] ✅ [WORKER] Bot bot-0 created with context from input
+[browser:worker]    🔍 Context ready: entityId=bot-0, tiles=37
+[browser:worker] ✅ [WORKER] Bot bot-1 created with 37 tiles in gridInfo AND memory.knownTiles
+[browser:worker]    🔍 Sample tile structure: neighbors=true, position=true, coord=true
+[browser:worker] ✅ [initializeBotContextFromWorker] Merging initial context for bot-1 {"hasGridInfo":true,"tilesCount":37,"hasKnownTiles":true,"knownTilesCount":37}
+[browser:worker] ✅ [WORKER] Bot bot-1 created with context from input
+[browser:worker]    🔍 Context ready: entityId=bot-1, tiles=37
+[browser:worker] 🔄 [WORKER] Radius changed by bot-0: 3 → 2
+[browser:worker] 🔄 [WORKER] Synced radius 2 to bot-1
+[browser:worker] 🚀 [WORKER] Bot bot-0 started
+[browser:worker] 🔧 CONTEXT [22:25:39] 🔄 [bot-1] Syncing radius to 2
+[browser:worker] 🚀 [WORKER] Bot bot-1 started
+[browser:worker] ✅ [WORKER] Bots reset successfully
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: initializing | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: initializing | Status: active
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_INITIALIZE_REQUEST (Initialize ship)
+[browser:worker] ⚠️ WARN [22:25:39] 🚢 [bot-0] No tile found at position, using worldToGrid fallback
+[browser:worker] {
+  "initialPosition": {
+    "x": 2.2,
+    "y": 0.5,
+    "z": 6.6000000000000005
+  },
+  "calculatedCoord": "1,3"
+}
+[browser:worker] 🏠 [SHIP INIT FALLBACK] Ship baseCoord set to: 1,3 (this should be the starting tile!)
+[browser:worker] 🏠 [SHIP INIT FALLBACK] Setting vehicle.baseCoord = 1,3 (THIS SHOULD NEVER CHANGE)
+[browser:worker] 🤖 [WORKER:bot-1] Sending: SHIP_INITIALIZE_REQUEST (Initialize ship)
+[browser:worker] ⚠️ WARN [22:25:39] 🚢 [bot-1] No tile found at position, using worldToGrid fallback
+[browser:worker] {
+  "initialPosition": {
+    "x": 2.2,
+    "y": 0.5,
+    "z": 13.200000000000001
+  },
+  "calculatedCoord": "1,6"
+}
+[browser:worker] 🏠 [SHIP INIT FALLBACK] Ship baseCoord set to: 1,6 (this should be the starting tile!)
+[browser:worker] 🏠 [SHIP INIT FALLBACK] Setting vehicle.baseCoord = 1,6 (THIS SHOULD NEVER CHANGE)
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: initializing | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: initializing | Status: active
+[browser:worker] 🤖 [WORKER:bot-0] Sending: DRONE_INITIALIZE_REQUEST (Initialize drone)
+[browser:worker] 🔧 CONTEXT [22:25:39] 🛸 [bot-0] Processing explorer drone init request
+[browser:worker] {
+  "shipCoord": "1,3",
+  "droneType": "explorer"
+}
+[browser:worker] 🔵 INFO [22:25:39] [Evaluating] Conditions
+[browser:worker] {
+  "fuel": 100,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 37
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=2 {"candidatesCount":9,"unexploredCount":9,"exploredCoordsSize":0,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=2 {"candidatesCount":9,"unexploredCount":9,"exploredCoordsSize":0,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] 🤖 [WORKER:bot-1] Sending: DRONE_INITIALIZE_REQUEST (Initialize drone)
+[browser:worker] 🔧 CONTEXT [22:25:39] 🛸 [bot-1] Processing explorer drone init request
+[browser:worker] {
+  "shipCoord": "1,6",
+  "droneType": "explorer"
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":7,"exploredCoordsSize":0,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":7,"exploredCoordsSize":0,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: initializing | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: initializing | Status: active
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: evaluating | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: initializing | Status: active
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: evaluating | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: evaluating | Status: active
+[browser:worker] 🔵 INFO [22:25:39] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:worker] {
+  "tilesCount": 20
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=2 {"candidatesCount":9,"unexploredCount":9,"exploredCoordsSize":0,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=2 {"candidatesCount":9,"unexploredCount":9,"exploredCoordsSize":0,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] 🤖 [WORKER:bot-0] Sending: NEED_EXPLORING (Continue exploration cycle)
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=2 {"candidatesCount":9,"unexploredCount":9,"exploredCoordsSize":0,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [DEBUG assignDroneDeployingContext] ship=1,3, radius=2 {"candidatesCount":13,"unexploredCount":13,"exploredCoordsSize":0,"exploredCoordsSample":[],"candidatesSample":["2,3:explored=false","0,3:explored=false","1,4:explored=false","1,2:explored=false","2,2:explored=false"]}
+[browser:worker] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 0,5
+[browser:worker] 🔵 INFO [22:25:39] ✅ [bot-0] Drone deploying with fuel consumption:
+[browser:worker] {
+  "distance": "2.24",
+  "fuelConsumed": 1,
+  "fuelRemaining": 99
+}
+[browser:worker] 🟠 ACTION [22:25:39] 🚁 [bot-0] Entrée dans l'état DRONE_DEPLOYING
+[browser:worker] {
+  "targetTile": "0,5"
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":7,"exploredCoordsSize":0,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":7,"exploredCoordsSize":0,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:worker] 🤖 [WORKER:bot-1] Sending: NEED_EXPLORING (Continue exploration cycle)
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":7,"exploredCoordsSize":0,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [DEBUG assignDroneDeployingContext] ship=1,6, radius=2 {"candidatesCount":10,"unexploredCount":10,"exploredCoordsSize":0,"exploredCoordsSample":[],"candidatesSample":["2,6:explored=false","0,6:explored=false","1,5:explored=false","2,5:explored=false","3,6:explored=false"]}
+[browser:worker] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 0,5
+[browser:worker] 🔵 INFO [22:25:39] ✅ [bot-1] Drone deploying with fuel consumption:
+[browser:worker] {
+  "distance": "1.41",
+  "fuelConsumed": 1,
+  "fuelRemaining": 99
+}
+[browser:worker] 🟠 ACTION [22:25:39] 🚁 [bot-1] Entrée dans l'état DRONE_DEPLOYING
+[browser:worker] {
+  "targetTile": "0,5"
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: evaluating | Status: active
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_deploying"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-1] Sending: DRONE_REACHES_TILE (Drone traveling to 0,5)
+[browser:worker] 📡 [assignDroneScanningContext] Scanning tile 0,5, type: "empty" (isDanger: false)
+[browser:worker] 🟠 ACTION [22:25:41] 📡 [bot-1] Entrée dans l'état DRONE_SCANNING
+[browser:worker] {
+  "scannedTile": "6,3",
+  "explorationCount": 1
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-1] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:worker] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "empty" → isDanger=false
+[browser:worker] 🔵 INFO [22:25:42] 🔄 [bot-1] assignDroneReturningContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_HAS_SCANNED",
+  "currentDroneState": "deploying"
+}
+[browser:worker] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 1,6
+[browser:worker] 🏠 [DRONE RETURNING] Current ship coord: 1,6
+[browser:worker] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 1,6
+[browser:worker] 🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!
+[browser:worker] 🔵 INFO [22:25:42] 🔙 [bot-1] Updating drone state to returning with targetDroneTile (base)
+[browser:worker] {
+  "baseTile": {
+    "position": {
+      "x": 0.8,
+      "y": 0.2,
+      "z": 4.800000000000001,
+      "coord": "1,6"
+    },
+    "coord": "1,6",
+    "type": "depart",
+    "biome": "station",
+    "explorable": false,
+    "collectable": false,
+    "resources": {
+      "food": 0,
+      "debris": 0,
+      "special": 0,
+      "total": 0
+    },
+    "hasResources": false
+  }
+}
+[browser:worker] 🟠 ACTION [22:25:42] 🔙 [bot-1] Entrée dans l'état DRONE_RETURNING
+[browser:worker] {
+  "baseCoord": "1,6",
+  "tilesExploredInCycle": 1
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-0] Sending: DRONE_REACHES_TILE (Drone traveling to 0,5)
+[browser:worker] 📡 [assignDroneScanningContext] Scanning tile 0,5, type: "empty" (isDanger: false)
+[browser:worker] 🟠 ACTION [22:25:42] 📡 [bot-0] Entrée dans l'état DRONE_SCANNING
+[browser:worker] {
+  "scannedTile": "6,3",
+  "explorationCount": 1
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_scanning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_scanning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-0] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:worker] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "empty" → isDanger=false
+[browser:worker] 🔵 INFO [22:25:43] 🔄 [bot-0] assignDroneReturningContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_HAS_SCANNED",
+  "currentDroneState": "deploying"
+}
+[browser:worker] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 1,3
+[browser:worker] 🏠 [DRONE RETURNING] Current ship coord: 1,3
+[browser:worker] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 1,3
+[browser:worker] 🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!
+[browser:worker] 🔵 INFO [22:25:43] 🔙 [bot-0] Updating drone state to returning with targetDroneTile (base)
+[browser:worker] {
+  "baseTile": {
+    "position": {
+      "x": 0.8,
+      "y": 0.2,
+      "z": 2.4000000000000004,
+      "coord": "1,3"
+    },
+    "coord": "1,3",
+    "type": "depart",
+    "biome": "station",
+    "explorable": false,
+    "collectable": false,
+    "resources": {
+      "food": 0,
+      "debris": 0,
+      "special": 0,
+      "total": 0
+    },
+    "hasResources": false
+  }
+}
+[browser:worker] 🟠 ACTION [22:25:43] 🔙 [bot-0] Entrée dans l'état DRONE_RETURNING
+[browser:worker] {
+  "baseCoord": "1,3",
+  "tilesExploredInCycle": 1
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-1] Sending: DRONE_REACHES_BASE (Drone returning to base)
+[browser:worker] 🔵 INFO [22:25:43] 🔄 [bot-1] assignDroneDockedContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_REACHES_BASE",
+  "currentDroneState": "returning"
+}
+[browser:worker] 🟠 ACTION [22:25:43] ⚓ [bot-1] Entrée dans l'état DRONE_DOCKED
+[browser:worker] {
+  "dockedTile": "6,3",
+  "totalExploredThisCycle": 1
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_docked"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-1] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
+[browser:worker] 🔵 INFO [22:25:44] 🔄 [bot-1] assignDroneReadyContext called - transition to evaluating with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_READY_FOR_REDEPLOY"
+}
+[browser:worker] 🔵 INFO [22:25:44] [Evaluating] Conditions
+[browser:worker] {
+  "fuel": 99,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 37
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":6,"exploredCoordsSize":1,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":6,"exploredCoordsSize":1,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: evaluating | Status: active
+[browser:worker] 🔵 INFO [22:25:44] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:worker] {
+  "tilesCount": 20
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":6,"exploredCoordsSize":1,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":6,"exploredCoordsSize":1,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:worker] 🤖 [WORKER:bot-1] Sending: NEED_EXPLORING (Continue exploration cycle)
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":6,"exploredCoordsSize":1,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [DEBUG assignDroneDeployingContext] ship=1,6, radius=2 {"candidatesCount":10,"unexploredCount":9,"exploredCoordsSize":1,"exploredCoordsSample":["0,5"],"candidatesSample":["2,6:explored=false","0,6:explored=false","1,5:explored=false","2,5:explored=false","3,6:explored=false"]}
+[browser:worker] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 0,6
+[browser:worker] 🔵 INFO [22:25:44] ✅ [bot-1] Drone deploying with fuel consumption:
+[browser:worker] {
+  "distance": "1.00",
+  "fuelConsumed": 1,
+  "fuelRemaining": 98
+}
+[browser:worker] 🟠 ACTION [22:25:44] 🚁 [bot-1] Entrée dans l'état DRONE_DEPLOYING
+[browser:worker] {
+  "targetTile": "0,6"
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_deploying"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-1] Sending: DRONE_REACHES_TILE (Drone traveling to 0,6)
+[browser:worker] 📡 [assignDroneScanningContext] Scanning tile 0,6, type: "danger" (isDanger: true)
+[browser:worker] 🟠 ACTION [22:25:45] 📡 [bot-1] Entrée dans l'état DRONE_SCANNING
+[browser:worker] {
+  "scannedTile": "6,3",
+  "explorationCount": 2
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-0] Sending: DRONE_REACHES_BASE (Drone returning to base)
+[browser:worker] 🔵 INFO [22:25:45] 🔄 [bot-0] assignDroneDockedContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_REACHES_BASE",
+  "currentDroneState": "returning"
+}
+[browser:worker] 🟠 ACTION [22:25:45] ⚓ [bot-0] Entrée dans l'état DRONE_DOCKED
+[browser:worker] {
+  "dockedTile": "6,3",
+  "totalExploredThisCycle": 1
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_docked"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-0] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
+[browser:worker] 🔵 INFO [22:25:46] 🔄 [bot-0] assignDroneReadyContext called - transition to evaluating with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_READY_FOR_REDEPLOY"
+}
+[browser:worker] 🔵 INFO [22:25:46] [Evaluating] Conditions
+[browser:worker] {
+  "fuel": 99,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 37
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=2 {"candidatesCount":9,"unexploredCount":9,"exploredCoordsSize":1,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=2 {"candidatesCount":9,"unexploredCount":9,"exploredCoordsSize":1,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: evaluating | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:worker] 🔵 INFO [22:25:46] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:worker] {
+  "tilesCount": 20
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=2 {"candidatesCount":9,"unexploredCount":9,"exploredCoordsSize":1,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=2 {"candidatesCount":9,"unexploredCount":9,"exploredCoordsSize":1,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] 🤖 [WORKER:bot-0] Sending: NEED_EXPLORING (Continue exploration cycle)
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=2 {"candidatesCount":9,"unexploredCount":9,"exploredCoordsSize":1,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [DEBUG assignDroneDeployingContext] ship=1,3, radius=2 {"candidatesCount":13,"unexploredCount":12,"exploredCoordsSize":1,"exploredCoordsSample":["0,5"],"candidatesSample":["2,3:explored=false","0,3:explored=false","1,4:explored=false","1,2:explored=false","2,2:explored=false"]}
+[browser:worker] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 3,3
+[browser:worker] 🔵 INFO [22:25:46] ✅ [bot-0] Drone deploying with fuel consumption:
+[browser:worker] {
+  "distance": "2.00",
+  "fuelConsumed": 1,
+  "fuelRemaining": 98
+}
+[browser:worker] 🟠 ACTION [22:25:46] 🚁 [bot-0] Entrée dans l'état DRONE_DEPLOYING
+[browser:worker] {
+  "targetTile": "3,3"
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-1] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:worker] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "danger" → isDanger=true
+[browser:worker] 🔥 [shouldDestroyDroneOnDanger] DANGER TILE CONFIRMED - Drone will be destroyed!
+[browser:worker] 🔵 INFO [22:25:46] [assignDroneDestroyedContext] Drone explorer détruit par danger
+[browser:worker] 🟠 ACTION [22:25:46] 💥 [bot-1] Drone DÉTRUIT
+[browser:worker] {
+  "droneType": "explorer",
+  "targetTile": "0,6",
+  "totalDestroyed": 1,
+  "visualState": "failed"
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_destroyed"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-1] Sending: DRONE_DESTRUCTION_ACKNOWLEDGED (Drone destruction acknowledged - evaluating next action)
+[browser:worker] 🔵 INFO [22:25:47] [Evaluating] Conditions
+[browser:worker] {
+  "fuel": 98,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
+  "isShipNotFull": true,
+  "isDroneAvailable": false,
+  "explorationQueueLength": 0,
+  "droneState": "failed",
+  "knownTilesCount": 37
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":5,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":5,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: evaluating | Status: active
+[browser:worker] 🔵 INFO [22:25:47] [Evaluating] → NEED_DRONE_PURCHASE (drone needs replacement)
+[browser:worker] {
+  "droneState": "failed",
+  "destroyedCount": 1
+}
+[browser:worker] 🔍 [needsDronePurchase] bot-1: isDestroyed=true, isActive=false, result=true
+[browser:worker] 🟠 ACTION [22:25:47] 🔧 [bot-1] Entrée dans l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 98,
+    "damage": 0,
+    "resources": 0
+  },
+  "maintenanceTasks": {
+    "needsFuel": true,
+    "needsRepair": false,
+    "needsDeposit": false
+  }
+}
+[browser:worker] 🟠 ACTION [22:25:47] 🛒 [bot-1] PURCHASING DRONE - Starting drone acquisition
+[browser:worker] {
+  "droneDestroyed": true,
+  "droneActive": false,
+  "availableResources": 0,
+  "canAfford": false,
+  "penaltyIfNoResources": "+20% damage"
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"maintaining":"purchasing_drone"} | Status: active
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"maintaining":"purchasing_drone"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-0] Sending: DRONE_REACHES_TILE (Drone traveling to 3,3)
+[browser:worker] 📡 [assignDroneScanningContext] Scanning tile 3,3, type: "food" (isDanger: false)
+[browser:worker] 🟠 ACTION [22:25:48] 📡 [bot-0] Entrée dans l'état DRONE_SCANNING
+[browser:worker] {
+  "scannedTile": "6,3",
+  "explorationCount": 2
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_scanning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"maintaining":"purchasing_drone"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-0] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:worker] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "food" → isDanger=false
+[browser:worker] 🔵 INFO [22:25:49] 🔄 [bot-0] assignDroneReturningContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_HAS_SCANNED",
+  "currentDroneState": "deploying"
+}
+[browser:worker] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 1,3
+[browser:worker] 🏠 [DRONE RETURNING] Current ship coord: 1,3
+[browser:worker] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 1,3
+[browser:worker] 🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!
+[browser:worker] 🔵 INFO [22:25:49] 🔙 [bot-0] Updating drone state to returning with targetDroneTile (base)
+[browser:worker] {
+  "baseTile": {
+    "position": {
+      "x": 0.8,
+      "y": 0.2,
+      "z": 2.4000000000000004,
+      "coord": "1,3"
+    },
+    "coord": "1,3",
+    "type": "depart",
+    "biome": "station",
+    "explorable": false,
+    "collectable": false,
+    "resources": {
+      "food": 0,
+      "debris": 0,
+      "special": 0,
+      "total": 0
+    },
+    "hasResources": false
+  }
+}
+[browser:worker] 🟠 ACTION [22:25:49] 🔙 [bot-0] Entrée dans l'état DRONE_RETURNING
+[browser:worker] {
+  "baseCoord": "1,3",
+  "tilesExploredInCycle": 2
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"maintaining":"purchasing_drone"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-0] Sending: DRONE_REACHES_BASE (Drone returning to base)
+[browser:worker] 🔵 INFO [22:25:51] 🔄 [bot-0] assignDroneDockedContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_REACHES_BASE",
+  "currentDroneState": "returning"
+}
+[browser:worker] 🟠 ACTION [22:25:51] ⚓ [bot-0] Entrée dans l'état DRONE_DOCKED
+[browser:worker] {
+  "dockedTile": "6,3",
+  "totalExploredThisCycle": 2
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_docked"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"maintaining":"purchasing_drone"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-0] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
+[browser:worker] 🔵 INFO [22:25:51] 🔄 [bot-0] assignDroneReadyContext called - transition to evaluating with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_READY_FOR_REDEPLOY"
+}
+[browser:worker] 🔵 INFO [22:25:51] [Evaluating] Conditions
+[browser:worker] {
+  "fuel": 98,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 37
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=2 {"candidatesCount":9,"unexploredCount":8,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=2 {"candidatesCount":9,"unexploredCount":8,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: evaluating | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"maintaining":"purchasing_drone"} | Status: active
+[browser:worker] 🔵 INFO [22:25:52] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:worker] {
+  "tilesCount": 20
+}
+[browser:worker] 🔵 INFO [22:25:52] 🔄 [bot-0] assignShipMovingToTileContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "NEED_COLLECTING",
+  "contextKeys": [
+    "entityId",
+    "entityType",
+    "autonomousMode",
+    "vehicle",
+    "fsmState",
+    "explorationQueue",
+    "lastAction",
+    "error",
+    "timestamps",
+    "score",
+    "memory",
+    "explorationCycle",
+    "config",
+    "droneFleet",
+    "gameConfig",
+    "gridInfo",
+    "explorationCount"
+  ]
+}
+[browser:worker] 🔵 INFO [22:25:52] 🎯 [bot-0] Targeting explored tile with resources:
+[browser:worker] {
+  "coord": "4,2",
+  "resources": {
+    "food": 96,
+    "debris": 992,
+    "special": 0,
+    "total": 1088
+  },
+  "totalKnownTiles": 37,
+  "tilesWithResources": 20
+}
+[browser:worker] 🔵 INFO [22:25:52] 🚢 [bot-0] Setting ship target for collection:
+[browser:worker] {
+  "targetPosition": {
+    "x": 0.8660254037844386,
+    "y": 0,
+    "z": -1.5,
+    "coord": "4,2"
+  },
+  "targetGridCoord": "4,2",
+  "currentCoord": "1,3",
+  "coordinateCheck": {
+    "original": {
+      "x": 0.8660254037844386,
+      "y": 0,
+      "z": -1.5,
+      "coord": "4,2"
+    },
+    "recalculated": {
+      "x": 0.8660254037844386,
+      "y": 0,
+      "z": -1.5,
+      "coord": "4,2"
+    },
+    "areConsistent": true
+  }
+}
+[browser:worker] 🔵 INFO [22:25:52] 🛤️ [bot-0] Pathfinding result:
+[browser:worker] {
+  "pathLength": 4,
+  "pathSteps": 3,
+  "path": "1,3 → 2,2 → 3,2 → 4,2",
+  "fuelConsumption": 24,
+  "fuelRemaining": 74
+}
+[browser:worker] 🛤️ [PATHFINDING] Path: 1,3 → 2,2 → 3,2 → 4,2
+[browser:worker] ⛽ [PATHFINDING] Fuel: 98 - 24 = 74 (3 tiles × 8/tile)
+[browser:worker] 🔵 INFO [22:25:52] ✅ [bot-0] Ship movement setup result:
+[browser:worker] {
+  "hasVehicle": true,
+  "targetVehicleTile": {
+    "position": {
+      "x": 0.8660254037844386,
+      "y": 0,
+      "z": -1.5,
+      "coord": "4,2"
+    },
+    "type": "food",
+    "biome": "grassland",
+    "walkable": true,
+    "explorable": true,
+    "collectable": true,
+    "explored": false,
+    "collected": false,
+    "neighbors": [
+      "5,2",
+      "3,2",
+      "4,3",
+      "4,1",
+      "5,1",
+      "3,3"
+    ],
+    "resources": {
+      "food": 96,
+      "debris": 992,
+      "special": 0,
+      "total": 1088
+    },
+    "hasResources": true,
+    "color": "#d5d330"
+  },
+  "isMoving": true,
+  "pathLength": 4,
+  "fuelConsumed": 24,
+  "fuelRemaining": 74
+}
+[browser:worker] 🚢 [SHIP MOVING] Ship moving from 1,3 to 4,2 via 4 tiles
+[browser:worker] 🏠 [SHIP MOVING] Original base coord is: 1,3 (this should stay constant!)
+[browser:worker] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"maintaining":"purchasing_drone"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-1] Sending: DRONE_PURCHASE_COMPLETE (Drone purchase complete)
+[browser:worker] {
+  "penalty": 20,
+  "damageBefore": 0,
+  "damageAfter": 20,
+  "droneStatus": "active (free but ship damaged)"
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":5,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":5,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:worker] 🔍 [hasResourcesForDrone] bot-1: resources=0, cost=50, result=false
+[browser:worker] 🟠 ACTION [22:25:52] ✅ [bot-1] DRONE PURCHASED - Drone is now active
+[browser:worker] {
+  "droneActive": false,
+  "droneHealth": 0,
+  "vehicleDamage": 0
+}
+[browser:worker] 🟠 ACTION [22:25:52] ✅ [bot-1] Sortie de l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 98,
+    "damage": 0,
+    "resources": 0
+  }
+}
+[browser:worker] 🟠 ACTION [22:25:52] 💥 [bot-1] Drone PURCHASED with DAMAGE PENALTY
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: evaluating | Status: active
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":5,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":5,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:worker] 🤖 [WORKER:bot-1] Sending: NEED_EXPLORING (Continue exploration cycle)
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,6, radius=2 {"candidatesCount":7,"unexploredCount":5,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,6","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [DEBUG assignDroneDeployingContext] ship=1,6, radius=2 {"candidatesCount":10,"unexploredCount":8,"exploredCoordsSize":2,"exploredCoordsSample":["0,5","0,6"],"candidatesSample":["2,6:explored=false","0,6:explored=false","1,5:explored=false","2,5:explored=false","3,6:explored=false"]}
+[browser:worker] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 2,6
+[browser:worker] 🔵 INFO [22:25:52] ✅ [bot-1] Drone deploying with fuel consumption:
+[browser:worker] {
+  "distance": "1.00",
+  "fuelConsumed": 1,
+  "fuelRemaining": 97
+}
+[browser:worker] 🟠 ACTION [22:25:52] 🚁 [bot-1] Entrée dans l'état DRONE_DEPLOYING
+[browser:worker] {
+  "targetTile": "2,6"
+}
+[browser:worker] 🤖 [WORKER:bot-1] Sending: DRONE_REACHES_TILE (Drone traveling to 2,6)
+[browser:worker] 📡 [assignDroneScanningContext] Scanning tile 2,6, type: "repair" (isDanger: false)
+[browser:worker] 🟠 ACTION [22:25:52] 📡 [bot-1] Entrée dans l'état DRONE_SCANNING
+[browser:worker] {
+  "scannedTile": "6,3",
+  "explorationCount": 3
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_deploying"} | Status: active
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaching waypoint 1: 2,2)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=0, pathLength=4, hasMore=true
+[browser:worker] 🔵 INFO [22:25:52] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 1,
+  "totalWaypoints": 4,
+  "newCoord": "2,2",
+  "remainingSteps": 2,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 1/3: 2,2
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_scanning"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-1] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:worker] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "repair" → isDanger=false
+[browser:worker] 🔵 INFO [22:25:53] 🔄 [bot-1] assignDroneReturningContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_HAS_SCANNED",
+  "currentDroneState": "deploying"
+}
+[browser:worker] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 1,6
+[browser:worker] 🏠 [DRONE RETURNING] Current ship coord: 1,6
+[browser:worker] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 1,6
+[browser:worker] 🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!
+[browser:worker] 🔵 INFO [22:25:53] 🔙 [bot-1] Updating drone state to returning with targetDroneTile (base)
+[browser:worker] {
+  "baseTile": {
+    "position": {
+      "x": 0.8,
+      "y": 0.2,
+      "z": 4.800000000000001,
+      "coord": "1,6"
+    },
+    "coord": "1,6",
+    "type": "depart",
+    "biome": "station",
+    "explorable": false,
+    "collectable": false,
+    "resources": {
+      "food": 0,
+      "debris": 0,
+      "special": 0,
+      "total": 0
+    },
+    "hasResources": false
+  }
+}
+[browser:worker] 🟠 ACTION [22:25:53] 🔙 [bot-1] Entrée dans l'état DRONE_RETURNING
+[browser:worker] {
+  "baseCoord": "1,6",
+  "tilesExploredInCycle": 3
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,2)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"4,2","hasResources":true,"currentResources":{"food":0,"debris":0,"special":0,"total":0},"totalResources":0,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:25:53] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": true
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_returning"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-1] Sending: DRONE_REACHES_BASE (Drone returning to base)
+[browser:worker] 🔵 INFO [22:25:54] 🔄 [bot-1] assignDroneDockedContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_REACHES_BASE",
+  "currentDroneState": "returning"
+}
+[browser:worker] 🟠 ACTION [22:25:54] ⚓ [bot-1] Entrée dans l'état DRONE_DOCKED
+[browser:worker] {
+  "dockedTile": "6,3",
+  "totalExploredThisCycle": 3
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":0,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_docked"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:25:54] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:25:54] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "4,2",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 96,
+    "debris": 992,
+    "special": 0,
+    "total": 1088
+  },
+  "vehicleResourcesBefore": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "vehicleResourcesAfter": {
+    "food": 96,
+    "debris": 992,
+    "special": 0,
+    "total": 1088
+  },
+  "vehicleCapacity": "1088/2003",
+  "capacityUsed": "54%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:25:54] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "4,2",
+  "nextTile": "5,2",
+  "nextResources": {
+    "food": 94,
+    "debris": 979,
+    "special": 0,
+    "total": 1073
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":1,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"exploring":"drone_docked"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-1] Sending: DRONE_READY_FOR_REDEPLOY (Drone ready to redeploy after docking)
+[browser:worker] 🔵 INFO [22:25:54] 🔄 [bot-1] assignDroneReadyContext called - transition to evaluating with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_READY_FOR_REDEPLOY"
+}
+[browser:worker] 🔵 INFO [22:25:54] [Evaluating] Conditions
+[browser:worker] {
+  "fuel": 97,
+  "damage": 20,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 37
+}
+[browser:worker] 🚨 [isStuckInEvaluating] bot-1 - FALLBACK TRIGGERED: {"canExplore":false,"canCollect":false,"needsMaintenance":false,"fuel":97,"damage":20,"shipCoord":"1,6"}
+[browser:worker] 🟠 ACTION [22:25:54] 🔧 [bot-1] Entrée dans l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 97,
+    "damage": 20,
+    "resources": 0
+  },
+  "maintenanceTasks": {
+    "needsFuel": true,
+    "needsRepair": true,
+    "needsDeposit": false
+  }
+}
+[browser:worker] 🟠 ACTION [22:25:54] 🔄 [bot-1] ========================================
+[browser:worker] 🟠 ACTION [22:25:54] 🔄 [bot-1] RELOCATING - Checking radius expansion
+[browser:worker] 🟠 ACTION [22:25:54] 🔄 [bot-1] Current radius: 2, Max: 3
+[browser:worker] 🟠 ACTION [22:25:54] 💥 [bot-1] PENALTIES APPLIED:
+[browser:worker] 🟠 ACTION [22:25:54]    - Score: 0 → 0 (÷2)
+[browser:worker] 🟠 ACTION [22:25:54]    - Damage: 20% → 50% (+30%)
+[browser:worker] 🟠 ACTION [22:25:54]    - Radius: 2 → 3
+[browser:worker] 🟠 ACTION [22:25:54] 🚢 [bot-1] Ship RELOCATING - moving to new exploration area
+[browser:worker] {
+  "currentCoord": "1,6",
+  "targetCoord": "unknown",
+  "fuel": 97,
+  "reason": "All local tiles explored, no collectible tiles"
+}
+[browser:worker] 🔄 [WORKER] Radius changed by bot-1: 2 → 3
+[browser:worker] 🔧 CONTEXT [22:25:54] 🔄 [bot-0] Syncing radius to 3
+[browser:worker] 🔄 [WORKER] Synced radius 3 to bot-0
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":1,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"maintaining":"relocating"} | Status: active
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaching waypoint 2: 3,2)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=1, pathLength=4, hasMore=true
+[browser:worker] 🔵 INFO [22:25:54] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 2,
+  "totalWaypoints": 4,
+  "newCoord": "3,2",
+  "remainingSteps": 1,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 2/3: 3,2
+[browser:worker] 🔵 INFO [22:25:54] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:worker] {
+  "tilesCount": 20
+}
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,2)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"5,2","hasResources":true,"currentResources":{"food":96,"debris":992,"special":0,"total":1088},"totalResources":1088,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:25:55] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:worker] 🤖 [WORKER:bot-1] Sending: RELOCATING_COMPLETE (Relocating complete - checking radius)
+[browser:worker] 🔍 [isAtMaxRadius] bot-1: radius=3, max=3, result=true
+[browser:worker] 🟠 ACTION [22:25:55] ✅ [bot-1] Ship relocation complete
+[browser:worker] {
+  "newCoord": "1,6",
+  "fuel": 97
+}
+[browser:worker] 🟠 ACTION [22:25:55] ✅ [bot-1] Sortie de l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 97,
+    "damage": 50,
+    "resources": 0
+  }
+}
+[browser:worker] 🟠 ACTION [22:25:55] 🏁🏁🏁 [bot-1] ========================================
+[browser:worker] 🟠 ACTION [22:25:55] 🏁 [bot-1] GAME OVER - Maximum radius reached!
+[browser:worker] 🟠 ACTION [22:25:55] 🏁 [bot-1] Final Score: 0
+[browser:worker] 🟠 ACTION [22:25:55] 🏁 [bot-1] Exploration Radius: MAX (3)
+[browser:worker] 🟠 ACTION [22:25:55] 🏁 [bot-1] Vehicle Damage: 50%
+[browser:worker] 🟠 ACTION [22:25:55] 🏁 [bot-1] Tiles Explored: 3
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":1,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: {"maintaining":"relocating"} | Status: active
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":1,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:25:56] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:25:56] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "5,2",
+  "tileResourcesAfter": {
+    "food": 14,
+    "debris": 145,
+    "special": 0,
+    "total": 159
+  },
+  "tileCollectedFlag": false,
+  "collected": {
+    "food": 80,
+    "debris": 834,
+    "special": 0,
+    "total": 914
+  },
+  "vehicleResourcesBefore": {
+    "food": 96,
+    "debris": 992,
+    "special": 0,
+    "total": 1088
+  },
+  "vehicleResourcesAfter": {
+    "food": 176,
+    "debris": 1826,
+    "special": 0,
+    "total": 2002
+  },
+  "vehicleCapacity": "2002/2003",
+  "capacityUsed": "100%",
+  "isNearFull": true,
+  "tileIsEmpty": false,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:25:56] 🔄 [bot-0] assignShipReturningContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES",
+  "currentVehicleState": false
+}
+[browser:worker] 🏠 [SHIP RETURNING] Looking for base tile at coord: 1,3
+[browser:worker] 🏠 [SHIP RETURNING] Current ship coord: 5,2
+[browser:worker] 🏠 [SHIP RETURNING] baseCoord from vehicle context: 1,3
+[browser:worker] 🛤️ [SHIP RETURNING] Path calculated: {"from":"5,2","to":"1,3","pathLength":5,"path":"5,2 → 4,2 → 3,2 → 2,2 → 1,3"}
+[browser:worker] 🔵 INFO [22:25:56] 🔙 [bot-0] Updating vehicle state to returning with target:
+[browser:worker] {
+  "baseCoord": "1,3",
+  "basePosition": {
+    "x": 0.8,
+    "y": 0.5,
+    "z": 2.4000000000000004
+  },
+  "currentCoord": "5,2",
+  "pathLength": 5
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":1,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaches return waypoint 1/4)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=0, pathLength=5, hasMore=true
+[browser:worker] 🔵 INFO [22:25:56] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 1,
+  "totalWaypoints": 5,
+  "newCoord": "4,2",
+  "remainingSteps": 3,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 1/4: 4,2
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":1,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_BASE (Ship reaches base (final waypoint))
+[browser:worker] 🟠 ACTION [22:25:58] 🔄 [bot-0] assignShipReachedBaseContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_BASE",
+  "currentVehicleState": true
+}
+[browser:worker] 🟠 ACTION [22:25:58] 🏠 [bot-0] Ship reached base - ready for maintenance
+[browser:worker] {
+  "vehicleResources": {
+    "food": 176,
+    "debris": 1826,
+    "special": 0,
+    "total": 2002
+  },
+  "vehicleState": "returning"
+}
+[browser:worker] 🟠 ACTION [22:25:58] 🔧 [bot-0] Entrée dans l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 72,
+    "damage": 0,
+    "resources": 2002
+  },
+  "maintenanceTasks": {
+    "needsFuel": true,
+    "needsRepair": false,
+    "needsDeposit": true
+  }
+}
+[browser:worker] 🟠 ACTION [22:25:58] 📦 [bot-0] Dépôt des ressources
+[browser:worker] {
+  "resourcesDeposited": {
+    "food": 176,
+    "debris": 1826,
+    "special": 0,
+    "total": 2002
+  },
+  "currentScore": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":1,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"maintaining":"depositing"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":1,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"maintaining":"depositing"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_DEPOSIT_COMPLETE (Depositing resources)
+[browser:worker] 🟠 ACTION [22:25:59] ✅ [bot-0] Ressources déposées avec succès
+[browser:worker] {
+  "score": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "vehicleResources": {
+    "food": 176,
+    "debris": 1826,
+    "special": 0,
+    "total": 2002
+  }
+}
+[browser:worker] 🟠 ACTION [22:25:59] ✅ [bot-0] Sortie de l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 72,
+    "damage": 0,
+    "resources": 2002
+  }
+}
+[browser:worker] 🟠 ACTION [22:25:59] 🔄 [bot-0] assignShipDepositResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_DEPOSIT_COMPLETE"
+}
+[browser:worker] 🟠 ACTION [22:25:59] 💰 [bot-0] Depositing resources at base:
+[browser:worker] {
+  "resourcesDeposited": {
+    "food": 176,
+    "debris": 1826,
+    "special": 0,
+    "total": 2002
+  },
+  "scoreBefore": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "scoreAfter": {
+    "food": 176,
+    "debris": 1826,
+    "special": 0,
+    "total": 2002
+  },
+  "totalGained": 2002
+}
+[browser:worker] 🔵 INFO [22:25:59] 🔄 [bot-0] Resetting exploration cycle counter after deposit
+[browser:worker] {
+  "previousCount": 2,
+  "newCount": 0
+}
+[browser:worker] 🔵 INFO [22:25:59] [Evaluating] Conditions
+[browser:worker] {
+  "fuel": 72,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 37
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=3 {"candidatesCount":18,"unexploredCount":16,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=3 {"candidatesCount":18,"unexploredCount":16,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":1,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: evaluating | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🔵 INFO [22:25:59] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:worker] {
+  "tilesCount": 19
+}
+[browser:worker] 🔵 INFO [22:25:59] 🔄 [bot-0] assignShipMovingToTileContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "NEED_COLLECTING",
+  "contextKeys": [
+    "entityId",
+    "entityType",
+    "autonomousMode",
+    "vehicle",
+    "fsmState",
+    "explorationQueue",
+    "lastAction",
+    "error",
+    "timestamps",
+    "score",
+    "memory",
+    "explorationCycle",
+    "config",
+    "droneFleet",
+    "gameConfig",
+    "gridInfo",
+    "explorationCount",
+    "shouldReturnToBase"
+  ]
+}
+[browser:worker] 🔵 INFO [22:25:59] 🎯 [bot-0] Targeting explored tile with resources:
+[browser:worker] {
+  "coord": "3,1",
+  "resources": {
+    "food": 93,
+    "debris": 965,
+    "special": 0,
+    "total": 1058
+  },
+  "totalKnownTiles": 37,
+  "tilesWithResources": 19
+}
+[browser:worker] 🔵 INFO [22:25:59] 🚢 [bot-0] Setting ship target for collection:
+[browser:worker] {
+  "targetPosition": {
+    "x": -1.7320508075688772,
+    "y": 0,
+    "z": -3,
+    "coord": "3,1"
+  },
+  "targetGridCoord": "3,1",
+  "currentCoord": "1,3",
+  "coordinateCheck": {
+    "original": {
+      "x": -1.7320508075688772,
+      "y": 0,
+      "z": -3,
+      "coord": "3,1"
+    },
+    "recalculated": {
+      "x": -1.7320508075688772,
+      "y": 0,
+      "z": -3,
+      "coord": "3,1"
+    },
+    "areConsistent": true
+  }
+}
+[browser:worker] 🔵 INFO [22:25:59] 🛤️ [bot-0] Pathfinding result:
+[browser:worker] {
+  "pathLength": 3,
+  "pathSteps": 2,
+  "path": "1,3 → 2,2 → 3,1",
+  "fuelConsumption": 16,
+  "fuelRemaining": 56
+}
+[browser:worker] 🛤️ [PATHFINDING] Path: 1,3 → 2,2 → 3,1
+[browser:worker] ⛽ [PATHFINDING] Fuel: 72 - 16 = 56 (2 tiles × 8/tile)
+[browser:worker] 🔵 INFO [22:25:59] ✅ [bot-0] Ship movement setup result:
+[browser:worker] {
+  "hasVehicle": true,
+  "targetVehicleTile": {
+    "position": {
+      "x": -1.7320508075688772,
+      "y": 0,
+      "z": -3,
+      "coord": "3,1"
+    },
+    "type": "food",
+    "biome": "grassland",
+    "walkable": true,
+    "explorable": true,
+    "collectable": true,
+    "explored": false,
+    "collected": false,
+    "neighbors": [
+      "4,1",
+      "2,1",
+      "3,2",
+      "3,0",
+      "4,0",
+      "2,2"
+    ],
+    "resources": {
+      "food": 93,
+      "debris": 965,
+      "special": 0,
+      "total": 1058
+    },
+    "hasResources": true,
+    "color": "#ecc18f"
+  },
+  "isMoving": true,
+  "pathLength": 3,
+  "fuelConsumed": 16,
+  "fuelRemaining": 56
+}
+[browser:worker] 🚢 [SHIP MOVING] Ship moving from 1,3 to 3,1 via 3 tiles
+[browser:worker] 🏠 [SHIP MOVING] Original base coord is: 1,3 (this should stay constant!)
+[browser:worker] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":1,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaching waypoint 1: 2,2)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=0, pathLength=3, hasMore=true
+[browser:worker] 🔵 INFO [22:26:00] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 1,
+  "totalWaypoints": 3,
+  "newCoord": "2,2",
+  "remainingSteps": 1,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 1/2: 2,2
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 3,1)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"3,1","hasResources":true,"currentResources":{"food":0,"debris":0,"special":0,"total":0},"totalResources":0,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:00] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": true
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":1,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:01] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:01] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "3,1",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 93,
+    "debris": 965,
+    "special": 0,
+    "total": 1058
+  },
+  "vehicleResourcesBefore": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "vehicleResourcesAfter": {
+    "food": 93,
+    "debris": 965,
+    "special": 0,
+    "total": 1058
+  },
+  "vehicleCapacity": "1058/2003",
+  "capacityUsed": "53%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:01] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "3,1",
+  "nextTile": "4,1",
+  "nextResources": {
+    "food": 92,
+    "debris": 952,
+    "special": 2,
+    "total": 1046
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 3,1)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"4,1","hasResources":true,"currentResources":{"food":93,"debris":965,"special":0,"total":1058},"totalResources":1058,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:02] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:03] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:03] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "4,1",
+  "tileResourcesAfter": {
+    "food": 9,
+    "debris": 92,
+    "special": 1,
+    "total": 102
+  },
+  "tileCollectedFlag": false,
+  "collected": {
+    "food": 83,
+    "debris": 860,
+    "special": 1,
+    "total": 944
+  },
+  "vehicleResourcesBefore": {
+    "food": 93,
+    "debris": 965,
+    "special": 0,
+    "total": 1058
+  },
+  "vehicleResourcesAfter": {
+    "food": 176,
+    "debris": 1825,
+    "special": 1,
+    "total": 2002
+  },
+  "vehicleCapacity": "2002/2003",
+  "capacityUsed": "100%",
+  "isNearFull": true,
+  "tileIsEmpty": false,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:03] 🔄 [bot-0] assignShipReturningContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES",
+  "currentVehicleState": false
+}
+[browser:worker] 🏠 [SHIP RETURNING] Looking for base tile at coord: 1,3
+[browser:worker] 🏠 [SHIP RETURNING] Current ship coord: 4,1
+[browser:worker] 🏠 [SHIP RETURNING] baseCoord from vehicle context: 1,3
+[browser:worker] 🛤️ [SHIP RETURNING] Path calculated: {"from":"4,1","to":"1,3","pathLength":4,"path":"4,1 → 3,1 → 2,2 → 1,3"}
+[browser:worker] 🔵 INFO [22:26:03] 🔙 [bot-0] Updating vehicle state to returning with target:
+[browser:worker] {
+  "baseCoord": "1,3",
+  "basePosition": {
+    "x": 0.8,
+    "y": 0.5,
+    "z": 2.4000000000000004
+  },
+  "currentCoord": "4,1",
+  "pathLength": 4
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaches return waypoint 1/3)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=0, pathLength=4, hasMore=true
+[browser:worker] 🔵 INFO [22:26:03] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 1,
+  "totalWaypoints": 4,
+  "newCoord": "3,1",
+  "remainingSteps": 2,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 1/3: 3,1
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_BASE (Ship reaches base (final waypoint))
+[browser:worker] 🟠 ACTION [22:26:04] 🔄 [bot-0] assignShipReachedBaseContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_BASE",
+  "currentVehicleState": true
+}
+[browser:worker] 🟠 ACTION [22:26:04] 🏠 [bot-0] Ship reached base - ready for maintenance
+[browser:worker] {
+  "vehicleResources": {
+    "food": 176,
+    "debris": 1825,
+    "special": 1,
+    "total": 2002
+  },
+  "vehicleState": "returning"
+}
+[browser:worker] 🟠 ACTION [22:26:04] 🔧 [bot-0] Entrée dans l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 54,
+    "damage": 0,
+    "resources": 2002
+  },
+  "maintenanceTasks": {
+    "needsFuel": true,
+    "needsRepair": false,
+    "needsDeposit": true
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:04] 📦 [bot-0] Dépôt des ressources
+[browser:worker] {
+  "resourcesDeposited": {
+    "food": 176,
+    "debris": 1825,
+    "special": 1,
+    "total": 2002
+  },
+  "currentScore": {
+    "food": 176,
+    "debris": 1826,
+    "special": 0,
+    "total": 2002
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"maintaining":"depositing"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_DEPOSIT_COMPLETE (Depositing resources)
+[browser:worker] 🟠 ACTION [22:26:06] ✅ [bot-0] Ressources déposées avec succès
+[browser:worker] {
+  "score": {
+    "food": 176,
+    "debris": 1826,
+    "special": 0,
+    "total": 2002
+  },
+  "vehicleResources": {
+    "food": 176,
+    "debris": 1825,
+    "special": 1,
+    "total": 2002
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:06] ✅ [bot-0] Sortie de l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 54,
+    "damage": 0,
+    "resources": 2002
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:06] 🔄 [bot-0] assignShipDepositResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_DEPOSIT_COMPLETE"
+}
+[browser:worker] 🟠 ACTION [22:26:06] 💰 [bot-0] Depositing resources at base:
+[browser:worker] {
+  "resourcesDeposited": {
+    "food": 176,
+    "debris": 1825,
+    "special": 1,
+    "total": 2002
+  },
+  "scoreBefore": {
+    "food": 176,
+    "debris": 1826,
+    "special": 0,
+    "total": 2002
+  },
+  "scoreAfter": {
+    "food": 352,
+    "debris": 3651,
+    "special": 1,
+    "total": 4004
+  },
+  "totalGained": 2002
+}
+[browser:worker] 🔵 INFO [22:26:06] 🔄 [bot-0] Resetting exploration cycle counter after deposit
+[browser:worker] {
+  "previousCount": 0,
+  "newCount": 0
+}
+[browser:worker] 🔵 INFO [22:26:06] [Evaluating] Conditions
+[browser:worker] {
+  "fuel": 54,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 37
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=3 {"candidatesCount":18,"unexploredCount":16,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=3 {"candidatesCount":18,"unexploredCount":16,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: evaluating | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🔵 INFO [22:26:06] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:worker] {
+  "tilesCount": 18
+}
+[browser:worker] 🔵 INFO [22:26:06] 🔄 [bot-0] assignShipMovingToTileContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "NEED_COLLECTING",
+  "contextKeys": [
+    "entityId",
+    "entityType",
+    "autonomousMode",
+    "vehicle",
+    "fsmState",
+    "explorationQueue",
+    "lastAction",
+    "error",
+    "timestamps",
+    "score",
+    "memory",
+    "explorationCycle",
+    "config",
+    "droneFleet",
+    "gameConfig",
+    "gridInfo",
+    "explorationCount",
+    "shouldReturnToBase"
+  ]
+}
+[browser:worker] 🔵 INFO [22:26:06] 🎯 [bot-0] Targeting explored tile with resources:
+[browser:worker] {
+  "coord": "5,1",
+  "resources": {
+    "food": 90,
+    "debris": 939,
+    "special": 2,
+    "total": 1031
+  },
+  "totalKnownTiles": 37,
+  "tilesWithResources": 18
+}
+[browser:worker] 🔵 INFO [22:26:06] 🚢 [bot-0] Setting ship target for collection:
+[browser:worker] {
+  "targetPosition": {
+    "x": 1.7320508075688772,
+    "y": 0,
+    "z": -3,
+    "coord": "5,1"
+  },
+  "targetGridCoord": "5,1",
+  "currentCoord": "1,3",
+  "coordinateCheck": {
+    "original": {
+      "x": 1.7320508075688772,
+      "y": 0,
+      "z": -3,
+      "coord": "5,1"
+    },
+    "recalculated": {
+      "x": 1.7320508075688772,
+      "y": 0,
+      "z": -3,
+      "coord": "5,1"
+    },
+    "areConsistent": true
+  }
+}
+[browser:worker] 🔵 INFO [22:26:06] 🛤️ [bot-0] Pathfinding result:
+[browser:worker] {
+  "pathLength": 5,
+  "pathSteps": 4,
+  "path": "1,3 → 2,2 → 3,2 → 4,2 → 5,1",
+  "fuelConsumption": 32,
+  "fuelRemaining": 22
+}
+[browser:worker] 🛤️ [PATHFINDING] Path: 1,3 → 2,2 → 3,2 → 4,2 → 5,1
+[browser:worker] ⛽ [PATHFINDING] Fuel: 54 - 32 = 22 (4 tiles × 8/tile)
+[browser:worker] 🔵 INFO [22:26:06] ✅ [bot-0] Ship movement setup result:
+[browser:worker] {
+  "hasVehicle": true,
+  "targetVehicleTile": {
+    "position": {
+      "x": 1.7320508075688772,
+      "y": 0,
+      "z": -3,
+      "coord": "5,1"
+    },
+    "type": "food",
+    "biome": "grassland",
+    "walkable": true,
+    "explorable": true,
+    "collectable": true,
+    "explored": false,
+    "collected": false,
+    "neighbors": [
+      "6,1",
+      "4,1",
+      "5,2",
+      "5,0",
+      "6,0",
+      "4,2"
+    ],
+    "resources": {
+      "food": 90,
+      "debris": 939,
+      "special": 2,
+      "total": 1031
+    },
+    "hasResources": true,
+    "color": "#aa7938"
+  },
+  "isMoving": true,
+  "pathLength": 5,
+  "fuelConsumed": 32,
+  "fuelRemaining": 22
+}
+[browser:worker] 🚢 [SHIP MOVING] Ship moving from 1,3 to 5,1 via 5 tiles
+[browser:worker] 🏠 [SHIP MOVING] Original base coord is: 1,3 (this should stay constant!)
+[browser:worker] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaching waypoint 1: 2,2)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=0, pathLength=5, hasMore=true
+[browser:worker] 🔵 INFO [22:26:06] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 1,
+  "totalWaypoints": 5,
+  "newCoord": "2,2",
+  "remainingSteps": 3,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 1/4: 2,2
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 5,1)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"5,1","hasResources":true,"currentResources":{"food":0,"debris":0,"special":0,"total":0},"totalResources":0,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:07] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": true
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":2,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:08] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:08] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "5,1",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 90,
+    "debris": 939,
+    "special": 2,
+    "total": 1031
+  },
+  "vehicleResourcesBefore": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "vehicleResourcesAfter": {
+    "food": 90,
+    "debris": 939,
+    "special": 2,
+    "total": 1031
+  },
+  "vehicleCapacity": "1031/2003",
+  "capacityUsed": "51%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:08] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "5,1",
+  "nextTile": "3,0",
+  "nextResources": {
+    "food": 89,
+    "debris": 925,
+    "special": 2,
+    "total": 1016
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":3,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaching waypoint 2: 3,2)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=1, pathLength=5, hasMore=true
+[browser:worker] 🔵 INFO [22:26:09] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 2,
+  "totalWaypoints": 5,
+  "newCoord": "3,2",
+  "remainingSteps": 2,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 2/4: 3,2
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 5,1)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"3,0","hasResources":true,"currentResources":{"food":90,"debris":939,"special":2,"total":1031},"totalResources":1031,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:10] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":3,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:11] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:11] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "3,0",
+  "tileResourcesAfter": {
+    "food": 4,
+    "debris": 41,
+    "special": 1,
+    "total": 46
+  },
+  "tileCollectedFlag": false,
+  "collected": {
+    "food": 85,
+    "debris": 884,
+    "special": 1,
+    "total": 970
+  },
+  "vehicleResourcesBefore": {
+    "food": 90,
+    "debris": 939,
+    "special": 2,
+    "total": 1031
+  },
+  "vehicleResourcesAfter": {
+    "food": 175,
+    "debris": 1823,
+    "special": 3,
+    "total": 2001
+  },
+  "vehicleCapacity": "2001/2003",
+  "capacityUsed": "100%",
+  "isNearFull": true,
+  "tileIsEmpty": false,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:11] 🔄 [bot-0] assignShipReturningContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES",
+  "currentVehicleState": false
+}
+[browser:worker] 🏠 [SHIP RETURNING] Looking for base tile at coord: 1,3
+[browser:worker] 🏠 [SHIP RETURNING] Current ship coord: 3,0
+[browser:worker] 🏠 [SHIP RETURNING] baseCoord from vehicle context: 1,3
+[browser:worker] 🛤️ [SHIP RETURNING] Path calculated: {"from":"3,0","to":"1,3","pathLength":4,"path":"3,0 → 3,1 → 2,2 → 1,3"}
+[browser:worker] 🔵 INFO [22:26:11] 🔙 [bot-0] Updating vehicle state to returning with target:
+[browser:worker] {
+  "baseCoord": "1,3",
+  "basePosition": {
+    "x": 0.8,
+    "y": 0.5,
+    "z": 2.4000000000000004
+  },
+  "currentCoord": "3,0",
+  "pathLength": 4
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":3,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaches return waypoint 1/3)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=0, pathLength=4, hasMore=true
+[browser:worker] 🔵 INFO [22:26:11] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 1,
+  "totalWaypoints": 4,
+  "newCoord": "3,1",
+  "remainingSteps": 2,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 1/3: 3,1
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":3,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_BASE (Ship reaches base (final waypoint))
+[browser:worker] 🟠 ACTION [22:26:12] 🔄 [bot-0] assignShipReachedBaseContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_BASE",
+  "currentVehicleState": true
+}
+[browser:worker] 🟠 ACTION [22:26:12] 🏠 [bot-0] Ship reached base - ready for maintenance
+[browser:worker] {
+  "vehicleResources": {
+    "food": 175,
+    "debris": 1823,
+    "special": 3,
+    "total": 2001
+  },
+  "vehicleState": "returning"
+}
+[browser:worker] 🟠 ACTION [22:26:12] 🔧 [bot-0] Entrée dans l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 20,
+    "damage": 0,
+    "resources": 2001
+  },
+  "maintenanceTasks": {
+    "needsFuel": true,
+    "needsRepair": false,
+    "needsDeposit": true
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:12] 📦 [bot-0] Dépôt des ressources
+[browser:worker] {
+  "resourcesDeposited": {
+    "food": 175,
+    "debris": 1823,
+    "special": 3,
+    "total": 2001
+  },
+  "currentScore": {
+    "food": 352,
+    "debris": 3651,
+    "special": 1,
+    "total": 4004
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":3,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"maintaining":"depositing"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_DEPOSIT_COMPLETE (Depositing resources)
+[browser:worker] 🟠 ACTION [22:26:14] ✅ [bot-0] Ressources déposées avec succès
+[browser:worker] {
+  "score": {
+    "food": 352,
+    "debris": 3651,
+    "special": 1,
+    "total": 4004
+  },
+  "vehicleResources": {
+    "food": 175,
+    "debris": 1823,
+    "special": 3,
+    "total": 2001
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:14] 🔄 [bot-0] assignShipDepositResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_DEPOSIT_COMPLETE"
+}
+[browser:worker] 🟠 ACTION [22:26:14] 💰 [bot-0] Depositing resources at base:
+[browser:worker] {
+  "resourcesDeposited": {
+    "food": 175,
+    "debris": 1823,
+    "special": 3,
+    "total": 2001
+  },
+  "scoreBefore": {
+    "food": 352,
+    "debris": 3651,
+    "special": 1,
+    "total": 4004
+  },
+  "scoreAfter": {
+    "food": 527,
+    "debris": 5474,
+    "special": 4,
+    "total": 6005
+  },
+  "totalGained": 2001
+}
+[browser:worker] 🔵 INFO [22:26:14] 🔄 [bot-0] Resetting exploration cycle counter after deposit
+[browser:worker] {
+  "previousCount": 0,
+  "newCount": 0
+}
+[browser:worker] 🟠 ACTION [22:26:14] ⛽ [bot-0] Ravitaillement du navire
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":3,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"maintaining":"refueling"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] {
+  "fuelBefore": 20,
+  "estimatedTime": "1s"
+}
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REFUEL_COMPLETE (Refueling ship)
+[browser:worker] 🟠 ACTION [22:26:15] ✅ [bot-0] Navire ravitaillé
+[browser:worker] {
+  "fuelAfter": 20
+}
+[browser:worker] 🟠 ACTION [22:26:15] ✅ [bot-0] Sortie de l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 20,
+    "damage": 0,
+    "resources": 0
+  }
+}
+[browser:worker] ⛽ [assignShipRefuelContext] bot-0: SHIP REFUELED
+[browser:worker]    Fuel: 20.0% → 100.0%
+[browser:worker]    Fuel added: 80.0%
+[browser:worker] 🔵 INFO [22:26:15] [Evaluating] Conditions
+[browser:worker] {
+  "fuel": 100,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 37
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=3 {"candidatesCount":18,"unexploredCount":16,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=3 {"candidatesCount":18,"unexploredCount":16,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":3,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: evaluating | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🔵 INFO [22:26:15] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:worker] {
+  "tilesCount": 17
+}
+[browser:worker] 🔵 INFO [22:26:15] 🔄 [bot-0] assignShipMovingToTileContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "NEED_COLLECTING",
+  "contextKeys": [
+    "entityId",
+    "entityType",
+    "autonomousMode",
+    "vehicle",
+    "fsmState",
+    "explorationQueue",
+    "lastAction",
+    "error",
+    "timestamps",
+    "score",
+    "memory",
+    "explorationCycle",
+    "config",
+    "droneFleet",
+    "gameConfig",
+    "gridInfo",
+    "explorationCount",
+    "shouldReturnToBase"
+  ]
+}
+[browser:worker] 🔵 INFO [22:26:15] 🎯 [bot-0] Targeting explored tile with resources:
+[browser:worker] {
+  "coord": "4,0",
+  "resources": {
+    "food": 88,
+    "debris": 912,
+    "special": 2,
+    "total": 1002
+  },
+  "totalKnownTiles": 37,
+  "tilesWithResources": 17
+}
+[browser:worker] 🔵 INFO [22:26:15] 🚢 [bot-0] Setting ship target for collection:
+[browser:worker] {
+  "targetPosition": {
+    "x": -0.8660254037844388,
+    "y": 0,
+    "z": -4.5,
+    "coord": "4,0"
+  },
+  "targetGridCoord": "4,0",
+  "currentCoord": "1,3",
+  "coordinateCheck": {
+    "original": {
+      "x": -0.8660254037844388,
+      "y": 0,
+      "z": -4.5,
+      "coord": "4,0"
+    },
+    "recalculated": {
+      "x": -0.8660254037844388,
+      "y": 0,
+      "z": -4.5,
+      "coord": "4,0"
+    },
+    "areConsistent": true
+  }
+}
+[browser:worker] 🔵 INFO [22:26:15] 🛤️ [bot-0] Pathfinding result:
+[browser:worker] {
+  "pathLength": 4,
+  "pathSteps": 3,
+  "path": "1,3 → 2,2 → 3,1 → 4,0",
+  "fuelConsumption": 24,
+  "fuelRemaining": 76
+}
+[browser:worker] 🛤️ [PATHFINDING] Path: 1,3 → 2,2 → 3,1 → 4,0
+[browser:worker] ⛽ [PATHFINDING] Fuel: 100 - 24 = 76 (3 tiles × 8/tile)
+[browser:worker] 🔵 INFO [22:26:15] ✅ [bot-0] Ship movement setup result:
+[browser:worker] {
+  "hasVehicle": true,
+  "targetVehicleTile": {
+    "position": {
+      "x": -0.8660254037844388,
+      "y": 0,
+      "z": -4.5,
+      "coord": "4,0"
+    },
+    "type": "food",
+    "biome": "grassland",
+    "walkable": true,
+    "explorable": true,
+    "collectable": true,
+    "explored": false,
+    "collected": false,
+    "neighbors": [
+      "5,0",
+      "3,0",
+      "4,1",
+      "3,1"
+    ],
+    "resources": {
+      "food": 88,
+      "debris": 912,
+      "special": 2,
+      "total": 1002
+    },
+    "hasResources": true,
+    "color": "#c168b6"
+  },
+  "isMoving": true,
+  "pathLength": 4,
+  "fuelConsumed": 24,
+  "fuelRemaining": 76
+}
+[browser:worker] 🚢 [SHIP MOVING] Ship moving from 1,3 to 4,0 via 4 tiles
+[browser:worker] 🏠 [SHIP MOVING] Original base coord is: 1,3 (this should stay constant!)
+[browser:worker] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":3,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaching waypoint 1: 2,2)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=0, pathLength=4, hasMore=true
+[browser:worker] 🔵 INFO [22:26:15] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 1,
+  "totalWaypoints": 4,
+  "newCoord": "2,2",
+  "remainingSteps": 2,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 1/3: 2,2
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,0)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"4,0","hasResources":true,"currentResources":{"food":0,"debris":0,"special":0,"total":0},"totalResources":0,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:16] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": true
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":3,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":3,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:17] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:17] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "4,0",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 88,
+    "debris": 912,
+    "special": 2,
+    "total": 1002
+  },
+  "vehicleResourcesBefore": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "vehicleResourcesAfter": {
+    "food": 88,
+    "debris": 912,
+    "special": 2,
+    "total": 1002
+  },
+  "vehicleCapacity": "1002/2003",
+  "capacityUsed": "50%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:17] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "4,0",
+  "nextTile": "5,0",
+  "nextResources": {
+    "food": 86,
+    "debris": 899,
+    "special": 2,
+    "total": 987
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":4,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaching waypoint 2: 3,1)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=1, pathLength=4, hasMore=true
+[browser:worker] 🔵 INFO [22:26:17] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 2,
+  "totalWaypoints": 4,
+  "newCoord": "3,1",
+  "remainingSteps": 1,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 2/3: 3,1
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,0)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"5,0","hasResources":true,"currentResources":{"food":88,"debris":912,"special":2,"total":1002},"totalResources":1002,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:18] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":4,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:19] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:19] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "5,0",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 86,
+    "debris": 899,
+    "special": 2,
+    "total": 987
+  },
+  "vehicleResourcesBefore": {
+    "food": 88,
+    "debris": 912,
+    "special": 2,
+    "total": 1002
+  },
+  "vehicleResourcesAfter": {
+    "food": 174,
+    "debris": 1811,
+    "special": 4,
+    "total": 1989
+  },
+  "vehicleCapacity": "1989/2003",
+  "capacityUsed": "99%",
+  "isNearFull": true,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:19] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "5,0",
+  "nextTile": "1,3",
+  "nextResources": {
+    "food": 100,
+    "debris": 100,
+    "special": 50,
+    "total": 250
+  }
+}
+[browser:worker] 🔵 INFO [22:26:19] 🔄 [bot-0] assignShipReturningContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES",
+  "currentVehicleState": false
+}
+[browser:worker] 🏠 [SHIP RETURNING] Looking for base tile at coord: 1,3
+[browser:worker] 🏠 [SHIP RETURNING] Current ship coord: 5,0
+[browser:worker] 🏠 [SHIP RETURNING] baseCoord from vehicle context: 1,3
+[browser:worker] 🛤️ [SHIP RETURNING] Path calculated: {"from":"5,0","to":"1,3","pathLength":5,"path":"5,0 → 4,0 → 3,1 → 2,2 → 1,3"}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":5,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🔵 INFO [22:26:19] 🔙 [bot-0] Updating vehicle state to returning with target:
+[browser:worker] {
+  "baseCoord": "1,3",
+  "basePosition": {
+    "x": 0.8,
+    "y": 0.5,
+    "z": 2.4000000000000004
+  },
+  "currentCoord": "5,0",
+  "pathLength": 5
+}
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaches return waypoint 1/4)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=0, pathLength=5, hasMore=true
+[browser:worker] 🔵 INFO [22:26:19] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 1,
+  "totalWaypoints": 5,
+  "newCoord": "4,0",
+  "remainingSteps": 3,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 1/4: 4,0
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_BASE (Ship reaches base (final waypoint))
+[browser:worker] 🟠 ACTION [22:26:21] 🔄 [bot-0] assignShipReachedBaseContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_BASE",
+  "currentVehicleState": true
+}
+[browser:worker] 🟠 ACTION [22:26:21] 🏠 [bot-0] Ship reached base - ready for maintenance
+[browser:worker] {
+  "vehicleResources": {
+    "food": 174,
+    "debris": 1811,
+    "special": 4,
+    "total": 1989
+  },
+  "vehicleState": "returning"
+}
+[browser:worker] 🟠 ACTION [22:26:21] 🔧 [bot-0] Entrée dans l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 74,
+    "damage": 0,
+    "resources": 1989
+  },
+  "maintenanceTasks": {
+    "needsFuel": true,
+    "needsRepair": false,
+    "needsDeposit": true
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:21] 📦 [bot-0] Dépôt des ressources
+[browser:worker] {
+  "resourcesDeposited": {
+    "food": 174,
+    "debris": 1811,
+    "special": 4,
+    "total": 1989
+  },
+  "currentScore": {
+    "food": 527,
+    "debris": 5474,
+    "special": 4,
+    "total": 6005
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":5,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"maintaining":"depositing"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":5,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"maintaining":"depositing"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_DEPOSIT_COMPLETE (Depositing resources)
+[browser:worker] 🟠 ACTION [22:26:22] ✅ [bot-0] Ressources déposées avec succès
+[browser:worker] {
+  "score": {
+    "food": 527,
+    "debris": 5474,
+    "special": 4,
+    "total": 6005
+  },
+  "vehicleResources": {
+    "food": 174,
+    "debris": 1811,
+    "special": 4,
+    "total": 1989
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:22] ✅ [bot-0] Sortie de l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 74,
+    "damage": 0,
+    "resources": 1989
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:22] 🔄 [bot-0] assignShipDepositResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_DEPOSIT_COMPLETE"
+}
+[browser:worker] 🟠 ACTION [22:26:22] 💰 [bot-0] Depositing resources at base:
+[browser:worker] {
+  "resourcesDeposited": {
+    "food": 174,
+    "debris": 1811,
+    "special": 4,
+    "total": 1989
+  },
+  "scoreBefore": {
+    "food": 527,
+    "debris": 5474,
+    "special": 4,
+    "total": 6005
+  },
+  "scoreAfter": {
+    "food": 701,
+    "debris": 7285,
+    "special": 8,
+    "total": 7994
+  },
+  "totalGained": 1989
+}
+[browser:worker] 🔵 INFO [22:26:22] 🔄 [bot-0] Resetting exploration cycle counter after deposit
+[browser:worker] {
+  "previousCount": 0,
+  "newCount": 0
+}
+[browser:worker] 🔵 INFO [22:26:22] [Evaluating] Conditions
+[browser:worker] {
+  "fuel": 74,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 37
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=3 {"candidatesCount":18,"unexploredCount":16,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=3 {"candidatesCount":18,"unexploredCount":16,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":5,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: evaluating | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🔵 INFO [22:26:22] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:worker] {
+  "tilesCount": 15
+}
+[browser:worker] 🔵 INFO [22:26:22] 🔄 [bot-0] assignShipMovingToTileContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "NEED_COLLECTING",
+  "contextKeys": [
+    "entityId",
+    "entityType",
+    "autonomousMode",
+    "vehicle",
+    "fsmState",
+    "explorationQueue",
+    "lastAction",
+    "error",
+    "timestamps",
+    "score",
+    "memory",
+    "explorationCycle",
+    "config",
+    "droneFleet",
+    "gameConfig",
+    "gridInfo",
+    "explorationCount",
+    "shouldReturnToBase"
+  ]
+}
+[browser:worker] 🔵 INFO [22:26:22] 🎯 [bot-0] Targeting explored tile with resources:
+[browser:worker] {
+  "coord": "1,3",
+  "resources": {
+    "food": 100,
+    "debris": 100,
+    "special": 50,
+    "total": 250
+  },
+  "totalKnownTiles": 37,
+  "tilesWithResources": 15
+}
+[browser:worker] 🔵 INFO [22:26:22] 🚢 [bot-0] Setting ship target for collection:
+[browser:worker] {
+  "targetPosition": {
+    "x": -3.4641016151377544,
+    "y": 0,
+    "z": 0,
+    "coord": "1,3"
+  },
+  "targetGridCoord": "1,3",
+  "currentCoord": "1,3",
+  "coordinateCheck": {
+    "original": {
+      "x": -3.4641016151377544,
+      "y": 0,
+      "z": 0,
+      "coord": "1,3"
+    },
+    "recalculated": {
+      "x": -3.4641016151377544,
+      "y": 0,
+      "z": 0,
+      "coord": "1,3"
+    },
+    "areConsistent": true
+  }
+}
+[browser:worker] 🔵 INFO [22:26:22] 🛤️ [bot-0] Pathfinding result:
+[browser:worker] {
+  "pathLength": 1,
+  "pathSteps": 0,
+  "path": "1,3",
+  "fuelConsumption": 1,
+  "fuelRemaining": 73
+}
+[browser:worker] 🛤️ [PATHFINDING] Path: 1,3
+[browser:worker] ⛽ [PATHFINDING] Fuel: 74 - 1 = 73 (0 tiles × 8/tile)
+[browser:worker] 🔵 INFO [22:26:22] ✅ [bot-0] Ship movement setup result:
+[browser:worker] {
+  "hasVehicle": true,
+  "targetVehicleTile": {
+    "position": {
+      "x": -3.4641016151377544,
+      "y": 0,
+      "z": 0,
+      "coord": "1,3"
+    },
+    "type": "depart",
+    "biome": "grassland",
+    "walkable": true,
+    "explorable": true,
+    "collectable": true,
+    "explored": false,
+    "collected": false,
+    "neighbors": [
+      "2,3",
+      "0,3",
+      "1,4",
+      "1,2",
+      "2,2",
+      "0,4"
+    ],
+    "resources": {
+      "food": 100,
+      "debris": 100,
+      "special": 50,
+      "total": 250
+    },
+    "hasResources": true,
+    "color": "#4CAF50",
+    "assignedToBot": "bot-0"
+  },
+  "isMoving": true,
+  "pathLength": 1,
+  "fuelConsumed": 1,
+  "fuelRemaining": 73
+}
+[browser:worker] 🚢 [SHIP MOVING] Ship moving from 1,3 to 1,3 via 1 tiles
+[browser:worker] 🏠 [SHIP MOVING] Original base coord is: 1,3 (this should stay constant!)
+[browser:worker] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":5,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship already at path end)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"1,3","hasResources":true,"currentResources":{"food":0,"debris":0,"special":0,"total":0},"totalResources":0,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:22] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": true
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":5,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:24] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:24] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "1,3",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 100,
+    "debris": 100,
+    "special": 50,
+    "total": 250
+  },
+  "vehicleResourcesBefore": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "vehicleResourcesAfter": {
+    "food": 100,
+    "debris": 100,
+    "special": 50,
+    "total": 250
+  },
+  "vehicleCapacity": "250/2003",
+  "capacityUsed": "12%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:24] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "1,3",
+  "nextTile": "1,6",
+  "nextResources": {
+    "food": 100,
+    "debris": 100,
+    "special": 50,
+    "total": 250
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":6,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship already at path end)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"1,6","hasResources":true,"currentResources":{"food":100,"debris":100,"special":50,"total":250},"totalResources":250,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:24] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":6,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:25] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:25] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "1,6",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 100,
+    "debris": 100,
+    "special": 50,
+    "total": 250
+  },
+  "vehicleResourcesBefore": {
+    "food": 100,
+    "debris": 100,
+    "special": 50,
+    "total": 250
+  },
+  "vehicleResourcesAfter": {
+    "food": 200,
+    "debris": 200,
+    "special": 100,
+    "total": 500
+  },
+  "vehicleCapacity": "500/2003",
+  "capacityUsed": "25%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:25] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "1,6",
+  "nextTile": "3,6",
+  "nextResources": {
+    "food": 12,
+    "debris": 164,
+    "special": 0,
+    "total": 176
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":7,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship already at path end)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"3,6","hasResources":true,"currentResources":{"food":200,"debris":200,"special":100,"total":500},"totalResources":500,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:25] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":7,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:26] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:26] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "3,6",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 12,
+    "debris": 164,
+    "special": 0,
+    "total": 176
+  },
+  "vehicleResourcesBefore": {
+    "food": 200,
+    "debris": 200,
+    "special": 100,
+    "total": 500
+  },
+  "vehicleResourcesAfter": {
+    "food": 212,
+    "debris": 364,
+    "special": 100,
+    "total": 676
+  },
+  "vehicleCapacity": "676/2003",
+  "capacityUsed": "34%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:26] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "3,6",
+  "nextTile": "5,2",
+  "nextResources": {
+    "food": 14,
+    "debris": 145,
+    "special": 0,
+    "total": 159
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":8,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship already at path end)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"5,2","hasResources":true,"currentResources":{"food":212,"debris":364,"special":100,"total":676},"totalResources":676,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:26] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":8,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":8,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:27] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:27] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "5,2",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 14,
+    "debris": 145,
+    "special": 0,
+    "total": 159
+  },
+  "vehicleResourcesBefore": {
+    "food": 212,
+    "debris": 364,
+    "special": 100,
+    "total": 676
+  },
+  "vehicleResourcesAfter": {
+    "food": 226,
+    "debris": 509,
+    "special": 100,
+    "total": 835
+  },
+  "vehicleCapacity": "835/2003",
+  "capacityUsed": "42%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:27] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "5,2",
+  "nextTile": "3,5",
+  "nextResources": {
+    "food": 8,
+    "debris": 124,
+    "special": 0,
+    "total": 132
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":9,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship already at path end)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"3,5","hasResources":true,"currentResources":{"food":226,"debris":509,"special":100,"total":835},"totalResources":835,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:28] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":9,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:29] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:29] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "3,5",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 8,
+    "debris": 124,
+    "special": 0,
+    "total": 132
+  },
+  "vehicleResourcesBefore": {
+    "food": 226,
+    "debris": 509,
+    "special": 100,
+    "total": 835
+  },
+  "vehicleResourcesAfter": {
+    "food": 234,
+    "debris": 633,
+    "special": 100,
+    "total": 967
+  },
+  "vehicleCapacity": "967/2003",
+  "capacityUsed": "48%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:29] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "3,5",
+  "nextTile": "4,3",
+  "nextResources": {
+    "food": 100,
+    "debris": 31,
+    "special": 0,
+    "total": 131
+  }
+}
+[browser:worker] 🔵 INFO [22:26:29] 🔄 [bot-0] assignShipReturningContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES",
+  "currentVehicleState": false
+}
+[browser:worker] 🏠 [SHIP RETURNING] Looking for base tile at coord: 1,3
+[browser:worker] 🏠 [SHIP RETURNING] Current ship coord: 3,5
+[browser:worker] 🏠 [SHIP RETURNING] baseCoord from vehicle context: 1,3
+[browser:worker] 🛤️ [SHIP RETURNING] Path calculated: {"from":"3,5","to":"1,3","pathLength":6,"path":"3,5 → 3,4 → 3,3 → 3,2 → 2,2..."}
+[browser:worker] 🔵 INFO [22:26:29] 🔙 [bot-0] Updating vehicle state to returning with target:
+[browser:worker] {
+  "baseCoord": "1,3",
+  "basePosition": {
+    "x": 0.8,
+    "y": 0.5,
+    "z": 2.4000000000000004
+  },
+  "currentCoord": "3,5",
+  "pathLength": 6
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":10,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaches return waypoint 1/5)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=0, pathLength=6, hasMore=true
+[browser:worker] 🔵 INFO [22:26:29] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 1,
+  "totalWaypoints": 6,
+  "newCoord": "3,4",
+  "remainingSteps": 4,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 1/5: 3,4
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_BASE (Ship reaches base (final waypoint))
+[browser:worker] 🟠 ACTION [22:26:31] 🔄 [bot-0] assignShipReachedBaseContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_BASE",
+  "currentVehicleState": true
+}
+[browser:worker] 🟠 ACTION [22:26:31] 🏠 [bot-0] Ship reached base - ready for maintenance
+[browser:worker] {
+  "vehicleResources": {
+    "food": 234,
+    "debris": 633,
+    "special": 100,
+    "total": 967
+  },
+  "vehicleState": "returning"
+}
+[browser:worker] 🟠 ACTION [22:26:31] 🔧 [bot-0] Entrée dans l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 68,
+    "damage": 0,
+    "resources": 967
+  },
+  "maintenanceTasks": {
+    "needsFuel": true,
+    "needsRepair": false,
+    "needsDeposit": true
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:31] 📦 [bot-0] Dépôt des ressources
+[browser:worker] {
+  "resourcesDeposited": {
+    "food": 234,
+    "debris": 633,
+    "special": 100,
+    "total": 967
+  },
+  "currentScore": {
+    "food": 701,
+    "debris": 7285,
+    "special": 8,
+    "total": 7994
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":10,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"maintaining":"depositing"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":10,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"maintaining":"depositing"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_DEPOSIT_COMPLETE (Depositing resources)
+[browser:worker] 🟠 ACTION [22:26:32] ✅ [bot-0] Ressources déposées avec succès
+[browser:worker] {
+  "score": {
+    "food": 701,
+    "debris": 7285,
+    "special": 8,
+    "total": 7994
+  },
+  "vehicleResources": {
+    "food": 234,
+    "debris": 633,
+    "special": 100,
+    "total": 967
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:32] ✅ [bot-0] Sortie de l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 68,
+    "damage": 0,
+    "resources": 967
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:32] 🔄 [bot-0] assignShipDepositResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_DEPOSIT_COMPLETE"
+}
+[browser:worker] 🟠 ACTION [22:26:32] 💰 [bot-0] Depositing resources at base:
+[browser:worker] {
+  "resourcesDeposited": {
+    "food": 234,
+    "debris": 633,
+    "special": 100,
+    "total": 967
+  },
+  "scoreBefore": {
+    "food": 701,
+    "debris": 7285,
+    "special": 8,
+    "total": 7994
+  },
+  "scoreAfter": {
+    "food": 935,
+    "debris": 7918,
+    "special": 108,
+    "total": 8961
+  },
+  "totalGained": 967
+}
+[browser:worker] 🔵 INFO [22:26:32] 🔄 [bot-0] Resetting exploration cycle counter after deposit
+[browser:worker] {
+  "previousCount": 0,
+  "newCount": 0
+}
+[browser:worker] 🔵 INFO [22:26:32] [Evaluating] Conditions
+[browser:worker] {
+  "fuel": 68,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": true,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 37
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=3 {"candidatesCount":18,"unexploredCount":16,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=3 {"candidatesCount":18,"unexploredCount":16,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":10,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: evaluating | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🔵 INFO [22:26:32] [Evaluating] → NEED_COLLECTING (collectible tiles available)
+[browser:worker] {
+  "tilesCount": 10
+}
+[browser:worker] 🔵 INFO [22:26:32] 🔄 [bot-0] assignShipMovingToTileContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "NEED_COLLECTING",
+  "contextKeys": [
+    "entityId",
+    "entityType",
+    "autonomousMode",
+    "vehicle",
+    "fsmState",
+    "explorationQueue",
+    "lastAction",
+    "error",
+    "timestamps",
+    "score",
+    "memory",
+    "explorationCycle",
+    "config",
+    "droneFleet",
+    "gameConfig",
+    "gridInfo",
+    "explorationCount",
+    "shouldReturnToBase"
+  ]
+}
+[browser:worker] 🔵 INFO [22:26:32] 🎯 [bot-0] Targeting explored tile with resources:
+[browser:worker] {
+  "coord": "4,3",
+  "resources": {
+    "food": 100,
+    "debris": 31,
+    "special": 0,
+    "total": 131
+  },
+  "totalKnownTiles": 37,
+  "tilesWithResources": 10
+}
+[browser:worker] 🔵 INFO [22:26:32] 🚢 [bot-0] Setting ship target for collection:
+[browser:worker] {
+  "targetPosition": {
+    "x": 1.7320508075688772,
+    "y": 0,
+    "z": 0,
+    "coord": "4,3"
+  },
+  "targetGridCoord": "4,3",
+  "currentCoord": "1,3",
+  "coordinateCheck": {
+    "original": {
+      "x": 1.7320508075688772,
+      "y": 0,
+      "z": 0,
+      "coord": "4,3"
+    },
+    "recalculated": {
+      "x": 1.7320508075688772,
+      "y": 0,
+      "z": 0,
+      "coord": "4,3"
+    },
+    "areConsistent": true
+  }
+}
+[browser:worker] 🔵 INFO [22:26:32] 🛤️ [bot-0] Pathfinding result:
+[browser:worker] {
+  "pathLength": 5,
+  "pathSteps": 4,
+  "path": "1,3 → 2,2 → 3,2 → 4,2 → 4,3",
+  "fuelConsumption": 32,
+  "fuelRemaining": 36
+}
+[browser:worker] 🛤️ [PATHFINDING] Path: 1,3 → 2,2 → 3,2 → 4,2 → 4,3
+[browser:worker] ⛽ [PATHFINDING] Fuel: 68 - 32 = 36 (4 tiles × 8/tile)
+[browser:worker] 🔵 INFO [22:26:32] ✅ [bot-0] Ship movement setup result:
+[browser:worker] {
+  "hasVehicle": true,
+  "targetVehicleTile": {
+    "position": {
+      "x": 1.7320508075688772,
+      "y": 0,
+      "z": 0,
+      "coord": "4,3"
+    },
+    "type": "food",
+    "biome": "grassland",
+    "walkable": true,
+    "explorable": true,
+    "collectable": true,
+    "explored": false,
+    "collected": false,
+    "neighbors": [
+      "5,3",
+      "3,3",
+      "4,4",
+      "4,2",
+      "5,2",
+      "3,4"
+    ],
+    "resources": {
+      "food": 100,
+      "debris": 31,
+      "special": 0,
+      "total": 131
+    },
+    "hasResources": true,
+    "color": "#e007dc"
+  },
+  "isMoving": true,
+  "pathLength": 5,
+  "fuelConsumed": 32,
+  "fuelRemaining": 36
+}
+[browser:worker] 🚢 [SHIP MOVING] Ship moving from 1,3 to 4,3 via 5 tiles
+[browser:worker] 🏠 [SHIP MOVING] Original base coord is: 1,3 (this should stay constant!)
+[browser:worker] 🚢 [SHIP MOVING] ⚠️  The ship is leaving its starting position to collect resources!
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":10,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaching waypoint 1: 2,2)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=0, pathLength=5, hasMore=true
+[browser:worker] 🔵 INFO [22:26:33] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 1,
+  "totalWaypoints": 5,
+  "newCoord": "2,2",
+  "remainingSteps": 3,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 1/4: 2,2
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,3)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"4,3","hasResources":true,"currentResources":{"food":0,"debris":0,"special":0,"total":0},"totalResources":0,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:34] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": true
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":10,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:35] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:35] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "4,3",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 100,
+    "debris": 31,
+    "special": 0,
+    "total": 131
+  },
+  "vehicleResourcesBefore": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "vehicleResourcesAfter": {
+    "food": 100,
+    "debris": 31,
+    "special": 0,
+    "total": 131
+  },
+  "vehicleCapacity": "131/2003",
+  "capacityUsed": "7%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:35] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "4,3",
+  "nextTile": "4,5",
+  "nextResources": {
+    "food": 7,
+    "debris": 111,
+    "special": 0,
+    "total": 118
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":11,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaching waypoint 2: 3,2)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=1, pathLength=5, hasMore=true
+[browser:worker] 🔵 INFO [22:26:36] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 2,
+  "totalWaypoints": 5,
+  "newCoord": "3,2",
+  "remainingSteps": 2,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 2/4: 3,2
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,3)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"4,5","hasResources":true,"currentResources":{"food":100,"debris":31,"special":0,"total":131},"totalResources":131,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:36] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":11,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":11,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:38] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:38] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "4,5",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 7,
+    "debris": 111,
+    "special": 0,
+    "total": 118
+  },
+  "vehicleResourcesBefore": {
+    "food": 100,
+    "debris": 31,
+    "special": 0,
+    "total": 131
+  },
+  "vehicleResourcesAfter": {
+    "food": 107,
+    "debris": 142,
+    "special": 0,
+    "total": 249
+  },
+  "vehicleCapacity": "249/2003",
+  "capacityUsed": "12%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:38] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "4,5",
+  "nextTile": "5,3",
+  "nextResources": {
+    "food": 98,
+    "debris": 18,
+    "special": 0,
+    "total": 116
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":12,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaching waypoint 3: 4,2)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=2, pathLength=5, hasMore=true
+[browser:worker] 🔵 INFO [22:26:38] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 3,
+  "totalWaypoints": 5,
+  "newCoord": "4,2",
+  "remainingSteps": 1,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 3/4: 4,2
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,3)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"5,3","hasResources":true,"currentResources":{"food":107,"debris":142,"special":0,"total":249},"totalResources":249,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:38] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":12,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:40] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:40] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "5,3",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 98,
+    "debris": 18,
+    "special": 0,
+    "total": 116
+  },
+  "vehicleResourcesBefore": {
+    "food": 107,
+    "debris": 142,
+    "special": 0,
+    "total": 249
+  },
+  "vehicleResourcesAfter": {
+    "food": 205,
+    "debris": 160,
+    "special": 0,
+    "total": 365
+  },
+  "vehicleCapacity": "365/2003",
+  "capacityUsed": "18%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:40] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "5,3",
+  "nextTile": "4,1",
+  "nextResources": {
+    "food": 9,
+    "debris": 92,
+    "special": 1,
+    "total": 102
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":13,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,3)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"4,1","hasResources":true,"currentResources":{"food":205,"debris":160,"special":0,"total":365},"totalResources":365,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:40] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":13,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:41] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:41] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "4,1",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 9,
+    "debris": 92,
+    "special": 1,
+    "total": 102
+  },
+  "vehicleResourcesBefore": {
+    "food": 205,
+    "debris": 160,
+    "special": 0,
+    "total": 365
+  },
+  "vehicleResourcesAfter": {
+    "food": 214,
+    "debris": 252,
+    "special": 1,
+    "total": 467
+  },
+  "vehicleCapacity": "467/2003",
+  "capacityUsed": "23%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:41] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "4,1",
+  "nextTile": "3,2",
+  "nextResources": {
+    "food": 97,
+    "debris": 4,
+    "special": 0,
+    "total": 101
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":14,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,3)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"3,2","hasResources":true,"currentResources":{"food":214,"debris":252,"special":1,"total":467},"totalResources":467,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:42] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":14,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":14,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:43] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:43] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "3,2",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 97,
+    "debris": 4,
+    "special": 0,
+    "total": 101
+  },
+  "vehicleResourcesBefore": {
+    "food": 214,
+    "debris": 252,
+    "special": 1,
+    "total": 467
+  },
+  "vehicleResourcesAfter": {
+    "food": 311,
+    "debris": 256,
+    "special": 1,
+    "total": 568
+  },
+  "vehicleCapacity": "568/2003",
+  "capacityUsed": "28%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:43] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "3,2",
+  "nextTile": "3,4",
+  "nextResources": {
+    "food": 4,
+    "debris": 84,
+    "special": 0,
+    "total": 88
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":15,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,3)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"3,4","hasResources":true,"currentResources":{"food":311,"debris":256,"special":1,"total":568},"totalResources":568,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:43] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":15,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:44] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:44] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "3,4",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 4,
+    "debris": 84,
+    "special": 0,
+    "total": 88
+  },
+  "vehicleResourcesBefore": {
+    "food": 311,
+    "debris": 256,
+    "special": 1,
+    "total": 568
+  },
+  "vehicleResourcesAfter": {
+    "food": 315,
+    "debris": 340,
+    "special": 1,
+    "total": 656
+  },
+  "vehicleCapacity": "656/2003",
+  "capacityUsed": "33%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:44] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "3,4",
+  "nextTile": "4,4",
+  "nextResources": {
+    "food": 3,
+    "debris": 71,
+    "special": 0,
+    "total": 74
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":16,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,3)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"4,4","hasResources":true,"currentResources":{"food":315,"debris":340,"special":1,"total":656},"totalResources":656,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:45] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":16,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:46] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:46] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "4,4",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 3,
+    "debris": 71,
+    "special": 0,
+    "total": 74
+  },
+  "vehicleResourcesBefore": {
+    "food": 315,
+    "debris": 340,
+    "special": 1,
+    "total": 656
+  },
+  "vehicleResourcesAfter": {
+    "food": 318,
+    "debris": 411,
+    "special": 1,
+    "total": 730
+  },
+  "vehicleCapacity": "730/2003",
+  "capacityUsed": "36%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:46] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "4,4",
+  "nextTile": "5,4",
+  "nextResources": {
+    "food": 1,
+    "debris": 58,
+    "special": 0,
+    "total": 59
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":17,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,3)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"5,4","hasResources":true,"currentResources":{"food":318,"debris":411,"special":1,"total":730},"totalResources":730,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:46] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":17,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":17,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:48] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:48] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "5,4",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 1,
+    "debris": 58,
+    "special": 0,
+    "total": 59
+  },
+  "vehicleResourcesBefore": {
+    "food": 318,
+    "debris": 411,
+    "special": 1,
+    "total": 730
+  },
+  "vehicleResourcesAfter": {
+    "food": 319,
+    "debris": 469,
+    "special": 1,
+    "total": 789
+  },
+  "vehicleCapacity": "789/2003",
+  "capacityUsed": "39%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:48] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "5,4",
+  "nextTile": "3,0",
+  "nextResources": {
+    "food": 4,
+    "debris": 41,
+    "special": 1,
+    "total": 46
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":18,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,3)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"3,0","hasResources":true,"currentResources":{"food":319,"debris":469,"special":1,"total":789},"totalResources":789,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:48] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":18,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:49] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:49] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "3,0",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 4,
+    "debris": 41,
+    "special": 1,
+    "total": 46
+  },
+  "vehicleResourcesBefore": {
+    "food": 319,
+    "debris": 469,
+    "special": 1,
+    "total": 789
+  },
+  "vehicleResourcesAfter": {
+    "food": 323,
+    "debris": 510,
+    "special": 2,
+    "total": 835
+  },
+  "vehicleCapacity": "835/2003",
+  "capacityUsed": "42%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:49] 🔄 [bot-0] Current tile collected, switching to next best tile:
+[browser:worker] {
+  "previousTile": "3,0",
+  "nextTile": "3,3",
+  "nextResources": {
+    "food": 0,
+    "debris": 44,
+    "special": 0,
+    "total": 44
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":19,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_moving_to_tile"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_TILE (Ship reaching final destination 4,3)
+[browser:worker] 🔍 [canCollectTile] {"hasTargetTile":true,"targetCoord":"3,3","hasResources":true,"currentResources":{"food":323,"debris":510,"special":2,"total":835},"totalResources":835,"maxCapacity":2003,"hasCapacity":true,"hasEnoughFuel":true,"isOperational":true,"result":true}
+[browser:worker] 🔵 INFO [22:26:50] 🔄 [bot-0] assignShipCollectingContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_TILE",
+  "currentVehicleState": false
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":19,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_collecting"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_LOAD_RESOURCES (Collecting resources)
+[browser:worker] 🟠 ACTION [22:26:51] 🔄 [bot-0] assignShipLoadResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES"
+}
+[browser:worker] 🟠 ACTION [22:26:51] 📦 [bot-0] Resources transferred from tile:
+[browser:worker] {
+  "tileCoord": "3,3",
+  "tileResourcesAfter": {
+    "food": 0,
+    "debris": 0,
+    "special": 0,
+    "total": 0
+  },
+  "tileCollectedFlag": true,
+  "collected": {
+    "food": 0,
+    "debris": 44,
+    "special": 0,
+    "total": 44
+  },
+  "vehicleResourcesBefore": {
+    "food": 323,
+    "debris": 510,
+    "special": 2,
+    "total": 835
+  },
+  "vehicleResourcesAfter": {
+    "food": 323,
+    "debris": 554,
+    "special": 2,
+    "total": 879
+  },
+  "vehicleCapacity": "879/2003",
+  "capacityUsed": "44%",
+  "isNearFull": false,
+  "tileIsEmpty": true,
+  "shouldReturn": true
+}
+[browser:worker] 🔵 INFO [22:26:51] 🔄 [bot-0] assignShipReturningContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_LOAD_RESOURCES",
+  "currentVehicleState": false
+}
+[browser:worker] 🏠 [SHIP RETURNING] Looking for base tile at coord: 1,3
+[browser:worker] 🏠 [SHIP RETURNING] Current ship coord: 3,3
+[browser:worker] 🏠 [SHIP RETURNING] baseCoord from vehicle context: 1,3
+[browser:worker] 🛤️ [SHIP RETURNING] Path calculated: {"from":"3,3","to":"1,3","pathLength":4,"path":"3,3 → 3,2 → 2,2 → 1,3"}
+[browser:worker] 🔵 INFO [22:26:51] 🔙 [bot-0] Updating vehicle state to returning with target:
+[browser:worker] {
+  "baseCoord": "1,3",
+  "basePosition": {
+    "x": 0.8,
+    "y": 0.5,
+    "z": 2.4000000000000004
+  },
+  "currentCoord": "3,3",
+  "pathLength": 4
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":20,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_WAYPOINT (Ship reaches return waypoint 1/3)
+[browser:worker] 🛤️ [hasMoreWaypoints] pathIndex=0, pathLength=4, hasMore=true
+[browser:worker] 🔵 INFO [22:26:51] 🛤️ [bot-0] Waypoint reached:
+[browser:worker] {
+  "waypointIndex": 1,
+  "totalWaypoints": 4,
+  "newCoord": "3,2",
+  "remainingSteps": 2,
+  "damage": "none"
+}
+[browser:worker] 🛤️ [PATHFINDING] Waypoint 1/3: 3,2
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":20,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"collecting":"ship_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REACHES_BASE (Ship reaches base (final waypoint))
+[browser:worker] 🟠 ACTION [22:26:52] 🔄 [bot-0] assignShipReachedBaseContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_REACHES_BASE",
+  "currentVehicleState": true
+}
+[browser:worker] 🟠 ACTION [22:26:52] 🏠 [bot-0] Ship reached base - ready for maintenance
+[browser:worker] {
+  "vehicleResources": {
+    "food": 323,
+    "debris": 554,
+    "special": 2,
+    "total": 879
+  },
+  "vehicleState": "returning"
+}
+[browser:worker] 🟠 ACTION [22:26:52] 🔧 [bot-0] Entrée dans l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 26,
+    "damage": 0,
+    "resources": 879
+  },
+  "maintenanceTasks": {
+    "needsFuel": true,
+    "needsRepair": false,
+    "needsDeposit": true
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:52] 📦 [bot-0] Dépôt des ressources
+[browser:worker] {
+  "resourcesDeposited": {
+    "food": 323,
+    "debris": 554,
+    "special": 2,
+    "total": 879
+  },
+  "currentScore": {
+    "food": 935,
+    "debris": 7918,
+    "special": 108,
+    "total": 8961
+  }
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":20,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"maintaining":"depositing"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_DEPOSIT_COMPLETE (Depositing resources)
+[browser:worker] 🟠 ACTION [22:26:54] ✅ [bot-0] Ressources déposées avec succès
+[browser:worker] {
+  "score": {
+    "food": 935,
+    "debris": 7918,
+    "special": 108,
+    "total": 8961
+  },
+  "vehicleResources": {
+    "food": 323,
+    "debris": 554,
+    "special": 2,
+    "total": 879
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:54] 🔄 [bot-0] assignShipDepositResourcesContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "SHIP_DEPOSIT_COMPLETE"
+}
+[browser:worker] 🟠 ACTION [22:26:54] 💰 [bot-0] Depositing resources at base:
+[browser:worker] {
+  "resourcesDeposited": {
+    "food": 323,
+    "debris": 554,
+    "special": 2,
+    "total": 879
+  },
+  "scoreBefore": {
+    "food": 935,
+    "debris": 7918,
+    "special": 108,
+    "total": 8961
+  },
+  "scoreAfter": {
+    "food": 1258,
+    "debris": 8472,
+    "special": 110,
+    "total": 9840
+  },
+  "totalGained": 879
+}
+[browser:worker] 🔵 INFO [22:26:54] 🔄 [bot-0] Resetting exploration cycle counter after deposit
+[browser:worker] {
+  "previousCount": 0,
+  "newCount": 0
+}
+[browser:worker] 🟠 ACTION [22:26:54] ⛽ [bot-0] Ravitaillement du navire
+[browser:worker] {
+  "fuelBefore": 26,
+  "estimatedTime": "1s"
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":20,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"maintaining":"refueling"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: SHIP_REFUEL_COMPLETE (Refueling ship)
+[browser:worker] 🟠 ACTION [22:26:55] ✅ [bot-0] Navire ravitaillé
+[browser:worker] {
+  "fuelAfter": 26
+}
+[browser:worker] 🟠 ACTION [22:26:55] ✅ [bot-0] Sortie de l'état MAINTAINING
+[browser:worker] {
+  "vehicleState": {
+    "fuel": 26,
+    "damage": 0,
+    "resources": 0
+  }
+}
+[browser:worker] ⛽ [assignShipRefuelContext] bot-0: SHIP REFUELED
+[browser:worker]    Fuel: 26.0% → 100.0%
+[browser:worker]    Fuel added: 74.0%
+[browser:worker] 🔵 INFO [22:26:55] [Evaluating] Conditions
+[browser:worker] {
+  "fuel": 100,
+  "damage": 0,
+  "needsMaintenance": false,
+  "hasUnexploredInRadius": true,
+  "shouldRelocate": false,
+  "hasCollectibleTiles": false,
+  "isShipNotFull": true,
+  "isDroneAvailable": true,
+  "explorationQueueLength": 0,
+  "droneState": "docked",
+  "knownTilesCount": 37
+}
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=3 {"candidatesCount":18,"unexploredCount":16,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=3 {"candidatesCount":18,"unexploredCount":16,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":20,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: evaluating | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🔵 INFO [22:26:55] [Evaluating] → NEED_EXPLORING (no collectible tiles or ship at capacity)
+[browser:worker] 🔍 [hasUnexploredTilesInRadius] ship=1,3, radius=3 {"candidatesCount":18,"unexploredCount":16,"exploredCoordsSize":2,"freshTilesCount":37,"shipCoord":"1,3","result":true}
+[browser:worker] ✅ [canStartExploring] ALLOWING - valid unexplored tiles available
+[browser:worker] 🔍 [DEBUG assignDroneDeployingContext] ship=1,3, radius=3 {"candidatesCount":12,"unexploredCount":11,"exploredCoordsSize":2,"exploredCoordsSample":["0,5","3,3"],"candidatesSample":["2,3:explored=false","0,3:explored=false","1,4:explored=false","1,2:explored=false","2,2:explored=false"]}
+[browser:worker] 🎯 [DEBUG assignDroneDeployingContext] Selected target: 2,2
+[browser:worker] 🔵 INFO [22:26:55] ✅ [bot-0] Drone deploying with fuel consumption:
+[browser:worker] {
+  "distance": "1.41",
+  "fuelConsumed": 1,
+  "fuelRemaining": 99
+}
+[browser:worker] 🟠 ACTION [22:26:55] 🚁 [bot-0] Entrée dans l'état DRONE_DEPLOYING
+[browser:worker] {
+  "targetTile": "2,2"
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":20,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_deploying"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: DRONE_REACHES_TILE (Drone traveling to 2,2)
+[browser:worker] 📡 [assignDroneScanningContext] Scanning tile 2,2, type: "fuel" (isDanger: false)
+[browser:worker] 🟠 ACTION [22:26:56] 📡 [bot-0] Entrée dans l'état DRONE_SCANNING
+[browser:worker] {
+  "scannedTile": "6,3",
+  "explorationCount": 3
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":20,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_scanning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":20,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_scanning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] 🤖 [WORKER:bot-0] Sending: DRONE_HAS_SCANNED (Scanning tile)
+[browser:worker] 🔥 [shouldDestroyDroneOnDanger] Checking targetTile.type: "fuel" → isDanger=false
+[browser:worker] 🔵 INFO [22:26:57] 🔄 [bot-0] assignDroneReturningContext called with:
+[browser:worker] {
+  "hasContext": true,
+  "hasEvent": true,
+  "eventType": "DRONE_HAS_SCANNED",
+  "currentDroneState": "deploying"
+}
+[browser:worker] 🏠 [DRONE RETURNING] Looking for base tile at baseCoord: 1,3
+[browser:worker] 🏠 [DRONE RETURNING] Current ship coord: 1,3
+[browser:worker] 🏠 [DRONE RETURNING] baseCoord from vehicle context: 1,3
+[browser:worker] 🏠 [DRONE RETURNING] ⚠️  The drone should return to the FIXED starting tile, not the current ship position!
+[browser:worker] 🔵 INFO [22:26:57] 🔙 [bot-0] Updating drone state to returning with targetDroneTile (base)
+[browser:worker] {
+  "baseTile": {
+    "position": {
+      "x": 0.8,
+      "y": 0.2,
+      "z": 2.4000000000000004,
+      "coord": "1,3"
+    },
+    "coord": "1,3",
+    "type": "depart",
+    "biome": "station",
+    "explorable": false,
+    "collectable": false,
+    "resources": {
+      "food": 0,
+      "debris": 0,
+      "special": 0,
+      "total": 0
+    },
+    "hasResources": false
+  }
+}
+[browser:worker] 🟠 ACTION [22:26:57] 🔙 [bot-0] Entrée dans l'état DRONE_RETURNING
+[browser:worker] {
+  "baseCoord": "1,3",
+  "tilesExploredInCycle": 1
+}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":20,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
+[browser:worker] [WORKER] Received message: {"type":"REQUEST_STATE","typeOf":"string","rawMessage":{"type":"REQUEST_STATE"}}
+[browser:browser:/vue2] 🗺️ [TileMatrix] Tiles stats: {"total":37,"explored":0,"collected":20,"samples":[{"coord":"0,3","explored":false,"collected":false},{"coord":"0,4","explored":false,"collected":false},{"coord":"0,5","explored":false,"collected":false}]}
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-0] State: {"exploring":"drone_returning"} | Status: active
+[browser:browser:/vue2] 🔄 [SharedFSM:bot-1] State: game_over | Status: done
