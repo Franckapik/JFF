@@ -41,6 +41,7 @@ import React from 'react';
 
 import GameInitializer from './components/GameInitializer';
 import SharedFSMVisualization from './components/SharedFSMVisualization';
+import SharedHeader from './components/SharedHeader';
 import Vue1R3F from './components/Vue1R3F';
 
 // =========================================================================
@@ -113,69 +114,11 @@ export default function AppRouter() {
       {/* Centralized game initialization - handles worker connection and tile generation */}
       <GameInitializer />
       
+      {/* Shared header displayed on all views */}
+      <SharedHeader />
+      
       {/* Current route view */}
       {route.component}
-      
-      {/* Development navigation helper */}
-      {(import.meta as unknown as { env: { DEV: boolean } }).env.DEV && (
-        <DevNavigation currentRoute={currentRoute} />
-      )}
     </>
-  );
-}
-
-// =========================================================================
-// DEV NAVIGATION HELPER
-// =========================================================================
-
-function DevNavigation({ currentRoute }: { currentRoute: RouteKey }) {
-  const navigate = (path: string) => {
-    window.history.pushState({}, '', path);
-    window.dispatchEvent(new PopStateEvent('popstate'));
-  };
-  
-  return (
-    <div style={{
-      position: 'fixed',
-      bottom: '16px',
-      right: '16px',
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      padding: '12px',
-      borderRadius: '8px',
-      zIndex: 10000,
-      fontFamily: 'system-ui, sans-serif',
-      fontSize: '12px'
-    }}>
-      <div style={{ color: '#9ca3af', marginBottom: '8px', fontWeight: 'bold' }}>
-        🧭 Dev Navigation
-      </div>
-      <div style={{ display: 'flex', gap: '8px' }}>
-        {Object.entries(routes).map(([key, config]) => (
-          <button
-            key={key}
-            onClick={() => navigate(config.path)}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '4px',
-              border: 'none',
-              cursor: 'pointer',
-              backgroundColor: currentRoute === key ? '#3b82f6' : '#374151',
-              color: 'white',
-              fontSize: '11px',
-              fontWeight: currentRoute === key ? 'bold' : 'normal'
-            }}
-          >
-            {config.path === '/vue1' ? 'Vue 1' : 'Vue 2'}
-          </button>
-        ))}
-      </div>
-      <div style={{ 
-        color: '#6b7280', 
-        marginTop: '8px', 
-        fontSize: '10px' 
-      }}>
-        Open /vue1 and /vue2 in separate tabs to test sync
-      </div>
-    </div>
   );
 }
