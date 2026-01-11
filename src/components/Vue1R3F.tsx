@@ -27,8 +27,9 @@
 
 import React from 'react';
 
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
+import { CuboidCollider, Physics, RigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
 
 import { getTileColor } from '../config/tileColors';
@@ -267,6 +268,41 @@ function hash(x: number, y: number): number {
 
 
 // =========================================================================
+// PHYSICAL CUBE COMPONENT - Interactive physics object on tiles
+// =========================================================================
+
+function PhysicalCube() {
+  const meshRef = React.useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = React.useState(false);
+
+  return (
+    <RigidBody
+      position={[0, 1.5, 0]}
+      colliders={false}
+      restitution={0.4}
+      friction={0.7}
+      linearDamping={0.5}
+      angularDamping={0.5}
+    >
+      <CuboidCollider args={[0.083, 0.083, 0.083]} />
+      <mesh
+        ref={meshRef}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        castShadow
+      >
+        <boxGeometry args={[0.167, 0.167, 0.167]} />
+        <meshStandardMaterial
+          color={hovered ? '#f59e0b' : '#8B7765'}
+          roughness={0.5}
+          metalness={0.2}
+        />
+      </mesh>
+    </RigidBody>
+  );
+}
+
+// =========================================================================
 // HEXAGONAL TILE COMPONENT WITH TOON SHADER
 // =========================================================================
 
@@ -280,14 +316,17 @@ function HexagonalTile({ position, tile }: { position: { x: number; y: number; z
 
   return (
     <group position={[position.x, position.y, position.z]}>
-      {/* Main hexagonal tile - completely transparent, invisible */}
+      {/* Static collider for the tile base */}
+      <RigidBody type="fixed" colliders={false}>
+        <CuboidCollider args={[0.95, 0.1, 0.95]} position={[0, 0, 0]} />
+      </RigidBody>
+
+      {/* Main hexagonal tile with solid material to hide internal edges */}
       <mesh rotation={[0, 0, 0]}>
         <cylinderGeometry args={[1, 1, 0.2, 6]} />
-        <meshStandardMaterial 
-          transparent={true}
-          opacity={0}
-          depthWrite={false}
-          depthTest={false}
+        <meshToonMaterial 
+          color="#E7D9BF"
+          transparent={false}
         />
       </mesh>
       
@@ -311,6 +350,9 @@ function HexagonalTile({ position, tile }: { position: { x: number; y: number; z
           opacity={0.02}
         />
       </mesh>
+
+      {/* Physical cube on this tile */}
+      <PhysicalCube />
     </group>
   );
 }
@@ -327,7 +369,7 @@ function DecorativeTile({ position, distance, maxDistance }: {
   // Calculate opacity based on distance - inverse gradient
   // distance 1 = 0.3 opacity, distance 4 = ~0.05 opacity, distance 5+ = 0
   const normalizedDistance = distance / (maxDistance - 1);
-  const opacity = Math.max(0, (1 - normalizedDistance) * 0.3);
+  const opacity = Math.max(0, (1 - normalizedDistance) * 0.5);
 
   return (
     <group position={[position.x, position.y, position.z]}>
@@ -346,7 +388,7 @@ function DecorativeTile({ position, distance, maxDistance }: {
 }
 
 // =========================================================================
-// BOT SPHERE COMPONENT - Simple sphere showing bot position with lerp
+// BOT SPHERE COMPONENT - Sphere with kinematic physics for collision
 // =========================================================================
 
 function BotSphere({ 
@@ -365,8 +407,8 @@ function BotSphere({
   // Position above tiles (Y = 0.5 to be above tile height of 0.2)
   const heightAboveTiles = 0.4;
 
-  // Mesh ref for useFrame
-  const meshRef = React.useRef<THREE.Mesh>(null);
+  // RigidBody ref for physics control
+  const rigidBodyRef = React.useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   
   // Track current target position
   const targetPos = React.useRef<[number, number, number]>([0, heightAboveTiles, 0]);
@@ -375,7 +417,7 @@ function BotSphere({
   const initializedRef = React.useRef(false);
   
   // Lerp speed (0 = instant, 1 = very slow)
-  const lerpAlpha = 0.01;
+  const lerpAlpha = 0.08;
 
   // Calculate target position whenever coord changes
   const calculateTargetPos = React.useCallback(() => {
@@ -402,35 +444,45 @@ function BotSphere({
     const newTarget = calculateTargetPos();
     targetPos.current = newTarget;
     
-    // Initialize mesh position on first render
-    if (!initializedRef.current && meshRef.current) {
-      meshRef.current.position.set(newTarget[0], newTarget[1], newTarget[2]);
+    // Initialize rigid body position on first render
+    if (!initializedRef.current && rigidBodyRef.current) {
+      rigidBodyRef.current.setTranslation({ x: newTarget[0], y: newTarget[1], z: newTarget[2] }, true);
       initializedRef.current = true;
     }
   }, [calculateTargetPos]);
 
-  // Animate position with lerp every frame
+  // Animate position with lerp every frame using kinematic body
   useFrame(() => {
-    if (!meshRef.current) return;
+    if (!rigidBodyRef.current) return;
 
-    const current = meshRef.current.position;
+    const current = rigidBodyRef.current.translation();
     const target = targetPos.current;
 
     // Linear interpolation
-    current.x += (target[0] - current.x) * lerpAlpha;
-    current.y += (target[1] - current.y) * lerpAlpha;
-    current.z += (target[2] - current.z) * lerpAlpha;
+    const newX = current.x + (target[0] - current.x) * lerpAlpha;
+    const newY = current.y + (target[1] - current.y) * lerpAlpha;
+    const newZ = current.z + (target[2] - current.z) * lerpAlpha;
+
+    // Update kinematic body position
+    rigidBodyRef.current.setNextKinematicTranslation({ x: newX, y: newY, z: newZ });
   });
 
   // Color based on botId
   const color = botId === 'bot-0' ? '#3b82f6' : '#f59e0b';
 
-  // Don't set position as prop - let useFrame handle it completely
   return (
-    <mesh ref={meshRef}>
-      <sphereGeometry args={[0.3, 16, 16]} />
-      <meshStandardMaterial color={color} />
-    </mesh>
+    <RigidBody
+      ref={rigidBodyRef}
+      type="kinematicPosition"
+      colliders={false}
+      ccd={true}
+    >
+      <CuboidCollider args={[0.3, 0.3, 0.3]} sensor={false} />
+      <mesh>
+        <sphereGeometry args={[0.3, 16, 16]} />
+        <meshStandardMaterial color={color} />
+      </mesh>
+    </RigidBody>
   );
 }
 
@@ -468,14 +520,14 @@ function TileGridRenderer() {
     if (!tiles || !gridConfig) return { 
       positions: [], 
       center: { x: 0, z: 0 },
-      spacingFactor: 0.43 
+      spacingFactor: 0.42 
     };
 
     const positions: Array<{ coord: GridCoordinate; x: number; y: number; z: number }> = [];
     let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
 
     // Increased spacing factor to prevent tile overlap with flat orientation
-    const spacingFactor = 0.415;
+    const spacingFactor = 0.418;
 
     Object.entries(tiles).forEach(([coord]) => {
       const [q, r] = coord.split(',').map(Number);
@@ -624,73 +676,95 @@ function TileGridRenderer() {
 }
 
 // =========================================================================
-// R3F CANVAS CONTENT
+// R3F CANVAS CONTENT - ISOMETRIC VIEW
 // =========================================================================
 
 function CanvasContent() {
+  const cameraRef = React.useRef<THREE.PerspectiveCamera>(null);
+  const orbitControlsRef = React.useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  // Setup isometric camera on mount
+  React.useEffect(() => {
+    if (cameraRef.current) {
+      // Isometric angle: 45 degrees around Y, 30 degrees from top
+      const distance = 15;
+      const angle = Math.PI / 4; // 45 degrees
+      const elevation = Math.PI / 6; // 30 degrees (30° from horizontal)
+      
+      const x = distance * Math.cos(angle) * Math.cos(elevation);
+      const y = distance * Math.sin(elevation);
+      const z = distance * Math.sin(angle) * Math.cos(elevation);
+      
+      cameraRef.current.position.set(x, y, z);
+      cameraRef.current.lookAt(0, 0, 0);
+      
+      if (cameraRef.current instanceof THREE.PerspectiveCamera) {
+        cameraRef.current.updateProjectionMatrix();
+      }
+    }
+  }, []);
+
+  // Handle pan restriction to X and Z axes only
+  const handleOrbitChange = React.useCallback(() => {
+    if (orbitControlsRef.current) {
+      // Force target.y to stay at 0 (no vertical movement)
+      orbitControlsRef.current.target.y = 0;
+    }
+  }, []);
+
   return (
     <>
+      {/* Background */}
+      <color attach="background" args={['#e7d9bf']} />
+      
       {/* Fog - creates depth and hides far background */}
-      <fog attach="fog" args={['#e7d9bf', 5, 35]} />
+      <fog attach="fog" args={['#e7d9bf', 10, 50]} />
       
-      {/* Grid Helper */}
-{/*       <gridHelper args={[20, 20, '#444444', '#222222']} />
- */}      
-      {/* Axes Helper - X (red), Y (green), Z (blue) */}
-      <axesHelper args={[10]} />
-      
-      {/* Lighting setup for paper/map effect - warm and diffuse */}
-      <ambientLight intensity={1.0} color="#E8D4B0" />
-      {/* Warm directional light simulating natural/candle light */}
+      {/* Isometric Lighting - key light from top-left-front */}
+      <ambientLight intensity={0.8} color="#E8D4B0" />
       <directionalLight 
-        position={[10, 12, 8]} 
-        intensity={1.5} 
+        position={[10, 12, 10]} 
+        intensity={3.5} 
         color="#F5DEB3"
         castShadow={false}
       />
-      {/* Soft fill light from opposite side */}
+      {/* Subtle fill light to reduce shadows on back side */}
       <directionalLight 
-        position={[-10, -8, -6]} 
-        intensity={0.9} 
+        position={[-8, 6, -8]} 
+        intensity={1} 
         color="#D4A574"
       />
-      {/* Top light for transparency effect */}
-      <pointLight 
-        position={[0, 8, 0]} 
-        intensity={1.2} 
-        color="#F0E68C"
-        distance={40}
+      
+      {/* Physics World */}
+      <Physics gravity={[0, -9.81, 0]}>
+        {/* Tile Grid from Worker */}
+        <TileGridRenderer />
+      </Physics>
+      
+      {/* Isometric Controls - limited to maintain view angle */}
+      <PerspectiveCamera 
+        ref={cameraRef}
+        position={[10.6, 7.5, 10.6]}
+        fov={50}
+        near={0.1}
+        far={100}
+        makeDefault
       />
-      {/* Bottom light for depth and translucency */}
-      <pointLight 
-        position={[0, -2, 0]} 
-        intensity={0.6} 
-        color="#E8D4B0"
-        distance={30}
-      />
-      
-      {/* Tile Grid from Worker */}
-      <TileGridRenderer />
-      
-      {/* Support Base - Large fantasy map plane */}
-      {/* <mesh position={[0, -0.12, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[15, 15]} />
-        <meshStandardMaterial 
-          color="#C4956E"
-          roughness={0.9}
-          metalness={0.0}
-        />
-      </mesh> */}
-      
-
-      
-      {/* Orbit Controls */}
       <OrbitControls 
+        ref={orbitControlsRef}
         enableDamping
         dampingFactor={0.05}
-        minDistance={5}
-        maxDistance={25}
+        minDistance={10}
+        maxDistance={30}
         autoRotate={false}
+        enableRotate={false}
+        enableZoom={true}
+        enablePan={true}
+        onChange={handleOrbitChange}
+        mouseButtons={{
+          LEFT: THREE.MOUSE.PAN,
+          RIGHT: THREE.MOUSE.ROTATE,
+        }}
       />
     </>
   );
