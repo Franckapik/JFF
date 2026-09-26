@@ -2,20 +2,20 @@
  * ==========================================================================
  * SIMULATED TRACKER CORE - Logique pure partagée (Test + Front)
  * ==========================================================================
- * 
+ *
  * Module partagé entre le test Node.js et le front React/R3F
  * Contient toute la logique de calcul des distances, durées, et événements
- * 
+ *
  * ✅ Logique pure (pas de side-effects)
  * ✅ Compatible Node + Browser
  * ✅ Source unique de vérité pour les timings
  */
 
-import { gridToWorld } from '../../../../core/spatial/coordinates.ts';
-import type { GridCoordinate, WorldPosition } from '../../../../types/coordinates';
-import type { FSMContext } from '../../../../types/fsm.d.ts';
-import type { Tile } from '../../../../types/tile.d.ts';
-import type { MachineEvents } from '../events.pure.v5.ts';
+import { gridToWorld } from "../../../../core/spatial/coordinates.ts";
+import type { GridCoordinate, WorldPosition } from "../../../../types/coordinates";
+import type { FSMContext } from "../../../../types/fsm.d.ts";
+import type { Tile } from "../../../../types/tile.d.ts";
+import type { MachineEvents } from "../events.pure.v5.ts";
 
 // ========================================
 // Configuration des durées (en ms)
@@ -25,20 +25,20 @@ export const DURATIONS = {
   // Vitesses de déplacement (unités par seconde)
   DRONE_SPEED: 2.0,
   SHIP_SPEED: 1.5,
-  
+
   // Limites de temps de déplacement
-  MIN_TRAVEL_TIME: 500,    // ms minimum
-  MAX_TRAVEL_TIME: 3000,   // ms maximum
-  
+  MIN_TRAVEL_TIME: 500, // ms minimum
+  MAX_TRAVEL_TIME: 3000, // ms maximum
+
   // Durées d'actions
   SCAN_DURATION: 800,
-  DOCK_DURATION: 500,      // Drone docking time before redeploy
+  DOCK_DURATION: 500, // Drone docking time before redeploy
   COLLECT_DURATION: 1200,
   DEPOSIT_DURATION: 1500,
   REFUEL_DURATION: 1000,
   REPAIR_DURATION: 1500,
-  PURCHASE_DRONE_DURATION: 5000,  // 🆕 Drone manufacturing time (5 seconds)
-  
+  PURCHASE_DRONE_DURATION: 5000, // 🆕 Drone manufacturing time (5 seconds)
+
   // 🛤️ PATHFINDING: Temps par tile traversée
   TILE_TRAVERSAL_TIME: 400, // ms per tile
 } as const;
@@ -75,10 +75,10 @@ export type StateInfo = {
  */
 export function calculateDistance(pos1: WorldPosition | null | undefined, pos2: WorldPosition | null | undefined): number {
   if (!pos1 || !pos2) return 0;
-  
+
   const dx = (pos2.x ?? 0) - (pos1.x ?? 0);
   const dz = (pos2.z ?? 0) - (pos1.z ?? 0);
-  
+
   return Math.sqrt(dx * dx + dz * dz);
 }
 
@@ -87,15 +87,12 @@ export function calculateDistance(pos1: WorldPosition | null | undefined, pos2: 
  */
 export function calculateTravelTime(distance: number, speed: number): number {
   if (distance === 0) return DURATIONS.MIN_TRAVEL_TIME;
-  
+
   // Temps = distance / vitesse (converti en ms)
   const travelTime = (distance / speed) * 1000;
-  
+
   // Limiter entre MIN et MAX
-  return Math.max(
-    DURATIONS.MIN_TRAVEL_TIME,
-    Math.min(travelTime, DURATIONS.MAX_TRAVEL_TIME)
-  );
+  return Math.max(DURATIONS.MIN_TRAVEL_TIME, Math.min(travelTime, DURATIONS.MAX_TRAVEL_TIME));
 }
 
 // ========================================
@@ -106,19 +103,19 @@ export function calculateTravelTime(distance: number, speed: number): number {
  * Parse le snapshot.value pour détecter l'état principal et le sous-état
  */
 export function detectCurrentState(snapshotValue: string | object): StateInfo {
-  if (typeof snapshotValue === 'string') {
+  if (typeof snapshotValue === "string") {
     return { mainState: snapshotValue, subState: null };
   }
-  
+
   // Format XState v5 : { exploring: 'drone_deploying' }
   const keys = Object.keys(snapshotValue);
   if (keys.length > 0) {
     const mainState = keys[0];
     const subState = (snapshotValue as Record<string, unknown>)[mainState];
-    return { mainState, subState: typeof subState === 'string' ? subState : null };
+    return { mainState, subState: typeof subState === "string" ? subState : null };
   }
-  
-  return { mainState: 'unknown', subState: null };
+
+  return { mainState: "unknown", subState: null };
 }
 
 // ========================================
@@ -131,19 +128,19 @@ export function detectCurrentState(snapshotValue: string | object): StateInfo {
  */
 export function extractPositionsAndTargets(context: FSMContext) {
   const spacing = context.gridInfo?.spacing ?? -0.2;
-  
+
   const droneCoord = context.droneFleet?.drones?.explorer?.coord;
   const shipCoord = context.vehicle?.coord;
   const baseCoord = context.vehicle?.baseCoord;
-  
+
   const dronePos = coordToWorldPosition(droneCoord, spacing);
   const shipPos = coordToWorldPosition(shipCoord, spacing);
   const basePos = coordToWorldPosition(baseCoord, spacing);
-  
+
   const targetDroneTile = context.droneFleet?.drones?.explorer?.targetDroneTile;
   const targetVehicleTile = context.vehicle?.targetVehicleTile;
   const tiles = context.gridInfo?.tiles || {};
-  
+
   return {
     dronePos,
     shipPos,
@@ -162,20 +159,16 @@ export function extractPositionsAndTargets(context: FSMContext) {
 /**
  * Détermine les événements à planifier pour un état d'exploration
  */
-export function getExploringEvents(
-  subState: string,
-  context: FSMContext,
-  verbose: boolean = false
-): ScheduledEvent[] {
+export function getExploringEvents(subState: string, context: FSMContext, verbose: boolean = false): ScheduledEvent[] {
   const { dronePos, basePos, targetDroneTile, tiles: _tiles, spacing } = extractPositionsAndTargets(context);
   const events: ScheduledEvent[] = [];
-  
-  if (subState === 'drone_deploying') {
+
+  if (subState === "drone_deploying") {
     if (verbose && targetDroneTile) {
       // eslint-disable-next-line no-console
-      console.log(`🛸 [TRACKER] Drone → ${targetDroneTile.position?.coord || 'unknown'}`);
+      console.log(`🛸 [TRACKER] Drone → ${targetDroneTile.position?.coord || "unknown"}`);
     }
-    
+
     // 🔍 DEBUG: Always log to understand why events might not be scheduled
     if (!targetDroneTile) {
       console.log(`⚠️ [TRACKER] drone_deploying: No targetDroneTile in context`);
@@ -184,27 +177,29 @@ export function getExploringEvents(
     } else if (!targetDroneTile.position.coord) {
       console.log(`⚠️ [TRACKER] drone_deploying: targetDroneTile.position has no coord`, targetDroneTile.position);
     }
-    
+
     if (targetDroneTile?.position?.coord) {
       const targetPos = coordToWorldPosition(targetDroneTile.position.coord as GridCoordinate, spacing);
       if (targetPos) {
         const distance = calculateDistance(dronePos, targetPos);
         const travelTime = calculateTravelTime(distance, DURATIONS.DRONE_SPEED);
-        
+
         // ✅ FIX: Si la distance est pratiquement nulle (drone déjà sur place)
         // programmer l'événement immédiatement pour éviter les boucles
         const isAlreadyOnTile = distance < 0.01; // Tolérance de 0.01 unité
         const effectiveDelay = isAlreadyOnTile ? 0 : travelTime;
-        
+
         if (verbose) {
-        // eslint-disable-next-line no-console
-          console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${effectiveDelay}ms${isAlreadyOnTile ? ' (already on tile)' : ''}`);
+          // eslint-disable-next-line no-console
+          console.log(
+            `   Distance: ${distance.toFixed(2)} units, Travel time: ${effectiveDelay}ms${isAlreadyOnTile ? " (already on tile)" : ""}`
+          );
         }
-        
+
         events.push({
-          event: { type: 'DRONE_REACHES_TILE' },
+          event: { type: "DRONE_REACHES_TILE" },
           delay: effectiveDelay,
-          reason: `Drone traveling to ${targetDroneTile.position.coord}`
+          reason: `Drone traveling to ${targetDroneTile.position.coord}`,
         });
       }
     } else {
@@ -214,69 +209,69 @@ export function getExploringEvents(
         console.log(`   ⚠️  No valid target tile → sending NO_TARGET_FOUND`);
       }
       events.push({
-        event: { type: 'NO_TARGET_FOUND' },
+        event: { type: "NO_TARGET_FOUND" },
         delay: 100, // Petit délai pour éviter boucle synchrone
-        reason: 'No unexplored tiles in radius - returning to evaluating'
+        reason: "No unexplored tiles in radius - returning to evaluating",
       });
     }
-  } else if (subState === 'drone_scanning') {
+  } else if (subState === "drone_scanning") {
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log(`🔍 [TRACKER] Scanning (${DURATIONS.SCAN_DURATION}ms)`);
     }
-    
+
     events.push({
-      event: { type: 'DRONE_HAS_SCANNED' },
+      event: { type: "DRONE_HAS_SCANNED" },
       delay: DURATIONS.SCAN_DURATION,
-      reason: 'Scanning tile'
+      reason: "Scanning tile",
     });
-  } else if (subState === 'drone_returning') {
+  } else if (subState === "drone_returning") {
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log(`🏠 [TRACKER] Drone returning`);
     }
-    
+
     if (basePos && dronePos) {
       const distance = calculateDistance(dronePos, basePos);
       const travelTime = calculateTravelTime(distance, DURATIONS.DRONE_SPEED);
-      
+
       if (verbose) {
-      // eslint-disable-next-line no-console
+        // eslint-disable-next-line no-console
         console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${travelTime}ms`);
       }
-      
+
       events.push({
-        event: { type: 'DRONE_REACHES_BASE' },
+        event: { type: "DRONE_REACHES_BASE" },
         delay: travelTime,
-        reason: 'Drone returning to base'
+        reason: "Drone returning to base",
       });
     }
-  } else if (subState === 'drone_docked') {
+  } else if (subState === "drone_docked") {
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log(`⚓ [TRACKER] Drone docking (${DURATIONS.DOCK_DURATION}ms)`);
     }
-    
+
     // 🔄 Après docking, redéployer automatiquement
     events.push({
-      event: { type: 'DRONE_READY_FOR_REDEPLOY' },
+      event: { type: "DRONE_READY_FOR_REDEPLOY" },
       delay: DURATIONS.DOCK_DURATION,
-      reason: 'Drone ready to redeploy after docking'
+      reason: "Drone ready to redeploy after docking",
     });
-  } else if (subState === 'drone_destroyed') {
+  } else if (subState === "drone_destroyed") {
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log(`💥 [TRACKER] Drone destroyed (800ms)`);
     }
-    
+
     // ✅ Délai de 800ms pour rendre l'état visible dans l'UI
     events.push({
-      event: { type: 'DRONE_DESTRUCTION_ACKNOWLEDGED' },
+      event: { type: "DRONE_DESTRUCTION_ACKNOWLEDGED" },
       delay: 800,
-      reason: 'Drone destruction acknowledged - evaluating next action'
+      reason: "Drone destruction acknowledged - evaluating next action",
     });
   }
-  
+
   return events;
 }
 
@@ -284,77 +279,28 @@ export function getExploringEvents(
  * Détermine les événements à planifier pour un état de collecte
  * 🛤️ PATHFINDING: Now uses vehicle.currentPath and vehicle.pathIndex
  */
-export function getCollectingEvents(
-  subState: string,
-  context: FSMContext,
-  verbose: boolean = false
-): ScheduledEvent[] {
+export function getCollectingEvents(subState: string, context: FSMContext, verbose: boolean = false): ScheduledEvent[] {
   const { shipPos, basePos, targetVehicleTile, spacing } = extractPositionsAndTargets(context);
   const events: ScheduledEvent[] = [];
-  
-  if (subState === 'ship_moving_to_tile') {
+
+  if (subState === "ship_moving_to_tile") {
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log(`🚢 [TRACKER] Ship moving`);
     }
-    
+
     // 🛤️ PATHFINDING: Check if we have a path to traverse
     const currentPath = context.vehicle?.currentPath || [];
     const pathIndex = context.vehicle?.pathIndex ?? 0;
-    
+
     if (currentPath.length > 0) {
-      // We have a path - emit ALL remaining waypoints with cumulative delays
       const remainingSteps = currentPath.length - pathIndex - 1;
-      
-      if (verbose) {
-        // eslint-disable-next-line no-console
-        console.log(`🛤️ [TRACKER] Pathfinding: ${remainingSteps} steps remaining (from index ${pathIndex} to ${currentPath.length - 1})`);
-      }
-      
-      // Emit all waypoint events with cumulative delays
-      for (let step = 1; step <= remainingSteps; step++) {
-        const waypointIndex = pathIndex + step;
-        const isLastWaypoint = waypointIndex === currentPath.length - 1;
-        const delay = step * DURATIONS.TILE_TRAVERSAL_TIME;
-        const targetCoord = currentPath[waypointIndex];
-        
-        if (isLastWaypoint) {
-          // Final waypoint - emit SHIP_REACHES_TILE
-          events.push({
-            event: { type: 'SHIP_REACHES_TILE' },
-            delay,
-            reason: `Ship reaching final destination ${targetCoord}`
-          });
-          if (verbose) {
-            // eslint-disable-next-line no-console
-            console.log(`   → SHIP_REACHES_TILE at ${delay}ms (waypoint ${waypointIndex})`);
-          }
-        } else {
-          // Intermediate waypoint - emit SHIP_REACHES_WAYPOINT
-          events.push({
-            event: { type: 'SHIP_REACHES_WAYPOINT' },
-            delay,
-            reason: `Ship reaching waypoint ${waypointIndex}: ${targetCoord}`
-          });
-          if (verbose) {
-            // eslint-disable-next-line no-console
-            console.log(`   → SHIP_REACHES_WAYPOINT at ${delay}ms (waypoint ${waypointIndex})`);
-          }
-        }
-      }
-      
-      // If no remaining steps, we're already at destination
-      if (remainingSteps <= 0) {
-        if (verbose) {
-          // eslint-disable-next-line no-console
-          console.log(`⚠️ [TRACKER] Already at path end, emitting SHIP_REACHES_TILE`);
-        }
-        events.push({
-          event: { type: 'SHIP_REACHES_TILE' },
-          delay: 100,
-          reason: 'Ship already at path end'
-        });
-      }
+      const nextIndex = Math.min(pathIndex + 1, currentPath.length - 1);
+      events.push({
+        event: { type: remainingSteps > 1 ? "SHIP_REACHES_WAYPOINT" : "SHIP_REACHES_TILE" },
+        delay: remainingSteps > 0 ? DURATIONS.TILE_TRAVERSAL_TIME : 100,
+        reason: `Ship reaching waypoint ${nextIndex}: ${currentPath[nextIndex]}`,
+      });
     } else {
       // Legacy fallback: no path, use direct distance calculation
       if (targetVehicleTile?.position?.coord && shipPos) {
@@ -362,102 +308,81 @@ export function getCollectingEvents(
         if (!targetPos) return events;
         const distance = calculateDistance(shipPos, targetPos);
         const travelTime = calculateTravelTime(distance, DURATIONS.SHIP_SPEED);
-        
+
         const isAlreadyOnTile = distance < 0.01;
         const effectiveDelay = isAlreadyOnTile ? 0 : travelTime;
-        
+
         if (verbose) {
           // eslint-disable-next-line no-console
           console.log(`   [LEGACY] Target: ${targetVehicleTile.position.coord}`);
           // eslint-disable-next-line no-console
-          console.log(`   Distance: ${distance.toFixed(2)} units, Travel time: ${effectiveDelay}ms${isAlreadyOnTile ? ' (already on tile)' : ''}`);
+          console.log(
+            `   Distance: ${distance.toFixed(2)} units, Travel time: ${effectiveDelay}ms${isAlreadyOnTile ? " (already on tile)" : ""}`
+          );
         }
-        
+
         events.push({
-          event: { type: 'SHIP_REACHES_TILE' },
+          event: { type: "SHIP_REACHES_TILE" },
           delay: effectiveDelay,
-          reason: `Ship traveling to ${targetVehicleTile.position.coord}`
+          reason: `Ship traveling to ${targetVehicleTile.position.coord}`,
         });
       }
     }
-  } else if (subState === 'ship_collecting') {
+  } else if (subState === "ship_collecting") {
     if (verbose) {
-       
       // eslint-disable-next-line no-console
       console.log(`\n🚢 [TRACKER-CORE] ship_collecting (${DURATIONS.COLLECT_DURATION}ms)`);
     }
-    
+
     events.push({
-      event: { 
-        type: 'SHIP_LOAD_RESOURCES'
+      event: {
+        type: "SHIP_LOAD_RESOURCES",
       },
       delay: DURATIONS.COLLECT_DURATION,
-      reason: 'Collecting resources'
+      reason: "Collecting resources",
     });
-  } else if (subState === 'ship_returning') {
+  } else if (subState === "ship_returning") {
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log(`🔙 [TRACKER] Ship returning via pathfinding`);
     }
-    
+
     // 🛤️ PATHFINDING: Use the calculated path for return journey
     const currentPath = context.vehicle?.currentPath || [];
     const pathIndex = context.vehicle?.pathIndex || 0;
     const remainingSteps = currentPath.length - pathIndex - 1;
-    
+
     if (currentPath.length > 0 && remainingSteps > 0) {
-      // Path exists - emit waypoint events for each step
-      if (verbose) {
-        // eslint-disable-next-line no-console
-        console.log(`🛤️ [TRACKER] Return path: ${remainingSteps} steps remaining (index ${pathIndex}/${currentPath.length - 1})`);
-      }
-      
-      // Emit SHIP_REACHES_WAYPOINT for intermediate tiles
-      for (let i = 1; i <= remainingSteps; i++) {
-        const isLastStep = i === remainingSteps;
-        const delay = i * DURATIONS.TILE_TRAVERSAL_TIME;
-        
-        if (isLastStep) {
-          // Final step: emit SHIP_REACHES_BASE
-          events.push({
-            event: { type: 'SHIP_REACHES_BASE' },
-            delay,
-            reason: `Ship reaches base (final waypoint)`
-          });
-        } else {
-          // Intermediate step: emit SHIP_REACHES_WAYPOINT
-          events.push({
-            event: { type: 'SHIP_REACHES_WAYPOINT' },
-            delay,
-            reason: `Ship reaches return waypoint ${pathIndex + i}/${currentPath.length - 1}`
-          });
-        }
-      }
+      events.push({
+        event: { type: remainingSteps > 1 ? "SHIP_REACHES_WAYPOINT" : "SHIP_REACHES_BASE" },
+        delay: DURATIONS.TILE_TRAVERSAL_TIME,
+        reason: `Ship reaching return waypoint ${pathIndex + 1}/${currentPath.length - 1}`,
+      });
     } else {
       // No path or already at destination - use direct distance as fallback
       if (basePos && shipPos) {
         const distance = calculateDistance(shipPos, basePos);
         const travelTime = calculateTravelTime(distance, DURATIONS.SHIP_SPEED);
-        
+
         // ✅ FIX: Si la distance est pratiquement nulle (ship déjà à la base)
         // programmer l'événement immédiatement pour éviter les boucles
         const isAlreadyAtBase = distance < 0.01; // Tolérance de 0.01 unité
         const effectiveDelay = isAlreadyAtBase ? 0 : travelTime;
-        
+
         if (verbose) {
           // eslint-disable-next-line no-console
           console.log(`🔙 [TRACKER] Fallback: Direct distance ${distance.toFixed(2)}, delay ${effectiveDelay}ms`);
         }
-        
+
         events.push({
-          event: { type: 'SHIP_REACHES_BASE' },
+          event: { type: "SHIP_REACHES_BASE" },
           delay: effectiveDelay,
-          reason: 'Ship returning to base (direct)'
+          reason: "Ship returning to base (direct)",
         });
       }
     }
   }
-  
+
   return events;
 }
 
@@ -465,65 +390,61 @@ export function getCollectingEvents(
  * Détermine les événements à planifier pour un état de maintenance
  * 🆕 Inclut maintenant le sous-état 'relocating'
  */
-export function getMaintainingEvents(
-  subState: string,
-  context: FSMContext,
-  verbose: boolean = false
-): ScheduledEvent[] {
+export function getMaintainingEvents(subState: string, context: FSMContext, verbose: boolean = false): ScheduledEvent[] {
   const events: ScheduledEvent[] = [];
-  
+
   // 🆕 Sous-état relocating: ship se déplace vers nouvelle zone
-  if (subState === 'relocating') {
+  if (subState === "relocating") {
     return getRelocatingEvents(context, verbose);
   }
-  
-  if (subState === 'depositing') {
+
+  if (subState === "depositing") {
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log(`💰 [TRACKER] Depositing (${DURATIONS.DEPOSIT_DURATION}ms)`);
     }
-    
+
     events.push({
-      event: { type: 'SHIP_DEPOSIT_COMPLETE' },
+      event: { type: "SHIP_DEPOSIT_COMPLETE" },
       delay: DURATIONS.DEPOSIT_DURATION,
-      reason: 'Depositing resources'
+      reason: "Depositing resources",
     });
-  } else if (subState === 'refueling') {
+  } else if (subState === "refueling") {
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log(`⛽ [TRACKER] Refueling (${DURATIONS.REFUEL_DURATION}ms)`);
     }
-    
+
     events.push({
-      event: { type: 'SHIP_REFUEL_COMPLETE' },
+      event: { type: "SHIP_REFUEL_COMPLETE" },
       delay: DURATIONS.REFUEL_DURATION,
-      reason: 'Refueling ship'
+      reason: "Refueling ship",
     });
-  } else if (subState === 'repairing') {
+  } else if (subState === "repairing") {
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log(`🔧 [TRACKER] Repairing (${DURATIONS.REPAIR_DURATION}ms)`);
     }
-    
+
     events.push({
-      event: { type: 'SHIP_REPAIR_COMPLETE' },
+      event: { type: "SHIP_REPAIR_COMPLETE" },
       delay: DURATIONS.REPAIR_DURATION,
-      reason: 'Repairing ship'
+      reason: "Repairing ship",
     });
-  } else if (subState === 'purchasing_drone') {
+  } else if (subState === "purchasing_drone") {
     if (verbose) {
       // eslint-disable-next-line no-console
       console.log(`🛒 [TRACKER] Purchasing drone (${DURATIONS.PURCHASE_DRONE_DURATION}ms)`);
     }
-    
+
     // ✅ Délai de 1000ms pour rendre l'état visible dans l'UI
     events.push({
-      event: { type: 'DRONE_PURCHASE_COMPLETE' },
+      event: { type: "DRONE_PURCHASE_COMPLETE" },
       delay: DURATIONS.PURCHASE_DRONE_DURATION,
-      reason: 'Drone purchase complete'
+      reason: "Drone purchase complete",
     });
   }
-  
+
   return events;
 }
 
@@ -538,150 +459,146 @@ export type TileProvider = {
 /**
  * Détermine les événements d'initialisation à planifier
  */
-export function getInitializingEvents(
-  context: FSMContext,
-  verbose: boolean = false,
-  tileProvider?: TileProvider
-): ScheduledEvent[] {
+export function getInitializingEvents(context: FSMContext, verbose: boolean = false, tileProvider?: TileProvider): ScheduledEvent[] {
   const events: ScheduledEvent[] = [];
   const spacing = context.gridInfo?.spacing ?? -0.2;
-  
+
   let departTile: Tile | undefined = undefined;
-  
+
   // ✅ Chercher d'abord dans le provider externe (tileStore)
   if (tileProvider?.findAssignedDepartTile) {
     departTile = tileProvider.findAssignedDepartTile(context.entityId);
-    
+
     // verbose logging omitted - use fsmLogger instead
   }
-  
+
   // ✅ Fallback : chercher dans le contexte FSM (pour compatibilité)
   if (!departTile) {
     const tiles = context.gridInfo?.tiles || {};
-    departTile = Object.values(tiles).find(
-      tile => tile.type === 'depart' && tile.assignedToBot === context.entityId
-    );
+    departTile = Object.values(tiles).find(tile => tile.type === "depart" && tile.assignedToBot === context.entityId);
   }
-  
+
   // Bot initialization tracking omitted - use fsmLogger if needed
-  
+
   // Utiliser la tuile de départ si trouvée, sinon fallback à '0,0'
-  const defaultCoord: GridCoordinate = departTile?.position?.coord || '0,0';
+  const defaultCoord: GridCoordinate = departTile?.position?.coord || "0,0";
   const baseCoord = context.vehicle?.baseCoord || defaultCoord;
-  
+
   // Vérifier si le vaisseau doit être initialisé
   const shipCoord = context.vehicle?.coord;
   if (!shipCoord) {
     if (verbose) {
       // eslint-disable-next-line no-console
-      console.log('🚀 [TRACKER] Init ship');
+      console.log("🚀 [TRACKER] Init ship");
     }
     const initialPosition = coordToWorldPosition(defaultCoord, spacing) || { x: 0, y: 0.5, z: 0 };
     events.push({
-      event: { 
-        type: 'SHIP_INITIALIZE_REQUEST',
+      event: {
+        type: "SHIP_INITIALIZE_REQUEST",
         initialPosition,
-        shipType: 'main-ship'
+        shipType: "main-ship",
       },
       delay: 50,
-      reason: 'Initialize ship'
+      reason: "Initialize ship",
     });
   }
-  
+
   // Vérifier si le drone doit être initialisé
   const droneState = context.droneFleet?.drones?.explorer?.visualState;
-  if (droneState === 'uninitialized') {
+  if (droneState === "uninitialized") {
     if (verbose) {
       // eslint-disable-next-line no-console
-      console.log('🔧 [TRACKER] Init drone');
+      console.log("🔧 [TRACKER] Init drone");
     }
     const initialPosition = coordToWorldPosition(baseCoord, spacing) || { x: 0, y: 0.5, z: 0 };
     events.push({
-      event: { 
-        type: 'DRONE_INITIALIZE_REQUEST',
-        droneType: 'explorer',
+      event: {
+        type: "DRONE_INITIALIZE_REQUEST",
+        droneType: "explorer",
         initialPosition,
       },
       delay: 100, // After ship initialization
-      reason: 'Initialize drone'
+      reason: "Initialize drone",
     });
   }
-  
+
   return events;
 }
 
 /**
  * Détermine les événements d'évaluation à planifier
- * 
+ *
  * Logique de décision selon les scenarios:
  * 1. Si hasCollectibleTiles → NEED_COLLECTING
  * 2. Si exploration cycle atteint (>= 3 tuiles explorées) → NEED_COLLECTING
  * 3. Si toutes les tuiles locales sont explorées → NEED_SHIP_RELOCATION
  * 4. Sinon → NEED_EXPLORING
  */
-export function getEvaluatingEvents(
-  context: FSMContext,
-  verbose: boolean = false
-): ScheduledEvent[] {
+export function getEvaluatingEvents(context: FSMContext, verbose: boolean = false): ScheduledEvent[] {
   const events: ScheduledEvent[] = [];
-  
-  const isDroneAvailable = context.droneFleet?.drones?.explorer?.visualState !== 'uninitialized';
+
+  const isDroneAvailable = context.droneFleet?.drones?.explorer?.visualState !== "uninitialized";
   if (!isDroneAvailable) return events;
-  
+
   // ✅ Check for collectible tiles in memory.knownTiles
   const knownTiles = context.memory?.knownTiles || [];
-  const collectibleTiles = knownTiles.filter(tile => 
-    tile?.collectable &&  // ✅ Check collectable property
-    tile?.explored === true &&
-    tile?.hasResources && 
-    !tile?.collected && 
-    tile?.resources?.total > 0
+  const collectibleTiles = knownTiles.filter(
+    tile =>
+      tile?.collectable && // ✅ Check collectable property
+      tile?.explored === true &&
+      tile?.hasResources &&
+      !tile?.collected &&
+      tile?.resources?.total > 0
   );
   const hasCollectibleTiles = collectibleTiles.length > 0;
-  
+
   // ✅ Check if exploration cycle limit reached (3 tiles = cycle complete)
   const tilesExploredInCycle = context.memory?.stats?.tilesExploredInCycle ?? 0;
   const EXPLORATION_CYCLE_LIMIT = 3;
   const isCycleComplete = tilesExploredInCycle >= EXPLORATION_CYCLE_LIMIT;
-  
+
   // ✅ Decision logic: Collect if we have tiles AND (cycle complete OR enough tiles)
   if (hasCollectibleTiles && (isCycleComplete || collectibleTiles.length >= 2)) {
     if (verbose) {
       // eslint-disable-next-line no-console
-      console.log(`🚢 [TRACKER] NEED_COLLECTING (${collectibleTiles.length} collectible tiles, cycle: ${tilesExploredInCycle}/${EXPLORATION_CYCLE_LIMIT})`);
+      console.log(
+        `🚢 [TRACKER] NEED_COLLECTING (${collectibleTiles.length} collectible tiles, cycle: ${tilesExploredInCycle}/${EXPLORATION_CYCLE_LIMIT})`
+      );
     }
     events.push({
-      event: { type: 'NEED_COLLECTING' },
+      event: { type: "NEED_COLLECTING" },
       delay: 100,
-      reason: `Start collection (${collectibleTiles.length} tiles available)`
+      reason: `Start collection (${collectibleTiles.length} tiles available)`,
     });
   } else {
     // ✅ NEW: Check if all local tiles are explored (need relocation)
     const allLocalExplored = checkAllLocalTilesExplored(context);
-    
+
     if (allLocalExplored && !hasCollectibleTiles) {
       if (verbose) {
         // eslint-disable-next-line no-console
         console.log(`🚢 [TRACKER] NEED_SHIP_RELOCATION (all local tiles explored, no collectibles)`);
       }
       events.push({
-        event: { type: 'NEED_SHIP_RELOCATION' },
+        event: { type: "NEED_SHIP_RELOCATION" },
         delay: 100,
-        reason: 'Relocate to explore new area'
+        reason: "Relocate to explore new area",
       });
     } else {
       if (verbose) {
         // eslint-disable-next-line no-console
-        console.log(`🔧 [TRACKER] NEED_EXPLORING (collectible: ${collectibleTiles.length}, cycle: ${tilesExploredInCycle}/${EXPLORATION_CYCLE_LIMIT})`);
+        console.log(
+          `🔧 [TRACKER] NEED_EXPLORING (collectible: ${collectibleTiles.length}, cycle: ${tilesExploredInCycle}/${EXPLORATION_CYCLE_LIMIT})`
+        );
       }
       events.push({
-        event: { type: 'NEED_EXPLORING' },
+        event: { type: "NEED_EXPLORING" },
         delay: 100,
-        reason: 'Continue exploration cycle'
+        reason: "Continue exploration cycle",
       });
     }
   }
-  
+
   return events;
 }
 
@@ -693,49 +610,45 @@ function checkAllLocalTilesExplored(context: FSMContext): boolean {
   const tiles = context.gridInfo?.tiles || {};
   const shipCoord = context.vehicle?.coord || context.vehicle?.baseCoord;
   const exploringRadius = context.config?.exploringRadius ?? 1; // 🔧 SPEC: Initial radius = 1
-  
+
   if (!shipCoord || Object.keys(tiles).length === 0) return false;
-  
+
   // Parse ship coordinate
-  const [shipCol, shipRow] = shipCoord.split(',').map(Number);
+  const [shipCol, shipRow] = shipCoord.split(",").map(Number);
   if (isNaN(shipCol) || isNaN(shipRow)) return false;
-  
+
   // Get explored coords from memory.knownTiles - PRIMARY SOURCE OF TRUTH
-  const exploredCoords = new Set(
-    (context.memory?.knownTiles ?? [])
-      .filter(t => t?.explored)
-      .map(t => t?.position?.coord)
-  );
-  
+  const exploredCoords = new Set((context.memory?.knownTiles ?? []).filter(t => t?.explored).map(t => t?.position?.coord));
+
   // Check all tiles in radius
   let tilesInRadius = 0;
   let exploredInRadius = 0;
-  
+
   for (const [coord, tile] of Object.entries(tiles)) {
-    const [col, row] = coord.split(',').map(Number);
+    const [col, row] = coord.split(",").map(Number);
     if (isNaN(col) || isNaN(row)) continue;
-    
+
     // 🔧 FIX: Use Euclidean distance (same as hasUnexploredTilesInRadius guard)
     const dx = col - shipCol;
     const dz = row - shipRow;
     const distance = Math.sqrt(dx * dx + dz * dz);
-    
+
     if (distance <= exploringRadius) {
       // ✅ Skip non-explorable tiles (depart, fuel, repair, obstacle)
       if (!(tile as Tile)?.explorable) continue;
-      
+
       tilesInRadius++;
-      
+
       // ✅ FIX: Use ONLY memory.knownTiles as source of truth
       // gridInfo.tiles.explored may not be updated in real-time
       const isExploredInMemory = exploredCoords.has(coord as GridCoordinate);
-      
+
       if (isExploredInMemory) {
         exploredInRadius++;
       }
     }
   }
-  
+
   // All local tiles explored if we have tiles AND all are explored
   return tilesInRadius > 0 && exploredInRadius >= tilesInRadius;
 }
@@ -750,33 +663,33 @@ export function getScheduledEvents(
   tileProvider?: TileProvider
 ): ScheduledEvent[] {
   if (verbose) {
-    const stateStr = typeof snapshotValue === 'string' ? snapshotValue : JSON.stringify(snapshotValue);
+    const stateStr = typeof snapshotValue === "string" ? snapshotValue : JSON.stringify(snapshotValue);
     // eslint-disable-next-line no-console
     console.log(`📋 [TRACKER] State: ${stateStr}`);
   }
-  
+
   const { mainState, subState } = detectCurrentState(snapshotValue);
-  
+
   // Gestion des états sans sous-état
   if (!subState) {
     switch (mainState) {
-      case 'initializing':
+      case "initializing":
         return getInitializingEvents(context, verbose, tileProvider);
-      case 'evaluating':
+      case "evaluating":
         return getEvaluatingEvents(context, verbose);
       // 🆕 'relocating' est maintenant un sous-état de 'maintaining', géré dans getMaintainingEvents
       default:
         return [];
     }
   }
-  
+
   // Gestion des états avec sous-états
   switch (mainState) {
-    case 'exploring':
+    case "exploring":
       return getExploringEvents(subState, context, verbose);
-    case 'collecting':
+    case "collecting":
       return getCollectingEvents(subState, context, verbose);
-    case 'maintaining':
+    case "maintaining":
       return getMaintainingEvents(subState, context, verbose);
     default:
       return [];
@@ -785,26 +698,23 @@ export function getScheduledEvents(
 
 /**
  * 🆕 Événements pour le sous-état 'relocating'
- * 
+ *
  * ✅ OPTION A: Envoie RELOCATING_COMPLETE après 500ms pour visibilité UI
  */
-export function getRelocatingEvents(
-  _context: FSMContext,
-  verbose: boolean = false
-): ScheduledEvent[] {
+export function getRelocatingEvents(_context: FSMContext, verbose: boolean = false): ScheduledEvent[] {
   const events: ScheduledEvent[] = [];
-  
+
   if (verbose) {
     // eslint-disable-next-line no-console
     console.log(`🔄 [TRACKER] Relocating (500ms)`);
   }
-  
+
   // ✅ OPTION A: Délai de 500ms pour rendre l'état visible dans l'UI
   events.push({
-    event: { type: 'RELOCATING_COMPLETE' },
+    event: { type: "RELOCATING_COMPLETE" },
     delay: 500,
-    reason: 'Relocating complete - checking radius'
+    reason: "Relocating complete - checking radius",
   });
-  
+
   return events;
 }

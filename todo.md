@@ -40,3 +40,203 @@ Quel objectif final pour le jeu?
 - pouvoir jouer moi meme
 - le décliner en jeu réel
 - proposer un multijoueur
+
+
+
+-----
+
+# CONTRAT DE VIGNETTES — TEMPLATE (à dupliquer par vignette)
+
+> Objectif du contrat : rendre l’infini supportable.
+> Ce contrat est un "pare-feu" : il protège le fun, force une fin, et évite le WIP éternel.
+> Il est fait pour être relu AVANT de coder, puis APRÈS chaque session.
+
+---
+
+## 0) Nom & intention (1 minute max)
+- **Nom de la vignette :** ___________________________
+- **Phrase d’intention (1 seule phrase, sans jargon) :**
+  > "Je veux que l’utilisateur ressente ___________________________ en __________________ minutes."
+- **Ce que je veux tester / apprendre (1 item max) :**
+  - [ ] visuel
+  - [ ] animation
+  - [ ] bots/IA
+  - [ ] physique
+  - [ ] narration/absurde
+  - [ ] UI / interactions
+  - [ ] autre : ___________________________
+- **Mon “WOW unique” (1 seule chose impressionnante) :** ___________________________
+
+⚠️ Règle : si j’écris 2 WOW → je choisis 1 et je supprime l’autre.
+
+---
+
+## 1) Contrat #0 (non négociable) — Fun d’abord
+- **Signal de perte du jeu (mon symptôme) :**
+  - [ ] je cherche “le meilleur” style
+  - [ ] je refactorise sans objectif de jeu
+  - [ ] je lis des docs 45 min sans jouer
+  - [ ] je change la direction globale
+  - [ ] autre : ___________________________
+
+- **Règle anti-perte (si symptôme → action immédiate) :**
+  - Si je remarque le symptôme, alors je fais **l’une** de ces actions (5 minutes max) :
+    - [ ] je lance la vignette et je joue 2 minutes
+    - [ ] j’ajoute une micro-surprise visible (pas une refacto)
+    - [ ] j’écris une phrase "ce qui est fun ici, c’est ____"
+    - [ ] je ferme l’IDE et j’arrête (oui, stop = victoire)
+
+---
+
+## 2) Scope (anti-WIP) — Définition de "montrable"
+### 2.1 Durée & boucle
+- **Durée cible :** [ ] 60s  [ ] 90s  [ ] 120s
+- **Boucle de jeu (début → action → fin) en 3 lignes max :**
+  1) Début : ___________________________
+  2) Action : ___________________________
+  3) Fin : ___________________________
+
+⚠️ Règle : si je n’arrive pas à écrire ça → je ne code pas.
+
+### 2.2 Checklist “montrable” (DOIT être atteinte)
+- [ ] Lancement en 1 clic / 1 commande
+- [ ] On comprend quoi faire en 10 secondes (sans README)
+- [ ] Il existe un **début** + une **fin**
+- [ ] Il y a **1 surprise** (absurde ou visuelle)
+- [ ] Aucun bug bloquant sur 3 minutes d’usage
+- [ ] Un GIF/vidéo de 10–20s existe
+
+> Une fois cette checklist cochée : la vignette est "shippée" même si elle est imparfaite.
+
+### 2.3 Liste “NON” (ce que je m’interdis explicitement)
+Coche au moins 3 interdits :
+- [ ] pas de nouveau système de persistance (save/load)
+- [ ] pas de nouveau framework / librairie majeure
+- [ ] pas de refonte architecture
+- [ ] pas d’éditeur de niveaux
+- [ ] pas de multi-joueurs
+- [ ] pas d’inventaire
+- [ ] pas de nouvelles textures “parfaites”
+- [ ] pas de “juste une dernière feature”
+- [ ] autre interdit : ___________________________
+
+---
+
+## 3) Contrat de design (fermer des portes volontairement)
+> Le but n’est pas d’avoir le meilleur style, mais d’avoir un style COHÉRENT.
+
+### 3.1 Style (choisir 1 seul axe)
+- [ ] Papier & bois 2.5D
+- [ ] Trompe-l’œil 2D/3D (quasi plat)
+- [ ] Boardgame classique + glitch subtil
+- [ ] autre : ___________________________
+
+### 3.2 Palette (strict)
+- **Couleur dominante 1 :** __________
+- **Couleur dominante 2 :** __________
+- **Neutre :** __________
+- **Accent unique :** __________
+
+⚠️ Règle : max 4 couleurs (sinon je triche).
+
+### 3.3 Formes & épaisseur (règles visuelles)
+- **Épaisseur max des objets (ex: carton) :** __________
+- **Contours (outline) :** [ ] oui [ ] non
+  - Si oui : épaisseur unique = __________
+- **Ombres :**
+  - [ ] 1 direction unique
+  - [ ] intensité fixe (pas de “j’ajuste au feeling”)
+
+### 3.4 Typo & UI
+- **1 seule typo :** ___________________________
+- UI en :
+  - [ ] cartes
+  - [ ] badges/pictos
+  - [ ] minimal (texte rare)
+- **Règle lisibilité :** tout doit être lisible à __ mètres (ex: 2m)
+
+---
+
+## 4) Contrat d’animation (subtilité contrôlée)
+> Ici tu empêches la dérive “je fais des animations partout”.
+
+- **Nombre d’animations autorisées :** [ ] 1  [ ] 2  [ ] 3 max
+- Liste des animations autorisées :
+  1) ___________________________
+  2) ___________________________
+  3) ___________________________
+
+- **Budget animation :**
+  - Durée max d’une anim : _______ ms
+  - Styles autorisés :
+    - [ ] squash & stretch léger
+    - [ ] pop (scale 1.0 → 1.05 → 1.0)
+    - [ ] rotation micro (±3°)
+    - [ ] fade court
+  - Styles interdits :
+    - [ ] particules "gratuites"
+    - [ ] caméra qui bouge pendant une action clé
+    - [ ] 12 easing différents
+
+---
+
+## 5) Contrat technique (garde-fous contre la spirale d’outillage)
+- **Tech autorisée (liste fermée) :**
+  - moteur/rendu : ___________________________
+  - state management : ___________________________
+  - physics (si oui) : ___________________________
+- **Tech interdite pour cette vignette :**
+  - ___________________________
+  - ___________________________
+
+- **Règle de refactor :**
+  - Je peux refactor **uniquement** si :
+    - [ ] cela supprime un bug bloquant
+    - [ ] cela simplifie une fonction utilisée dans la boucle 90s
+  - Sinon : je crée une issue “refactor plus tard” et je continue.
+
+---
+
+## 6) Contrat “surprise / absurde” (1 seule surprise)
+> Une vignette = UNE surprise mémorable.
+
+- **Nature de la surprise :**
+  - [ ] visuelle
+  - [ ] sonore
+  - [ ] logique (événement inattendu)
+  - [ ] texte/absurde (POCA vibe)
+- **Description en 1 phrase :**
+  > ___________________________
+- **Règle :** pas d’ajout de 2e surprise tant que la 1ère n’est pas parfaite (dans son intention).
+
+---
+
+## 7) Plan de session (pour éviter "je code au hasard")
+### Session suivante (30–90 minutes)
+- [ ] Tâche 1 (fun + visible) : ___________________________
+- [ ] Tâche 2 (finir la boucle) : ___________________________
+- [ ] Tâche 3 (polish minimal) : ___________________________
+
+### Définition de réussite de session (1 ligne)
+> "Cette session est réussie si ___________________________."
+
+---
+
+## 8) Rituel de fin (obligatoire)
+- [ ] J’ai joué 2 minutes à la vignette
+- [ ] J’ai noté 1 phrase : "le fun vient de ______"
+- [ ] J’ai écrit la prochaine action (1 seule) :
+  > ___________________________
+
+---
+
+## 9) Clause de sortie (la porte de secours)
+> Si je suis bloqué, je choisis UNE de ces sorties (pas de débat) :
+
+- [ ] je supprime une feature
+- [ ] je réduis la durée cible (120s → 60s)
+- [ ] je remplace une complexité par une illusion (fake)
+- [ ] je ship une version “moche mais complète”
+- [ ] j’arrête la vignette et je la classe "saison suivante"
+
+FIN
