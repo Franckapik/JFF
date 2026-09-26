@@ -30,6 +30,8 @@ export default function SharedHeader() {
   const instanceId = useSharedWorkerStore((s) => s.instanceId);
   const updateCounter = useSharedWorkerStore((s) => s.updateCounter);
   const isConnected = useSharedWorkerStore((s) => s.isConnected);
+  const errorMessage = useSharedWorkerStore((s) => s.errorMessage);
+  const connect = useSharedWorkerStore((s) => s.connect);
   const lastUpdateTimestamp = useSharedWorkerStore((s) => s.lastUpdateTimestamp);
   const resetGame = useSharedWorkerStore((s) => s.resetGame);
   const currentRoute = getCurrentRoute();
@@ -45,6 +47,9 @@ export default function SharedHeader() {
       right: '12px',
       zIndex: 9999,
       display: 'flex',
+      flexWrap: 'wrap',
+      maxWidth: 'calc(100vw - 24px)',
+      boxSizing: 'border-box',
       alignItems: 'center',
       gap: '8px',
       backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -55,19 +60,32 @@ export default function SharedHeader() {
       color: 'white'
     }}>
       {/* Connection Status Dot */}
-      <div
-        title={isConnected ? 'Connected' : 'Disconnected'}
+      <button
+        type="button"
+        title={errorMessage || (isConnected ? 'Connected' : 'Reconnect to SharedWorker')}
+        aria-label={isConnected ? 'Connected' : 'Reconnect to SharedWorker'}
+        disabled={isConnected}
+        onClick={connect}
         style={{
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
           width: '16px',
           height: '16px',
+          border: 0,
+          padding: 0,
+          cursor: isConnected ? 'default' : 'pointer',
           borderRadius: '50%',
           backgroundColor: isConnected ? '#10b981' : '#ef4444',
           flexShrink: 0
         }}
       />
+
+      {errorMessage && (
+        <span role="alert" style={{ flexBasis: '100%', maxWidth: '280px', overflowWrap: 'anywhere', color: '#fca5a5' }}>
+          {errorMessage}
+        </span>
+      )}
 
       {/* Update Counter */}
       <div

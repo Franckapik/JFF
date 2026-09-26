@@ -44,10 +44,10 @@ import { processDroneInitRequest, processShipInitRequest } from './domains/initi
 import { initializeBotContextFromWorker, onInitializingEntry, onInitializingExit } from './domains/initializing/actions.effects.ts';
 import { assignDroneDamagePenaltyContext, assignPurchaseDroneContext, assignShipAtFuelStationContext, assignShipAtRepairStationContext, assignShipDepositResourcesContext, assignShipMovingToFuelStationContext, assignShipMovingToRepairStationContext, assignShipRefuelContext, assignShipRelocatingContext, assignShipRepairContext } from './domains/maintenance/actions.assign.ts';
 import { onGameOverEntry, onMaintainingEntry, onMaintainingExit, onPurchasingDroneEntry, onPurchasingDroneExit, onShipDepositingEntry, onShipDepositingExit, onShipRefuelingEntry, onShipRefuelingExit, onShipRelocatingEntry, onShipRelocatingExit, onShipRepairingEntry, onShipRepairingExit } from './domains/maintenance/actions.effects.ts';
-import { canIncreaseRadius, hasResourcesForDrone, isAtMaxRadius, isMovingToFuelStation, isMovingToRepairStation, isShipOnBase, maintenanceComplete, needsDeposit, needsDronePurchase, needsRefuel, needsRepair, shouldUseFuelStation, shouldUseRepairStation } from './domains/maintenance/guards.pure.ts';
+import { canIncreaseRadius, hasResourcesForDrone, isAtMaxRadius, isExpansionExhausted, isMovingToFuelStation, isMovingToRepairStation, isShipOnBase, maintenanceComplete, needsDeposit, needsDronePurchase, needsRefuel, needsRepair, shouldUseFuelStation, shouldUseRepairStation } from './domains/maintenance/guards.pure.ts';
 
 // ✅ Phase 1: Pure guards from collection domain
-import { canCollectTile, hasMoreCollectibleTiles, hasMoreWaypoints, isAtFinalWaypoint, isVehicleOverloaded, noMoreCollectibleTiles, shouldApplyDangerDamage } from './domains/collection/guards.pure.ts';
+import { canCollectTile, hasMoreCollectibleTiles, hasMoreWaypoints, hasNoCollectionRoute, isAtFinalWaypoint, isVehicleOverloaded, noMoreCollectibleTiles, shouldApplyDangerDamage } from './domains/collection/guards.pure.ts';
 // ✅ Phase 1: Pure guards from initializing domain
 import { areAllEntitiesInitialized, isBasePositionInitialized, isDronePositionInitialized, isVehiclePositionInitialized } from './domains/initializing/guards.pure.ts';
 
@@ -177,6 +177,7 @@ export const machineXV5Pure = setup({
     
     // Guards du domaine COLLECTION (pure)
     canCollectTile,
+    hasNoCollectionRoute,
     isVehicleOverloaded,
     hasMoreCollectibleTiles, // ✅ Pure: uses context.memory.knownTiles
     noMoreCollectibleTiles, // ✅ Inverse de hasMoreCollectibleTiles
@@ -191,6 +192,7 @@ export const machineXV5Pure = setup({
     needsRepair,
     isShipOnBase,
     maintenanceComplete,
+    isExpansionExhausted,
     isAtMaxRadius, // 🆕 PHASE 2: Check if radius >= 3
     canIncreaseRadius, // 🆕 PHASE 2: Check if radius < 3
     
@@ -429,6 +431,10 @@ export const machineXV5Pure = setup({
         ship_moving_to_tile: {
           entry: 'onShipMovingToTileEntry',
           exit: 'onShipMovingToTileExit',
+          always: {
+            target: '#machineXV5Pure.evaluating',
+            guard: 'hasNoCollectionRoute'
+          },
           on: {
             // 🛤️ PATHFINDING: Handle intermediate waypoints
             SHIP_REACHES_WAYPOINT: {
@@ -442,13 +448,13 @@ export const machineXV5Pure = setup({
                 // 🆕 STATION SUPPORT: Priority 1 - Arrived at fuel station
                 target: '#machineXV5Pure.maintaining.refueling',
                 guard: 'isMovingToFuelStation',
-                actions: 'assignShipAtFuelStationContext'
+                actions: ['assignShipNextWaypointContext', 'assignShipAtFuelStationContext']
               },
               {
                 // 🆕 STATION SUPPORT: Priority 2 - Arrived at repair station
                 target: '#machineXV5Pure.maintaining.repairing',
                 guard: 'isMovingToRepairStation',
-                actions: 'assignShipAtRepairStationContext'
+                actions: ['assignShipNextWaypointContext', 'assignShipAtRepairStationContext']
               },
               {
                 // Priority 3: Ship hits danger tile → apply damage, then collect
@@ -464,7 +470,8 @@ export const machineXV5Pure = setup({
               },
               {
                 // Priority 5: Cannot collect → return to evaluating
-                target: '#machineXV5Pure.evaluating'
+                target: '#machineXV5Pure.evaluating',
+                actions: 'assignShipCollectingContext'
               }
             ]
           }
@@ -491,7 +498,7 @@ export const machineXV5Pure = setup({
               {
                 // Priority 3: More tiles available → continue collecting
                 target: 'ship_moving_to_tile',
-                actions: 'assignShipLoadResourcesContext'
+                actions: ['assignShipLoadResourcesContext', 'assignShipMovingToTileContext']
               }
             ],
             RESOURCE_DEPLETED: '#machineXV5Pure.evaluating'
@@ -556,14 +563,11 @@ export const machineXV5Pure = setup({
           on: {
             RELOCATING_COMPLETE: [
               {
-                // Priority 1: Max radius reached → GAME_OVER (final state)
                 target: '#machineXV5Pure.game_over',
-                guard: 'isAtMaxRadius'
+                guard: 'isExpansionExhausted'
               },
               {
-                // Priority 2: Can increase radius → return to evaluating
-                target: '#machineXV5Pure.evaluating',
-                guard: 'canIncreaseRadius'
+                target: '#machineXV5Pure.evaluating'
               }
             ]
           }
@@ -599,14 +603,17 @@ export const machineXV5Pure = setup({
             SHIP_REPAIR_COMPLETE: [
               {
                 target: 'refueling',
-                guard: 'needsRefuel'
+                guard: 'needsRefuel',
+                actions: 'assignShipRepairContext'
               },
               {
                 target: 'depositing',
-                guard: 'needsDeposit'
+                guard: 'needsDeposit',
+                actions: 'assignShipRepairContext'
               },
               {
-                target: '#machineXV5Pure.evaluating'
+                target: '#machineXV5Pure.evaluating',
+                actions: 'assignShipRepairContext'
               }
             ]
           }

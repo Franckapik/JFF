@@ -50,52 +50,32 @@ const POSITION_MATCH_THRESHOLD = 0.3;
 export function findPath(
   startCoord: GridCoordinate,
   targetCoord: GridCoordinate,
-  tiles: TileMap
+  tiles: Record<string, { walkable?: boolean; neighbors?: GridCoordinate[] }>
 ): Path {
-  // Validate inputs
-  if (!startCoord || !targetCoord || !tiles) {
+  if (!tiles?.[startCoord]?.walkable || !tiles[targetCoord]?.walkable) {
     return [];
   }
-
-  // Same start and target returns single-element path
-  if (startCoord === targetCoord) {
-    return [startCoord];
-  }
-
-  // BFS initialization
-  const queue: Path[] = [[startCoord]];
-  const visited = new Set<GridCoordinate>();
-
-  // BFS loop
-  while (queue.length > 0) {
-    const path = queue.shift()!;
-    const currentCoord = path[path.length - 1];
-
-    // Target reached
-    if (currentCoord === targetCoord) {
+  const queue: GridCoordinate[] = [startCoord];
+  const parents = new Map<GridCoordinate, GridCoordinate | null>([[startCoord, null]]);
+  for (let head = 0; head < queue.length; head++) {
+    const current = queue[head];
+    if (current === targetCoord) {
+      const path: Path = [];
+      let cursor: GridCoordinate | null = current;
+      while (cursor !== null) {
+        path.push(cursor);
+        cursor = parents.get(cursor) ?? null;
+      }
+      path.reverse();
       return path;
     }
-
-    // Skip visited nodes
-    if (visited.has(currentCoord)) {
-      continue;
-    }
-
-    visited.add(currentCoord);
-    const currentTile = tiles[currentCoord];
-
-    // Explore neighbors
-    if (currentTile?.neighbors) {
-      for (const neighborCoord of currentTile.neighbors) {
-        const neighborTile = tiles[neighborCoord];
-        if (neighborTile?.walkable && !visited.has(neighborCoord)) {
-          queue.push([...path, neighborCoord]);
-        }
+    for (const neighbor of tiles[current].neighbors ?? []) {
+      if (tiles[neighbor]?.walkable && !parents.has(neighbor)) {
+        parents.set(neighbor, current);
+        queue.push(neighbor);
       }
     }
   }
-
-  // No path found
   return [];
 }
 

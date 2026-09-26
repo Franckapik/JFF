@@ -19,34 +19,20 @@
 
 import { create } from 'zustand';
 
-import type { FSMContext } from '../../types/fsm.d.ts';
 import type { MachineEvents } from '../../ai/fsm/machineX/events.pure.v5.ts';
+import type { WorkerBotId as BotId, WorkerBotState as BotState, WorkerRequest, WorkerResponse } from '../../types/worker.ts';
 
 // =========================================================================
 // TYPES
 // =========================================================================
 
-type BotId = 'bot-0' | 'bot-1';
-
-interface BotState {
-  value: unknown;
-  context: FSMContext;
-  status: string;
-}
-
-interface WorkerResponse {
-  type: 'STATE_UPDATE' | 'INIT_COMPLETE' | 'CONNECTED' | 'ERROR';
-  instanceId: string;
-  updateCounter: number;
-  botStates: Record<BotId, BotState>;
-  activeBots: BotId[];
-  timestamp: number;
-}
-
 interface SharedWorkerStoreState {
   // Connection state
   isConnected: boolean;
   isInitialized: boolean;
+  gameId: string | null;
+  mapSeed: number | null;
+  errorMessage: string | null;
   
   // Synchronization proof
   instanceId: string;
@@ -67,8 +53,7 @@ interface SharedWorkerStoreActions {
   connect: () => void;
   disconnect: () => void;
   
-  // Initialize game (send tiles to worker)
-  initGame: (tiles: Record<string, unknown>) => void;
+  initGame: () => void;
   
   // Send event to bot
   sendEvent: (botId: BotId, event: MachineEvents) => void;
@@ -93,45 +78,27 @@ export const useSharedWorkerStore = create<SharedWorkerStore>((set, get) => {
   
   const handleWorkerMessage = (event: MessageEvent<WorkerResponse>) => {
     const data = event.data;
-    
-    switch (data.type) {
-      case 'CONNECTED':
-        console.log(`🔌 [STORE] Connected to worker. Instance: ${data.instanceId}`);
-        set({
-          isConnected: true,
-          instanceId: data.instanceId,
-          updateCounter: data.updateCounter,
-          botStates: data.botStates,
-          activeBots: data.activeBots,
-          lastUpdateTimestamp: data.timestamp
-        });
-        break;
-        
-      case 'INIT_COMPLETE':
-        console.log(`✅ [STORE] Game initialized in worker`);
-        set({
-          isInitialized: true,
-          instanceId: data.instanceId,
-          updateCounter: data.updateCounter,
-          activeBots: data.activeBots,
-          lastUpdateTimestamp: data.timestamp
-        });
-        break;
-        
-      case 'STATE_UPDATE':
-        set({
-          instanceId: data.instanceId,
-          updateCounter: data.updateCounter,
-          botStates: data.botStates,
-          activeBots: data.activeBots,
-          lastUpdateTimestamp: data.timestamp
-        });
-        break;
-        
-      case 'ERROR':
-        console.error('[STORE] Worker error:', data);
-        break;
+    if (data.type === 'ERROR') {
+      set({ errorMessage: data.errorMessage ?? 'Worker error' });
+      return;
     }
+
+    set({
+      isConnected: true,
+      isInitialized: data.isInitialized,
+      gameId: data.gameId,
+      mapSeed: data.mapSeed,
+      errorMessage: null,
+      instanceId: data.instanceId,
+      updateCounter: data.updateCounter,
+      botStates: data.botStates,
+      activeBots: data.activeBots,
+      lastUpdateTimestamp: data.timestamp
+    });
+  };
+
+  const postMessage = (message: WorkerRequest) => {
+    get().port?.postMessage(message);
   };
   
   // =========================================================================
@@ -141,6 +108,9 @@ export const useSharedWorkerStore = create<SharedWorkerStore>((set, get) => {
   const initialState: SharedWorkerStoreState = {
     isConnected: false,
     isInitialized: false,
+    gameId: null,
+    mapSeed: null,
+    errorMessage: null,
     instanceId: '',
     updateCounter: 0,
     lastUpdateTimestamp: 0,
@@ -165,69 +135,65 @@ export const useSharedWorkerStore = create<SharedWorkerStore>((set, get) => {
       try {
         console.log('🔌 [STORE] Creating SharedWorker...');
         
-        // Create SharedWorker connection with correct path
-        // Note: The path must be relative to this file's location
-        const workerUrl = new URL('../../workers/fsm-shared-worker.ts', import.meta.url);
-        console.log('🔌 [STORE] Worker URL:', workerUrl.href);
-        
         const worker = new SharedWorker(
-          workerUrl,
+          new URL('../../workers/fsm-shared-worker.ts', import.meta.url),
           { type: 'module', name: 'fsm-shared-worker' }
         );
         
         // Handle worker errors
         worker.onerror = (e) => {
-          console.error('❌ [STORE] SharedWorker error:', e);
-          console.error('❌ [STORE] Error message:', e.message);
-          set({ isConnected: false });
+          if (get().worker !== worker) return;
+          worker.port.close();
+          set({ ...initialState, errorMessage: e.message || 'SharedWorker failed to start' });
         };
         
         const port = worker.port;
         
-        port.onmessage = handleWorkerMessage;
+        port.onmessage = (event) => {
+          if (get().port === port) handleWorkerMessage(event);
+        };
         port.onmessageerror = (e) => {
           console.error('[STORE] Message error:', e);
+          if (get().port !== port) return;
+          actions.disconnect();
+          set({ errorMessage: 'Cannot read SharedWorker message' });
         };
         
         port.start();
         
-        set({ worker, port });
+        set({ worker, port, errorMessage: null });
         
         // Request connection acknowledgment
-        port.postMessage({ type: 'CONNECT' });
+        postMessage({ type: 'CONNECT' });
         
         console.log('🔌 [STORE] Connecting to SharedWorker...');
       } catch (error) {
         console.error('[STORE] Failed to connect to SharedWorker:', error);
-        set({ isConnected: false });
+        get().port?.close();
+        set({ ...initialState, errorMessage: error instanceof Error ? error.message : 'Cannot connect to SharedWorker' });
       }
     },
     
     disconnect: () => {
       const state = get();
       if (state.port) {
+        postMessage({ type: 'DISCONNECT' });
+        state.port.onmessage = null;
+        state.port.onmessageerror = null;
         state.port.close();
       }
-      set({
-        worker: null,
-        port: null,
-        isConnected: false,
-        isInitialized: false
-      });
+      set(initialState);
       console.log('🔌 [STORE] Disconnected from SharedWorker');
     },
     
-    initGame: (tiles: Record<string, unknown>) => {
+    initGame: () => {
       const state = get();
       if (!state.port) {
         console.error('[STORE] Cannot init game: not connected');
         return;
       }
       
-      state.port.postMessage({
-        type: 'INIT',
-        tiles
-      });
+      postMessage({ type: 'INIT' });
       
       console.log('🎮 [STORE] Initializing game in worker...');
     },
@@ -239,8 +205,9 @@ export const useSharedWorkerStore = create<SharedWorkerStore>((set, get) => {
         return;
       }
       
-      state.port.postMessage({
+      postMessage({
         type: 'SEND_EVENT',
+        gameId: state.gameId,
         botId,
         event
       });
@@ -250,7 +217,7 @@ export const useSharedWorkerStore = create<SharedWorkerStore>((set, get) => {
       const state = get();
       if (!state.port) return;
       
-      state.port.postMessage({ type: 'REQUEST_STATE' });
+      postMessage({ type: 'REQUEST_STATE' });
     },
     
     resetGame: () => {
@@ -260,10 +227,7 @@ export const useSharedWorkerStore = create<SharedWorkerStore>((set, get) => {
         return;
       }
       
-      console.log('🔄 [STORE] Sending reset command to worker...');
-      const message = { type: 'RESET' };
-      console.log('🔄 [STORE] Message content:', message);
-      state.port.postMessage(message);
+      postMessage({ type: 'RESET', gameId: state.gameId });
     }
   };
   

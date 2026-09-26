@@ -9,6 +9,15 @@ import globals from 'globals'
 
 export default [
   { ignores: ['dist', 'node_modules', 'backup', '*.config.js', '*.config.mjs'] },
+  {
+    files: ['src/engine/{botMachine,model,protocol,resources,rules,session,world}.ts'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [{
+        group: ['react', 'react/*', 'react-dom', '@react-three/*', 'zustand', 'zustand/*', '**/stores/**', '**/components/**', '**/hooks/**'],
+        message: 'The session engine must remain independent of rendering and UI stores.',
+      }] }],
+    },
+  },
   // Bloc TypeScript uniquement
   {
     files: ['src/**/*.{ts,tsx}'],
@@ -20,11 +29,10 @@ export default [
         ecmaVersion: 'latest',
         ecmaFeatures: { jsx: true },
         sourceType: 'module',
-        project: './tsconfig.json',
       },
     },
     settings: {
-      react: { version: '18.3' },
+      react: { version: '19' },
       'import/resolver': {
         node: {
           extensions: ['.js', '.jsx', '.ts', '.tsx']
@@ -96,7 +104,7 @@ export default [
       ],
       // React Three Fiber - Autorise les propriétés de R3F  
       'react/no-unknown-property': ['error', { 
-        'ignore': ['position', 'rotation', 'args', 'intensity', 'castShadow', 'metalness', 'roughness', 'transparent', 'emissive', 'emissiveIntensity'] 
+        'ignore': ['position', 'rotation', 'args', 'intensity', 'castShadow', 'receiveShadow', 'attach', 'shadow-mapSize', 'metalness', 'roughness', 'transparent', 'emissive', 'emissiveIntensity']
       }],
       // TypeScript comments - Plus permissif pour @ts-expect-error
       '@typescript-eslint/ban-ts-comment': 'warn',

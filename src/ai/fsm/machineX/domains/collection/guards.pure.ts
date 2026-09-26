@@ -229,6 +229,10 @@ export const shouldApplyDangerDamage: XStateV5Guard = ({ context }) => {
  * Guard: Check if ship has more waypoints to traverse before reaching target
  * Returns true if pathIndex < path.length - 1 (more waypoints ahead)
  */
+export const hasNoCollectionRoute: XStateV5Guard = ({ context }) => {
+  return !context.vehicle?.targetVehicleTile && !context.vehicle?.currentPath?.length;
+};
+
 export const hasMoreWaypoints: XStateV5Guard = ({ context }) => {
   const path = context.vehicle?.currentPath || [];
   const pathIndex = context.vehicle?.pathIndex ?? 0;

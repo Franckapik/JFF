@@ -1,4 +1,45 @@
-# 🧪 FSM Guard Validation - Terminal Testing Guide
+# Validation de la session JFF
+
+Commandes actives depuis la refonte du 26 septembre 2026, avec Node >= 22.12 :
+
+```bash
+npm ci
+npm test
+npm run type-check
+npm run lint
+npm run build
+./scripts/pre-commit.sh
+```
+
+`npm run validate` rassemble types, tests, lint et build. Le pre-commit ajoute
+`npm audit --audit-level=moderate`. Les controles portent sur le graphe actif,
+pas sur les anciennes FSM conservees comme references. La suite Vitest est
+dans `src/engine/session.test.ts`; `npm run test:watch` active le suivi.
+
+`npm run dev` sert l'application, `/vue1` le terrain, `/vue2` le diagnostic.
+Pour controler le build : `npm run preview -- --host 127.0.0.1`.
+Les onglets d'une meme origine partagent une session ; deux ports HTTP
+differents correspondent a deux sessions independantes.
+
+Les logs de session sont visibles dans le diagnostic et exportables avec le
+snapshot. Le forwarder console est desactive par defaut et en production.
+Pour l'activer explicitement en developpement :
+
+```bash
+VITE_FORWARD_LOGS=true npm run dev:all
+```
+
+Le serveur de logs ecoute uniquement `127.0.0.1:5123`, refuse les origines
+non locales et les corps de plus de 64 Kio. Le client limite les envois a
+10/s et 32 Kio, sans supprimer les messages de la console locale.
+
+Voir [le suivi de refonte](../docs/AUDIT-2026-09-26.md#suivi-de-la-refonte-apres-decisions)
+pour les regles, les mesures et les limites.
+
+## Archive : ancien guide des guards
+
+Le contenu ci-dessous decrit l'ancien outillage. Ses commandes de menus et
+scripts absents ne font plus partie des commandes npm actives.
 
 ## Overview
 

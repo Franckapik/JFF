@@ -40,9 +40,10 @@
 import React from 'react';
 
 import GameInitializer from './components/GameInitializer';
-import SharedFSMVisualization from './components/SharedFSMVisualization';
-import SharedHeader from './components/SharedHeader';
-import Vue1R3F from './components/Vue1R3F';
+import SessionToolbar from './components/session/SessionToolbar';
+
+const GameView = React.lazy(() => import('./components/session/GameView'));
+const Diagnostics = React.lazy(() => import('./components/session/Diagnostics'));
 
 // =========================================================================
 // TYPES
@@ -63,13 +64,13 @@ interface RouteConfig {
 const routes: Record<RouteKey, RouteConfig> = {
   vue1: {
     path: '/vue1',
-    component: <Vue1R3F />,
-    title: 'FSM Game - Vue 1 R3F (SharedWorker)'
+    component: <GameView />,
+    title: 'JFF - Terrain'
   },
   vue2: {
     path: '/vue2',
-    component: <SharedFSMVisualization />,
-    title: 'FSM Game - Vue 2 (SharedWorker + Full Visualization)'
+    component: <Diagnostics />,
+    title: 'JFF - Diagnostic'
   }
 };
 
@@ -111,14 +112,11 @@ export default function AppRouter() {
   
   return (
     <>
-      {/* Centralized game initialization - handles worker connection and tile generation */}
       <GameInitializer />
-      
-      {/* Shared header displayed on all views */}
-      <SharedHeader />
-      
-      {/* Current route view */}
-      {route.component}
+      <SessionToolbar route={currentRoute} />
+      <React.Suspense fallback={<main className="empty-state" role="status">Chargement de la vue...</main>}>
+        {route.component}
+      </React.Suspense>
     </>
   );
 }

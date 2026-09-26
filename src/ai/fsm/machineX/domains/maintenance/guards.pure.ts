@@ -174,6 +174,10 @@ export const maintenanceComplete: XStateV5Guard = ({ context }) => {
  * 
  * @returns true if radius is at or above maximum (GAME_OVER condition)
  */
+export const isExpansionExhausted: XStateV5Guard = ({ context }) => {
+  return context.lastAction === 'game_over_pending';
+};
+
 export const isAtMaxRadius: XStateV5Guard = ({ context }) => {
   // ✅ Phase 2: Read from context instead of GameStore
   const currentRadius = context.config?.exploringRadius ?? 1;

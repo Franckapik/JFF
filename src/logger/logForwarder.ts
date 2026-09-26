@@ -19,8 +19,9 @@
  * @param source - Source identifier ("browser:vue1", "worker", etc.)
  * @param isDev - Whether in dev mode (should check import.meta.env.DEV for browser)
  */
-export function setupLogForwarder(source = "unknown", isDev = true) {
-  if (!isDev) return;
+export function setupLogForwarder(source = "unknown", isDev = false) {
+  if (!isDev || '__jffForwarderInstalled' in console) return;
+  Object.defineProperty(console, '__jffForwarderInstalled', { value: true });
 
   const originalConsole = {
     log: console.log,
@@ -28,27 +29,27 @@ export function setupLogForwarder(source = "unknown", isDev = true) {
     error: console.error,
   };
 
-  const sendToServer = (level, args) => {
-    // Serialize args safely (handle circular refs, complex objects)
-    const serializedArgs = args.map(arg => {
+  let windowStart = performance.now();
+  let sent = 0;
+  const sendToServer = (level: keyof typeof originalConsole, args: unknown[]) => {
+    const now = performance.now();
+    if (now - windowStart >= 1000) { windowStart = now; sent = 0; }
+    if (sent++ >= 10) return;
+    const serializedArgs = args.slice(0, 32).map(arg => {
       try {
-        return typeof arg === 'object' ? JSON.stringify(arg) : String(arg);
-      } catch (e) {
-        return String(arg);
+        return (typeof arg === 'object' ? JSON.stringify(arg) : String(arg))?.slice(0, 2048);
+      } catch {
+        return '[Unserializable log value]';
       }
     });
-
-    // Send to log server on port 5123
-    fetch('http://localhost:5123/log', {
+    const body = JSON.stringify({ level, args: serializedArgs, meta: source });
+    if (new TextEncoder().encode(body).byteLength > 32768) return;
+    fetch('http://127.0.0.1:5123/log', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        level,
-        args: serializedArgs,
-        meta: source,
-      }),
+      body,
       keepalive: true,
-    }).catch(() => {}); // Silently fail if log server is down
+    }).catch(() => undefined);
   };
 
   // Override console methods

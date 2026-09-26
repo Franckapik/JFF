@@ -2,11 +2,13 @@ import { createRoot } from "react-dom/client";
 
 import AppRouter from "./AppRouter.tsx";
 import { setupLogForwarder } from "./logger/logForwarder.ts";
-import "./styles/App.css";
+import '@fontsource/ibm-plex-sans/latin-400.css';
+import '@fontsource/ibm-plex-sans/latin-600.css';
+import "./styles/session.css";
 
-// ✅ Forward console logs to terminal in dev mode (centralized setup)
-setupLogForwarder(`browser:${window.location.pathname}`, import.meta.env.DEV);
+setupLogForwarder(`browser:${window.location.pathname}`, import.meta.env.DEV && import.meta.env.VITE_FORWARD_LOGS === 'true');
 
-// Les versions App et SimpleApp ont été fusionnées en une seule version
-const root = createRoot(document.getElementById("root"));
+const container = document.getElementById("root");
+if (!container) throw new Error("Missing application root");
+const root = createRoot(container);
 root.render(<AppRouter />);

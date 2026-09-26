@@ -303,58 +303,13 @@ export function getCollectingEvents(
     const pathIndex = context.vehicle?.pathIndex ?? 0;
     
     if (currentPath.length > 0) {
-      // We have a path - emit ALL remaining waypoints with cumulative delays
       const remainingSteps = currentPath.length - pathIndex - 1;
-      
-      if (verbose) {
-        // eslint-disable-next-line no-console
-        console.log(`🛤️ [TRACKER] Pathfinding: ${remainingSteps} steps remaining (from index ${pathIndex} to ${currentPath.length - 1})`);
-      }
-      
-      // Emit all waypoint events with cumulative delays
-      for (let step = 1; step <= remainingSteps; step++) {
-        const waypointIndex = pathIndex + step;
-        const isLastWaypoint = waypointIndex === currentPath.length - 1;
-        const delay = step * DURATIONS.TILE_TRAVERSAL_TIME;
-        const targetCoord = currentPath[waypointIndex];
-        
-        if (isLastWaypoint) {
-          // Final waypoint - emit SHIP_REACHES_TILE
-          events.push({
-            event: { type: 'SHIP_REACHES_TILE' },
-            delay,
-            reason: `Ship reaching final destination ${targetCoord}`
-          });
-          if (verbose) {
-            // eslint-disable-next-line no-console
-            console.log(`   → SHIP_REACHES_TILE at ${delay}ms (waypoint ${waypointIndex})`);
-          }
-        } else {
-          // Intermediate waypoint - emit SHIP_REACHES_WAYPOINT
-          events.push({
-            event: { type: 'SHIP_REACHES_WAYPOINT' },
-            delay,
-            reason: `Ship reaching waypoint ${waypointIndex}: ${targetCoord}`
-          });
-          if (verbose) {
-            // eslint-disable-next-line no-console
-            console.log(`   → SHIP_REACHES_WAYPOINT at ${delay}ms (waypoint ${waypointIndex})`);
-          }
-        }
-      }
-      
-      // If no remaining steps, we're already at destination
-      if (remainingSteps <= 0) {
-        if (verbose) {
-          // eslint-disable-next-line no-console
-          console.log(`⚠️ [TRACKER] Already at path end, emitting SHIP_REACHES_TILE`);
-        }
-        events.push({
-          event: { type: 'SHIP_REACHES_TILE' },
-          delay: 100,
-          reason: 'Ship already at path end'
-        });
-      }
+      const nextIndex = Math.min(pathIndex + 1, currentPath.length - 1);
+      events.push({
+        event: { type: remainingSteps > 1 ? 'SHIP_REACHES_WAYPOINT' : 'SHIP_REACHES_TILE' },
+        delay: remainingSteps > 0 ? DURATIONS.TILE_TRAVERSAL_TIME : 100,
+        reason: `Ship reaching waypoint ${nextIndex}: ${currentPath[nextIndex]}`
+      });
     } else {
       // Legacy fallback: no path, use direct distance calculation
       if (targetVehicleTile?.position?.coord && shipPos) {
@@ -406,33 +361,11 @@ export function getCollectingEvents(
     const remainingSteps = currentPath.length - pathIndex - 1;
     
     if (currentPath.length > 0 && remainingSteps > 0) {
-      // Path exists - emit waypoint events for each step
-      if (verbose) {
-        // eslint-disable-next-line no-console
-        console.log(`🛤️ [TRACKER] Return path: ${remainingSteps} steps remaining (index ${pathIndex}/${currentPath.length - 1})`);
-      }
-      
-      // Emit SHIP_REACHES_WAYPOINT for intermediate tiles
-      for (let i = 1; i <= remainingSteps; i++) {
-        const isLastStep = i === remainingSteps;
-        const delay = i * DURATIONS.TILE_TRAVERSAL_TIME;
-        
-        if (isLastStep) {
-          // Final step: emit SHIP_REACHES_BASE
-          events.push({
-            event: { type: 'SHIP_REACHES_BASE' },
-            delay,
-            reason: `Ship reaches base (final waypoint)`
-          });
-        } else {
-          // Intermediate step: emit SHIP_REACHES_WAYPOINT
-          events.push({
-            event: { type: 'SHIP_REACHES_WAYPOINT' },
-            delay,
-            reason: `Ship reaches return waypoint ${pathIndex + i}/${currentPath.length - 1}`
-          });
-        }
-      }
+      events.push({
+        event: { type: remainingSteps > 1 ? 'SHIP_REACHES_WAYPOINT' : 'SHIP_REACHES_BASE' },
+        delay: DURATIONS.TILE_TRAVERSAL_TIME,
+        reason: `Ship reaching return waypoint ${pathIndex + 1}/${currentPath.length - 1}`
+      });
     } else {
       // No path or already at destination - use direct distance as fallback
       if (basePos && shipPos) {

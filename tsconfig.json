@@ -7,21 +7,22 @@
 
     // Bundler mode (pour Vite)
     "moduleResolution": "bundler",
+    "types": ["vite/client"],
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "allowJs": true,
+    "checkJs": true,
     "noEmit": true,
     "jsx": "react-jsx",
 
     // Mode strict progressif
-    "strict": false,
+    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "typeRoots": ["./src/types"],
 
     // Paths pour vos imports
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@/ai/*": ["./src/ai/*"],
@@ -29,10 +30,9 @@
     
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx", 
-    "src/**/*.js",
-    "src/**/*.jsx"
+    "src/index.jsx",
+    "src/workers/session-worker.ts",
+    "src/engine/session.test.ts"
   ],
   "exclude": [
     "node_modules",

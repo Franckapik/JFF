@@ -88,7 +88,7 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
   }
   
   
-  if (event.type === 'NEED_COLLECTING') {
+  if (event.type === 'NEED_COLLECTING' || event.type === 'SHIP_LOAD_RESOURCES') {
     // ✅ Phase 5: Priorité aux tuiles explorées (memory.knownTiles) avec ressources
     const tiles = context.gridInfo?.tiles || {};
     const shipCoord = context.vehicle?.coord;
@@ -105,7 +105,9 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     
     let targetVehicleTile = null;
     
-    if (knownTilesWithResources.length > 0) {
+    if (event.type === 'SHIP_LOAD_RESOURCES') {
+      targetVehicleTile = context.vehicle?.targetVehicleTile ?? null;
+    } else if (knownTilesWithResources.length > 0) {
       // Sélectionner la tuile avec le plus de ressources
       targetVehicleTile = knownTilesWithResources.reduce((best, current) => 
         (current.resources?.total || 0) > (best.resources?.total || 0) ? current : best
@@ -149,7 +151,9 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     }
     
     if (!targetVehicleTile) {
-      return {};
+      return {
+        vehicle: { ...context.vehicle, targetVehicleTile: null, currentPath: [], pathIndex: 0, isMoving: false, currentSpeed: 0 }
+      };
     }
     const targetGridCoord = targetVehicleTile.position.coord;
     const consistentTargetPos = targetVehicleTile.position;
@@ -177,7 +181,9 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     if (path.length === 0) {
       fsmLogger.warn(`⚠️ [${context.entityId}] No walkable path to ${targetGridCoord}!`);
       console.log(`🚫 [PATHFINDING] No path from ${shipCoord} to ${targetGridCoord} - blocked?`);
-      return {};
+      return {
+        vehicle: { ...context.vehicle, targetVehicleTile: null, currentPath: [], pathIndex: 0, isMoving: false, currentSpeed: 0 }
+      };
     }
     
     // ✅ Calculate fuel based on PATH LENGTH (number of tiles traversed)
@@ -185,7 +191,7 @@ export const assignShipMovingToTileContext = createAssignAction(({ context, even
     const pathSteps = Math.max(0, path.length - 1); // Number of tiles to traverse
     const FUEL_PER_TILE = 1; // 🔧 SPEC: 1% fuel per tile (collection.feature line 56)
     const fuelConsumption = Math.max(1, pathSteps * FUEL_PER_TILE);
-    const currentFuel = context.vehicle?.fuel || 100;
+    const currentFuel = context.vehicle?.fuel ?? 100;
     const newFuel = Math.max(0, currentFuel - fuelConsumption);
     
     fsmLogger.info(`🛤️ [${context.entityId}] Pathfinding result:`, {
@@ -290,7 +296,8 @@ export const assignShipNextWaypointContext = createAssignAction(({ context }) =>
       coord: newCoord,
       pathIndex: nextIndex,
       damage: newDamage
-    }
+    },
+    ...syncDockedDronesPosition(context, newCoord),
   };
 });
 
@@ -338,6 +345,7 @@ export const assignShipCollectingContext = createAssignAction(({ context, event 
     vehicle: {
       ...context.vehicle,
       coord: arrivedCoord,
+      pathIndex: Math.max(0, (context.vehicle.currentPath?.length ?? 1) - 1),
       isMoving: false, // ✅ IMPORTANT: Le vaisseau s'arrête pour collecter
       progress: 100, // Arrivé à destination
       currentSpeed: 0,
@@ -458,6 +466,7 @@ export const assignShipReachedBaseContext = createAssignAction(({ context, event
     vehicle: {
       ...context.vehicle,
       coord: baseCoord,
+      pathIndex: Math.max(0, (context.vehicle.currentPath?.length ?? 1) - 1),
       isMoving: false, // ✅ IMPORTANT: Le vaisseau s'arrête à la base
       progress: 100, // Arrivé à la base
       currentSpeed: 0,
