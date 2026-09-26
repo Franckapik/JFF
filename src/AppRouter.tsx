@@ -41,6 +41,7 @@ import React from 'react';
 
 import GameInitializer from './components/GameInitializer';
 import SessionToolbar from './components/session/SessionToolbar';
+import { profilingEnabled, recordRender } from './components/session/renderMetrics';
 
 const GameView = React.lazy(() => import('./components/session/GameView'));
 const Diagnostics = React.lazy(() => import('./components/session/Diagnostics'));
@@ -115,7 +116,7 @@ export default function AppRouter() {
       <GameInitializer />
       <SessionToolbar route={currentRoute} />
       <React.Suspense fallback={<main className="empty-state" role="status">Chargement de la vue...</main>}>
-        {route.component}
+        {profilingEnabled ? <React.Profiler id="session-view" onRender={recordRender}>{route.component}</React.Profiler> : route.component}
       </React.Suspense>
     </>
   );

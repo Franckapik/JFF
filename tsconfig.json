@@ -25,19 +25,9 @@
     // Paths pour vos imports
     "paths": {
       "@/*": ["./src/*"],
-      "@/ai/*": ["./src/ai/*"],
-    },
-    
+      "@/ai/*": ["./src/ai/*"]
+    }
   },
-  "include": [
-    "src/index.jsx",
-    "src/workers/session-worker.ts",
-    "src/engine/session.test.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "backup"
-  ]
+  "include": ["src/index.jsx", "src/workers/session-worker.ts", "src/engine/session.test.ts"],
+  "exclude": ["node_modules", "dist", "backup"]
 }
-

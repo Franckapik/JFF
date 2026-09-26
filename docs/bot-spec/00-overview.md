@@ -1,5 +1,8 @@
 # Vue d'Ensemble : Bot Autonome JFF FSM
 
+> Document historique, non normatif pour le socle du 26 septembre 2026.
+> Consulter le [contrat valide](03-contrat-et-questions.md), les [scenarios actuels](scenarios/README.md) et les [extensions](04-extensions.md).
+
 **Version :** 1.0.0  
 **Date :** 23 décembre 2025  
 **Auteur :** Équipe JFF

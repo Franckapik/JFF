@@ -1,5 +1,8 @@
 # Règles Métier : Guards et Logique de Décision
 
+> Regles historiques non normatives. Le [contrat valide](03-contrat-et-questions.md) et les [scenarios actuels](scenarios/README.md) font foi.
+> Les anciens guards et affirmations de couverture ci-dessous ne certifient pas le socle actuel.
+
 **Version :** 1.0.0  
 **Date :** 23 décembre 2025
 

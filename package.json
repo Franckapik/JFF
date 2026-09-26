@@ -29,6 +29,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@cucumber/gherkin": "^42.0.1",
     "@types/node": "^24.0.10",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
@@ -50,6 +51,8 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
+    "benchmark": "node --expose-gc scripts/benchmark-session.mjs",
+    "scenarios:check": "node scripts/validate-scenarios.mjs",
     "dev": "vite",
     "log:server": "node scripts/log-server.mjs",
     "dev:all": "npm-run-all -p log:server dev",
@@ -57,8 +60,8 @@
     "type-check": "tsc --noEmit",
     "type-watch": "tsc --noEmit --watch",
     "preview": "vite preview",
-    "lint": "eslint --max-warnings=0 src/AppRouter.tsx src/components/GameInitializer.tsx src/components/session src/stores/useSessionStore.ts src/workers/session-worker.ts src/engine/session*.ts src/engine/resources.ts src/engine/world.ts src/engine/rules.ts src/engine/model.ts src/engine/botMachine.ts src/engine/protocol.ts",
-    "validate": "npm run type-check && npm test && npm run lint && npm run build"
+    "lint": "eslint --max-warnings=0 src/AppRouter.tsx src/components/GameInitializer.tsx src/components/session src/stores/useSessionStore.ts src/workers/session-worker.ts src/engine/session*.ts src/engine/resources.ts src/engine/world.ts src/engine/rules.ts src/engine/model.ts src/engine/botMachine.ts src/engine/protocol.ts scripts/benchmark-session.mjs scripts/validate-scenarios.mjs",
+    "validate": "npm run type-check && npm test && npm run scenarios:check && npm run lint && npm run build"
   },
   "engines": {
     "node": ">=22.12.0"

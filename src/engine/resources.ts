@@ -1,5 +1,5 @@
-export const RESOURCE_KINDS = ['food', 'debris', 'special'] as const;
-export type ResourceKind = typeof RESOURCE_KINDS[number];
+export const RESOURCE_KINDS = ["food", "debris", "special"] as const;
+export type ResourceKind = (typeof RESOURCE_KINDS)[number];
 export type Resources = Record<ResourceKind, number>;
 
 export function emptyResources(): Resources {
@@ -19,7 +19,10 @@ export function transferResources(stock: Resources, cargo: Resources, capacity: 
   const remaining = emptyResources();
   const loaded = emptyResources();
   for (const kind of RESOURCE_KINDS) {
-    if (![stock[kind], cargo[kind], capacity[kind]].every(value => Number.isSafeInteger(value) && value >= 0) || cargo[kind] > capacity[kind]) {
+    if (
+      ![stock[kind], cargo[kind], capacity[kind]].every(value => Number.isSafeInteger(value) && value >= 0) ||
+      cargo[kind] > capacity[kind]
+    ) {
       throw new Error(`Invalid resource quantity: ${kind}`);
     }
     taken[kind] = Math.min(stock[kind], capacity[kind] - cargo[kind]);

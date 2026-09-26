@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { Activity, Dices, Download, Map, Pause, Play, RotateCcw, StepForward, Wifi, WifiOff, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { useSessionStore } from '../../stores/useSessionStore';
 
@@ -11,7 +11,7 @@ export default function SessionToolbar({ route }: { route: 'vue1' | 'vue2' }) {
   const sessionSeed = snapshot?.seed;
   useEffect(() => { if (sessionSeed !== undefined) setSeed(String(sessionSeed)); }, [sessionSeed]);
   const ready = status === 'connected' && !!snapshot;
-  const canRun = ready && snapshot.phase !== 'finished';
+  const canRun = ready && snapshot.phase !== 'finished' && snapshot.phase !== 'blocked';
   const navigate = (path: string) => { window.history.pushState({}, '', path); window.dispatchEvent(new PopStateEvent('popstate')); };
   const download = () => {
     if (!snapshot) return;
@@ -32,7 +32,7 @@ export default function SessionToolbar({ route }: { route: 'vue1' | 'vue2' }) {
         <button className="icon-button" disabled={!canRun || !snapshot?.paused} onClick={() => control('STEP')} title="Avancer de 100 ms" aria-label="Avancer de 100 ms"><StepForward size={18} /></button>
         <select aria-label="Vitesse" value={snapshot?.speed ?? 1} disabled={!ready} onChange={event => control('SPEED', Number(event.target.value))}>{[1, 2, 4, 8].map(speed => <option key={speed} value={speed}>{speed}x</option>)}</select>
         <time className="clock">{clock(snapshot?.elapsed ?? 0)}</time>
-        <span className="run-state">{snapshot?.phase === 'finished' ? 'Terminee' : snapshot?.paused ? 'Pause' : ready ? 'En cours' : 'Connexion'}</span>
+        <span className="run-state">{snapshot?.phase === 'blocked' ? 'Bloquee' : snapshot?.phase === 'finished' ? 'Terminee' : snapshot?.paused ? 'Pause' : ready ? 'En cours' : 'Connexion'}</span>
       </div>
       <form className="seed-control" onSubmit={event => { event.preventDefault(); reset(Number(seed)); }}>
         <label htmlFor="map-seed">Graine</label><input id="map-seed" type="number" min="0" max="4294967295" step="1" required value={seed} onChange={event => setSeed(event.target.value)} />

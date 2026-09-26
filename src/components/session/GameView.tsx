@@ -1,6 +1,6 @@
-import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Color, Group, InstancedMesh, Object3D, Vector3 } from 'three';
 
 import type { BotView } from '../../engine/model';
@@ -11,8 +11,10 @@ import { useSessionStore } from '../../stores/useSessionStore';
 
 import BotPanel from './BotPanel';
 import { BOT_COLORS, TILE_COLORS, TILE_LABELS } from './presentation';
+import { useRenderCounter } from './renderMetrics';
 
 const Tiles = memo(function Tiles({ world, visible, selected, select }: { world: World; visible: string; selected: Coord | null; select: (coord: Coord) => void }) {
+  useRenderCounter('Tiles');
   const mesh = useRef<InstancedMesh>(null);
   const tiles = useMemo(() => Object.values(world), [world]);
   useLayoutEffect(() => {
@@ -37,6 +39,7 @@ const Tiles = memo(function Tiles({ world, visible, selected, select }: { world:
 });
 
 function Vehicle({ bot, paused, speed }: { bot: BotView; paused: boolean; speed: number }) {
+  useRenderCounter(bot.id);
   const ship = useRef<Group>(null);
   const drone = useRef<Group>(null);
   const received = useRef(performance.now());
@@ -81,6 +84,7 @@ function Vehicle({ bot, paused, speed }: { bot: BotView; paused: boolean; speed:
 }
 
 export default function GameView() {
+  useRenderCounter('GameView');
   const snapshot = useSessionStore(state => state.snapshot);
   const status = useSessionStore(state => state.status);
   const [perspective, setPerspective] = useState<BotId | 'world'>('world');
@@ -88,7 +92,7 @@ export default function GameView() {
   if (!snapshot) return <main className="empty-state" role="status">{status === 'disconnected' ? 'Moteur hors ligne' : 'Connexion au moteur...'}</main>;
   const visible = perspective === 'world' ? '' : snapshot.bots[perspective].known.join('|');
   const tile = selected ? snapshot.world[selected] : null;
-  const known = perspective === 'world' || !!selected && snapshot.bots[perspective].known.includes(selected);
+  const known = perspective === 'world' || !!tile && ['base', 'fuel', 'repair', 'obstacle'].includes(tile.kind) || !!selected && snapshot.bots[perspective].known.includes(selected);
   return <main className="game-layout">
     <section className="board-panel" aria-label="Terrain de la partie">
       <div className="board-toolbar"><h1>Terrain</h1><label>Vision <select value={perspective} onChange={event => setPerspective(event.target.value as BotId | 'world')}><option value="world">Monde</option><option value="bot-0">Bot 0</option><option value="bot-1">Bot 1</option></select></label><span>{resourceTotal(snapshot.remainingResources).toLocaleString('fr-FR')} ressources restantes</span></div>
@@ -96,7 +100,7 @@ export default function GameView() {
         <Canvas shadows dpr={[1, 1.5]} camera={{ position: [9, 12, 10], fov: 45 }} onPointerMissed={() => setSelected(null)}>
           <color attach="background" args={['#edf2f1']} /><ambientLight intensity={1.5} /><directionalLight position={[5, 12, 6]} intensity={2.4} castShadow shadow-mapSize={[512, 512]} />
           <Tiles world={snapshot.world} visible={visible} selected={selected} select={setSelected} />
-          {Object.values(snapshot.bots).map(bot => <Vehicle key={bot.id} bot={bot} paused={snapshot.paused || snapshot.phase === 'finished' || status !== 'connected'} speed={snapshot.speed} />)}
+          {Object.values(snapshot.bots).map(bot => <Vehicle key={bot.id} bot={bot} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} speed={snapshot.speed} />)}
           <OrbitControls makeDefault target={[0, 0, 0]} minDistance={8} maxDistance={26} minPolarAngle={0.1} maxPolarAngle={Math.PI / 2.1} />
         </Canvas>
       </div>
@@ -104,8 +108,8 @@ export default function GameView() {
       <div className="map-legend">{Object.entries(TILE_LABELS).map(([kind, label]) => <span key={kind}><i style={{ background: TILE_COLORS[kind as keyof typeof TILE_COLORS] }} />{label}</span>)}</div>
     </section>
     <aside className="bot-sidebar" aria-label="Bots">
-      {snapshot.phase === 'finished' && <section className="result"><h2>Partie terminee</h2><p>{snapshot.winners.length === 0 ? 'Aucun vainqueur' : snapshot.winners.length === 2 ? 'Egalite' : `Victoire du Bot ${snapshot.winners[0].slice(-1)}`}</p><small>{snapshot.endReason}</small></section>}
-      {Object.values(snapshot.bots).map(bot => <BotPanel key={bot.id} bot={bot} winner={snapshot.winners.includes(bot.id)} />)}
+      {(snapshot.phase === 'finished' || snapshot.phase === 'blocked') && <section className="result"><h2>{snapshot.phase === 'blocked' ? 'Partie bloquee' : 'Partie terminee'}</h2><p>{snapshot.winners.length === 0 ? 'Aucun vainqueur' : snapshot.winners.length === 2 ? 'Egalite' : `Victoire du Bot ${snapshot.winners[0].slice(-1)}`}</p><small>{snapshot.endReason}</small></section>}
+      {Object.values(snapshot.bots).filter(bot => perspective === 'world' || perspective === bot.id).map(bot => <BotPanel key={bot.id} bot={bot} winner={snapshot.winners.includes(bot.id)} />)}
     </aside>
   </main>;
 }

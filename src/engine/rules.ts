@@ -1,4 +1,4 @@
-import type { Resources } from './resources';
+import type { Resources } from "./resources";
 
 export const RULES = {
   capacity: { food: 200, debris: 1800, special: 3 } satisfies Resources,

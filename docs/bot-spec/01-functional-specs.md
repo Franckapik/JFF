@@ -1,5 +1,8 @@
 # Spécifications Fonctionnelles : Bot Autonome
 
+> Specification historique remplacee par le [contrat valide](03-contrat-et-questions.md) et les [scenarios actuels](scenarios/README.md).
+> Les anciens evenements, sous-etats et seuils ci-dessous ne sont pas le contrat du moteur actif.
+
 **Version :** 1.0.0  
 **Date :** 23 décembre 2025
 
