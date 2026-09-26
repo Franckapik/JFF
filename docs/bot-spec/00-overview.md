@@ -12,6 +12,7 @@
 ## 🎯 Objectif du Bot
 
 Le bot autonome JFF est un système intelligent capable de :
+
 - ✅ Explorer automatiquement un territoire inconnu
 - ✅ Collecter des ressources de manière optimisée
 - ✅ Gérer sa maintenance (carburant, réparations, dépôt)
@@ -57,12 +58,12 @@ Le bot autonome JFF est un système intelligent capable de :
 
 ## 📊 Métriques de Succès
 
-| KPI | Target | Mesure |
-|-----|--------|--------|
-| Efficacité exploration | > 5 tiles/min | tiles_explored / time |
-| Taux de collecte | > 150 res/tile | resources / tiles_collected |
-| Efficacité fuel | > 50 res/fuel | resources / fuel_consumed |
-| Temps maintenance | < 20% | time_maintaining / total_time |
+| KPI                    | Target         | Mesure                        |
+| ---------------------- | -------------- | ----------------------------- |
+| Efficacité exploration | > 5 tiles/min  | tiles_explored / time         |
+| Taux de collecte       | > 150 res/tile | resources / tiles_collected   |
+| Efficacité fuel        | > 50 res/fuel  | resources / fuel_consumed     |
+| Temps maintenance      | < 20%          | time_maintaining / total_time |
 
 ---
 
@@ -89,15 +90,19 @@ docs/bot-spec/
 ## 🚀 Utilisation de Cette Documentation
 
 ### Pour les Product Managers
+
 → Lire `01-functional-specs.md` pour comprendre les fonctionnalités
 
 ### Pour les Développeurs
+
 → Lire `02-business-rules.md` + `03-fsm-states.md` pour l'implémentation
 
 ### Pour les QA
+
 → Utiliser `scenarios/*.feature` pour les tests automatisés
 
 ### Pour les Stakeholders
+
 → Consulter `06-success-metrics.md` pour les KPIs
 
 ---
@@ -105,6 +110,7 @@ docs/bot-spec/
 ## 📝 Changelog
 
 ### v1.0.0 (23 décembre 2025)
+
 - ✅ Documentation initiale complète
 - ✅ 4 fichiers Gherkin scenarios
 - ✅ Couverture : 4 features, 11 guards, 9 transitions

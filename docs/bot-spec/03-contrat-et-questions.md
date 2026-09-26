@@ -185,43 +185,43 @@ Elles ne sont plus ouvertes : le registre des reponses fait foi. Une evolution u
 
 ## Registre des reponses validees
 
-| Question | Choix | Decision retenue |
-| --- | --- | --- |
-| Q01 | A | Socle actuel ; fonctions historiques absentes en extensions |
-| Q02 | A | Reference locale Linux/Chromium et viewport mobile emule |
-| Q03 | A | Bases fixes et symetriques |
-| Q04 | A | Bases sans ressources initiales |
-| Q05 | A | Symetrie initiale, sans validateur de cartes arbitraires |
-| Q06 | A | Services et obstacles publics non scannables |
-| Q07 | A | Decouverte possible par le vaisseau sans drone |
-| Q08 | A | Heuristiques actuelles de collecte et de dechargement |
-| Q09 | A | Seuils et priorites actuels de maintenance |
-| Q10 | A | Service gratuit combine a sa base en 1200 ms |
-| Q11 | A | Aucun carburant facture au chargement |
-| Q12 | B | Perte et decouverte du danger des l'arrivee du drone |
-| Q13 | A | Remplacement a sa base pour 50 de budget uniquement |
-| Q14 | A | Pause globale ; interruptions individuelles differees |
-| Q15 | A | Blocage explicite, sans vainqueur ni destruction artificielle |
-| Q16 | A | Survivants seuls eligibles ; egalites partagees |
-| Q17 | A | Durees actuelles et horloge unique |
-| Q18 | A | Tentatives, transferts non vides et tuiles distinctes separes |
-| Q19 | A | Diagnostic actuel ; graphe complet en extension |
-| Q20 | A | Aucune extension supplementaire dans cette cloture |
+| Question | Choix | Decision retenue                                              |
+| -------- | ----- | ------------------------------------------------------------- |
+| Q01      | A     | Socle actuel ; fonctions historiques absentes en extensions   |
+| Q02      | A     | Reference locale Linux/Chromium et viewport mobile emule      |
+| Q03      | A     | Bases fixes et symetriques                                    |
+| Q04      | A     | Bases sans ressources initiales                               |
+| Q05      | A     | Symetrie initiale, sans validateur de cartes arbitraires      |
+| Q06      | A     | Services et obstacles publics non scannables                  |
+| Q07      | A     | Decouverte possible par le vaisseau sans drone                |
+| Q08      | A     | Heuristiques actuelles de collecte et de dechargement         |
+| Q09      | A     | Seuils et priorites actuels de maintenance                    |
+| Q10      | A     | Service gratuit combine a sa base en 1200 ms                  |
+| Q11      | A     | Aucun carburant facture au chargement                         |
+| Q12      | B     | Perte et decouverte du danger des l'arrivee du drone          |
+| Q13      | A     | Remplacement a sa base pour 50 de budget uniquement           |
+| Q14      | A     | Pause globale ; interruptions individuelles differees         |
+| Q15      | A     | Blocage explicite, sans vainqueur ni destruction artificielle |
+| Q16      | A     | Survivants seuls eligibles ; egalites partagees               |
+| Q17      | A     | Durees actuelles et horloge unique                            |
+| Q18      | A     | Tentatives, transferts non vides et tuiles distinctes separes |
+| Q19      | A     | Diagnostic actuel ; graphe complet en extension               |
+| Q20      | A     | Aucune extension supplementaire dans cette cloture            |
 
 ## Correspondance des scenarios reecrits
 
-| Fichier | Decisions appliquees | Base executable actuelle |
-| --- | --- | --- |
-| [initialization.feature](scenarios/initialization.feature) | Q03-Q04 | creation, graine et protocole |
-| [initialization-fairness.feature](scenarios/initialization-fairness.feature) | Q03-Q05 | symetrie, connectivite, tailles limites |
-| [exploration.feature](scenarios/exploration.feature) | Q06-Q08, Q12, Q17 | rayon mobile et connaissance individuelle |
-| [collection.feature](scenarios/collection.feature) | Q08, Q11, Q18 | compartiments et transactions concurrentes |
-| [maintenance.feature](scenarios/maintenance.feature) | Q09-Q11, Q13, Q17 | services locaux, achats individuels |
-| [danger-tiles.feature](scenarios/danger-tiles.feature) | Q12-Q14, Q20 | degats par arrivee, perte de drone |
-| [emergency.feature](scenarios/emergency.feature) | Q14-Q15 | remorquage et elimination ; interruptions absentes |
-| [game-over.feature](scenarios/game-over.feature) | Q15-Q16 | derniers depots, egalite, blocage explicite |
-| [multi-bot.feature](scenarios/multi-bot.feature) | Q16, Q18-Q19 | monde partage et arbitrage concurrent |
-| [edge-cases.feature](scenarios/edge-cases.feature) | Q01-Q02, Q15, Q20 | pause, absence de chemin, limites et protocole |
+| Fichier                                                                      | Decisions appliquees | Base executable actuelle                           |
+| ---------------------------------------------------------------------------- | -------------------- | -------------------------------------------------- |
+| [initialization.feature](scenarios/initialization.feature)                   | Q03-Q04              | creation, graine et protocole                      |
+| [initialization-fairness.feature](scenarios/initialization-fairness.feature) | Q03-Q05              | symetrie, connectivite, tailles limites            |
+| [exploration.feature](scenarios/exploration.feature)                         | Q06-Q08, Q12, Q17    | rayon mobile et connaissance individuelle          |
+| [collection.feature](scenarios/collection.feature)                           | Q08, Q11, Q18        | compartiments et transactions concurrentes         |
+| [maintenance.feature](scenarios/maintenance.feature)                         | Q09-Q11, Q13, Q17    | services locaux, achats individuels                |
+| [danger-tiles.feature](scenarios/danger-tiles.feature)                       | Q12-Q14, Q20         | degats par arrivee, perte de drone                 |
+| [emergency.feature](scenarios/emergency.feature)                             | Q14-Q15              | remorquage et elimination ; interruptions absentes |
+| [game-over.feature](scenarios/game-over.feature)                             | Q15-Q16              | derniers depots, egalite, blocage explicite        |
+| [multi-bot.feature](scenarios/multi-bot.feature)                             | Q16, Q18-Q19         | monde partage et arbitrage concurrent              |
+| [edge-cases.feature](scenarios/edge-cases.feature)                           | Q01-Q02, Q15, Q20    | pause, absence de chemin, limites et protocole     |
 
 Les evenements obsoletes ont ete remplaces par des effets observables. Chaque scenario dispose d'un identifiant stable ; les fonctions differees sont listees separement, sans promesse de livraison implicite.
 

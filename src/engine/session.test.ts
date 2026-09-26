@@ -40,7 +40,8 @@ describe("shared session", () => {
   it("accumulates repeated harvests of one tile without counting it twice", () => {
     const world = generateWorld(42);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
-    world["0,0"].kind = "resource"; world["0,0"].walkable = true;
+    world["0,0"].kind = "resource";
+    world["0,0"].walkable = true;
     world["0,0"].resources.food = 450;
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].coord = "0,0";
@@ -54,19 +55,24 @@ describe("shared session", () => {
     expect(snapshot.bots["bot-0"].statistics.collections).toBe(3);
     expect(snapshot.bots["bot-0"].statistics.collectionAttempts).toBe(3);
     expect(snapshot.bots["bot-0"].harvested).toEqual({ "0,0": { food: 450, debris: 0, special: 0 } });
-    session.assertInvariants(); session.stop();
+    session.assertInvariants();
+    session.stop();
   });
 
   it.each([0, 10])("reports blocked objectives or final returns with %i resources without awarding a normal victory", remainingFood => {
     const world = generateWorld(42);
     for (const tile of Object.values(world)) {
-      tile.resources = emptyResources(); tile.walkable = true;
+      tile.resources = emptyResources();
+      tile.walkable = true;
       if (tile.kind !== "base") tile.kind = "danger";
     }
-    world["0,0"].kind = "resource"; world["0,0"].resources.food = remainingFood;
+    world["0,0"].kind = "resource";
+    world["0,0"].resources.food = remainingFood;
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     for (const bot of Object.values(bots)) {
-      bot.coord = "0,0"; bot.damage = 90; bot.known = Object.values(world).map(tile => tile.coord);
+      bot.coord = "0,0";
+      bot.damage = 90;
+      bot.known = Object.values(world).map(tile => tile.coord);
       bot.cargo.food = 5;
     }
     expect(pathBetween(world, "0,0", bots["bot-0"].base).length).toBeGreaterThan(1);
@@ -81,7 +87,8 @@ describe("shared session", () => {
     expect(snapshot.lostResources.food).toBe(0);
     session.advance(10000);
     expect(session.getSnapshot()).toEqual(snapshot);
-    session.assertInvariants(); session.stop();
+    session.assertInvariants();
+    session.stop();
   });
 
   it.each(["fuel", "repair", "base"] as const)("does not scan a public %s tile", kind => {
@@ -93,21 +100,28 @@ describe("shared session", () => {
     resource.resources.food = 20;
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].coord = origin;
-    bots["bot-0"].known = Object.values(world).filter(tile => tile.coord !== target.coord && tile.coord !== resource.coord).map(tile => tile.coord);
+    bots["bot-0"].known = Object.values(world)
+      .filter(tile => tile.coord !== target.coord && tile.coord !== resource.coord)
+      .map(tile => tile.coord);
     const session = new GameSession(42, { world, bots });
     session.advance(1);
     expect(session.getSnapshot().bots["bot-0"].operation?.kind).toBe("move");
     expect(session.getSnapshot().bots["bot-0"].statistics.scans).toBe(0);
-    session.assertInvariants(); session.stop();
+    session.assertInvariants();
+    session.stop();
   });
 
   it("distinguishes attempted, successful and distinct-tile collections", () => {
     const world = generateWorld(42);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
-    world["0,0"].kind = "resource"; world["0,0"].walkable = true;
+    world["0,0"].kind = "resource";
+    world["0,0"].walkable = true;
     world["0,0"].resources.food = 10;
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
-    for (const bot of Object.values(bots)) { bot.coord = "0,0"; bot.known = Object.values(world).map(tile => tile.coord); }
+    for (const bot of Object.values(bots)) {
+      bot.coord = "0,0";
+      bot.known = Object.values(world).map(tile => tile.coord);
+    }
     const session = new GameSession(42, { world, bots });
     session.advance(RULES.collectDuration);
     const snapshot = session.getSnapshot();
@@ -120,7 +134,8 @@ describe("shared session", () => {
     session.advance(100000);
     expect(session.getSnapshot().bots["bot-0"].harvested).toEqual(snapshot.bots["bot-0"].harvested);
     expect(session.getSnapshot().bots["bot-0"].statistics.fuelUsed).toBe(session.getSnapshot().bots["bot-0"].statistics.steps);
-    session.assertInvariants(); session.stop();
+    session.assertInvariants();
+    session.stop();
   });
 
   it("finishes a reproducible batch of 64 seeds", () => {

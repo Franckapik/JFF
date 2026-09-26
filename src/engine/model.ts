@@ -40,7 +40,15 @@ export interface Bot {
   route: Coord[];
   goal: { coord: Coord; reason: GoalReason } | null;
   decision: string;
-  statistics: { scans: number; collectionAttempts: number; collections: number; steps: number; fuelUsed: number; rescues: number; droneLosses: number };
+  statistics: {
+    scans: number;
+    collectionAttempts: number;
+    collections: number;
+    steps: number;
+    fuelUsed: number;
+    rescues: number;
+    droneLosses: number;
+  };
   visits: Partial<Record<Coord, number>>;
   eliminationReason: string | null;
 }

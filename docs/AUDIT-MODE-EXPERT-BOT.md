@@ -35,16 +35,16 @@ La vue actuelle repond correctement a une partie de la premiere question. Elle n
 
 ### P0 - Securite, incidents et causes de sortie
 
-| Information | Disponibilite actuelle | Recommandation iconique |
-| --- | --- | --- |
-| Nombre de drones detruits | Disponible dans `statistics.droneLosses`, non affiche | `ScanLine` ou `Plane` barre + compteur ; alerte seulement lors d'une nouvelle perte |
-| Detail d'une perte de drone | Message textuel seulement ; coordonnee, operation et remplacement non relies | Evenement `drone.lost` avec heure logique, tuile dangereuse et identifiant d'operation |
-| Panne de carburant | Carburant courant et total de remorquages seulement | `Fuel` + seuil colore pour l'etat courant ; `Truck` + compteur pour les pannes historiques |
-| Cargaison perdue pendant un remorquage | Comptee uniquement dans les pertes globales | `PackageX` + quantites par ressource, heure, coordonnee et bot responsable |
-| Impacts de danger | Degats courants visibles, aucun historique | `TriangleAlert` + nombre d'impacts ; detail avec tuile, degats avant/apres et heure |
-| Reparations et ravitaillements | Etat final observable, occurrences non comptees | `Wrench` et `Fuel` avec compteurs distincts par base/station |
-| Elimination | Etat et `eliminationReason` disponibles, raison non affichee explicitement | `Skull` + raison, heure, position, cargaison perdue et dernier objectif |
-| Blocage individuel | Seule la raison globale de session existe | `OctagonX` par bot avec objectif, retour ou service inaccessible ; ne pas inventer une elimination |
+| Information                            | Disponibilite actuelle                                                       | Recommandation iconique                                                                            |
+| -------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Nombre de drones detruits              | Disponible dans `statistics.droneLosses`, non affiche                        | `ScanLine` ou `Plane` barre + compteur ; alerte seulement lors d'une nouvelle perte                |
+| Detail d'une perte de drone            | Message textuel seulement ; coordonnee, operation et remplacement non relies | Evenement `drone.lost` avec heure logique, tuile dangereuse et identifiant d'operation             |
+| Panne de carburant                     | Carburant courant et total de remorquages seulement                          | `Fuel` + seuil colore pour l'etat courant ; `Truck` + compteur pour les pannes historiques         |
+| Cargaison perdue pendant un remorquage | Comptee uniquement dans les pertes globales                                  | `PackageX` + quantites par ressource, heure, coordonnee et bot responsable                         |
+| Impacts de danger                      | Degats courants visibles, aucun historique                                   | `TriangleAlert` + nombre d'impacts ; detail avec tuile, degats avant/apres et heure                |
+| Reparations et ravitaillements         | Etat final observable, occurrences non comptees                              | `Wrench` et `Fuel` avec compteurs distincts par base/station                                       |
+| Elimination                            | Etat et `eliminationReason` disponibles, raison non affichee explicitement   | `Skull` + raison, heure, position, cargaison perdue et dernier objectif                            |
+| Blocage individuel                     | Seule la raison globale de session existe                                    | `OctagonX` par bot avec objectif, retour ou service inaccessible ; ne pas inventer une elimination |
 
 Un carburant bas n'est pas a lui seul une panne. Le moteur doit publier le statut d'urgence qu'il a effectivement utilise pour decider, afin que l'interface ne reproduise pas partiellement les regles de planification.
 
@@ -52,13 +52,13 @@ Un carburant bas n'est pas a lui seul une panne. Le moteur doit publier le statu
 
 Ces champs existent deja dans le snapshot et peuvent etre exposes sans nouvelle regle metier :
 
-| Information | Presentation recommandee |
-| --- | --- |
-| Type d'operation | Une icone stable par operation : `Route`, `ScanLine`, `PackageOpen`, `Wrench`, `Expand`, `ShoppingCart`, `Truck` |
-| Progression | Anneau ou barre compacte calculee avec `remaining / duration`, accompagnee du temps restant |
-| Cible et objectif | `Crosshair` pour la cible ; icone de motif pour collecte, exploration, base, carburant ou reparation |
-| Route restante | `Route` + nombre de pas ; tracage sur la carte uniquement quand le bot est selectionne |
-| Etat final | `Flag`, `Trophy`, `Skull` ou `OctagonX`, selon termine, gagnant, elimine ou bloque |
+| Information       | Presentation recommandee                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Type d'operation  | Une icone stable par operation : `Route`, `ScanLine`, `PackageOpen`, `Wrench`, `Expand`, `ShoppingCart`, `Truck` |
+| Progression       | Anneau ou barre compacte calculee avec `remaining / duration`, accompagnee du temps restant                      |
+| Cible et objectif | `Crosshair` pour la cible ; icone de motif pour collecte, exploration, base, carburant ou reparation             |
+| Route restante    | `Route` + nombre de pas ; tracage sur la carte uniquement quand le bot est selectionne                           |
+| Etat final        | `Flag`, `Trophy`, `Skull` ou `OctagonX`, selon termine, gagnant, elimine ou bloque                               |
 
 La cible de l'operation et l'objectif strategique ne doivent pas etre fusionnes : pendant un trajet, la premiere est le prochain waypoint et le second est la destination finale.
 
@@ -76,14 +76,14 @@ Recommandation : afficher une icone `CircleHelp` a cote de l'action. Son infobul
 
 ### P1 - Economie et ressources par bot
 
-| Information | Etat actuel | Recommandation |
-| --- | --- | --- |
-| Depots par type de ressource | Disponible par bot, mais seul le score total est mis en avant | `PackageCheck` ouvrant les trois quantites |
-| Depenses par type d'achat | Seul le total depense est conserve | Distinguer `Expand` et `Bot`/drone, avec prix et heure |
-| Achats et extensions termines | Le lancement peut apparaitre en texte, sans historique structure | Compteurs et jalons dans la chronologie |
-| Pertes par bot et par cause | Seulement un total de session par ressource | Ventiler remorquage et elimination, sans les ajouter au score |
-| Collecte vide ou perdue lors d'une concurrence | Tentative et succes sont comptes, cause non conservee | `PackageX` discret avec tuile, stock observe avant transaction et resultat nul |
-| Saturation des compartiments | Deducible de la cargaison courante seulement | `Gauge` par compartiment au moment de la decision de retour |
+| Information                                    | Etat actuel                                                      | Recommandation                                                                 |
+| ---------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Depots par type de ressource                   | Disponible par bot, mais seul le score total est mis en avant    | `PackageCheck` ouvrant les trois quantites                                     |
+| Depenses par type d'achat                      | Seul le total depense est conserve                               | Distinguer `Expand` et `Bot`/drone, avec prix et heure                         |
+| Achats et extensions termines                  | Le lancement peut apparaitre en texte, sans historique structure | Compteurs et jalons dans la chronologie                                        |
+| Pertes par bot et par cause                    | Seulement un total de session par ressource                      | Ventiler remorquage et elimination, sans les ajouter au score                  |
+| Collecte vide ou perdue lors d'une concurrence | Tentative et succes sont comptes, cause non conservee            | `PackageX` discret avec tuile, stock observe avant transaction et resultat nul |
+| Saturation des compartiments                   | Deducible de la cargaison courante seulement                     | `Gauge` par compartiment au moment de la decision de retour                    |
 
 Les achats debitent le budget, pas le score ni le bilan physique. L'affichage doit conserver visuellement ces trois notions separees.
 

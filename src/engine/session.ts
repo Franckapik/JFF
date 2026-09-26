@@ -69,9 +69,9 @@ export class GameSession {
     if (!Number.isSafeInteger(seed)) throw new Error("Invalid seed");
     this.seed = seed >>> 0;
     this.world = structuredClone(scenario?.world ?? generateWorld(this.seed, RULES.mapRadius));
-    this.safeWorld = Object.fromEntries(Object.entries(this.world).map(([coord, tile]) => [
-      coord, { ...tile, walkable: tile.walkable && tile.kind !== "danger" },
-    ]));
+    this.safeWorld = Object.fromEntries(
+      Object.entries(this.world).map(([coord, tile]) => [coord, { ...tile, walkable: tile.walkable && tile.kind !== "danger" }])
+    );
     for (const id of BOT_IDS) {
       const bot = structuredClone(scenario?.bots?.[id] ?? createBot(id, this.world, this.seed));
       this.actors.set(id, createActor(botMachine, { input: bot }).start());
@@ -97,9 +97,7 @@ export class GameSession {
   }
 
   private route(bot: Bot, target: Coord): Coord[] {
-    const safeWorld = this.world[bot.coord]?.kind === "danger"
-      ? { ...this.safeWorld, [bot.coord]: this.world[bot.coord] }
-      : this.safeWorld;
+    const safeWorld = this.world[bot.coord]?.kind === "danger" ? { ...this.safeWorld, [bot.coord]: this.world[bot.coord] } : this.safeWorld;
     const safe = pathBetween(safeWorld, bot.coord, target);
     const path = safe.length ? safe : pathBetween(this.world, bot.coord, target);
     const damage = path.slice(1).filter(coord => this.world[coord].kind === "danger").length * RULES.dangerDamage;
@@ -136,12 +134,10 @@ export class GameSession {
 
   private eliminate(bot: Bot, reason: string) {
     this.lostResources = addResources(this.lostResources, bot.cargo);
-    this.actors
-      .get(bot.id)!
-      .send({
-        type: "ELIMINATE",
-        bot: { ...bot, cargo: emptyResources(), route: [], goal: null, operation: null, eliminationReason: reason, decision: reason },
-      });
+    this.actors.get(bot.id)!.send({
+      type: "ELIMINATE",
+      bot: { ...bot, cargo: emptyResources(), route: [], goal: null, operation: null, eliminationReason: reason, decision: reason },
+    });
     this.log(bot.id, reason);
   }
 
@@ -202,8 +198,9 @@ export class GameSession {
       this.launch(bot, "purchase", bot.base, RULES.purchaseDuration, "Remplacement du drone");
       return;
     }
-    const unknown = Object.values(this.world).filter(candidate => candidate.walkable &&
-      ['resource', 'empty', 'danger'].includes(candidate.kind) && !bot.known.includes(candidate.coord));
+    const unknown = Object.values(this.world).filter(
+      candidate => candidate.walkable && ["resource", "empty", "danger"].includes(candidate.kind) && !bot.known.includes(candidate.coord)
+    );
     const price = RULES.upgradePrices[bot.radius];
     if (
       isBase &&
@@ -279,7 +276,11 @@ export class GameSession {
           route: bot.route.slice(1),
           known: [...new Set([...bot.known, operation.target])],
           visits: { ...bot.visits, [operation.target]: (bot.visits[operation.target] ?? 0) + 1 },
-          statistics: { ...bot.statistics, steps: bot.statistics.steps + 1, fuelUsed: bot.statistics.fuelUsed + Math.min(bot.fuel, RULES.fuelPerStep) },
+          statistics: {
+            ...bot.statistics,
+            steps: bot.statistics.steps + 1,
+            fuelUsed: bot.statistics.fuelUsed + Math.min(bot.fuel, RULES.fuelPerStep),
+          },
         };
         break;
       }
@@ -301,9 +302,18 @@ export class GameSession {
         this.world[bot.coord] = { ...this.world[bot.coord], resources: transfer.remaining };
         this.worldRevision++;
         const collected = resourceTotal(transfer.taken) > 0;
-        next = { ...next, cargo: transfer.cargo,
-          harvested: collected ? { ...bot.harvested, [bot.coord]: addResources(bot.harvested[bot.coord] ?? emptyResources(), transfer.taken) } : bot.harvested,
-          statistics: { ...bot.statistics, collectionAttempts: bot.statistics.collectionAttempts + 1, collections: bot.statistics.collections + Number(collected) } };
+        next = {
+          ...next,
+          cargo: transfer.cargo,
+          harvested: collected
+            ? { ...bot.harvested, [bot.coord]: addResources(bot.harvested[bot.coord] ?? emptyResources(), transfer.taken) }
+            : bot.harvested,
+          statistics: {
+            ...bot.statistics,
+            collectionAttempts: bot.statistics.collectionAttempts + 1,
+            collections: bot.statistics.collections + Number(collected),
+          },
+        };
         this.log(bot.id, `${resourceTotal(transfer.taken)} ressources collectees`);
         break;
       }
@@ -376,7 +386,8 @@ export class GameSession {
     this.endReason = reason;
     const eligible = this.bots().filter(bot => bot.state !== "eliminated");
     const reachable = new Set(eligible.flatMap(bot => reachableCoords(this.world, bot.coord)));
-    const blocked = [...reachable].some(coord => resourceTotal(this.world[coord].resources) > 0) ||
+    const blocked =
+      [...reachable].some(coord => resourceTotal(this.world[coord].resources) > 0) ||
       eligible.some(bot => bot.coord !== bot.base || resourceTotal(bot.cargo) > 0);
     this.phase = blocked ? "blocked" : "finished";
     if (blocked) this.endReason = "Objectifs ou retour final impossibles : partie bloquee";

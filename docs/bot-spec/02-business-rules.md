@@ -13,6 +13,7 @@
 Les **guards** sont des fonctions pures qui décident si une transition FSM peut avoir lieu.
 
 **Format :**
+
 ```typescript
 type Guard = (context: FSMContext) => boolean;
 ```
@@ -24,16 +25,16 @@ type Guard = (context: FSMContext) => boolean;
 **Rôle :** Détermine si le bot doit aller en maintenance
 
 **Formule :**
+
 ```typescript
 shouldMaintain = needsRefuel OR needsRepair OR needsDeposit
 ```
 
 **Implémentation :**
+
 ```typescript
 const shouldMaintain = ({ context }) => {
-  return needsRefuel({ context }) 
-      || needsRepair({ context }) 
-      || needsDeposit({ context });
+  return needsRefuel({ context }) || needsRepair({ context }) || needsDeposit({ context });
 };
 ```
 
@@ -57,6 +58,7 @@ Examples:
 ```
 
 **Code :**
+
 ```typescript
 const needsRefuel = ({ context }) => {
   const fuel = context.vehicle?.fuel ?? 0;
@@ -84,6 +86,7 @@ Examples:
 ```
 
 **Code :**
+
 ```typescript
 const needsRepair = ({ context }) => {
   const damage = context.vehicle?.damage ?? 0;
@@ -110,6 +113,7 @@ Examples:
 ```
 
 **Code :**
+
 ```typescript
 const needsDeposit = ({ context }) => {
   const total = context.vehicle?.resources?.total ?? 0;
@@ -124,25 +128,24 @@ const needsDeposit = ({ context }) => {
 **Rôle :** Détermine si le bot doit collecter des ressources
 
 **Formule :**
+
 ```typescript
-shouldCollect = hasAvailableTiles 
-                AND NOT isVehicleOverloaded 
-                AND (fuel > 20) 
+shouldCollect = hasAvailableTiles
+                AND NOT isVehicleOverloaded
+                AND (fuel > 20)
                 AND (damage < 70)
 ```
 
 **Implémentation :**
+
 ```typescript
 const shouldCollect = ({ context }) => {
   const hasAvailableTiles = (context.injectedData?.availableTiles?.length ?? 0) > 0;
   const isOverloaded = isVehicleOverloaded({ context });
   const fuel = context.vehicle?.fuel ?? 0;
   const damage = context.vehicle?.damage ?? 0;
-  
-  return hasAvailableTiles 
-      && !isOverloaded 
-      && fuel > 20 
-      && damage < 70;
+
+  return hasAvailableTiles && !isOverloaded && fuel > 20 && damage < 70;
 };
 ```
 
@@ -166,12 +169,13 @@ Examples:
 ```
 
 **Code :**
+
 ```typescript
 const isVehicleOverloaded = ({ context }) => {
   const total = context.vehicle?.resources?.total ?? 0;
   const maxCapacity = context.vehicle?.maxCapacity?.total ?? 2003;
   const threshold = maxCapacity * 0.8;
-  
+
   return total >= threshold;
 };
 ```
@@ -185,11 +189,11 @@ Rule: hasMoreCollectibleTiles
   Priority 1: Check overload
     When isVehicleOverloaded = true
     Then return false
-  
+
   Priority 2: Check tiles count
     When availableTiles.length <= 1
     Then return false
-  
+
   Default:
     When availableTiles.length > 1 AND NOT overloaded
     Then return true
@@ -203,19 +207,19 @@ Examples:
 ```
 
 **Code :**
+
 ```typescript
 const hasMoreCollectibleTiles = ({ context }) => {
   // Priority 1: Check overload
-  const totalResources = (context.vehicle?.resources?.food ?? 0) + 
-                         (context.vehicle?.resources?.debris ?? 0) + 
-                         (context.vehicle?.resources?.special ?? 0);
+  const totalResources =
+    (context.vehicle?.resources?.food ?? 0) + (context.vehicle?.resources?.debris ?? 0) + (context.vehicle?.resources?.special ?? 0);
   const maxCapacity = context.vehicle?.maxCapacity?.total ?? 2003;
   const threshold = maxCapacity * 0.8;
-  
+
   if (totalResources >= threshold) {
     return false; // Overloaded → stop
   }
-  
+
   // Priority 2: Check tiles count
   const tiles = context.injectedData?.availableTiles;
   return tiles && tiles.length > 1;
@@ -229,10 +233,11 @@ const hasMoreCollectibleTiles = ({ context }) => {
 **Rôle :** Détermine si le bot doit explorer
 
 **Formule :**
+
 ```typescript
-shouldExplore = (explorationQueue.length > 0) 
-                AND (fuel > 10) 
-                AND (damage < 80)
+shouldExplore = explorationQueue.length > 0;
+AND(fuel > 10);
+AND(damage < 80);
 ```
 
 ```gherkin
@@ -252,12 +257,13 @@ Examples:
 ```
 
 **Code :**
+
 ```typescript
 const shouldExplore = ({ context }) => {
   const queueLength = context.explorationQueue?.length ?? 0;
   const fuel = context.vehicle?.fuel ?? 0;
   const damage = context.vehicle?.damage ?? 0;
-  
+
   return queueLength > 0 && fuel > 10 && damage < 80;
 };
 ```
@@ -269,10 +275,11 @@ const shouldExplore = ({ context }) => {
 **Rôle :** Vérifie si une tuile spécifique peut être collectée
 
 **Formule :**
+
 ```typescript
-canCollectTile = (tile.resources.total > 0) 
-                 AND (tile.explored === true) 
-                 AND (tile.collected === false)
+canCollectTile = tile.resources.total > 0;
+AND(tile.explored === true);
+AND(tile.collected === false);
 ```
 
 ```gherkin
@@ -292,8 +299,9 @@ Rule: canCollectTile
 **Rôle :** Vérifie si le ship est à la base
 
 **Formule :**
+
 ```typescript
-isShipOnBase = (vehicle.position === vehicle.basePosition)
+isShipOnBase = vehicle.position === vehicle.basePosition;
 ```
 
 ```gherkin
@@ -311,6 +319,7 @@ Rule: isShipOnBase
 **Rôle :** Vérifie si toutes les maintenances sont terminées
 
 **Formule :**
+
 ```typescript
 maintenanceComplete = NOT (needsRefuel OR needsRepair OR needsDeposit)
 ```
@@ -328,13 +337,14 @@ Rule: maintenanceComplete
 
 ## Matrice de Priorités
 
-| Guard | Priority | Trigger | Impact |
-|-------|----------|---------|--------|
-| shouldMaintain | P1 | fuel<30 OR damage>50 OR resources>100 | → maintaining |
-| shouldCollect | P2 | availableTiles>0 AND NOT overloaded | → collecting |
-| shouldExplore | P3 | explorationQueue>0 | → exploring |
+| Guard          | Priority | Trigger                               | Impact        |
+| -------------- | -------- | ------------------------------------- | ------------- |
+| shouldMaintain | P1       | fuel<30 OR damage>50 OR resources>100 | → maintaining |
+| shouldCollect  | P2       | availableTiles>0 AND NOT overloaded   | → collecting  |
+| shouldExplore  | P3       | explorationQueue>0                    | → exploring   |
 
 **Règle d'évaluation :**
+
 1. Évaluer shouldMaintain EN PREMIER
 2. Si false, évaluer shouldCollect
 3. Si false, évaluer shouldExplore
@@ -345,6 +355,7 @@ Rule: maintenanceComplete
 ## Tests de Validation
 
 Tous les guards sont testés dans :
+
 - `scripts/test-fsm-cycle.js` (tests Node.js)
 - `docs/bot-spec/scenarios/*.feature` (specs Gherkin)
 

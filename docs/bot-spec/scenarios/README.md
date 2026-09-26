@@ -30,18 +30,18 @@ Le tableau ci-dessous relie chaque groupe historique aux decisions et aux
 nouveaux identifiants. Les divergences S01-S38 de l'audit restent un constat
 historique, pas une description du code apres cloture.
 
-| Fichier | Divergences historiques | Nouveaux IDs | Preuve comportementale disponible |
-| --- | --- | --- | --- |
-| initialization.feature | S01-S04, S38 | INIT-01 a INIT-05 | Tests creation, initialisation idempotente, reset et rejet ancien snapshot |
-| initialization-fairness.feature | S05-S07 | FAIR-01 a FAIR-05 | Tests symetrie, connectivite, graines et tailles limites ; pas de garantie de score egal |
-| exploration.feature | S08-S13 | EXP-01 a EXP-06 | Tests scans publics exclus, rayon mobile et connaissance individuelle ; heuristiques relues dans `plan()` |
-| collection.feature | S14-S19 | COL-01 a COL-07 | Tests compartiments, concurrence, tentative vide, prelevements repetes et invariants ; politique de retour relue |
-| maintenance.feature | S20-S22, S25 | MAINT-01 a MAINT-07 | Tests lieux, trajets, services, extensions et drone ; seuils exacts relus dans `plan()` |
-| danger-tiles.feature | S12, S23-S26 | DANGER-01 a DANGER-04 | Tests degats par arrivee et perte de drone aux trois distances ; terrain statique inspecte |
-| emergency.feature | S27-S29 | EMERG-01 a EMERG-04 | Tests pause, remorquage et elimination ; ordre des priorites relu |
-| game-over.feature | S31-S34 | END-01 a END-06 | Tests derniers depots, egalite, survivants, blocages et absence de perte fictive |
-| multi-bot.feature | S35-S38 | MULTI-01 a MULTI-05 | Tests concurrence et temps ; vues, connaissance masquee et synchronisation verifiees en navigateur |
-| edge-cases.feature | S30-S31 | EDGE-01 a EDGE-07 | Tests chemins, entrees invalides, pas et reconnexion ; controles responsive manuels |
+| Fichier                         | Divergences historiques | Nouveaux IDs          | Preuve comportementale disponible                                                                                |
+| ------------------------------- | ----------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| initialization.feature          | S01-S04, S38            | INIT-01 a INIT-05     | Tests creation, initialisation idempotente, reset et rejet ancien snapshot                                       |
+| initialization-fairness.feature | S05-S07                 | FAIR-01 a FAIR-05     | Tests symetrie, connectivite, graines et tailles limites ; pas de garantie de score egal                         |
+| exploration.feature             | S08-S13                 | EXP-01 a EXP-06       | Tests scans publics exclus, rayon mobile et connaissance individuelle ; heuristiques relues dans `plan()`        |
+| collection.feature              | S14-S19                 | COL-01 a COL-07       | Tests compartiments, concurrence, tentative vide, prelevements repetes et invariants ; politique de retour relue |
+| maintenance.feature             | S20-S22, S25            | MAINT-01 a MAINT-07   | Tests lieux, trajets, services, extensions et drone ; seuils exacts relus dans `plan()`                          |
+| danger-tiles.feature            | S12, S23-S26            | DANGER-01 a DANGER-04 | Tests degats par arrivee et perte de drone aux trois distances ; terrain statique inspecte                       |
+| emergency.feature               | S27-S29                 | EMERG-01 a EMERG-04   | Tests pause, remorquage et elimination ; ordre des priorites relu                                                |
+| game-over.feature               | S31-S34                 | END-01 a END-06       | Tests derniers depots, egalite, survivants, blocages et absence de perte fictive                                 |
+| multi-bot.feature               | S35-S38                 | MULTI-01 a MULTI-05   | Tests concurrence et temps ; vues, connaissance masquee et synchronisation verifiees en navigateur               |
+| edge-cases.feature              | S30-S31                 | EDGE-01 a EDGE-07     | Tests chemins, entrees invalides, pas et reconnexion ; controles responsive manuels                              |
 
 Cette correspondance n'affirme pas qu'un test execute chaque phrase de chaque
 scenario. En particulier, les heuristiques de choix et certains seuils ont une

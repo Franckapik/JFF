@@ -1,6 +1,6 @@
-import { useLayoutEffect, type ProfilerOnRenderCallback } from 'react';
+import { useLayoutEffect, type ProfilerOnRenderCallback } from "react";
 
-export const profilingEnabled = import.meta.env.DEV && new URLSearchParams(window.location.search).has('profile');
+export const profilingEnabled = import.meta.env.DEV && new URLSearchParams(window.location.search).has("profile");
 export const renderMetrics = {
   components: {} as Record<string, number>,
   commits: 0,

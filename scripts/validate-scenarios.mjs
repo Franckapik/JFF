@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
 import { AstBuilder, compile, GherkinClassicTokenMatcher, Parser } from "@cucumber/gherkin";
+import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
 
 const directory = new URL("../docs/bot-spec/scenarios/", import.meta.url);
 const files = readdirSync(directory).filter(file => file.endsWith(".feature")).sort();
