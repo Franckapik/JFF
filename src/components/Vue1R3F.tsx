@@ -27,10 +27,11 @@
 
 import React from 'react';
 
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, useAnimations } from '@react-three/drei';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { CuboidCollider, Physics, RigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 import { getTileColor } from '../config/tileColors';
 import { UIProvider } from '../contexts/UIContext';
@@ -352,7 +353,7 @@ function HexagonalTile({ position, tile }: { position: { x: number; y: number; z
       </mesh>
 
       {/* Physical cube on this tile */}
-      <PhysicalCube />
+     {/*  <PhysicalCube /> */}
     </group>
   );
 }
@@ -384,6 +385,190 @@ function DecorativeTile({ position, distance, maxDistance }: {
         />
       </lineSegments>
     </group>
+  );
+}
+
+// =========================================================================
+// BOT CHARACTER COMPONENT - 3D animated character with kinematic physics
+// =========================================================================
+
+function BotCharacter({ 
+  botId, 
+  coord, 
+  gridConfig,
+  gridCenter,
+  spacingFactor 
+}: { 
+  botId: string; 
+  coord: string | null; 
+  gridConfig: { spacing: number; radius: number } | null;
+  gridCenter: { x: number; z: number };
+  spacingFactor: number;
+}) {
+  // Load FBX model
+  const fbx = useLoader(FBXLoader, '/character/ship_7.fbx');
+  
+  // Load texture
+  const texture = useLoader(THREE.TextureLoader, '/character/textures/Ship_base.jpg');
+  
+  // Setup animations
+  const groupRef = React.useRef<THREE.Group>(null);
+  const { actions, names } = useAnimations(fbx.animations, groupRef);
+  
+  // Position above tiles (Y adjusted for character model)
+  const heightAboveTiles = 0.4;
+
+  // RigidBody ref for physics control
+  const rigidBodyRef = React.useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
+  
+  // Track current target position
+  const targetPos = React.useRef<[number, number, number]>([0, heightAboveTiles, 0]);
+  
+  // Track if position has been initialized
+  const initializedRef = React.useRef(false);
+  
+  // Lerp speed (0 = instant, 1 = very slow)
+  const lerpAlpha = 0.08;
+
+  // Apply texture to model
+  React.useEffect(() => {
+    if (!fbx || !texture) return;
+
+    let meshCount = 0;
+    let texturedMeshCount = 0;
+
+    fbx.traverse((child: any) => {
+      if (child instanceof THREE.Mesh) {
+        meshCount++;
+        console.log('[BotCharacter] Found mesh:', {
+          name: child.name,
+          hasGeometry: !!child.geometry,
+          hasUVs: child.geometry?.attributes.uv ? true : false,
+          materialType: child.material?.type,
+          botId
+        });
+
+        // Create a new StandardMaterial with the texture
+        const newMaterial = new THREE.MeshStandardMaterial({
+          map: texture,
+          metalness: 0.5,
+          roughness: 0.5
+        });
+
+        child.material = newMaterial;
+        texturedMeshCount++;
+      }
+    });
+
+    console.log('[BotCharacter] Texture applied', {
+      botId,
+      totalMeshes: meshCount,
+      texturedMeshes: texturedMeshCount,
+      textureURL: '/character/textures/Ship_base.jpg'
+    });
+  }, [fbx, texture, botId]);
+
+  // Play animation from FBX
+  React.useEffect(() => {
+    if (!actions || names.length === 0) {
+      console.log('[BotCharacter] No animations found', { botId });
+      return;
+    }
+    
+    console.log('[BotCharacter] Available animations:', names, { botId });
+    
+    // Use the first animation available
+    const animationName = names[0];
+    
+    if (actions[animationName]) {
+      console.log('[BotCharacter] Playing animation:', animationName, { botId });
+      actions[animationName].reset().play();
+      actions[animationName].setLoop(THREE.LoopRepeat, Infinity);
+    } else {
+      console.warn('[BotCharacter] Animation not found in actions', { animationName, actions });
+    }
+    
+    return () => {
+      if (actions[animationName]) {
+        actions[animationName].stop();
+      }
+    };
+  }, [actions, names, botId]);
+
+  // Calculate target position whenever coord changes
+  const calculateTargetPos = React.useCallback(() => {
+    if (!coord || !gridConfig) {
+      return [0, heightAboveTiles, 0] as [number, number, number];
+    }
+
+    const [q, r] = coord.split(',').map(Number);
+    const worldPos = calculateHexPosition(q, r, gridConfig);
+    
+    // Apply same spacing factor as tiles
+    const scaledX = worldPos.x * spacingFactor;
+    const scaledZ = worldPos.z * spacingFactor;
+
+    // Apply grid center offset (same as tiles)
+    const centeredX = scaledX - gridCenter.x;
+    const centeredZ = scaledZ - gridCenter.z;
+
+    return [centeredX, heightAboveTiles, centeredZ] as [number, number, number];
+  }, [coord, gridConfig, gridCenter, spacingFactor]);
+
+  // Update target position when coord changes
+  React.useEffect(() => {
+    const newTarget = calculateTargetPos();
+    console.log('[BotCharacter] New target position:', { botId, coord, newTarget });
+    targetPos.current = newTarget;
+    
+    // Initialize rigid body position on first render
+    if (!initializedRef.current && rigidBodyRef.current) {
+      console.log('[BotCharacter] Initializing position:', { botId, newTarget });
+      rigidBodyRef.current.setTranslation({ x: newTarget[0], y: newTarget[1], z: newTarget[2] }, true);
+      initializedRef.current = true;
+    }
+  }, [calculateTargetPos, botId, coord]);
+
+  // Animate position with lerp every frame using kinematic body
+  useFrame(() => {
+    if (!rigidBodyRef.current || !groupRef.current) return;
+
+    const current = rigidBodyRef.current.translation();
+    const target = targetPos.current;
+
+    // Check if moving
+    const isMoving = Math.abs(current.x - target[0]) > 0.01 || 
+                     Math.abs(current.z - target[2]) > 0.01;
+
+    // Calculate direction for rotation
+    if (isMoving) {
+      const dx = target[0] - current.x;
+      const dz = target[2] - current.z;
+      const angle = Math.atan2(dx, dz);
+      groupRef.current.rotation.y = angle;
+    }
+
+    // Linear interpolation
+    const newX = current.x + (target[0] - current.x) * lerpAlpha;
+    const newY = current.y + (target[1] - current.y) * lerpAlpha;
+    const newZ = current.z + (target[2] - current.z) * lerpAlpha;
+
+    // Update kinematic body position
+    rigidBodyRef.current.setNextKinematicTranslation({ x: newX, y: newY, z: newZ });
+  });
+
+  return (
+    <RigidBody
+      ref={rigidBodyRef}
+      type="kinematicPosition"
+      colliders={false}
+      ccd={true}
+    >
+      <CuboidCollider args={[0.3, 0.5, 0.3]} sensor={false} />
+      <group ref={groupRef} scale={0.06} position={[0, -0.25, 0]}>
+        <primitive object={fbx} />
+      </group>
+    </RigidBody>
   );
 }
 
@@ -485,6 +670,9 @@ function BotSphere({
     </RigidBody>
   );
 }
+
+// Preload the FBX model
+FBXLoader.prototype.constructor.name;
 
 // =========================================================================
 // TILE GRID RENDERER
@@ -660,16 +848,30 @@ function TileGridRenderer() {
       {botStates && Object.entries(botStates).map(([botId, botState]) => {
         const vehicleCoord = botState?.context?.vehicle?.coord || null;
         
-        return (
-          <BotSphere
-            key={botId}
-            botId={botId}
-            coord={vehicleCoord}
-            gridConfig={gridConfig}
-            gridCenter={tilePositions.center}
-            spacingFactor={tilePositions.spacingFactor}
-          />
-        );
+        // Use BotCharacter for bot-0, BotSphere for others
+        if (botId === 'bot-0') {
+          return (
+            <BotCharacter
+              key={botId}
+              botId={botId}
+              coord={vehicleCoord}
+              gridConfig={gridConfig}
+              gridCenter={tilePositions.center}
+              spacingFactor={tilePositions.spacingFactor}
+            />
+          );
+        } else {
+          return (
+            <BotSphere
+              key={botId}
+              botId={botId}
+              coord={vehicleCoord}
+              gridConfig={gridConfig}
+              gridCenter={tilePositions.center}
+              spacingFactor={tilePositions.spacingFactor}
+            />
+          );
+        }
       })}
     </>
   );
