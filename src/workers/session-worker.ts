@@ -6,6 +6,8 @@ const host = new SessionHost(`session-${crypto.randomUUID()}`);
 const ports = new Map<MessagePort, number>();
 let lastTick = performance.now();
 let failed = false;
+let broadcastGameId: string | null = null;
+let broadcastEventSequence = 0;
 
 function post(port: MessagePort, response: SessionResponse) {
   try {
@@ -18,6 +20,16 @@ function post(port: MessagePort, response: SessionResponse) {
 
 function broadcast(response: SessionResponse) {
   for (const port of ports.keys()) post(port, response);
+  if (response.snapshot) {
+    broadcastGameId = response.gameId;
+    broadcastEventSequence = response.snapshot.eventSequence;
+  }
+}
+
+function nextBroadcast(error: string | null = null) {
+  let response = host.snapshot(error, broadcastEventSequence);
+  if (response.gameId !== broadcastGameId) response = host.snapshot(error);
+  return response;
 }
 
 function advanceClock() {
@@ -29,7 +41,7 @@ function advanceClock() {
 
 setInterval(() => {
   try {
-    if (advanceClock()) broadcast(host.snapshot());
+    if (advanceClock()) broadcast(nextBroadcast());
     for (const [port, lastSeen] of ports) {
       if (Date.now() - lastSeen > 180000) {
         post(port, { ...host.snapshot("Connexion expiree : reconnectez cette vue"), type: "DISCONNECTED" });
@@ -39,7 +51,7 @@ setInterval(() => {
     }
   } catch (error) {
     failed = true;
-    broadcast(host.snapshot(error instanceof Error ? error.message : "Erreur du moteur"));
+    broadcast(nextBroadcast(error instanceof Error ? error.message : "Erreur du moteur"));
   }
 }, 100);
 

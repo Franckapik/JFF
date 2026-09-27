@@ -73,17 +73,20 @@ export const useSessionStore = create<SessionStore>((set, get) => {
             fail(data.error ?? "Connexion interrompue");
             return;
           }
-          if (!data || data.protocol !== 1 || data.snapshot?.schemaVersion !== 2) {
+          if (!data || data.protocol !== 1 || data.snapshot?.schemaVersion !== 3) {
             fail(data?.error ?? "Version du moteur incompatible. Fermez les anciens onglets du jeu, puis reconnectez-vous.");
             return;
           }
           clearTimeout(handshake);
           lastSeen = Date.now();
           const previous = get();
-          const snapshot =
-            previous.gameId === data.gameId && previous.snapshot?.worldRevision === data.snapshot.worldRevision
-              ? { ...data.snapshot, world: previous.snapshot.world }
-              : data.snapshot;
+          const sameGame = previous.gameId === data.gameId && !!previous.snapshot;
+          const previousEvents = sameGame ? previous.snapshot!.events : [];
+          const lastEventSequence = previousEvents[previousEvents.length - 1]?.sequence ?? 0;
+          const newEvents = sameGame ? data.snapshot.events.filter(event => event.sequence > lastEventSequence) : data.snapshot.events;
+          const events = sameGame && newEvents.length === 0 ? previousEvents : sameGame ? [...previousEvents, ...newEvents] : newEvents;
+          const world = sameGame && previous.snapshot!.worldRevision === data.snapshot.worldRevision ? previous.snapshot!.world : data.snapshot.world;
+          const snapshot = { ...data.snapshot, world, events };
           set({ status: "connected", instanceId: data.instanceId, gameId: data.gameId, snapshot, error: data.error });
         };
         connection.start();

@@ -1,7 +1,7 @@
 import { createActor, type ActorRefFrom } from "xstate";
 
 import { botMachine } from "./botMachine";
-import type { Bot, BotPhase, BotView, GoalReason, OperationKind, SessionLog, SessionSnapshot } from "./model";
+import type { Bot, BotPhase, BotView, GoalReason, OperationKind, SessionEvent, SessionLog, SessionSnapshot } from "./model";
 import { addResources, emptyResources, RESOURCE_KINDS, resourceTotal, transferResources, type Resources } from "./resources";
 import { RULES } from "./rules";
 import {
@@ -61,6 +61,8 @@ export class GameSession {
   private turn = 0;
   private logs: SessionLog[] = [];
   private logSequence = 0;
+  private events: SessionEvent[] = [];
+  private eventSequence = 0;
   private winners: BotId[] = [];
   private endReason: string | null = null;
   readonly seed: number;
@@ -81,6 +83,7 @@ export class GameSession {
       worldResources(this.world)
     );
     this.log(null, "Partie initialisee");
+    this.emit({ type: "session.started", category: "lifecycle", botId: null });
     this.assertInvariants();
   }
 
@@ -94,6 +97,10 @@ export class GameSession {
   private log(botId: BotId | null, message: string) {
     this.logs.push({ sequence: ++this.logSequence, time: this.elapsed, botId, message });
     if (this.logs.length > RULES.maxLogEntries) this.logs.shift();
+  }
+
+  private emit(event: Omit<SessionEvent, "sequence" | "time">) {
+    this.events.push({ ...event, sequence: ++this.eventSequence, time: this.elapsed });
   }
 
   private route(bot: Bot, target: Coord): Coord[] {
@@ -117,6 +124,7 @@ export class GameSession {
   private launch(bot: Bot, kind: OperationKind, target: Coord, duration: number, decision: string) {
     this.actors.get(bot.id)!.send({ type: "PLAN", bot: { ...bot, decision, operation: { kind, target, duration, remaining: duration } } });
     this.log(bot.id, decision);
+    this.emit({ type: "operation.started", category: "decision", botId: bot.id, operation: kind, coord: bot.coord, target, reason: decision });
   }
 
   private move(bot: Bot, target: Coord, reason: GoalReason): boolean {
@@ -134,11 +142,19 @@ export class GameSession {
 
   private eliminate(bot: Bot, reason: string) {
     this.lostResources = addResources(this.lostResources, bot.cargo);
+    if (resourceTotal(bot.cargo) > 0)
+      this.emit({ type: "cargo.lost", category: "incident", botId: bot.id, coord: bot.coord, reason: "elimination", resources: bot.cargo });
     this.actors.get(bot.id)!.send({
       type: "ELIMINATE",
       bot: { ...bot, cargo: emptyResources(), route: [], goal: null, operation: null, eliminationReason: reason, decision: reason },
     });
     this.log(bot.id, reason);
+    this.emit({ type: "bot.eliminated", category: "lifecycle", botId: bot.id, coord: bot.coord, reason });
+  }
+
+  private finishBot(bot: Bot, decision: string) {
+    this.actors.get(bot.id)!.send({ type: "FINISH", bot: { ...bot, decision, operation: null } });
+    this.emit({ type: "bot.finished", category: "lifecycle", botId: bot.id, coord: bot.coord, reason: decision });
   }
 
   private available(bot: Bot, coord: Coord): number {
@@ -161,6 +177,7 @@ export class GameSession {
     const isBase = bot.coord === bot.base;
     const atFuel = isBase || tile.kind === "fuel";
     if (bot.fuel <= 0 && !atFuel) {
+      this.emit({ type: "fuel.stranded", category: "incident", botId: bot.id, coord: bot.coord, after: { fuel: bot.fuel } });
       this.launch({ ...bot, route: [], goal: null }, "rescue", bot.base, RULES.rescueDuration, "Remorquage : cargaison perdue");
       return;
     }
@@ -173,9 +190,9 @@ export class GameSession {
       return;
     }
     if (this.phase === "returning") {
-      if (isBase) this.actors.get(bot.id)!.send({ type: "FINISH", bot: { ...bot, decision: "Cargaison soldee", operation: null } });
+      if (isBase) this.finishBot(bot, "Cargaison soldee");
       else if (!this.move(bot, bot.base, "base"))
-        this.actors.get(bot.id)!.send({ type: "FINISH", bot: { ...bot, decision: "Retour a la base impossible", operation: null } });
+        this.finishBot(bot, "Retour a la base impossible");
       return;
     }
     if (bot.damage >= RULES.repairThreshold) {
@@ -258,7 +275,7 @@ export class GameSession {
       .sort((left, right) => left.path.length - right.path.length);
     if (frontiers.length && this.move(bot, frontiers[0].coord, "explore")) return;
     if (fuelPath.length > 1 && bot.fuel < RULES.fuelCapacity && this.move(bot, fuelPath[fuelPath.length - 1], "fuel")) return;
-    this.actors.get(bot.id)!.send({ type: "FINISH", bot: { ...bot, decision: "Aucun objectif accessible", operation: null } });
+    this.finishBot(bot, "Aucun objectif accessible");
   }
 
   private complete(bot: BotView) {
@@ -282,6 +299,27 @@ export class GameSession {
             fuelUsed: bot.statistics.fuelUsed + Math.min(bot.fuel, RULES.fuelPerStep),
           },
         };
+        this.emit({
+          type: "movement.arrived",
+          category: "movement",
+          botId: bot.id,
+          operation: operation.kind,
+          coord: bot.coord,
+          target: operation.target,
+          before: { fuel: bot.fuel, damage: bot.damage },
+          delta: { fuel: next.fuel - bot.fuel, damage: next.damage - bot.damage },
+          after: { fuel: next.fuel, damage: next.damage },
+        });
+        if (next.damage > bot.damage)
+          this.emit({
+            type: "danger.impact",
+            category: "incident",
+            botId: bot.id,
+            coord: operation.target,
+            before: { damage: bot.damage },
+            delta: { damage: next.damage - bot.damage },
+            after: { damage: next.damage },
+          });
         break;
       }
       case "scan": {
@@ -292,7 +330,11 @@ export class GameSession {
           droneAvailable: !destroyed,
           statistics: { ...bot.statistics, scans: bot.statistics.scans + 1, droneLosses: bot.statistics.droneLosses + Number(destroyed) },
         };
-        if (destroyed) this.log(bot.id, "Drone perdu sur une case dangereuse");
+        this.emit({ type: "scan.completed", category: "movement", botId: bot.id, operation: operation.kind, coord: bot.coord, target: operation.target });
+        if (destroyed) {
+          this.log(bot.id, "Drone perdu sur une case dangereuse");
+          this.emit({ type: "drone.lost", category: "incident", botId: bot.id, coord: operation.target, reason: "case dangereuse" });
+        }
         break;
       }
       case "collect": {
@@ -315,6 +357,15 @@ export class GameSession {
           },
         };
         this.log(bot.id, `${resourceTotal(transfer.taken)} ressources collectees`);
+        this.emit({
+          type: "collection.completed",
+          category: "resource",
+          botId: bot.id,
+          coord: bot.coord,
+          target: operation.target,
+          reason: collected ? "transfert non vide" : "stock indisponible ou capacite atteinte",
+          resources: transfer.taken,
+        });
         break;
       }
       case "service": {
@@ -332,8 +383,19 @@ export class GameSession {
             goal: null,
           };
           this.log(bot.id, `${amount} ressources deposees`);
-        } else if (tile.kind === "fuel") next = { ...next, fuel: RULES.fuelCapacity, goal: null };
-        else if (tile.kind === "repair") next = { ...next, damage: 0, goal: null };
+          if (amount > 0)
+            this.emit({ type: "resources.deposited", category: "resource", botId: bot.id, coord: bot.coord, resources: bot.cargo, delta: { budget: amount, score: amount }, after: { budget: next.budget, score: next.score } });
+          if (bot.fuel < RULES.fuelCapacity)
+            this.emit({ type: "fuel.refueled", category: "maintenance", botId: bot.id, coord: bot.coord, before: { fuel: bot.fuel }, delta: { fuel: RULES.fuelCapacity - bot.fuel }, after: { fuel: RULES.fuelCapacity } });
+          if (bot.damage > 0)
+            this.emit({ type: "ship.repaired", category: "maintenance", botId: bot.id, coord: bot.coord, before: { damage: bot.damage }, delta: { damage: -bot.damage }, after: { damage: 0 } });
+        } else if (tile.kind === "fuel") {
+          next = { ...next, fuel: RULES.fuelCapacity, goal: null };
+          this.emit({ type: "fuel.refueled", category: "maintenance", botId: bot.id, coord: bot.coord, before: { fuel: bot.fuel }, delta: { fuel: RULES.fuelCapacity - bot.fuel }, after: { fuel: RULES.fuelCapacity } });
+        } else if (tile.kind === "repair") {
+          next = { ...next, damage: 0, goal: null };
+          this.emit({ type: "ship.repaired", category: "maintenance", botId: bot.id, coord: bot.coord, before: { damage: bot.damage }, delta: { damage: -bot.damage }, after: { damage: 0 } });
+        }
         else throw new Error("Service outside a station");
         break;
       }
@@ -341,14 +403,18 @@ export class GameSession {
         const cost = RULES.upgradePrices[bot.radius];
         if (bot.coord !== bot.base || cost === undefined || bot.budget < cost) throw new Error("Invalid upgrade");
         next = { ...next, radius: bot.radius + 1, budget: bot.budget - cost, spent: bot.spent + cost };
+        this.emit({ type: "exploration.upgraded", category: "economy", botId: bot.id, coord: bot.coord, before: { budget: bot.budget, radius: bot.radius }, delta: { budget: -cost, radius: 1 }, after: { budget: next.budget, radius: next.radius } });
         break;
       }
       case "purchase":
         if (bot.coord !== bot.base || bot.droneAvailable || bot.budget < RULES.dronePrice) throw new Error("Invalid drone purchase");
         next = { ...next, droneAvailable: true, budget: bot.budget - RULES.dronePrice, spent: bot.spent + RULES.dronePrice };
+        this.emit({ type: "drone.replaced", category: "economy", botId: bot.id, coord: bot.coord, before: { budget: bot.budget }, delta: { budget: -RULES.dronePrice }, after: { budget: next.budget } });
         break;
       case "rescue":
         this.lostResources = addResources(this.lostResources, bot.cargo);
+        if (resourceTotal(bot.cargo) > 0)
+          this.emit({ type: "cargo.lost", category: "incident", botId: bot.id, coord: bot.coord, reason: "remorquage", resources: bot.cargo });
         next = {
           ...next,
           coord: bot.base,
@@ -359,6 +425,7 @@ export class GameSession {
           statistics: { ...bot.statistics, rescues: bot.statistics.rescues + 1 },
           visits: { ...bot.visits, [bot.base]: (bot.visits[bot.base] ?? 0) + 1 },
         };
+        this.emit({ type: "rescue.completed", category: "incident", botId: bot.id, coord: bot.coord, target: bot.base, after: { fuel: 0 } });
         break;
     }
     this.actors.get(bot.id)!.send({ type: "COMPLETE", bot: next });
@@ -394,6 +461,7 @@ export class GameSession {
     const best = Math.max(...eligible.map(bot => bot.score));
     this.winners = blocked ? [] : eligible.filter(bot => bot.score === best).map(bot => bot.id);
     this.log(null, this.endReason);
+    this.emit({ type: blocked ? "session.blocked" : "session.finished", category: "lifecycle", botId: null, reason: this.endReason });
   }
 
   private timeUntilCompletion(bot: Bot): number {
@@ -467,9 +535,9 @@ export class GameSession {
     this.actors.forEach(actor => actor.stop());
   }
 
-  getSnapshot(): SessionSnapshot {
+  getSnapshot(afterEventSequence = 0): SessionSnapshot {
     return structuredClone({
-      schemaVersion: 2,
+      schemaVersion: 3,
       seed: this.seed,
       revision: this.revision,
       worldRevision: this.worldRevision,
@@ -485,6 +553,8 @@ export class GameSession {
       winners: this.winners,
       endReason: this.endReason,
       logs: this.logs,
+      eventSequence: this.eventSequence,
+      events: this.events.filter(event => event.sequence > afterEventSequence),
     });
   }
 

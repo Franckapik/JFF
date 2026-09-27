@@ -2,6 +2,22 @@
 
 Date : 26 septembre 2026. Portee : vues actives Terrain et Diagnostic, moteur de session actuel. Ce document ne propose aucune modification des regles de gameplay.
 
+## Statut d'implementation
+
+Premiere version livree le 26 septembre 2026 :
+
+- activation iconique depuis Terrain, sans changement du mode normal ;
+- resume compact de six indicateurs par bot ;
+- tiroir par bot avec historique filtre, route et statistiques ;
+- surbrillance de la route restante du bot analyse ;
+- evenements structures emis par la session pour mouvements, impacts, drones, ressources, maintenance, achats, remorquages, eliminations et fins ;
+- snapshot `schemaVersion: 3`, protocole de commandes inchange ;
+- transport incremental des evenements entre les diffusions du worker, avec reconstruction par sequence dans chaque vue ;
+- export JSON existant enrichi automatiquement avec les evenements ;
+- tests moteur et rendu statique accessible du mode expert.
+
+Restent differes : options rejetees par le planificateur, probabilite et tirage de chaque arbitrage, duree cumulee par etat et import/rejeu d'un historique. Une connexion recoit l'historique complet ; les mises a jour periodiques ne transportent que les nouveaux evenements. Le cout doit rester mesure avant de viser de longues sessions ou de grandes cartes.
+
 ## Objectif
 
 Le mode expert doit permettre de repondre rapidement, pour un bot donne, a cinq questions :

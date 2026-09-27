@@ -1,5 +1,6 @@
 import { OrbitControls } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
+import { Bot as BotIcon, SlidersHorizontal } from 'lucide-react';
 import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Color, Group, InstancedMesh, Object3D, Vector3 } from 'three';
 
@@ -10,16 +11,18 @@ import { worldPosition, type BotId, type Coord, type World } from '../../engine/
 import { useSessionStore } from '../../stores/useSessionStore';
 
 import BotPanel from './BotPanel';
+import ExpertBotView from './ExpertBotView';
 import { BOT_COLORS, TILE_COLORS, TILE_LABELS } from './presentation';
 import { useRenderCounter } from './renderMetrics';
 
-const Tiles = memo(function Tiles({ world, visible, selected, select }: { world: World; visible: string; selected: Coord | null; select: (coord: Coord) => void }) {
+const Tiles = memo(function Tiles({ world, visible, selected, route, routeOwner, select }: { world: World; visible: string; selected: Coord | null; route: Coord[]; routeOwner: BotId | null; select: (coord: Coord) => void }) {
   useRenderCounter('Tiles');
   const mesh = useRef<InstancedMesh>(null);
   const tiles = useMemo(() => Object.values(world), [world]);
   useLayoutEffect(() => {
     if (!mesh.current) return;
     const known = visible ? new Set(visible.split('|')) : null;
+    const routeCoords = new Set(route);
     const transform = new Object3D();
     tiles.forEach((tile, index) => {
       transform.position.set(...worldPosition(tile.coord));
@@ -27,12 +30,12 @@ const Tiles = memo(function Tiles({ world, visible, selected, select }: { world:
       transform.scale.set(1, tile.kind === 'obstacle' ? 4 : 1, 1);
       transform.updateMatrix(); mesh.current!.setMatrixAt(index, transform.matrix);
       const publicTile = ['base', 'fuel', 'repair', 'obstacle'].includes(tile.kind);
-      const color = known && !known.has(tile.coord) && !publicTile ? '#becac8' : tile.owner ? BOT_COLORS[tile.owner] : tile.kind === 'resource' && resourceTotal(tile.resources) === 0 ? TILE_COLORS.empty : TILE_COLORS[tile.kind];
+      const color = routeOwner && routeCoords.has(tile.coord) ? BOT_COLORS[routeOwner] : known && !known.has(tile.coord) && !publicTile ? '#becac8' : tile.owner ? BOT_COLORS[tile.owner] : tile.kind === 'resource' && resourceTotal(tile.resources) === 0 ? TILE_COLORS.empty : TILE_COLORS[tile.kind];
       mesh.current!.setColorAt(index, new Color(color));
     });
     mesh.current.instanceMatrix.needsUpdate = true;
     if (mesh.current.instanceColor) mesh.current.instanceColor.needsUpdate = true;
-  }, [tiles, visible, selected]);
+  }, [tiles, visible, selected, route, routeOwner]);
   return <instancedMesh ref={mesh} args={[undefined, undefined, tiles.length]} receiveShadow onClick={event => { event.stopPropagation(); if (event.instanceId !== undefined) select(tiles[event.instanceId].coord); }}>
     <cylinderGeometry args={[0.96, 0.96, 0.12, 6]} /><meshStandardMaterial roughness={0.86} />
   </instancedMesh>;
@@ -89,17 +92,20 @@ export default function GameView() {
   const status = useSessionStore(state => state.status);
   const [perspective, setPerspective] = useState<BotId | 'world'>('world');
   const [selected, setSelected] = useState<Coord | null>(null);
+  const [expert, setExpert] = useState(false);
+  const [expertBotId, setExpertBotId] = useState<BotId>('bot-0');
   if (!snapshot) return <main className="empty-state" role="status">{status === 'disconnected' ? 'Moteur hors ligne' : 'Connexion au moteur...'}</main>;
   const visible = perspective === 'world' ? '' : snapshot.bots[perspective].known.join('|');
   const tile = selected ? snapshot.world[selected] : null;
   const known = perspective === 'world' || !!tile && ['base', 'fuel', 'repair', 'obstacle'].includes(tile.kind) || !!selected && snapshot.bots[perspective].known.includes(selected);
-  return <main className="game-layout">
+  const expertBot = snapshot.bots[expertBotId];
+  return <main className={`game-layout${expert ? ' expert-open' : ''}`}>
     <section className="board-panel" aria-label="Terrain de la partie">
-      <div className="board-toolbar"><h1>Terrain</h1><label>Vision <select value={perspective} onChange={event => setPerspective(event.target.value as BotId | 'world')}><option value="world">Monde</option><option value="bot-0">Bot 0</option><option value="bot-1">Bot 1</option></select></label><span>{resourceTotal(snapshot.remainingResources).toLocaleString('fr-FR')} ressources restantes</span></div>
+      <div className="board-toolbar"><h1>Terrain</h1><label>Vision <select value={perspective} onChange={event => setPerspective(event.target.value as BotId | 'world')}><option value="world">Monde</option><option value="bot-0">Bot 0</option><option value="bot-1">Bot 1</option></select></label><button className="icon-button expert-toggle" aria-pressed={expert} onClick={() => setExpert(value => !value)} title={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'} aria-label={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'}><SlidersHorizontal size={18} /></button><span>{resourceTotal(snapshot.remainingResources).toLocaleString('fr-FR')} ressources restantes</span></div>
       <div className="scene">
         <Canvas shadows dpr={[1, 1.5]} camera={{ position: [9, 12, 10], fov: 45 }} onPointerMissed={() => setSelected(null)}>
           <color attach="background" args={['#edf2f1']} /><ambientLight intensity={1.5} /><directionalLight position={[5, 12, 6]} intensity={2.4} castShadow shadow-mapSize={[512, 512]} />
-          <Tiles world={snapshot.world} visible={visible} selected={selected} select={setSelected} />
+          <Tiles world={snapshot.world} visible={visible} selected={selected} route={expert ? expertBot.route : []} routeOwner={expert ? expertBot.id : null} select={setSelected} />
           {Object.values(snapshot.bots).map(bot => <Vehicle key={bot.id} bot={bot} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} speed={snapshot.speed} />)}
           <OrbitControls makeDefault target={[0, 0, 0]} minDistance={8} maxDistance={26} minPolarAngle={0.1} maxPolarAngle={Math.PI / 2.1} />
         </Canvas>
@@ -109,7 +115,11 @@ export default function GameView() {
     </section>
     <aside className="bot-sidebar" aria-label="Bots">
       {(snapshot.phase === 'finished' || snapshot.phase === 'blocked') && <section className="result"><h2>{snapshot.phase === 'blocked' ? 'Partie bloquee' : 'Partie terminee'}</h2><p>{snapshot.winners.length === 0 ? 'Aucun vainqueur' : snapshot.winners.length === 2 ? 'Egalite' : `Victoire du Bot ${snapshot.winners[0].slice(-1)}`}</p><small>{snapshot.endReason}</small></section>}
-      {Object.values(snapshot.bots).filter(bot => perspective === 'world' || perspective === bot.id).map(bot => <BotPanel key={bot.id} bot={bot} winner={snapshot.winners.includes(bot.id)} />)}
+      {Object.values(snapshot.bots).filter(bot => perspective === 'world' || perspective === bot.id).map(bot => <BotPanel key={bot.id} bot={bot} winner={snapshot.winners.includes(bot.id)} expert={expert} events={snapshot.events} onOpenExpert={() => setExpertBotId(bot.id)} />)}
+      {expert && <>
+        <div className="expert-bot-switch" aria-label="Bot analyse">{Object.values(snapshot.bots).map(bot => <button key={bot.id} aria-pressed={expertBotId === bot.id} onClick={() => setExpertBotId(bot.id)} title={`Analyser le Bot ${bot.id.slice(-1)}`} aria-label={`Analyser le Bot ${bot.id.slice(-1)}`}><BotIcon size={16} /><span>{bot.id.slice(-1)}</span></button>)}</div>
+        <ExpertBotView bot={expertBot} events={snapshot.events} onClose={() => setExpert(false)} />
+      </>}
     </aside>
   </main>;
 }

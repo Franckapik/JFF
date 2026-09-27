@@ -47,13 +47,13 @@ export class SessionHost {
     private readonly initialSeed = Date.now() >>> 0
   ) {}
 
-  snapshot(error: string | null = null): SessionResponse {
+  snapshot(error: string | null = null, afterEventSequence = 0): SessionResponse {
     return {
       protocol: 1,
       type: error ? "ERROR" : "STATE",
       instanceId: this.instanceId,
       gameId: this.gameId,
-      snapshot: this.session?.getSnapshot() ?? null,
+      snapshot: this.session?.getSnapshot(afterEventSequence) ?? null,
       error,
     };
   }

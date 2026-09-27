@@ -61,8 +61,44 @@ export interface SessionLog {
   botId: BotId | null;
   message: string;
 }
+export type SessionEventCategory = "decision" | "movement" | "incident" | "resource" | "maintenance" | "economy" | "lifecycle";
+export type SessionEventType =
+  | "session.started"
+  | "operation.started"
+  | "movement.arrived"
+  | "danger.impact"
+  | "scan.completed"
+  | "drone.lost"
+  | "collection.completed"
+  | "resources.deposited"
+  | "fuel.refueled"
+  | "ship.repaired"
+  | "exploration.upgraded"
+  | "drone.replaced"
+  | "fuel.stranded"
+  | "cargo.lost"
+  | "rescue.completed"
+  | "bot.eliminated"
+  | "bot.finished"
+  | "session.finished"
+  | "session.blocked";
+export interface SessionEvent {
+  sequence: number;
+  time: number;
+  botId: BotId | null;
+  type: SessionEventType;
+  category: SessionEventCategory;
+  operation?: OperationKind;
+  coord?: Coord;
+  target?: Coord;
+  reason?: string;
+  resources?: Resources;
+  before?: Partial<Record<"fuel" | "damage" | "budget" | "score" | "radius", number>>;
+  delta?: Partial<Record<"fuel" | "damage" | "budget" | "score" | "radius", number>>;
+  after?: Partial<Record<"fuel" | "damage" | "budget" | "score" | "radius", number>>;
+}
 export interface SessionSnapshot {
-  schemaVersion: 2;
+  schemaVersion: 3;
   seed: number;
   revision: number;
   worldRevision: number;
@@ -78,4 +114,6 @@ export interface SessionSnapshot {
   winners: BotId[];
   endReason: string | null;
   logs: SessionLog[];
+  eventSequence: number;
+  events: SessionEvent[];
 }

@@ -278,6 +278,12 @@ describe("shared session", () => {
     expect(bot.damage).toBe(10);
     expect(bot.fuel).toBe(88);
     expect(bot.statistics.steps).toBe(2);
+    expect(session.getSnapshot().events).toContainEqual(expect.objectContaining({
+      type: "danger.impact",
+      botId: "bot-0",
+      coord: "-1,0",
+      delta: { damage: 10 },
+    }));
     session.assertInvariants();
     session.stop();
   });
@@ -327,6 +333,12 @@ describe("shared session", () => {
     expect(bot.known).toContain(target);
     expect(bot.damage).toBe(0);
     expect(bot.coord).toBe("0,0");
+    expect(session.getSnapshot().events).toContainEqual(expect.objectContaining({
+      botId: "bot-0",
+      type: "drone.lost",
+      category: "incident",
+      coord: target,
+    }));
     const singleAdvance = new GameSession(42, { world, bots });
     singleAdvance.advance(distance * RULES.stepDuration);
     expect({ ...session.getSnapshot(), revision: 0 }).toEqual({ ...singleAdvance.getSnapshot(), revision: 0 });
@@ -352,6 +364,10 @@ describe("shared session", () => {
     expect(snapshot.winners).toEqual(["bot-1"]);
     expect(snapshot.bots["bot-0"].state).toBe("eliminated");
     expect(snapshot.lostResources.food).toBe(20);
+    expect(snapshot.events.filter(event => event.botId === "bot-0")).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: "cargo.lost", reason: "elimination", resources: { food: 20, debris: 0, special: 0 } }),
+      expect.objectContaining({ type: "bot.eliminated", reason: "Vaisseau detruit" }),
+    ]));
     session.assertInvariants();
     session.stop();
   });
@@ -400,6 +416,11 @@ describe("shared session", () => {
     expect(snapshot.bots["bot-0"].coord).toBe("-3,0");
     expect(snapshot.bots["bot-0"].score).toBe(0);
     expect(snapshot.lostResources).toEqual({ food: 20, debris: 10, special: 1 });
+    expect(snapshot.events.filter(event => event.botId === "bot-0")).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: "fuel.stranded", coord: "-2,0" }),
+      expect.objectContaining({ type: "cargo.lost", reason: "remorquage", resources: { food: 20, debris: 10, special: 1 } }),
+      expect.objectContaining({ type: "rescue.completed", target: "-3,0" }),
+    ]));
     session.assertInvariants();
     session.stop();
   });
@@ -469,6 +490,10 @@ describe("shared session", () => {
     session.advance(1200);
     expect(session.getSnapshot().bots["bot-0"].fuel).toBe(100);
     expect(session.getSnapshot().bots["bot-0"].score).toBe(33);
+    expect(session.getSnapshot().events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: "resources.deposited", botId: "bot-0", resources: { food: 20, debris: 10, special: 3 } }),
+      expect.objectContaining({ type: "fuel.refueled", botId: "bot-0", after: { fuel: 100 } }),
+    ]));
     session.assertInvariants();
     session.stop();
   });
@@ -502,6 +527,13 @@ describe("session protocol", () => {
       expect(TestWorker.instances).toBe(1);
       emit(response);
       expect(useSessionStore.getState().status).toBe("connected");
+      expect(useSessionStore.getState().snapshot?.schemaVersion).toBe(3);
+      const initialEvents = response.snapshot!.events;
+      const additionalEvent = { ...initialEvents[0], sequence: response.snapshot!.eventSequence + 1, time: 100 };
+      const incremental = { ...response, snapshot: { ...response.snapshot!, eventSequence: additionalEvent.sequence, events: [additionalEvent] } };
+      emit(incremental);
+      emit(incremental);
+      expect(useSessionStore.getState().snapshot?.events).toEqual([...initialEvents, additionalEvent]);
       emit({ ...response, type: "DISCONNECTED", error: "Port expire" });
       expect(useSessionStore.getState().status).toBe("disconnected");
       expect(useSessionStore.getState().error).toBe("Port expire");
@@ -542,14 +574,19 @@ describe("session protocol", () => {
     expect(reset.gameId).not.toBe(first.gameId);
     expect(reset.snapshot!.seed).toBe(42);
     expect(reset.snapshot!.elapsed).toBe(0);
+    const cursor = reset.snapshot!.eventSequence;
+    expect(host.snapshot(null, cursor).snapshot!.events).toEqual([]);
+    host.advance(1000);
+    expect(host.snapshot(null, cursor).snapshot!.events.every(event => event.sequence > cursor)).toBe(true);
     expect(host.receive({ protocol: 1, type: "RESET", gameId: first.gameId, seed: 99 }).type).toBe("ERROR");
     expect(host.receive({ protocol: 1, type: "CONTROL", gameId: reset.gameId, command: "SPEED", speed: "8" }).type).toBe("ERROR");
     expect(host.receive(null).type).toBe("ERROR");
     expect(host.receive({ protocol: 1, type: ["PING"] }).type).toBe("ERROR");
     expect(host.receive({ protocol: 1, type: "CONTROL", gameId: reset.gameId, command: ["PAUSE"] }).type).toBe("ERROR");
     host.receive({ protocol: 1, type: "CONTROL", gameId: reset.gameId, command: "PAUSE" });
+    const pausedElapsed = host.snapshot().snapshot!.elapsed;
     expect(host.advance(10000)).toBe(false);
-    expect(host.snapshot().snapshot!.elapsed).toBe(0);
+    expect(host.snapshot().snapshot!.elapsed).toBe(pausedElapsed);
     host.stop();
   });
 });

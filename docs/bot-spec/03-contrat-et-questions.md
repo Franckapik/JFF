@@ -30,7 +30,7 @@ Ces choix conservateurs sont desormais valides, implementes et testes :
 - Distinction entre tentatives de collecte, collectes non vides et tuiles distinctes. Quantites prelevees cumulees par bot et par coordonnee, meme apres depot ou perte.
 - Vue individuelle du panneau du bot selectionne ; diagnostic de provenance et consommation cumulee de carburant.
 - Etat de session `blocked` si les objectifs ou le retour final sont impossibles. Pas de victoire artificielle, de destruction inventee ni de conversion gratuite de cargaison en score. Le temps s'arrete ; export et nouvelle partie restent disponibles.
-- Snapshot `schemaVersion: 2`, protocole de commandes toujours 1. Un ancien worker est refuse avec une erreur recuperable : fermer ses anciens onglets avant reconnexion. Pas de second monde local de secours.
+- Snapshot `schemaVersion: 3` avec evenements metier structures pour le mode expert, protocole de commandes toujours 1. Un ancien worker est refuse avec une erreur recuperable : fermer ses anciens onglets avant reconnexion. Pas de second monde local de secours.
 
 Le point d'entree executable est [session.ts](../../src/engine/session.ts), les valeurs sont dans [rules.ts](../../src/engine/rules.ts), les checks dans [session.test.ts](../../src/engine/session.test.ts).
 

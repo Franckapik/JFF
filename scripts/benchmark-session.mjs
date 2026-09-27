@@ -34,12 +34,14 @@ try {
     const durations = [];
     let maxBytes = 0;
     let snapshot;
+    let eventSequence = 0;
     try {
       for (let tick = 0; tick < 20000; tick++) {
         const started = performance.now();
         session.advance(100);
         session.assertInvariants();
-        snapshot = session.getSnapshot();
+        snapshot = session.getSnapshot(eventSequence);
+        eventSequence = snapshot.eventSequence;
         maxBytes = Math.max(maxBytes, Buffer.byteLength(JSON.stringify(snapshot)));
         durations.push(performance.now() - started);
         if (snapshot.phase === "finished") break;
@@ -79,7 +81,7 @@ try {
   visit(profile.head);
   const report = {
     measuredAt: new Date().toISOString(), node: process.version, platform: `${os.platform()} ${os.arch()}`, cpu: os.cpus()[0]?.model,
-    methodology: { tick: "100 logical ms + invariants + snapshot clone + JSON serialization; seed 42; sampling disabled",
+    methodology: { tick: "100 logical ms + invariants + incremental-event snapshot clone + JSON serialization; seed 42; sampling disabled",
       memory: "Sequential complete games, actors stopped, GC after each batch; retained heap, not total allocation rate",
       allocation: "Separate run of 10 games; V8 sampling at 32 KiB including collected objects; statistical estimate, not exact byte accounting; locations are transformed SSR frames, not source lines" },
     timings, memory: { games, wallMs: memoryWallMs, samples: heapSamples,
