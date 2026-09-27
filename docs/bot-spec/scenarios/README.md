@@ -1,8 +1,8 @@
 # Scenarios du socle valide
 
 Les dix fichiers `.feature` expriment les [decisions Q01-Q20 et les premieres evolutions](../03-contrat-et-questions.md)
-avec des effets observables et des identifiants stables. Ils contiennent 65
-scenarios et 76 cas apres expansion des exemples.
+avec des effets observables et des identifiants stables. Ils contiennent 67
+scenarios et 78 cas apres expansion des exemples.
 
 L'[audit de la visibilite et du gameplay](../05-audit-visibilite-gameplay.md)
 recapitule les regles appliquees et les limites encore presentes.

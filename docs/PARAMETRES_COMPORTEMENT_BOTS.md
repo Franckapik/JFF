@@ -27,8 +27,9 @@ session et toutes les vues observent donc les memes reglages.
 | Capacite | `capacity.debris` | 1 800 | Limite independante de debris transportes. |
 | Capacite | `capacity.special` | 3 | Limite independante de ressources speciales. |
 | Carte | `mapRadius` | 3 | Produit une carte hexagonale de 37 cases. |
-| Exploration | `maxExplorationRadius` | 3 | Rayon maximal du drone. Le rayon initial vaut 1. |
-| Economie | `upgradePrices` | 50, puis 100 | Cout des passages aux rayons 2 et 3. |
+| Exploration | `initialExplorationRadius` | 1 | Rayon initial du drone et rayon conserve autour du vaisseau apres sa destruction. |
+| Exploration | `maxExplorationRadius` | 3 | Rayon maximal du drone. |
+| Economie | `upgradePrices` | 50, puis 100 | Cout des passages aux rayons 2 et 3, a racheter apres chaque perte du drone. |
 | Economie | `dronePrice` | 50 | Cout de remplacement d'un drone perdu. |
 | Carburant | `fuelCapacity` | 100 | Reserve commune initiale du vaisseau et du drone ; niveau apres un plein. |
 | Carburant | `fuelPerStep` | 2 | Consommation du vaisseau par case parcourue, aller et retour. |

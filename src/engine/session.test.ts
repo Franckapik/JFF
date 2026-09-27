@@ -448,6 +448,7 @@ describe("shared session", () => {
     session.advance(1);
     const bot = session.getSnapshot().bots["bot-0"];
     expect(bot.droneAvailable).toBe(false);
+    expect(bot.radius).toBe(RULES.initialExplorationRadius);
     expect(bot.statistics.droneLosses).toBe(1);
     expect(bot.statistics.scans).toBe(1);
     expect(bot.known).toContain(target);
@@ -466,6 +467,55 @@ describe("shared session", () => {
     singleAdvance.advance(distance * RULES.stepDuration);
     expect({ ...session.getSnapshot(), revision: 0 }).toEqual({ ...singleAdvance.getSnapshot(), revision: 0 });
     singleAdvance.stop();
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("resets drone vision after a loss and charges each replacement upgrade again", () => {
+    const world = generateWorld(42, 4);
+    for (const tile of Object.values(world)) tile.resources = emptyResources();
+    world["-2,0"].kind = "danger";
+    world["-2,0"].walkable = true;
+    world["-2,1"].kind = "resource";
+    world["-2,1"].walkable = true;
+    world["-2,1"].resources.food = 20;
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    Object.assign(bots["bot-0"], {
+      radius: 2,
+      score: 200,
+      budget: 200,
+      deposited: { food: 200, debris: 0, special: 0 },
+    });
+    bots["bot-0"].known = Object.values(world).map(tile => tile.coord).filter(coord => coord !== "-2,0" && coord !== "-2,1");
+    bots["bot-1"].damage = 100;
+    const session = new GameSession(42, { world, bots });
+    expect(activeCoords(world, session.getSnapshot().bots["bot-0"])).toContain("-2,0");
+
+    session.advance(2 * RULES.stepDuration);
+    let bot = session.getSnapshot().bots["bot-0"];
+    expect(bot.droneAvailable).toBe(false);
+    expect(bot.radius).toBe(1);
+    expect(activeCoords(world, bot)).not.toContain("-2,0");
+    expect(bot.explored).toContain("-2,0");
+    expect(bot.operation?.kind).toBe("purchase");
+    expect(session.getSnapshot().events).toContainEqual(expect.objectContaining({ type: "drone.lost", after: { radius: 1 } }));
+
+    session.advance(RULES.purchaseDuration);
+    bot = session.getSnapshot().bots["bot-0"];
+    expect(bot.droneAvailable).toBe(true);
+    expect(bot.radius).toBe(1);
+    expect(bot.budget).toBe(150);
+
+    session.advance(RULES.purchaseDuration);
+    bot = session.getSnapshot().bots["bot-0"];
+    expect(bot.radius).toBe(2);
+    expect(bot.budget).toBe(100);
+
+    session.advance(RULES.purchaseDuration);
+    bot = session.getSnapshot().bots["bot-0"];
+    expect(bot.radius).toBe(3);
+    expect(bot.budget).toBe(0);
+    expect(bot.score).toBe(200);
     session.assertInvariants();
     session.stop();
   });

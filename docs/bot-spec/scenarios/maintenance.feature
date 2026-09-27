@@ -80,3 +80,12 @@ Fonctionnalité: Services locaux et achats individuels
     Alors la réserve commune est encore incomplète
     Quand la dernière milliseconde s'écoule
     Alors la réserve commune est pleine après 1200 ms, soit trois fois un pas
+
+  @MAINT-09
+  Scénario: Racheter les extensions après remplacement du drone
+    Étant donné un drone de rayon 3 détruit par un danger
+    Et un bot revenu à sa base avec assez de budget
+    Quand il achète un nouveau drone pour 50 de budget
+    Alors son drone est disponible avec un rayon de 1
+    Quand il rachète successivement les extensions pour 50 puis 100 de budget
+    Alors le rayon passe à 2 puis à 3 et chaque achat est débité

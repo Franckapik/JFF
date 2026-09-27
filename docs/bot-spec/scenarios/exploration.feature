@@ -41,7 +41,7 @@ Fonctionnalité: Exploration depuis le vaisseau mobile
     Quand il cherche une nouvelle zone
     Alors il peut rejoindre une frontière proche par des pas voisins
     Et il découvre chaque case où arrive son vaisseau
-    Et sans drone le rayon de vision du vaisseau reste actif
+    Et sans drone le rayon initial de vision 1 reste actif autour du vaisseau
     Et il ne lance aucune opération de scan sans drone
 
   @EXP-05

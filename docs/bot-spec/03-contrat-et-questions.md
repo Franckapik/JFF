@@ -19,9 +19,10 @@ sans certification sur telephone.
   et obstacles sont publics et exclus des objectifs de scan. Un vaisseau
   continue a decouvrir la case ou il arrive si son drone est perdu.
 - Le plateau affiche par defaut la vision du Bot 0 et permet de choisir celle
-  du Bot 1. Le champ de vision actuel reste centre sur le vaisseau, avec son
-  rayon individuel meme si le drone est perdu ou en vol. Le trajet du drone ne
-  modifie ni le brouillard ni la memoire du terrain. Hors de ce champ, une case
+  du Bot 1. Le champ de vision actuel reste centre sur le vaisseau et utilise
+  le rayon du drone (1 a 3), meme pendant son vol. Si le drone est perdu, ce
+  rayon retombe a 1 autour du vaisseau ; le trajet du drone ne modifie ni le
+  brouillard ni la memoire du terrain. Hors de ce champ, une case
   jamais exploree est sombre, meme si elle contient un service ou un
   obstacle ; une case exploree garde seulement le souvenir assombri du terrain.
   Les obstacles visibles coupent la ligne de vue hexagonale : les cases derriere
@@ -53,8 +54,11 @@ sans certification sur telephone.
 - Un scan consomme 1 carburant commun par hexagone parcouru par le drone a
   l'aller et au retour ; une cible dont l'aller-retour depasse la reserve
   commune est exclue.
-- Rayon initial 1, extensions individuelles a 2 pour 50 puis 3 pour 100 de
-  budget. Un drone perdu est remplace uniquement a sa base pour 50 de budget.
+- Rayon initial du drone 1, extensions individuelles a 2 pour 50 puis 3 pour
+  100 de budget. Un drone perdu fait retomber le rayon de visibilite a 1 ; le
+  terrain deja explore reste en memoire. Son remplacement a la base coute 50
+  de budget et repart au rayon 1. Chaque extension doit etre rachetee pour
+  regagner les rayons 2 et 3.
 - A sa base, un service gratuit de 1 200 ms combine depot et reparation, sans
   ravitaillement. Seules les stations carburant remplissent la reserve commune.
   Les stations publiques ne fournissent que leur service specialise. Le

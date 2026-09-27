@@ -32,11 +32,11 @@ export function createBot(id: BotId, world: World, seed: number): Bot {
     score: 0,
     fuel: RULES.fuelCapacity,
     damage: 0,
-    radius: 1,
+    radius: RULES.initialExplorationRadius,
     droneAvailable: true,
     known: [base],
     scanned: [],
-    explored: activeCoords(world, { coord: base, radius: 1 }),
+    explored: activeCoords(world, { coord: base, radius: RULES.initialExplorationRadius }),
     randomState: (seed ^ (id === "bot-0" ? 0x9e3779b9 : 0x85ebca6b)) >>> 0,
     operation: null,
     route: [],
@@ -234,7 +234,7 @@ export class GameSession {
       price !== undefined &&
       bot.budget >= price &&
       bot.droneAvailable &&
-      unknown.some(candidate => hexDistance(bot.coord, candidate.coord) === bot.radius + 1) &&
+      unknown.some(candidate => hexDistance(bot.coord, candidate.coord) > bot.radius && hexDistance(bot.coord, candidate.coord) <= RULES.maxExplorationRadius) &&
       !unknown.some(candidate => hexDistance(bot.coord, candidate.coord) <= bot.radius)
     ) {
       this.launch(bot, "upgrade", bot.base, RULES.purchaseDuration, `Extension du rayon a ${bot.radius + 1}`);
@@ -278,7 +278,7 @@ export class GameSession {
     if (cargoTotal > 0 && this.move(bot, bot.base, "base")) return;
     if (!isBase && ((price !== undefined && bot.budget >= price) || (!bot.droneAvailable && bot.budget >= RULES.dronePrice))) {
       const baseInterest = unknown.some(
-        candidate => hexDistance(bot.base, candidate.coord) > bot.radius && hexDistance(bot.base, candidate.coord) <= bot.radius + 1
+        candidate => hexDistance(bot.base, candidate.coord) > bot.radius && hexDistance(bot.base, candidate.coord) <= RULES.maxExplorationRadius
       );
       if ((baseInterest || !bot.droneAvailable) && this.move(bot, bot.base, "base")) return;
     }
@@ -347,12 +347,13 @@ export class GameSession {
           scanned: [...new Set([...bot.scanned, operation.target])],
           explored: bot.explored,
           droneAvailable: !destroyed,
+          radius: destroyed ? RULES.initialExplorationRadius : bot.radius,
           statistics: { ...bot.statistics, scans: bot.statistics.scans + 1, fuelUsed: bot.statistics.fuelUsed + cost, droneLosses: bot.statistics.droneLosses + Number(destroyed) },
         };
         this.emit({ type: "scan.completed", category: "movement", botId: bot.id, operation: operation.kind, coord: bot.coord, target: operation.target, before: { fuel: bot.fuel }, delta: { fuel: -cost }, after: { fuel: next.fuel } });
         if (destroyed) {
           this.log(bot.id, "Drone perdu sur une case dangereuse");
-          this.emit({ type: "drone.lost", category: "incident", botId: bot.id, coord: operation.target, reason: "case dangereuse" });
+          this.emit({ type: "drone.lost", category: "incident", botId: bot.id, coord: operation.target, reason: "case dangereuse", before: { radius: bot.radius }, delta: { radius: next.radius - bot.radius }, after: { radius: next.radius } });
         }
         break;
       }
@@ -424,7 +425,7 @@ export class GameSession {
       }
       case "purchase":
         if (bot.coord !== bot.base || bot.droneAvailable || bot.budget < RULES.dronePrice) throw new Error("Invalid drone purchase");
-        next = { ...next, droneAvailable: true, budget: bot.budget - RULES.dronePrice, spent: bot.spent + RULES.dronePrice };
+        next = { ...next, droneAvailable: true, radius: RULES.initialExplorationRadius, budget: bot.budget - RULES.dronePrice, spent: bot.spent + RULES.dronePrice };
         this.emit({ type: "drone.replaced", category: "economy", botId: bot.id, coord: bot.coord, before: { budget: bot.budget }, delta: { budget: -RULES.dronePrice }, after: { budget: next.budget } });
         break;
       case "rescue":
@@ -589,8 +590,9 @@ export class GameSession {
         bot.fuel > RULES.fuelCapacity ||
         bot.damage < 0 ||
         bot.damage > 100 ||
-        bot.radius < 1 ||
-        bot.radius > RULES.maxExplorationRadius
+        bot.radius < RULES.initialExplorationRadius ||
+        bot.radius > RULES.maxExplorationRadius ||
+        (!bot.droneAvailable && bot.radius !== RULES.initialExplorationRadius)
       )
         throw new Error("Bot bounds failed");
       accounted = addResources(accounted, addResources(bot.cargo, bot.deposited));

@@ -31,6 +31,7 @@ Fonctionnalité: Dangers statiques et perte du drone à l'arrivée
     Et le vaisseau distant conserve sa position et ses dégâts
     Et la réserve commune perd seulement le coût de l'aller du drone jusqu'au danger
     Et l'opération de scan se termine sans attendre un scan ou retour fictif
+    Et le rayon de visibilité retombe à 1 autour du vaisseau
     Exemples:
       | distance | avant |
       | 1        | 399   |
@@ -44,3 +45,11 @@ Fonctionnalité: Dangers statiques et perte du drone à l'arrivée
     Alors leurs coordonnées et leur type restent inchangés
     Et aucune collision due au déplacement d'un danger n'est émise
     Et aucune base ou station n'est transformée spontanément en danger
+
+  @DANGER-05
+  Scénario: Perdre les extensions avec le drone sans effacer le terrain mémorisé
+    Étant donné un drone de rayon 3 et une case dangereuse visible au-delà du rayon initial
+    Quand le drone atteint ce danger et est détruit
+    Alors le rayon de vision autour du vaisseau vaut immédiatement 1
+    Et les cases explorées hors de ce rayon ne gardent que le souvenir assombri du terrain
+    Et les ressources et vaisseaux présents sur ces cases ne sont plus visibles
