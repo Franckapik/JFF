@@ -1,228 +1,107 @@
-# Contrat de reference et decisions validees
+# Contrat metier valide
 
-Date : 26 septembre 2026. Etat : decisions Q01-Q20 validees par le concepteur.
+Le concepteur a valide les decisions Q01-Q20 le 26 septembre 2026. La
+reference de cloture est le socle local Linux/Chromium ; l'affichage mobile a
+ete emule, sans certification sur telephone. Les regles ci-dessous sont
+actuelles. Toute evolution demande une nouvelle decision explicite.
 
-Ce document accompagne la [feuille de route](../AUDIT-2026-09-26.md#feuille-de-route).
-Le concepteur a ensuite explicitement valide toutes les recommandations : Q12 = B ; toutes les autres reponses = A.
-Les dix fichiers de scenarios sont reecrits selon ces decisions. Leur origine et leur niveau de verification sont documentes dans le [registre de migration](scenarios/README.md).
-La cloture porte sur le socle actuel et la cible locale Linux/Chromium, pas sur les [extensions futures](04-extensions.md).
+## Monde, bots et ressources
 
-## Contrat deja valide
+- Deux bots concurrents partagent un monde unique. Connaissance, score, budget,
+  cargaison et progression restent individuels. Les bases sont fixes,
+  symetriques et vides de ressources au depart. La carte initiale est
+  symetrique et connectee ; aucune validation generique de cartes arbitraires
+  n'est promise.
+- Le drone reste rattache au vaisseau mobile et son rayon est centre sur lui.
+  Ressources, cases vides et dangers inconnus sont scannables. Bases, stations
+  et obstacles sont publics et exclus des objectifs de scan. Un vaisseau
+  continue a decouvrir la case ou il arrive si son drone est perdu.
+- Les intentions realisables sont arbitrees avec un choix probabiliste, apres
+  les urgences. Les collectes possibles sont classees notamment par quantite
+  et longueur de trajet. Un compartiment plein peut declencher un retour meme
+  si les autres ont encore de la place.
+- Capacites independantes : nourriture 200, debris 1 800, special 3. Une
+  collecte peut etre partielle. Les transactions du stock partage sont
+  serialisees. Le depot a sa propre base credite score cumule et budget ; les
+  achats ne debitent que le budget.
 
-- Deux bots en competition dans un monde partage ; connaissance, score, budget et progression individuels.
-- Drone rattache au vaisseau mobile ; rayon centre sur celui-ci. Choix probabiliste entre intentions faisables, maintenance urgente prioritaire.
-- Compartiments independants : nourriture 200, debris 1800, special 3. Collectes partielles possibles, sans duplication du stock partage.
-- Depot a sa propre base : credit du score cumule et du budget. Achats sur le budget uniquement : rayon 1 vers 2 pour 50, puis 2 vers 3 pour 100, maximum 3.
-- Depot, carburant, reparation et achats a sa base ; stations specialisees pour carburant ou reparation. Services gratuits et locaux.
-- Chaque pas coute 1 carburant, aller et retour. Panne loin d'un point de carburant : remorquage, perte declaree de la cargaison, reprise.
-- Degats a 100 : elimination definitive. Fin normale : epuisement des ressources accessibles, derniers retours et depots, comparaison des scores deposes.
-- Monde gere par une session et une horloge ; le rendu ne decide pas. Tests automatises cibles autorises.
-- Sur un danger, le drone est perdu et la cible revelee des son arrivee, sans attendre un scan ou retour fictif. Le vaisseau distant reste indemne.
+## Deplacements, services et dangers
 
-Invariant physique, **pour chaque ressource** : stock restant + cargaisons + depots cumules + pertes explicites = stock initial.
-Invariant financier : budget + depenses = score depose. Le registre des collectes est une provenance, pas un stock a ajouter au bilan.
+- Chaque pas du vaisseau consomme 1 carburant, aller comme retour. Le
+  chargement consomme du temps, sans carburant supplementaire. Les trajets
+  suivent des cases adjacentes praticables ; une cible sans chemin reste
+  inaccessible.
+- Rayon initial 1, extensions individuelles a 2 pour 50 puis 3 pour 100 de
+  budget. Un drone perdu est remplace uniquement a sa base pour 50 de budget.
+- A sa base, un service gratuit de 1 200 ms combine depot, plein et reparation.
+  Les stations publiques ne fournissent que leur service specialise. Le
+  carburant urgent est a 20 ou sous le cout d'acces au service plus une
+  reserve de 3 ; plein opportuniste en station sous 30. La reparation devient
+  prioritaire a 50 degats ; entre deux besoins distants, elle est recherchee
+  avant le ravitaillement.
+- Arrive sur un danger, le drone est perdu et la cible est revelee
+  immediatement, sans scan ni retour fictif. Le vaisseau distant est indemne.
+  Le vaisseau recoit 10 degats en entrant sur une case dangereuse ; a 100
+  degats, il est elimine definitivement.
+- Une panne de carburant loin d'un service provoque un remorquage de 5 000 ms
+  vers sa base avec perte explicite de la cargaison. La pause est globale et
+  reprend les operations sans les annuler ; aucune interruption individuelle
+  d'urgence n'est incluse.
 
-## Corrections de cette tranche
+## Fin, comptages et invariants
 
-Ces choix conservateurs sont desormais valides, implementes et testes :
+- Fin normale : ressources accessibles epuisees, puis derniers retours et
+  depots. Seuls les bots survivants peuvent gagner ; les meilleurs scores ex
+  aequo gagnent ensemble. Aucun survivant ou session `blocked` : aucun
+  vainqueur. `blocked` arrete le temps sans depot a distance, destruction ou
+  victoire artificiels ; export et nouvelle partie restent possibles.
+- Distinguer tentatives de collecte terminees, transferts non vides et tuiles
+  distinctes ayant fourni des ressources. La provenance cumule les quantites
+  par bot et tuile, meme apres depot ou perte.
+- Invariant physique, pour chaque ressource : stock du monde + cargaisons +
+  depots cumules + pertes explicites = stock initial. Invariant financier :
+  budget + depenses = score depose. La provenance n'est pas un stock a
+  additionner au bilan.
 
-- Services publics exclus des objectifs de scan ; ils restent traversables et visibles dans l'inspecteur.
-- Distinction entre tentatives de collecte, collectes non vides et tuiles distinctes. Quantites prelevees cumulees par bot et par coordonnee, meme apres depot ou perte.
-- Vue individuelle du panneau du bot selectionne ; diagnostic de provenance et consommation cumulee de carburant.
-- Etat de session `blocked` si les objectifs ou le retour final sont impossibles. Pas de victoire artificielle, de destruction inventee ni de conversion gratuite de cargaison en score. Le temps s'arrete ; export et nouvelle partie restent disponibles.
-- Snapshot `schemaVersion: 3` avec evenements metier structures pour le mode expert, protocole de commandes toujours 1. Un ancien worker est refuse avec une erreur recuperable : fermer ses anciens onglets avant reconnexion. Pas de second monde local de secours.
+## Durees et interfaces
 
-Le point d'entree executable est [session.ts](../../src/engine/session.ts), les valeurs sont dans [rules.ts](../../src/engine/rules.ts), les checks dans [session.test.ts](../../src/engine/session.test.ts).
+Pas 400 ms ; scan 800 ms hors trajet du drone ; collecte 1 000 ms ; service
+1 200 ms ; achat ou extension 1 000 ms ; remorquage 5 000 ms. Les vitesses
+1x/2x/4x/8x accelerent la meme horloge. Le terrain, le diagnostic et le mode
+expert montrent l'etat reel, la cible, les comptes et les evenements. Un graphe
+anime complet des transitions reste une extension.
 
-## Historique du questionnaire
+Le snapshot actif est en `schemaVersion: 3` ; le protocole de commandes reste
+en version 1. Le moteur est dans [session.ts](../../src/engine/session.ts),
+les valeurs dans [rules.ts](../../src/engine/rules.ts), les controles dans
+[session.test.ts](../../src/engine/session.test.ts). Les dix fichiers
+[`.feature`](scenarios/README.md) decrivent ces effets ; leur syntaxe et leurs
+identifiants sont controles, mais leurs etapes ne sont pas executees.
 
-Les options ci-dessous conservent le raisonnement pedagogique ayant conduit aux decisions.
-Elles ne sont plus ouvertes : le registre des reponses fait foi. Une evolution ulterieure demande une nouvelle decision explicite.
+## Decisions Q01-Q20
 
-### Perimetre et preuve
+| ID | Decision confirmee |
+| --- | --- |
+| Q01 | Socle actuel ; fonctions absentes en extensions. |
+| Q02 | Reference locale Linux/Chromium, mobile emule. |
+| Q03 | Bases fixes et symetriques. |
+| Q04 | Bases sans ressources initiales. |
+| Q05 | Symetrie initiale sans validateur de cartes arbitraires. |
+| Q06 | Services et obstacles publics non scannables. |
+| Q07 | Decouverte possible par le vaisseau sans drone. |
+| Q08 | Heuristiques actuelles de collecte et de retour. |
+| Q09 | Seuils et priorites de maintenance ci-dessus. |
+| Q10 | Service gratuit combine a sa base en 1 200 ms. |
+| Q11 | Aucun carburant facture au chargement. |
+| Q12 | Perte du drone et decouverte du danger des l'arrivee. |
+| Q13 | Remplacement du drone a sa base pour 50 de budget. |
+| Q14 | Pause globale ; interruptions individuelles differees. |
+| Q15 | Blocage explicite sans vainqueur ou destruction artificielle. |
+| Q16 | Survivants seuls eligibles ; egalites partagees. |
+| Q17 | Durees et horloge unique ci-dessus. |
+| Q18 | Tentatives, transferts non vides et tuiles distinctes separes. |
+| Q19 | Diagnostic actuel ; graphe complet en extension. |
+| Q20 | Aucune extension supplementaire dans cette cloture. |
 
-#### Q01. Quelle version cloturons-nous ?
-
-**Actuel :** socle jouable avec deux bots ; pas de dangers mobiles, flotte de drones, sauvegarde persistante ni interruption individuelle d'urgence.
-**Exemple :** une ancienne exigence reclame un danger qui se deplace alors que le nouveau moteur utilise un terrain fixe.
-**A :** cloturer le socle actuel et inscrire ces fonctions comme extensions. **B :** les exiger pour cette version, apres specification.
-**Recommandation : A**, pour distinguer stabilite du socle et enrichissement fonctionnel. B maintient la feuille de route ouverte.
-
-#### Q02. Quels appareils font foi ?
-
-**Actuel :** mesures sur ce poste Linux, Node 22.20 et Chromium integre ; affichage mobile emule. Aucun telephone physique certifie.
-**Exemple :** un ecran de 390 px sur ce PC ne mesure pas les performances d'un smartphone.
-**A :** accepter cette reference locale, autres cibles dans une campagne distincte. **B :** fournir navigateurs, appareils et budgets obligatoires avant cloture.
-**Recommandation : A pour le prototype**, sans transformer l'emulation en certification mobile.
-
-### Carte et connaissance
-
-#### Q03. Departs fixes ou variables ?
-
-**Actuel :** bases symetriques en bord de carte, positions fixes pour une taille donnee ; la graine change terrain et ressources.
-**Exemple :** rejouer une autre graine conserve les positions des deux bases.
-**A :** conserver. **B :** positions variables selon la graine, avec distances et acces minimaux a definir.
-**Recommandation : A** pour la reference reproductible. Concerne S02 et S38.
-
-#### Q04. Y a-t-il des ressources a la base au depart ?
-
-**Actuel :** zero ; aucune base n'est une tuile de collecte. Les anciens textes se contredisent sur une reserve de 400.
-**A :** zero. **B :** reserve initiale, en precisant sa composition, son proprietaire et si elle appartient au bilan physique.
-**Recommandation : A**, sans credit gratuit implicite. Concerne S03.
-
-#### Q05. Quelle garantie d'equite ?
-
-**Actuel :** symetrie de la carte initiale et connectivite testees, pas de validateur generique de cartes arbitraires.
-**Exemple :** des scores finaux differents ne prouvent pas une carte inegale : les decisions des bots peuvent diverger.
-**A :** accepter la symetrie comme garantie de cette version. **B :** definir des tolerances de distances, stocks et obstacles, puis un rapport et des tentatives bornees de generation.
-**Recommandation : A** tant qu'aucun import de carte arbitraire n'est requis. Concerne S05-S07.
-
-#### Q06. Que faut-il envoyer scanner ?
-
-**Actuel apres correction :** ressources, cases vides et dangers inconnus ; pas les bases, stations ou obstacles publics.
-**Exemple :** une station connue par sa fonction ne consomme plus un aller-retour de drone.
-**A :** confirmer cette separation. **B :** cacher certains services et autoriser leur decouverte, en precisant lesquels.
-**Recommandation : A** ; B impose d'aligner aussi l'affichage et la recherche des services. Concerne S09.
-
-#### Q07. Que sait le vaisseau sans drone ?
-
-**Actuel :** il decouvre la case ou il arrive et peut continuer a chercher des frontieres ; les bots ne partagent pas leurs decouvertes.
-**Exemple :** perdre le drone n'interdit pas au vaisseau de decouvrir une ressource en s'y deplacant.
-**A :** conserver. **B :** interdire de nouvelles decouvertes sans drone, mais permettre les services et la collecte deja connue.
-**Recommandation : A**, pour eviter un blocage automatique sans budget de remplacement. Concerne S10 et S26.
-
-### Decisions et services
-
-#### Q08. Comment choisir et quand decharger ?
-
-**Actuel :** meilleures collectes classees par quantite / longueur de trajet ; arbitrage probabiliste avec le scan. Un compartiment plein et une cible ailleurs peuvent provoquer le retour meme si un autre compartiment reste libre.
-**Exemple :** special plein, debris encore disponibles : le retour n'attend pas obligatoirement de remplir tous les compartiments.
-**A :** conserver ces heuristiques. **B :** preciser une autre priorite et la condition de retour.
-**Recommandation : A comme reference initiale**, sans figer des pourcentages de rendement non mesures. Concerne S08, S14-S15 et S19.
-
-#### Q09. Quels seuils declenchent la maintenance ?
-
-**Actuel :** reparation a partir de 50 degats ; carburant urgent a 20 ou sous le cout d'acces au service + reserve de 3. Sur une station carburant, service automatique sous 30 ; reparation prioritaire entre deux besoins distants.
-**Exemple :** 28 carburants n'imposent pas toujours un retour, mais 50 degats declenchent une recherche de reparation.
-**A :** conserver. **B :** donner les seuils et la priorite quand les deux besoins coexistent.
-**Recommandation : A**, sous reserve des tests de trajets et de reserve. Concerne S20 et S28.
-
-#### Q10. Un passage a la base est-il un service combine ?
-
-**Actuel :** en 1 200 ms, depot complet, plein et reparation complete. Une station specialisee ne rend que son service.
-**A :** conserver. **B :** separer depot, plein et reparation, avec ordre, durees et possibilite d'interruption a definir.
-**Recommandation : A**, sans modifier leur gratuite deja validee. Concerne S21.
-
-#### Q11. Charger consomme-t-il aussi du carburant ?
-
-**Actuel :** seuls les deplacements en consomment ; la collecte coute du temps.
-**Exemple :** deux chargements sur place ne retirent pas de carburant.
-**A :** conserver. **B :** ajouter un cout, a chiffrer ; la reserve de retour devra l'anticiper.
-**Recommandation : A** pour la lisibilite du bilan de deplacement. Concerne S16.
-
-### Dangers et interruptions
-
-#### Q12. Quand le drone est-il perdu, et que revele son echec ?
-
-**Avant decision :** perte et decouverte en fin de l'operation complete. **Actuel :** perte et decouverte des l'arrivee sur le danger ; vaisseau distant indemne.
-**Exemple :** le danger apparait dans la connaissance meme si le drone est detruit.
-**A :** conserver. **B :** perte et decouverte des l'arrivee. **C :** perte a l'arrivee sans revelation complete, avec memorisation d'une cible a risque pour eviter de la retenter indefiniment.
-**Decision : B**, implementee dans l'ordonnanceur et testee aux distances 1, 2 et 3. Concerne S12, S24 et S26.
-
-#### Q13. Comment remplacer le drone perdu ?
-
-**Actuel :** uniquement a sa base, pour 50 de budget, sans toucher au score. Pas d'echange contre des degats.
-**A :** conserver. **B :** autoriser une solution sans budget ; preciser prix, contrepartie et limite.
-**Recommandation : A**. L'ancien remplacement contre +20 degats serait une nouvelle regle, pas une correction. Concerne S25.
-
-#### Q14. Faut-il une urgence distincte de la pause ?
-
-**Actuel :** pause globale, puis reprise exacte. Pas d'evenement d'urgence qui interrompe individuellement une operation de bot.
-**Exemple :** mettre en pause une collecte ne l'annule pas et ne declenche aucun secours.
-**A :** conserver la pause et differer l'interruption individuelle. **B :** ajouter celle-ci ; preciser les etats interruptibles et le sort de l'operation, du trajet, du temps restant et de la cargaison.
-**Recommandation : A pour cette version**. Concerne S23, S27 et S29 ; la pause ne sera jamais decrite comme une couverture des urgences historiques.
-
-#### Q15. Que faire si aucun objectif ou retour n'est faisable ?
-
-**Actuel apres correction :** session `blocked`, temps arrete, aucun vainqueur, cargaison et degats preserves, export/reset possibles.
-**Exemple :** un vaisseau a 90 degats devrait traverser un danger mortel pour rentrer ; cela ne justifie ni sa destruction fictive ni un depot a distance.
-**A :** conserver ce diagnostic explicite. **B :** definir une regle de secours exceptionnelle, differente de la panne de carburant. **C :** definir une defaite pour immobilisation, avec traitement explicite de la cargaison.
-**Recommandation : A tant que B/C ne sont pas definis**. Concerne S31 et la sortie attendue du lot 2.
-
-### Resultats et prochaines etapes
-
-#### Q16. Qui peut gagner et comment traiter les egalites ?
-
-**Actuel :** seuls les survivants sont eligibles ; tous les meilleurs scores ex aequo gagnent. Aucun survivant ou session bloquee : aucun vainqueur.
-**Exemple :** un bot elimine avec 500 points ne bat pas un survivant avec 300.
-**A :** conserver. **B :** definir un autre classement ou departage, sans modifier retroactivement le score depose.
-**Decision : A**, classement confirme. Concerne S34.
-
-#### Q17. Quelles durees garder ?
-
-**Actuel :** pas 400 ms ; scan 800 ms plus aller-retour ; collecte 1 000 ms ; service 1 200 ms ; achat/extension 1 000 ms ; remorquage 5 000 ms. Les vitesses 1x/2x/4x/8x accelerent la meme horloge.
-**A :** conserver. **B :** fournir les valeurs souhaitees. Ne pas confondre vitesse d'animation et duree metier.
-**Recommandation : A** avant une campagne d'equilibrage. Concerne S13, S19 et S33.
-
-#### Q18. Que signifie le mot "collecte" dans les scenarios ?
-
-**Actuel apres correction :** trois mesures distinctes : tentative terminee, transfert non vide, tuile distincte ayant fourni des ressources. La provenance cumule les quantites, pas les seuls stocks encore transportes.
-**Exemple :** deux bots arrivent sur 10 nourritures : deux tentatives, un transfert non vide, une tuile recoltee par le gagnant de la transaction.
-**A :** garder les trois termes explicites. **B :** preciser une autre mesure principale, sans fusionner ces faits differents.
-**Recommandation : A**. Concerne S17-S18 et S37.
-
-#### Q19. Quel diagnostic visuel est indispensable ?
-
-**Actuel :** etat reel, cible, compteurs, bilan, provenance, logs bornes et panneau individuel via Vision ; pas de graphe anime complet des transitions.
-**A :** accepter ces vues pour cette version. **B :** exiger le graphe derive de la machine active, en plus des tableaux.
-**Recommandation : A pour le socle**, B comme outil de conception suivant. Concerne S36-S37.
-
-#### Q20. Quelle extension faut-il specifier ensuite ?
-
-**Actuel :** terrain fixe, un drone par bot, pas de persistance apres fermeture du worker ; export JSON sans import. Le generateur accepte 217 tuiles, mais l'interface lance 37 tuiles.
-**A :** aucune extension pour cette cloture. **B :** dangers mobiles. **C :** plusieurs drones. **D :** sauvegarde/reprise. **E :** grandes cartes selectionnables. Plusieurs choix possibles, avec un ordre de priorite.
-**Recommandation : A pour cloturer, puis une seule priorite.** B exige cadence et collisions ; C ordonnancement et capacites ; D versionnement et restauration ; E cadrage et budgets sur l'appareil cible.
-
-## Registre des reponses validees
-
-| Question | Choix | Decision retenue                                              |
-| -------- | ----- | ------------------------------------------------------------- |
-| Q01      | A     | Socle actuel ; fonctions historiques absentes en extensions   |
-| Q02      | A     | Reference locale Linux/Chromium et viewport mobile emule      |
-| Q03      | A     | Bases fixes et symetriques                                    |
-| Q04      | A     | Bases sans ressources initiales                               |
-| Q05      | A     | Symetrie initiale, sans validateur de cartes arbitraires      |
-| Q06      | A     | Services et obstacles publics non scannables                  |
-| Q07      | A     | Decouverte possible par le vaisseau sans drone                |
-| Q08      | A     | Heuristiques actuelles de collecte et de dechargement         |
-| Q09      | A     | Seuils et priorites actuels de maintenance                    |
-| Q10      | A     | Service gratuit combine a sa base en 1200 ms                  |
-| Q11      | A     | Aucun carburant facture au chargement                         |
-| Q12      | B     | Perte et decouverte du danger des l'arrivee du drone          |
-| Q13      | A     | Remplacement a sa base pour 50 de budget uniquement           |
-| Q14      | A     | Pause globale ; interruptions individuelles differees         |
-| Q15      | A     | Blocage explicite, sans vainqueur ni destruction artificielle |
-| Q16      | A     | Survivants seuls eligibles ; egalites partagees               |
-| Q17      | A     | Durees actuelles et horloge unique                            |
-| Q18      | A     | Tentatives, transferts non vides et tuiles distinctes separes |
-| Q19      | A     | Diagnostic actuel ; graphe complet en extension               |
-| Q20      | A     | Aucune extension supplementaire dans cette cloture            |
-
-## Correspondance des scenarios reecrits
-
-| Fichier                                                                      | Decisions appliquees | Base executable actuelle                           |
-| ---------------------------------------------------------------------------- | -------------------- | -------------------------------------------------- |
-| [initialization.feature](scenarios/initialization.feature)                   | Q03-Q04              | creation, graine et protocole                      |
-| [initialization-fairness.feature](scenarios/initialization-fairness.feature) | Q03-Q05              | symetrie, connectivite, tailles limites            |
-| [exploration.feature](scenarios/exploration.feature)                         | Q06-Q08, Q12, Q17    | rayon mobile et connaissance individuelle          |
-| [collection.feature](scenarios/collection.feature)                           | Q08, Q11, Q18        | compartiments et transactions concurrentes         |
-| [maintenance.feature](scenarios/maintenance.feature)                         | Q09-Q11, Q13, Q17    | services locaux, achats individuels                |
-| [danger-tiles.feature](scenarios/danger-tiles.feature)                       | Q12-Q14, Q20         | degats par arrivee, perte de drone                 |
-| [emergency.feature](scenarios/emergency.feature)                             | Q14-Q15              | remorquage et elimination ; interruptions absentes |
-| [game-over.feature](scenarios/game-over.feature)                             | Q15-Q16              | derniers depots, egalite, blocage explicite        |
-| [multi-bot.feature](scenarios/multi-bot.feature)                             | Q16, Q18-Q19         | monde partage et arbitrage concurrent              |
-| [edge-cases.feature](scenarios/edge-cases.feature)                           | Q01-Q02, Q15, Q20    | pause, absence de chemin, limites et protocole     |
-
-Les evenements obsoletes ont ete remplaces par des effets observables. Chaque scenario dispose d'un identifiant stable ; les fonctions differees sont listees separement, sans promesse de livraison implicite.
-
-Les 43 tests Vitest ne sont **pas** une execution des fichiers `.feature`. `npm run scenarios:check` utilise le parseur officiel pour verifier les 10 fichiers, 56 identifiants et 67 cas decrits apres expansion des exemples. L'execution des etapes Gherkin reste une extension ; aucun taux de couverture Gherkin n'est revendique.
+Les fonctions futures sont decrites dans les [extensions](04-extensions.md).
+Les deliberations et anciennes versions demeurent consultables dans Git.

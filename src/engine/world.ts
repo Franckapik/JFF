@@ -1,5 +1,3 @@
-import { findPath } from "../core/spatial/pathfinding";
-
 import { addResources, emptyResources, type Resources } from "./resources";
 
 export type Coord = `${number},${number}`;
@@ -51,7 +49,28 @@ export function nextRandom(state: number): { state: number; value: number } {
 }
 
 export function pathBetween(world: World, from: Coord, to: Coord): Coord[] {
-  return findPath(from, to, world);
+  if (!world[from]?.walkable || !world[to]?.walkable) return [];
+  const queue: Coord[] = [from];
+  const parents = new Map<Coord, Coord | null>([[from, null]]);
+  for (let head = 0; head < queue.length; head++) {
+    const current = queue[head];
+    if (current === to) {
+      const path: Coord[] = [];
+      let cursor: Coord | null = current;
+      while (cursor !== null) {
+        path.push(cursor);
+        cursor = parents.get(cursor) ?? null;
+      }
+      return path.reverse();
+    }
+    for (const neighbor of world[current].neighbors) {
+      if (world[neighbor]?.walkable && !parents.has(neighbor)) {
+        parents.set(neighbor, current);
+        queue.push(neighbor);
+      }
+    }
+  }
+  return [];
 }
 
 export function reachableCoords(world: World, from: Coord): Coord[] {

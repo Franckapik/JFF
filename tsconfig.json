@@ -5,7 +5,6 @@
     "module": "ESNext",
     "skipLibCheck": true,
 
-    // Bundler mode (pour Vite)
     "moduleResolution": "bundler",
     "types": ["vite/client"],
     "allowImportingTsExtensions": true,
@@ -16,18 +15,11 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    // Mode strict progressif
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-
-    // Paths pour vos imports
-    "paths": {
-      "@/*": ["./src/*"],
-      "@/ai/*": ["./src/ai/*"]
-    }
+    "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/index.jsx", "src/workers/session-worker.ts", "src/engine/session.test.ts"],
-  "exclude": ["node_modules", "dist", "backup"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -5,7 +5,7 @@ Date de l'analyse : 26 septembre 2026.
 Ce document inventorie les valeurs qui influencent le comportement des bots
 dans le moteur actif. Il distingue les regles centralisees, les heuristiques
 encore codees dans le planificateur et les propositions d'equilibrage. Les
-anciennes FSM sous `src/ai/fsm/` ne font pas partie de ce comportement.
+reglages proposes ne sont pas des regles deja validees.
 
 ## Chemin de decision actif
 
@@ -254,5 +254,5 @@ la meme configuration et un export contient bien `graine + regles + resultat`.
 6. Ajouter les grandes vitesses et la comparaison rapide des resultats.
 7. Ajuster les valeurs a partir des mesures plutot qu'a partir du seul rendu.
 
-Les decisions de gameplay deja confirmees restent documentees dans
-[`AUDIT-2026-09-26.md`](AUDIT-2026-09-26.md#decisions-de-gameplay-validees).
+Les decisions de gameplay confirmees restent documentees dans le
+[contrat valide](bot-spec/03-contrat-et-questions.md).

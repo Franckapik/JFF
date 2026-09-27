@@ -1,15 +1,12 @@
 /**
  * ==========================================================================
- * LOG FORWARDER - Redirect console logs to VS Code terminal
+ * LOG FORWARDER - Redirect console logs to the local development server
  * ==========================================================================
  *
- * This utility allows both browser and SharedWorker contexts to forward
- * their console logs to the development server, which displays them in
- * the VS Code terminal.
+ * The browser can forward its console logs to the local development server.
  *
  * Usage:
- * - Browser: Automatically called in src/index.jsx
- * - SharedWorker: Call setupLogForwarder() in the worker startup
+ * Called from src/index.jsx only when VITE_FORWARD_LOGS=true in development.
  */
 
 /**

@@ -1,4 +1,4 @@
-# Prochain travail avec Copilot
+# Extensions envisagees
 
 Le socle valide par Q01-Q20 est clos sur la cible locale. Aucune fonction
 ci-dessous n'est implicitement livree ou autorisee pour cette cloture.
@@ -20,8 +20,7 @@ echouer le cas correspondant ; les cas non relies restent signales comme tels.
 ## E02. Graphe de diagnostic de la machine active
 
 Ajouter un graphe et des transitions observes, derives de `botMachine` et
-des snapshots, avec choix du bot et details d'operation. Ne pas reutiliser
-le graphe historique comme s'il representait le nouveau moteur.
+des snapshots, avec choix du bot et details d'operation.
 
 Acceptation : aucun effet de gameplay depuis le graphe ; chaque etat affiche
 correspond a l'acteur ; navigation clavier et mobile ; chargement a la demande.

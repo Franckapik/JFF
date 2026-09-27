@@ -1,26 +1,21 @@
 {
-  "name": "react-three-vite",
+  "name": "jff",
   "version": "1.0.2",
-  "description": "A simple React Three Fiber + Vite starter with an import-ready CodeSandbox config.",
+  "private": true,
+  "description": "Jeu de simulation de deux bots dans un monde hexagonal partage.",
   "keywords": [
     "r3f",
     "react",
     "three",
     "vite",
-    "starter",
-    "react three fiber",
-    "sandbox",
-    "codesandbox"
+    "xstate",
+    "sharedworker"
   ],
-  "author": "Benjamin Miles <talk@benjaminmiles.com> (https://github.com/benjaminmiles)",
-  "repository": "github:benjaminmiles/react-three-vite",
   "license": "MIT",
   "dependencies": {
     "@fontsource/ibm-plex-sans": "^5.3.0",
     "@react-three/drei": "^10.5.0",
     "@react-three/fiber": "^9.2.0",
-    "@react-three/rapier": "^2.2.0",
-    "@statelyai/inspect": "^0.7.2",
     "lucide-react": "^1.48.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -42,7 +37,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
-    "inquirer": "^9.3.8",
+    "globals": "^14.0.0",
     "npm-run-all": "^4.1.5",
     "typescript": "^5.8.3",
     "vite": "^7.3.6",
@@ -60,7 +55,7 @@
     "type-check": "tsc --noEmit",
     "type-watch": "tsc --noEmit --watch",
     "preview": "vite preview",
-    "lint": "eslint --max-warnings=0 src/AppRouter.tsx src/components/GameInitializer.tsx src/components/session src/stores/useSessionStore.ts src/workers/session-worker.ts src/engine/session*.ts src/engine/resources.ts src/engine/world.ts src/engine/rules.ts src/engine/model.ts src/engine/botMachine.ts src/engine/protocol.ts scripts/benchmark-session.mjs scripts/validate-scenarios.mjs",
+    "lint": "eslint --max-warnings=0 src scripts/*.mjs",
     "validate": "npm run type-check && npm test && npm run scenarios:check && npm run lint && npm run build"
   },
   "engines": {

@@ -1,41 +1,4 @@
-/**
- * ==========================================================================
- * APP ROUTER - Routing pour les vues SharedWorker
- * ==========================================================================
- * 
- * ✅ Phase 5 Migration: Worker 100% autonome + Initialisation déléguée
- * 
- * Ce module gère le routing simple pour les différentes vues.
- * L'initialisation du SharedWorker est déléguée au composant GameInitializer.
- * 
- * Routes:
- * - /vue1 : Vue R3F connectée au SharedWorker (scene 3D simple)
- * - /vue2 : Vue complète avec visualisation FSM détaillée
- * 
- * Architecture:
- * - Worker autonome: FSM pure sans dépendances React
- * - GameInitializer: Gère connexion + initialisation (composant dédié)
- * - AppRouter: Routing et navigation uniquement
- * - Vue1/Vue2: Consommateurs purs via useSharedWorkerStore
- * - Synchronisation: Multi-onglets via BroadcastChannel
- * 
- * Avantages de la séparation:
- * - Responsabilités claires (SRP)
- * - GameInitializer réutilisable
- * - AppRouter focalisé sur le routing
- * - Plus facile à tester et maintenir
- * 
- * Test de synchronisation:
- * 1. Ouvrir /vue1 OU /vue2 en premier (les deux fonctionnent)
- * 2. Ouvrir l'autre vue dans un autre onglet
- * 3. Observer: même instanceId, updateCounter, états FSM
- * 
- * Pas de dépendance à react-router pour rester léger.
- * Utilise un simple switch basé sur window.location.pathname.
- * 
- * @see docs/SHARED_WORKER_VIEWS_ARCHITECTURE.md
- * @see components/GameInitializer.tsx
- */
+/** Les deux routes lisent la meme session detenue par le SharedWorker. */
 
 import React from 'react';
 

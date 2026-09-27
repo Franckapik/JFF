@@ -1,62 +1,41 @@
-# 🧑‍💻 Copilot Instructions for JFF FSM Project
+# JFF : consignes pour les modifications
 
-## Big Picture Architecture
+## Sources de verite
 
-- The active runtime is `src/engine/session.ts`: one authoritative world, two XState v5 bot actors, serialized resource transactions and one logical scheduler.
-- `src/engine/botMachine.ts` exposes explicit operation states through the XState `setup()` API. The session planner selects feasible intentions; the session applies their effects.
-- `src/engine/resources.ts`, `rules.ts`, `world.ts`, `model.ts` and `protocol.ts` define resource arithmetic, configurable rules, axial geometry, typed state and the validated transport contract.
-- `src/workers/session-worker.ts` owns one `SessionHost` and one clock. All same-origin tabs connect through `src/stores/useSessionStore.ts`; no local engine fallback is allowed.
-- `src/components/session/` contains the lazy-loaded game and diagnostic views. Rendering interpolates snapshots; it never advances gameplay or changes resource stocks.
-- The old `src/ai/fsm/machineX/`, game/XFSM/shared-worker stores, `fsm-shared-worker.ts`, `engine/gameEngine.ts`, `Vue1R3F.tsx` and related components remain historical references outside the active graph. Do not wire them back into production or use their old rules as the gameplay contract.
+- Le [contrat valide](../docs/bot-spec/03-contrat-et-questions.md) fixe les
+  regles metier Q01-Q20. Les [extensions](../docs/bot-spec/04-extensions.md)
+  ne sont pas des fonctions du socle actuel.
+- `src/engine/session.ts` detient le monde partage, les decisions, les
+  transactions et l'horloge. `botMachine.ts` expose les etats XState v5 ;
+  `rules.ts`, `resources.ts`, `world.ts` et `model.ts` definissent les regles,
+  bilans, trajets et types.
+- `src/workers/session-worker.ts` possede la session unique.
+  `src/engine/protocol.ts` et `src/stores/useSessionStore.ts` valident et
+  transportent les snapshots entre onglets. Il n'y a aucun moteur local de
+  secours.
+- `src/components/session/` affiche les snapshots. Le rendu n'avance pas la
+  simulation et ne modifie pas les ressources. Le mode expert lit les
+  evenements structures emis par la session.
 
-## Developer Workflows
+## Invariants
 
-- Node >= 22.12; use `npm ci` with the tracked lockfile.
-- **Run/build:** `npm run dev`, `npm run build`, `npm run preview`.
-- **Tests:** `npm test` or `npm run test:watch`; reuse `src/engine/session.test.ts` for nearby scenarios.
-- **Types/lint:** `npm run type-check` checks the complete active entry graph with strict TypeScript and checked JavaScript. `npm run lint` uses `eslint.config.js`, rejects warnings and prohibits UI imports in the engine.
-- **Gate:** `npm run validate` runs types, tests, lint and build. `./scripts/pre-commit.sh` also checks dependency advisories. The former `check-exports` and guard-menu commands do not exist in the active workflow.
+Pour chaque ressource : monde + cargaisons + depots cumules + pertes
+explicites = stock initial. Pour chaque bot : budget + depenses = score depose.
+Les achats debitent le budget ; les trajets utilisent des cases adjacentes
+praticables ; les services sont locaux. Utiliser une seule horloge de session
+pour les actions des bots. Preserver `gameId`, la reconnexion idempotente, la
+pause, le pas a pas et le reset partage.
 
-## Logging & Debugging
+## Travail et verification
 
-- Logs are always managed by copy-pasting from the browser/node console, or by using the ninja logging tools (see `console-ninja_runtimeLogs*`).
-- Focused automated test files are authorized by the user as of 2026-09-26. Cover shared-resource conservation, per-resource capacities, FSM transitions, and bot decisions with reproducible checks.
-- Keep TypeScript checks and runtime logs as complementary verification. Reuse the existing test tooling and suitable test files; avoid unnecessary frameworks, duplicate suites, and one-off validation files.
-- Console forwarding requires `VITE_FORWARD_LOGS=true` in development; it is disabled in production. The loopback log server and client bound request size and traffic.
+Node >= 22.12 ; `npm ci` depuis le lockfile. `npm run validate` lance les types
+de tout `src/`, Vitest, le controle de syntaxe Gherkin, ESLint et le build.
+`scripts/pre-commit.sh` ajoute l'audit des dependances. Les fichiers `.feature`
+ne sont pas executes comme tests. Reutiliser `src/engine/session.test.ts` pour
+les scenarios moteur proches et des tests de vue cibles lorsque necessaire.
 
-## Gameplay Contract
-
-- Follow the [confirmed gameplay decisions](../docs/AUDIT-2026-09-26.md#decisions-de-gameplay-validees) when changing the engine.
-- Implementation status and conservative defaults are recorded in the audit's refactor follow-up. Keep new unresolved rules explicit instead of deciding gameplay implicitly.
-- Enforce each resource compartment independently. Remaining world stock + cargo + cumulative deposits + explicit losses equals initial stock, per resource. Purchases debit budget, not cumulative score or the physical resource ledger.
-- Use seeded randomness, adjacent walkable movement, local-only services, and the session clock. Do not add independent timers to bots or renderer-driven completion events.
-
-## Project-Specific Conventions
-
-- **Exports:**
-  - Stores/hooks: named exports only
-  - React components: default export only
-- **XState Actions:**
-  - Context updates: prefix with `assign*Context` (e.g., `assignDroneDeployingContext`)
-  - Entry/exit effects: prefix with `on*Entry`/`on*Exit` (e.g., `onExploringEntry`)
-- **Guards:**
-  - Guard names reflect business logic (e.g., `shouldCollect`, `needsRefuel`)
-  - Legacy adapters belong only to archived code, not to the active engine
-- **Types:**
-  - Active context/events are in `src/engine/model.ts`, `botMachine.ts` and `protocol.ts`; old `src/types/*fsm*` declarations are not the new contract
-- **FSM Machine:**
-  - Use `setup()` API for XState v5
-  - All actions/guards are referenced by string name in the machine config, implemented in the setup object
-
-## Rendering & Synchronization
-
-- Flow: session transactions -> XState contexts -> versioned worker snapshot -> Zustand read model -> Three.js interpolation.
-- Preserve `gameId` checks, idempotent connection, pause/step semantics and shared resets. An unsupported SharedWorker must produce a visible recoverable error, not an independent local world.
-- Cache unchanged world references via `worldRevision`; use one instanced tile mesh. Keep derived UI statistics tied to the actual snapshot.
-- Verify desktop/mobile layout, canvas pixels and interaction after rendering changes. Performance measurements from this machine do not certify all browsers or devices.
-
----
-
-For more details, see `/docs/` and `scripts/README.md`. If any section is unclear or missing, please provide feedback to improve these instructions.
-
-**Note:** Targeted automated tests are permitted. Keep verification proportional to the change, alongside TypeScript and runtime checks.
+Le worker publie un snapshot version 3, le protocole de commandes est en
+version 1. Un changement de contrat de transport doit etre versionne et teste.
+Les performances du poste Linux/Chromium ne certifient pas d'autres appareils.
+Voir [le socle actuel](../docs/SOCLE_ACTUEL.md) et
+[les commandes](../scripts/README.md).
