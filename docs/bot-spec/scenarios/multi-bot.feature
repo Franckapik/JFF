@@ -19,14 +19,14 @@ Fonctionnalité: Compétition partagée et lectures individuelles
     Et le nombre de frames de rendu ne change pas le résultat métier
 
   @MULTI-03
-  Scénario: Distinguer la vision globale de celle d'un bot
+  Scénario: Basculer entre les visions individuelles
     Étant donné la vue du terrain
-    Quand la vision "Monde" est choisie
-    Alors les ressources du monde et les panneaux des deux bots sont visibles
     Quand la vision "Bot 0" est choisie
     Alors seul son panneau individuel est affiché
-    Et les informations des ressources qu'il ne connaît pas sont masquées
-    Et les bases, stations et obstacles publics restent identifiables
+    Et seules les ressources de ses cibles scannées dans le rayon de son vaisseau sont matérialisées
+    Et les bases, stations et obstacles hors du rayon jamais explorés sont masqués
+    Quand la vision "Bot 1" est choisie
+    Alors son champ et sa mémoire individuels remplacent ceux du Bot 0
     Et changer la vision ne modifie ni les compteurs ni la connaissance des bots
 
   @MULTI-04

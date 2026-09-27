@@ -3,19 +3,19 @@
 Fonctionnalité: Services locaux et achats individuels
 
   @MAINT-01
-  Scénario: Combiner les services à sa base
-    Étant donné un bot à sa base avec 10 carburants et 60 dégâts
+  Scénario: Déposer et réparer à sa base sans ravitailler
+    Étant donné un bot à sa base avec 10 carburants communs et 60 dégâts
     Et une cargaison de 20 nourritures, 30 débris et 1 spécial
     Quand 1199 ms de service se sont écoulées
     Alors aucun effet du service n'est encore appliqué
     Quand la dernière milliseconde s'écoule
-    Alors sa cargaison est vide, son carburant vaut 100 et ses dégâts valent 0
+    Alors sa cargaison est vide, son carburant commun vaut encore 10 et ses dégâts valent 0
     Et son score et son budget augmentent chacun de 51
     Et aucun coût de service n'est prélevé
 
   @MAINT-02
   Plan du scénario: Limiter une station à son service
-    Étant donné un bot sur une station <station> avec 10 carburants et 60 dégâts
+    Étant donné un bot sur une station <station> avec 10 carburants communs et 60 dégâts
     Et une cargaison non vide
     Quand son service de 1200 ms se termine
     Alors son carburant vaut <carburant> et ses dégâts valent <dégâts>
@@ -30,7 +30,7 @@ Fonctionnalité: Services locaux et achats individuels
     Étant donné un bot à distance d'une station avec 60 dégâts
     Quand il choisit une réparation
     Alors ses dégâts restent inchangés pendant le trajet hors danger
-    Et chaque pas consomme 1 carburant
+    Et chaque pas du vaisseau consomme 2 carburants communs
     Et la réparation complète exige l'arrivée puis 1200 ms de service
 
   @MAINT-04
@@ -39,8 +39,8 @@ Fonctionnalité: Services locaux et achats individuels
     Quand ses besoins sont évalués
     Alors une réparation est recherchée dès 50 dégâts inclus
     Et le carburant est urgent sous ou au seuil maximal entre 20 et le coût d'accès au service augmenté de 3
-    Et un service carburant est automatique sur sa station si le carburant est strictement inférieur à 30
-    Et à sa base toute cargaison, tout dégât ou tout carburant manquant déclenche le service combiné
+    Et un service carburant est automatique sur sa station si la réserve commune est incomplète
+    Et à sa base toute cargaison ou tout dégât déclenche le service local sans plein
 
   @MAINT-05
   Plan du scénario: Acheter une extension utile à sa base
@@ -71,3 +71,12 @@ Fonctionnalité: Services locaux et achats individuels
     Alors aucun drone gratuit n'est créé
     Et aucun échange contre des dégâts n'est appliqué
     Et les déplacements et découvertes par le vaisseau restent possibles s'ils sont faisables
+
+  @MAINT-08
+  Scénario: Consacrer trois temps de déplacement au plein
+    Étant donné qu'un pas du vaisseau dure 400 ms
+    Et un bot sur une station carburant avec une réserve commune incomplète
+    Quand 1199 ms de service se sont écoulées
+    Alors la réserve commune est encore incomplète
+    Quand la dernière milliseconde s'écoule
+    Alors la réserve commune est pleine après 1200 ms, soit trois fois un pas

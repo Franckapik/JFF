@@ -6,7 +6,7 @@ Fonctionnalité: Dangers statiques et perte du drone à l'arrivée
   Scénario: Appliquer les dégâts à chaque arrivée du vaisseau
     Étant donné un trajet faisable passant par une case dangereuse
     Quand le vaisseau arrive sur cette case après son pas de 400 ms
-    Alors il consomme 1 carburant et reçoit exactement 10 dégâts
+    Alors il consomme 2 carburants communs et reçoit exactement 10 dégâts
     Et le temps passé ensuite sur la case ne répète pas les dégâts
     Et cette case n'a aucune ressource collectable
 
@@ -28,7 +28,8 @@ Fonctionnalité: Dangers statiques et perte du drone à l'arrivée
     Quand 1 ms supplémentaire s'écoule
     Alors le drone est perdu et le danger est connu de ce bot
     Et les compteurs de scans et de pertes de drone augmentent chacun de 1
-    Et le vaisseau distant conserve sa position, son carburant et ses dégâts
+    Et le vaisseau distant conserve sa position et ses dégâts
+    Et la réserve commune perd seulement le coût de l'aller du drone jusqu'au danger
     Et l'opération de scan se termine sans attendre un scan ou retour fictif
     Exemples:
       | distance | avant |

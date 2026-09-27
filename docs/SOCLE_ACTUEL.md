@@ -35,7 +35,7 @@ stock supplementaire. La session peut finir normalement apres les derniers
 depots ou passer en `blocked` lorsqu'aucun objectif ou retour n'est faisable.
 Le blocage n'invente ni vainqueur ni elimination.
 
-Le snapshot est en `schemaVersion: 3` et transporte des evenements metier
+Le snapshot est en `schemaVersion: 5` et transporte des evenements metier
 structures pour le mode expert ; le protocole de commandes reste en version 1.
 Un onglet avec un ancien worker doit etre ferme avant reconnexion. L'export
 JSON est un diagnostic, pas une sauvegarde restaurable.

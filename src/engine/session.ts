@@ -4,6 +4,7 @@ import { botMachine } from "./botMachine";
 import type { Bot, BotPhase, BotView, GoalReason, OperationKind, SessionEvent, SessionLog, SessionSnapshot } from "./model";
 import { addResources, emptyResources, RESOURCE_KINDS, resourceTotal, transferResources, type Resources } from "./resources";
 import { RULES } from "./rules";
+import { activeCoords, hasLineOfSight, rememberTerrain } from "./visibility";
 import {
     BOT_IDS,
     generateWorld,
@@ -34,6 +35,8 @@ export function createBot(id: BotId, world: World, seed: number): Bot {
     radius: 1,
     droneAvailable: true,
     known: [base],
+    scanned: [],
+    explored: activeCoords(world, { coord: base, radius: 1 }),
     randomState: (seed ^ (id === "bot-0" ? 0x9e3779b9 : 0x85ebca6b)) >>> 0,
     operation: null,
     route: [],
@@ -76,6 +79,7 @@ export class GameSession {
     );
     for (const id of BOT_IDS) {
       const bot = structuredClone(scenario?.bots?.[id] ?? createBot(id, this.world, this.seed));
+      bot.explored = rememberTerrain(bot.explored, activeCoords(this.world, bot));
       this.actors.set(id, createActor(botMachine, { input: bot }).start());
     }
     this.initialResources = this.bots().reduce(
@@ -114,7 +118,7 @@ export class GameSession {
   private servicePath(bot: Bot, service: "fuel" | "repair"): Coord[] {
     return (
       Object.values(this.world)
-        .filter(tile => tile.coord === bot.base || tile.kind === service)
+        .filter(tile => (service === "repair" && tile.coord === bot.base) || tile.kind === service)
         .map(tile => this.route(bot, tile.coord))
         .filter(path => path.length > 0)
         .sort((left, right) => left.length - right.length)[0] ?? []
@@ -128,6 +132,7 @@ export class GameSession {
   }
 
   private move(bot: Bot, target: Coord, reason: GoalReason): boolean {
+    if (bot.fuel < RULES.fuelPerStep) return false;
     const path = this.route(bot, target);
     if (path.length < 2) return false;
     this.launch(
@@ -175,18 +180,23 @@ export class GameSession {
       return;
     }
     const isBase = bot.coord === bot.base;
-    const atFuel = isBase || tile.kind === "fuel";
-    if (bot.fuel <= 0 && !atFuel) {
+    const atFuel = tile.kind === "fuel";
+    if (bot.fuel < RULES.fuelPerStep && !atFuel) {
+      if (isBase) {
+        this.finishBot(bot, "Carburant insuffisant pour quitter la base");
+        return;
+      }
       this.emit({ type: "fuel.stranded", category: "incident", botId: bot.id, coord: bot.coord, after: { fuel: bot.fuel } });
       this.launch({ ...bot, route: [], goal: null }, "rescue", bot.base, RULES.rescueDuration, "Remorquage : cargaison perdue");
       return;
     }
     if (
-      (isBase && (resourceTotal(bot.cargo) > 0 || bot.fuel < RULES.fuelCapacity || bot.damage > 0)) ||
-      (tile.kind === "fuel" && bot.fuel < RULES.fuelCapacity && (bot.goal?.reason === "fuel" || bot.fuel < RULES.stationFuelThreshold)) ||
+      (isBase && (resourceTotal(bot.cargo) > 0 || bot.damage > 0)) ||
+      (tile.kind === "fuel" && bot.fuel < RULES.fuelCapacity) ||
       (tile.kind === "repair" && bot.damage > 0 && (bot.goal?.reason === "repair" || bot.damage >= RULES.repairThreshold))
     ) {
-      this.launch(bot, "service", bot.coord, RULES.serviceDuration, isBase ? "Depot et maintenance a la base" : `Service ${tile.kind}`);
+      const duration = atFuel ? RULES.fuelServiceStepMultiplier * RULES.stepDuration : RULES.serviceDuration;
+      this.launch(bot, "service", bot.coord, duration, isBase ? "Depot et maintenance a la base" : `Service ${tile.kind}`);
       return;
     }
     if (this.phase === "returning") {
@@ -235,7 +245,10 @@ export class GameSession {
       .map(coord => ({ coord, path: this.affordableRoute(bot, coord), amount: this.available(bot, coord) }))
       .filter(candidate => candidate.path.length > 0)
       .sort((left, right) => right.amount / right.path.length - left.amount / left.path.length);
-    const scans = bot.droneAvailable ? unknown.filter(candidate => hexDistance(bot.coord, candidate.coord) <= bot.radius) : [];
+    const scans = bot.droneAvailable ? unknown.filter(candidate => {
+      const distance = hexDistance(bot.coord, candidate.coord);
+      return distance <= bot.radius && hasLineOfSight(this.world, bot.coord, candidate.coord) && 2 * distance * RULES.droneFuelPerHex <= bot.fuel;
+    }) : [];
     const cargoTotal = resourceTotal(bot.cargo);
     const storagePressure = RESOURCE_KINDS.some(kind => bot.cargo[kind] >= RULES.capacity[kind]);
     if (cargoTotal > 0 && (!collections.length || (storagePressure && !collections.some(candidate => candidate.coord === bot.coord)))) {
@@ -292,6 +305,7 @@ export class GameSession {
           damage: Math.min(100, bot.damage + (this.world[operation.target].kind === "danger" ? RULES.dangerDamage : 0)),
           route: bot.route.slice(1),
           known: [...new Set([...bot.known, operation.target])],
+          explored: rememberTerrain(bot.explored, activeCoords(this.world, { ...bot, coord: operation.target })),
           visits: { ...bot.visits, [operation.target]: (bot.visits[operation.target] ?? 0) + 1 },
           statistics: {
             ...bot.statistics,
@@ -324,13 +338,18 @@ export class GameSession {
       }
       case "scan": {
         const destroyed = this.world[operation.target].kind === "danger";
+        const cost = (destroyed ? 1 : 2) * hexDistance(bot.coord, operation.target) * RULES.droneFuelPerHex;
+        if (!bot.droneAvailable || bot.fuel < cost) throw new Error("Insufficient fuel for scan");
         next = {
           ...next,
+          fuel: bot.fuel - cost,
           known: [...new Set([...bot.known, operation.target])],
+          scanned: [...new Set([...bot.scanned, operation.target])],
+          explored: bot.explored,
           droneAvailable: !destroyed,
-          statistics: { ...bot.statistics, scans: bot.statistics.scans + 1, droneLosses: bot.statistics.droneLosses + Number(destroyed) },
+          statistics: { ...bot.statistics, scans: bot.statistics.scans + 1, fuelUsed: bot.statistics.fuelUsed + cost, droneLosses: bot.statistics.droneLosses + Number(destroyed) },
         };
-        this.emit({ type: "scan.completed", category: "movement", botId: bot.id, operation: operation.kind, coord: bot.coord, target: operation.target });
+        this.emit({ type: "scan.completed", category: "movement", botId: bot.id, operation: operation.kind, coord: bot.coord, target: operation.target, before: { fuel: bot.fuel }, delta: { fuel: -cost }, after: { fuel: next.fuel } });
         if (destroyed) {
           this.log(bot.id, "Drone perdu sur une case dangereuse");
           this.emit({ type: "drone.lost", category: "incident", botId: bot.id, coord: operation.target, reason: "case dangereuse" });
@@ -378,15 +397,12 @@ export class GameSession {
             deposited: addResources(bot.deposited, bot.cargo),
             score: bot.score + amount,
             budget: bot.budget + amount,
-            fuel: RULES.fuelCapacity,
             damage: 0,
             goal: null,
           };
           this.log(bot.id, `${amount} ressources deposees`);
           if (amount > 0)
             this.emit({ type: "resources.deposited", category: "resource", botId: bot.id, coord: bot.coord, resources: bot.cargo, delta: { budget: amount, score: amount }, after: { budget: next.budget, score: next.score } });
-          if (bot.fuel < RULES.fuelCapacity)
-            this.emit({ type: "fuel.refueled", category: "maintenance", botId: bot.id, coord: bot.coord, before: { fuel: bot.fuel }, delta: { fuel: RULES.fuelCapacity - bot.fuel }, after: { fuel: RULES.fuelCapacity } });
           if (bot.damage > 0)
             this.emit({ type: "ship.repaired", category: "maintenance", botId: bot.id, coord: bot.coord, before: { damage: bot.damage }, delta: { damage: -bot.damage }, after: { damage: 0 } });
         } else if (tile.kind === "fuel") {
@@ -402,7 +418,7 @@ export class GameSession {
       case "upgrade": {
         const cost = RULES.upgradePrices[bot.radius];
         if (bot.coord !== bot.base || cost === undefined || bot.budget < cost) throw new Error("Invalid upgrade");
-        next = { ...next, radius: bot.radius + 1, budget: bot.budget - cost, spent: bot.spent + cost };
+        next = { ...next, radius: bot.radius + 1, explored: rememberTerrain(bot.explored, activeCoords(this.world, { ...bot, radius: bot.radius + 1 })), budget: bot.budget - cost, spent: bot.spent + cost };
         this.emit({ type: "exploration.upgraded", category: "economy", botId: bot.id, coord: bot.coord, before: { budget: bot.budget, radius: bot.radius }, delta: { budget: -cost, radius: 1 }, after: { budget: next.budget, radius: next.radius } });
         break;
       }
@@ -488,10 +504,14 @@ export class GameSession {
       const duration = Math.min(remaining, ...working.map(bot => this.timeUntilCompletion(bot)));
       this.elapsed += duration;
       remaining -= duration;
-      for (const bot of working)
+      for (const bot of working) {
         this.actors
           .get(bot.id)!
-          .send({ type: "TICK", bot: { ...bot, operation: { ...bot.operation!, remaining: bot.operation!.remaining - duration } } });
+          .send({ type: "TICK", bot: {
+            ...bot,
+            operation: { ...bot.operation!, remaining: bot.operation!.remaining - duration },
+          } });
+      }
       const order = this.turn % 2 === 0 ? BOT_IDS : [...BOT_IDS].reverse();
       const due = this.bots().filter(bot => this.timeUntilCompletion(bot) === 0);
       for (const id of order) {
@@ -537,7 +557,7 @@ export class GameSession {
 
   getSnapshot(afterEventSequence = 0): SessionSnapshot {
     return structuredClone({
-      schemaVersion: 3,
+      schemaVersion: 5,
       seed: this.seed,
       revision: this.revision,
       worldRevision: this.worldRevision,

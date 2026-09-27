@@ -15,11 +15,13 @@ Fonctionnalité: Initialisation de la session partagée
   @INIT-02
   Scénario: Initialiser les moyens et les comptes individuels
     Étant donné une nouvelle session
-    Alors chaque bot est à sa base avec 100 carburants et 0 dégât
-    Et son drone est disponible avec un rayon de 1
+    Alors chaque bot est à sa base avec une réserve commune de 100 carburants et 0 dégât
+    Et son drone est disponible avec un rayon de 1, sans réserve séparée
     Et sa cargaison, ses dépôts, son score, son budget et ses dépenses sont nuls
     Et ses compteurs et son registre de collecte sont vides
     Et sa connaissance individuelle contient initialement sa propre base
+    Et aucune cible n'est initialement enregistrée comme scannée par son drone
+    Et son souvenir initial du terrain couvre le rayon du vaisseau autour de sa base
     Et ses capacités sont définies indépendamment
       | ressource | capacité |
       | food      | 200      |
@@ -44,8 +46,8 @@ Fonctionnalité: Initialisation de la session partagée
 
   @INIT-05
   Scénario: Refuser un ancien contrat de snapshot
-    Étant donné un client attendant un snapshot de version 2
-    Quand le worker fournit un snapshot de version 1
+    Étant donné un client attendant un snapshot de version 5
+    Quand le worker fournit un snapshot de version 4
     Alors la connexion est fermée avec une erreur de version visible
     Et aucun monde local de remplacement n'est créé
     Et la reconnexion est possible après fermeture des anciens onglets

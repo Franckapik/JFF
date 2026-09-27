@@ -1,8 +1,11 @@
 # Scenarios du socle valide
 
-Les dix fichiers `.feature` expriment les [decisions Q01-Q20](../03-contrat-et-questions.md)
-avec des effets observables et des identifiants stables. Ils contiennent 56
-scenarios et 67 cas apres expansion des exemples.
+Les dix fichiers `.feature` expriment les [decisions Q01-Q20 et les premieres evolutions](../03-contrat-et-questions.md)
+avec des effets observables et des identifiants stables. Ils contiennent 65
+scenarios et 76 cas apres expansion des exemples.
+
+L'[audit de la visibilite et du gameplay](../05-audit-visibilite-gameplay.md)
+recapitule les regles appliquees et les limites encore presentes.
 
 `npm run scenarios:check` verifie la syntaxe Gherkin, les identifiants et la
 compilation des exemples. **Il n'execute pas les etapes.** `npm test` execute
@@ -14,9 +17,9 @@ necessitent un controle navigateur.
 | --- | --- |
 | `initialization.feature` | Creation, graine, reset et protocole. |
 | `initialization-fairness.feature` | Symetrie, connectivite et tailles limites. |
-| `exploration.feature` | Scans, rayon mobile et connaissance individuelle. |
-| `collection.feature` | Compartiments et transactions concurrentes. |
-| `maintenance.feature` | Services locaux, trajets et achats. |
+| `exploration.feature` | Scans, réserve commune, vision du vaisseau et souvenir individuel du terrain. |
+| `collection.feature` | Compartiments, transactions et objets visibles uniquement sur les cibles scannées. |
+| `maintenance.feature` | Services locaux, ravitaillement en station, trajets et achats. |
 | `danger-tiles.feature` | Degats, perte de drone et revelation du danger. |
 | `emergency.feature` | Pause, remorquage et elimination. |
 | `game-over.feature` | Derniers depots, egalite et blocage. |

@@ -23,6 +23,7 @@ npm run dev
 - [Architecture et limites du socle](docs/SOCLE_ACTUEL.md)
 - [Contrat metier valide](docs/bot-spec/03-contrat-et-questions.md)
 - [Scenarios du socle](docs/bot-spec/scenarios/README.md)
+- [Audit de la visibilite et du gameplay](docs/bot-spec/05-audit-visibilite-gameplay.md)
 - [Extensions envisagees](docs/bot-spec/04-extensions.md)
 - [Mode expert](docs/AUDIT-MODE-EXPERT-BOT.md)
 - [Parametres des bots](docs/PARAMETRES_COMPORTEMENT_BOTS.md)

@@ -11,7 +11,8 @@ Fonctionnalité: Panne, destruction et suspension du temps
     Alors il est à sa base avec une cargaison vide et encore 0 carburant
     Et ces ressources figurent dans les pertes explicites, pas dans le score
     Et son compteur de secours augmente de 1
-    Et le service local suivant lui permet de reprendre après ravitaillement
+    Et la base ne fournit aucun carburant après ce remorquage
+    Et le bot sans carburant ne peut plus quitter sa base
 
   @EMERG-02
   Scénario: Éliminer définitivement un vaisseau détruit
@@ -37,5 +38,12 @@ Fonctionnalité: Panne, destruction et suspension du temps
     Et aucun service disponible à sa position
     Quand il choisit sa prochaine opération
     Alors la réparation est recherchée avant le ravitaillement distant
-    Et une panne à 0 carburant hors service aurait priorité sous forme de remorquage
-    Et à sa propre base les besoins sont couverts par un service combiné
+    Et une réserve inférieure à 2 carburants hors service aurait priorité sous forme de remorquage
+    Et à sa propre base seuls le dépôt et la réparation sont assurés
+
+  @EMERG-05
+  Scénario: Ne pas franchir une case avec une réserve inférieure au coût du vaisseau
+    Étant donné un vaisseau hors station carburant avec 1 carburant commun
+    Quand il tente de se déplacer vers une case voisine
+    Alors le déplacement de coût 2 ne démarre pas
+    Et aucun carburant supplémentaire n'est créé par le déplacement

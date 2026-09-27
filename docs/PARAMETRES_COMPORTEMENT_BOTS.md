@@ -30,17 +30,19 @@ session et toutes les vues observent donc les memes reglages.
 | Exploration | `maxExplorationRadius` | 3 | Rayon maximal du drone. Le rayon initial vaut 1. |
 | Economie | `upgradePrices` | 50, puis 100 | Cout des passages aux rayons 2 et 3. |
 | Economie | `dronePrice` | 50 | Cout de remplacement d'un drone perdu. |
-| Carburant | `fuelCapacity` | 100 | Carburant initial et niveau apres un plein. |
-| Carburant | `fuelPerStep` | 1 | Consommation par case parcourue, aller et retour. |
+| Carburant | `fuelCapacity` | 100 | Reserve commune initiale du vaisseau et du drone ; niveau apres un plein. |
+| Carburant | `fuelPerStep` | 2 | Consommation du vaisseau par case parcourue, aller et retour. |
+| Carburant | `droneFuelPerHex` | 1 | Consommation du drone par hexagone parcouru, aller et retour. |
 | Carburant | `fuelReserve` | 3 | Marge exigee lors de la validation d'une cible. |
 | Carburant | `fuelUrgencyThreshold` | 20 | Declenche la recherche prioritaire d'un ravitaillement. |
-| Carburant | `stationFuelThreshold` | 30 | Autorise un plein opportuniste sur une station traversee. |
+| Carburant | station carburant | 100 | Recharge toute reserve commune incomplete sur la station. La base ne ravitaille pas. |
 | Danger | `dangerDamage` | 10 | Degats recus en entrant sur une case dangereuse. |
 | Reparation | `repairThreshold` | 50 | Rend la recherche d'une reparation prioritaire. |
 | Temps | `stepDuration` | 400 ms | Duree logique d'un pas du vaisseau. |
 | Temps | `scanDuration` | 800 ms | Duree fixe d'un scan, hors trajet du drone. |
 | Temps | `collectDuration` | 1 000 ms | Duree d'une collecte. |
-| Temps | `serviceDuration` | 1 200 ms | Duree d'un depot, plein ou d'une reparation. |
+| Temps | `serviceDuration` | 1 200 ms | Duree d'un depot ou d'une reparation. |
+| Temps | `fuelServiceStepMultiplier` | 3 | Un plein en station dure trois fois `stepDuration`, soit 1 200 ms actuellement. |
 | Temps | `purchaseDuration` | 1 000 ms | Duree d'un achat de drone ou d'extension. |
 | Temps | `rescueDuration` | 5 000 ms | Duree du remorquage apres une panne. |
 | Diagnostic | `maxLogEntries` | 120 | Nombre maximal d'entrees du journal conservees. |
@@ -50,7 +52,7 @@ session et toutes les vues observent donc les memes reglages.
 Le planificateur examine les besoins dans cet ordre :
 
 1. elimination si les degats atteignent 100 ;
-2. remorquage si le carburant est nul hors d'un point de ravitaillement ;
+2. remorquage si le carburant ne couvre pas un pas du vaisseau hors d'un point de ravitaillement ;
 3. service si le bot est deja a sa base ou dans une station pertinente ;
 4. retour final quand les ressources accessibles sont epuisees ;
 5. trajet vers une reparation a partir de 50 degats ;
@@ -173,10 +175,10 @@ de la panne le resultat habituel :
 | Parametre | Standard actuel | `Carburant visible` |
 | --- | ---: | ---: |
 | `fuelCapacity` | 100 | 40 |
-| `fuelPerStep` | 1 | 2 |
+| `fuelPerStep` | 2 | 3 |
+| `droneFuelPerHex` | 1 | 1 |
 | `fuelReserve` | 3 | 6 |
 | `fuelUrgencyThreshold` | 20 | 14 |
-| `stationFuelThreshold` | 30 | 20 |
 
 Ces valeurs sont des hypotheses d'equilibrage, pas de nouvelles regles
 validees. Elles doivent etre comparees sur un lot de graines reproductibles.
@@ -186,8 +188,7 @@ faisabilite continuerait a securiser les destinations.
 
 Autres leviers possibles :
 
-- ne faire le plein a la base que sous un seuil configurable ;
-- donner un cout en carburant aux scans du drone ;
+- faire varier le cout relatif du vaisseau et du drone ;
 - augmenter le rayon de carte, ce qui renforce naturellement les decisions de
   trajet sans changer les regles du carburant ;
 - augmenter la capacite speciale pour reduire les retours automatiques ;

@@ -68,3 +68,31 @@ Fonctionnalité: Collecte concurrente et compartiments indépendants
     Alors stock restant plus cargaisons plus dépôts cumulés plus pertes égale stock initial
     Et la provenance des collectes n'est pas ajoutée à ce bilan physique
     Et les achats débitent le budget, pas le score ni les dépôts cumulés
+
+  @COL-08
+  Scénario: Représenter les ressources uniquement sur une cible scannée
+    Étant donné deux tuiles ressources dans le rayon de vision du vaisseau
+    Et aucune de ces tuiles n'a été scannée par le drone de ce bot
+    Alors aucun objet de ressource n'apparaît sur ces tuiles
+    Quand le drone termine un scan sur la première tuile
+    Alors un objet 3D distinct par catégorie non vide apparaît uniquement sur cette cible
+    Et la seconde tuile garde l'apparence du terrain sans montrer ses quantités
+    Et les objets de la cible disparaissent lorsque celle-ci sort du rayon du vaisseau
+    Et chaque catégorie prélevée disparaît de la tuile quand son stock atteint zéro
+
+  @COL-09
+  Scénario: Montrer l'acheminement jusqu'au dépôt
+    Étant donné un vaisseau qui a chargé plusieurs catégories de ressources
+    Quand il revient vers sa base
+    Alors les objets correspondant à sa cargaison se déplacent avec le vaisseau sur le plateau
+    Et ils restent visibles pendant le service de dépôt
+    Quand le dépôt à la base se termine
+    Alors ces objets disparaissent de la base et la cargaison devient vide
+
+  @COL-10
+  Scénario: Distinguer arrivée du vaisseau et scan du drone
+    Étant donné une tuile ressource atteinte par le vaisseau sans scan préalable du drone
+    Alors le bot peut connaître et collecter son stock selon les règles de déplacement et collecte
+    Mais aucun objet de ressource au sol n'apparaît sur cette tuile
+    Quand le vaisseau repart avec la cargaison collectée
+    Alors les objets de cargaison suivent le vaisseau sans créer d'objets au sol sur cette tuile

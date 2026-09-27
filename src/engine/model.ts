@@ -34,6 +34,8 @@ export interface Bot {
   radius: number;
   droneAvailable: boolean;
   known: Coord[];
+  scanned: Coord[];
+  explored: Coord[];
   harvested: Partial<Record<Coord, Resources>>;
   randomState: number;
   operation: Operation | null;
@@ -98,7 +100,7 @@ export interface SessionEvent {
   after?: Partial<Record<"fuel" | "damage" | "budget" | "score" | "radius", number>>;
 }
 export interface SessionSnapshot {
-  schemaVersion: 3;
+  schemaVersion: 5;
   seed: number;
   revision: number;
   worldRevision: number;
