@@ -10,16 +10,20 @@ sans certification sur telephone.
 
 - Deux bots concurrents partagent un monde unique. Connaissance, score, budget,
   cargaison et progression restent individuels. Les bases sont fixes,
-  symetriques et vides de ressources au depart. La carte initiale est
-  symetrique et connectee ; aucune validation generique de cartes arbitraires
+  symetriques et vides de ressources au depart. La carte initiale garde des
+  stocks et une accessibilite symetriques, avec un seul service de chaque type
+  place selon la graine a distance de trajet presque egale des deux bases. Elle
+  est connectee ; aucune validation generique de cartes arbitraires
   n'est promise.
 - Le drone reste rattache au vaisseau mobile et son rayon de scan est centre
   sur le vaisseau.
   Ressources, cases vides et dangers inconnus sont scannables. Bases, stations
   et obstacles sont publics et exclus des objectifs de scan. Un vaisseau
   continue a decouvrir la case ou il arrive si son drone est perdu.
+  Une station ne devient une destination de maintenance que lorsqu'elle est
+  entree dans le champ de vision de ce bot et reste ensuite dans son souvenir.
 - Le plateau affiche par defaut la vision du Bot 0 et permet de choisir celle
-  du Bot 1. Le champ de vision actuel reste centre sur le vaisseau et utilise
+  du Bot 1 ou la vision developpeur sans brouillard. Le champ de vision actuel reste centre sur le vaisseau et utilise
   le rayon du drone (1 a 3), meme pendant son vol. Si le drone est perdu, ce
   rayon retombe a 1 autour du vaisseau ; le trajet du drone ne modifie ni le
   brouillard ni la memoire du terrain. Hors de ce champ, une case
@@ -35,6 +39,10 @@ sans certification sur telephone.
   vaisseau peut toujours identifier et collecter un stock sans creer ces objets
   au sol. Les objets charges suivent le vaisseau et disparaissent quand le
   depot a la base se termine.
+  Les dangers dans le champ mais non encore decouverts apparaissent comme du
+  terrain non identifie. Le bot ne tient compte dans ses trajets que des dangers
+  deja decouverts par son drone ou son vaisseau ; la vision developpeur montre
+  tous les dangers et tous les stocks.
 - Les intentions realisables sont arbitrees avec un choix probabiliste, apres
   les urgences. Les collectes possibles sont classees notamment par quantite
   et longueur de trajet. Un compartiment plein peut declencher un retour meme

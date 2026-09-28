@@ -21,6 +21,7 @@ npm run dev
 ## References actuelles
 
 - [Architecture et limites du socle](docs/SOCLE_ACTUEL.md)
+- [Audit du jeu et vision créative](docs/AUDIT-ET-VISION-JEU.md)
 - [Contrat metier valide](docs/bot-spec/03-contrat-et-questions.md)
 - [Scenarios du socle](docs/bot-spec/scenarios/README.md)
 - [Audit de la visibilite et du gameplay](docs/bot-spec/05-audit-visibilite-gameplay.md)

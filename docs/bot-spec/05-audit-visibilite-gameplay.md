@@ -12,6 +12,9 @@ les cibles du scan.
 | Trois etats visuels | Une case jamais exploree est sombre ; une case exploree hors rayon conserve uniquement le terrain assombri ; une case dans le rayon affiche le terrain et les vaisseaux presents. |
 | Ressources au sol | Les objets 3D et les quantites dans l'inspecteur apparaissent seulement pour une cible scannee par le drone du bot affiche, encore dans le rayon du vaisseau et avec un stock non nul. Une case seulement atteinte par le vaisseau n'a pas d'objets au sol. |
 | Collecte | Le vaisseau peut toujours decouvrir et collecter des ressources sur une case atteinte sans scan. Les objets de cargaison suivent le vaisseau et disparaissent apres le depot a la base. |
+| Tuiles speciales | Bases, stations et obstacles sont identifies dans le champ de vision sans scan. Un danger y reste du terrain non identifie jusqu'a la perte d'un drone sur cette case ou l'arrivee du vaisseau. La decouverte est individuelle ; seuls les dangers connus influencent le calcul de trajet. |
+| Maintenance connue | Le bot ne planifie une visite de station que si elle figure dans son terrain explore. Tant qu'aucune station carburant n'est connue, ses trajets faisables gardent une reserve de retour vers sa base, qui ne ravitaille pas. |
+| Vision developpeur | La carte entiere, la nature de chaque case, tous les stocks et les deux bots sont visibles sans brouillard ; l'inspecteur indique si chaque bot connait la nature de la case. |
 | Carburant | Le vaisseau et le drone utilisent une reserve commune de 100. Un pas du vaisseau coute 2 ; le drone coute 1 par hexagone effectivement parcouru. Une perte sur danger ne facture que l'aller. Le plein est limite aux stations carburant et dure trois fois un pas, soit 1 200 ms actuellement. |
 
 Corrections de l'audit : le champ de vision suivait le drone en vol et se

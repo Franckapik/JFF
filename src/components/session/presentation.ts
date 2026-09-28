@@ -2,6 +2,7 @@ import type { BotPhase } from "../../engine/model";
 import type { BotId, TileKind } from "../../engine/world";
 
 export const BOT_COLORS: Record<BotId, string> = { "bot-0": "#087f8c", "bot-1": "#cf6348" };
+export const DEPLETED_TILE_COLOR = "#476889";
 export const TILE_COLORS: Record<TileKind, string> = {
   resource: "#8db7a0",
   empty: "#d8dfdb",

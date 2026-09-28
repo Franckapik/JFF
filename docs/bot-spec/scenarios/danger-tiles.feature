@@ -12,12 +12,23 @@ Fonctionnalité: Dangers statiques et perte du drone à l'arrivée
 
   @DANGER-02
   Scénario: Préférer un trajet sans danger et refuser un trajet mortel
-    Étant donné plusieurs routes vers un objectif
+    Étant donné plusieurs routes vers un objectif et des dangers déjà découverts par ce bot
     Quand le bot planifie son trajet
     Alors une route sans danger est préférée si elle existe
     Et sinon une route dangereuse reste possible si les dégâts prévus restent strictement inférieurs à 100
     Et un objectif exigeant des dégâts mortels n'est pas déclaré faisable
     Et un simple refus de trajet ne détruit pas le vaisseau
+
+  @DANGER-06
+  Scénario: Cacher la nature d'un danger jusqu'à sa découverte
+    Étant donné une case dangereuse dans le rayon du vaisseau et encore inconnue du bot
+    Quand le bot observe le terrain sans avoir envoyé de drone ni atteint cette case
+    Alors la case apparaît comme terrain non identifié dans sa vision
+    Et le bot ne l'évite pas grâce à sa nature réelle lors du calcul de trajet
+    Quand le drone est détruit sur cette case ou que le vaisseau y arrive
+    Alors le danger est connu de ce bot et apparaît comme danger dans sa vision
+    Et l'autre bot ne reçoit pas cette découverte
+    Et la vision développeur révèle le danger indépendamment des deux bots
 
   @DANGER-03
   Plan du scénario: Détruire le drone et révéler le danger dès son arrivée

@@ -92,6 +92,22 @@ export function worldResources(world: World): Resources {
   return Object.values(world).reduce((total, tile) => addResources(total, tile.resources), emptyResources());
 }
 
+function placeServices(world: World, fuel: Coord, repair: Coord): World {
+  const placed: World = Object.fromEntries(
+    Object.entries(world).map(([coord, tile]) => [coord, { ...tile }])
+  );
+  for (const coord of [fuel, repair]) {
+    const [column, row] = axial(coord);
+    const mirror: Coord = `${-column},${-row}`;
+    if (mirror !== fuel && mirror !== repair) {
+      placed[mirror] = { ...placed[mirror], kind: "empty", walkable: true, resources: emptyResources() };
+    }
+  }
+  placed[fuel] = { ...placed[fuel], kind: "fuel", walkable: true, resources: emptyResources() };
+  placed[repair] = { ...placed[repair], kind: "repair", walkable: true, resources: emptyResources() };
+  return placed;
+}
+
 export function generateWorld(seed: number, radius = 3): World {
   if (!Number.isSafeInteger(seed) || !Number.isInteger(radius) || radius < 2 || radius > 8) throw new Error("Invalid map configuration");
   let randomState = seed >>> 0;
@@ -119,8 +135,6 @@ export function generateWorld(seed: number, radius = 3): World {
     world[coord].kind = "base";
     world[coord].owner = BOT_IDS[index];
   });
-  for (const coord of ["-1,1", "1,-1"] as Coord[]) world[coord].kind = "fuel";
-  for (const coord of ["-1,0", "1,0"] as Coord[]) world[coord].kind = "repair";
   const processed = new Set<Coord>();
   for (const tile of Object.values(world)) {
     if (processed.has(tile.coord) || tile.kind !== "resource") continue;
@@ -158,5 +172,22 @@ export function generateWorld(seed: number, radius = 3): World {
       }
     }
   }
-  return world;
+  const candidates = Object.values(world).filter(tile => {
+    const distances = bases.map(base => hexDistance(base, tile.coord));
+    return Math.min(...distances) > 1 && Math.max(...distances) <= radius + 1 && Math.abs(distances[0] - distances[1]) <= 1;
+  });
+  const layouts: World[] = [];
+  for (const fuel of candidates.filter(tile => hexDistance(bases[0], tile.coord) === hexDistance(bases[1], tile.coord))) {
+    for (const repair of candidates) {
+      if (repair.coord === fuel.coord) continue;
+      const placed = placeServices(world, fuel.coord, repair.coord);
+      const fair = [fuel.coord, repair.coord].every(coord => {
+        const distances = bases.map(base => pathBetween(placed, base, coord).length - 1);
+        return distances.every(distance => distance >= 0 && distance <= radius + 2) && Math.abs(distances[0] - distances[1]) <= 1;
+      });
+      if (fair) layouts.push(placed);
+    }
+  }
+  if (!layouts.length) throw new Error("No balanced service placement");
+  return layouts[Math.floor(random() * layouts.length)];
 }

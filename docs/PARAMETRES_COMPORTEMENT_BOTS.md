@@ -147,9 +147,13 @@ La generation reproductible est implementee dans
 | Ressources speciales par case | 0 a 6 |
 
 Les cases situees a une distance maximale de 1 d'une base restent des cases de
-ressources. Les deux bases et le terrain sont symetriques. Les stations de
-carburant sont actuellement fixes en `-1,1` et `1,-1`, et les stations de
-reparation en `-1,0` et `1,0`.
+ressources. Les deux bases, les stocks de ressources et l'accessibilite du
+terrain sont symetriques. Une station carburant et une station reparation sont
+tirees parmi les positions centrales compatibles avec la graine. Le carburant
+est place a distance geometrique egale des deux bases ; le trajet effectif
+vers chaque service differe d'au plus un pas entre les bots. Les positions
+miroirs des services restent vides de ressources pour conserver l'equite des
+stocks.
 
 ## Pourquoi le carburant reste presque toujours eleve
 
@@ -157,12 +161,13 @@ Le carburant participe bien aux decisions, mais plusieurs regles reduisent
 fortement son influence observable :
 
 - une carte de rayon 3 est petite face a une autonomie de 100 pas ;
-- chaque depot a la base remet gratuitement le reservoir a 100 ;
-- la capacite speciale de 3 provoque des retours et donc des pleins frequents ;
+- la station de carburant remet gratuitement le reservoir a 100 ; la base ne
+  ravitaille pas ;
+- la capacite speciale de 3 provoque des retours frequents a la base ;
 - le filtre de faisabilite elimine preventivement les destinations trop
   couteuses ;
-- les trajets du drone ne consomment aucun carburant du vaisseau ;
-- le seuil d'urgence de 20 represente encore vingt pas avec le cout actuel.
+- les trajets du drone consomment la meme reserve que le vaisseau ;
+- le seuil d'urgence de 20 represente dix pas avec le cout actuel.
 
 Le carburant est donc surtout une contrainte de securite. Il produit rarement
 un arbitrage visible, une visite forcee a une station ou une panne dans une
@@ -201,7 +206,7 @@ Le diagnostic expose deja les pas, le carburant cumule consomme et les
 remorquages. Pour mesurer l'effet reel d'un reglage, ajouter par bot :
 
 - carburant minimal atteint ;
-- nombre de pleins a la base et en station ;
+- nombre de pleins en station ;
 - nombre de decisions motivees par le carburant ;
 - distance ajoutee par les detours de ravitaillement ;
 - ressources deposees par unite de carburant ;

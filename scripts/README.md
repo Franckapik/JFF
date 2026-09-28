@@ -34,6 +34,31 @@ specifique a la machine qui l'execute. Pour le rendu en developpement, ouvrir
 mesure. Comparer une fenetre active et une fenetre en pause ; ces mesures DOM
 et RAF ne certifient pas les performances GPU ou mobile.
 
+## Equilibrage sur plusieurs graines
+
+```bash
+npm run balance -- --games=1000 --output=report.balance-reference.json --label=reference
+npm run balance -- --games=1000 --output=report.balance-essai.json --compare=report.balance-reference.json --label=essai
+```
+
+Les deux executions utilisent les graines 0 a 999 et la meme limite
+de temps logique (1 000 000 ms). `--start` choisit la premiere graine ;
+`--max-logical-ms` modifie cette limite. Augmenter `--games` (par exemple a
+10 000) pour affiner la mesure une fois la strategie stabilisee. Pour comparer
+deux rapports, garder
+les memes valeurs de ces trois options. Le script refuse d'ecraser un rapport.
+
+Le rapport JSON conserve le resultat de chaque graine pour reproduire les cas
+problematiques. `success` signifie une partie terminee avec au moins un
+vainqueur ; `blocked`, `noWinner` et `timeout` comptent comme echecs. Le taux
+est une fraction entre 0 et 1 et s'accompagne d'un intervalle de Wilson a 95 %.
+Les pannes, remorquages,
+pertes de drone, impacts et eliminations sont comptes separement ; ils ne sont
+pas automatiquement des echecs de partie. La comparaison indique les graines
+gagnees ou perdues avec les nouveaux reglages. Le rapport indique aussi les
+positions des deux services et leurs distances de trajet depuis chaque base.
+`npm run benchmark` reste l'outil de mesure des performances.
+
 ## Logs de developpement
 
 Le diagnostic et l'export JSON contiennent les evenements de la session. Le

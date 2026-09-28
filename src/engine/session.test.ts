@@ -6,7 +6,7 @@ import { SessionHost } from "./protocol";
 import { addResources, emptyResources, resourceTotal, transferResources } from "./resources";
 import { RULES } from "./rules";
 import { createBot, GameSession } from "./session";
-import { activeCoords, hasLineOfSight, resourceMarkerCoords } from "./visibility";
+import { activeCoords, hasLineOfSight, resourceMarkerCoords, revealedTileKind } from "./visibility";
 import { axial, generateWorld, hexDistance, pathBetween, reachableCoords, worldPosition } from "./world";
 
 describe("resource transactions", () => {
@@ -90,6 +90,42 @@ describe("shared session", () => {
     expect(resourceMarkerCoords(world, current, [targets[0]])).toEqual([]);
   });
 
+  it("reveals public services in view but keeps danger hidden until discovered", () => {
+    const world = generateWorld(42);
+    const known = new Set(["-3,0"] as const);
+    const scanned = new Set<`${number},${number}`>();
+    const danger = world["-2,0"];
+    danger.kind = "danger";
+    const repair = Object.values(world).find(tile => tile.kind === "repair")!;
+    expect(revealedTileKind(repair, known, scanned, true)).toBe("repair");
+    expect(revealedTileKind(danger, known, scanned, true)).toBe("terrain");
+    expect(revealedTileKind(danger, new Set([danger.coord]), scanned, true)).toBe("danger");
+    expect(revealedTileKind(danger, known, scanned, true, true)).toBe("danger");
+  });
+
+  it("plans around a danger only after this bot has discovered it", () => {
+    const world = generateWorld(42);
+    for (const tile of Object.values(world)) tile.resources = emptyResources();
+    world["-1,0"].kind = "danger";
+    world["-1,0"].walkable = true;
+    world["0,0"].kind = "resource";
+    world["0,0"].resources.food = 20;
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].coord = "-2,0";
+    bots["bot-0"].goal = { coord: "0,0", reason: "collect" };
+    bots["bot-1"].damage = 100;
+    const unknown = new GameSession(42, { world, bots });
+    unknown.advance(1);
+    expect(unknown.getSnapshot().bots["bot-0"].operation?.target).toBe("-1,0");
+    unknown.stop();
+
+    bots["bot-0"].known.push("-1,0");
+    const discovered = new GameSession(42, { world, bots });
+    discovered.advance(1);
+    expect(discovered.getSnapshot().bots["bot-0"].operation?.target).not.toBe("-1,0");
+    discovered.stop();
+  });
+
   it("keeps terrain memory separate for each bot after the ship leaves its radius", () => {
     const world = generateWorld(42);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
@@ -114,11 +150,11 @@ describe("shared session", () => {
   it("accumulates repeated harvests of one tile without counting it twice", () => {
     const world = generateWorld(42);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
-    world["0,0"].kind = "resource";
-    world["0,0"].walkable = true;
-    world["0,0"].resources.food = 450;
+    world["-2,0"].kind = "resource";
+    world["-2,0"].walkable = true;
+    world["-2,0"].resources.food = 450;
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
-    bots["bot-0"].coord = "0,0";
+    bots["bot-0"].coord = "-2,0";
     bots["bot-0"].known = Object.values(world).map(tile => tile.coord);
     bots["bot-1"].damage = 100;
     const session = new GameSession(42, { world, bots });
@@ -128,7 +164,7 @@ describe("shared session", () => {
     expect(snapshot.bots["bot-0"].score).toBe(450);
     expect(snapshot.bots["bot-0"].statistics.collections).toBe(3);
     expect(snapshot.bots["bot-0"].statistics.collectionAttempts).toBe(3);
-    expect(snapshot.bots["bot-0"].harvested).toEqual({ "0,0": { food: 450, debris: 0, special: 0 } });
+    expect(snapshot.bots["bot-0"].harvested).toEqual({ "-2,0": { food: 450, debris: 0, special: 0 } });
     session.assertInvariants();
     session.stop();
   });
@@ -185,15 +221,34 @@ describe("shared session", () => {
     session.stop();
   });
 
+  it("plans maintenance only toward a fuel station already seen by this bot", () => {
+    const world = generateWorld(42);
+    const fuel = Object.values(world).find(tile => tile.kind === "fuel")!;
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].fuel = RULES.fuelUrgencyThreshold;
+    bots["bot-1"].damage = 100;
+    expect(bots["bot-0"].explored).not.toContain(fuel.coord);
+    const undiscovered = new GameSession(42, { world, bots });
+    undiscovered.advance(1);
+    expect(undiscovered.getSnapshot().bots["bot-0"].goal?.reason).not.toBe("fuel");
+    undiscovered.stop();
+
+    bots["bot-0"].explored.push(fuel.coord);
+    const discovered = new GameSession(42, { world, bots });
+    discovered.advance(1);
+    expect(discovered.getSnapshot().bots["bot-0"].goal).toEqual({ coord: fuel.coord, reason: "fuel" });
+    discovered.stop();
+  });
+
   it("distinguishes attempted, successful and distinct-tile collections", () => {
     const world = generateWorld(42);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
-    world["0,0"].kind = "resource";
-    world["0,0"].walkable = true;
-    world["0,0"].resources.food = 10;
+    world["-2,0"].kind = "resource";
+    world["-2,0"].walkable = true;
+    world["-2,0"].resources.food = 10;
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     for (const bot of Object.values(bots)) {
-      bot.coord = "0,0";
+      bot.coord = "-2,0";
       bot.known = Object.values(world).map(tile => tile.coord);
     }
     const session = new GameSession(42, { world, bots });
@@ -203,7 +258,7 @@ describe("shared session", () => {
     expect(snapshot.bots["bot-1"].statistics.collectionAttempts).toBe(1);
     expect(snapshot.bots["bot-0"].statistics.collections).toBe(1);
     expect(snapshot.bots["bot-1"].statistics.collections).toBe(0);
-    expect(snapshot.bots["bot-0"].harvested).toEqual({ "0,0": { food: 10, debris: 0, special: 0 } });
+    expect(snapshot.bots["bot-0"].harvested).toEqual({ "-2,0": { food: 10, debris: 0, special: 0 } });
     expect(snapshot.bots["bot-1"].harvested).toEqual({});
     session.advance(100000);
     expect(session.getSnapshot().bots["bot-0"].harvested).toEqual(snapshot.bots["bot-0"].harvested);
@@ -351,6 +406,10 @@ describe("shared session", () => {
   it("sends a drone with insufficient scan fuel to a fuel station", () => {
     const world = generateWorld(42);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
+    world["0,0"].kind = "empty";
+    world["0,0"].walkable = true;
+    world["0,1"].kind = "fuel";
+    world["0,1"].walkable = true;
     world["2,0"].resources.food = 20;
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].coord = "0,0";
@@ -614,12 +673,12 @@ describe("shared session", () => {
   it("serializes simultaneous collections against a single stock", () => {
     const world = generateWorld(42);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
-    world["0,0"].kind = "resource";
-    world["0,0"].walkable = true;
-    world["0,0"].resources = { food: 100, debris: 500, special: 6 };
+    world["-2,0"].kind = "resource";
+    world["-2,0"].walkable = true;
+    world["-2,0"].resources = { food: 100, debris: 500, special: 6 };
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     for (const bot of Object.values(bots)) {
-      bot.coord = "0,0";
+      bot.coord = "-2,0";
       bot.known = Object.values(world).map(tile => tile.coord);
     }
     const session = new GameSession(42, { world, bots });
@@ -765,24 +824,50 @@ describe("session protocol", () => {
 });
 
 describe("hexagonal world", () => {
+  it("varies the single shared stations while keeping both bases close to each service", () => {
+    const layouts = new Set<string>();
+    for (let seed = 0; seed < 64; seed++) {
+      const world = generateWorld(seed);
+      const fuel = Object.values(world).find(tile => tile.kind === "fuel")!;
+      const repair = Object.values(world).find(tile => tile.kind === "repair")!;
+      layouts.add(`${fuel.coord}|${repair.coord}`);
+      for (const station of [fuel, repair]) {
+        const distances = (["-3,0", "3,0"] as const).map(base => pathBetween(world, base, station.coord).length - 1);
+        expect(Math.abs(distances[0] - distances[1])).toBeLessThanOrEqual(1);
+        expect(Math.min(...distances)).toBeGreaterThan(1);
+      }
+    }
+    expect(layouts.size).toBeGreaterThan(1);
+  });
+
   it.each([2, 8])("supports generator radius %i with connected usable tiles", radius => {
     const world = generateWorld(0, radius);
     expect(Object.keys(world)).toHaveLength(1 + 3 * radius * (radius + 1));
     expect(reachableCoords(world, `${-radius},0`)).toHaveLength(Object.values(world).filter(tile => tile.walkable).length);
     expect(Object.values(world).filter(tile => tile.kind === "base")).toHaveLength(2);
+    expect(Object.values(world).filter(tile => tile.kind === "fuel")).toHaveLength(1);
+    expect(Object.values(world).filter(tile => tile.kind === "repair")).toHaveLength(1);
     expect(() => generateWorld(0, 1)).toThrow();
     expect(() => generateWorld(0, 9)).toThrow();
   });
 
-  it.each([0, 1, 42, 4294967295])("generates a symmetric connected world for seed %i", seed => {
+  it.each([0, 1, 42, 4294967295])("generates a balanced connected world for seed %i", seed => {
     const world = generateWorld(seed);
     expect(world).toEqual(generateWorld(seed));
     expect(Object.keys(world)).toHaveLength(37);
     expect(reachableCoords(world, "-3,0")).toHaveLength(Object.values(world).filter(tile => tile.walkable).length);
+    for (const kind of ["fuel", "repair"] as const) {
+      const stations = Object.values(world).filter(tile => tile.kind === kind);
+      expect(stations).toHaveLength(1);
+      const distances = (["-3,0", "3,0"] as const).map(base => pathBetween(world, base, stations[0].coord).length - 1);
+      expect(Math.abs(distances[0] - distances[1])).toBeLessThanOrEqual(1);
+      expect(Math.max(...distances)).toBeLessThanOrEqual(5);
+    }
     for (const tile of Object.values(world)) {
       const [column, row] = axial(tile.coord);
       const mirror = world[`${-column},${-row}`];
-      expect(tile.kind).toBe(mirror.kind);
+      if (!["fuel", "repair"].includes(tile.kind) && !["fuel", "repair"].includes(mirror.kind)) expect(tile.kind).toBe(mirror.kind);
+      expect(tile.walkable).toBe(mirror.walkable);
       expect(tile.resources).toEqual(mirror.resources);
       expect(Object.values(tile.resources).every(value => value >= 0 && Number.isInteger(value))).toBe(true);
       if (tile.kind !== "resource") expect(resourceTotal(tile.resources)).toBe(0);

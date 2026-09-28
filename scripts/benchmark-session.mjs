@@ -24,7 +24,7 @@ try {
     try {
       session.advance(1000000);
       session.assertInvariants();
-      assert.equal(session.getSnapshot().phase, "finished", `Unfinished seed ${seed}`);
+      assert.ok(["finished", "blocked"].includes(session.getSnapshot().phase), `Unfinished seed ${seed}`);
     } finally { session.stop(); }
   };
   for (let seed = 0; seed < 5; seed++) play(seed);
@@ -44,12 +44,12 @@ try {
         eventSequence = snapshot.eventSequence;
         maxBytes = Math.max(maxBytes, Buffer.byteLength(JSON.stringify(snapshot)));
         durations.push(performance.now() - started);
-        if (snapshot.phase === "finished") break;
+        if (snapshot.phase === "finished" || snapshot.phase === "blocked") break;
       }
-      assert.equal(snapshot.phase, "finished");
+      assert.ok(["finished", "blocked"].includes(snapshot.phase));
       durations.sort((left, right) => left - right);
       const percentile = fraction => durations[Math.min(durations.length - 1, Math.floor(durations.length * fraction))];
-      timings.push({ tiles: Object.keys(snapshot.world).length, ticks: durations.length, logicalMs: snapshot.elapsed,
+      timings.push({ tiles: Object.keys(snapshot.world).length, phase: snapshot.phase, ticks: durations.length, logicalMs: snapshot.elapsed,
         maxSnapshotBytes: maxBytes, tickP50Ms: percentile(0.5), tickP95Ms: percentile(0.95), tickMaxMs: percentile(1),
         budget: { snapshotLimitBytes: radius === 3 ? 32768 : 65536, p95LimitMs: radius === 3 ? 5 : 10,
           passed: maxBytes < (radius === 3 ? 32768 : 65536) && percentile(0.95) < (radius === 3 ? 5 : 10) } });

@@ -11,8 +11,10 @@ ne sont pas incluses dans cette cloture.
   decisions, les transactions et l'horloge logique unique.
 - `src/engine/botMachine.ts` represente les operations XState v5. La session
   choisit les intentions faisables et applique leurs effets.
-- `src/engine/world.ts` genere une carte symetrique reproductible en
-  coordonnees axiales et calcule les trajets adjacents par BFS.
+- `src/engine/world.ts` genere une carte reproductible en coordonnees axiales,
+  avec ressources symetriques et un service unique de chaque type place a
+  distance de trajet presque egale des deux bases ; il calcule les trajets
+  adjacents par BFS.
 - `src/engine/resources.ts` applique les transferts par compartiment ;
   `src/engine/rules.ts` contient les valeurs reglementaires.
 - `src/workers/session-worker.ts` partage une seule `SessionHost` entre les

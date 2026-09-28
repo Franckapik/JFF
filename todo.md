@@ -1,3 +1,5 @@
+Je pense que la premiere originalité pourrait résider sur une autonomie des pions et de leur déplacements. Le joueur reel sur le temps long, peut apporter des décisions, des choix, comme un jeu de roles avec une vision startegique plus large et managériale avec tout les comportements amusants liés aux bots qui peuvent etre induits.
+
 # Carnet creatif JFF
 
 Notes d'intention personnelles et pistes non decidees. Elles ne definissent

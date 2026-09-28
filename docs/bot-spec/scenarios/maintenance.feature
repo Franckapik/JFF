@@ -89,3 +89,13 @@ Fonctionnalité: Services locaux et achats individuels
     Alors son drone est disponible avec un rayon de 1
     Quand il rachète successivement les extensions pour 50 puis 100 de budget
     Alors le rayon passe à 2 puis à 3 et chaque achat est débité
+
+  @MAINT-10
+  Scénario: Chercher les stations avant de planifier leur service
+    Étant donné une station carburant hors du rayon et du souvenir d'un bot
+    Quand ce bot planifie un ravitaillement
+    Alors il ne connaît pas encore la position de cette station
+    Et il explore avec une réserve de retour vers sa base
+    Quand la station entre dans son champ de vision
+    Alors il mémorise sa position et peut planifier un trajet de ravitaillement
+    Et l'autre bot ne reçoit pas cette découverte

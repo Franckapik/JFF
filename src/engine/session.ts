@@ -52,7 +52,6 @@ export function createBot(id: BotId, world: World, seed: number): Bot {
 export class GameSession {
   private readonly actors = new Map<BotId, ActorRefFrom<typeof botMachine>>();
   private readonly world: World;
-  private readonly safeWorld: World;
   private readonly initialResources: Resources;
   private lostResources = emptyResources();
   private elapsed = 0;
@@ -74,9 +73,6 @@ export class GameSession {
     if (!Number.isSafeInteger(seed)) throw new Error("Invalid seed");
     this.seed = seed >>> 0;
     this.world = structuredClone(scenario?.world ?? generateWorld(this.seed, RULES.mapRadius));
-    this.safeWorld = Object.fromEntries(
-      Object.entries(this.world).map(([coord, tile]) => [coord, { ...tile, walkable: tile.walkable && tile.kind !== "danger" }])
-    );
     for (const id of BOT_IDS) {
       const bot = structuredClone(scenario?.bots?.[id] ?? createBot(id, this.world, this.seed));
       bot.explored = rememberTerrain(bot.explored, activeCoords(this.world, bot));
@@ -108,17 +104,20 @@ export class GameSession {
   }
 
   private route(bot: Bot, target: Coord): Coord[] {
-    const safeWorld = this.world[bot.coord]?.kind === "danger" ? { ...this.safeWorld, [bot.coord]: this.world[bot.coord] } : this.safeWorld;
+    const knownDangers = new Set(bot.known);
+    const safeWorld = Object.fromEntries(
+      Object.entries(this.world).map(([coord, tile]) => [coord, { ...tile, walkable: tile.walkable && !(tile.kind === "danger" && knownDangers.has(tile.coord) && coord !== bot.coord) }])
+    ) as World;
     const safe = pathBetween(safeWorld, bot.coord, target);
     const path = safe.length ? safe : pathBetween(this.world, bot.coord, target);
-    const damage = path.slice(1).filter(coord => this.world[coord].kind === "danger").length * RULES.dangerDamage;
+    const damage = path.slice(1).filter(coord => knownDangers.has(coord) && this.world[coord].kind === "danger").length * RULES.dangerDamage;
     return bot.damage + damage < 100 ? path : [];
   }
 
   private servicePath(bot: Bot, service: "fuel" | "repair"): Coord[] {
     return (
       Object.values(this.world)
-        .filter(tile => (service === "repair" && tile.coord === bot.base) || tile.kind === service)
+        .filter(tile => (service === "repair" && tile.coord === bot.base) || (tile.kind === service && bot.explored.includes(tile.coord)))
         .map(tile => this.route(bot, tile.coord))
         .filter(path => path.length > 0)
         .sort((left, right) => left.length - right.length)[0] ?? []
@@ -169,7 +168,8 @@ export class GameSession {
   private affordableRoute(bot: Bot, coord: Coord): Coord[] {
     const path = this.route(bot, coord);
     if (!path.length) return [];
-    const returnPath = this.servicePath({ ...bot, coord }, "fuel");
+    const fuelStationKnown = Object.values(this.world).some(tile => tile.kind === "fuel" && bot.explored.includes(tile.coord));
+    const returnPath = fuelStationKnown ? this.servicePath({ ...bot, coord }, "fuel") : this.route({ ...bot, coord }, bot.base);
     return returnPath.length && (path.length + returnPath.length - 2) * RULES.fuelPerStep + RULES.fuelReserve <= bot.fuel ? path : [];
   }
 
@@ -225,8 +225,9 @@ export class GameSession {
       this.launch(bot, "purchase", bot.base, RULES.purchaseDuration, "Remplacement du drone");
       return;
     }
-    const unknown = Object.values(this.world).filter(
-      candidate => candidate.walkable && ["resource", "empty", "danger"].includes(candidate.kind) && !bot.known.includes(candidate.coord)
+    const unknown = Object.values(this.world).filter(candidate =>
+      candidate.walkable && !bot.known.includes(candidate.coord) &&
+      (!["base", "fuel", "repair"].includes(candidate.kind) || !bot.explored.includes(candidate.coord))
     );
     const price = RULES.upgradePrices[bot.radius];
     if (
@@ -247,7 +248,7 @@ export class GameSession {
       .sort((left, right) => right.amount / right.path.length - left.amount / left.path.length);
     const scans = bot.droneAvailable ? unknown.filter(candidate => {
       const distance = hexDistance(bot.coord, candidate.coord);
-      return distance <= bot.radius && hasLineOfSight(this.world, bot.coord, candidate.coord) && 2 * distance * RULES.droneFuelPerHex <= bot.fuel;
+      return ["resource", "empty", "danger"].includes(candidate.kind) && distance <= bot.radius && hasLineOfSight(this.world, bot.coord, candidate.coord) && 2 * distance * RULES.droneFuelPerHex <= bot.fuel;
     }) : [];
     const cargoTotal = resourceTotal(bot.cargo);
     const storagePressure = RESOURCE_KINDS.some(kind => bot.cargo[kind] >= RULES.capacity[kind]);
