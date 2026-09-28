@@ -1,10 +1,11 @@
 import type { Resources } from "./resources";
 import type { BotId, Coord, World } from "./world";
 
-export type OperationKind = "move" | "scan" | "collect" | "service" | "upgrade" | "purchase" | "rescue";
+export type OperationKind = "move" | "wait" | "scan" | "collect" | "service" | "upgrade" | "purchase" | "rescue";
 export type BotPhase =
   | "deciding"
   | "moving"
+  | "waiting"
   | "scanning"
   | "collecting"
   | "servicing"

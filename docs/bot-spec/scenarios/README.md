@@ -1,8 +1,8 @@
 # Scenarios du socle valide
 
 Les dix fichiers `.feature` expriment les [decisions Q01-Q20 et les premieres evolutions](../03-contrat-et-questions.md)
-avec des effets observables et des identifiants stables. Ils contiennent 67
-scenarios et 78 cas apres expansion des exemples.
+avec des effets observables et des identifiants stables. Ils contiennent 75
+scenarios et 86 cas apres expansion des exemples.
 
 L'[audit de la visibilite et du gameplay](../05-audit-visibilite-gameplay.md)
 recapitule les regles appliquees et les limites encore presentes.
@@ -23,7 +23,7 @@ necessitent un controle navigateur.
 | `danger-tiles.feature` | Degats, perte de drone et revelation du danger. |
 | `emergency.feature` | Pause, remorquage et elimination. |
 | `game-over.feature` | Derniers depots, egalite et blocage. |
-| `multi-bot.feature` | Monde partage et arbitrage concurrent. |
+| `multi-bot.feature` | Monde partage, reservation des tuiles d'arret et arbitrage concurrent. |
 | `edge-cases.feature` | Chemins absents, commandes et limites. |
 
 Les anciens scenarios restent accessibles dans la revision Git

@@ -9,6 +9,7 @@ export const botMachine = setup({
   actions: { assignBotContext: assign(({ event }) => event.bot) },
   guards: {
     isMove: ({ event }) => event.bot.operation?.kind === "move",
+    isWait: ({ event }) => event.bot.operation?.kind === "wait",
     isScan: ({ event }) => event.bot.operation?.kind === "scan",
     isCollect: ({ event }) => event.bot.operation?.kind === "collect",
     isService: ({ event }) => event.bot.operation?.kind === "service",
@@ -30,6 +31,7 @@ export const botMachine = setup({
       on: {
         PLAN: [
           { target: "moving", guard: "isMove", actions: "assignBotContext" },
+          { target: "waiting", guard: "isWait", actions: "assignBotContext" },
           { target: "scanning", guard: "isScan", actions: "assignBotContext" },
           { target: "collecting", guard: "isCollect", actions: "assignBotContext" },
           { target: "servicing", guard: "isService", actions: "assignBotContext" },
@@ -40,6 +42,10 @@ export const botMachine = setup({
       },
     },
     moving: { on: { COMPLETE: { target: "deciding", actions: "assignBotContext" } } },
+    waiting: { on: {
+      COMPLETE: { target: "deciding", actions: "assignBotContext" },
+      PLAN: { target: "moving", guard: "isMove", actions: "assignBotContext" },
+    } },
     scanning: { on: { COMPLETE: { target: "deciding", actions: "assignBotContext" } } },
     collecting: { on: { COMPLETE: { target: "deciding", actions: "assignBotContext" } } },
     servicing: { on: { COMPLETE: { target: "deciding", actions: "assignBotContext" } } },

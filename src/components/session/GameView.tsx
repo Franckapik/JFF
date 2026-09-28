@@ -84,7 +84,17 @@ function DeveloperRoutes({ bots }: { bots: BotView[] }) {
   }))}</>;
 }
 
-function Vehicle({ bot, paused, speed }: { bot: BotView; paused: boolean; speed: number }) {
+function WaitingMarkers({ bots, visible }: { bots: BotView[]; visible: Coord[] }) {
+  const seen = new Set(visible);
+  return <>{bots.filter(bot => bot.operation?.kind === 'wait' && seen.has(bot.operation.target)).map(bot => {
+    const [x, , z] = worldPosition(bot.operation!.target);
+    return <mesh key={bot.id} position={[x, 0.21, z]} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[0.7, 0.78, 24]} /><meshBasicMaterial color={BOT_COLORS[bot.id]} transparent opacity={0.8} />
+    </mesh>;
+  })}</>;
+}
+
+function Vehicle({ bot, paused, speed, crossing, flyoverStart, flyoverEnd }: { bot: BotView; paused: boolean; speed: number; crossing: boolean; flyoverStart: boolean; flyoverEnd: boolean }) {
   useRenderCounter(bot.id);
   const ship = useRef<Group>(null);
   const drone = useRef<Group>(null);
@@ -99,7 +109,17 @@ function Vehicle({ bot, paused, speed }: { bot: BotView; paused: boolean; speed:
     if (ship.current) {
       ship.current.position.copy(from);
       if (operation?.kind === 'move' || operation?.kind === 'rescue') ship.current.position.lerp(to, progress);
-      ship.current.position.y = 0.28;
+      ship.current.position.y = 0.28 + (operation?.kind === 'move'
+        ? 0.32 * Math.sin(Math.PI * progress) + 0.56 * ((flyoverStart ? 1 - progress : 0) + (flyoverEnd ? progress : 0))
+        : 0);
+      if (crossing && operation?.kind === 'move') {
+        const direction = bot.coord < operation.target ? 1 : -1;
+        const dx = (to.x - from.x) * direction;
+        const dz = (to.z - from.z) * direction;
+        const offset = (bot.id === 'bot-0' ? 1 : -1) * 0.4 * Math.sin(Math.PI * progress) / Math.hypot(dx, dz);
+        ship.current.position.x -= dz * offset;
+        ship.current.position.z += dx * offset;
+      }
       if (operation?.kind === 'move') ship.current.rotation.y = Math.atan2(to.x - from.x, to.z - from.z);
     }
     if (drone.current) {
@@ -110,7 +130,7 @@ function Vehicle({ bot, paused, speed }: { bot: BotView; paused: boolean; speed:
         flight = travel > 0 ? Math.min(1, elapsed / travel, (operation.duration - elapsed) / travel) : 0;
         drone.current.position.lerp(to, Math.max(0, flight));
       } else if (ship.current) drone.current.position.copy(ship.current.position);
-      drone.current.position.y = operation?.kind === 'scan' ? 0.8 + 0.6 * flight : 0.8;
+      drone.current.position.y = operation?.kind === 'scan' ? 0.8 + 0.6 * flight : 0.8 + (ship.current?.position.y ?? 0.28) - 0.28;
       if (!paused && operation?.kind === 'scan') drone.current.rotation.y += delta * 5;
     }
   });
@@ -162,7 +182,15 @@ export default function GameView() {
           <Tiles world={snapshot.world} current={current} explored={explored} scanned={scanned} known={viewedBot.known.join('|')} depleted={depleted} developer={developer} selected={selected} route={expert && !developer ? expertBot.route : []} routeOwner={expert && !developer ? expertBot.id : null} select={setSelected} />
           <GroundResources world={snapshot.world} current={current} scanned={scanned} />
           {developer && <DeveloperRoutes bots={Object.values(snapshot.bots)} />}
-          {Object.values(snapshot.bots).filter(bot => developer || bot.id === perspective || currentCoords.includes(bot.coord)).map(bot => <Vehicle key={bot.id} bot={bot} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} speed={snapshot.speed} />)}
+          <WaitingMarkers bots={Object.values(snapshot.bots)} visible={currentCoords} />
+          {Object.values(snapshot.bots).filter(bot => developer || bot.id === perspective || currentCoords.includes(bot.coord)).map(bot => {
+            const other = snapshot.bots[bot.id === 'bot-0' ? 'bot-1' : 'bot-0'];
+            const crossing = bot.operation?.kind === 'move' && other.operation?.kind === 'move' && bot.operation.target === other.coord && other.operation.target === bot.coord;
+            const otherParked = other.state !== 'finished' && other.state !== 'eliminated' && other.operation?.kind !== 'move' && other.operation?.kind !== 'rescue';
+            const flyoverStart = bot.operation?.kind === 'move' && otherParked && bot.coord === other.coord;
+            const flyoverEnd = bot.operation?.kind === 'move' && otherParked && bot.operation.target === other.coord && bot.goal?.coord !== other.coord;
+            return <Vehicle key={bot.id} bot={bot} crossing={crossing} flyoverStart={flyoverStart} flyoverEnd={flyoverEnd} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} speed={snapshot.speed} />;
+          })}
           <OrbitControls makeDefault target={[0, 0, 0]} minDistance={8} maxDistance={26} minPolarAngle={0.1} maxPolarAngle={Math.PI / 2.1} />
         </Canvas>
       </div>

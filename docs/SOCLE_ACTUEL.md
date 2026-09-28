@@ -28,6 +28,11 @@ Le flux est : transaction de session -> contexte XState -> snapshot versionne
 -> store Zustand -> affichage React/Three.js. Le worker publie au plus dix
 mises a jour periodiques par seconde, hors commandes et connexions.
 
+Les tuiles ou un bot s'arrete pour agir sont exclusives. Le dernier pas vers
+une cible reserve la place, tandis que les trajets intermediaires restent
+survolables. Le bot concurrent attend sans frais sur la tuile d'approche ;
+deux bots face a face peuvent echanger leur place par un croisement en vol.
+
 ## Garanties et sorties
 
 Pour chaque ressource : stock restant dans le monde + cargaisons + depots

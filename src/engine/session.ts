@@ -73,10 +73,11 @@ export class GameSession {
     if (!Number.isSafeInteger(seed)) throw new Error("Invalid seed");
     this.seed = seed >>> 0;
     this.world = structuredClone(scenario?.world ?? generateWorld(this.seed, RULES.mapRadius));
-    for (const id of BOT_IDS) {
-      const bot = structuredClone(scenario?.bots?.[id] ?? createBot(id, this.world, this.seed));
+    const startingBots = BOT_IDS.map(id => structuredClone(scenario?.bots?.[id] ?? createBot(id, this.world, this.seed)));
+    if (startingBots[0].coord === startingBots[1].coord) throw new Error("Bots cannot start on the same tile");
+    for (const bot of startingBots) {
       bot.explored = rememberTerrain(bot.explored, activeCoords(this.world, bot));
-      this.actors.set(id, createActor(botMachine, { input: bot }).start());
+      this.actors.set(bot.id, createActor(botMachine, { input: bot }).start());
     }
     this.initialResources = this.bots().reduce(
       (total, bot) => addResources(total, addResources(bot.cargo, bot.deposited)),
@@ -126,14 +127,46 @@ export class GameSession {
 
   private launch(bot: Bot, kind: OperationKind, target: Coord, duration: number, decision: string) {
     this.actors.get(bot.id)!.send({ type: "PLAN", bot: { ...bot, decision, operation: { kind, target, duration, remaining: duration } } });
-    this.log(bot.id, decision);
-    this.emit({ type: "operation.started", category: "decision", botId: bot.id, operation: kind, coord: bot.coord, target, reason: decision });
+    if (kind !== "wait" || bot.decision !== decision) {
+      this.log(bot.id, decision);
+      this.emit({ type: "operation.started", category: "decision", botId: bot.id, operation: kind, coord: bot.coord, target, reason: decision });
+    }
+  }
+
+  // Only the destination of a final movement step is reserved. Intermediate
+  // waypoints remain flyable, even when another bot is using the tile below.
+  private claimant(coord: Coord, requester: BotId): BotView | undefined {
+    return this.bots().find(bot => {
+      if (bot.id === requester || bot.state === "finished" || bot.state === "eliminated") return false;
+      if (bot.operation?.kind === "move") return bot.operation.target === coord && bot.goal?.coord === coord;
+      if (bot.operation?.kind === "rescue") return false;
+      return bot.coord === coord;
+    });
   }
 
   private move(bot: Bot, target: Coord, reason: GoalReason): boolean {
     if (bot.fuel < RULES.fuelPerStep) return false;
     const path = this.route(bot, target);
     if (path.length < 2) return false;
+    const claimant = path[1] === target ? this.claimant(target, bot.id) : undefined;
+    if (claimant?.operation?.kind === "wait" && claimant.operation.target === bot.coord && claimant.fuel >= RULES.fuelPerStep) {
+      this.launch(
+        { ...claimant, route: [bot.coord] },
+        "move",
+        bot.coord,
+        RULES.stepDuration,
+        `Croisement vers ${bot.coord}`
+      );
+    } else if (claimant) {
+      this.launch(
+        { ...bot, route: path.slice(1), goal: { coord: target, reason } },
+        "wait",
+        target,
+        RULES.stepDuration,
+        `Attente : tuile ${target} occupee`
+      );
+      return true;
+    }
     this.launch(
       { ...bot, route: path.slice(1), goal: { coord: target, reason } },
       "move",
@@ -179,6 +212,8 @@ export class GameSession {
       this.eliminate(bot, "Vaisseau detruit");
       return;
     }
+    if (bot.goal?.reason === "collect" && this.available(bot, bot.goal.coord) === 0)
+      bot = { ...bot, goal: null, route: [] };
     const isBase = bot.coord === bot.base;
     const atFuel = tile.kind === "fuel";
     if (bot.fuel < RULES.fuelPerStep && !atFuel) {
@@ -296,6 +331,8 @@ export class GameSession {
     const operation = bot.operation!;
     let next: Bot = { ...bot, operation: null };
     switch (operation.kind) {
+      case "wait":
+        break;
       case "move": {
         if (!this.world[bot.coord].neighbors.includes(operation.target) || !this.world[operation.target]?.walkable)
           throw new Error("Invalid waypoint");

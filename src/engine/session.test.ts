@@ -179,12 +179,11 @@ describe("shared session", () => {
     world["0,0"].kind = "resource";
     world["0,0"].resources.food = remainingFood;
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
-    for (const bot of Object.values(bots)) {
-      bot.coord = "0,0";
-      bot.damage = 90;
-      bot.known = Object.values(world).map(tile => tile.coord);
-      bot.cargo.food = 5;
-    }
+    bots["bot-0"].coord = "0,0";
+    bots["bot-0"].damage = 90;
+    bots["bot-0"].known = Object.values(world).map(tile => tile.coord);
+    bots["bot-0"].cargo.food = 5;
+    bots["bot-1"].damage = 100;
     expect(pathBetween(world, "0,0", bots["bot-0"].base).length).toBeGreaterThan(1);
     const session = new GameSession(42, { world, bots });
     session.advance(1);
@@ -240,22 +239,22 @@ describe("shared session", () => {
     discovered.stop();
   });
 
-  it("distinguishes attempted, successful and distinct-tile collections", () => {
+  it("does not count a contested and depleted tile as a collection attempt", () => {
     const world = generateWorld(42);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     world["-2,0"].kind = "resource";
     world["-2,0"].walkable = true;
     world["-2,0"].resources.food = 10;
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
-    for (const bot of Object.values(bots)) {
-      bot.coord = "-2,0";
-      bot.known = Object.values(world).map(tile => tile.coord);
-    }
+    bots["bot-0"].coord = "-2,0";
+    bots["bot-1"].coord = "-1,0";
+    bots["bot-1"].goal = { coord: "-2,0", reason: "collect" };
+    for (const bot of Object.values(bots)) bot.known = Object.values(world).map(tile => tile.coord);
     const session = new GameSession(42, { world, bots });
     session.advance(RULES.collectDuration);
     const snapshot = session.getSnapshot();
     expect(snapshot.bots["bot-0"].statistics.collectionAttempts).toBe(1);
-    expect(snapshot.bots["bot-1"].statistics.collectionAttempts).toBe(1);
+    expect(snapshot.bots["bot-1"].statistics.collectionAttempts).toBe(0);
     expect(snapshot.bots["bot-0"].statistics.collections).toBe(1);
     expect(snapshot.bots["bot-1"].statistics.collections).toBe(0);
     expect(snapshot.bots["bot-0"].harvested).toEqual({ "-2,0": { food: 10, debris: 0, special: 0 } });
@@ -670,22 +669,148 @@ describe("shared session", () => {
     session.stop();
   });
 
-  it("serializes simultaneous collections against a single stock", () => {
+  it("serializes contested collection of stock larger than one compartment", () => {
     const world = generateWorld(42);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     world["-2,0"].kind = "resource";
     world["-2,0"].walkable = true;
     world["-2,0"].resources = { food: 100, debris: 500, special: 6 };
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].coord = "-2,0";
+    bots["bot-1"].coord = "-1,0";
+    bots["bot-1"].goal = { coord: "-2,0", reason: "collect" };
+    for (const bot of Object.values(bots)) bot.known = Object.values(world).map(tile => tile.coord);
+    const session = new GameSession(42, { world, bots });
+    session.advance(3000);
+    const snapshot = session.getSnapshot();
+    const collected = Object.values(snapshot.bots).reduce((total, bot) => addResources(total, addResources(bot.cargo, bot.deposited)), emptyResources());
+    expect(collected).toEqual({ food: 100, debris: 500, special: 6 });
+    expect(resourceTotal(snapshot.remainingResources)).toBe(0);
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("rejects an initial scenario with two bots on the same tile", () => {
+    const world = generateWorld(42);
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-1"].coord = bots["bot-0"].coord;
+    expect(() => new GameSession(42, { world, bots })).toThrow("Bots cannot start on the same tile");
+  });
+
+  it("reserves a contested resource on the final step and releases the loser without spending fuel", () => {
+    const world = generateWorld(42);
+    for (const tile of Object.values(world)) tile.resources = emptyResources();
+    world["-2,0"].kind = "resource";
+    world["-2,0"].walkable = true;
+    world["-2,0"].resources.food = 40;
+    world["-1,0"].walkable = true;
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-1"].coord = "-1,0";
     for (const bot of Object.values(bots)) {
-      bot.coord = "-2,0";
-      bot.known = Object.values(world).map(tile => tile.coord);
+      bot.known = ["-2,0"];
+      bot.goal = { coord: "-2,0", reason: "collect" };
     }
     const session = new GameSession(42, { world, bots });
-    session.advance(1000);
-    const snapshot = session.getSnapshot();
-    expect(addResources(snapshot.bots["bot-0"].cargo, snapshot.bots["bot-1"].cargo)).toEqual({ food: 100, debris: 500, special: 6 });
-    expect(resourceTotal(snapshot.remainingResources)).toBe(0);
+    session.advance(1);
+    let snapshot = session.getSnapshot();
+    expect(snapshot.bots["bot-0"].operation).toMatchObject({ kind: "move", target: "-2,0" });
+    expect(snapshot.bots["bot-1"].operation).toMatchObject({ kind: "wait", target: "-2,0" });
+    expect(snapshot.bots["bot-1"].fuel).toBe(RULES.fuelCapacity);
+    session.advance(RULES.stepDuration - 1);
+    snapshot = session.getSnapshot();
+    expect(snapshot.bots["bot-0"].operation?.kind).toBe("collect");
+    expect(snapshot.bots["bot-1"].coord).toBe("-1,0");
+    session.advance(RULES.collectDuration + RULES.stepDuration);
+    snapshot = session.getSnapshot();
+    expect(snapshot.bots["bot-1"].coord).toBe("-1,0");
+    expect(snapshot.bots["bot-1"].statistics.collections).toBe(0);
+    expect(snapshot.bots["bot-1"].fuel).toBe(RULES.fuelCapacity);
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("keeps an occupied intermediate waypoint flyable", () => {
+    const world = generateWorld(42);
+    for (const tile of Object.values(world)) tile.resources = emptyResources();
+    for (const coord of ["-2,0", "-1,0"] as const) {
+      world[coord].kind = "resource";
+      world[coord].walkable = true;
+      world[coord].resources.food = 20;
+    }
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].known.push("-1,0");
+    bots["bot-0"].goal = { coord: "-1,0", reason: "collect" };
+    bots["bot-1"].coord = "-2,0";
+    bots["bot-1"].known.push("-2,0");
+    bots["bot-1"].droneAvailable = false;
+    const session = new GameSession(42, { world, bots });
+    session.advance(1);
+    expect(session.getSnapshot().bots["bot-0"].operation).toMatchObject({ kind: "move", target: "-2,0" });
+    expect(session.getSnapshot().bots["bot-1"].operation?.kind).toBe("collect");
+    session.advance(RULES.stepDuration - 1);
+    const passing = session.getSnapshot();
+    expect(passing.bots["bot-0"].coord).toBe("-2,0");
+    expect(passing.bots["bot-0"].operation).toMatchObject({ kind: "move", target: "-1,0" });
+    expect(passing.bots["bot-1"].operation?.kind).toBe("collect");
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("queues for the fuel station without consuming fuel while waiting", () => {
+    const world = generateWorld(42);
+    for (const tile of Object.values(world)) tile.resources = emptyResources();
+    const station = Object.values(world).find(tile => tile.kind === "fuel")!;
+    const neighbors = station.neighbors.filter(coord => world[coord].walkable);
+    const resource = Object.values(world).find(tile => tile.kind === "resource" && !neighbors.includes(tile.coord))!;
+    resource.resources.food = 40;
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    for (const [index, bot] of Object.values(bots).entries()) {
+      bot.coord = neighbors[index];
+      bot.fuel = 10;
+      bot.explored = Object.keys(world) as (typeof bot.coord)[];
+      bot.known = Object.keys(world) as (typeof bot.coord)[];
+      bot.droneAvailable = false;
+      bot.goal = { coord: station.coord, reason: "fuel" };
+    }
+    const session = new GameSession(42, { world, bots });
+    session.advance(1);
+    let snapshot = session.getSnapshot();
+    expect(snapshot.bots["bot-0"].operation).toMatchObject({ kind: "move", target: station.coord });
+    expect(snapshot.bots["bot-1"].operation).toMatchObject({ kind: "wait", target: station.coord });
+    session.advance(RULES.stepDuration - 1);
+    snapshot = session.getSnapshot();
+    expect(snapshot.bots["bot-0"].operation?.kind).toBe("service");
+    expect(snapshot.bots["bot-1"].coord).toBe(neighbors[1]);
+    expect(snapshot.bots["bot-1"].fuel).toBe(10);
+    session.advance(RULES.fuelServiceStepMultiplier * RULES.stepDuration + RULES.stepDuration);
+    snapshot = session.getSnapshot();
+    expect(snapshot.bots["bot-0"].fuel).toBe(RULES.fuelCapacity - RULES.fuelPerStep);
+    expect(snapshot.bots["bot-1"].coord).toBe(station.coord);
+    expect(snapshot.bots["bot-1"].operation?.kind).toBe("service");
+    expect(snapshot.bots["bot-1"].fuel).toBe(10 - RULES.fuelPerStep);
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("lets two waiting bots exchange adjacent destinations in one airborne crossing", () => {
+    const world = generateWorld(42);
+    for (const tile of Object.values(world)) tile.resources = emptyResources();
+    world["-2,0"].kind = "resource";
+    world["-2,0"].walkable = true;
+    world["-2,0"].resources.food = 40;
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-1"].coord = "-2,0";
+    bots["bot-0"].goal = { coord: "-2,0", reason: "collect" };
+    bots["bot-1"].goal = { coord: "-3,0", reason: "explore" };
+    const session = new GameSession(42, { world, bots });
+    session.advance(1);
+    const moving = session.getSnapshot();
+    expect(moving.bots["bot-0"].operation).toMatchObject({ kind: "move", target: "-2,0" });
+    expect(moving.bots["bot-1"].operation).toMatchObject({ kind: "move", target: "-3,0" });
+    session.advance(RULES.stepDuration - 1);
+    const arrived = session.getSnapshot();
+    expect(arrived.bots["bot-0"].coord).toBe("-2,0");
+    expect(arrived.bots["bot-1"].coord).toBe("-3,0");
     session.assertInvariants();
     session.stop();
   });

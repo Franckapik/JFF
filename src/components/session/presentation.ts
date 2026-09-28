@@ -25,6 +25,7 @@ export const RESOURCE_LABELS = { food: "Nourriture", debris: "Debris", special: 
 export const PHASE_LABELS: Record<BotPhase, string> = {
   deciding: "Decision",
   moving: "Deplacement",
+  waiting: "En attente",
   scanning: "Exploration",
   collecting: "Collecte",
   servicing: "Maintenance",

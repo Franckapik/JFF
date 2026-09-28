@@ -44,3 +44,41 @@ Fonctionnalité: Compétition partagée et lectures individuelles
     Quand un onglet met en pause, change la vitesse ou réinitialise la partie
     Alors les deux onglets observent la même session résultante
     Et aucun onglet ne fait avancer une simulation locale supplémentaire
+
+  @MULTI-06
+  Scénario: Réserver seulement la dernière étape vers une tuile disputée
+    Étant donné deux bots qui visent la même tuile de ressources
+    Quand le premier commence son dernier pas vers cette tuile
+    Alors il en réserve la place jusqu'à son départ
+    Et le second attend avant son dernier pas sans consommer de carburant ni compter de collecte
+    Et sa cible occupée est signalée sur le terrain lorsqu'elle est visible
+    Mais les tuiles intermédiaires de leurs trajets restent survolables
+
+  @MULTI-07
+  Scénario: Attendre son tour à une station publique
+    Étant donné deux bots qui ont besoin de la même station de carburant
+    Quand le premier y effectue son service
+    Alors le second reste sur sa tuile d'approche sans consommer de carburant pendant l'attente
+    Et il peut entrer dans la station dès que le premier la quitte
+    Et chaque bot reçoit son service uniquement après son arrivée et sa propre durée de service
+
+  @MULTI-08
+  Scénario: Échanger deux destinations adjacentes sans blocage
+    Étant donné deux bots voisins dont chacun vise la tuile actuelle de l'autre
+    Quand le second rencontre l'attente du premier
+    Alors les deux commencent un croisement en vol à la même échéance logique
+    Et chacun arrive sur une tuile différente après un pas facturé normalement
+    Et leurs trajectoires visibles sont écartées pendant le croisement
+
+  @MULTI-09
+  Scénario: Abandonner une ressource épuisée pendant l'attente
+    Étant donné un bot qui attend l'accès à une ressource occupée
+    Quand le premier bot prélève tout le stock disponible
+    Alors le bot en attente abandonne cet objectif avant d'entrer sur la tuile
+    Et il cherche un autre objectif selon ses priorités habituelles
+
+  @MULTI-10
+  Scénario: Refuser deux positions initiales identiques
+    Étant donné un scénario de démarrage qui place les deux bots sur la même tuile
+    Quand la session est créée
+    Alors ce scénario est refusé explicitement

@@ -75,6 +75,14 @@ sans certification sur telephone.
   incomplete apres une duree egale a trois pas du vaisseau. La reparation devient
   prioritaire a 50 degats ; entre deux besoins distants, elle est recherchee
   avant le ravitaillement.
+- Une tuile d'arret accueille un seul bot actif a la fois. Le dernier pas vers
+  une cible reserve cette place ; les autres bots attendent sur leur tuile
+  d'approche sans depense de carburant ni tentative d'action. Les trajets
+  intermediaires restent survolables. Une attente prend fin lorsque la place
+  est liberee ou que la ressource visee est epuisee. Deux bots voisins qui
+  visent chacun la place de l'autre se croisent simultanement en vol.
+  Un bot termine ou elimine ne reserve plus de place, et un scenario initial
+  ne peut pas placer les deux bots sur une meme tuile.
 - Arrive sur un danger, le drone est perdu et la cible est revelee
   immediatement, sans scan ni retour fictif. Le vaisseau distant est indemne.
   Le vaisseau recoit 10 degats en entrant sur une case dangereuse ; a 100

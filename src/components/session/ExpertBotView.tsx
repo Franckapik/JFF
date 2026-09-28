@@ -31,6 +31,7 @@ type EventIcon = ComponentType<{ size?: number }>;
 
 const OPERATION_ICONS: Record<OperationKind, EventIcon> = {
   move: Route,
+  wait: Footprints,
   scan: Radar,
   collect: PackageOpen,
   service: Wrench,
