@@ -14,6 +14,7 @@ Fonctionnalité: Exploration depuis le vaisseau mobile
   Scénario: Effectuer un scan normal et revenir au vaisseau
     Étant donné un vaisseau en "1,0" avec un rayon de 1
     Et sa seule cible de scan est la ressource inconnue "2,0"
+    Et aucun nuage ne touche le trajet du drone pendant cette opération
     Quand le scan commence
     Alors son aller dure 400 ms, son scan 800 ms et son retour 400 ms
     Et à 1599 ms la connaissance ne contient pas encore cette cible

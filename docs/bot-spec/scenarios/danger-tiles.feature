@@ -1,6 +1,6 @@
 # language: fr
 @socle @danger
-Fonctionnalité: Dangers statiques et perte du drone à l'arrivée
+Fonctionnalité: Tuiles dangereuses statiques et perte du drone à l'arrivée
 
   @DANGER-01
   Scénario: Appliquer les dégâts à chaque arrivée du vaisseau
@@ -50,11 +50,12 @@ Fonctionnalité: Dangers statiques et perte du drone à l'arrivée
       | 3        | 1199  |
 
   @DANGER-04
-  Scénario: Ne pas déplacer les dangers dans le socle
+  Scénario: Garder les tuiles dangereuses statiques malgré le nuage mobile
     Étant donné une carte dont les dangers sont statiques
     Quand du temps logique s'écoule
     Alors leurs coordonnées et leur type restent inchangés
-    Et aucune collision due au déplacement d'un danger n'est émise
+    Et aucune collision due au déplacement d'une tuile dangereuse n'est émise
+    Et un nuage électrique peut se déplacer indépendamment au-dessus de ces tuiles
     Et aucune base ou station n'est transformée spontanément en danger
 
   @DANGER-05

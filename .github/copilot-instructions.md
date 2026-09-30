@@ -28,13 +28,21 @@ pause, le pas a pas et le reset partage.
 
 ## Travail et verification
 
+Toute modification d'une regle de gameplay ou d'un comportement observable
+doit mettre a jour les scenarios Gherkin concernes dans
+`docs/bot-spec/scenarios/*.feature` au cours du meme changement. Ajouter les
+cas manquants, corriger les cas devenus faux et tenir a jour leur `README.md`
+si le nombre ou la liste des fichiers change. Executer `npm run scenarios:check`
+apres ces modifications ; ce controle verifie la syntaxe et les identifiants,
+pas l'execution des etapes.
+
 Node >= 22.12 ; `npm ci` depuis le lockfile. `npm run validate` lance les types
 de tout `src/`, Vitest, le controle de syntaxe Gherkin, ESLint et le build.
 `scripts/pre-commit.sh` ajoute l'audit des dependances. Les fichiers `.feature`
 ne sont pas executes comme tests. Reutiliser `src/engine/session.test.ts` pour
 les scenarios moteur proches et des tests de vue cibles lorsque necessaire.
 
-Le worker publie un snapshot version 3, le protocole de commandes est en
+Le worker publie un snapshot version 7, le protocole de commandes est en
 version 1. Un changement de contrat de transport doit etre versionne et teste.
 Les performances du poste Linux/Chromium ne certifient pas d'autres appareils.
 Voir [le socle actuel](../docs/SOCLE_ACTUEL.md) et
