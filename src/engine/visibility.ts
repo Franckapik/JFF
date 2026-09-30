@@ -1,4 +1,4 @@
-import type { Bot } from "./model";
+import type { Bot, ElectricCloud } from "./model";
 import { resourceTotal } from "./resources";
 import { axial, hexDistance, type Coord, type TileKind, type World, type WorldTile } from "./world";
 
@@ -39,6 +39,10 @@ export function activeCoords(world: World, ship: Pick<Bot, "coord" | "radius">):
 
 export function rememberTerrain(explored: Coord[], visible: Coord[]): Coord[] {
   return [...new Set([...explored, ...visible])].sort();
+}
+
+export function isCloudVisible(cloud: ElectricCloud | null, current: readonly Coord[], developer = false): boolean {
+  return !!cloud && (developer || current.includes(cloud.coord));
 }
 
 export function revealedTileKind(tile: WorldTile, known: ReadonlySet<Coord>, scanned: ReadonlySet<Coord>, visible: boolean, developer = false): TileKind | "terrain" {

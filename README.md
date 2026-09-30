@@ -18,6 +18,16 @@ npm run dev
 - `npm run validate` : types, tests, scenarios Gherkin, lint et build.
 - `npm run preview -- --host 127.0.0.1` : servir le build.
 
+Le nuage électrique apparaît après chaque palier de six nouvelles tuiles
+explorées, à deux tuiles au moins des deux vaisseaux, s'il n'est pas déjà
+présent. Il dérive d'une tuile toutes les 2,4 secondes et se dissipe après
+10 secondes, avec un fondu à l'apparition et à la disparition. Son effet ne
+concerne que la tuile qu'il occupe : un vaisseau en contact subit des dégâts ;
+un drone rebondit en sens inverse vers le bord du plateau, puis visite une
+tuile aléatoire avant de revenir. Le détour peut conduire le drone sur une
+tuile dangereuse. Le nuage reste caché hors de la vision actuelle du bot
+sélectionné.
+
 ## References actuelles
 
 - [Architecture et limites du socle](docs/SOCLE_ACTUEL.md)

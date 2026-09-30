@@ -4,16 +4,16 @@ import { Bot as BotIcon, SlidersHorizontal } from 'lucide-react';
 import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Color, Group, InstancedMesh, Object3D, Vector3 } from 'three';
 
-import type { BotView } from '../../engine/model';
+import type { BotView, ElectricCloud } from '../../engine/model';
 import { RESOURCE_KINDS, type Resources } from '../../engine/resources';
 import { RULES } from '../../engine/rules';
-import { activeCoords, depletedResourceCoords, resourceMarkerCoords, revealedTileKind } from '../../engine/visibility';
-import { BOT_IDS, worldPosition, type BotId, type Coord, type World, type WorldTile } from '../../engine/world';
+import { activeCoords, depletedResourceCoords, isCloudVisible, resourceMarkerCoords, revealedTileKind } from '../../engine/visibility';
+import { BOT_IDS, hexLine, worldPosition, type BotId, type Coord, type World, type WorldTile } from '../../engine/world';
 import { useSessionStore } from '../../stores/useSessionStore';
 
 import BotPanel from './BotPanel';
 import ExpertBotView from './ExpertBotView';
-import { BOT_COLORS, DEPLETED_TILE_COLOR, TILE_COLORS, TILE_LABELS } from './presentation';
+import { BOT_COLORS, cloudOpacity, DEPLETED_TILE_COLOR, TILE_COLORS, TILE_LABELS } from './presentation';
 import { useRenderCounter } from './renderMetrics';
 
 type Perspective = BotId | 'developer';
@@ -94,6 +94,41 @@ function WaitingMarkers({ bots, visible }: { bots: BotView[]; visible: Coord[] }
   })}</>;
 }
 
+function ElectricCloudView({ cloud, opacity, paused }: { cloud: ElectricCloud; opacity: number; paused: boolean }) {
+  const body = useRef<Group>(null);
+  const phase = useRef(0);
+  const [x, , z] = worldPosition(cloud.coord);
+  useFrame((_, delta) => {
+    if (!paused) phase.current += delta;
+    if (body.current) {
+      body.current.rotation.y = phase.current * 0.45;
+      body.current.position.y = 0.82 + Math.sin(phase.current * 2.3) * 0.1;
+    }
+  });
+  return <>
+    <mesh position={[x, 0.2, z]} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[0.78, 0.85, 6]} />
+      <meshBasicMaterial color="#65dbe9" transparent opacity={0.88 * opacity} />
+    </mesh>
+    <group position={worldPosition(cloud.coord)}>
+      <group ref={body}>
+        <mesh position={[-0.27, 0, 0]}><icosahedronGeometry args={[0.35, 1]} /><meshStandardMaterial color="#bad9df" emissive="#4ba3c3" emissiveIntensity={0.75} transparent opacity={0.86 * opacity} /></mesh>
+        <mesh position={[0.2, 0.13, 0.15]}><icosahedronGeometry args={[0.4, 1]} /><meshStandardMaterial color="#9fcbd4" emissive="#3977ba" emissiveIntensity={0.8} transparent opacity={0.83 * opacity} /></mesh>
+        <mesh position={[0.12, -0.12, -0.25]}><icosahedronGeometry args={[0.28, 1]} /><meshStandardMaterial color="#c5e5e8" emissive="#4ba3c3" emissiveIntensity={0.65} transparent opacity={0.85 * opacity} /></mesh>
+        <mesh rotation={[0.3, 0, 0.4]}><torusGeometry args={[0.51, 0.025, 4, 16]} /><meshBasicMaterial color="#f5e777" transparent opacity={opacity} /></mesh>
+      </group>
+    </group>
+  </>;
+}
+
+function scanPosition(from: Coord, to: Coord, elapsed: number): Vector3 {
+  const path = hexLine(from, to);
+  if (path.length === 1) return new Vector3(...worldPosition(from));
+  const progress = Math.max(0, Math.min(path.length - 1, elapsed / RULES.stepDuration));
+  const index = Math.min(path.length - 2, Math.floor(progress));
+  return new Vector3(...worldPosition(path[index])).lerp(new Vector3(...worldPosition(path[index + 1])), progress - index);
+}
+
 function Vehicle({ bot, paused, speed, crossing, flyoverStart, flyoverEnd }: { bot: BotView; paused: boolean; speed: number; crossing: boolean; flyoverStart: boolean; flyoverEnd: boolean }) {
   useRenderCounter(bot.id);
   const ship = useRef<Group>(null);
@@ -126,9 +161,22 @@ function Vehicle({ bot, paused, speed, crossing, flyoverStart, flyoverEnd }: { b
       drone.current.position.copy(from);
       let flight = 0;
       if (operation?.kind === 'scan') {
-        const travel = (operation.duration - RULES.scanDuration) / 2;
-        flight = travel > 0 ? Math.min(1, elapsed / travel, (operation.duration - elapsed) / travel) : 0;
-        drone.current.position.lerp(to, Math.max(0, flight));
+        flight = Math.max(0, Math.min(1, elapsed / RULES.stepDuration, (operation.duration - elapsed) / RULES.stepDuration));
+        const detour = operation.scanDetour;
+        if (detour) {
+          if (elapsed <= detour.contactAt) drone.current.position.copy(scanPosition(bot.coord, detour.contact, elapsed));
+          else if (elapsed <= detour.edgeAt) drone.current.position.copy(scanPosition(detour.contact, detour.edge, elapsed - detour.contactAt));
+          else if (elapsed <= detour.destinationAt) drone.current.position.copy(scanPosition(detour.edge, detour.destination, elapsed - detour.edgeAt));
+          else if (elapsed <= detour.destinationAt + RULES.scanDuration) drone.current.position.set(...worldPosition(detour.destination));
+          else drone.current.position.copy(scanPosition(detour.destination, bot.coord, elapsed - detour.destinationAt - RULES.scanDuration));
+        } else {
+          const target = operation.scanInitialTarget ?? operation.target;
+          const travel = hexLine(bot.coord, target).length - 1;
+          const arrival = travel * RULES.stepDuration;
+          if (elapsed <= arrival) drone.current.position.copy(scanPosition(bot.coord, target, elapsed));
+          else if (elapsed <= arrival + RULES.scanDuration) drone.current.position.set(...worldPosition(target));
+          else drone.current.position.copy(scanPosition(target, bot.coord, elapsed - arrival - RULES.scanDuration));
+        }
       } else if (ship.current) drone.current.position.copy(ship.current.position);
       drone.current.position.y = operation?.kind === 'scan' ? 0.8 + 0.6 * flight : 0.8 + (ship.current?.position.y ?? 0.28) - 0.28;
       if (!paused && operation?.kind === 'scan') drone.current.rotation.y += delta * 5;
@@ -172,10 +220,13 @@ export default function GameView() {
   const isExplored = isCurrent || !!selected && viewedBot.explored.includes(selected);
   const isScanned = !!selected && (developer || viewedBot.scanned.includes(selected));
   const revealedKind = tile && isExplored ? revealedTileKind(tile, new Set(viewedBot.known), new Set(viewedBot.scanned), isCurrent, developer) : null;
+  const cloudVisible = isCloudVisible(snapshot.cloud, currentCoords, developer);
+  const selectedInCloud = !!selected && cloudVisible && selected === snapshot.cloud?.coord;
+  const opacity = snapshot.cloud ? cloudOpacity(snapshot.cloud, snapshot.elapsed) : 0;
   const expertBot = snapshot.bots[expertBotId];
   return <main className={`game-layout${expert ? ' expert-open' : ''}`}>
     <section className="board-panel" aria-label="Terrain de la partie">
-      <div className="board-toolbar"><h1>Terrain</h1><label>Vision <select value={perspective} onChange={event => setPerspective(event.target.value as Perspective)}><option value="bot-0">Bot 0</option><option value="bot-1">Bot 1</option><option value="developer">Développeur</option></select></label><button className="icon-button expert-toggle" aria-pressed={expert} onClick={() => setExpert(value => !value)} title={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'} aria-label={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'}><SlidersHorizontal size={18} /></button><span>{developer ? 'Carte complète' : `${viewedBot.explored.length} / ${allCoords.length} cases explorées`}</span></div>
+      <div className="board-toolbar"><h1>Terrain</h1><label>Vision <select value={perspective} onChange={event => setPerspective(event.target.value as Perspective)}><option value="bot-0">Bot 0</option><option value="bot-1">Bot 1</option><option value="developer">Développeur</option></select></label><button className="icon-button expert-toggle" aria-pressed={expert} onClick={() => setExpert(value => !value)} title={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'} aria-label={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'}><SlidersHorizontal size={18} /></button><span>{developer ? 'Carte complète' : `${viewedBot.explored.length} / ${allCoords.length} cases explorées`}</span>{cloudVisible && <span className="cloud-alert">⚡ Nuage électrique détecté</span>}{viewedBot.operation?.scanDetour && <span className="cloud-alert">{!viewedBot.operation.scanEdgeReached ? 'Drone repoussé vers le bord' : !viewedBot.operation.scanArrived ? 'Drone vers une tuile aléatoire' : 'Drone en retour'}</span>}</div>
       <div className="scene">
         <Canvas shadows dpr={[1, 1.5]} camera={{ position: [9, 12, 10], fov: 45 }} onPointerMissed={() => setSelected(null)}>
           <color attach="background" args={['#edf2f1']} /><ambientLight intensity={1.5} /><directionalLight position={[5, 12, 6]} intensity={2.4} castShadow shadow-mapSize={[512, 512]} />
@@ -183,6 +234,7 @@ export default function GameView() {
           <GroundResources world={snapshot.world} current={current} scanned={scanned} />
           {developer && <DeveloperRoutes bots={Object.values(snapshot.bots)} />}
           <WaitingMarkers bots={Object.values(snapshot.bots)} visible={currentCoords} />
+          {cloudVisible && snapshot.cloud && <ElectricCloudView cloud={snapshot.cloud} opacity={opacity} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} />}
           {Object.values(snapshot.bots).filter(bot => developer || bot.id === perspective || currentCoords.includes(bot.coord)).map(bot => {
             const other = snapshot.bots[bot.id === 'bot-0' ? 'bot-1' : 'bot-0'];
             const crossing = bot.operation?.kind === 'move' && other.operation?.kind === 'move' && bot.operation.target === other.coord && other.operation.target === bot.coord;
@@ -194,8 +246,8 @@ export default function GameView() {
           <OrbitControls makeDefault target={[0, 0, 0]} minDistance={8} maxDistance={26} minPolarAngle={0.1} maxPolarAngle={Math.PI / 2.1} />
         </Canvas>
       </div>
-      <div className="tile-inspector"><label>Tuile <select aria-label="Tuile selectionnee" value={selected ?? ''} onChange={event => setSelected(event.target.value ? event.target.value as Coord : null)}><option value="">Aucune</option>{Object.values(snapshot.world).map(candidate => <option key={candidate.coord} value={candidate.coord}>{candidate.coord}</option>)}</select></label><span>{tile ? !revealedKind ? 'Inconnue' : depleted.split('|').includes(tile.coord) ? 'Collectée et épuisée' : revealedKind === 'terrain' ? 'Terrain' : TILE_LABELS[revealedKind] : `${allCoords.length} hexagones`}</span>{tile && isCurrent && isScanned && tile.kind === 'resource' && <span>Nourriture {tile.resources.food} / Débris {tile.resources.debris} / Spécial {tile.resources.special}</span>}{tile && developer && <span>Bot 0 : {knowsTileKind(snapshot.bots['bot-0'], tile) ? 'nature connue' : 'nature inconnue'} · Bot 1 : {knowsTileKind(snapshot.bots['bot-1'], tile) ? 'nature connue' : 'nature inconnue'}</span>}</div>
-      <div className="map-legend"><span><i style={{ background: '#151c20' }} />Inconnue</span><span><i style={{ background: '#596a69' }} />Souvenir du terrain</span>{Object.entries(TILE_LABELS).map(([kind, label]) => <span key={kind}><i style={{ background: TILE_COLORS[kind as keyof typeof TILE_COLORS] }} />{label}</span>)}<span><i style={{ background: DEPLETED_TILE_COLOR }} />Collectée et épuisée</span>{RESOURCE_KINDS.map(kind => <span key={kind}><i style={{ background: RESOURCE_COLORS[kind] }} />{kind === 'food' ? 'Nourriture' : kind === 'debris' ? 'Débris' : 'Spécial'}</span>)}</div>
+      <div className="tile-inspector"><label>Tuile <select aria-label="Tuile selectionnee" value={selected ?? ''} onChange={event => setSelected(event.target.value ? event.target.value as Coord : null)}><option value="">Aucune</option>{Object.values(snapshot.world).map(candidate => <option key={candidate.coord} value={candidate.coord}>{candidate.coord}</option>)}</select></label><span>{tile ? !revealedKind ? 'Inconnue' : depleted.split('|').includes(tile.coord) ? 'Collectée et épuisée' : revealedKind === 'terrain' ? 'Terrain' : TILE_LABELS[revealedKind] : `${allCoords.length} hexagones`}</span>{selectedInCloud && <span className="cloud-alert">Nuage électrique : traversée dangereuse</span>}{tile && isCurrent && isScanned && tile.kind === 'resource' && <span>Nourriture {tile.resources.food} / Débris {tile.resources.debris} / Spécial {tile.resources.special}</span>}{tile && developer && <span>Bot 0 : {knowsTileKind(snapshot.bots['bot-0'], tile) ? 'nature connue' : 'nature inconnue'} · Bot 1 : {knowsTileKind(snapshot.bots['bot-1'], tile) ? 'nature connue' : 'nature inconnue'}</span>}</div>
+      <div className="map-legend"><span><i style={{ background: '#151c20' }} />Inconnue</span><span><i style={{ background: '#596a69' }} />Souvenir du terrain</span>{Object.entries(TILE_LABELS).map(([kind, label]) => <span key={kind}><i style={{ background: TILE_COLORS[kind as keyof typeof TILE_COLORS] }} />{label}</span>)}<span><i style={{ background: '#65dbe9' }} />Nuage électrique : contact sur sa tuile</span><span><i style={{ background: DEPLETED_TILE_COLOR }} />Collectée et épuisée</span>{RESOURCE_KINDS.map(kind => <span key={kind}><i style={{ background: RESOURCE_COLORS[kind] }} />{kind === 'food' ? 'Nourriture' : kind === 'debris' ? 'Débris' : 'Spécial'}</span>)}</div>
     </section>
     <aside className="bot-sidebar" aria-label="Bots">
       {(snapshot.phase === 'finished' || snapshot.phase === 'blocked') && <section className="result"><h2>{snapshot.phase === 'blocked' ? 'Partie bloquee' : 'Partie terminee'}</h2><p>{snapshot.winners.length === 0 ? 'Aucun vainqueur' : snapshot.winners.length === 2 ? 'Egalite' : `Victoire du Bot ${snapshot.winners[0].slice(-1)}`}</p><small>{snapshot.endReason}</small></section>}

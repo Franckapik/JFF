@@ -220,6 +220,13 @@ h2 {
   font-size: 12px;
   color: #587265;
 }
+.board-toolbar > .cloud-alert {
+  margin-left: 0;
+}
+.cloud-alert {
+  color: #17627b;
+  font-weight: 700;
+}
 .expert-toggle {
   border-color: #c7d2cb;
 }

@@ -118,7 +118,7 @@ extension 1 000 ms ; remorquage 5 000 ms. Les vitesses
 expert montrent l'etat reel, la cible, les comptes et les evenements. Un graphe
 anime complet des transitions reste une extension.
 
-Le snapshot actif est en `schemaVersion: 5` ; le protocole de commandes reste
+Le snapshot actif est en `schemaVersion: 7` ; le protocole de commandes reste
 en version 1. Le moteur est dans [session.ts](../../src/engine/session.ts),
 les valeurs dans [rules.ts](../../src/engine/rules.ts), les controles dans
 [session.test.ts](../../src/engine/session.test.ts). Les dix fichiers

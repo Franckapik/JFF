@@ -8,7 +8,7 @@ import { BOT_COLORS, PHASE_LABELS, RESOURCE_LABELS } from './presentation';
 
 export default function BotPanel({ bot, winner = false, expert = false, events = [], onOpenExpert }: { bot: BotView; winner?: boolean; expert?: boolean; events?: SessionEvent[]; onOpenExpert?: () => void }) {
   const progress = bot.operation ? Math.round((1 - bot.operation.remaining / bot.operation.duration) * 100) : 0;
-  const impacts = events.filter(event => event.botId === bot.id && event.type === 'danger.impact').length;
+  const impacts = events.filter(event => event.botId === bot.id && (event.type === 'danger.impact' || event.type === 'cloud.impact')).length;
   const cargoLosses = events.filter(event => event.botId === bot.id && event.type === 'cargo.lost').length;
   return <article className="bot-panel" style={{ borderTopColor: BOT_COLORS[bot.id] }}>
     <div className="bot-heading"><h2><BotIcon size={20} color={BOT_COLORS[bot.id]} />Bot {bot.id.slice(-1)}</h2><span>{winner && <Trophy size={17} />} {PHASE_LABELS[bot.state]}</span></div>

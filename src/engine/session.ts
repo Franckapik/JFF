@@ -1,14 +1,16 @@
 import { createActor, type ActorRefFrom } from "xstate";
 
 import { botMachine } from "./botMachine";
-import type { Bot, BotPhase, BotView, GoalReason, OperationKind, SessionEvent, SessionLog, SessionSnapshot } from "./model";
+import type { Bot, BotPhase, BotView, ElectricCloud, GoalReason, OperationKind, SessionEvent, SessionLog, SessionSnapshot } from "./model";
 import { addResources, emptyResources, RESOURCE_KINDS, resourceTotal, transferResources, type Resources } from "./resources";
 import { RULES } from "./rules";
 import { activeCoords, hasLineOfSight, rememberTerrain } from "./visibility";
 import {
+    axial,
     BOT_IDS,
     generateWorld,
     hexDistance,
+    hexLine,
     nextRandom,
     pathBetween,
     reachableCoords,
@@ -67,11 +69,18 @@ export class GameSession {
   private eventSequence = 0;
   private winners: BotId[] = [];
   private endReason: string | null = null;
+  private cloud: ElectricCloud | null = null;
+  private readonly shipCloudContacts = new Set<BotId>();
+  private cloudRandomState: number;
+  private exploredSinceStart = 0;
+  private nextCloudAt = RULES.cloudExplorationInterval;
   readonly seed: number;
 
-  constructor(seed: number, scenario?: { world: World; bots?: Record<BotId, Bot> }) {
+  constructor(seed: number, scenario?: { world: World; bots?: Record<BotId, Bot>; cloud?: ElectricCloud | null }) {
     if (!Number.isSafeInteger(seed)) throw new Error("Invalid seed");
     this.seed = seed >>> 0;
+    this.cloudRandomState = (this.seed ^ 0xc10d1234) >>> 0;
+    this.cloud = scenario?.cloud ? structuredClone(scenario.cloud) : null;
     this.world = structuredClone(scenario?.world ?? generateWorld(this.seed, RULES.mapRadius));
     const startingBots = BOT_IDS.map(id => structuredClone(scenario?.bots?.[id] ?? createBot(id, this.world, this.seed)));
     if (startingBots[0].coord === startingBots[1].coord) throw new Error("Bots cannot start on the same tile");
@@ -85,6 +94,7 @@ export class GameSession {
     );
     this.log(null, "Partie initialisee");
     this.emit({ type: "session.started", category: "lifecycle", botId: null });
+    this.syncCloudContacts();
     this.assertInvariants();
   }
 
@@ -102,6 +112,152 @@ export class GameSession {
 
   private emit(event: Omit<SessionEvent, "sequence" | "time">) {
     this.events.push({ ...event, sequence: ++this.eventSequence, time: this.elapsed });
+  }
+
+  private random(): number {
+    const result = nextRandom(this.cloudRandomState);
+    this.cloudRandomState = result.state;
+    return result.value;
+  }
+
+  private cloudMoveCandidates(): Coord[] {
+    const bases = this.bots().map(bot => bot.base);
+    return Object.values(this.world)
+      .filter(tile => tile.walkable && bases.every(base => hexDistance(base, tile.coord) > 1))
+      .map(tile => tile.coord);
+  }
+
+  private cloudSpawnCandidates(): Coord[] {
+    const positions = this.bots().map(bot => bot.coord);
+    return this.cloudMoveCandidates().filter(coord => positions.every(position => hexDistance(coord, position) >= 2));
+  }
+
+  private recordExploration(before: Coord[], after: Coord[]) {
+    this.exploredSinceStart += after.length - before.length;
+    while (this.exploredSinceStart >= this.nextCloudAt) {
+      this.nextCloudAt += RULES.cloudExplorationInterval;
+      if (this.cloud) continue;
+      const candidates = this.cloudSpawnCandidates();
+      if (!candidates.length) continue;
+      const coord = candidates[Math.floor(this.random() * candidates.length)];
+      this.cloud = { coord, previousCoord: null, appearedAt: this.elapsed, nextMoveAt: this.elapsed + RULES.cloudMoveDuration, expiresAt: this.elapsed + RULES.cloudLifetime };
+      this.emit({ type: "cloud.appeared", category: "incident", botId: null, reason: "Nuage electrique apparu" });
+      this.syncCloudContacts();
+    }
+  }
+
+  private updateCloud(): boolean {
+    if (!this.cloud) return false;
+    if (this.elapsed >= this.cloud.expiresAt) {
+      this.cloud = null;
+      this.emit({ type: "cloud.disappeared", category: "incident", botId: null, reason: "Nuage electrique dissipe" });
+      return this.syncCloudContacts();
+    }
+    if (this.elapsed < this.cloud.nextMoveAt) return false;
+    const old = this.cloud.coord;
+    const safe = new Set(this.cloudMoveCandidates());
+    const neighbors = this.world[old].neighbors.filter(coord => safe.has(coord) && coord !== this.cloud?.previousCoord);
+    const fallback = this.world[old].neighbors.filter(coord => safe.has(coord));
+    const choices = neighbors.length ? neighbors : fallback;
+    const coord = choices.length ? choices[Math.floor(this.random() * choices.length)] : old;
+    this.cloud = { ...this.cloud, coord, previousCoord: old, nextMoveAt: this.cloud.nextMoveAt + RULES.cloudMoveDuration };
+    this.emit({ type: "cloud.moved", category: "movement", botId: null, reason: "Le nuage electrique se deplace" });
+    return this.syncCloudContacts();
+  }
+
+  private syncCloudContacts(): boolean {
+    let eliminated = false;
+    for (const bot of this.bots()) {
+      const leaving = bot.operation?.kind === "move" && bot.operation.remaining < bot.operation.duration;
+      const touching = this.cloud?.coord === bot.coord && !leaving && bot.state !== "eliminated" && bot.state !== "finished";
+      if (!touching) {
+        this.shipCloudContacts.delete(bot.id);
+        continue;
+      }
+      if (this.shipCloudContacts.has(bot.id)) continue;
+      this.shipCloudContacts.add(bot.id);
+      const damage = Math.min(100 - bot.damage, RULES.cloudDamage);
+      if (damage <= 0) continue;
+      const next = { ...bot, damage: bot.damage + damage };
+      this.actors.get(bot.id)!.send({ type: "TICK", bot: next });
+      this.emit({ type: "cloud.impact", category: "incident", botId: bot.id, coord: bot.coord,
+        before: { damage: bot.damage }, delta: { damage }, after: { damage: next.damage } });
+      if (next.damage >= 100) {
+        this.eliminate(next, "Vaisseau detruit par le nuage electrique");
+        eliminated = true;
+      }
+    }
+    if (this.cloud) {
+      for (const bot of this.bots()) {
+        const operation = bot.operation;
+        if (operation?.kind !== "scan") continue;
+        const elapsed = operation.duration - operation.remaining;
+        const detour = operation.scanDetour;
+        const arrival = detour?.destinationAt ?? hexDistance(bot.coord, operation.scanInitialTarget ?? operation.target) * RULES.stepDuration;
+        const coord = detour?.destination ?? operation.target;
+        if (!operation.scanArrived || elapsed < arrival || elapsed >= arrival + RULES.scanDuration || coord !== this.cloud.coord) continue;
+        const from = detour?.edge ?? bot.coord;
+        const line = hexLine(from, coord);
+        const previous = line[line.length - 2] ?? coord;
+        this.startScanDetour(bot, coord, previous);
+      }
+    }
+    return eliminated;
+  }
+
+  private startScanDetour(bot: BotView, contact: Coord, previous: Coord) {
+    const operation = bot.operation;
+    if (operation?.kind !== "scan") return;
+    const [column, row] = axial(contact);
+    const [previousColumn, previousRow] = axial(previous);
+    const reverseColumn = previousColumn - column;
+    const reverseRow = previousRow - row;
+    const edges = Object.values(this.world).filter(tile => tile.neighbors.length < 6 && tile.coord !== contact).map(tile => tile.coord);
+    edges.sort((left, right) => {
+      const score = (coord: Coord) => {
+        const [q, r] = axial(coord);
+        const dq = q - column;
+        const dr = r - row;
+        const reverse = dq * reverseColumn + dr * reverseRow + (-dq - dr) * (-reverseColumn - reverseRow);
+        return [Number(hexLine(contact, coord)[1] === previous), reverse, hexDistance(contact, coord)] as const;
+      };
+      const a = score(left);
+      const b = score(right);
+      return b[0] - a[0] || b[1] - a[1] || b[2] - a[2] || left.localeCompare(right);
+    });
+    const edge = edges[0];
+    if (!edge) return;
+    const coords = Object.keys(this.world) as Coord[];
+    const destination = coords[Math.floor(this.random() * coords.length)];
+    const contactAt = operation.duration - operation.remaining;
+    const edgeAt = contactAt + hexDistance(contact, edge) * RULES.stepDuration;
+    const destinationAt = edgeAt + hexDistance(edge, destination) * RULES.stepDuration;
+    const duration = destinationAt + RULES.scanDuration + hexDistance(destination, bot.coord) * RULES.stepDuration;
+    this.actors.get(bot.id)!.send({ type: "TICK", bot: {
+      ...bot,
+      operation: { ...operation, target: destination, duration, remaining: duration - contactAt,
+        scanDetour: { contact, edge, destination, contactAt, edgeAt, destinationAt },
+        scanEdgeReached: false, scanArrived: false, scanCheckedSteps: 0 },
+      decision: `Interference electromagnetique : rebond vers le bord ${edge}`,
+    } });
+    this.log(bot.id, `Interference electromagnetique : drone rebondit vers ${edge}`);
+    this.emit({ type: "drone.interfered", category: "incident", botId: bot.id, coord: contact, target: edge, reason: "Rebond vers le bord du plateau" });
+  }
+
+  private scanSegment(bot: Bot): { from: Coord; to: Coord; startAt: number; kind: "outbound" | "edge" | "destination" | "return" } {
+    const operation = bot.operation!;
+    const detour = operation.scanDetour;
+    if (detour) {
+      if (!operation.scanEdgeReached)
+        return { from: detour.contact, to: detour.edge, startAt: detour.contactAt, kind: "edge" };
+      if (!operation.scanArrived)
+        return { from: detour.edge, to: detour.destination, startAt: detour.edgeAt, kind: "destination" };
+      return { from: detour.destination, to: bot.coord, startAt: detour.destinationAt + RULES.scanDuration, kind: "return" };
+    }
+    const target = operation.scanInitialTarget ?? operation.target;
+    if (!operation.scanArrived) return { from: bot.coord, to: target, startAt: 0, kind: "outbound" };
+    const outbound = hexDistance(bot.coord, target);
+    return { from: target, to: bot.coord, startAt: outbound * RULES.stepDuration + RULES.scanDuration, kind: "return" };
   }
 
   private route(bot: Bot, target: Coord): Coord[] {
@@ -126,11 +282,16 @@ export class GameSession {
   }
 
   private launch(bot: Bot, kind: OperationKind, target: Coord, duration: number, decision: string) {
-    this.actors.get(bot.id)!.send({ type: "PLAN", bot: { ...bot, decision, operation: { kind, target, duration, remaining: duration } } });
+    this.actors.get(bot.id)!.send({ type: "PLAN", bot: { ...bot, decision, operation: {
+      kind, target, duration, remaining: duration,
+      ...(kind === "scan" ? { scanInitialTarget: target, scanCheckedSteps: 0, scanArrived: false } : {}),
+    } } });
     if (kind !== "wait" || bot.decision !== decision) {
       this.log(bot.id, decision);
       this.emit({ type: "operation.started", category: "decision", botId: bot.id, operation: kind, coord: bot.coord, target, reason: decision });
     }
+    if (kind === "scan" && this.cloud?.coord === bot.coord)
+      this.startScanDetour(this.bots().find(candidate => candidate.id === bot.id)!, bot.coord, bot.coord);
   }
 
   // Only the destination of a final movement step is reserved. Intermediate
@@ -327,7 +488,7 @@ export class GameSession {
     this.finishBot(bot, "Aucun objectif accessible");
   }
 
-  private complete(bot: BotView) {
+  private complete(bot: BotView, scanDestroyed = false) {
     const operation = bot.operation!;
     let next: Bot = { ...bot, operation: null };
     switch (operation.kind) {
@@ -336,11 +497,13 @@ export class GameSession {
       case "move": {
         if (!this.world[bot.coord].neighbors.includes(operation.target) || !this.world[operation.target]?.walkable)
           throw new Error("Invalid waypoint");
+        const dangerImpact = this.world[operation.target].kind === "danger" ? Math.min(100 - bot.damage, RULES.dangerDamage) : 0;
+        const cloudImpact = this.cloud?.coord === operation.target ? Math.min(100 - bot.damage - dangerImpact, RULES.cloudDamage) : 0;
         next = {
           ...next,
           coord: operation.target,
           fuel: Math.max(0, bot.fuel - RULES.fuelPerStep),
-          damage: Math.min(100, bot.damage + (this.world[operation.target].kind === "danger" ? RULES.dangerDamage : 0)),
+          damage: bot.damage + dangerImpact + cloudImpact,
           route: bot.route.slice(1),
           known: [...new Set([...bot.known, operation.target])],
           explored: rememberTerrain(bot.explored, activeCoords(this.world, { ...bot, coord: operation.target })),
@@ -362,22 +525,26 @@ export class GameSession {
           delta: { fuel: next.fuel - bot.fuel, damage: next.damage - bot.damage },
           after: { fuel: next.fuel, damage: next.damage },
         });
-        if (next.damage > bot.damage)
+        if (dangerImpact > 0)
           this.emit({
             type: "danger.impact",
             category: "incident",
             botId: bot.id,
             coord: operation.target,
             before: { damage: bot.damage },
-            delta: { damage: next.damage - bot.damage },
-            after: { damage: next.damage },
+            delta: { damage: dangerImpact },
+            after: { damage: bot.damage + dangerImpact },
           });
+        if (cloudImpact > 0)
+          this.emit({ type: "cloud.impact", category: "incident", botId: bot.id, coord: operation.target,
+            before: { damage: bot.damage + dangerImpact }, delta: { damage: cloudImpact }, after: { damage: next.damage } });
         break;
       }
       case "scan": {
-        const destroyed = this.world[operation.target].kind === "danger";
-        const cost = (destroyed ? 1 : 2) * hexDistance(bot.coord, operation.target) * RULES.droneFuelPerHex;
-        if (!bot.droneAvailable || bot.fuel < cost) throw new Error("Insufficient fuel for scan");
+        const destroyed = scanDestroyed;
+        const distance = (destroyed ? 1 : 2) * hexDistance(bot.coord, operation.scanInitialTarget ?? operation.target);
+        const cost = Math.min(bot.fuel, distance * RULES.droneFuelPerHex);
+        if (!bot.droneAvailable) throw new Error("Unavailable drone for scan");
         next = {
           ...next,
           fuel: bot.fuel - cost,
@@ -484,6 +651,11 @@ export class GameSession {
         break;
     }
     this.actors.get(bot.id)!.send({ type: "COMPLETE", bot: next });
+    if (operation.kind === "move") {
+      if (this.cloud?.coord === next.coord) this.shipCloudContacts.add(bot.id);
+      else this.shipCloudContacts.delete(bot.id);
+    }
+    if (next.explored.length > bot.explored.length) this.recordExploration(bot.explored, next.explored);
     if (next.damage >= 100) this.eliminate(next, "Vaisseau detruit");
   }
 
@@ -519,14 +691,68 @@ export class GameSession {
     this.emit({ type: blocked ? "session.blocked" : "session.finished", category: "lifecycle", botId: null, reason: this.endReason });
   }
 
-  private timeUntilCompletion(bot: Bot): number {
+  private timeUntilBotEvent(bot: Bot): number {
     const operation = bot.operation;
     if (!operation) return Infinity;
-    if (operation.kind === "scan" && this.world[operation.target].kind === "danger") {
-      const arrival = hexDistance(bot.coord, operation.target) * RULES.stepDuration;
-      return Math.max(0, operation.remaining - (operation.duration - arrival));
+    if (operation.kind !== "scan") return operation.remaining;
+    const segment = this.scanSegment(bot);
+    const elapsed = operation.duration - operation.remaining;
+    const distance = hexDistance(segment.from, segment.to);
+    const checked = operation.scanCheckedSteps ?? 0;
+    const next = checked < distance
+      ? segment.startAt + (checked + 1) * RULES.stepDuration
+      : segment.startAt;
+    return Math.min(operation.remaining, Math.max(0, next - elapsed));
+  }
+
+  private processScanEvent(bot: BotView): boolean {
+    let current = bot;
+    for (let transitions = 0; transitions < 4; transitions++) {
+      const operation = current.operation!;
+      const elapsed = operation.duration - operation.remaining;
+      const segment = this.scanSegment(current);
+      const distance = hexDistance(segment.from, segment.to);
+      const checked = operation.scanCheckedSteps ?? 0;
+      const line = hexLine(segment.from, segment.to);
+      if (checked < distance) {
+        if (elapsed < segment.startAt + (checked + 1) * RULES.stepDuration) return false;
+        const coord = line[checked + 1];
+        this.actors.get(current.id)!.send({ type: "TICK", bot: { ...current, operation: { ...operation, scanCheckedSteps: checked + 1 } } });
+        current = this.bots().find(candidate => candidate.id === current.id)!;
+        if ((segment.kind === "outbound" || segment.kind === "destination") && checked + 1 === distance && this.world[coord].kind === "danger") {
+          this.complete(current, true);
+          return true;
+        }
+        if (this.cloud?.coord === coord) {
+          this.startScanDetour(current, coord, line[checked]);
+          return false;
+        }
+        continue;
+      }
+      if (elapsed < segment.startAt + distance * RULES.stepDuration) return false;
+      if (segment.kind === "edge") {
+        this.actors.get(current.id)!.send({ type: "TICK", bot: { ...current, operation: { ...operation, scanEdgeReached: true, scanCheckedSteps: 0 } } });
+        this.emit({ type: "drone.bounced", category: "movement", botId: current.id, coord: operation.scanDetour!.edge,
+          target: operation.scanDetour!.destination, reason: "Rebond sur le bord du plateau" });
+        current = this.bots().find(candidate => candidate.id === current.id)!;
+        continue;
+      }
+      if (segment.kind === "outbound" || segment.kind === "destination") {
+        if (this.world[segment.to].kind === "danger") {
+          this.complete(current, true);
+          return true;
+        }
+        this.actors.get(current.id)!.send({ type: "TICK", bot: { ...current, operation: { ...operation, scanArrived: true, scanCheckedSteps: 0 } } });
+        current = this.bots().find(candidate => candidate.id === current.id)!;
+        continue;
+      }
+      if (operation.remaining === 0) {
+        this.complete(current);
+        return true;
+      }
+      return false;
     }
-    return operation.remaining;
+    return false;
   }
 
   advance(milliseconds: number): void {
@@ -540,7 +766,8 @@ export class GameSession {
         this.settle();
         break;
       }
-      const duration = Math.min(remaining, ...working.map(bot => this.timeUntilCompletion(bot)));
+      const cloudEvent = this.cloud ? Math.min(this.cloud.nextMoveAt, this.cloud.expiresAt) - this.elapsed : Infinity;
+      const duration = Math.min(remaining, cloudEvent, ...working.map(bot => this.timeUntilBotEvent(bot)));
       this.elapsed += duration;
       remaining -= duration;
       for (const bot of working) {
@@ -551,13 +778,18 @@ export class GameSession {
             operation: { ...bot.operation!, remaining: bot.operation!.remaining - duration },
           } });
       }
+      let completed = this.updateCloud();
       const order = this.turn % 2 === 0 ? BOT_IDS : [...BOT_IDS].reverse();
-      const due = this.bots().filter(bot => this.timeUntilCompletion(bot) === 0);
       for (const id of order) {
-        const bot = due.find(candidate => candidate.id === id);
-        if (bot) this.complete(bot);
+        const bot = this.bots().find(candidate => candidate.id === id)!;
+        if (bot.operation?.kind === "scan" && this.timeUntilBotEvent(bot) === 0)
+          completed = this.processScanEvent(bot) || completed;
+        else if (bot.operation?.remaining === 0) {
+          this.complete(bot);
+          completed = true;
+        }
       }
-      if (due.length) {
+      if (completed) {
         this.turn++;
         this.settle();
       }
@@ -596,7 +828,7 @@ export class GameSession {
 
   getSnapshot(afterEventSequence = 0): SessionSnapshot {
     return structuredClone({
-      schemaVersion: 5,
+      schemaVersion: 7,
       seed: this.seed,
       revision: this.revision,
       worldRevision: this.worldRevision,
@@ -605,6 +837,7 @@ export class GameSession {
       paused: this.paused,
       speed: this.speed,
       world: this.world,
+      cloud: this.cloud,
       bots: Object.fromEntries(this.bots().map(bot => [bot.id, bot])) as Record<BotId, BotView>,
       initialResources: this.initialResources,
       lostResources: this.lostResources,
@@ -618,6 +851,8 @@ export class GameSession {
   }
 
   assertInvariants() {
+    if (this.cloud && (!this.world[this.cloud.coord]?.walkable || this.cloud.expiresAt <= this.elapsed || this.cloud.nextMoveAt <= this.elapsed))
+      throw new Error("Cloud bounds failed");
     let accounted = addResources(worldResources(this.world), this.lostResources);
     for (const bot of this.bots()) {
       transferResources(emptyResources(), bot.cargo, RULES.capacity);

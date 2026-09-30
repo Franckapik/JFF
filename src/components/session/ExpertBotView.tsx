@@ -45,6 +45,12 @@ const EVENT_LABELS: Record<SessionEventType, string> = {
   'operation.started': 'Operation planifiee',
   'movement.arrived': 'Etape atteinte',
   'danger.impact': 'Impact sur une case dangereuse',
+  'cloud.appeared': 'Nuage électrique apparu',
+  'cloud.moved': 'Nuage électrique déplacé',
+  'cloud.disappeared': 'Nuage électrique dissipé',
+  'cloud.impact': 'Impact du nuage sur le vaisseau',
+  'drone.interfered': 'Drone repoussé par le nuage',
+  'drone.bounced': 'Drone rebondi sur le bord',
   'scan.completed': 'Scan termine',
   'drone.lost': 'Drone detruit',
   'collection.completed': 'Collecte terminee',
@@ -116,7 +122,7 @@ export default function ExpertBotView({ bot, events, onClose }: { bot: BotView; 
     .reverse();
   const visits = Object.entries(bot.visits).sort(([, left], [, right]) => (right ?? 0) - (left ?? 0));
   const incidents = {
-    impacts: events.filter(event => event.botId === bot.id && event.type === 'danger.impact').length,
+    impacts: events.filter(event => event.botId === bot.id && (event.type === 'danger.impact' || event.type === 'cloud.impact')).length,
     cargoLosses: events.filter(event => event.botId === bot.id && event.type === 'cargo.lost').length,
     refuels: events.filter(event => event.botId === bot.id && event.type === 'fuel.refueled').length,
     repairs: events.filter(event => event.botId === bot.id && event.type === 'ship.repaired').length,
@@ -156,10 +162,17 @@ export default function ExpertBotView({ bot, events, onClose }: { bot: BotView; 
       <dl className="expert-current">
         <div><dt><OperationIcon size={16} />Operation</dt><dd>{bot.operation ? `${bot.operation.kind} - ${Math.ceil(bot.operation.remaining / 100) / 10}s` : 'Aucune'}</dd></div>
         <div><dt><Crosshair size={16} />Cible</dt><dd>{bot.operation?.target ?? '-'}</dd></div>
+        {bot.operation?.kind === 'scan' && <div><dt><Crosshair size={16} />Cible prévue</dt><dd>{bot.operation.scanInitialTarget ?? bot.operation.target}</dd></div>}
         <div><dt><Route size={16} />Objectif</dt><dd>{bot.goal ? `${bot.goal.reason} vers ${bot.goal.coord}` : '-'}</dd></div>
         <div><dt><Eye size={16} />Connues</dt><dd>{bot.known.length}</dd></div>
       </dl>
       {bot.operation && <progress aria-label="Progression de l'operation" max={bot.operation.duration} value={bot.operation.duration - bot.operation.remaining} />}
+      {bot.operation?.scanDetour && <div className="route-steps" aria-label="Trajet perturbé du drone">
+        <span>Nuage {bot.operation.scanDetour.contact}</span>
+        <span>Bord {bot.operation.scanDetour.edge}</span>
+        <span>Visite {bot.operation.scanDetour.destination}</span>
+        <span>Retour {bot.coord}</span>
+      </div>}
       <div className="route-steps" aria-label="Etapes restantes">{bot.route.length ? bot.route.map((coord, index) => <span key={`${coord}:${index}`}>{coord}</span>) : <small>Aucune etape restante</small>}</div>
       <h3><Footprints size={16} />Cases les plus visitees</h3>
       <ol className="visit-list">{visits.slice(0, 8).map(([coord, count]) => <li key={coord}><span>{coord}</span><strong>{count}</strong></li>)}</ol>

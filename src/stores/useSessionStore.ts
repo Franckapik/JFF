@@ -58,7 +58,7 @@ export const useSessionStore = create<SessionStore>((set, get) => {
       if (port) return;
       set({ status: "connecting", error: null });
       try {
-        worker = new SharedWorker(new URL("../workers/session-worker.ts", import.meta.url), { type: "module", name: "jff-session-v3" });
+        worker = new SharedWorker(new URL("../workers/session-worker.ts", import.meta.url), { type: "module", name: "jff-session-v5" });
         const connection = worker.port;
         port = connection;
         worker.onerror = () => {
@@ -73,7 +73,7 @@ export const useSessionStore = create<SessionStore>((set, get) => {
             fail(data.error ?? "Connexion interrompue");
             return;
           }
-          if (!data || data.protocol !== 1 || data.snapshot?.schemaVersion !== 5) {
+          if (!data || data.protocol !== 1 || data.snapshot?.schemaVersion !== 7) {
             fail(data?.error ?? "Version du moteur incompatible. Fermez les anciens onglets du jeu, puis reconnectez-vous.");
             return;
           }

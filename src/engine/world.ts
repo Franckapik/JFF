@@ -36,6 +36,26 @@ export function hexDistance(from: Coord, to: Coord): number {
   return (Math.abs(column) + Math.abs(row) + Math.abs(column + row)) / 2;
 }
 
+export function hexLine(from: Coord, to: Coord): Coord[] {
+  const distance = hexDistance(from, to);
+  if (distance === 0) return [from];
+  const [fromColumn, fromRow] = axial(from);
+  const [toColumn, toRow] = axial(to);
+  return Array.from({ length: distance + 1 }, (_, step) => {
+    const fraction = step / distance;
+    const column = fromColumn + (toColumn - fromColumn) * fraction;
+    const row = fromRow + (toRow - fromRow) * fraction;
+    const cube = -column - row;
+    let q = Math.round(column);
+    let r = Math.round(row);
+    const s = Math.round(cube);
+    const errors = [Math.abs(q - column), Math.abs(r - row), Math.abs(s - cube)];
+    if (errors[0] > errors[1] && errors[0] > errors[2]) q = -r - s;
+    else if (errors[1] > errors[2]) r = -q - s;
+    return `${q},${r}` as Coord;
+  });
+}
+
 export function worldPosition(coord: Coord): [number, number, number] {
   const [column, row] = axial(coord);
   return [Math.sqrt(3) * (column + row / 2), 0, 1.5 * row];

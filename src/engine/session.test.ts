@@ -1,13 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { useSessionStore } from "../stores/useSessionStore";
+import { cloudOpacity } from "../components/session/presentation";
 
 import { SessionHost } from "./protocol";
 import { addResources, emptyResources, resourceTotal, transferResources } from "./resources";
 import { RULES } from "./rules";
 import { createBot, GameSession } from "./session";
-import { activeCoords, hasLineOfSight, resourceMarkerCoords, revealedTileKind } from "./visibility";
-import { axial, generateWorld, hexDistance, pathBetween, reachableCoords, worldPosition } from "./world";
+import { activeCoords, hasLineOfSight, isCloudVisible, resourceMarkerCoords, revealedTileKind } from "./visibility";
+import { axial, generateWorld, hexDistance, hexLine, pathBetween, reachableCoords, worldPosition, type Coord } from "./world";
 
 describe("resource transactions", () => {
   const capacity = { food: 200, debris: 1800, special: 3 };
@@ -34,6 +35,262 @@ describe("resource transactions", () => {
     expect(() => transferResources({ food: -1, debris: 0, special: 0 }, emptyResources(), capacity)).toThrow();
     expect(() => transferResources({ food: 0.5, debris: 0, special: 0 }, emptyResources(), capacity)).toThrow();
     expect(() => transferResources(emptyResources(), { food: 201, debris: 0, special: 0 }, capacity)).toThrow();
+  });
+});
+
+describe("electric cloud", () => {
+  function scanScenario(target: Coord, cloudCoord: Coord, expiresAt: number = RULES.cloudLifetime, seed = 42, dangerCoord?: Coord) {
+    const world = generateWorld(42);
+    for (const tile of Object.values(world)) {
+      tile.resources = emptyResources();
+      if (tile.kind === "danger") tile.kind = "empty";
+    }
+    for (const coord of ["0,0", "1,0", "1,1", "2,0", target, cloudCoord] as Coord[]) {
+      world[coord].kind = "empty";
+      world[coord].walkable = true;
+    }
+    world["-3,1"].kind = "resource";
+    world["-3,1"].walkable = true;
+    world["-3,1"].resources.food = 20;
+    if (dangerCoord) {
+      world[dangerCoord].kind = "danger";
+      world[dangerCoord].walkable = true;
+      world[dangerCoord].resources = emptyResources();
+    }
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].coord = "0,0";
+    bots["bot-0"].radius = 2;
+    bots["bot-0"].known = Object.values(world).map(tile => tile.coord).filter(coord => coord !== target && coord !== "-3,1");
+    bots["bot-1"].damage = 100;
+    const cloud = { coord: cloudCoord, previousCoord: null, appearedAt: 0, nextMoveAt: RULES.cloudMoveDuration, expiresAt };
+    return new GameSession(seed, { world, bots, cloud });
+  }
+
+  it("has no effect on a drone passing beside its tile", () => {
+    const session = scanScenario("2,0", "1,1");
+    session.advance(2 * RULES.stepDuration);
+    const bot = session.getSnapshot().bots["bot-0"];
+    expect(bot.operation).toMatchObject({ kind: "scan", target: "2,0", scanArrived: true });
+    expect(bot.operation?.scanDetour).toBeUndefined();
+    expect(session.getSnapshot().events.some(event => event.type === "drone.interfered")).toBe(false);
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("reverses the drone on the cloud tile, bounces at an edge, visits a random tile, then returns", () => {
+    const session = scanScenario("2,0", "1,0");
+    session.advance(RULES.stepDuration);
+    const detour = session.getSnapshot().bots["bot-0"].operation?.scanDetour;
+    expect(detour).toMatchObject({ contact: "1,0", contactAt: RULES.stepDuration });
+    expect(detour).toBeDefined();
+    expect(session.getSnapshot().world[detour!.edge].neighbors.length).toBeLessThan(6);
+    expect(hexLine(detour!.contact, detour!.edge)[1]).toBe("0,0");
+    expect(session.getSnapshot().events).toContainEqual(expect.objectContaining({ type: "drone.interfered", coord: "1,0", target: detour!.edge }));
+    session.advance(detour!.edgeAt - RULES.stepDuration);
+    expect(session.getSnapshot().events).toContainEqual(expect.objectContaining({ type: "drone.bounced", coord: detour!.edge, target: detour!.destination }));
+    const duration = session.getSnapshot().bots["bot-0"].operation!.duration;
+    session.advance(duration - detour!.edgeAt);
+    const snapshot = session.getSnapshot();
+    expect(snapshot.bots["bot-0"].droneAvailable).toBe(true);
+    expect(snapshot.bots["bot-0"].coord).toBe("0,0");
+    expect(snapshot.bots["bot-0"].scanned).toContain(detour!.destination);
+    expect(snapshot.bots["bot-0"].statistics.scans).toBe(1);
+    expect(snapshot.bots["bot-0"].fuel).toBe(RULES.fuelCapacity - 4 * RULES.droneFuelPerHex);
+    expect(snapshot.events).toContainEqual(expect.objectContaining({ type: "scan.completed", target: detour!.destination }));
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("rebounds when the cloud is the drone's exact target", () => {
+    const session = scanScenario("1,0", "1,0");
+    session.advance(RULES.stepDuration);
+    expect(session.getSnapshot().bots["bot-0"].operation?.scanDetour?.contact).toBe("1,0");
+    expect(session.getSnapshot().bots["bot-0"].droneAvailable).toBe(true);
+    expect(session.getSnapshot().events.some(event => event.type === "drone.lost")).toBe(false);
+    session.stop();
+  });
+
+  function cloudMovesIntoFlight(target: Coord, nextMoveAt: number) {
+    const world = generateWorld(42);
+    for (const tile of Object.values(world)) {
+      tile.resources = emptyResources();
+      if (tile.kind === "danger") tile.kind = "empty";
+    }
+    for (const coord of ["0,0", "1,0", "1,1", "2,0", target] as Coord[]) {
+      world[coord].kind = "empty";
+      world[coord].walkable = true;
+    }
+    for (const neighbor of world["1,1"].neighbors) {
+      if (neighbor !== "1,0" && neighbor !== target) world[neighbor].walkable = false;
+    }
+    world["-3,1"].kind = "resource";
+    world["-3,1"].walkable = true;
+    world["-3,1"].resources.food = 20;
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].coord = "0,0";
+    bots["bot-0"].radius = 2;
+    bots["bot-0"].known = Object.values(world).map(tile => tile.coord).filter(coord => coord !== target && coord !== "-3,1");
+    bots["bot-1"].damage = 100;
+    const cloud = { coord: "1,1" as const, previousCoord: null, appearedAt: 0, nextMoveAt, expiresAt: RULES.cloudLifetime };
+    return new GameSession(42, { world, bots, cloud });
+  }
+
+  it("rebounds when the cloud reaches the drone during its visit", () => {
+    const session = cloudMovesIntoFlight("1,0", 800);
+    session.advance(400);
+    expect(session.getSnapshot().bots["bot-0"].operation?.scanArrived).toBe(true);
+    session.advance(400);
+    expect(session.getSnapshot().cloud?.coord).toBe("1,0");
+    expect(session.getSnapshot().bots["bot-0"].operation?.scanDetour).toMatchObject({ contact: "1,0", contactAt: 800 });
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("rebounds when the return path crosses the cloud", () => {
+    const session = cloudMovesIntoFlight("2,0", 1200);
+    session.advance(1200);
+    expect(session.getSnapshot().bots["bot-0"].operation?.scanDetour).toBeUndefined();
+    expect(session.getSnapshot().cloud?.coord).toBe("1,0");
+    session.advance(800);
+    expect(session.getSnapshot().bots["bot-0"].operation?.scanDetour).toMatchObject({ contact: "1,0", contactAt: 2000 });
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("can lose a drone on the random tile when that tile is dangerous", () => {
+    let chosen: { seed: number; destination: Coord } | null = null;
+    for (let seed = 0; seed < 40 && !chosen; seed++) {
+      const probe = scanScenario("2,0", "1,0", RULES.cloudLifetime, seed);
+      probe.advance(RULES.stepDuration);
+      const destination = probe.getSnapshot().bots["bot-0"].operation?.scanDetour?.destination;
+      if (destination && !["-3,0", "3,0", "-3,1", "0,0", "1,0", "2,0"].includes(destination))
+        chosen = { seed, destination };
+      probe.stop();
+    }
+    expect(chosen).not.toBeNull();
+    const session = scanScenario("2,0", "1,0", RULES.cloudLifetime, chosen!.seed, chosen!.destination);
+    session.advance(RULES.stepDuration);
+    const detour = session.getSnapshot().bots["bot-0"].operation!.scanDetour!;
+    expect(detour.destination).toBe(chosen!.destination);
+    session.advance(detour.destinationAt - RULES.stepDuration);
+    const snapshot = session.getSnapshot();
+    expect(snapshot.bots["bot-0"].droneAvailable).toBe(false);
+    expect(snapshot.events).toContainEqual(expect.objectContaining({ type: "drone.lost", coord: detour.destination, reason: "case dangereuse" }));
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("damages a ship on arrival at the cloud tile, but not beside it", () => {
+    const makeSession = (cloudCoord: Coord) => {
+      const world = generateWorld(42);
+      for (const tile of Object.values(world)) tile.resources = emptyResources();
+      world["1,0"].kind = "empty";
+      world["1,0"].walkable = true;
+      world["-3,1"].kind = "resource";
+      world["-3,1"].resources.food = 20;
+      const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+      bots["bot-0"].coord = "0,0";
+      bots["bot-0"].goal = { coord: "1,0", reason: "explore" };
+      bots["bot-1"].damage = 100;
+      const cloud = { coord: cloudCoord, previousCoord: null, appearedAt: 0, nextMoveAt: RULES.cloudMoveDuration, expiresAt: RULES.cloudLifetime };
+      return new GameSession(42, { world, bots, cloud });
+    };
+    const hit = makeSession("1,0");
+    hit.advance(RULES.stepDuration - 1);
+    expect(hit.getSnapshot().bots["bot-0"].damage).toBe(0);
+    hit.advance(1);
+    expect(hit.getSnapshot().bots["bot-0"].damage).toBe(RULES.cloudDamage);
+    expect(hit.getSnapshot().events).toContainEqual(expect.objectContaining({ type: "cloud.impact", coord: "1,0", delta: { damage: RULES.cloudDamage } }));
+    hit.assertInvariants();
+    hit.stop();
+    const beside = makeSession("1,1");
+    beside.advance(RULES.stepDuration);
+    expect(beside.getSnapshot().bots["bot-0"].damage).toBe(0);
+    beside.stop();
+  });
+
+  it("applies one hit when the cloud moves onto a stationary ship", () => {
+    const world = generateWorld(42);
+    for (const tile of Object.values(world)) tile.resources = emptyResources();
+    world["-1,0"].kind = "resource";
+    world["-1,0"].walkable = true;
+    world["-1,0"].resources.food = 20;
+    world["0,0"].kind = "empty";
+    world["0,0"].walkable = true;
+    const cloudCoord: Coord = "1,0";
+    world[cloudCoord].kind = "empty";
+    world[cloudCoord].walkable = true;
+    for (const neighbor of world[cloudCoord].neighbors) if (neighbor !== "0,0") world[neighbor].walkable = false;
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].coord = "0,0";
+    bots["bot-1"].damage = 100;
+    const cloud = { coord: cloudCoord, previousCoord: null, appearedAt: 0, nextMoveAt: 100, expiresAt: RULES.cloudLifetime };
+    const session = new GameSession(42, { world, bots, cloud });
+    session.advance(100);
+    expect(session.getSnapshot().cloud?.coord).toBe("0,0");
+    expect(session.getSnapshot().bots["bot-0"].damage).toBe(RULES.cloudDamage);
+    session.advance(100);
+    expect(session.getSnapshot().bots["bot-0"].damage).toBe(RULES.cloudDamage);
+    session.assertInvariants();
+    session.stop();
+
+    const movingBots = structuredClone(bots);
+    movingBots["bot-0"].goal = { coord: "-1,0", reason: "explore" };
+    const moving = new GameSession(42, { world, bots: movingBots, cloud });
+    moving.advance(100);
+    expect(moving.getSnapshot().cloud?.coord).toBe("0,0");
+    expect(moving.getSnapshot().bots["bot-0"].damage).toBe(0);
+    moving.advance(300);
+    expect(moving.getSnapshot().bots["bot-0"].coord).toBe("-1,0");
+    expect(moving.getSnapshot().bots["bot-0"].damage).toBe(0);
+    moving.assertInvariants();
+    moving.stop();
+  });
+
+  it("hides the cloud in fog and fades it in and out", () => {
+    const cloud = { coord: "1,0" as const, previousCoord: null, appearedAt: 0, nextMoveAt: 2400, expiresAt: 10000 };
+    expect(isCloudVisible(cloud, ["0,0"])).toBe(false);
+    expect(isCloudVisible(cloud, ["1,0"])).toBe(true);
+    expect(isCloudVisible(cloud, ["0,0"], true)).toBe(true);
+    expect(isCloudVisible(null, ["1,0"], true)).toBe(false);
+    expect(cloudOpacity(cloud, 0)).toBe(0);
+    expect(cloudOpacity(cloud, RULES.cloudFadeDuration / 2)).toBe(0.5);
+    expect(cloudOpacity(cloud, 5000)).toBe(1);
+    expect(cloudOpacity(cloud, cloud.expiresAt - RULES.cloudFadeDuration / 2)).toBe(0.5);
+  });
+
+  it("moves slowly, expires, and behaves the same with split time advances", () => {
+    const first = scanScenario("2,0", "1,1", 4000);
+    const second = scanScenario("2,0", "1,1", 4000);
+    first.advance(3000);
+    for (let index = 0; index < 3; index++) second.advance(1000);
+    expect(first.getSnapshot().events.filter(event => event.type === "cloud.moved")).toHaveLength(1);
+    expect({ ...first.getSnapshot(), revision: 0 }).toEqual({ ...second.getSnapshot(), revision: 0 });
+    first.advance(1000);
+    expect(first.getSnapshot().cloud).toBeNull();
+    expect(first.getSnapshot().events.filter(event => event.type === "cloud.disappeared")).toHaveLength(1);
+    first.assertInvariants();
+    first.stop();
+    second.stop();
+  });
+
+  it("appears after six newly explored tiles at least two tiles from both ships", () => {
+    const session = new GameSession(42);
+    const initial = Object.values(session.getSnapshot().bots).reduce((total, bot) => total + bot.explored.length, 0);
+    let discovered = 0;
+    for (let index = 0; index < 1000; index++) {
+      session.advance(RULES.stepDuration);
+      const snapshot = session.getSnapshot();
+      discovered = Object.values(snapshot.bots).reduce((total, bot) => total + bot.explored.length, 0) - initial;
+      if (snapshot.events.some(event => event.type === "cloud.appeared")) break;
+      expect(discovered).toBeLessThan(RULES.cloudExplorationInterval);
+    }
+    expect(discovered).toBeGreaterThanOrEqual(RULES.cloudExplorationInterval);
+    const snapshot = session.getSnapshot();
+    expect(snapshot.cloud).not.toBeNull();
+    for (const bot of Object.values(snapshot.bots)) expect(hexDistance(snapshot.cloud!.coord, bot.coord)).toBeGreaterThanOrEqual(2);
+    session.assertInvariants();
+    session.stop();
   });
 });
 
@@ -884,7 +1141,7 @@ describe("session protocol", () => {
       expect(TestWorker.instances).toBe(1);
       emit(response);
       expect(useSessionStore.getState().status).toBe("connected");
-      expect(useSessionStore.getState().snapshot?.schemaVersion).toBe(5);
+      expect(useSessionStore.getState().snapshot?.schemaVersion).toBe(7);
       const initialEvents = response.snapshot!.events;
       const additionalEvent = { ...initialEvents[0], sequence: response.snapshot!.eventSequence + 1, time: 100 };
       const incremental = { ...response, snapshot: { ...response.snapshot!, eventSequence: additionalEvent.sequence, events: [additionalEvent] } };

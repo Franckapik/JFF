@@ -20,6 +20,25 @@ export interface Operation {
   target: Coord;
   duration: number;
   remaining: number;
+  scanInitialTarget?: Coord;
+  scanCheckedSteps?: number;
+  scanArrived?: boolean;
+  scanEdgeReached?: boolean;
+  scanDetour?: {
+    contact: Coord;
+    edge: Coord;
+    destination: Coord;
+    contactAt: number;
+    edgeAt: number;
+    destinationAt: number;
+  };
+}
+export interface ElectricCloud {
+  coord: Coord;
+  previousCoord: Coord | null;
+  appearedAt: number;
+  nextMoveAt: number;
+  expiresAt: number;
 }
 export interface Bot {
   id: BotId;
@@ -70,6 +89,12 @@ export type SessionEventType =
   | "operation.started"
   | "movement.arrived"
   | "danger.impact"
+  | "cloud.appeared"
+  | "cloud.moved"
+  | "cloud.disappeared"
+  | "cloud.impact"
+  | "drone.interfered"
+  | "drone.bounced"
   | "scan.completed"
   | "drone.lost"
   | "collection.completed"
@@ -101,7 +126,7 @@ export interface SessionEvent {
   after?: Partial<Record<"fuel" | "damage" | "budget" | "score" | "radius", number>>;
 }
 export interface SessionSnapshot {
-  schemaVersion: 5;
+  schemaVersion: 7;
   seed: number;
   revision: number;
   worldRevision: number;
@@ -110,6 +135,7 @@ export interface SessionSnapshot {
   paused: boolean;
   speed: number;
   world: World;
+  cloud: ElectricCloud | null;
   bots: Record<BotId, BotView>;
   initialResources: Resources;
   lostResources: Resources;
