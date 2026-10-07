@@ -31,6 +31,8 @@ export function createBot(id: BotId, world: World, seed: number): Bot {
     deposited: emptyResources(),
     budget: 0,
     spent: 0,
+    actions: 0,
+    actionsSpent: 0,
     score: 0,
     fuel: RULES.fuelCapacity,
     damage: 0,
@@ -500,7 +502,8 @@ export class GameSession {
       this.disable(bot, "Vaisseau immobilise : remorquage requis");
       return;
     }
-    if (bot.goal?.reason === "collect" && this.available(bot, bot.goal.coord) === 0)
+    if ((bot.goal?.reason === "collect" && this.available(bot, bot.goal.coord) === 0) ||
+      (bot.goal?.reason === "repair" && bot.budget < RULES.repairPrice))
       bot = { ...bot, goal: null, route: [] };
     const isBase = bot.coord === bot.base;
     const atFuel = tile.kind === "fuel";
@@ -516,7 +519,7 @@ export class GameSession {
     if (
       (isBase && resourceTotal(bot.cargo) > 0) ||
       (tile.kind === "fuel" && bot.fuel < RULES.fuelCapacity) ||
-      (tile.kind === "repair" && bot.damage > 0 && (bot.goal?.reason === "repair" || bot.damage >= RULES.repairThreshold))
+      (tile.kind === "repair" && bot.damage > 0 && bot.budget >= RULES.repairPrice && (bot.goal?.reason === "repair" || bot.damage >= RULES.repairThreshold))
     ) {
       if (tile.kind === "repair" && this.elapsed < this.repairAvailableAt) {
         this.launch(bot, "wait", bot.coord, this.repairAvailableAt - this.elapsed, "Station de reparation temporairement indisponible");
@@ -532,7 +535,7 @@ export class GameSession {
         this.finishBot(bot, "Retour a la base impossible");
       return;
     }
-    if (bot.damage >= RULES.repairThreshold) {
+    if (bot.damage >= RULES.repairThreshold && bot.budget >= RULES.repairPrice) {
       const repair = this.servicePath(bot, "repair");
       if (repair.length > 1 && this.move(bot, repair[repair.length - 1], "repair")) return;
     }
@@ -549,7 +552,8 @@ export class GameSession {
       if (this.move(bot, bot.goal.coord, bot.goal.reason)) return;
     }
     bot = { ...bot, goal: null, route: [] };
-    if (isBase && !bot.droneAvailable && bot.budget >= RULES.dronePrice) {
+    const repairReserve = RULES.repairPrice;
+    if (isBase && !bot.droneAvailable && bot.budget >= RULES.dronePrice + (bot.damage > 0 ? repairReserve : 0)) {
       this.launch(bot, "purchase", bot.base, RULES.purchaseDuration, "Remplacement du drone");
       return;
     }
@@ -561,7 +565,7 @@ export class GameSession {
     if (
       isBase &&
       price !== undefined &&
-      bot.budget >= price &&
+      bot.budget >= price + repairReserve &&
       bot.droneAvailable &&
       unknown.some(candidate => hexDistance(bot.coord, candidate.coord) > bot.radius && hexDistance(bot.coord, candidate.coord) <= RULES.maxExplorationRadius) &&
       !unknown.some(candidate => hexDistance(bot.coord, candidate.coord) <= bot.radius)
@@ -570,15 +574,30 @@ export class GameSession {
       return;
     }
     const memoryPrice = RULES.mineMemoryUpgradePrices[bot.mineMemoryLevel];
-    if (isBase && bot.statistics.mineSightings > 0 && memoryPrice !== undefined && bot.budget >= memoryPrice) {
+    if (isBase && bot.statistics.mineSightings > 0 && memoryPrice !== undefined && bot.budget >= memoryPrice + repairReserve) {
       this.launch(bot, "memoryUpgrade", bot.base, RULES.purchaseDuration, `Memoire des mines : niveau ${bot.mineMemoryLevel + 1}`);
       return;
     }
+    if (bot.damage >= RULES.repairThreshold && bot.cargo.debris > 0 &&
+      bot.budget + bot.cargo.debris >= RULES.repairPrice && !isBase && this.move(bot, bot.base, "base")) return;
+    const debrisNeed = Math.max(
+      bot.damage >= RULES.repairThreshold ? RULES.repairPrice : 0,
+      !bot.droneAvailable ? RULES.dronePrice : 0,
+      RULES.upgradePrices[bot.radius] ?? 0
+    );
+    const debrisWeight = bot.budget < debrisNeed
+      ? bot.damage >= RULES.repairThreshold ? RULES.urgentDebrisPriorityMultiplier : RULES.debrisPriorityMultiplier
+      : 1;
     const collections = bot.known
       .filter(coord => this.world[coord]?.kind === "resource" && this.available(bot, coord) > 0)
-      .map(coord => ({ coord, path: this.affordableRoute(bot, coord), amount: this.available(bot, coord) }))
+      .map(coord => {
+        const path = this.affordableRoute(bot, coord);
+        const taken = transferResources(this.world[coord].resources, bot.cargo, RULES.capacity).taken;
+        const specialValue = bot.actions + bot.cargo.special === 0 ? RULES.firstSpecialPriorityValue : 1;
+        return { coord, path, value: taken.food + taken.special * specialValue + taken.debris * debrisWeight };
+      })
       .filter(candidate => candidate.path.length > 0)
-      .sort((left, right) => right.amount / right.path.length - left.amount / left.path.length);
+      .sort((left, right) => right.value / right.path.length - left.value / left.path.length);
     const scans = bot.droneAvailable ? unknown.filter(candidate => {
       const distance = hexDistance(bot.coord, candidate.coord);
       return ["resource", "empty", "danger"].includes(candidate.kind) && distance <= effectiveRadius(bot) && hasLineOfSight(this.world, bot.coord, candidate.coord) && 2 * distance * RULES.droneFuelPerHex <= bot.fuel;
@@ -586,7 +605,7 @@ export class GameSession {
     const opponent = this.bots().find(other => other.id !== bot.id && other.state !== "disabled" && other.state !== "finished");
     const opponentVisible = opponent && activeCoords(this.world, bot).includes(opponent.coord);
     const opponentNext = opponent?.operation?.kind === "move" ? opponent.operation.target : undefined;
-    const mineTargets = opponentVisible && opponentNext && bot.offensiveDroneAvailable
+    const mineTargets = opponentVisible && opponentNext && bot.offensiveDroneAvailable && bot.actions >= RULES.mineActionCost
       ? Object.values(this.world).filter(candidate => candidate.coord === opponentNext && candidate.walkable &&
           candidate.coord !== bot.coord && hexDistance(candidate.coord, opponent.coord) === 1 &&
           !bot.knownMines[candidate.coord] && this.elapsed - (bot.mineChecked[candidate.coord] ?? -Infinity) >= 5000 &&
@@ -597,18 +616,18 @@ export class GameSession {
     if (cargoTotal > 0 && (!collections.length || (storagePressure && !collections.some(candidate => candidate.coord === bot.coord)))) {
       if (this.move(bot, bot.base, "base")) return;
     }
+    if (mineTargets.length) {
+      const target = mineTargets[0].coord;
+      this.launch(bot, "mine", target, RULES.scanDuration + 2 * hexDistance(bot.coord, target) * RULES.stepDuration, `Pose d'une mine en ${target}`);
+      return;
+    }
     let random = nextRandom(bot.randomState);
     bot = { ...bot, randomState: random.state };
-    const collectProbability = collections.length ? Math.min(0.9, 0.55 + collections[0].amount / 1500 + cargoTotal / 5000) : 0;
+    const collectProbability = collections.length ? Math.min(0.9, 0.55 + collections[0].value / 1500 + cargoTotal / 5000) : 0;
     if (collections.length && (!scans.length || random.value < collectProbability)) {
       const target = collections[0].coord;
       if (target === bot.coord) this.launch(bot, "collect", target, RULES.collectDuration, `Collecte a ${target}`);
       else this.move(bot, target, "collect");
-      return;
-    }
-    if (mineTargets.length) {
-      const target = mineTargets[0].coord;
-      this.launch(bot, "mine", target, RULES.scanDuration + 2 * hexDistance(bot.coord, target) * RULES.stepDuration, `Pose d'une mine en ${target}`);
       return;
     }
     if (scans.length) {
@@ -624,7 +643,8 @@ export class GameSession {
       return;
     }
     if (cargoTotal > 0 && this.move(bot, bot.base, "base")) return;
-    if (!isBase && ((price !== undefined && bot.budget >= price) || (!bot.droneAvailable && bot.budget >= RULES.dronePrice))) {
+    if (!isBase && ((price !== undefined && bot.budget >= price + repairReserve) ||
+      (!bot.droneAvailable && bot.budget >= RULES.dronePrice + (bot.damage > 0 ? repairReserve : 0)))) {
       const baseInterest = unknown.some(
         candidate => hexDistance(bot.base, candidate.coord) > bot.radius && hexDistance(bot.base, candidate.coord) <= RULES.maxExplorationRadius
       );
@@ -802,20 +822,22 @@ export class GameSession {
             ...next,
             cargo: emptyResources(),
             deposited: addResources(bot.deposited, bot.cargo),
-            score: bot.score + amount,
-            budget: bot.budget + amount,
+            score: bot.score + bot.cargo.food,
+            budget: bot.budget + bot.cargo.debris,
+            actions: bot.actions + bot.cargo.special,
             goal: null,
           };
           this.log(bot.id, `${amount} ressources deposees`);
           if (amount > 0)
-            this.emit({ type: "resources.deposited", category: "resource", botId: bot.id, coord: bot.coord, resources: bot.cargo, delta: { budget: amount, score: amount }, after: { budget: next.budget, score: next.score } });
+            this.emit({ type: "resources.deposited", category: "resource", botId: bot.id, coord: bot.coord, resources: bot.cargo, delta: { budget: bot.cargo.debris, actions: bot.cargo.special, score: bot.cargo.food }, after: { budget: next.budget, actions: next.actions, score: next.score } });
         } else if (tile.kind === "fuel") {
           next = { ...next, fuel: RULES.fuelCapacity, goal: null };
           this.emit({ type: "fuel.refueled", category: "maintenance", botId: bot.id, coord: bot.coord, before: { fuel: bot.fuel }, delta: { fuel: RULES.fuelCapacity - bot.fuel }, after: { fuel: RULES.fuelCapacity } });
         } else if (tile.kind === "repair") {
-          next = { ...next, damage: 0, goal: null };
+          if (bot.budget < RULES.repairPrice) throw new Error("Insufficient debris for repair");
+          next = { ...next, damage: 0, budget: bot.budget - RULES.repairPrice, spent: bot.spent + RULES.repairPrice, goal: null };
           this.repairAvailableAt = this.elapsed + RULES.repairCooldown;
-          this.emit({ type: "ship.repaired", category: "maintenance", botId: bot.id, coord: bot.coord, before: { damage: bot.damage }, delta: { damage: -bot.damage }, after: { damage: 0 } });
+          this.emit({ type: "ship.repaired", category: "maintenance", botId: bot.id, coord: bot.coord, before: { damage: bot.damage, budget: bot.budget }, delta: { damage: -bot.damage, budget: -RULES.repairPrice }, after: { damage: 0, budget: next.budget } });
         }
         else throw new Error("Service outside a station");
         break;
@@ -975,13 +997,17 @@ export class GameSession {
   private placeMine(bot: BotView) {
     const operation = bot.operation!;
     const tile = this.world[operation.target];
-    const planted = tile.walkable && !tile.mine;
+    const planted = tile.walkable && !tile.mine && bot.actions >= RULES.mineActionCost;
     if (planted) {
       this.world[operation.target] = { ...tile, mine: { owner: bot.id, state: "arming", armsAt: this.elapsed + RULES.mineArmingDuration } };
       this.worldRevision++;
-      this.emit({ type: "mine.placed", category: "incident", botId: bot.id, coord: operation.target, target: operation.target });
+      this.emit({ type: "mine.placed", category: "incident", botId: bot.id, coord: operation.target, target: operation.target,
+        before: { actions: bot.actions }, delta: { actions: -RULES.mineActionCost }, after: { actions: bot.actions - RULES.mineActionCost } });
     }
-    this.actors.get(bot.id)!.send({ type: "TICK", bot: { ...bot, operation: {
+    this.actors.get(bot.id)!.send({ type: "TICK", bot: { ...bot,
+      actions: bot.actions - Number(planted) * RULES.mineActionCost,
+      actionsSpent: bot.actionsSpent + Number(planted) * RULES.mineActionCost,
+      operation: {
       ...operation, minePlacementAttempted: true, minePlacementSucceeded: planted,
     } } });
     this.syncMineKnowledge();
@@ -1066,7 +1092,7 @@ export class GameSession {
 
   getSnapshot(afterEventSequence = 0): SessionSnapshot {
     return structuredClone({
-      schemaVersion: 10,
+      schemaVersion: 11,
       seed: this.seed,
       revision: this.revision,
       worldRevision: this.worldRevision,
@@ -1095,7 +1121,8 @@ export class GameSession {
     let accounted = addResources(worldResources(this.world), this.lostResources);
     for (const bot of this.bots()) {
       transferResources(emptyResources(), bot.cargo, RULES.capacity);
-      if (bot.score !== resourceTotal(bot.deposited) || bot.budget < 0 || bot.budget + bot.spent !== bot.score)
+      if (bot.score !== bot.deposited.food || bot.budget < 0 || bot.budget + bot.spent !== bot.deposited.debris ||
+        bot.actions < 0 || bot.actions + bot.actionsSpent !== bot.deposited.special)
         throw new Error("Economy invariant failed");
       if (
         bot.fuel < 0 ||

@@ -2,17 +2,17 @@ import type { BotPhase, ElectricCloud } from "../../engine/model";
 import { RULES } from "../../engine/rules";
 import type { BotId, TileKind } from "../../engine/world";
 
-export const BOT_COLORS: Record<BotId, string> = { "bot-0": "#087f8c", "bot-1": "#cf6348" };
-export const DEPLETED_TILE_COLOR = "#476889";
-export const MINED_TILE_COLOR = "#a83d58";
+export const BOT_COLORS: Record<BotId, string> = { "bot-0": "#287c79", "bot-1": "#be6249" };
+export const DEPLETED_TILE_COLOR = "#829aac";
+export const MINED_TILE_COLOR = "#a84962";
 export const TILE_COLORS: Record<TileKind, string> = {
-  resource: "#8db7a0",
-  empty: "#d8dfdb",
-  obstacle: "#73817e",
-  danger: "#d98377",
-  base: "#eeeae0",
-  fuel: "#e6c366",
-  repair: "#b596b6",
+  resource: "#a8bda3",
+  empty: "#e0d7c1",
+  obstacle: "#8f988e",
+  danger: "#d58b72",
+  base: "#dac7a5",
+  fuel: "#dfbb75",
+  repair: "#b5a8bc",
 };
 export const TILE_LABELS: Record<TileKind, string> = {
   resource: "Ressources",
@@ -23,7 +23,7 @@ export const TILE_LABELS: Record<TileKind, string> = {
   fuel: "Carburant",
   repair: "Reparation",
 };
-export const RESOURCE_LABELS = { food: "Nourriture", debris: "Debris", special: "Special" };
+export const RESOURCE_LABELS = { food: "Provisions", debris: "Débris", special: "Cartes action" };
 export const PHASE_LABELS: Record<BotPhase, string> = {
   deciding: "Decision",
   moving: "Deplacement",

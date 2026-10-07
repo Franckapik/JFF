@@ -12,10 +12,12 @@ Fonctionnalité: Mines, drone offensif et mémoire individuelle
   @MINE-02
   Scénario: Arbitrer entre exploration et embuscade
     Étant donné un adversaire visible qui se déplace vers une tuile voisine traversable
+    Et le bot possède au moins une action issue d'une ressource spéciale déposée
     Et cette tuile est dans le rayon et la ligne de vue du drone offensif
     Et le bot n'a ni collecte ni maintenance prioritaire
     Quand le bot choisit une opération
     Alors il peut poser une mine sur la prochaine tuile de cet adversaire
+    Et une cible de mine admissible passe avant une collecte ordinaire
     Et si aucun déplacement adverse visible n'offre une cible faisable, il continue son exploration
     Et la même graine et le même état produisent la même décision
 
@@ -60,10 +62,18 @@ Fonctionnalité: Mines, drone offensif et mémoire individuelle
 
   @MINE-07
   Scénario: Ne pas limiter globalement les mines par vaisseau
-    Étant donné un bot disposant du carburant requis et de plusieurs cibles admissibles
+    Étant donné un bot disposant du carburant et des actions requis ainsi que de plusieurs cibles admissibles
     Quand il pose successivement des mines sur des tuiles distinctes
-    Alors aucune limite globale de mines posées ne bloque une nouvelle pose
+    Alors chaque pose effective consomme une action
+    Et aucune autre limite globale de mines posées ne bloque une nouvelle pose
     Et une tuile déjà minée ne reçoit pas une seconde mine simultanée
+
+  @MINE-26
+  Scénario: Ne pas créer de mine sans action disponible
+    Étant donné un bot sans action disponible après ses dépôts et ses dépenses
+    Quand il évalue une cible de mine admissible
+    Alors il ne lance pas de pose de mine
+    Et ses scans et neutralisations restent disponibles selon leur coût en carburant
 
   @MINE-08
   Scénario: Montrer l'armement à l'adversaire dans son rayon actuel

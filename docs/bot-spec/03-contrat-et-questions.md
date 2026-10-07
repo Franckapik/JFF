@@ -8,7 +8,7 @@ sans certification sur telephone.
 
 ## Monde, bots et ressources
 
-- Deux bots concurrents partagent un monde unique. Connaissance, score, budget,
+- Deux bots concurrents partagent un monde unique. Connaissance, score, budget, actions,
   cargaison et progression restent individuels. Les bases sont fixes,
   symetriques et vides de ressources au depart. La carte initiale garde des
   stocks et une accessibilite symetriques, avec un seul service de chaque type
@@ -47,10 +47,14 @@ sans certification sur telephone.
   les urgences. Les collectes possibles sont classees notamment par quantite
   et longueur de trajet. Un compartiment plein peut declencher un retour meme
   si les autres ont encore de la place.
-- Capacites independantes : nourriture 200, debris 1 800, special 3. Une
-  collecte peut etre partielle. Les transactions du stock partage sont
-  serialisees. Le depot a sa propre base credite score cumule et budget ; les
-  achats ne debitent que le budget.
+- Capacites independantes : nourriture (appelee Provisions dans l'interface)
+  200, debris 1 800, special 3. Une collecte peut etre partielle. Les
+  transactions du stock partage sont serialisees. Le depot a sa propre base
+  credite trois comptes distincts : les Provisions donnent le score de
+  victoire, les debris donnent le budget, les ressources speciales donnent
+  des actions. Achats et reparations debitent le budget ; une mine effectivement
+  posee debite une action. Le plateau initial contient dix ressources speciales
+  sur cinq paires de cases miroirs.
 
 ## Deplacements, services et dangers
 
@@ -74,7 +78,7 @@ sans certification sur telephone.
   carburant urgent est a 20 ou sous le cout d'acces au service plus une
   reserve de 3 ; le service a une station carburant remplit toute reserve
   incomplete apres une duree egale a trois pas du vaisseau. La reparation devient
-  prioritaire a 65 degats ; entre deux besoins distants, elle est recherchee
+  prioritaire a 45 degats si le bot dispose de 30 debris en budget ; entre deux besoins distants, elle est recherchee
   avant le ravitaillement. Après chaque réparation, la station est indisponible
   pendant 40 000 ms logiques.
 - Une tuile d'arret accueille un seul bot actif a la fois. Le dernier pas vers
@@ -112,8 +116,9 @@ sans certification sur telephone.
   par bot et tuile, meme apres depot ou perte.
 - Invariant physique, pour chaque ressource : stock du monde + cargaisons +
   depots cumules + pertes explicites = stock initial. Invariant financier :
-  budget + depenses = score depose. La provenance n'est pas un stock a
-  additionner au bilan.
+  score = Provisions deposees, budget + depenses = debris deposes et
+  actions disponibles + actions depensees = ressources speciales deposees.
+  La provenance n'est pas un stock a additionner au bilan.
 
 ## Durees et interfaces
 
@@ -124,7 +129,7 @@ extension 1 000 ms ; remorquage 5 000 ms. Les vitesses
 expert montrent l'etat reel, la cible, les comptes et les evenements. Un graphe
 anime complet des transitions reste une extension.
 
-Le snapshot actif est en `schemaVersion: 10` ; le protocole de commandes reste
+Le snapshot actif est en `schemaVersion: 11` ; le protocole de commandes reste
 en version 1. Le moteur est dans [session.ts](../../src/engine/session.ts),
 les valeurs dans [rules.ts](../../src/engine/rules.ts), les controles dans
 [session.test.ts](../../src/engine/session.test.ts). Les dix fichiers
@@ -144,7 +149,7 @@ identifiants sont controles, mais leurs etapes ne sont pas executees.
 | Q07 | Decouverte possible par le vaisseau sans drone. |
 | Q08 | Heuristiques actuelles de collecte et de retour. |
 | Q09 | Seuils et priorites de maintenance ci-dessus. |
-| Q10 | Depot gratuit a sa base en 1 200 ms ; reparation uniquement a la station dediee. |
+| Q10 | Depot gratuit a sa base en 1 200 ms ; reparation pour 30 de budget issu des debris uniquement a la station dediee. |
 | Q11 | Aucun carburant facture au chargement. |
 | Q12 | Perte du drone et decouverte du danger des l'arrivee. |
 | Q13 | Remplacement du drone a sa base pour 50 de budget. |

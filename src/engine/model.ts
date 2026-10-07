@@ -61,6 +61,8 @@ export interface Bot {
   deposited: Resources;
   budget: number;
   spent: number;
+  actions: number;
+  actionsSpent: number;
   score: number;
   fuel: number;
   damage: number;
@@ -153,12 +155,12 @@ export interface SessionEvent {
   target?: Coord;
   reason?: string;
   resources?: Resources;
-  before?: Partial<Record<"fuel" | "damage" | "budget" | "score" | "radius", number>>;
-  delta?: Partial<Record<"fuel" | "damage" | "budget" | "score" | "radius", number>>;
-  after?: Partial<Record<"fuel" | "damage" | "budget" | "score" | "radius", number>>;
+  before?: Partial<Record<"fuel" | "damage" | "budget" | "actions" | "score" | "radius", number>>;
+  delta?: Partial<Record<"fuel" | "damage" | "budget" | "actions" | "score" | "radius", number>>;
+  after?: Partial<Record<"fuel" | "damage" | "budget" | "actions" | "score" | "radius", number>>;
 }
 export interface SessionSnapshot {
-  schemaVersion: 10;
+  schemaVersion: 11;
   seed: number;
   revision: number;
   worldRevision: number;

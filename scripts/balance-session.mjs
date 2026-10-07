@@ -53,9 +53,11 @@ function summarize(results) {
   const servicePlacements = { fuel: {}, repair: {} };
   const serviceMaxPathDifference = { fuel: 0, repair: 0 };
   let remainingResources = 0;
+  let actionsPlayed = 0;
   for (const result of results) {
     counts[result.outcome]++;
     remainingResources += result.remainingResources;
+    actionsPlayed += Object.values(result.bots).reduce((total, bot) => total + bot.actionsSpent, 0);
     for (const type of INCIDENT_TYPES) {
       incidentEvents[type] += result.incidents[type];
       if (result.incidents[type] > 0) incidentGames[type]++;
@@ -84,6 +86,7 @@ function summarize(results) {
     serviceMaxPathDifference,
     gamesWithRemainingResources: results.filter(result => result.remainingResources > 0).length,
     totalRemainingResources: remainingResources,
+    actionsPlayed,
   };
 }
 
@@ -164,12 +167,17 @@ try {
         endReason: snapshot.endReason,
         winners: snapshot.winners,
         remainingResources: Object.values(snapshot.remainingResources).reduce((total, amount) => total + amount, 0),
+        initialSpecial: snapshot.initialResources.special,
+        remainingSpecial: snapshot.remainingResources.special,
         services,
         incidents,
         damagePeaks,
         bots: Object.fromEntries(Object.values(snapshot.bots).map(bot => [bot.id, {
           state: bot.state,
           score: bot.score,
+          budget: bot.budget,
+          actions: bot.actions,
+          actionsSpent: bot.actionsSpent,
           fuel: bot.fuel,
           damage: bot.damage,
           explored: bot.explored.length,

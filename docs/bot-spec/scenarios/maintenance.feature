@@ -10,24 +10,25 @@ Fonctionnalité: Services locaux et achats individuels
     Alors aucun effet du service n'est encore appliqué
     Quand la dernière milliseconde s'écoule
     Alors sa cargaison est vide, son carburant commun vaut encore 10 et ses dégâts valent encore 60
-    Et son score et son budget augmentent chacun de 51
+    Et son score augmente de 20 grâce aux Provisions, son budget de 30 grâce aux débris et ses actions de 1 grâce à la ressource spéciale
     Et aucun coût de service n'est prélevé
 
   @MAINT-02
   Plan du scénario: Limiter une station à son service
     Étant donné un bot sur une station <station> avec 10 carburants communs et 70 dégâts
-    Et une cargaison non vide
+    Et une cargaison non vide et un budget suffisant pour réparer
     Quand son service de 1200 ms se termine
     Alors son carburant vaut <carburant> et ses dégâts valent <dégâts>
-    Et sa cargaison, son score et son budget n'ont pas changé
+    Et sa cargaison et son score n'ont pas changé
+    Et son budget a diminué de <débit>
     Exemples:
-      | station | carburant | dégâts |
-      | fuel    | 100       | 70     |
-      | repair  | 10        | 0      |
+      | station | carburant | dégâts | débit |
+      | fuel    | 100       | 70     | 0     |
+      | repair  | 10        | 0      | 30    |
 
   @MAINT-03
   Scénario: Voyager avant de réparer
-    Étant donné un bot à distance d'une station avec 70 dégâts
+    Étant donné un bot à distance d'une station avec 70 dégâts et au moins 30 de budget issu des débris
     Quand il choisit une réparation
     Alors ses dégâts restent inchangés pendant le trajet hors danger
     Et chaque pas du vaisseau consomme 2 carburants communs
@@ -37,7 +38,7 @@ Fonctionnalité: Services locaux et achats individuels
   Scénario: Utiliser les seuils validés
     Étant donné un bot qui ne bénéficie pas déjà d'un service local
     Quand ses besoins sont évalués
-    Alors une réparation est recherchée dès 65 dégâts inclus
+    Alors une réparation est recherchée dès 45 dégâts inclus si le budget atteint 30
     Et le carburant est urgent sous ou au seuil maximal entre 20 et le coût d'accès au service augmenté de 3
     Et un service carburant est automatique sur sa station si la réserve commune est incomplète
     Et à sa base seule une cargaison déclenche le dépôt sans plein ni réparation
@@ -46,7 +47,7 @@ Fonctionnalité: Services locaux et achats individuels
   @MAINT-05
   Plan du scénario: Acheter une extension utile à sa base
     Étant donné un bot à sa base avec un drone disponible et un rayon de <avant>
-    Et assez de budget, le rayon courant exploré et une nouvelle couronne inconnue utile
+    Et assez de budget pour l'achat plus 30 de réserve, le rayon courant exploré et une nouvelle couronne inconnue utile
     Quand son achat de 1000 ms se termine
     Alors son rayon vaut <après> et son budget a diminué de <prix>
     Et son score et ses dégâts n'ont pas changé
@@ -59,7 +60,7 @@ Fonctionnalité: Services locaux et achats individuels
 
   @MAINT-06
   Scénario: Remplacer seulement un drone perdu
-    Étant donné un bot à sa base sans drone et avec au moins 50 de budget
+    Étant donné un bot intact à sa base sans drone et avec au moins 50 de budget
     Quand son achat de 1000 ms se termine
     Alors son drone est disponible et son budget diminue de 50
     Et son score et ses dégâts restent inchangés
@@ -85,7 +86,7 @@ Fonctionnalité: Services locaux et achats individuels
   @MAINT-09
   Scénario: Racheter les extensions après remplacement du drone
     Étant donné un drone de rayon 3 détruit par un danger
-    Et un bot revenu à sa base avec assez de budget
+    Et un bot revenu à sa base avec assez de budget pour les achats et 30 de réserve après les extensions
     Quand il achète un nouveau drone pour 50 de budget
     Alors son drone est disponible avec un rayon de 1
     Quand il rachète successivement les extensions pour 50 puis 100 de budget
@@ -105,5 +106,5 @@ Fonctionnalité: Services locaux et achats individuels
   Scénario: Attendre la remise en service de la station de réparation
     Étant donné qu'une réparation vient de se terminer
     Alors la station reste indisponible pendant 40000 ms logiques
-    Quand un bot endommagé s'y présente pendant ce délai
+    Quand un bot endommagé avec au moins 30 de budget s'y présente pendant ce délai
     Alors il attend la fin du délai avant de commencer son service de 1200 ms

@@ -39,11 +39,20 @@ mémorisée si un trajet sûr existe ; il utilise le drone offensif pour la
 neutraliser lorsqu'elle bloque son prochain pas. La neutralisation produit
 une explosion contrôlée sans dégâts.
 
+Les trois compteurs du bot sont les points, le budget et les actions. Les
+« Provisions » (anciennement nourriture) déposées donnent les points de
+victoire. Les débris déposés créditent le budget des achats et réparations.
+Les ressources spéciales déposées donnent des actions ; la pose effective
+d'une mine consomme une action. Le plateau initial contient dix unités
+spéciales, réparties en cinq paires symétriques. Les dépôts cumulés restent
+dans le bilan interne, mais ne figurent pas parmi les compteurs courants.
+
 Les dégâts réduisent le rayon effectif d'un hexagone dès 50 %, puis doublent
 la durée des pas du vaisseau dès 70 %. À 100 %, le vaisseau est immobilisé sur
 sa tuile avec sa cargaison : le remorquage de cette panne reste à définir. La
-réparation n'est possible que sur la station dédiée, qui doit attendre 40 s
-après chaque service avant de réparer à nouveau.
+réparation coûte 30 unités de budget, crédité uniquement par les débris déposés.
+Elle n'est possible que sur la station dédiée, qui doit attendre 40 s après
+chaque service avant de réparer à nouveau.
 
 Le drone offensif peut aussi scanner une tuile : son rapport donne le nombre
 de mines ennemies dans un rayon de deux hexagones et la distance de la plus
@@ -57,6 +66,7 @@ en plus du même coût de vol aller-retour que le drone d'exploration.
 ## References actuelles
 
 - [Architecture et limites du socle](docs/SOCLE_ACTUEL.md)
+- [Direction graphique du plateau](docs/DIRECTION-GRAPHIQUE-PLATEAU.md)
 - [Audit du jeu et vision créative](docs/AUDIT-ET-VISION-JEU.md)
 - [Contrat metier valide](docs/bot-spec/03-contrat-et-questions.md)
 - [Scenarios du socle](docs/bot-spec/scenarios/README.md)

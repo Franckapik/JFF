@@ -207,8 +207,6 @@ export default function ExpertBotView({ bot, events, onClose }: { bot: BotView; 
         <div><dt><Fuel size={17} />Pleins</dt><dd>{incidents.refuels}</dd></div>
         <div><dt><Wrench size={17} />Reparations</dt><dd>{incidents.repairs}</dd></div>
       </dl>
-      <h3><PackageCheck size={16} />Depots cumules</h3>
-      <div className="expert-resources">{RESOURCE_KINDS.map(kind => <span key={kind} title={RESOURCE_LABELS[kind]}>{RESOURCE_LABELS[kind]} <strong>{bot.deposited[kind]}</strong></span>)}</div>
     </div>}
   </section>;
 }

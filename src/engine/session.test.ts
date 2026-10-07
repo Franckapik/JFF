@@ -65,6 +65,8 @@ describe("offensive drone", () => {
     bots["bot-0"].fuel = 10;
     bots["bot-0"].offensiveDroneAvailable = false;
     bots["bot-1"].fuel = 100;
+    bots["bot-1"].actions = 1;
+    bots["bot-1"].deposited.special = 1;
     const session = new GameSession(42, { world, bots });
     session.advance(1);
     const operation = session.getSnapshot().bots["bot-1"].operation;
@@ -78,6 +80,8 @@ describe("offensive drone", () => {
     expect(snapshot.bots["bot-1"].knownMines[target]).toBe(Number.MAX_SAFE_INTEGER);
     expect(snapshot.bots["bot-0"].knownMines[target]).toBeGreaterThan(snapshot.elapsed);
     expect(snapshot.events).toContainEqual(expect.objectContaining({ type: "mine.placed", botId: "bot-1", target }));
+    expect(snapshot.bots["bot-1"].actions).toBe(0);
+    expect(snapshot.events).toContainEqual(expect.objectContaining({ type: "mine.placed", delta: { actions: -1 } }));
     expect(snapshot.events).toContainEqual(expect.objectContaining({ type: "mine.spotted", botId: "bot-0", coord: target }));
     session.advance(799);
     expect(session.getSnapshot().world[target].mine?.state).toBe("arming");
@@ -89,6 +93,19 @@ describe("offensive drone", () => {
     snapshot = session.getSnapshot();
     expect(snapshot.bots["bot-1"].fuel).toBe(RULES.fuelCapacity - 2 * hexDistance("1,0", target) * RULES.droneFuelPerHex - RULES.minePlacementFuel);
     session.assertInvariants();
+    session.stop();
+  });
+
+  it("does not play the mine action without a deposited special resource", () => {
+    const { world, bots } = scenario();
+    world["0,1"].kind = "fuel";
+    bots["bot-0"].goal = { coord: "0,1", reason: "fuel" };
+    bots["bot-0"].fuel = 10;
+    bots["bot-0"].offensiveDroneAvailable = false;
+    const session = new GameSession(42, { world, bots });
+    session.advance(1);
+    expect(session.getSnapshot().bots["bot-1"].operation?.kind).not.toBe("mine");
+    expect(session.getSnapshot().events.some(event => event.type === "mine.placed")).toBe(false);
     session.stop();
   });
 
@@ -282,9 +299,10 @@ describe("offensive drone", () => {
     bots["bot-0"].coord = bots["bot-0"].base;
     bots["bot-0"].known = Object.keys(world) as Coord[];
     bots["bot-0"].mineMemoryLevel = before;
-    bots["bot-0"].budget = price;
-    bots["bot-0"].score = price;
-    bots["bot-0"].deposited.food = price;
+    bots["bot-0"].budget = price + RULES.repairPrice;
+    bots["bot-0"].score = price + RULES.repairPrice;
+    bots["bot-0"].deposited.food = price + RULES.repairPrice;
+    bots["bot-0"].deposited.debris = price + RULES.repairPrice;
     bots["bot-0"].statistics.mineSightings = 1;
     const session = new GameSession(42, { world, bots });
     session.advance(1);
@@ -294,7 +312,7 @@ describe("offensive drone", () => {
     const bot = session.getSnapshot().bots["bot-0"];
     expect(bot.mineMemoryLevel).toBe(after);
     expect(RULES.mineMemoryDurations[bot.mineMemoryLevel - 1]).toBe(duration);
-    expect(bot.budget).toBe(0);
+    expect(bot.budget).toBe(RULES.repairPrice);
     expect(bot.spent).toBe(price);
     session.assertInvariants();
     session.stop();
@@ -810,6 +828,9 @@ describe("shared session", () => {
       coord: station.coord,
       fuel: 10,
       damage: 70,
+      budget: RULES.repairPrice,
+      score: RULES.repairPrice,
+      deposited: { food: RULES.repairPrice, debris: RULES.repairPrice, special: 0 },
       cargo: { food: 20, debris: 30, special: 1 },
       goal: { coord: station.coord, reason: service },
     });
@@ -824,7 +845,11 @@ describe("shared session", () => {
     const bot = session.getSnapshot().bots["bot-0"];
     expect(bot.fuel).toBe(service === "fuel" ? 100 : 10);
     expect(bot.damage).toBe(service === "repair" ? 0 : 70);
-    expect(bot.score).toBe(0);
+    expect(bot.score).toBe(RULES.repairPrice);
+    expect(bot.budget).toBe(service === "repair" ? 0 : RULES.repairPrice);
+    if (service === "repair") expect(session.getSnapshot().events).toContainEqual(expect.objectContaining({
+      type: "ship.repaired", delta: { damage: -70, budget: -RULES.repairPrice },
+    }));
     expect(bot.cargo).toEqual(bots["bot-0"].cargo);
     session.assertInvariants();
     session.stop();
@@ -838,7 +863,9 @@ describe("shared session", () => {
     session.advance(RULES.serviceDuration);
     const snapshot = session.getSnapshot();
     expect(snapshot.bots["bot-0"].cargo).toEqual(emptyResources());
-    expect(snapshot.bots["bot-0"].score).toBe(51);
+    expect(snapshot.bots["bot-0"].score).toBe(20);
+    expect(snapshot.bots["bot-0"].budget).toBe(30);
+    expect(snapshot.bots["bot-0"].actions).toBe(1);
     expect(snapshot.bots["bot-0"].fuel).toBe(30);
     expect(snapshot.bots["bot-0"].damage).toBe(60);
     expect(snapshot.events).toContainEqual(expect.objectContaining({ type: "resources.deposited", botId: "bot-0", coord: bots["bot-0"].base }));
@@ -847,11 +874,99 @@ describe("shared session", () => {
     session.stop();
   });
 
+  it("credits provisions, debris and special to separate accounts", () => {
+    const world = generateWorld(42);
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].cargo = { food: 40, debris: 0, special: 2 };
+    const session = new GameSession(42, { world, bots });
+    session.advance(RULES.serviceDuration);
+    const bot = session.getSnapshot().bots["bot-0"];
+    expect(bot.score).toBe(40);
+    expect(bot.budget).toBe(0);
+    expect(bot.actions).toBe(2);
+    expect(bot.deposited).toEqual({ food: 40, debris: 0, special: 2 });
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("does not repair without enough deposited debris", () => {
+    const world = generateWorld(42);
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    const station = Object.values(world).find(tile => tile.kind === "repair")!;
+    Object.assign(bots["bot-0"], { coord: station.coord, damage: 70, budget: RULES.repairPrice - 1,
+      score: RULES.repairPrice - 1, deposited: { food: RULES.repairPrice - 1, debris: RULES.repairPrice - 1, special: 0 },
+      goal: { coord: station.coord, reason: "repair" } });
+    const session = new GameSession(42, { world, bots });
+    session.advance(1);
+    expect(session.getSnapshot().bots["bot-0"].operation?.kind).not.toBe("service");
+    expect(session.getSnapshot().bots["bot-0"].damage).toBe(70);
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("prioritizes debris while short of funds and food once funded", () => {
+    const world = generateWorld(42);
+    for (const tile of Object.values(world)) {
+      tile.resources = emptyResources();
+      if (tile.kind !== "base") { tile.kind = "empty"; tile.walkable = true; }
+    }
+    world["-2,0"].kind = "resource";
+    world["-2,0"].resources.food = 100;
+    world["-3,1"].kind = "resource";
+    world["-3,1"].resources.debris = 30;
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].known = Object.keys(world) as Coord[];
+    const short = new GameSession(42, { world, bots });
+    short.advance(1);
+    expect(short.getSnapshot().bots["bot-0"].operation).toMatchObject({ kind: "move", target: "-3,1" });
+    short.stop();
+
+    bots["bot-0"].budget = 80;
+    bots["bot-0"].score = 80;
+    bots["bot-0"].deposited.food = 80;
+    bots["bot-0"].deposited.debris = 80;
+    const funded = new GameSession(42, { world, bots });
+    funded.advance(1);
+    expect(funded.getSnapshot().bots["bot-0"].operation).toMatchObject({ kind: "move", target: "-2,0" });
+    funded.stop();
+  });
+
+  it("seeks a first special action before favoring provisions again", () => {
+    const world = generateWorld(42);
+    for (const tile of Object.values(world)) {
+      tile.resources = emptyResources();
+      if (tile.kind !== "base") { tile.kind = "empty"; tile.walkable = true; }
+    }
+    world["-2,0"].kind = "resource";
+    world["-2,0"].resources.food = 100;
+    world["-3,1"].kind = "resource";
+    world["-3,1"].resources = { food: 40, debris: 0, special: 1 };
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].known = Object.keys(world) as Coord[];
+    bots["bot-0"].budget = 80;
+    bots["bot-0"].deposited.debris = 80;
+    const seeking = new GameSession(42, { world, bots });
+    seeking.advance(1);
+    expect(seeking.getSnapshot().bots["bot-0"].operation).toMatchObject({ kind: "move", target: "-3,1" });
+    seeking.stop();
+
+    bots["bot-0"].actions = 1;
+    bots["bot-0"].deposited.special = 1;
+    const supplied = new GameSession(42, { world, bots });
+    supplied.advance(1);
+    expect(supplied.getSnapshot().bots["bot-0"].operation).toMatchObject({ kind: "move", target: "-2,0" });
+    supplied.stop();
+  });
+
   it("does not plan base service for damage alone and heads to the known repair station", () => {
     const world = generateWorld(42);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     const station = Object.values(world).find(tile => tile.kind === "repair")!;
     bots["bot-0"].damage = 70;
+    bots["bot-0"].budget = RULES.repairPrice;
+    bots["bot-0"].score = RULES.repairPrice;
+    bots["bot-0"].deposited.food = RULES.repairPrice;
+    bots["bot-0"].deposited.debris = RULES.repairPrice;
     bots["bot-0"].explored.push(station.coord);
     const session = new GameSession(42, { world, bots });
     session.advance(1);
@@ -866,7 +981,8 @@ describe("shared session", () => {
     const world = generateWorld(42);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     const station = Object.values(world).find(tile => tile.kind === "repair")!;
-    Object.assign(bots["bot-0"], { coord: station.coord, radius: 3, damage: 50, goal: { coord: station.coord, reason: "repair" } });
+    Object.assign(bots["bot-0"], { coord: station.coord, radius: 3, damage: 50, budget: RULES.repairPrice, score: RULES.repairPrice,
+      deposited: { food: RULES.repairPrice, debris: RULES.repairPrice, special: 0 }, goal: { coord: station.coord, reason: "repair" } });
     const session = new GameSession(42, { world, bots });
     expect(effectiveRadius(session.getSnapshot().bots["bot-0"])).toBe(2);
     expect(effectiveRadius({ radius: 1, damage: 50 })).toBe(1);
@@ -896,7 +1012,8 @@ describe("shared session", () => {
     const world = generateWorld(42);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     const station = Object.values(world).find(tile => tile.kind === "repair")!;
-    Object.assign(bots["bot-0"], { coord: station.coord, damage: 60, goal: { coord: station.coord, reason: "repair" } });
+    Object.assign(bots["bot-0"], { coord: station.coord, damage: 60, budget: RULES.repairPrice, score: RULES.repairPrice,
+      deposited: { food: RULES.repairPrice, debris: RULES.repairPrice, special: 0 }, goal: { coord: station.coord, reason: "repair" } });
     const session = new GameSession(42, { world, bots, repairAvailableAt: 5000 });
     session.advance(1);
     expect(session.getSnapshot().bots["bot-0"].operation).toMatchObject({ kind: "wait", remaining: 4999 });
@@ -931,7 +1048,8 @@ describe("shared session", () => {
   it("travels to a repair station before repairing", () => {
     const world = generateWorld(42);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
-    Object.assign(bots["bot-0"], { coord: "0,0", fuel: 40, damage: 70 });
+    Object.assign(bots["bot-0"], { coord: "0,0", fuel: 40, damage: 70, budget: RULES.repairPrice, score: RULES.repairPrice,
+      deposited: { food: RULES.repairPrice, debris: RULES.repairPrice, special: 0 } });
     world["0,0"].kind = "empty";
     world["0,0"].walkable = true;
     world["0,0"].resources = emptyResources();
@@ -953,7 +1071,7 @@ describe("shared session", () => {
   it("replaces only a lost drone at its own base without reducing score", () => {
     const world = generateWorld(42);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
-    for (const bot of Object.values(bots)) Object.assign(bot, { score: 50, budget: 50, deposited: { food: 50, debris: 0, special: 0 } });
+    for (const bot of Object.values(bots)) Object.assign(bot, { score: 50, budget: 50, deposited: { food: 50, debris: 50, special: 0 } });
     bots["bot-0"].droneAvailable = false;
     const session = new GameSession(42, { world, bots });
     session.advance(RULES.purchaseDuration);
@@ -970,7 +1088,7 @@ describe("shared session", () => {
     const world = generateWorld(42);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     const bot = bots["bot-0"];
-    Object.assign(bot, { radius: 2, score: 150, budget: 100, spent: 50, deposited: { food: 150, debris: 0, special: 0 } });
+    Object.assign(bot, { radius: 2, score: 180, budget: 130, spent: 50, deposited: { food: 180, debris: 180, special: 0 } });
     bot.known = Object.values(world)
       .filter(tile => hexDistance(bot.base, tile.coord) <= 2)
       .map(tile => tile.coord);
@@ -978,8 +1096,8 @@ describe("shared session", () => {
     session.advance(RULES.purchaseDuration);
     const snapshot = session.getSnapshot();
     expect(snapshot.bots["bot-0"].radius).toBe(3);
-    expect(snapshot.bots["bot-0"].budget).toBe(0);
-    expect(snapshot.bots["bot-0"].score).toBe(150);
+    expect(snapshot.bots["bot-0"].budget).toBe(RULES.repairPrice);
+    expect(snapshot.bots["bot-0"].score).toBe(180);
     expect(snapshot.phase).toBe("running");
     session.assertInvariants();
     session.stop();
@@ -1105,6 +1223,21 @@ describe("shared session", () => {
     session.stop();
   });
 
+  it("awards victory from provisions even when the rival has more debris and actions", () => {
+    const world = generateWorld(42);
+    for (const tile of Object.values(world)) tile.resources = emptyResources();
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    Object.assign(bots["bot-0"], { score: 10, deposited: { food: 10, debris: 0, special: 0 } });
+    Object.assign(bots["bot-1"], { score: 5, budget: 100, actions: 2,
+      deposited: { food: 5, debris: 100, special: 2 } });
+    const session = new GameSession(42, { world, bots });
+    session.advance(1);
+    expect(session.getSnapshot().phase).toBe("finished");
+    expect(session.getSnapshot().winners).toEqual(["bot-0"]);
+    session.assertInvariants();
+    session.stop();
+  });
+
   it.each([1, 2, 3])("loses a drone and reveals danger exactly on arrival at distance %i without damaging its distant ship", distance => {
     const world = generateWorld(42, 4);
     const target = `${distance},0` as const;
@@ -1159,9 +1292,9 @@ describe("shared session", () => {
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     Object.assign(bots["bot-0"], {
       radius: 2,
-      score: 200,
-      budget: 200,
-      deposited: { food: 200, debris: 0, special: 0 },
+      score: 230,
+      budget: 230,
+      deposited: { food: 230, debris: 230, special: 0 },
     });
     bots["bot-0"].known = Object.values(world).map(tile => tile.coord).filter(coord => coord !== "-2,0" && coord !== "-2,1");
     bots["bot-1"].damage = 100;
@@ -1181,18 +1314,18 @@ describe("shared session", () => {
     bot = session.getSnapshot().bots["bot-0"];
     expect(bot.droneAvailable).toBe(true);
     expect(bot.radius).toBe(1);
-    expect(bot.budget).toBe(150);
+    expect(bot.budget).toBe(180);
 
     session.advance(RULES.purchaseDuration);
     bot = session.getSnapshot().bots["bot-0"];
     expect(bot.radius).toBe(2);
-    expect(bot.budget).toBe(100);
+    expect(bot.budget).toBe(130);
 
     session.advance(RULES.purchaseDuration);
     bot = session.getSnapshot().bots["bot-0"];
     expect(bot.radius).toBe(3);
-    expect(bot.budget).toBe(0);
-    expect(bot.score).toBe(200);
+    expect(bot.budget).toBe(RULES.repairPrice);
+    expect(bot.score).toBe(230);
     session.assertInvariants();
     session.stop();
   });
@@ -1205,7 +1338,7 @@ describe("shared session", () => {
       damage: 100,
       score: 200,
       budget: 200,
-      deposited: { food: 200, debris: 0, special: 0 },
+      deposited: { food: 200, debris: 200, special: 0 },
       cargo: { food: 20, debris: 0, special: 0 },
     });
     const session = new GameSession(42, { world, bots });
@@ -1247,16 +1380,18 @@ describe("shared session", () => {
     session.stop();
   });
 
-  it.each([0, 1, 42, 4294967295])("finishes seed %i without duplicating resources or exceeding compartments", seed => {
+  it.each([0, 1, 42, 4294967295])("settles seed %i without duplicating resources or exceeding compartments", seed => {
     const session = new GameSession(seed);
-    for (let step = 0; step < 1000 && session.getSnapshot().phase !== "finished"; step++) {
+    for (let step = 0; step < 1000 && !["finished", "blocked"].includes(session.getSnapshot().phase); step++) {
       session.advance(1000);
       session.assertInvariants();
     }
     const snapshot = session.getSnapshot();
-    expect(snapshot.phase).toBe("finished");
-    expect(resourceTotal(snapshot.remainingResources)).toBe(0);
-    expect(Object.values(snapshot.bots).every(bot => resourceTotal(bot.cargo) === 0)).toBe(true);
+    expect(["finished", "blocked"]).toContain(snapshot.phase);
+    if (snapshot.phase === "finished") {
+      expect(resourceTotal(snapshot.remainingResources)).toBe(0);
+      expect(Object.values(snapshot.bots).every(bot => resourceTotal(bot.cargo) === 0)).toBe(true);
+    } else expect(snapshot.winners).toEqual([]);
     session.stop();
   });
 
@@ -1464,7 +1599,7 @@ describe("shared session", () => {
     const world = generateWorld(42);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     const bot = bots["bot-0"];
-    bot.deposited = { food: 80, debris: 0, special: 0 };
+    bot.deposited = { food: 80, debris: 80, special: 0 };
     bot.score = 80;
     bot.budget = 80;
     bot.known = Object.values(world)
@@ -1491,7 +1626,9 @@ describe("shared session", () => {
     expect(session.getSnapshot().bots["bot-0"].score).toBe(0);
     session.advance(1200);
     expect(session.getSnapshot().bots["bot-0"].fuel).toBe(28);
-    expect(session.getSnapshot().bots["bot-0"].score).toBe(33);
+    expect(session.getSnapshot().bots["bot-0"].score).toBe(20);
+    expect(session.getSnapshot().bots["bot-0"].budget).toBe(10);
+    expect(session.getSnapshot().bots["bot-0"].actions).toBe(3);
     expect(session.getSnapshot().events).toEqual(expect.arrayContaining([
       expect.objectContaining({ type: "resources.deposited", botId: "bot-0", resources: { food: 20, debris: 10, special: 3 } }),
     ]));
@@ -1529,7 +1666,7 @@ describe("session protocol", () => {
       expect(TestWorker.instances).toBe(1);
       emit(response);
       expect(useSessionStore.getState().status).toBe("connected");
-      expect(useSessionStore.getState().snapshot?.schemaVersion).toBe(10);
+      expect(useSessionStore.getState().snapshot?.schemaVersion).toBe(11);
       const initialEvents = response.snapshot!.events;
       const additionalEvent = { ...initialEvents[0], sequence: response.snapshot!.eventSequence + 1, time: 100 };
       const incremental = { ...response, snapshot: { ...response.snapshot!, eventSequence: additionalEvent.sequence, events: [additionalEvent] } };
@@ -1594,6 +1731,17 @@ describe("session protocol", () => {
 });
 
 describe("hexagonal world", () => {
+  it("limits special action resources to ten in symmetric pairs", () => {
+    for (let seed = 0; seed < 100; seed++) {
+      const world = generateWorld(seed);
+      expect(Object.values(world).reduce((total, tile) => total + tile.resources.special, 0)).toBe(10);
+      for (const tile of Object.values(world)) {
+        const [column, row] = axial(tile.coord);
+        expect(tile.resources.special).toBeLessThanOrEqual(1);
+        expect(tile.resources.special).toBe(world[`${-column},${-row}`].resources.special);
+      }
+    }
+  });
   it("varies the single shared stations while keeping both bases close to each service", () => {
     const layouts = new Set<string>();
     for (let seed = 0; seed < 64; seed++) {

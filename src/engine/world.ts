@@ -1,4 +1,5 @@
 import { addResources, emptyResources, type Resources } from "./resources";
+import { RULES } from "./rules";
 
 export type Coord = `${number},${number}`;
 export type BotId = "bot-0" | "bot-1";
@@ -162,6 +163,7 @@ export function generateWorld(seed: number, radius = 3): World {
     world[coord].owner = BOT_IDS[index];
   });
   const processed = new Set<Coord>();
+  const specialPriority = new Map<Coord, number>();
   for (const tile of Object.values(world)) {
     if (processed.has(tile.coord) || tile.kind !== "resource") continue;
     const [column, row] = axial(tile.coord);
@@ -179,10 +181,24 @@ export function generateWorld(seed: number, radius = 3): World {
           : roll < 0.3
             ? "empty"
             : "resource";
-    const resources =
-      kind === "resource"
-        ? { food: 20 + Math.floor(random() * 81), debris: 80 + Math.floor(random() * 221), special: Math.floor(random() * 7) }
-        : emptyResources();
+    const guaranteedDebris = tile.coord === `${-radius + 1},0` || mirror === `${-radius + 1},0`;
+    let resources = emptyResources();
+    if (kind === "resource") {
+      const foodRoll = random();
+      const debrisRoll = random();
+      const specialRoll = random();
+      specialPriority.set(tile.coord, specialRoll);
+      specialPriority.set(mirror, specialRoll);
+      resources = {
+        food: 20 + Math.floor(foodRoll * 81),
+        debris: guaranteedDebris
+          ? RULES.debrisMin + Math.floor(debrisRoll * (RULES.debrisMax - RULES.debrisMin + 1))
+          : debrisRoll < RULES.debrisTileChance
+            ? RULES.debrisMin + Math.floor(debrisRoll / RULES.debrisTileChance * (RULES.debrisMax - RULES.debrisMin + 1))
+            : 0,
+        special: 0,
+      };
+    }
     for (const coord of new Set([tile.coord, mirror])) {
       world[coord].kind = kind;
       world[coord].walkable = kind !== "obstacle";
@@ -215,5 +231,20 @@ export function generateWorld(seed: number, radius = 3): World {
     }
   }
   if (!layouts.length) throw new Error("No balanced service placement");
-  return layouts[Math.floor(random() * layouts.length)];
+  const selected = layouts[Math.floor(random() * layouts.length)];
+  const specialPairs = Object.values(selected)
+    .filter(tile => {
+      const [column, row] = axial(tile.coord);
+      const mirror: Coord = `${-column},${-row}`;
+      return tile.kind === "resource" && tile.coord < mirror && selected[mirror]?.kind === "resource";
+    })
+    .sort((left, right) => (specialPriority.get(right.coord) ?? 0) - (specialPriority.get(left.coord) ?? 0))
+    .slice(0, RULES.specialPairCount);
+  for (const tile of specialPairs) {
+    const [column, row] = axial(tile.coord);
+    const mirror: Coord = `${-column},${-row}`;
+    selected[tile.coord].resources.special = 1;
+    selected[mirror].resources.special = 1;
+  }
+  return selected;
 }

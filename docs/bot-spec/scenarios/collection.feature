@@ -67,7 +67,7 @@ Fonctionnalité: Collecte concurrente et compartiments indépendants
     Quand le bilan de chaque ressource est calculé
     Alors stock restant plus cargaisons plus dépôts cumulés plus pertes égale stock initial
     Et la provenance des collectes n'est pas ajoutée à ce bilan physique
-    Et les achats débitent le budget, pas le score ni les dépôts cumulés
+    Et les achats et les réparations débitent le budget issu des débris, pas le score ni les dépôts cumulés
 
   @COL-08
   Scénario: Représenter les ressources uniquement sur une cible scannée
