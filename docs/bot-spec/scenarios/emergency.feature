@@ -1,7 +1,7 @@
 # language: fr
 @socle @emergency
-Fonctionnalité: Panne, destruction et suspension du temps
-  Les interruptions individuelles d'urgence sont une extension, pas une fonction du socle.
+Fonctionnalité: Panne, immobilisation et suspension du temps
+  Le remorquage après immobilisation à 100 dégâts reste à définir.
 
   @EMERG-01
   Scénario: Remorquer un vaisseau sans carburant
@@ -15,12 +15,13 @@ Fonctionnalité: Panne, destruction et suspension du temps
     Et le bot sans carburant ne peut plus quitter sa base
 
   @EMERG-02
-  Scénario: Éliminer définitivement un vaisseau détruit
+  Scénario: Immobiliser un vaisseau à 100 dégâts
     Étant donné un bot dont les dégâts atteignent 100
     Quand la session constate cet état
-    Alors le bot est éliminé sans réparation ni réapparition
-    Et sa cargaison rejoint les pertes explicites
-    Et son score déposé reste conservé mais il n'est plus éligible à la victoire
+    Alors le bot est immobilisé et n'exécute plus d'opération
+    Et sa cargaison, son carburant et son score restent conservés
+    Et le remorquage de ce vaisseau reste à définir
+    Et la partie se bloque si elle ne peut être résolue sans ce remorquage
 
   @EMERG-03
   Scénario: Suspendre une opération sans la transformer en urgence
@@ -33,13 +34,13 @@ Fonctionnalité: Panne, destruction et suspension du temps
 
   @EMERG-04
   Scénario: Prioriser les besoins simultanés aux frontières d'opération
-    Étant donné un bot avec 60 dégâts et 10 carburants
+    Étant donné un bot avec 70 dégâts et 10 carburants
     Et des trajets faisables vers réparation et carburant
     Et aucun service disponible à sa position
     Quand il choisit sa prochaine opération
     Alors la réparation est recherchée avant le ravitaillement distant
     Et une réserve inférieure à 2 carburants hors service aurait priorité sous forme de remorquage
-    Et à sa propre base seuls le dépôt et la réparation sont assurés
+    Et à sa propre base seul le dépôt est assuré
 
   @EMERG-05
   Scénario: Ne pas franchir une case avec une réserve inférieure au coût du vaisseau

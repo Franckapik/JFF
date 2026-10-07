@@ -48,6 +48,7 @@
     "test:watch": "vitest",
     "benchmark": "node --expose-gc scripts/benchmark-session.mjs",
     "balance": "node scripts/balance-session.mjs",
+    "mines": "node scripts/mine-stats.mjs",
     "scenarios:check": "node scripts/validate-scenarios.mjs",
     "dev": "vite",
     "log:server": "node scripts/log-server.mjs",

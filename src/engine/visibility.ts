@@ -1,5 +1,6 @@
 import type { Bot, ElectricCloud } from "./model";
 import { resourceTotal } from "./resources";
+import { RULES } from "./rules";
 import { axial, hexDistance, type Coord, type TileKind, type World, type WorldTile } from "./world";
 
 function roundedHex(column: number, row: number): Coord {
@@ -31,9 +32,13 @@ export function hasLineOfSight(world: World, from: Coord, to: Coord): boolean {
   return true;
 }
 
-export function activeCoords(world: World, ship: Pick<Bot, "coord" | "radius">): Coord[] {
+export function effectiveRadius(ship: Pick<Bot, "radius"> & Partial<Pick<Bot, "damage">>): number {
+  return Math.max(RULES.initialExplorationRadius, ship.radius - Number((ship.damage ?? 0) >= RULES.impairedVisionThreshold));
+}
+
+export function activeCoords(world: World, ship: Pick<Bot, "coord" | "radius"> & Partial<Pick<Bot, "damage">>): Coord[] {
   return Object.values(world)
-    .filter(tile => hexDistance(ship.coord, tile.coord) <= ship.radius && hasLineOfSight(world, ship.coord, tile.coord))
+    .filter(tile => hexDistance(ship.coord, tile.coord) <= effectiveRadius(ship) && hasLineOfSight(world, ship.coord, tile.coord))
     .map(tile => tile.coord);
 }
 

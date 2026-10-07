@@ -1,6 +1,6 @@
 # language: fr
 @socle @gameover
-Fonctionnalité: Fin normale, élimination et blocage explicite
+Fonctionnalité: Fin normale, immobilisation et blocage explicite
 
   @END-01
   Scénario: Solder les cargaisons avant le classement
@@ -28,11 +28,12 @@ Fonctionnalité: Fin normale, élimination et blocage explicite
     Et aucune dépense d'achat ne diminue leurs scores déposés
 
   @END-04
-  Scénario: Exclure les bots éliminés du classement gagnant
-    Étant donné un bot éliminé ayant déposé 500 et un survivant ayant déposé 300
-    Quand la partie se termine normalement
-    Alors seul le survivant gagne
-    Et si aucun bot ne survit, aucun vainqueur n'est désigné
+  Scénario: Conserver une partie bloquée en attente d'un remorquage à définir
+    Étant donné un bot immobilisé ayant déposé 500 et un bot actif ayant déposé 300
+    Quand le bot actif termine ses actions
+    Alors la session est bloquée en attente d'un remorquage à définir
+    Et la cargaison et le score du bot immobilisé restent conservés
+    Et aucun vainqueur n'est désigné avant une résolution future
 
   @END-05
   Scénario: Signaler l'absence d'objectif faisable sans inventer une victoire

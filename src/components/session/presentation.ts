@@ -4,6 +4,7 @@ import type { BotId, TileKind } from "../../engine/world";
 
 export const BOT_COLORS: Record<BotId, string> = { "bot-0": "#087f8c", "bot-1": "#cf6348" };
 export const DEPLETED_TILE_COLOR = "#476889";
+export const MINED_TILE_COLOR = "#a83d58";
 export const TILE_COLORS: Record<TileKind, string> = {
   resource: "#8db7a0",
   empty: "#d8dfdb",
@@ -28,12 +29,16 @@ export const PHASE_LABELS: Record<BotPhase, string> = {
   moving: "Deplacement",
   waiting: "En attente",
   scanning: "Exploration",
+  mining: "Pose de mine",
+  mineScanning: "Scan de mines",
+  neutralizing: "Neutralisation",
   collecting: "Collecte",
   servicing: "Maintenance",
   upgrading: "Extension",
+  memoryUpgrading: "Mémoire améliorée",
   purchasing: "Achat de drone",
   rescuing: "Remorquage",
-  eliminated: "Elimine",
+  disabled: "Immobilise",
   finished: "Termine",
 };
 export function cloudOpacity(cloud: ElectricCloud, elapsed: number): number {

@@ -28,6 +28,32 @@ tuile aléatoire avant de revenir. Le détour peut conduire le drone sur une
 tuile dangereuse. Le nuage reste caché hors de la vision actuelle du bot
 sélectionné.
 
+Chaque vaisseau dispose aussi d'un drone offensif. Quand un adversaire visible
+se déplace, le bot peut poser une mine sur sa prochaine tuile traversable,
+y compris une tuile de ressources ou de service. La mine se superpose au
+terrain et s'arme en 800 ms. Pendant ce délai, l'adversaire la voit si elle
+est dans son rayon et en mémorise la position. Une mine armée explose au
+contact d'un vaisseau ou d'un drone d'exploration, puis disparaît ; le
+vaisseau subit les dégâts d'une tuile dangereuse. Le bot contourne une mine
+mémorisée si un trajet sûr existe ; il utilise le drone offensif pour la
+neutraliser lorsqu'elle bloque son prochain pas. La neutralisation produit
+une explosion contrôlée sans dégâts.
+
+Les dégâts réduisent le rayon effectif d'un hexagone dès 50 %, puis doublent
+la durée des pas du vaisseau dès 70 %. À 100 %, le vaisseau est immobilisé sur
+sa tuile avec sa cargaison : le remorquage de cette panne reste à définir. La
+réparation n'est possible que sur la station dédiée, qui doit attendre 40 s
+après chaque service avant de réparer à nouveau.
+
+Le drone offensif peut aussi scanner une tuile : son rapport donne le nombre
+de mines ennemies dans un rayon de deux hexagones et la distance de la plus
+proche, sans révéler sa position exacte. Le joueur et le bot reçoivent le
+même rapport. Le souvenir d'une mine ennemie expire après 10 s ; le bot peut
+acheter à sa base deux améliorations de mémoire (20 puis 40 s, pour 50 puis
+100 points). Un avertissement signale une mine ennemie à un hexagone ou
+moins. La pose coûte 4 unités de carburant, le scan et la neutralisation 2,
+en plus du même coût de vol aller-retour que le drone d'exploration.
+
 ## References actuelles
 
 - [Architecture et limites du socle](docs/SOCLE_ACTUEL.md)

@@ -4,7 +4,7 @@ import { parseArgs } from "node:util";
 import { createServer } from "vite";
 
 const REPORT_VERSION = 1;
-const INCIDENT_TYPES = ["fuel.stranded", "rescue.completed", "drone.lost", "danger.impact", "bot.eliminated"];
+const INCIDENT_TYPES = ["fuel.stranded", "rescue.completed", "drone.lost", "danger.impact", "cloud.impact", "ship.repaired", "ship.disabled"];
 const OUTCOMES = ["success", "blocked", "noWinner", "timeout"];
 
 const { values } = parseArgs({ options: {
@@ -48,7 +48,8 @@ function summarize(results) {
   const counts = Object.fromEntries(OUTCOMES.map(outcome => [outcome, 0]));
   const incidentGames = Object.fromEntries(INCIDENT_TYPES.map(type => [type, 0]));
   const incidentEvents = Object.fromEntries(INCIDENT_TYPES.map(type => [type, 0]));
-  const botFailures = { "bot-0": 0, "bot-1": 0 };
+  const damageThresholdSeeds = { 50: 0, 70: 0, 100: 0 };
+  const damageThresholdBots = { 50: 0, 70: 0, 100: 0 };
   const servicePlacements = { fuel: {}, repair: {} };
   const serviceMaxPathDifference = { fuel: 0, repair: 0 };
   let remainingResources = 0;
@@ -59,7 +60,11 @@ function summarize(results) {
       incidentEvents[type] += result.incidents[type];
       if (result.incidents[type] > 0) incidentGames[type]++;
     }
-    for (const id of ["bot-0", "bot-1"]) if (result.bots[id].state === "eliminated") botFailures[id]++;
+    for (const threshold of [50, 70, 100]) {
+      const reached = Object.values(result.damagePeaks).filter(damage => damage >= threshold).length;
+      if (reached > 0) damageThresholdSeeds[threshold]++;
+      damageThresholdBots[threshold] += reached;
+    }
     for (const kind of ["fuel", "repair"]) {
       const service = result.services[kind];
       servicePlacements[kind][service.coord] = (servicePlacements[kind][service.coord] ?? 0) + 1;
@@ -73,7 +78,8 @@ function summarize(results) {
     failure: { count: failures, ...failureInterval(failures, results.length) },
     incidentGames,
     incidentEvents,
-    eliminatedBots: botFailures,
+    damageThresholdSeeds,
+    damageThresholdBots,
     servicePlacements,
     serviceMaxPathDifference,
     gamesWithRemainingResources: results.filter(result => result.remainingResources > 0).length,
@@ -118,7 +124,7 @@ const server = await createServer({
   configFile: false,
   cacheDir: "node_modules/.vite-balance",
   optimizeDeps: { noDiscovery: true, entries: [] },
-  server: { middlewareMode: true, watch: null, hmr: false },
+  server: { middlewareMode: true, watch: null, hmr: false, ws: false },
   appType: "custom",
   logLevel: "error",
 });
@@ -142,6 +148,8 @@ try {
           : snapshot.winners.length === 0 ? "noWinner" : "success";
       const incidents = Object.fromEntries(INCIDENT_TYPES.map(type => [type, 0]));
       for (const event of snapshot.events) if (event.type in incidents) incidents[event.type]++;
+      const damagePeaks = Object.fromEntries(["bot-0", "bot-1"].map(id => [id, Math.max(snapshot.bots[id].damage,
+        ...snapshot.events.filter(event => event.botId === id).map(event => event.after?.damage ?? 0))]));
       const bases = [snapshot.bots["bot-0"].base, snapshot.bots["bot-1"].base];
       const services = Object.fromEntries(["fuel", "repair"].map(kind => {
         const coord = Object.values(snapshot.world).find(tile => tile.kind === kind)?.coord;
@@ -158,6 +166,7 @@ try {
         remainingResources: Object.values(snapshot.remainingResources).reduce((total, amount) => total + amount, 0),
         services,
         incidents,
+        damagePeaks,
         bots: Object.fromEntries(Object.values(snapshot.bots).map(bot => [bot.id, {
           state: bot.state,
           score: bot.score,

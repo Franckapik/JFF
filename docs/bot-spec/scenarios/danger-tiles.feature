@@ -6,7 +6,7 @@ Fonctionnalité: Tuiles dangereuses statiques et perte du drone à l'arrivée
   Scénario: Appliquer les dégâts à chaque arrivée du vaisseau
     Étant donné un trajet faisable passant par une case dangereuse
     Quand le vaisseau arrive sur cette case après son pas de 400 ms
-    Alors il consomme 2 carburants communs et reçoit exactement 10 dégâts
+    Alors il consomme 2 carburants communs et reçoit exactement 15 dégâts
     Et le temps passé ensuite sur la case ne répète pas les dégâts
     Et cette case n'a aucune ressource collectable
 

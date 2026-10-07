@@ -33,9 +33,13 @@ const OPERATION_ICONS: Record<OperationKind, EventIcon> = {
   move: Route,
   wait: Footprints,
   scan: Radar,
+  mine: Crosshair,
+  mineScan: Radar,
+  neutralize: TriangleAlert,
   collect: PackageOpen,
   service: Wrench,
   upgrade: Activity,
+  memoryUpgrade: Eye,
   purchase: ShoppingCart,
   rescue: Truck,
 };
@@ -52,17 +56,25 @@ const EVENT_LABELS: Record<SessionEventType, string> = {
   'drone.interfered': 'Drone repoussé par le nuage',
   'drone.bounced': 'Drone rebondi sur le bord',
   'scan.completed': 'Scan termine',
+  'mine.placed': 'Mine posée',
+  'mine.armed': 'Mine armée',
+  'mine.exploded': 'Mine explosée',
+  'mine.neutralized': 'Mine neutralisée',
+  'mine.spotted': 'Mine repérée',
+  'mine.forgotten': 'Position oubliée',
+  'mine.scan.completed': 'Rapport de mines',
+  'mine.memory.upgraded': 'Mémoire améliorée',
   'drone.lost': 'Drone detruit',
   'collection.completed': 'Collecte terminee',
   'resources.deposited': 'Ressources deposees',
   'fuel.refueled': 'Plein effectue',
   'ship.repaired': 'Reparation effectuee',
+  'ship.disabled': 'Vaisseau immobilise',
   'exploration.upgraded': 'Rayon augmente',
   'drone.replaced': 'Drone remplace',
   'fuel.stranded': 'Panne de carburant',
   'cargo.lost': 'Cargaison perdue',
   'rescue.completed': 'Remorquage termine',
-  'bot.eliminated': 'Bot elimine',
   'bot.finished': 'Bot termine',
   'session.finished': 'Session terminee',
   'session.blocked': 'Session bloquee',
@@ -183,6 +195,10 @@ export default function ExpertBotView({ bot, events, onClose }: { bot: BotView; 
         <div><dt><Footprints size={17} />Pas</dt><dd>{bot.statistics.steps}</dd></div>
         <div><dt><Fuel size={17} />Carburant utilise</dt><dd>{bot.statistics.fuelUsed}</dd></div>
         <div><dt><Radar size={17} />Scans</dt><dd>{bot.statistics.scans}</dd></div>
+        <div><dt><Crosshair size={17} />Mines posées</dt><dd>{bot.statistics.minesPlaced}</dd></div>
+        <div><dt><TriangleAlert size={17} />Mines explosées</dt><dd>{bot.statistics.minesExploded}</dd></div>
+        <div><dt><Radar size={17} />Scans de mines</dt><dd>{bot.statistics.mineScans}</dd></div>
+        <div><dt><BotIcon size={17} />Mines neutralisées</dt><dd>{bot.statistics.minesNeutralized}</dd></div>
         <div><dt><BotIcon size={17} />Drones perdus</dt><dd>{bot.statistics.droneLosses}</dd></div>
         <div><dt><PackageOpen size={17} />Collectes</dt><dd>{bot.statistics.collections}/{bot.statistics.collectionAttempts}</dd></div>
         <div><dt><Truck size={17} />Remorquages</dt><dd>{bot.statistics.rescues}</dd></div>

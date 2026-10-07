@@ -37,8 +37,14 @@ session et toutes les vues observent donc les memes reglages.
 | Carburant | `fuelReserve` | 3 | Marge exigee lors de la validation d'une cible. |
 | Carburant | `fuelUrgencyThreshold` | 20 | Declenche la recherche prioritaire d'un ravitaillement. |
 | Carburant | station carburant | 100 | Recharge toute reserve commune incomplete sur la station. La base ne ravitaille pas. |
-| Danger | `dangerDamage` | 10 | Degats recus en entrant sur une case dangereuse. |
-| Reparation | `repairThreshold` | 50 | Rend la recherche d'une reparation prioritaire. |
+| Danger | `dangerDamage` | 15 | Degats recus en entrant sur une case dangereuse. |
+| Danger | `mineDamage` | 40 | Degats recus au contact d'une mine armee. |
+| Danger | `cloudDamage` | 45 | Degats recus au contact du nuage electrique. |
+| Reparation | `repairThreshold` | 65 | Rend la recherche de la station de reparation decouverte prioritaire. La base ne repare pas. |
+| Reparation | `repairCooldown` | 40 000 ms | Indisponibilite de la station apres une reparation. |
+| Degats | `impairedVisionThreshold` | 50 | Rayon effectif diminue de un, sans descendre sous un hexagone. |
+| Degats | `slowMovementThreshold` | 70 | Duree de chaque pas du vaisseau doublee. |
+| Risque | `riskyResourceThreshold` | 200 | Valeur minimale d'une ressource pour envisager un raccourci dangereux plus court. |
 | Temps | `stepDuration` | 400 ms | Duree logique d'un pas du vaisseau. |
 | Temps | `scanDuration` | 800 ms | Duree fixe d'un scan, hors trajet du drone. |
 | Temps | `collectDuration` | 1 000 ms | Duree d'une collecte. |
@@ -52,11 +58,11 @@ session et toutes les vues observent donc les memes reglages.
 
 Le planificateur examine les besoins dans cet ordre :
 
-1. elimination si les degats atteignent 100 ;
+1. immobilisation si les degats atteignent 100 ;
 2. remorquage si le carburant ne couvre pas un pas du vaisseau hors d'un point de ravitaillement ;
-3. service si le bot est deja a sa base ou dans une station pertinente ;
+3. depot si le bot a une cargaison a sa base, ou service dans une station pertinente ;
 4. retour final quand les ressources accessibles sont epuisees ;
-5. trajet vers une reparation a partir de 50 degats ;
+5. trajet vers une reparation a partir de 65 degats ;
 6. trajet vers un ravitaillement en cas de carburant urgent ;
 7. poursuite d'un objectif deja choisi ;
 8. remplacement du drone ou achat d'une extension a la base ;
@@ -114,15 +120,20 @@ meilleure action ne peut pas continuer sur la case actuelle. Un compartiment
 plein n'interdit pas de charger les autres ressources.
 
 La faible capacite de ressources speciales, fixee a 3, peut provoquer des
-retours frequents. Ces retours declenchent egalement un plein complet a la
-base et influencent donc indirectement la pertinence du carburant.
+retours frequents. La base permet de deposer, mais le plein reste reserve a la
+station de carburant.
 
 ### Dangers
 
-Le calcul de route prefere un chemin ne traversant aucun danger. Si aucun
-chemin sur n'existe, un chemin dangereux peut etre accepte seulement si ses
-degats projetes restent strictement inferieurs a 100. La reparation devient
-prioritaire a partir de 50 degats, avant l'urgence carburant.
+Le calcul de route prefere un chemin ne traversant aucun danger. Un bot peut
+prendre un raccourci dangereux vers une ressource valant au moins 200 si ce
+trajet est plus court et ne traverse pas une mine memorisee. Dans tous les cas,
+les degats connus projetes doivent rester strictement inferieurs a 100. La
+reparation devient prioritaire a partir de 65 degats, avant l'urgence carburant.
+La station de reparation impose ensuite un delai de 40 secondes avant un
+nouveau service. Le rayon effectif baisse de un a 50 degats, la duree d'un pas
+double a 70, et le vaisseau est immobilise a 100 en attendant une future regle
+de remorquage.
 
 ### Achats
 
@@ -160,7 +171,8 @@ stocks.
 Le carburant participe bien aux decisions, mais plusieurs regles reduisent
 fortement son influence observable :
 
-- une carte de rayon 3 est petite face a une autonomie de 100 pas ;
+- une carte de rayon 3 est petite face a une reserve de 100 carburants, soit
+  50 pas du vaisseau sans autres depenses ;
 - la station de carburant remet gratuitement le reservoir a 100 ; la base ne
   ravitaille pas ;
 - la capacite speciale de 3 provoque des retours frequents a la base ;

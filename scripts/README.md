@@ -13,7 +13,7 @@ npm run validate
 ```
 
 `validate` enchaine les types de tout `src/`, Vitest, `scenarios:check`, ESLint
-et le build. `scenarios:check` parse les dix fichiers Gherkin, controle leurs
+et le build. `scenarios:check` parse les fichiers Gherkin, controle leurs
 identifiants et compile les exemples ; il n'execute pas les etapes. Le script
 pre-commit ajoute `npm audit --audit-level=moderate`. La CI utilise le meme
 script sur Node 22. Les tests du moteur sont dans `src/engine/session.test.ts` ;
@@ -53,11 +53,31 @@ problematiques. `success` signifie une partie terminee avec au moins un
 vainqueur ; `blocked`, `noWinner` et `timeout` comptent comme echecs. Le taux
 est une fraction entre 0 et 1 et s'accompagne d'un intervalle de Wilson a 95 %.
 Les pannes, remorquages,
-pertes de drone, impacts et eliminations sont comptes separement ; ils ne sont
+pertes de drone, impacts et immobilisations sont comptes separement ; ils ne sont
 pas automatiquement des echecs de partie. La comparaison indique les graines
 gagnees ou perdues avec les nouveaux reglages. Le rapport indique aussi les
-positions des deux services et leurs distances de trajet depuis chaque base.
+positions des deux services et leurs distances de trajet depuis chaque base,
+ainsi que le nombre de graines et de bots ayant atteint 50, 70 et 100 degats
+au moins une fois pendant la partie.
 `npm run benchmark` reste l'outil de mesure des performances.
+
+Pour mesurer spécifiquement les mines sur les mêmes graines reproductibles :
+
+```bash
+npm run mines -- --games=100 --start=0
+npm run mines -- --games=100 --start=0 --output=report.mines.json
+```
+
+Le résumé indique les poses, les neutralisations avant armement et sous 2 ou
+5 secondes, les explosions au contact et les dégâts réellement subis par un
+vaisseau. Chaque impact est classé selon la mémoire du bot touché : position
+encore mémorisée, oubliée après un repérage de cette pose, ou jamais repérée
+pour cette pose. Cette association suit les événements de la mine jusqu'à son
+explosion ; elle indique une corrélation, pas une preuve que l'oubli est la
+seule cause de l'impact. Le rapport JSON facultatif conserve les chiffres par graine et les
+délais individuels de neutralisation. Une explosion sur un drone est comptée
+séparément des dégâts infligés à un vaisseau. `--max-logical-ms` fixe la limite
+de temps logique par partie (1 000 000 ms par défaut).
 
 ## Logs de developpement
 

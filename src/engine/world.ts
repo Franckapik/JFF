@@ -4,6 +4,11 @@ export type Coord = `${number},${number}`;
 export type BotId = "bot-0" | "bot-1";
 export const BOT_IDS: BotId[] = ["bot-0", "bot-1"];
 export type TileKind = "resource" | "empty" | "obstacle" | "danger" | "base" | "fuel" | "repair";
+export interface Mine {
+  owner: BotId;
+  state: "arming" | "armed";
+  armsAt: number;
+}
 export interface WorldTile {
   coord: Coord;
   kind: TileKind;
@@ -11,6 +16,7 @@ export interface WorldTile {
   neighbors: Coord[];
   resources: Resources;
   owner: BotId | null;
+  mine?: Mine;
 }
 export type World = Record<Coord, WorldTile>;
 

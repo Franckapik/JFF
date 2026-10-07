@@ -40,9 +40,9 @@ cumules + pertes explicites = stock initial. Pour chaque bot : budget +
 depenses = score depose. La provenance des collectes ne constitue pas un
 stock supplementaire. La session peut finir normalement apres les derniers
 depots ou passer en `blocked` lorsqu'aucun objectif ou retour n'est faisable.
-Le blocage n'invente ni vainqueur ni elimination.
+Le blocage n'invente ni vainqueur ni perte de cargaison pour un vaisseau immobilise.
 
-Le snapshot est en `schemaVersion: 7` et transporte des evenements metier
+Le snapshot est en `schemaVersion: 10` et transporte des evenements metier
 structures pour le mode expert ; le protocole de commandes reste en version 1.
 Un onglet avec un ancien worker doit etre ferme avant reconnexion. L'export
 JSON est un diagnostic, pas une sauvegarde restaurable.

@@ -3,31 +3,31 @@
 Fonctionnalité: Services locaux et achats individuels
 
   @MAINT-01
-  Scénario: Déposer et réparer à sa base sans ravitailler
+  Scénario: Déposer à sa base sans réparer ni ravitailler
     Étant donné un bot à sa base avec 10 carburants communs et 60 dégâts
     Et une cargaison de 20 nourritures, 30 débris et 1 spécial
     Quand 1199 ms de service se sont écoulées
     Alors aucun effet du service n'est encore appliqué
     Quand la dernière milliseconde s'écoule
-    Alors sa cargaison est vide, son carburant commun vaut encore 10 et ses dégâts valent 0
+    Alors sa cargaison est vide, son carburant commun vaut encore 10 et ses dégâts valent encore 60
     Et son score et son budget augmentent chacun de 51
     Et aucun coût de service n'est prélevé
 
   @MAINT-02
   Plan du scénario: Limiter une station à son service
-    Étant donné un bot sur une station <station> avec 10 carburants communs et 60 dégâts
+    Étant donné un bot sur une station <station> avec 10 carburants communs et 70 dégâts
     Et une cargaison non vide
     Quand son service de 1200 ms se termine
     Alors son carburant vaut <carburant> et ses dégâts valent <dégâts>
     Et sa cargaison, son score et son budget n'ont pas changé
     Exemples:
       | station | carburant | dégâts |
-      | fuel    | 100       | 60     |
+      | fuel    | 100       | 70     |
       | repair  | 10        | 0      |
 
   @MAINT-03
   Scénario: Voyager avant de réparer
-    Étant donné un bot à distance d'une station avec 60 dégâts
+    Étant donné un bot à distance d'une station avec 70 dégâts
     Quand il choisit une réparation
     Alors ses dégâts restent inchangés pendant le trajet hors danger
     Et chaque pas du vaisseau consomme 2 carburants communs
@@ -37,10 +37,11 @@ Fonctionnalité: Services locaux et achats individuels
   Scénario: Utiliser les seuils validés
     Étant donné un bot qui ne bénéficie pas déjà d'un service local
     Quand ses besoins sont évalués
-    Alors une réparation est recherchée dès 50 dégâts inclus
+    Alors une réparation est recherchée dès 65 dégâts inclus
     Et le carburant est urgent sous ou au seuil maximal entre 20 et le coût d'accès au service augmenté de 3
     Et un service carburant est automatique sur sa station si la réserve commune est incomplète
-    Et à sa base toute cargaison ou tout dégât déclenche le service local sans plein
+    Et à sa base seule une cargaison déclenche le dépôt sans plein ni réparation
+    Et la recherche de réparation ne cible que la station découverte
 
   @MAINT-05
   Plan du scénario: Acheter une extension utile à sa base
@@ -99,3 +100,10 @@ Fonctionnalité: Services locaux et achats individuels
     Quand la station entre dans son champ de vision
     Alors il mémorise sa position et peut planifier un trajet de ravitaillement
     Et l'autre bot ne reçoit pas cette découverte
+
+  @MAINT-11
+  Scénario: Attendre la remise en service de la station de réparation
+    Étant donné qu'une réparation vient de se terminer
+    Alors la station reste indisponible pendant 40000 ms logiques
+    Quand un bot endommagé s'y présente pendant ce délai
+    Alors il attend la fin du délai avant de commencer son service de 1200 ms

@@ -1,18 +1,22 @@
 import type { Resources } from "./resources";
 import type { BotId, Coord, World } from "./world";
 
-export type OperationKind = "move" | "wait" | "scan" | "collect" | "service" | "upgrade" | "purchase" | "rescue";
+export type OperationKind = "move" | "wait" | "scan" | "mine" | "mineScan" | "neutralize" | "collect" | "service" | "upgrade" | "memoryUpgrade" | "purchase" | "rescue";
 export type BotPhase =
   | "deciding"
   | "moving"
   | "waiting"
   | "scanning"
+  | "mining"
+  | "mineScanning"
+  | "neutralizing"
   | "collecting"
   | "servicing"
   | "upgrading"
+  | "memoryUpgrading"
   | "purchasing"
   | "rescuing"
-  | "eliminated"
+  | "disabled"
   | "finished";
 export type GoalReason = "collect" | "explore" | "base" | "fuel" | "repair";
 export interface Operation {
@@ -20,6 +24,8 @@ export interface Operation {
   target: Coord;
   duration: number;
   remaining: number;
+  minePlacementAttempted?: boolean;
+  minePlacementSucceeded?: boolean;
   scanInitialTarget?: Coord;
   scanCheckedSteps?: number;
   scanArrived?: boolean;
@@ -32,6 +38,13 @@ export interface Operation {
     edgeAt: number;
     destinationAt: number;
   };
+}
+export interface MineReport {
+  center: Coord;
+  radius: number;
+  count: number;
+  nearestDistance: number | null;
+  time: number;
 }
 export interface ElectricCloud {
   coord: Coord;
@@ -53,7 +66,13 @@ export interface Bot {
   damage: number;
   radius: number;
   droneAvailable: boolean;
+  offensiveDroneAvailable: boolean;
   known: Coord[];
+  knownMines: Partial<Record<Coord, number>>;
+  mineReports: MineReport[];
+  mineChecked: Partial<Record<Coord, number>>;
+  mineWarning: boolean;
+  mineMemoryLevel: number;
   scanned: Coord[];
   explored: Coord[];
   harvested: Partial<Record<Coord, Resources>>;
@@ -64,6 +83,11 @@ export interface Bot {
   decision: string;
   statistics: {
     scans: number;
+    minesPlaced: number;
+    minesExploded: number;
+    minesNeutralized: number;
+    mineScans: number;
+    mineSightings: number;
     collectionAttempts: number;
     collections: number;
     steps: number;
@@ -72,7 +96,7 @@ export interface Bot {
     droneLosses: number;
   };
   visits: Partial<Record<Coord, number>>;
-  eliminationReason: string | null;
+  immobilizationReason: string | null;
 }
 export interface BotView extends Bot {
   state: BotPhase;
@@ -96,17 +120,25 @@ export type SessionEventType =
   | "drone.interfered"
   | "drone.bounced"
   | "scan.completed"
+  | "mine.placed"
+  | "mine.armed"
+  | "mine.exploded"
+  | "mine.neutralized"
+  | "mine.spotted"
+  | "mine.forgotten"
+  | "mine.scan.completed"
+  | "mine.memory.upgraded"
   | "drone.lost"
   | "collection.completed"
   | "resources.deposited"
   | "fuel.refueled"
   | "ship.repaired"
+  | "ship.disabled"
   | "exploration.upgraded"
   | "drone.replaced"
   | "fuel.stranded"
   | "cargo.lost"
   | "rescue.completed"
-  | "bot.eliminated"
   | "bot.finished"
   | "session.finished"
   | "session.blocked";
@@ -126,7 +158,7 @@ export interface SessionEvent {
   after?: Partial<Record<"fuel" | "damage" | "budget" | "score" | "radius", number>>;
 }
 export interface SessionSnapshot {
-  schemaVersion: 7;
+  schemaVersion: 10;
   seed: number;
   revision: number;
   worldRevision: number;
@@ -136,6 +168,7 @@ export interface SessionSnapshot {
   speed: number;
   world: World;
   cloud: ElectricCloud | null;
+  repairAvailableAt: number;
   bots: Record<BotId, BotView>;
   initialResources: Resources;
   lostResources: Resources;

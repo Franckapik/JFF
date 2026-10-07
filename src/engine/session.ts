@@ -4,7 +4,7 @@ import { botMachine } from "./botMachine";
 import type { Bot, BotPhase, BotView, ElectricCloud, GoalReason, OperationKind, SessionEvent, SessionLog, SessionSnapshot } from "./model";
 import { addResources, emptyResources, RESOURCE_KINDS, resourceTotal, transferResources, type Resources } from "./resources";
 import { RULES } from "./rules";
-import { activeCoords, hasLineOfSight, rememberTerrain } from "./visibility";
+import { activeCoords, effectiveRadius, hasLineOfSight, rememberTerrain } from "./visibility";
 import {
     axial,
     BOT_IDS,
@@ -36,7 +36,13 @@ export function createBot(id: BotId, world: World, seed: number): Bot {
     damage: 0,
     radius: RULES.initialExplorationRadius,
     droneAvailable: true,
+    offensiveDroneAvailable: true,
     known: [base],
+    knownMines: {},
+    mineReports: [],
+    mineChecked: {},
+    mineWarning: false,
+    mineMemoryLevel: 1,
     scanned: [],
     explored: activeCoords(world, { coord: base, radius: RULES.initialExplorationRadius }),
     randomState: (seed ^ (id === "bot-0" ? 0x9e3779b9 : 0x85ebca6b)) >>> 0,
@@ -45,9 +51,9 @@ export function createBot(id: BotId, world: World, seed: number): Bot {
     goal: null,
     decision: "Initialisation",
     harvested: {},
-    statistics: { scans: 0, collectionAttempts: 0, collections: 0, steps: 0, fuelUsed: 0, rescues: 0, droneLosses: 0 },
+    statistics: { scans: 0, minesPlaced: 0, minesExploded: 0, minesNeutralized: 0, mineScans: 0, mineSightings: 0, collectionAttempts: 0, collections: 0, steps: 0, fuelUsed: 0, rescues: 0, droneLosses: 0 },
     visits: { [base]: 1 },
-    eliminationReason: null,
+    immobilizationReason: null,
   };
 }
 
@@ -70,17 +76,19 @@ export class GameSession {
   private winners: BotId[] = [];
   private endReason: string | null = null;
   private cloud: ElectricCloud | null = null;
+  private repairAvailableAt = 0;
   private readonly shipCloudContacts = new Set<BotId>();
   private cloudRandomState: number;
   private exploredSinceStart = 0;
   private nextCloudAt = RULES.cloudExplorationInterval;
   readonly seed: number;
 
-  constructor(seed: number, scenario?: { world: World; bots?: Record<BotId, Bot>; cloud?: ElectricCloud | null }) {
+  constructor(seed: number, scenario?: { world: World; bots?: Record<BotId, Bot>; cloud?: ElectricCloud | null; repairAvailableAt?: number }) {
     if (!Number.isSafeInteger(seed)) throw new Error("Invalid seed");
     this.seed = seed >>> 0;
     this.cloudRandomState = (this.seed ^ 0xc10d1234) >>> 0;
     this.cloud = scenario?.cloud ? structuredClone(scenario.cloud) : null;
+    this.repairAvailableAt = scenario?.repairAvailableAt ?? 0;
     this.world = structuredClone(scenario?.world ?? generateWorld(this.seed, RULES.mapRadius));
     const startingBots = BOT_IDS.map(id => structuredClone(scenario?.bots?.[id] ?? createBot(id, this.world, this.seed)));
     if (startingBots[0].coord === startingBots[1].coord) throw new Error("Bots cannot start on the same tile");
@@ -95,6 +103,7 @@ export class GameSession {
     this.log(null, "Partie initialisee");
     this.emit({ type: "session.started", category: "lifecycle", botId: null });
     this.syncCloudContacts();
+    this.syncMineKnowledge();
     this.assertInvariants();
   }
 
@@ -112,6 +121,67 @@ export class GameSession {
 
   private emit(event: Omit<SessionEvent, "sequence" | "time">) {
     this.events.push({ ...event, sequence: ++this.eventSequence, time: this.elapsed });
+  }
+
+  private mineMemoryDuration(bot: Bot): number {
+    return RULES.mineMemoryDurations[bot.mineMemoryLevel - 1];
+  }
+
+  private syncMineKnowledge() {
+    for (const bot of this.bots()) {
+      if (bot.state === "disabled" || bot.state === "finished") continue;
+      const visible = new Set(activeCoords(this.world, bot));
+      const knownMines = { ...bot.knownMines };
+      let sightings = 0;
+      for (const [coord, expiresAt] of Object.entries(knownMines)) {
+        const tile = this.world[coord as Coord];
+        if (expiresAt === undefined) continue;
+        if (expiresAt <= this.elapsed || ((!tile?.mine || tile.mine.owner !== bot.id) && expiresAt === Number.MAX_SAFE_INTEGER)) {
+          delete knownMines[coord as Coord];
+          this.emit({ type: "mine.forgotten", category: "decision", botId: bot.id, coord: coord as Coord });
+        }
+      }
+      for (const tile of Object.values(this.world)) {
+        if (!tile.mine) continue;
+        if (tile.mine.owner === bot.id) {
+          knownMines[tile.coord] = Number.MAX_SAFE_INTEGER;
+        } else if (tile.mine.state === "arming" && visible.has(tile.coord)) {
+          if (!knownMines[tile.coord]) {
+            sightings++;
+            this.emit({ type: "mine.spotted", category: "incident", botId: bot.id, coord: tile.coord, reason: "Mine ennemie vue pendant l'armement" });
+          }
+          knownMines[tile.coord] = this.elapsed + this.mineMemoryDuration(bot);
+        }
+      }
+      const mineWarning = Object.values(this.world).some(tile => tile.mine && tile.mine.owner !== bot.id && hexDistance(tile.coord, bot.coord) <= 1);
+      if (JSON.stringify(knownMines) !== JSON.stringify(bot.knownMines) || mineWarning !== bot.mineWarning || sightings) {
+        this.actors.get(bot.id)!.send({ type: "TICK", bot: { ...bot, knownMines, mineWarning,
+          statistics: { ...bot.statistics, mineSightings: bot.statistics.mineSightings + sightings } } });
+      }
+    }
+  }
+
+  private updateMines() {
+    for (const tile of Object.values(this.world)) {
+      if (tile.mine?.state !== "arming" || tile.mine.armsAt > this.elapsed) continue;
+      this.world[tile.coord] = { ...tile, mine: { ...tile.mine, state: "armed" } };
+      this.worldRevision++;
+      this.emit({ type: "mine.armed", category: "incident", botId: tile.mine.owner, coord: tile.coord });
+    }
+    this.syncMineKnowledge();
+  }
+
+  private explodeMine(coord: Coord, reason: string) {
+    const tile = this.world[coord];
+    if (!tile.mine) return;
+    this.world[coord] = { ...tile, mine: undefined };
+    this.worldRevision++;
+    this.emit({ type: "mine.exploded", category: "incident", botId: tile.mine.owner, coord, reason });
+    const owner = this.bots().find(bot => bot.id === tile.mine?.owner)!;
+    if (owner.state === "disabled" || owner.state === "finished") return;
+    this.actors.get(owner.id)!.send({ type: "TICK", bot: { ...owner,
+      knownMines: Object.fromEntries(Object.entries(owner.knownMines).filter(([known]) => known !== coord)),
+      statistics: { ...owner.statistics, minesExploded: owner.statistics.minesExploded + 1 } } });
   }
 
   private random(): number {
@@ -141,7 +211,7 @@ export class GameSession {
       if (!candidates.length) continue;
       const coord = candidates[Math.floor(this.random() * candidates.length)];
       this.cloud = { coord, previousCoord: null, appearedAt: this.elapsed, nextMoveAt: this.elapsed + RULES.cloudMoveDuration, expiresAt: this.elapsed + RULES.cloudLifetime };
-      this.emit({ type: "cloud.appeared", category: "incident", botId: null, reason: "Nuage electrique apparu" });
+      this.emit({ type: "cloud.appeared", category: "incident", botId: null, coord, reason: "Nuage electrique apparu" });
       this.syncCloudContacts();
     }
   }
@@ -149,8 +219,9 @@ export class GameSession {
   private updateCloud(): boolean {
     if (!this.cloud) return false;
     if (this.elapsed >= this.cloud.expiresAt) {
+      const coord = this.cloud.coord;
       this.cloud = null;
-      this.emit({ type: "cloud.disappeared", category: "incident", botId: null, reason: "Nuage electrique dissipe" });
+      this.emit({ type: "cloud.disappeared", category: "incident", botId: null, coord, reason: "Nuage electrique dissipe" });
       return this.syncCloudContacts();
     }
     if (this.elapsed < this.cloud.nextMoveAt) return false;
@@ -161,15 +232,15 @@ export class GameSession {
     const choices = neighbors.length ? neighbors : fallback;
     const coord = choices.length ? choices[Math.floor(this.random() * choices.length)] : old;
     this.cloud = { ...this.cloud, coord, previousCoord: old, nextMoveAt: this.cloud.nextMoveAt + RULES.cloudMoveDuration };
-    this.emit({ type: "cloud.moved", category: "movement", botId: null, reason: "Le nuage electrique se deplace" });
+    this.emit({ type: "cloud.moved", category: "movement", botId: null, coord, reason: "Le nuage electrique se deplace" });
     return this.syncCloudContacts();
   }
 
   private syncCloudContacts(): boolean {
-    let eliminated = false;
+    let disabled = false;
     for (const bot of this.bots()) {
       const leaving = bot.operation?.kind === "move" && bot.operation.remaining < bot.operation.duration;
-      const touching = this.cloud?.coord === bot.coord && !leaving && bot.state !== "eliminated" && bot.state !== "finished";
+      const touching = this.cloud?.coord === bot.coord && !leaving && bot.state !== "disabled" && bot.state !== "finished";
       if (!touching) {
         this.shipCloudContacts.delete(bot.id);
         continue;
@@ -183,8 +254,8 @@ export class GameSession {
       this.emit({ type: "cloud.impact", category: "incident", botId: bot.id, coord: bot.coord,
         before: { damage: bot.damage }, delta: { damage }, after: { damage: next.damage } });
       if (next.damage >= 100) {
-        this.eliminate(next, "Vaisseau detruit par le nuage electrique");
-        eliminated = true;
+        this.disable(next, "Vaisseau immobilise par le nuage electrique");
+        disabled = true;
       }
     }
     if (this.cloud) {
@@ -202,7 +273,7 @@ export class GameSession {
         this.startScanDetour(bot, coord, previous);
       }
     }
-    return eliminated;
+    return disabled;
   }
 
   private startScanDetour(bot: BotView, contact: Coord, previous: Coord) {
@@ -260,21 +331,30 @@ export class GameSession {
     return { from: target, to: bot.coord, startAt: outbound * RULES.stepDuration + RULES.scanDuration, kind: "return" };
   }
 
-  private route(bot: Bot, target: Coord): Coord[] {
-    const knownDangers = new Set(bot.known);
+  private route(bot: Bot, target: Coord, allowResourceRisk = false): Coord[] {
+    const knownDangers = new Set(bot.known.filter(coord => this.world[coord]?.kind === "danger"));
+    const rememberedMines = new Set((Object.entries(bot.knownMines) as [Coord, number][])
+      .filter(([, expiresAt]) => expiresAt > this.elapsed).map(([coord]) => coord));
+    const dangerous = (coord: Coord) => knownDangers.has(coord) || rememberedMines.has(coord);
     const safeWorld = Object.fromEntries(
-      Object.entries(this.world).map(([coord, tile]) => [coord, { ...tile, walkable: tile.walkable && !(tile.kind === "danger" && knownDangers.has(tile.coord) && coord !== bot.coord) }])
+      Object.entries(this.world).map(([coord, tile]) => [coord, { ...tile, walkable: tile.walkable && !(dangerous(tile.coord) && coord !== bot.coord) }])
     ) as World;
     const safe = pathBetween(safeWorld, bot.coord, target);
-    const path = safe.length ? safe : pathBetween(this.world, bot.coord, target);
-    const damage = path.slice(1).filter(coord => knownDangers.has(coord) && this.world[coord].kind === "danger").length * RULES.dangerDamage;
+    const direct = pathBetween(this.world, bot.coord, target);
+    const worthwhileShortcut = allowResourceRisk && safe.length > direct.length &&
+      this.world[target]?.kind === "resource" && this.available(bot, target) >= RULES.riskyResourceThreshold &&
+      !direct.slice(1).some(coord => rememberedMines.has(coord));
+    const path = worthwhileShortcut ? direct : safe.length ? safe : direct;
+    const damage = path.slice(1).reduce((total, coord) => total +
+      (knownDangers.has(coord) ? RULES.dangerDamage : 0) +
+      (rememberedMines.has(coord) ? RULES.mineDamage : 0), 0);
     return bot.damage + damage < 100 ? path : [];
   }
 
   private servicePath(bot: Bot, service: "fuel" | "repair"): Coord[] {
     return (
       Object.values(this.world)
-        .filter(tile => (service === "repair" && tile.coord === bot.base) || (tile.kind === service && bot.explored.includes(tile.coord)))
+        .filter(tile => tile.kind === service && bot.explored.includes(tile.coord))
         .map(tile => this.route(bot, tile.coord))
         .filter(path => path.length > 0)
         .sort((left, right) => left.length - right.length)[0] ?? []
@@ -294,11 +374,15 @@ export class GameSession {
       this.startScanDetour(this.bots().find(candidate => candidate.id === bot.id)!, bot.coord, bot.coord);
   }
 
+  private moveDuration(bot: Bot): number {
+    return RULES.stepDuration * (bot.damage >= RULES.slowMovementThreshold ? 2 : 1);
+  }
+
   // Only the destination of a final movement step is reserved. Intermediate
   // waypoints remain flyable, even when another bot is using the tile below.
   private claimant(coord: Coord, requester: BotId): BotView | undefined {
     return this.bots().find(bot => {
-      if (bot.id === requester || bot.state === "finished" || bot.state === "eliminated") return false;
+      if (bot.id === requester || bot.state === "finished" || bot.state === "disabled") return false;
       if (bot.operation?.kind === "move") return bot.operation.target === coord && bot.goal?.coord === coord;
       if (bot.operation?.kind === "rescue") return false;
       return bot.coord === coord;
@@ -307,7 +391,17 @@ export class GameSession {
 
   private move(bot: Bot, target: Coord, reason: GoalReason): boolean {
     if (bot.fuel < RULES.fuelPerStep) return false;
-    const path = this.route(bot, target);
+    const path = this.route(bot, target, reason === "collect");
+    const nextStep = path[1] ?? pathBetween(this.world, bot.coord, target)[1];
+    if (!nextStep) return false;
+    if ((bot.knownMines[nextStep] ?? 0) > this.elapsed && bot.offensiveDroneAvailable &&
+      !(bot.known.includes(nextStep) && this.world[nextStep].kind === "danger") &&
+      this.offensiveTargetInRange(bot, "neutralize", nextStep)) {
+      this.launch({ ...bot, route: path.length ? path.slice(1) : [nextStep], goal: { coord: target, reason } }, "neutralize", nextStep,
+        RULES.scanDuration + 2 * hexDistance(bot.coord, nextStep) * RULES.stepDuration,
+        `Neutralisation du passage vers ${target} en ${nextStep}`);
+      return true;
+    }
     if (path.length < 2) return false;
     const claimant = path[1] === target ? this.claimant(target, bot.id) : undefined;
     if (claimant?.operation?.kind === "wait" && claimant.operation.target === bot.coord && claimant.fuel >= RULES.fuelPerStep) {
@@ -315,7 +409,7 @@ export class GameSession {
         { ...claimant, route: [bot.coord] },
         "move",
         bot.coord,
-        RULES.stepDuration,
+        this.moveDuration(claimant),
         `Croisement vers ${bot.coord}`
       );
     } else if (claimant) {
@@ -332,22 +426,21 @@ export class GameSession {
       { ...bot, route: path.slice(1), goal: { coord: target, reason } },
       "move",
       path[1],
-      RULES.stepDuration,
-      `Trajet ${reason} vers ${target}`
+      this.moveDuration(bot),
+      path.slice(1).some(coord => bot.known.includes(coord) && this.world[coord].kind === "danger")
+        ? `Trajet risque vers ${target}` : `Trajet ${reason} vers ${target}`
     );
     return true;
   }
 
-  private eliminate(bot: Bot, reason: string) {
-    this.lostResources = addResources(this.lostResources, bot.cargo);
-    if (resourceTotal(bot.cargo) > 0)
-      this.emit({ type: "cargo.lost", category: "incident", botId: bot.id, coord: bot.coord, reason: "elimination", resources: bot.cargo });
+  private disable(bot: Bot, reason: string) {
+    if (this.bots().find(candidate => candidate.id === bot.id)?.state === "disabled") return;
     this.actors.get(bot.id)!.send({
-      type: "ELIMINATE",
-      bot: { ...bot, cargo: emptyResources(), route: [], goal: null, operation: null, eliminationReason: reason, decision: reason },
+      type: "DISABLE",
+      bot: { ...bot, route: [], goal: null, operation: null, immobilizationReason: reason, decision: reason },
     });
     this.log(bot.id, reason);
-    this.emit({ type: "bot.eliminated", category: "lifecycle", botId: bot.id, coord: bot.coord, reason });
+    this.emit({ type: "ship.disabled", category: "incident", botId: bot.id, coord: bot.coord, reason, after: { damage: bot.damage } });
   }
 
   private finishBot(bot: Bot, decision: string) {
@@ -360,17 +453,51 @@ export class GameSession {
   }
 
   private affordableRoute(bot: Bot, coord: Coord): Coord[] {
-    const path = this.route(bot, coord);
+    const path = this.route(bot, coord, this.world[coord]?.kind === "resource");
     if (!path.length) return [];
     const fuelStationKnown = Object.values(this.world).some(tile => tile.kind === "fuel" && bot.explored.includes(tile.coord));
     const returnPath = fuelStationKnown ? this.servicePath({ ...bot, coord }, "fuel") : this.route({ ...bot, coord }, bot.base);
     return returnPath.length && (path.length + returnPath.length - 2) * RULES.fuelPerStep + RULES.fuelReserve <= bot.fuel ? path : [];
   }
 
+  private offensiveCost(bot: Bot, kind: "mine" | "mineScan" | "neutralize", target: Coord): number {
+    const surcharge = kind === "mine" ? RULES.minePlacementFuel
+      : kind === "mineScan" ? RULES.mineScanFuel : RULES.mineNeutralizeFuel;
+    return 2 * hexDistance(bot.coord, target) * RULES.droneFuelPerHex + surcharge;
+  }
+
+  private offensiveTargetInRange(bot: Bot, kind: "mine" | "mineScan" | "neutralize", target: Coord): boolean {
+    return !!this.world[target] && hexDistance(bot.coord, target) <= effectiveRadius(bot) &&
+      hasLineOfSight(this.world, bot.coord, target) && this.offensiveCost(bot, kind, target) <= bot.fuel;
+  }
+
+  private planMineDefense(bot: BotView): boolean {
+    if (!bot.offensiveDroneAvailable) return false;
+    const knownNearby = (Object.entries(bot.knownMines) as [Coord, number][])
+      .some(([coord, expiresAt]) => expiresAt > this.elapsed && hexDistance(bot.coord, coord) <= 1);
+    const report = bot.mineReports[bot.mineReports.length - 1];
+    if (bot.mineWarning && !knownNearby && this.offensiveTargetInRange(bot, "mineScan", bot.coord) &&
+      (!report || report.center !== bot.coord || this.elapsed - report.time >= 5000)) {
+      this.launch(bot, "mineScan", bot.coord, RULES.scanDuration, `Recherche de mines autour de ${bot.coord}`);
+      return true;
+    }
+    if (bot.mineWarning && report && report.count > 0 && this.elapsed - report.time < 5000 && bot.goal) {
+      const path = this.route(bot, bot.goal.coord);
+      const nextStep = path[1];
+      if (nextStep && hexDistance(report.center, nextStep) === report.nearestDistance &&
+        (bot.mineChecked[nextStep] ?? -Infinity) < report.time && this.offensiveTargetInRange(bot, "neutralize", nextStep)) {
+        this.launch(bot, "neutralize", nextStep, RULES.scanDuration + 2 * hexDistance(bot.coord, nextStep) * RULES.stepDuration,
+          `Verification du passage suspect ${nextStep}`);
+        return true;
+      }
+    }
+    return false;
+  }
+
   private plan(bot: BotView) {
     const tile = this.world[bot.coord];
     if (bot.damage >= 100) {
-      this.eliminate(bot, "Vaisseau detruit");
+      this.disable(bot, "Vaisseau immobilise : remorquage requis");
       return;
     }
     if (bot.goal?.reason === "collect" && this.available(bot, bot.goal.coord) === 0)
@@ -387,12 +514,16 @@ export class GameSession {
       return;
     }
     if (
-      (isBase && (resourceTotal(bot.cargo) > 0 || bot.damage > 0)) ||
+      (isBase && resourceTotal(bot.cargo) > 0) ||
       (tile.kind === "fuel" && bot.fuel < RULES.fuelCapacity) ||
       (tile.kind === "repair" && bot.damage > 0 && (bot.goal?.reason === "repair" || bot.damage >= RULES.repairThreshold))
     ) {
+      if (tile.kind === "repair" && this.elapsed < this.repairAvailableAt) {
+        this.launch(bot, "wait", bot.coord, this.repairAvailableAt - this.elapsed, "Station de reparation temporairement indisponible");
+        return;
+      }
       const duration = atFuel ? RULES.fuelServiceStepMultiplier * RULES.stepDuration : RULES.serviceDuration;
-      this.launch(bot, "service", bot.coord, duration, isBase ? "Depot et maintenance a la base" : `Service ${tile.kind}`);
+      this.launch(bot, "service", bot.coord, duration, isBase ? "Depot a la base" : `Service ${tile.kind}`);
       return;
     }
     if (this.phase === "returning") {
@@ -413,6 +544,7 @@ export class GameSession {
       this.move(bot, fuelPath[fuelPath.length - 1], "fuel");
       return;
     }
+    if (this.planMineDefense(bot)) return;
     if (bot.goal && bot.coord !== bot.goal.coord) {
       if (this.move(bot, bot.goal.coord, bot.goal.reason)) return;
     }
@@ -437,6 +569,11 @@ export class GameSession {
       this.launch(bot, "upgrade", bot.base, RULES.purchaseDuration, `Extension du rayon a ${bot.radius + 1}`);
       return;
     }
+    const memoryPrice = RULES.mineMemoryUpgradePrices[bot.mineMemoryLevel];
+    if (isBase && bot.statistics.mineSightings > 0 && memoryPrice !== undefined && bot.budget >= memoryPrice) {
+      this.launch(bot, "memoryUpgrade", bot.base, RULES.purchaseDuration, `Memoire des mines : niveau ${bot.mineMemoryLevel + 1}`);
+      return;
+    }
     const collections = bot.known
       .filter(coord => this.world[coord]?.kind === "resource" && this.available(bot, coord) > 0)
       .map(coord => ({ coord, path: this.affordableRoute(bot, coord), amount: this.available(bot, coord) }))
@@ -444,8 +581,17 @@ export class GameSession {
       .sort((left, right) => right.amount / right.path.length - left.amount / left.path.length);
     const scans = bot.droneAvailable ? unknown.filter(candidate => {
       const distance = hexDistance(bot.coord, candidate.coord);
-      return ["resource", "empty", "danger"].includes(candidate.kind) && distance <= bot.radius && hasLineOfSight(this.world, bot.coord, candidate.coord) && 2 * distance * RULES.droneFuelPerHex <= bot.fuel;
+      return ["resource", "empty", "danger"].includes(candidate.kind) && distance <= effectiveRadius(bot) && hasLineOfSight(this.world, bot.coord, candidate.coord) && 2 * distance * RULES.droneFuelPerHex <= bot.fuel;
     }) : [];
+    const opponent = this.bots().find(other => other.id !== bot.id && other.state !== "disabled" && other.state !== "finished");
+    const opponentVisible = opponent && activeCoords(this.world, bot).includes(opponent.coord);
+    const opponentNext = opponent?.operation?.kind === "move" ? opponent.operation.target : undefined;
+    const mineTargets = opponentVisible && opponentNext && bot.offensiveDroneAvailable
+      ? Object.values(this.world).filter(candidate => candidate.coord === opponentNext && candidate.walkable &&
+          candidate.coord !== bot.coord && hexDistance(candidate.coord, opponent.coord) === 1 &&
+          !bot.knownMines[candidate.coord] && this.elapsed - (bot.mineChecked[candidate.coord] ?? -Infinity) >= 5000 &&
+          this.offensiveTargetInRange(bot, "mine", candidate.coord))
+      : [];
     const cargoTotal = resourceTotal(bot.cargo);
     const storagePressure = RESOURCE_KINDS.some(kind => bot.cargo[kind] >= RULES.capacity[kind]);
     if (cargoTotal > 0 && (!collections.length || (storagePressure && !collections.some(candidate => candidate.coord === bot.coord)))) {
@@ -458,6 +604,11 @@ export class GameSession {
       const target = collections[0].coord;
       if (target === bot.coord) this.launch(bot, "collect", target, RULES.collectDuration, `Collecte a ${target}`);
       else this.move(bot, target, "collect");
+      return;
+    }
+    if (mineTargets.length) {
+      const target = mineTargets[0].coord;
+      this.launch(bot, "mine", target, RULES.scanDuration + 2 * hexDistance(bot.coord, target) * RULES.stepDuration, `Pose d'une mine en ${target}`);
       return;
     }
     if (scans.length) {
@@ -491,13 +642,16 @@ export class GameSession {
   private complete(bot: BotView, scanDestroyed = false) {
     const operation = bot.operation!;
     let next: Bot = { ...bot, operation: null };
+    let explodedMine: Coord | null = null;
     switch (operation.kind) {
       case "wait":
         break;
       case "move": {
         if (!this.world[bot.coord].neighbors.includes(operation.target) || !this.world[operation.target]?.walkable)
           throw new Error("Invalid waypoint");
-        const dangerImpact = this.world[operation.target].kind === "danger" ? Math.min(100 - bot.damage, RULES.dangerDamage) : 0;
+        const mineHit = this.world[operation.target].mine?.state === "armed";
+        const dangerImpact = Math.min(100 - bot.damage, (this.world[operation.target].kind === "danger" ? RULES.dangerDamage : 0) + (mineHit ? RULES.mineDamage : 0));
+        if (mineHit) explodedMine = operation.target;
         const cloudImpact = this.cloud?.coord === operation.target ? Math.min(100 - bot.damage - dangerImpact, RULES.cloudDamage) : 0;
         next = {
           ...next,
@@ -506,6 +660,7 @@ export class GameSession {
           damage: bot.damage + dangerImpact + cloudImpact,
           route: bot.route.slice(1),
           known: [...new Set([...bot.known, operation.target])],
+          knownMines: bot.knownMines,
           explored: rememberTerrain(bot.explored, activeCoords(this.world, { ...bot, coord: operation.target })),
           visits: { ...bot.visits, [operation.target]: (bot.visits[operation.target] ?? 0) + 1 },
           statistics: {
@@ -531,6 +686,7 @@ export class GameSession {
             category: "incident",
             botId: bot.id,
             coord: operation.target,
+            reason: mineHit ? "mine" : "terrain",
             before: { damage: bot.damage },
             delta: { damage: dangerImpact },
             after: { damage: bot.damage + dangerImpact },
@@ -549,6 +705,8 @@ export class GameSession {
           ...next,
           fuel: bot.fuel - cost,
           known: [...new Set([...bot.known, operation.target])],
+          knownMines: this.world[operation.target].mine?.state === "arming"
+            ? { ...bot.knownMines, [operation.target]: this.elapsed + this.mineMemoryDuration(bot) } : bot.knownMines,
           scanned: [...new Set([...bot.scanned, operation.target])],
           explored: bot.explored,
           droneAvailable: !destroyed,
@@ -557,9 +715,52 @@ export class GameSession {
         };
         this.emit({ type: "scan.completed", category: "movement", botId: bot.id, operation: operation.kind, coord: bot.coord, target: operation.target, before: { fuel: bot.fuel }, delta: { fuel: -cost }, after: { fuel: next.fuel } });
         if (destroyed) {
-          this.log(bot.id, "Drone perdu sur une case dangereuse");
-          this.emit({ type: "drone.lost", category: "incident", botId: bot.id, coord: operation.target, reason: "case dangereuse", before: { radius: bot.radius }, delta: { radius: next.radius - bot.radius }, after: { radius: next.radius } });
+          const mineHit = this.world[operation.target].mine?.state === "armed";
+          if (mineHit) explodedMine = operation.target;
+          this.log(bot.id, mineHit ? "Drone perdu sur une mine" : "Drone perdu sur une case dangereuse");
+          this.emit({ type: "drone.lost", category: "incident", botId: bot.id, coord: operation.target, reason: mineHit ? "mine" : "case dangereuse", before: { radius: bot.radius }, delta: { radius: next.radius - bot.radius }, after: { radius: next.radius } });
         }
+        break;
+      }
+      case "mine":
+      case "mineScan":
+      case "neutralize": {
+        if (!bot.offensiveDroneAvailable) throw new Error("Unavailable offensive drone");
+        const kind = operation.kind;
+        const cost = this.offensiveCost(bot, kind, operation.target);
+        if (!this.world[operation.target] || cost > bot.fuel)
+          throw new Error("Invalid offensive drone operation");
+        const tile = this.world[operation.target];
+        const planted = kind === "mine" && !!operation.minePlacementSucceeded;
+        const neutralized = kind === "neutralize" && !!tile.mine;
+        if (neutralized) {
+          this.world[operation.target] = { ...tile, mine: undefined };
+          this.worldRevision++;
+          this.emit({ type: "mine.neutralized", category: "incident", botId: bot.id, coord: operation.target, target: operation.target,
+            reason: "Explosion controlee sans degats", before: { fuel: bot.fuel }, delta: { fuel: -cost }, after: { fuel: bot.fuel - cost } });
+        }
+        const enemies = Object.values(this.world).filter(candidate => candidate.mine?.owner !== bot.id && candidate.mine &&
+          hexDistance(operation.target, candidate.coord) <= RULES.mineScanRadius);
+        const nearestDistance = enemies.length ? Math.min(...enemies.map(candidate => hexDistance(operation.target, candidate.coord))) : null;
+        const report = { center: operation.target, radius: RULES.mineScanRadius, count: enemies.length, nearestDistance, time: this.elapsed };
+        if (kind === "mineScan") this.emit({ type: "mine.scan.completed", category: "decision", botId: bot.id, coord: bot.coord, target: operation.target,
+          reason: `${report.count} mine(s) dans un rayon de ${report.radius}${nearestDistance === null ? "" : ` ; plus proche a ${nearestDistance} hexagone(s)`}`,
+          before: { fuel: bot.fuel }, delta: { fuel: -cost }, after: { fuel: bot.fuel - cost } });
+        next = {
+          ...next,
+          fuel: bot.fuel - cost,
+          known: planted ? [...new Set([...bot.known, operation.target])] : bot.known,
+          knownMines: planted && this.world[operation.target].mine?.owner === bot.id
+            ? { ...bot.knownMines, [operation.target]: Number.MAX_SAFE_INTEGER }
+            : kind === "neutralize" ? Object.fromEntries(Object.entries(bot.knownMines).filter(([coord]) => coord !== operation.target)) : bot.knownMines,
+          mineReports: kind === "mineScan" ? [...bot.mineReports, report].slice(-8) : bot.mineReports,
+          mineChecked: kind === "neutralize" || (kind === "mine" && !planted)
+            ? { ...bot.mineChecked, [operation.target]: this.elapsed } : bot.mineChecked,
+          explored: planted ? rememberTerrain(bot.explored, [operation.target]) : bot.explored,
+          statistics: { ...bot.statistics, fuelUsed: bot.statistics.fuelUsed + cost,
+            minesPlaced: bot.statistics.minesPlaced + Number(planted), minesNeutralized: bot.statistics.minesNeutralized + Number(neutralized),
+            mineScans: bot.statistics.mineScans + Number(kind === "mineScan") },
+        };
         break;
       }
       case "collect": {
@@ -603,19 +804,17 @@ export class GameSession {
             deposited: addResources(bot.deposited, bot.cargo),
             score: bot.score + amount,
             budget: bot.budget + amount,
-            damage: 0,
             goal: null,
           };
           this.log(bot.id, `${amount} ressources deposees`);
           if (amount > 0)
             this.emit({ type: "resources.deposited", category: "resource", botId: bot.id, coord: bot.coord, resources: bot.cargo, delta: { budget: amount, score: amount }, after: { budget: next.budget, score: next.score } });
-          if (bot.damage > 0)
-            this.emit({ type: "ship.repaired", category: "maintenance", botId: bot.id, coord: bot.coord, before: { damage: bot.damage }, delta: { damage: -bot.damage }, after: { damage: 0 } });
         } else if (tile.kind === "fuel") {
           next = { ...next, fuel: RULES.fuelCapacity, goal: null };
           this.emit({ type: "fuel.refueled", category: "maintenance", botId: bot.id, coord: bot.coord, before: { fuel: bot.fuel }, delta: { fuel: RULES.fuelCapacity - bot.fuel }, after: { fuel: RULES.fuelCapacity } });
         } else if (tile.kind === "repair") {
           next = { ...next, damage: 0, goal: null };
+          this.repairAvailableAt = this.elapsed + RULES.repairCooldown;
           this.emit({ type: "ship.repaired", category: "maintenance", botId: bot.id, coord: bot.coord, before: { damage: bot.damage }, delta: { damage: -bot.damage }, after: { damage: 0 } });
         }
         else throw new Error("Service outside a station");
@@ -626,6 +825,14 @@ export class GameSession {
         if (bot.coord !== bot.base || cost === undefined || bot.budget < cost) throw new Error("Invalid upgrade");
         next = { ...next, radius: bot.radius + 1, explored: rememberTerrain(bot.explored, activeCoords(this.world, { ...bot, radius: bot.radius + 1 })), budget: bot.budget - cost, spent: bot.spent + cost };
         this.emit({ type: "exploration.upgraded", category: "economy", botId: bot.id, coord: bot.coord, before: { budget: bot.budget, radius: bot.radius }, delta: { budget: -cost, radius: 1 }, after: { budget: next.budget, radius: next.radius } });
+        break;
+      }
+      case "memoryUpgrade": {
+        const cost = RULES.mineMemoryUpgradePrices[bot.mineMemoryLevel];
+        if (bot.coord !== bot.base || cost === undefined || bot.budget < cost) throw new Error("Invalid memory upgrade");
+        next = { ...next, mineMemoryLevel: bot.mineMemoryLevel + 1, budget: bot.budget - cost, spent: bot.spent + cost };
+        this.emit({ type: "mine.memory.upgraded", category: "economy", botId: bot.id, coord: bot.coord,
+          reason: `Memoire des mines : ${this.mineMemoryDuration(next)} ms`, before: { budget: bot.budget }, delta: { budget: -cost }, after: { budget: next.budget } });
         break;
       }
       case "purchase":
@@ -651,18 +858,20 @@ export class GameSession {
         break;
     }
     this.actors.get(bot.id)!.send({ type: "COMPLETE", bot: next });
+    if (explodedMine) this.explodeMine(explodedMine, operation.kind === "scan" ? "Drone d'exploration" : "Entree d'un vaisseau");
     if (operation.kind === "move") {
       if (this.cloud?.coord === next.coord) this.shipCloudContacts.add(bot.id);
       else this.shipCloudContacts.delete(bot.id);
     }
     if (next.explored.length > bot.explored.length) this.recordExploration(bot.explored, next.explored);
-    if (next.damage >= 100) this.eliminate(next, "Vaisseau detruit");
+    if (next.damage >= 100) this.disable(next, "Vaisseau immobilise : remorquage requis");
   }
 
   private settle() {
-    const alive = this.bots().filter(bot => bot.state !== "eliminated");
+    this.syncMineKnowledge();
+    const alive = this.bots().filter(bot => bot.state !== "disabled");
     if (!alive.length) {
-      this.finish("Tous les bots sont elimines");
+      this.finish("Tous les bots sont immobilises");
       return;
     }
     const reachable = new Set(alive.flatMap(bot => reachableCoords(this.world, bot.coord)));
@@ -672,19 +881,22 @@ export class GameSession {
       this.log(null, "Ressources accessibles epuisees : derniers depots");
     }
     for (const bot of this.bots()) if (bot.state === "deciding") this.plan(bot);
-    if (this.bots().every(bot => bot.state === "eliminated" || bot.state === "finished"))
+    if (this.bots().every(bot => bot.state === "disabled" || bot.state === "finished"))
       this.finish(hasResources ? "Plus aucun objectif accessible aux bots" : "Ressources accessibles epuisees");
   }
 
   private finish(reason: string) {
     this.endReason = reason;
-    const eligible = this.bots().filter(bot => bot.state !== "eliminated");
+    const eligible = this.bots().filter(bot => bot.state !== "disabled");
     const reachable = new Set(eligible.flatMap(bot => reachableCoords(this.world, bot.coord)));
     const blocked =
       [...reachable].some(coord => resourceTotal(this.world[coord].resources) > 0) ||
-      eligible.some(bot => bot.coord !== bot.base || resourceTotal(bot.cargo) > 0);
+      eligible.some(bot => bot.coord !== bot.base || resourceTotal(bot.cargo) > 0) ||
+      this.bots().some(bot => bot.state === "disabled");
     this.phase = blocked ? "blocked" : "finished";
-    if (blocked) this.endReason = "Objectifs ou retour final impossibles : partie bloquee";
+    if (blocked) this.endReason = this.bots().some(bot => bot.state === "disabled")
+      ? "Vaisseau immobilise : remorquage a definir"
+      : "Objectifs ou retour final impossibles : partie bloquee";
     const best = Math.max(...eligible.map(bot => bot.score));
     this.winners = blocked ? [] : eligible.filter(bot => bot.score === best).map(bot => bot.id);
     this.log(null, this.endReason);
@@ -694,6 +906,10 @@ export class GameSession {
   private timeUntilBotEvent(bot: Bot): number {
     const operation = bot.operation;
     if (!operation) return Infinity;
+    if (operation.kind === "mine" && !operation.minePlacementAttempted) {
+      const outbound = hexDistance(bot.coord, operation.target) * RULES.stepDuration;
+      return Math.min(operation.remaining, Math.max(0, outbound - (operation.duration - operation.remaining)));
+    }
     if (operation.kind !== "scan") return operation.remaining;
     const segment = this.scanSegment(bot);
     const elapsed = operation.duration - operation.remaining;
@@ -719,7 +935,8 @@ export class GameSession {
         const coord = line[checked + 1];
         this.actors.get(current.id)!.send({ type: "TICK", bot: { ...current, operation: { ...operation, scanCheckedSteps: checked + 1 } } });
         current = this.bots().find(candidate => candidate.id === current.id)!;
-        if ((segment.kind === "outbound" || segment.kind === "destination") && checked + 1 === distance && this.world[coord].kind === "danger") {
+        if ((segment.kind === "outbound" || segment.kind === "destination") && checked + 1 === distance &&
+          (this.world[coord].kind === "danger" || this.world[coord].mine?.state === "armed")) {
           this.complete(current, true);
           return true;
         }
@@ -738,7 +955,7 @@ export class GameSession {
         continue;
       }
       if (segment.kind === "outbound" || segment.kind === "destination") {
-        if (this.world[segment.to].kind === "danger") {
+        if (this.world[segment.to].kind === "danger" || this.world[segment.to].mine?.state === "armed") {
           this.complete(current, true);
           return true;
         }
@@ -755,6 +972,21 @@ export class GameSession {
     return false;
   }
 
+  private placeMine(bot: BotView) {
+    const operation = bot.operation!;
+    const tile = this.world[operation.target];
+    const planted = tile.walkable && !tile.mine;
+    if (planted) {
+      this.world[operation.target] = { ...tile, mine: { owner: bot.id, state: "arming", armsAt: this.elapsed + RULES.mineArmingDuration } };
+      this.worldRevision++;
+      this.emit({ type: "mine.placed", category: "incident", botId: bot.id, coord: operation.target, target: operation.target });
+    }
+    this.actors.get(bot.id)!.send({ type: "TICK", bot: { ...bot, operation: {
+      ...operation, minePlacementAttempted: true, minePlacementSucceeded: planted,
+    } } });
+    this.syncMineKnowledge();
+  }
+
   advance(milliseconds: number): void {
     if (!Number.isFinite(milliseconds) || milliseconds < 0) throw new Error("Invalid elapsed time");
     if (this.paused || this.finished || milliseconds === 0) return;
@@ -767,7 +999,9 @@ export class GameSession {
         break;
       }
       const cloudEvent = this.cloud ? Math.min(this.cloud.nextMoveAt, this.cloud.expiresAt) - this.elapsed : Infinity;
-      const duration = Math.min(remaining, cloudEvent, ...working.map(bot => this.timeUntilBotEvent(bot)));
+      const mineEvent = Math.min(Infinity, ...Object.values(this.world)
+        .filter(tile => tile.mine?.state === "arming").map(tile => tile.mine!.armsAt - this.elapsed));
+      const duration = Math.min(remaining, cloudEvent, mineEvent, ...working.map(bot => this.timeUntilBotEvent(bot)));
       this.elapsed += duration;
       remaining -= duration;
       for (const bot of working) {
@@ -779,11 +1013,14 @@ export class GameSession {
           } });
       }
       let completed = this.updateCloud();
+      this.updateMines();
       const order = this.turn % 2 === 0 ? BOT_IDS : [...BOT_IDS].reverse();
       for (const id of order) {
         const bot = this.bots().find(candidate => candidate.id === id)!;
         if (bot.operation?.kind === "scan" && this.timeUntilBotEvent(bot) === 0)
           completed = this.processScanEvent(bot) || completed;
+        else if (bot.operation?.kind === "mine" && !bot.operation.minePlacementAttempted && this.timeUntilBotEvent(bot) === 0)
+          this.placeMine(bot);
         else if (bot.operation?.remaining === 0) {
           this.complete(bot);
           completed = true;
@@ -794,6 +1031,7 @@ export class GameSession {
         this.settle();
       }
     }
+    this.syncMineKnowledge();
     this.revision++;
   }
 
@@ -828,7 +1066,7 @@ export class GameSession {
 
   getSnapshot(afterEventSequence = 0): SessionSnapshot {
     return structuredClone({
-      schemaVersion: 7,
+      schemaVersion: 10,
       seed: this.seed,
       revision: this.revision,
       worldRevision: this.worldRevision,
@@ -838,6 +1076,7 @@ export class GameSession {
       speed: this.speed,
       world: this.world,
       cloud: this.cloud,
+      repairAvailableAt: this.repairAvailableAt,
       bots: Object.fromEntries(this.bots().map(bot => [bot.id, bot])) as Record<BotId, BotView>,
       initialResources: this.initialResources,
       lostResources: this.lostResources,
@@ -865,6 +1104,9 @@ export class GameSession {
         bot.damage > 100 ||
         bot.radius < RULES.initialExplorationRadius ||
         bot.radius > RULES.maxExplorationRadius ||
+        bot.mineMemoryLevel < 1 ||
+        bot.mineMemoryLevel > RULES.mineMemoryDurations.length ||
+        typeof bot.offensiveDroneAvailable !== "boolean" ||
         (!bot.droneAvailable && bot.radius !== RULES.initialExplorationRadius)
       )
         throw new Error("Bot bounds failed");

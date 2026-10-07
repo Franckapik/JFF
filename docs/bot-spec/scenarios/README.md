@@ -1,8 +1,7 @@
 # Scenarios du socle valide
 
-Les onze fichiers `.feature` expriment les [decisions Q01-Q20 et les premieres evolutions](../03-contrat-et-questions.md)
-avec des effets observables et des identifiants stables. Ils contiennent 88
-scenarios et 99 cas apres expansion des exemples.
+Les fichiers `.feature` expriment les [decisions Q01-Q20 et les premieres evolutions](../03-contrat-et-questions.md)
+avec des effets observables et des identifiants stables.
 
 L'[audit de la visibilite et du gameplay](../05-audit-visibilite-gameplay.md)
 recapitule les regles appliquees et les limites encore presentes.
@@ -21,8 +20,10 @@ necessitent un controle navigateur.
 | `collection.feature` | Compartiments, transactions et objets visibles uniquement sur les cibles scannées. |
 | `maintenance.feature` | Services locaux, ravitaillement en station, trajets et achats. |
 | `danger-tiles.feature` | Degats, perte de drone et revelation des tuiles dangereuses statiques. |
+| `offensive-drone.feature` | Pose, armement, visibilité, mémoire, scan, neutralisation et dégâts des mines. |
 | `electric-cloud.feature` | Apparition, visibilité, dérive, collisions et rebonds du drone liés au nuage électrique. |
-| `emergency.feature` | Pause, remorquage et elimination. |
+| `emergency.feature` | Pause, remorquage et immobilisation. |
+| `damage-thresholds.feature` | Effets des seuils de dégâts à 50, 70 et 100 %. |
 | `game-over.feature` | Derniers depots, egalite et blocage. |
 | `multi-bot.feature` | Monde partage, reservation des tuiles d'arret et arbitrage concurrent. |
 | `edge-cases.feature` | Chemins absents, commandes et limites. |

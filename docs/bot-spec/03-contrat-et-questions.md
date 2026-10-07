@@ -67,26 +67,32 @@ sans certification sur telephone.
   terrain deja explore reste en memoire. Son remplacement a la base coute 50
   de budget et repart au rayon 1. Chaque extension doit etre rachetee pour
   regagner les rayons 2 et 3.
-- A sa base, un service gratuit de 1 200 ms combine depot et reparation, sans
-  ravitaillement. Seules les stations carburant remplissent la reserve commune.
+- A sa base, un service gratuit de 1 200 ms depose la cargaison, sans
+  reparation ni ravitaillement. Seule la station de reparation repare le
+  vaisseau ; seule la station carburant remplit la reserve commune.
   Les stations publiques ne fournissent que leur service specialise. Le
   carburant urgent est a 20 ou sous le cout d'acces au service plus une
   reserve de 3 ; le service a une station carburant remplit toute reserve
   incomplete apres une duree egale a trois pas du vaisseau. La reparation devient
-  prioritaire a 50 degats ; entre deux besoins distants, elle est recherchee
-  avant le ravitaillement.
+  prioritaire a 65 degats ; entre deux besoins distants, elle est recherchee
+  avant le ravitaillement. Après chaque réparation, la station est indisponible
+  pendant 40 000 ms logiques.
 - Une tuile d'arret accueille un seul bot actif a la fois. Le dernier pas vers
   une cible reserve cette place ; les autres bots attendent sur leur tuile
   d'approche sans depense de carburant ni tentative d'action. Les trajets
   intermediaires restent survolables. Une attente prend fin lorsque la place
   est liberee ou que la ressource visee est epuisee. Deux bots voisins qui
   visent chacun la place de l'autre se croisent simultanement en vol.
-  Un bot termine ou elimine ne reserve plus de place, et un scenario initial
+  Un bot termine ou immobilise ne reserve plus de place, et un scenario initial
   ne peut pas placer les deux bots sur une meme tuile.
 - Arrive sur un danger, le drone est perdu et la cible est revelee
   immediatement, sans scan ni retour fictif. Le vaisseau distant est indemne.
-  Le vaisseau recoit 10 degats en entrant sur une case dangereuse ; a 100
-  degats, il est elimine definitivement.
+  Le vaisseau recoit 15 degats en entrant sur une case dangereuse, 40 au contact
+  d'une mine et 45 au contact du nuage. Des 50 degats, son rayon effectif baisse
+  d'un hexagone (minimum 1). Des 70 degats, chaque pas du vaisseau dure 800 ms.
+  A 100 degats, il est immobilise avec sa cargaison ; son remorquage reste a
+  definir. Un bot peut choisir un raccourci dangereux vers une ressource de
+  valeur elevee si les degats connus du trajet restent inferieurs a 100.
 - Une reserve inferieure au cout d'un pas du vaisseau loin d'un service
   provoque un remorquage de 5 000 ms
   vers sa base avec perte explicite de la cargaison. Si le vaisseau y arrive
@@ -112,13 +118,13 @@ sans certification sur telephone.
 ## Durees et interfaces
 
 Pas 400 ms ; scan 800 ms hors trajet du drone ; collecte 1 000 ms ; plein
-3 pas (1 200 ms actuellement) ; depot et reparation 1 200 ms ; achat ou
+3 pas (1 200 ms actuellement) ; depot ou reparation 1 200 ms ; achat ou
 extension 1 000 ms ; remorquage 5 000 ms. Les vitesses
 1x/2x/4x/8x accelerent la meme horloge. Le terrain, le diagnostic et le mode
 expert montrent l'etat reel, la cible, les comptes et les evenements. Un graphe
 anime complet des transitions reste une extension.
 
-Le snapshot actif est en `schemaVersion: 7` ; le protocole de commandes reste
+Le snapshot actif est en `schemaVersion: 10` ; le protocole de commandes reste
 en version 1. Le moteur est dans [session.ts](../../src/engine/session.ts),
 les valeurs dans [rules.ts](../../src/engine/rules.ts), les controles dans
 [session.test.ts](../../src/engine/session.test.ts). Les dix fichiers
@@ -138,7 +144,7 @@ identifiants sont controles, mais leurs etapes ne sont pas executees.
 | Q07 | Decouverte possible par le vaisseau sans drone. |
 | Q08 | Heuristiques actuelles de collecte et de retour. |
 | Q09 | Seuils et priorites de maintenance ci-dessus. |
-| Q10 | Service gratuit combine a sa base en 1 200 ms. |
+| Q10 | Depot gratuit a sa base en 1 200 ms ; reparation uniquement a la station dediee. |
 | Q11 | Aucun carburant facture au chargement. |
 | Q12 | Perte du drone et decouverte du danger des l'arrivee. |
 | Q13 | Remplacement du drone a sa base pour 50 de budget. |

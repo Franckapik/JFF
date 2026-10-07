@@ -53,15 +53,15 @@ Fonctionnalité: Nuage électrique mobile et perturbations sur sa seule tuile
   Scénario: Endommager le vaisseau immobile rejoint par le nuage
     Étant donné un vaisseau immobile sur une tuile praticable
     Quand le nuage se déplace sur cette même tuile
-    Alors ce vaisseau reçoit 15 dégâts dus au nuage une seule fois pour ce contact
+    Alors ce vaisseau reçoit 45 dégâts dus au nuage une seule fois pour ce contact
     Et le vaisseau subit l'impact même s'il n'avait pas prévu de se déplacer
-    Et si ses dégâts atteignent 100, le vaisseau est éliminé
+    Et si ses dégâts atteignent 100, le vaisseau est immobilisé
 
   @CLOUD-07
   Scénario: Cumuler les dangers sur une même tuile
     Étant donné une tuile dangereuse occupée par le nuage et un vaisseau sans dégâts
     Quand le vaisseau arrive sur cette tuile
-    Alors il reçoit 10 dégâts dus à la tuile dangereuse et 15 dus au nuage
+    Alors il reçoit 15 dégâts dus à la tuile dangereuse et 45 dus au nuage
     Et les deux impacts sont identifiables séparément
 
   @CLOUD-08

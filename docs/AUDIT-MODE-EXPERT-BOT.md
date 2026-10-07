@@ -14,8 +14,8 @@ regle de gameplay et n'avance pas l'horloge.
 - Operation, cible, progression, carburant, degats, drone, remorquages,
   ressources deposees et compteurs issus du snapshot.
 - Evenements structures pour mouvements, scans, impacts, pertes et achats de
-  drones, ressources, maintenance, remorquages, eliminations et fins.
-- `schemaVersion: 7` pour le snapshot courant ; protocole de commandes en version 1.
+  drones, ressources, maintenance, remorquages, immobilisations et fins.
+- `schemaVersion: 10` pour le snapshot courant ; protocole de commandes en version 1.
   Une connexion recoit l'historique complet de la partie. Les diffusions
   periodiques n'envoient que les evenements nouveaux ; le store reconstitue la
   chronologie par sequence. L'export JSON du diagnostic inclut ces evenements.
