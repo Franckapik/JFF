@@ -51,6 +51,9 @@ Fonctionnalité: Compétition partagée et lectures individuelles
     Quand le premier commence son dernier pas vers cette tuile
     Alors il en réserve la place jusqu'à son départ
     Et le second attend avant son dernier pas sans consommer de carburant ni compter de collecte
+    Et le premier gagne 5 points de confiance envers le second pour avoir cédé la priorité
+    Et cette variation ne se répète pas à chaque cycle d'attente sur la même case
+    Et la case disputée porte un signal de confiance visible au joueur du premier bot
     Et sa cible occupée est signalée sur le terrain lorsqu'elle est visible
     Mais les tuiles intermédiaires de leurs trajets restent survolables
 
@@ -60,6 +63,7 @@ Fonctionnalité: Compétition partagée et lectures individuelles
     Quand le premier y effectue son service
     Alors le second reste sur sa tuile d'approche sans consommer de carburant pendant l'attente
     Et il peut entrer dans la station dès que le premier la quitte
+    Et le premier gagne 5 points de confiance envers le second lors de cette attente
     Et chaque bot reçoit son service uniquement après son arrivée et sa propre durée de service
 
   @MULTI-08
@@ -75,6 +79,8 @@ Fonctionnalité: Compétition partagée et lectures individuelles
     Étant donné un bot qui attend l'accès à une ressource occupée
     Quand le premier bot prélève tout le stock disponible
     Alors le bot en attente abandonne cet objectif avant d'entrer sur la tuile
+    Et sa confiance envers le collecteur baisse de 8 points si le stock a été effectivement épuisé
+    Et la variation apparaît sur la case de ressources et dans l'indicateur de confiance
     Et il cherche un autre objectif selon ses priorités habituelles
 
   @MULTI-10

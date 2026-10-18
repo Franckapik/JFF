@@ -20,6 +20,17 @@ function damageDetail(event: SessionEvent): string {
 export function incidentMessage(event: SessionEvent): IncidentMessage | null {
   const location = event.coord ? `Case ${event.coord}` : '';
   switch (event.type) {
+    case 'trust.changed': {
+      if (!event.trust) return null;
+      const change = event.trust;
+      const sign = change.delta > 0 ? '+' : '';
+      return {
+        title: `Confiance ${change.delta > 0 ? 'renforcée' : 'affaiblie'} · Bot ${event.botId?.slice(-1)} → Bot ${change.toward.slice(-1)}`,
+        detail: `${sign}${change.delta} points · ${event.reason ?? ''} · ${location}`,
+        tone: change.delta > 0 ? 'recovery' : 'warning',
+        coord: event.coord,
+      };
+    }
     case 'danger.impact':
       return { title: event.reason === 'mine' ? 'Mine déclenchée' : 'Terrain dangereux', detail: [location, damageDetail(event)].filter(Boolean).join(' · '), tone: 'danger', coord: event.coord };
     case 'cloud.impact':

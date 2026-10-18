@@ -18,6 +18,17 @@ npm run dev
 - `npm run validate` : types, tests, scenarios Gherkin, lint et build.
 - `npm run preview -- --host 127.0.0.1` : servir le build.
 
+La vue Terrain contient un atelier Rapier 3D indépendant des règles de la
+partie. Une pile de blocs apparaît près du bot affiché. Sélectionner une
+autre tuile puis cliquer « Empiler ici » déplace la pile ; « Lancer une bille »
+teste les collisions, « Onde de choc » la stabilité, et un clic direct sur un
+bloc le pousse. « Caisses sur trajet » place des corps mobiles devant le bot
+affiché ; mettre en pause avant de les placer facilite l'observation. Son
+vaisseau possède un corps cinématique qui suit sa position animée,
+pousse les caisses au passage et incrémente le compteur de contacts Rapier.
+« Masquer » retire l'atelier. Ces collisions ne modifient pas encore les
+décisions ni les scores des bots.
+
 Le nuage électrique apparaît après chaque palier de six nouvelles tuiles
 explorées, à deux tuiles au moins des deux vaisseaux, s'il n'est pas déjà
 présent. Il dérive d'une tuile toutes les 2,4 secondes et se dissipe après

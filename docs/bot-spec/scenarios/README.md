@@ -26,6 +26,7 @@ necessitent un controle navigateur.
 | `damage-thresholds.feature` | Effets des seuils de dégâts à 50, 70 et 100 %. |
 | `game-over.feature` | Derniers depots, egalite et blocage. |
 | `multi-bot.feature` | Monde partage, reservation des tuiles d'arret et arbitrage concurrent. |
+| `trust.feature` | Confiance directionnelle, effets des actes et retours visibles sur la scène. |
 | `edge-cases.feature` | Chemins absents, commandes et limites. |
 
 Les anciens scenarios restent accessibles dans la revision Git

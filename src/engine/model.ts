@@ -109,7 +109,15 @@ export interface SessionLog {
   botId: BotId | null;
   message: string;
 }
-export type SessionEventCategory = "decision" | "movement" | "incident" | "resource" | "maintenance" | "economy" | "lifecycle";
+export type TrustCause = "yield" | "depletion" | "mine-spotted" | "mine-hit" | "drone-lost";
+export interface TrustChange {
+  toward: BotId;
+  cause: TrustCause;
+  before: number;
+  delta: number;
+  after: number;
+}
+export type SessionEventCategory = "decision" | "movement" | "incident" | "resource" | "maintenance" | "economy" | "lifecycle" | "social";
 export type SessionEventType =
   | "session.started"
   | "operation.started"
@@ -143,7 +151,8 @@ export type SessionEventType =
   | "rescue.completed"
   | "bot.finished"
   | "session.finished"
-  | "session.blocked";
+  | "session.blocked"
+  | "trust.changed";
 export interface SessionEvent {
   sequence: number;
   time: number;
@@ -158,9 +167,10 @@ export interface SessionEvent {
   before?: Partial<Record<"fuel" | "damage" | "budget" | "actions" | "score" | "radius", number>>;
   delta?: Partial<Record<"fuel" | "damage" | "budget" | "actions" | "score" | "radius", number>>;
   after?: Partial<Record<"fuel" | "damage" | "budget" | "actions" | "score" | "radius", number>>;
+  trust?: TrustChange;
 }
 export interface SessionSnapshot {
-  schemaVersion: 11;
+  schemaVersion: 12;
   seed: number;
   revision: number;
   worldRevision: number;
@@ -172,6 +182,8 @@ export interface SessionSnapshot {
   cloud: ElectricCloud | null;
   repairAvailableAt: number;
   bots: Record<BotId, BotView>;
+  trust: Record<BotId, number>;
+  lastTrustChange: Record<BotId, SessionEvent | null>;
   initialResources: Resources;
   lostResources: Resources;
   remainingResources: Resources;

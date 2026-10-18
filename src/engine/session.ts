@@ -1,7 +1,7 @@
 import { createActor, type ActorRefFrom } from "xstate";
 
 import { botMachine } from "./botMachine";
-import type { Bot, BotPhase, BotView, ElectricCloud, GoalReason, OperationKind, SessionEvent, SessionLog, SessionSnapshot } from "./model";
+import type { Bot, BotPhase, BotView, ElectricCloud, GoalReason, OperationKind, SessionEvent, SessionLog, SessionSnapshot, TrustCause } from "./model";
 import { addResources, emptyResources, RESOURCE_KINDS, resourceTotal, transferResources, type Resources } from "./resources";
 import { RULES } from "./rules";
 import { activeCoords, effectiveRadius, hasLineOfSight, rememberTerrain } from "./visibility";
@@ -75,6 +75,9 @@ export class GameSession {
   private logSequence = 0;
   private events: SessionEvent[] = [];
   private eventSequence = 0;
+  private trust: Record<BotId, number> = { "bot-0": RULES.initialTrust, "bot-1": RULES.initialTrust };
+  private lastTrustChange: Record<BotId, SessionEvent | null> = { "bot-0": null, "bot-1": null };
+  private readonly trustYields = new Set<string>();
   private winners: BotId[] = [];
   private endReason: string | null = null;
   private cloud: ElectricCloud | null = null;
@@ -85,12 +88,19 @@ export class GameSession {
   private nextCloudAt = RULES.cloudExplorationInterval;
   readonly seed: number;
 
-  constructor(seed: number, scenario?: { world: World; bots?: Record<BotId, Bot>; cloud?: ElectricCloud | null; repairAvailableAt?: number }) {
+  constructor(seed: number, scenario?: { world: World; bots?: Record<BotId, Bot>; cloud?: ElectricCloud | null; repairAvailableAt?: number; trust?: Partial<Record<BotId, number>> }) {
     if (!Number.isSafeInteger(seed)) throw new Error("Invalid seed");
     this.seed = seed >>> 0;
     this.cloudRandomState = (this.seed ^ 0xc10d1234) >>> 0;
     this.cloud = scenario?.cloud ? structuredClone(scenario.cloud) : null;
     this.repairAvailableAt = scenario?.repairAvailableAt ?? 0;
+    for (const id of BOT_IDS) {
+      const value = scenario?.trust?.[id];
+      if (value !== undefined) {
+        if (!Number.isInteger(value) || value < 0 || value > 100) throw new Error("Invalid initial trust");
+        this.trust[id] = value;
+      }
+    }
     this.world = structuredClone(scenario?.world ?? generateWorld(this.seed, RULES.mapRadius));
     const startingBots = BOT_IDS.map(id => structuredClone(scenario?.bots?.[id] ?? createBot(id, this.world, this.seed)));
     if (startingBots[0].coord === startingBots[1].coord) throw new Error("Bots cannot start on the same tile");
@@ -121,8 +131,23 @@ export class GameSession {
     if (this.logs.length > RULES.maxLogEntries) this.logs.shift();
   }
 
-  private emit(event: Omit<SessionEvent, "sequence" | "time">) {
-    this.events.push({ ...event, sequence: ++this.eventSequence, time: this.elapsed });
+  private emit(event: Omit<SessionEvent, "sequence" | "time">): SessionEvent {
+    const item = { ...event, sequence: ++this.eventSequence, time: this.elapsed };
+    this.events.push(item);
+    return item;
+  }
+
+  private adjustTrust(observer: BotId, toward: BotId, delta: number, cause: TrustCause, coord: Coord, reason: string) {
+    if (observer === toward) return;
+    const before = this.trust[observer];
+    const after = Math.max(0, Math.min(100, before + delta));
+    if (after === before) return;
+    this.trust[observer] = after;
+    const event = this.emit({
+      botId: observer, type: "trust.changed", category: "social", coord, reason,
+      trust: { toward, cause, before, delta: after - before, after },
+    });
+    this.lastTrustChange[observer] = event;
   }
 
   private mineMemoryDuration(bot: Bot): number {
@@ -151,6 +176,7 @@ export class GameSession {
           if (!knownMines[tile.coord]) {
             sightings++;
             this.emit({ type: "mine.spotted", category: "incident", botId: bot.id, coord: tile.coord, reason: "Mine ennemie vue pendant l'armement" });
+            this.adjustTrust(bot.id, tile.mine.owner, -RULES.trustMineSpottedLoss, "mine-spotted", tile.coord, "Mine ennemie repérée pendant l'armement");
           }
           knownMines[tile.coord] = this.elapsed + this.mineMemoryDuration(bot);
         }
@@ -415,6 +441,11 @@ export class GameSession {
         `Croisement vers ${bot.coord}`
       );
     } else if (claimant) {
+      const key = `${bot.id}:${claimant.id}:${target}`;
+      if (!this.trustYields.has(key)) {
+        this.trustYields.add(key);
+        this.adjustTrust(claimant.id, bot.id, RULES.trustYieldGain, "yield", target, `Bot ${bot.id.slice(-1)} a cédé la priorité sur la case`);
+      }
       this.launch(
         { ...bot, route: path.slice(1), goal: { coord: target, reason } },
         "wait",
@@ -812,6 +843,10 @@ export class GameSession {
           reason: collected ? "transfert non vide" : "stock indisponible ou capacite atteinte",
           resources: transfer.taken,
         });
+        if (collected && resourceTotal(transfer.remaining) === 0) {
+          const rival = this.bots().find(candidate => candidate.id !== bot.id && candidate.goal?.reason === "collect" && candidate.goal.coord === bot.coord);
+          if (rival) this.adjustTrust(rival.id, bot.id, -RULES.trustDepletionLoss, "depletion", bot.coord, `Bot ${bot.id.slice(-1)} a épuisé la réserve attendue`);
+        }
         break;
       }
       case "service": {
@@ -880,7 +915,14 @@ export class GameSession {
         break;
     }
     this.actors.get(bot.id)!.send({ type: "COMPLETE", bot: next });
-    if (explodedMine) this.explodeMine(explodedMine, operation.kind === "scan" ? "Drone d'exploration" : "Entree d'un vaisseau");
+    if (explodedMine) {
+      const owner = this.world[explodedMine].mine?.owner;
+      if (owner && owner !== bot.id) this.adjustTrust(bot.id, owner,
+        operation.kind === "scan" ? -RULES.trustDroneLostLoss : -RULES.trustMineHitLoss,
+        operation.kind === "scan" ? "drone-lost" : "mine-hit", explodedMine,
+        operation.kind === "scan" ? "Drone perdu sur une mine ennemie" : "Vaisseau touché par une mine ennemie");
+      this.explodeMine(explodedMine, operation.kind === "scan" ? "Drone d'exploration" : "Entree d'un vaisseau");
+    }
     if (operation.kind === "move") {
       if (this.cloud?.coord === next.coord) this.shipCloudContacts.add(bot.id);
       else this.shipCloudContacts.delete(bot.id);
@@ -1092,7 +1134,7 @@ export class GameSession {
 
   getSnapshot(afterEventSequence = 0): SessionSnapshot {
     return structuredClone({
-      schemaVersion: 11,
+      schemaVersion: 12,
       seed: this.seed,
       revision: this.revision,
       worldRevision: this.worldRevision,
@@ -1104,6 +1146,8 @@ export class GameSession {
       cloud: this.cloud,
       repairAvailableAt: this.repairAvailableAt,
       bots: Object.fromEntries(this.bots().map(bot => [bot.id, bot])) as Record<BotId, BotView>,
+      trust: this.trust,
+      lastTrustChange: this.lastTrustChange,
       initialResources: this.initialResources,
       lostResources: this.lostResources,
       remainingResources: worldResources(this.world),
@@ -1116,6 +1160,8 @@ export class GameSession {
   }
 
   assertInvariants() {
+    if (BOT_IDS.some(id => !Number.isInteger(this.trust[id]) || this.trust[id] < 0 || this.trust[id] > 100))
+      throw new Error("Trust bounds failed");
     if (this.cloud && (!this.world[this.cloud.coord]?.walkable || this.cloud.expiresAt <= this.elapsed || this.cloud.nextMoveAt <= this.elapsed))
       throw new Error("Cloud bounds failed");
     let accounted = addResources(worldResources(this.world), this.lostResources);

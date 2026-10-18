@@ -1,10 +1,11 @@
 import { OrbitControls } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Bot as BotIcon, SlidersHorizontal } from 'lucide-react';
-import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Color, Group, InstancedMesh, Object3D, Vector3 } from 'three';
 
 import type { BotView, ElectricCloud, MineReport } from '../../engine/model';
+import type { PhysicsBotPose } from '../../engine/physicsPlayground';
 import { RESOURCE_KINDS, type Resources } from '../../engine/resources';
 import { RULES } from '../../engine/rules';
 import { activeCoords, depletedResourceCoords, isCloudVisible, resourceMarkerCoords, revealedTileKind } from '../../engine/visibility';
@@ -15,13 +16,16 @@ import BotPanel from './BotPanel';
 import { TileGlyphs } from './BoardArt';
 import ExpertBotView from './ExpertBotView';
 import { IncidentHud, IncidentPulses } from './IncidentFeedback';
+import type { PhysicsCommand } from './PhysicsPlayground';
 import { BOT_COLORS, cloudOpacity, DEPLETED_TILE_COLOR, MINED_TILE_COLOR, RESOURCE_LABELS, TILE_COLORS, TILE_LABELS } from './presentation';
 import { useRenderCounter } from './renderMetrics';
 import { useIncidentAlerts } from './useIncidentAlerts';
+import TrustHud from './TrustHud';
 import { sketchTileShader } from './boardShaders';
 
 type Perspective = BotId | 'developer';
 const VOID_COLOR = '#18262c';
+const PhysicsPlayground = lazy(() => import('./PhysicsPlayground'));
 
 function ScoreBackground({ gameId, score0, score1 }: { gameId: string | null; score0: number; score1: number }) {
   const target = useRef(new Color(VOID_COLOR));
@@ -209,7 +213,7 @@ function scanPosition(from: Coord, to: Coord, elapsed: number): Vector3 {
   return new Vector3(...worldPosition(path[index])).lerp(new Vector3(...worldPosition(path[index + 1])), progress - index);
 }
 
-function Vehicle({ bot, paused, speed, crossing, flyoverStart, flyoverEnd }: { bot: BotView; paused: boolean; speed: number; crossing: boolean; flyoverStart: boolean; flyoverEnd: boolean }) {
+function Vehicle({ bot, paused, speed, crossing, flyoverStart, flyoverEnd, onPose }: { bot: BotView; paused: boolean; speed: number; crossing: boolean; flyoverStart: boolean; flyoverEnd: boolean; onPose?: (id: BotId, position: Vector3, heading: number) => void }) {
   useRenderCounter(bot.id);
   const ship = useRef<Group>(null);
   const drone = useRef<Group>(null);
@@ -237,6 +241,7 @@ function Vehicle({ bot, paused, speed, crossing, flyoverStart, flyoverEnd }: { b
         ship.current.position.z += dx * offset;
       }
       if (operation?.kind === 'move') ship.current.rotation.y = Math.atan2(to.x - from.x, to.z - from.z);
+      onPose?.(bot.id, ship.current.position, ship.current.rotation.y);
     }
     if (drone.current) {
       drone.current.position.copy(from);
@@ -304,10 +309,21 @@ export default function GameView() {
   const [selected, setSelected] = useState<Coord | null>(null);
   const [expert, setExpert] = useState(false);
   const [expertBotId, setExpertBotId] = useState<BotId>('bot-0');
+  const [physicsEnabled, setPhysicsEnabled] = useState(true);
+  const [physicsStatus, setPhysicsStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const [physicsCommand, setPhysicsCommand] = useState<PhysicsCommand | null>(null);
+  const [physicsImpacts, setPhysicsImpacts] = useState<Record<BotId, number>>({ 'bot-0': 0, 'bot-1': 0 });
+  const physicsBotPoses = useRef<Record<BotId, PhysicsBotPose | null>>({ 'bot-0': null, 'bot-1': null });
+  const recordBotPose = useCallback((id: BotId, position: Vector3, heading: number) => {
+    const pose = physicsBotPoses.current[id];
+    if (pose) Object.assign(pose, { x: position.x, y: position.y, z: position.z, heading });
+    else physicsBotPoses.current[id] = { x: position.x, y: position.y, z: position.z, heading };
+  }, []);
   const currentCoords = snapshot ? perspective === 'developer' ? Object.keys(snapshot.world) as Coord[] : activeCoords(snapshot.world, snapshot.bots[perspective]) : [];
   const alerts = useIncidentAlerts(snapshot, gameId, perspective, currentCoords);
   if (!snapshot) return <main className="empty-state" role="status">{status === 'disconnected' ? 'Moteur hors ligne' : 'Connexion au moteur...'}</main>;
   const developer = perspective === 'developer';
+  const visibleEvents = developer ? snapshot.events : snapshot.events.filter(event => event.type !== 'trust.changed' || event.botId === perspective);
   const viewedBot = snapshot.bots[developer ? expertBotId : perspective];
   const allCoords = Object.keys(snapshot.world) as Coord[];
   const current = currentCoords.join('|');
@@ -331,9 +347,31 @@ export default function GameView() {
   const selectedInCloud = !!selected && cloudVisible && selected === snapshot.cloud?.coord;
   const opacity = snapshot.cloud ? cloudOpacity(snapshot.cloud, snapshot.elapsed) : 0;
   const expertBot = snapshot.bots[expertBotId];
+  const focusBase = snapshot.world[viewedBot.base];
+  const physicsInitial = focusBase?.neighbors.find(coord => snapshot.world[coord]?.walkable) ?? viewedBot.base;
+  const physicsScope = `${gameId ?? 'local'}:${viewedBot.id}`;
+  const physicsTarget = selected && (developer || currentCoords.includes(selected)) ? selected : physicsInitial;
+  const physicsRouteTarget = viewedBot.route[0] ?? (viewedBot.operation?.kind === 'move' ? viewedBot.operation.target : null);
+  const visibleBots = Object.values(snapshot.bots).filter(bot => developer || bot.id === perspective || currentCoords.includes(bot.coord));
+  const sendPhysics = (action: PhysicsCommand['action'], coord = physicsTarget) => setPhysicsCommand(previous => ({
+    serial: (previous?.serial ?? 0) + 1, scope: physicsScope, action, coord,
+  }));
   return <main className={`game-layout${expert ? ' expert-open' : ''}`}>
     <section className="board-panel" aria-label="Terrain de la partie">
       <div className="board-toolbar"><div className="board-title"><small>Carnet de terrain / 01</small><h1>Atlas d’exploration</h1></div><label>Vision <select value={perspective} onChange={event => setPerspective(event.target.value as Perspective)}><option value="bot-0">Bot 0</option><option value="bot-1">Bot 1</option><option value="developer">Développeur</option></select></label><button className="icon-button expert-toggle" aria-pressed={expert} onClick={() => setExpert(value => !value)} title={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'} aria-label={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'}><SlidersHorizontal size={18} /></button><span>{developer ? 'Carte complète' : `${viewedBot.explored.length} / ${allCoords.length} cases explorées`}</span>{viewedBot.mineWarning && <span className="cloud-alert">Mine ennemie à proximité</span>}{mineReport && <span title={`Relevé à ${Math.round(mineReport.time / 1000)} s`}>Scan {mineReport.center} : {mineReport.count} mine(s) / rayon {mineReport.radius} · plus proche {mineReport.nearestDistance ?? '—'} hex.</span>}{cloudVisible && <span className="cloud-alert">⚡ Nuage électrique détecté</span>}{viewedBot.operation?.scanDetour && <span className="cloud-alert">{!viewedBot.operation.scanEdgeReached ? 'Drone repoussé vers le bord' : !viewedBot.operation.scanArrived ? 'Drone vers une tuile aléatoire' : 'Drone en retour'}</span>}</div>
+      <div className="physics-controls" aria-label="Atelier physique Rapier 3D">
+        <strong>Rapier 3D <span>· atelier physique</span></strong>
+        <button type="button" aria-pressed={physicsEnabled} onClick={() => { setPhysicsEnabled(value => !value); setPhysicsCommand(null); setPhysicsStatus('loading'); }}>{physicsEnabled ? 'Masquer' : 'Afficher'}</button>
+        {physicsEnabled && <>
+          <span className="physics-controls-target">Case {physicsTarget} · les vaisseaux poussent les caisses</span>
+          <button type="button" disabled={physicsStatus !== 'ready'} onClick={() => sendPhysics('stack')}>Empiler ici</button>
+          <button type="button" disabled={physicsStatus !== 'ready' || !physicsRouteTarget} onClick={() => sendPhysics('route', physicsRouteTarget!)} title={physicsRouteTarget ? `Placer des caisses en ${physicsRouteTarget}` : 'Attendez que le bot choisisse un trajet'}>Caisses sur trajet du Bot {viewedBot.id.slice(-1)}</button>
+          <button type="button" disabled={physicsStatus !== 'ready'} onClick={() => sendPhysics('ball')}>Lancer une bille</button>
+          <button type="button" disabled={physicsStatus !== 'ready'} onClick={() => sendPhysics('shock')}>Onde de choc</button>
+          <span className="physics-impact-count" aria-live="polite">Contacts · Bot 0 : {physicsImpacts['bot-0']} · Bot 1 : {physicsImpacts['bot-1']}</span>
+          {physicsStatus !== 'ready' && <span role="status">{physicsStatus === 'failed' ? 'Physique indisponible' : 'Chargement de la physique…'}</span>}
+        </>}
+      </div>
       <div className="scene">
         <Canvas shadows dpr={[1, 1.5]} camera={{ position: [7, 10, 8], fov: 45 }} onPointerMissed={() => setSelected(null)}>
           <BoardCamera />
@@ -348,17 +386,19 @@ export default function GameView() {
           <WaitingMarkers bots={Object.values(snapshot.bots)} visible={currentCoords} />
           {cloudVisible && snapshot.cloud && <ElectricCloudView cloud={snapshot.cloud} opacity={opacity} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} />}
           <IncidentPulses alerts={alerts} />
-          {Object.values(snapshot.bots).filter(bot => developer || bot.id === perspective || currentCoords.includes(bot.coord)).map(bot => {
+          {visibleBots.map(bot => {
             const other = snapshot.bots[bot.id === 'bot-0' ? 'bot-1' : 'bot-0'];
             const crossing = bot.operation?.kind === 'move' && other.operation?.kind === 'move' && bot.operation.target === other.coord && other.operation.target === bot.coord;
             const otherParked = other.state !== 'finished' && other.state !== 'disabled' && other.operation?.kind !== 'move' && other.operation?.kind !== 'rescue';
             const flyoverStart = bot.operation?.kind === 'move' && otherParked && bot.coord === other.coord;
             const flyoverEnd = bot.operation?.kind === 'move' && otherParked && bot.operation.target === other.coord && bot.goal?.coord !== other.coord;
-            return <Vehicle key={bot.id} bot={bot} crossing={crossing} flyoverStart={flyoverStart} flyoverEnd={flyoverEnd} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} speed={snapshot.speed} />;
+            return <Vehicle key={bot.id} bot={bot} crossing={crossing} flyoverStart={flyoverStart} flyoverEnd={flyoverEnd} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} speed={snapshot.speed} onPose={recordBotPose} />;
           })}
+          {physicsEnabled && <Suspense fallback={null}><PhysicsPlayground key={physicsScope} scope={physicsScope} tiles={snapshot.world} initialCoord={physicsInitial} command={physicsCommand} botPoses={physicsBotPoses} visibleBots={visibleBots.map(bot => bot.id)} onStatus={setPhysicsStatus} onImpacts={setPhysicsImpacts} /></Suspense>}
           <OrbitControls makeDefault target={[0, 0, 0]} minDistance={8} maxDistance={26} minPolarAngle={0.1} maxPolarAngle={Math.PI / 2.1} />
         </Canvas>
         <div className="map-cartouche" aria-hidden="true"><span>JFF · ATLAS DES BOTS</span><strong>Les territoires inconnus</strong><small>Relevé vivant · {allCoords.length} hexagones</small></div>
+        <TrustHud trust={snapshot.trust} lastChange={snapshot.lastTrustChange} perspective={perspective} onSelect={setSelected} />
         <IncidentHud alerts={alerts} bot={viewedBot} cloudVisible={cloudVisible} onSelect={setSelected} />
       </div>
       <div className="tile-inspector"><label>Tuile <select aria-label="Tuile selectionnee" value={selected ?? ''} onChange={event => setSelected(event.target.value ? event.target.value as Coord : null)}><option value="">Aucune</option>{Object.values(snapshot.world).map(candidate => <option key={candidate.coord} value={candidate.coord}>{candidate.coord}</option>)}</select></label><span>{tile ? !revealedKind ? 'Inconnue' : depleted.split('|').includes(tile.coord) ? 'Collectée et épuisée' : revealedKind === 'terrain' ? 'Terrain' : TILE_LABELS[revealedKind] : `${allCoords.length} hexagones`}</span>{revealedKind === 'repair' && snapshot.repairAvailableAt > snapshot.elapsed && <span className="cloud-alert">Réparation disponible dans {Math.ceil((snapshot.repairAvailableAt - snapshot.elapsed) / 1000)} s</span>}{mineLabel && <span className="cloud-alert">{mineLabel}</span>}{selectedInCloud && <span className="cloud-alert">Nuage électrique : traversée dangereuse</span>}{tile && isCurrent && isScanned && tile.kind === 'resource' && <span>{RESOURCE_LABELS.food} {tile.resources.food} / {RESOURCE_LABELS.debris} {tile.resources.debris} / {RESOURCE_LABELS.special} {tile.resources.special}</span>}{tile && developer && <span>Bot 0 : {knowsTileKind(snapshot.bots['bot-0'], tile) ? 'nature connue' : 'nature inconnue'} · Bot 1 : {knowsTileKind(snapshot.bots['bot-1'], tile) ? 'nature connue' : 'nature inconnue'}</span>}</div>
@@ -366,10 +406,10 @@ export default function GameView() {
     </section>
     <aside className="bot-sidebar" aria-label="Bots">
       {(snapshot.phase === 'finished' || snapshot.phase === 'blocked') && <section className="result"><h2>{snapshot.phase === 'blocked' ? 'Partie bloquee' : 'Partie terminee'}</h2><p>{snapshot.winners.length === 0 ? 'Aucun vainqueur' : snapshot.winners.length === 2 ? 'Egalite' : `Victoire du Bot ${snapshot.winners[0].slice(-1)}`}</p><small>{snapshot.endReason}</small></section>}
-      {(developer ? BOT_IDS.map(id => snapshot.bots[id]) : [viewedBot]).map(bot => <BotPanel key={bot.id} bot={bot} winner={snapshot.winners.includes(bot.id)} expert={expert} events={snapshot.events} onOpenExpert={() => setExpertBotId(bot.id)} />)}
+      {(developer ? BOT_IDS.map(id => snapshot.bots[id]) : [viewedBot]).map(bot => <BotPanel key={bot.id} bot={bot} winner={snapshot.winners.includes(bot.id)} expert={expert} events={visibleEvents} onOpenExpert={() => setExpertBotId(bot.id)} />)}
       {expert && <>
         <div className="expert-bot-switch" aria-label="Bot analyse">{Object.values(snapshot.bots).map(bot => <button key={bot.id} aria-pressed={expertBotId === bot.id} onClick={() => setExpertBotId(bot.id)} title={`Analyser le Bot ${bot.id.slice(-1)}`} aria-label={`Analyser le Bot ${bot.id.slice(-1)}`}><BotIcon size={16} /><span>{bot.id.slice(-1)}</span></button>)}</div>
-        <ExpertBotView bot={expertBot} events={snapshot.events} onClose={() => setExpert(false)} />
+        <ExpertBotView bot={expertBot} events={visibleEvents} onClose={() => setExpert(false)} />
       </>}
     </aside>
   </main>;

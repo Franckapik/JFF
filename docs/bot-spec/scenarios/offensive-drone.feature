@@ -81,6 +81,8 @@ Fonctionnalité: Mines, drone offensif et mémoire individuelle
     Quand la mine est encore en armement
     Alors sa position exacte est visible pour cet adversaire
     Et elle est enregistrée dans sa mémoire individuelle
+    Et sa confiance envers le propriétaire baisse de 12 points une seule fois à la première observation
+    Et la mine repérée porte le signal de cette variation sur la scène
     Et le propriétaire conserve la position de sa mine sans péremption
     Et l'autre bot ne reçoit pas de mémoire hors de sa propre vision
 
@@ -167,6 +169,8 @@ Fonctionnalité: Mines, drone offensif et mémoire individuelle
     Alors la mine explose une fois et disparaît
     Et le vaisseau reçoit 40 dégâts dus à la mine
     Et l'impact est identifié comme lié à une mine dans les événements
+    Et la confiance du bot touché envers le propriétaire ennemi baisse de 25 points
+    Mais une mine du bot touché ne change aucune confiance envers l'autre bot
     Et la ressource ou le service sous la mine reste sur la tuile
 
   @MINE-19
@@ -183,6 +187,7 @@ Fonctionnalité: Mines, drone offensif et mémoire individuelle
     Alors la mine explose et disparaît
     Et le drone d'exploration est perdu comme sur une tuile dangereuse
     Et le vaisseau distant ne reçoit aucun dégât de cette explosion
+    Et sa confiance envers le propriétaire ennemi baisse de 18 points
 
   @MINE-21
   Scénario: Exclure déclenchement à distance et réactivation

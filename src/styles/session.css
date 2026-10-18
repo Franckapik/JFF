@@ -257,6 +257,47 @@ h2 {
   background: #315f54;
   border-color: #315f54;
 }
+.physics-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px 10px;
+  padding: 8px 18px;
+  border-bottom: 1px solid #b8c6bb;
+  background: #dfe9df;
+  color: #21483f;
+  font-size: 11px;
+}
+.physics-controls strong {
+  margin-right: 3px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.physics-controls strong span {
+  font-weight: 400;
+}
+.physics-controls button {
+  min-height: 29px;
+  padding: 3px 9px;
+  border: 1px solid #92aea1;
+  border-radius: 4px;
+  background: #f7fbf6;
+  color: #21483f;
+  font-size: 11px;
+  font-weight: 600;
+}
+.physics-controls button:hover:not(:disabled) {
+  background: #fff;
+  border-color: #426b5c;
+}
+.physics-controls-target {
+  color: #4f6b5f;
+}
+.physics-impact-count {
+  color: #245c60;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
 .scene {
   position: relative;
   overflow: hidden;
@@ -307,6 +348,121 @@ h2 {
   gap: 7px;
   pointer-events: none;
 }
+.trust-hud {
+  position: absolute;
+  z-index: 3;
+  top: 18px;
+  right: 18px;
+  width: min(278px, calc(100% - 36px));
+  padding: 13px 14px;
+  border: 1px solid #8ba8a1;
+  border-top: 3px solid #d5e7d8;
+  border-radius: 5px;
+  background: #142b30f2;
+  box-shadow: 0 8px 28px #081b20aa;
+  color: #f2f7f2;
+}
+.trust-hud-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.trust-hud-heading span {
+  color: #b6cfc6;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+.trust-hud-heading strong {
+  font: italic 20px Georgia, serif;
+}
+.trust-hud-row + .trust-hud-row {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #69878066;
+}
+.trust-hud-meta,
+.trust-hud-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.trust-hud-meta > span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+}
+.trust-hud-meta b {
+  padding: 0 3px;
+  color: #aac4bc;
+}
+.trust-hud-meta > strong {
+  font-size: 24px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.trust-hud-meta small {
+  padding-left: 1px;
+  color: #abc5bd;
+  font-size: 11px;
+}
+.trust-hud-track {
+  height: 9px;
+  margin: 8px 0 6px;
+  overflow: hidden;
+  border-radius: 9px;
+  background: #aec3b84a;
+}
+.trust-hud-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #e4aa57;
+  transition: width 350ms ease;
+}
+.trust-hud-row.low .trust-hud-track span { background: #de6955; }
+.trust-hud-row.high .trust-hud-track span { background: #65b994; }
+.trust-hud-row.allied .trust-hud-track span { background: #69d2af; }
+.trust-hud-caption {
+  min-height: 14px;
+  font-size: 10px;
+}
+.trust-hud-caption em {
+  color: #bfd0c7;
+  font-style: normal;
+  white-space: nowrap;
+}
+.trust-hud-caption button {
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: #f2e4c9;
+  font: inherit;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.trust-hud-caption button:hover { text-decoration: underline; }
+.trust-world-marker {
+  pointer-events: none;
+  white-space: nowrap;
+}
+.trust-world-marker span {
+  display: block;
+  padding: 5px 8px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  background: #142b30ee;
+  box-shadow: 0 3px 10px #081b20aa;
+  font-size: 12px;
+  font-weight: 800;
+}
+.trust-world-marker .positive { color: #9cf2bd; }
+.trust-world-marker .negative { color: #ffbd8f; }
 .incident-feed-heading {
   display: flex;
   align-items: center;
@@ -1149,6 +1305,27 @@ thead {
     font-size: 18px;
   }
 }
+@media (max-width: 980px) {
+  .incident-feed {
+    top: auto;
+    bottom: 145px;
+    left: 10px;
+    width: min(310px, calc(100% - 20px));
+    max-height: 96px;
+    overflow-y: auto;
+    pointer-events: auto;
+  }
+  .trust-hud {
+    top: 10px;
+    right: 10px;
+    width: min(310px, calc(100% - 20px));
+    padding: 10px 12px;
+  }
+  .trust-hud-heading { margin-bottom: 7px; }
+  .trust-hud-row + .trust-hud-row { margin-top: 7px; padding-top: 7px; }
+  .trust-hud-meta > strong { font-size: 22px; }
+  .trust-hud-track { margin: 6px 0 4px; }
+}
 @media (max-width: 520px) {
   .toolbar-actions {
     margin-left: 0;
@@ -1175,11 +1352,6 @@ thead {
   .scene {
     height: 450px;
     min-height: 400px;
-  }
-  .incident-feed {
-    top: 10px;
-    left: 10px;
-    width: min(310px, calc(100% - 20px));
   }
   .incident-card {
     min-height: 54px;

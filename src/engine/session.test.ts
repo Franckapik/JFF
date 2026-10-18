@@ -83,6 +83,9 @@ describe("offensive drone", () => {
     expect(snapshot.bots["bot-1"].actions).toBe(0);
     expect(snapshot.events).toContainEqual(expect.objectContaining({ type: "mine.placed", delta: { actions: -1 } }));
     expect(snapshot.events).toContainEqual(expect.objectContaining({ type: "mine.spotted", botId: "bot-0", coord: target }));
+    expect(snapshot.trust).toEqual({ "bot-0": 38, "bot-1": 50 });
+    expect(snapshot.lastTrustChange["bot-0"]).toMatchObject({ type: "trust.changed", botId: "bot-0", coord: target,
+      trust: { toward: "bot-1", cause: "mine-spotted", before: 50, delta: -12, after: 38 } });
     session.advance(799);
     expect(session.getSnapshot().world[target].mine?.state).toBe("arming");
     session.advance(1);
@@ -126,6 +129,41 @@ describe("offensive drone", () => {
     expect(session.getSnapshot().world["1,0"].mine).toBeUndefined();
     expect(session.getSnapshot().events).toContainEqual(expect.objectContaining({ type: "danger.impact", botId: "bot-1", coord: "1,0", reason: "mine" }));
     expect(session.getSnapshot().events).toContainEqual(expect.objectContaining({ type: "mine.exploded", coord: "1,0" }));
+    expect(session.getSnapshot().trust).toEqual({ "bot-0": 50, "bot-1": 25 });
+    expect(session.getSnapshot().lastTrustChange["bot-1"]?.trust).toMatchObject({ toward: "bot-0", cause: "mine-hit", delta: -25 });
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("bounds trust after discovering an enemy mine", () => {
+    const { world, bots } = scenario();
+    world["1,0"].mine = { owner: "bot-1", state: "arming", armsAt: 800 };
+    const session = new GameSession(42, { world, bots, trust: { "bot-0": 5 } });
+    const snapshot = session.getSnapshot();
+    expect(snapshot.trust).toEqual({ "bot-0": 0, "bot-1": 50 });
+    expect(snapshot.lastTrustChange["bot-0"]?.trust).toMatchObject({ cause: "mine-spotted", before: 5, delta: -5, after: 0 });
+    expect(() => new GameSession(42, { world, bots, trust: { "bot-0": 101 } })).toThrow("Invalid initial trust");
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("reduces trust when an exploration drone is lost on an enemy mine", () => {
+    const world = generateWorld(42, 4);
+    for (const tile of Object.values(world)) tile.resources = emptyResources();
+    world["1,0"].mine = { owner: "bot-1", state: "armed", armsAt: 0 };
+    world["-4,1"].resources.food = 20;
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].coord = "0,0";
+    bots["bot-0"].offensiveDroneAvailable = false;
+    bots["bot-0"].known = Object.values(world).filter(tile => !["1,0", "-4,1"].includes(tile.coord)).map(tile => tile.coord);
+    const session = new GameSession(42, { world, bots });
+    session.advance(1);
+    expect(session.getSnapshot().bots["bot-0"].operation).toMatchObject({ kind: "scan", target: "1,0" });
+    session.advance(RULES.stepDuration - 1);
+    const snapshot = session.getSnapshot();
+    expect(snapshot.events).toContainEqual(expect.objectContaining({ type: "drone.lost", botId: "bot-0", reason: "mine" }));
+    expect(snapshot.trust).toEqual({ "bot-0": 32, "bot-1": 50 });
+    expect(snapshot.lastTrustChange["bot-0"]?.trust).toMatchObject({ toward: "bot-1", cause: "drone-lost", delta: -18 });
     session.assertInvariants();
     session.stop();
   });
@@ -1496,6 +1534,8 @@ describe("shared session", () => {
     expect(snapshot.bots["bot-0"].operation).toMatchObject({ kind: "move", target: "-2,0" });
     expect(snapshot.bots["bot-1"].operation).toMatchObject({ kind: "wait", target: "-2,0" });
     expect(snapshot.bots["bot-1"].fuel).toBe(RULES.fuelCapacity);
+    expect(snapshot.trust).toEqual({ "bot-0": 55, "bot-1": 50 });
+    expect(snapshot.lastTrustChange["bot-0"]?.trust).toMatchObject({ toward: "bot-1", cause: "yield", delta: 5 });
     session.advance(RULES.stepDuration - 1);
     snapshot = session.getSnapshot();
     expect(snapshot.bots["bot-0"].operation?.kind).toBe("collect");
@@ -1505,6 +1545,12 @@ describe("shared session", () => {
     expect(snapshot.bots["bot-1"].coord).toBe("-1,0");
     expect(snapshot.bots["bot-1"].statistics.collections).toBe(0);
     expect(snapshot.bots["bot-1"].fuel).toBe(RULES.fuelCapacity);
+    expect(snapshot.trust).toEqual({ "bot-0": 55, "bot-1": 42 });
+    expect(snapshot.lastTrustChange["bot-1"]?.trust).toMatchObject({ toward: "bot-0", cause: "depletion", delta: -8 });
+    expect(snapshot.events.filter(event => event.trust?.cause === "yield")).toHaveLength(1);
+    const withoutNewEvents = session.getSnapshot(snapshot.eventSequence);
+    expect(withoutNewEvents.events).toEqual([]);
+    expect(withoutNewEvents.lastTrustChange).toEqual(snapshot.lastTrustChange);
     session.assertInvariants();
     session.stop();
   });
@@ -1666,7 +1712,7 @@ describe("session protocol", () => {
       expect(TestWorker.instances).toBe(1);
       emit(response);
       expect(useSessionStore.getState().status).toBe("connected");
-      expect(useSessionStore.getState().snapshot?.schemaVersion).toBe(11);
+      expect(useSessionStore.getState().snapshot?.schemaVersion).toBe(12);
       const initialEvents = response.snapshot!.events;
       const additionalEvent = { ...initialEvents[0], sequence: response.snapshot!.eventSequence + 1, time: 100 };
       const incremental = { ...response, snapshot: { ...response.snapshot!, eventSequence: additionalEvent.sequence, events: [additionalEvent] } };

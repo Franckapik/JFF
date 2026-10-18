@@ -1,3 +1,4 @@
+import { Html } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { AlertTriangle, CloudLightning, Fuel, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { useRef } from 'react';
@@ -23,10 +24,15 @@ function IncidentPulse({ alert }: { alert: ActiveIncident }) {
   });
   const color = alert.message.tone === 'electric' ? '#21b5d4' : alert.message.tone === 'recovery' ? '#2f9b71' : '#d74737';
   const [x, , z] = worldPosition(coord);
-  return <mesh ref={ring} position={[x, 0.3, z]} rotation={[-Math.PI / 2, 0, 0]}>
-    <ringGeometry args={[0.53, 0.68, 32]} />
-    <meshBasicMaterial ref={material} color={color} transparent opacity={0.85} />
-  </mesh>;
+  return <group position={[x, 0, z]}>
+    <mesh ref={ring} position={[0, 0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[0.53, 0.68, 32]} />
+      <meshBasicMaterial ref={material} color={color} transparent opacity={0.85} />
+    </mesh>
+    {alert.event.trust && <Html center position={[0, 1.25, 0]} distanceFactor={12} className="trust-world-marker">
+      <span className={alert.event.trust.delta > 0 ? 'positive' : 'negative'}>{alert.event.trust.delta > 0 ? '+' : ''}{alert.event.trust.delta} confiance</span>
+    </Html>}
+  </group>;
 }
 
 export function IncidentPulses({ alerts }: { alerts: ActiveIncident[] }) {
@@ -42,8 +48,8 @@ export function IncidentHud({ alerts, bot, cloudVisible, onSelect }: { alerts: A
   const lowFuel = bot.fuel <= RULES.fuelUrgencyThreshold;
   const threats = [bot.mineWarning && 'Mine à proximité', cloudVisible && 'Nuage électrique visible', criticalDamage && 'Vaisseau ralenti', lowFuel && 'Carburant critique'].filter((threat): threat is string => typeof threat === 'string');
   return <>
-    {alerts.length > 0 && <div className="incident-feed" role="log" aria-label="Incidents récents" aria-live="polite" aria-relevant="additions">
-      <div className="incident-feed-heading"><span className="incident-live-dot" />EN DIRECT <span>· {alerts.length} incident{alerts.length > 1 ? 's' : ''}</span></div>
+    {alerts.length > 0 && <div className="incident-feed" role="log" aria-label="Événements récents" aria-live="polite" aria-relevant="additions">
+      <div className="incident-feed-heading"><span className="incident-live-dot" />EN DIRECT <span>· {alerts.length} événement{alerts.length > 1 ? 's' : ''}</span></div>
       {[...alerts].reverse().map(alert => {
         const Icon = alert.message.tone === 'electric' ? CloudLightning : alert.message.tone === 'recovery' ? ShieldCheck : AlertTriangle;
         return <button type="button" key={alert.event.sequence} className={`incident-card ${alert.message.tone}`} onClick={() => alert.message.coord && onSelect(alert.message.coord)} disabled={!alert.message.coord} aria-label={`${alert.message.title}. ${alert.message.detail}${alert.message.coord ? '. Voir la case' : ''}`}>

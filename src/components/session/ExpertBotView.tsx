@@ -7,6 +7,7 @@ import {
   Eye,
   Footprints,
   Fuel,
+  Handshake,
   History,
   PackageCheck,
   PackageOpen,
@@ -78,6 +79,7 @@ const EVENT_LABELS: Record<SessionEventType, string> = {
   'bot.finished': 'Bot termine',
   'session.finished': 'Session terminee',
   'session.blocked': 'Session bloquee',
+  'trust.changed': 'Confiance modifiée',
 };
 
 const CATEGORY_ICONS: Record<SessionEventCategory, EventIcon> = {
@@ -88,6 +90,7 @@ const CATEGORY_ICONS: Record<SessionEventCategory, EventIcon> = {
   maintenance: Wrench,
   economy: ShoppingCart,
   lifecycle: Activity,
+  social: Handshake,
 };
 
 const CATEGORY_LABELS: Record<SessionEventCategory, string> = {
@@ -98,6 +101,7 @@ const CATEGORY_LABELS: Record<SessionEventCategory, string> = {
   maintenance: 'Maintenance',
   economy: 'Achats',
   lifecycle: 'Cycle de vie',
+  social: 'Relations',
 };
 
 function EventGlyph({ event }: { event: SessionEvent }) {
@@ -122,7 +126,8 @@ function formatEventDetail(event: SessionEvent): string {
   const delta = event.delta
     ? Object.entries(event.delta).map(([key, value]) => `${key} ${value! > 0 ? '+' : ''}${value}`).join(', ')
     : null;
-  return [event.reason, location, target, resources, delta].filter(Boolean).join(' - ');
+  const trust = event.trust ? `Bot ${event.trust.toward.slice(-1)} : ${event.trust.delta > 0 ? '+' : ''}${event.trust.delta} → ${event.trust.after}/100` : null;
+  return [event.reason, location, target, resources, delta, trust].filter(Boolean).join(' - ');
 }
 
 export default function ExpertBotView({ bot, events, onClose }: { bot: BotView; events: SessionEvent[]; onClose: () => void }) {

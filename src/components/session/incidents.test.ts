@@ -38,4 +38,18 @@ describe('incident feedback', () => {
   it('ignores routine events in the live feed', () => {
     expect(incidentMessage({ ...impact, type: 'movement.arrived', category: 'movement' })).toBeNull();
   });
+
+  it('identifies a private trust change, its direction, cause and location', () => {
+    const change: SessionEvent = { ...impact, type: 'trust.changed', category: 'social',
+      reason: 'Mine ennemie repérée pendant l’armement',
+      trust: { toward: 'bot-1', cause: 'mine-spotted', before: 50, delta: -12, after: 38 } };
+    expect(incidentMessage(change)).toMatchObject({
+      title: 'Confiance affaiblie · Bot 0 → Bot 1',
+      detail: '-12 points · Mine ennemie repérée pendant l’armement · Case 1,0',
+      coord: '1,0',
+    });
+    expect(incidentVisible(change, 'bot-0', new Set())).toBe(true);
+    expect(incidentVisible(change, 'bot-1', new Set(['1,0']))).toBe(false);
+    expect(incidentVisible(change, 'developer', new Set())).toBe(true);
+  });
 });
