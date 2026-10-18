@@ -1,6 +1,6 @@
 import { OrbitControls } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Bot as BotIcon, SlidersHorizontal, Waves } from 'lucide-react';
+import { Bot as BotIcon, Maximize2, Minimize2, SlidersHorizontal, Waves } from 'lucide-react';
 import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Color, Group, InstancedMesh, Object3D, Vector3 } from 'three';
 
@@ -15,6 +15,7 @@ import { useSessionStore } from '../../stores/useSessionStore';
 
 import BotPanel from './BotPanel';
 import { TileGlyphs } from './BoardArt';
+import { fitBoardCamera } from './boardCamera';
 import EndlessSeabed from './EndlessSeabed';
 import ExpertBotView from './ExpertBotView';
 import FloodStage from './FloodStage';
@@ -54,13 +55,13 @@ function ScoreBackground({ gameId, score0, score1 }: { gameId: string | null; sc
   return <color attach="background" args={[VOID_COLOR]} />;
 }
 
-function BoardCamera() {
+function BoardCamera({ radius }: { radius: number }) {
   const { camera, size } = useThree();
   useEffect(() => {
-    const compactScale = size.width < 600 ? 1 + (600 - size.width) / 800 : 1;
-    camera.position.set(6.4 * compactScale, 9.3 * compactScale, 7.8 * compactScale);
-    camera.lookAt(0, 0.85, 0);
-  }, [camera, size.width]);
+    const { position, target } = fitBoardCamera(radius, size.width, size.height);
+    camera.position.copy(position);
+    camera.lookAt(target);
+  }, [camera, radius, size.width, size.height]);
   return null;
 }
 
@@ -314,6 +315,7 @@ export default function GameView() {
   const gameId = useSessionStore(state => state.gameId);
   const [perspective, setPerspective] = useState<Perspective>('bot-0');
   const [selected, setSelected] = useState<Coord | null>(null);
+  useEffect(() => { setSelected(null); }, [gameId]);
   const [expert, setExpert] = useState(false);
   const [expertBotId, setExpertBotId] = useState<BotId>('bot-0');
   const [physicsEnabled, setPhysicsEnabled] = useState(false);
@@ -321,7 +323,26 @@ export default function GameView() {
   const [physicsStatus, setPhysicsStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
   const [physicsCommand, setPhysicsCommand] = useState<PhysicsCommand | null>(null);
   const [physicsImpacts, setPhysicsImpacts] = useState<Record<BotId, number>>({ 'bot-0': 0, 'bot-1': 0 });
+  const sceneRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenError, setFullscreenError] = useState(false);
   const physicsBotPoses = useRef<Record<BotId, PhysicsBotPose | null>>({ 'bot-0': null, 'bot-1': null });
+  useEffect(() => {
+    const syncFullscreen = () => setIsFullscreen(document.fullscreenElement === sceneRef.current);
+    document.addEventListener('fullscreenchange', syncFullscreen);
+    return () => document.removeEventListener('fullscreenchange', syncFullscreen);
+  }, []);
+  const toggleFullscreen = async () => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+    setFullscreenError(false);
+    try {
+      if (document.fullscreenElement === scene) await document.exitFullscreen();
+      else await scene.requestFullscreen();
+    } catch {
+      setFullscreenError(true);
+    }
+  };
   const recordBotPose = useCallback((id: BotId, position: Vector3, heading: number) => {
     const pose = physicsBotPoses.current[id];
     if (pose) Object.assign(pose, { x: position.x, y: position.y, z: position.z, heading });
@@ -380,12 +401,12 @@ export default function GameView() {
           {physicsStatus !== 'ready' && <span role="status">{physicsStatus === 'failed' ? 'Physique indisponible' : 'Chargement de la physique…'}</span>}
         </>}
       </div>
-      <div className="scene">
+      <div className="scene" ref={sceneRef}>
         <Canvas shadows dpr={[1, 1.5]} camera={{ position: [7, 10, 8], fov: 45 }} onPointerMissed={() => setSelected(null)}>
-          <BoardCamera />
+          <BoardCamera radius={snapshot.mapRadius} />
           <ScoreBackground gameId={gameId} score0={snapshot.bots['bot-0'].score} score1={snapshot.bots['bot-1'].score} />
           <ambientLight intensity={0.95} /><directionalLight position={[5, 12, 6]} intensity={1.3} castShadow shadow-mapSize={[1024, 1024]} />
-          <EndlessSeabed />
+          <EndlessSeabed radius={snapshot.mapRadius} />
           <FloodStage key={gameId ?? 'preview'} world={snapshot.world} highTide={highTide} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} onSelect={setSelected} />
           <Tiles world={snapshot.world} current={current} explored={explored} scanned={scanned} known={viewedBot.known.join('|')} depleted={depleted} developer={developer} selected={selected} route={expert && !developer ? expertBot.route : []} routeOwner={expert && !developer ? expertBot.id : null} select={setSelected} />
           <TileGlyphs world={snapshot.world} current={current} explored={explored} scanned={scanned} known={viewedBot.known.join('|')} depleted={depleted} developer={developer} selected={selected} />
@@ -405,8 +426,10 @@ export default function GameView() {
             return <Vehicle key={bot.id} bot={bot} crossing={crossing} flyoverStart={flyoverStart} flyoverEnd={flyoverEnd} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} speed={snapshot.speed} onPose={recordBotPose} />;
           })}
           {physicsEnabled && <Suspense fallback={null}><PhysicsPlayground key={physicsScope} scope={physicsScope} tiles={snapshot.world} initialCoord={physicsInitial} command={physicsCommand} botPoses={physicsBotPoses} visibleBots={visibleBots.map(bot => bot.id)} onStatus={setPhysicsStatus} onImpacts={setPhysicsImpacts} /></Suspense>}
-          <OrbitControls makeDefault target={[0, 0, 0]} minDistance={8} maxDistance={26} minPolarAngle={0.1} maxPolarAngle={Math.PI / 2.1} />
+          <OrbitControls makeDefault target={[0, 0.85, 0]} minDistance={8} maxDistance={Math.max(26, snapshot.mapRadius * 12)} minPolarAngle={0.1} maxPolarAngle={Math.PI / 2.1} />
         </Canvas>
+        <button type="button" className="scene-fullscreen-button" onClick={toggleFullscreen} title={isFullscreen ? 'Quitter le plein écran' : 'Afficher la scène en plein écran'} aria-label={isFullscreen ? 'Quitter le plein écran' : 'Afficher la scène en plein écran'} aria-pressed={isFullscreen}>{isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}</button>
+        {fullscreenError && <span className="scene-fullscreen-error" role="alert">Le plein écran est indisponible.</span>}
         <div className="map-cartouche" aria-hidden="true"><span>JFF · ÉTUDE VISUELLE</span><strong>Les deux refuges</strong><small>L’eau monte autour de la tour</small></div>
         <TrustHud trust={snapshot.trust} lastChange={snapshot.lastTrustChange} perspective={perspective} onSelect={setSelected} />
         <IncidentHud alerts={alerts} bot={viewedBot} cloudVisible={cloudVisible} onSelect={setSelected} />

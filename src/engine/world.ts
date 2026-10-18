@@ -1,5 +1,5 @@
 import { addResources, emptyResources, type Resources } from "./resources";
-import { RULES } from "./rules";
+import { MAX_MAP_RADIUS, MIN_MAP_RADIUS, RULES } from "./rules";
 
 export type Coord = `${number},${number}`;
 export type BotId = "bot-0" | "bot-1";
@@ -41,6 +41,10 @@ export function hexDistance(from: Coord, to: Coord): number {
   const column = toColumn - fromColumn;
   const row = toRow - fromRow;
   return (Math.abs(column) + Math.abs(row) + Math.abs(column + row)) / 2;
+}
+
+export function worldRadius(world: World): number {
+  return Math.max(0, ...Object.keys(world).map(coord => hexDistance("0,0", coord as Coord)));
 }
 
 export function hexLine(from: Coord, to: Coord): Coord[] {
@@ -135,8 +139,8 @@ function placeServices(world: World, fuel: Coord, repair: Coord): World {
   return placed;
 }
 
-export function generateWorld(seed: number, radius = 3): World {
-  if (!Number.isSafeInteger(seed) || !Number.isInteger(radius) || radius < 2 || radius > 8) throw new Error("Invalid map configuration");
+export function generateWorld(seed: number, radius: number = RULES.mapRadius): World {
+  if (!Number.isSafeInteger(seed) || !Number.isInteger(radius) || radius < MIN_MAP_RADIUS || radius > MAX_MAP_RADIUS) throw new Error("Invalid map configuration");
   let randomState = seed >>> 0;
   const random = () => {
     const result = nextRandom(randomState);
@@ -240,6 +244,34 @@ export function generateWorld(seed: number, radius = 3): World {
     })
     .sort((left, right) => (specialPriority.get(right.coord) ?? 0) - (specialPriority.get(left.coord) ?? 0))
     .slice(0, RULES.specialPairCount);
+  if (specialPairs.length < RULES.specialPairCount) {
+    const supplemental = Object.values(selected)
+      .filter(tile => {
+        const [column, row] = axial(tile.coord);
+        const mirror: Coord = `${-column},${-row}`;
+        return tile.coord < mirror && selected[mirror]?.kind === tile.kind &&
+          !["resource", "base", "fuel", "repair"].includes(tile.kind);
+      })
+      .map(tile => ({ tile, priority: random() }))
+      .sort((left, right) => right.priority - left.priority)
+      .slice(0, RULES.specialPairCount - specialPairs.length);
+    if (specialPairs.length + supplemental.length < RULES.specialPairCount) throw new Error("Insufficient special resource pairs");
+    for (const { tile } of supplemental) {
+      const [column, row] = axial(tile.coord);
+      const mirror: Coord = `${-column},${-row}`;
+      const resources = {
+        food: 20 + Math.floor(random() * 81),
+        debris: RULES.debrisMin + Math.floor(random() * (RULES.debrisMax - RULES.debrisMin + 1)),
+        special: 0,
+      };
+      for (const coord of [tile.coord, mirror]) {
+        selected[coord].kind = "resource";
+        selected[coord].walkable = true;
+        selected[coord].resources = { ...resources };
+      }
+      specialPairs.push(tile);
+    }
+  }
   for (const tile of specialPairs) {
     const [column, row] = axial(tile.coord);
     const mirror: Coord = `${-column},${-row}`;

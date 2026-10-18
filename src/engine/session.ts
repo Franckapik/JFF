@@ -15,6 +15,7 @@ import {
     pathBetween,
     reachableCoords,
     worldResources,
+    worldRadius,
     type BotId,
     type Coord,
     type World,
@@ -23,6 +24,7 @@ import {
 export function createBot(id: BotId, world: World, seed: number): Bot {
   const base = Object.values(world).find(tile => tile.kind === "base" && tile.owner === id)?.coord;
   if (!base) throw new Error(`Missing base for ${id}`);
+  const fuelStation = Object.values(world).find(tile => tile.kind === "fuel")?.coord;
   return {
     id,
     coord: base,
@@ -46,7 +48,7 @@ export function createBot(id: BotId, world: World, seed: number): Bot {
     mineWarning: false,
     mineMemoryLevel: 1,
     scanned: [],
-    explored: activeCoords(world, { coord: base, radius: RULES.initialExplorationRadius }),
+    explored: rememberTerrain(activeCoords(world, { coord: base, radius: RULES.initialExplorationRadius }), fuelStation ? [fuelStation] : []),
     randomState: (seed ^ (id === "bot-0" ? 0x9e3779b9 : 0x85ebca6b)) >>> 0,
     operation: null,
     route: [],
@@ -87,8 +89,9 @@ export class GameSession {
   private exploredSinceStart = 0;
   private nextCloudAt = RULES.cloudExplorationInterval;
   readonly seed: number;
+  readonly mapRadius: number;
 
-  constructor(seed: number, scenario?: { world: World; bots?: Record<BotId, Bot>; cloud?: ElectricCloud | null; repairAvailableAt?: number; trust?: Partial<Record<BotId, number>> }) {
+  constructor(seed: number, scenario?: { world?: World; radius?: number; bots?: Record<BotId, Bot>; cloud?: ElectricCloud | null; repairAvailableAt?: number; trust?: Partial<Record<BotId, number>> }) {
     if (!Number.isSafeInteger(seed)) throw new Error("Invalid seed");
     this.seed = seed >>> 0;
     this.cloudRandomState = (this.seed ^ 0xc10d1234) >>> 0;
@@ -101,7 +104,9 @@ export class GameSession {
         this.trust[id] = value;
       }
     }
-    this.world = structuredClone(scenario?.world ?? generateWorld(this.seed, RULES.mapRadius));
+    this.world = structuredClone(scenario?.world ?? generateWorld(this.seed, scenario?.radius ?? RULES.mapRadius));
+    this.mapRadius = worldRadius(this.world);
+    if (scenario?.radius !== undefined && scenario.radius !== this.mapRadius) throw new Error("Map radius does not match world");
     const startingBots = BOT_IDS.map(id => structuredClone(scenario?.bots?.[id] ?? createBot(id, this.world, this.seed)));
     if (startingBots[0].coord === startingBots[1].coord) throw new Error("Bots cannot start on the same tile");
     for (const bot of startingBots) {
@@ -1134,8 +1139,9 @@ export class GameSession {
 
   getSnapshot(afterEventSequence = 0): SessionSnapshot {
     return structuredClone({
-      schemaVersion: 12,
+      schemaVersion: 13,
       seed: this.seed,
+      mapRadius: this.mapRadius,
       revision: this.revision,
       worldRevision: this.worldRevision,
       elapsed: this.elapsed,

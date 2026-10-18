@@ -1,8 +1,11 @@
 import type { Resources } from "./resources";
 
+export const MIN_MAP_RADIUS = 2;
+export const MAX_MAP_RADIUS = 8;
+
 export const RULES = {
   capacity: { food: 200, debris: 1800, special: 3 } satisfies Resources,
-  mapRadius: 3,
+  mapRadius: 5,
   initialExplorationRadius: 1,
   maxExplorationRadius: 3,
   upgradePrices: { 1: 50, 2: 100 } as Record<number, number>,

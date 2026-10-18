@@ -1,9 +1,10 @@
 import type { SessionSnapshot } from "./model";
+import { MAX_MAP_RADIUS, MIN_MAP_RADIUS, RULES } from "./rules";
 import { GameSession } from "./session";
 
 export type SessionRequest =
   | { protocol: 1; type: "CONNECT" | "INIT" | "REQUEST_STATE" | "PING" | "DISCONNECT" }
-  | { protocol: 1; type: "RESET"; gameId: string | null; seed: number }
+  | { protocol: 1; type: "RESET"; gameId: string | null; seed: number; radius?: number }
   | { protocol: 1; type: "CONTROL"; gameId: string; command: "PAUSE" | "RESUME" | "STEP" | "SPEED"; speed?: number };
 
 export interface SessionResponse {
@@ -26,7 +27,8 @@ export function isSessionRequest(input: unknown): input is SessionRequest {
       typeof message.seed === "number" &&
       Number.isInteger(message.seed) &&
       message.seed >= 0 &&
-      message.seed <= 0xffffffff
+      message.seed <= 0xffffffff &&
+      (message.radius === undefined || (typeof message.radius === "number" && Number.isInteger(message.radius) && message.radius >= MIN_MAP_RADIUS && message.radius <= MAX_MAP_RADIUS))
     );
   return (
     message.type === "CONTROL" &&
@@ -66,7 +68,7 @@ export class SessionHost {
     }
     if (input.type === "RESET" || input.type === "CONTROL") {
       if (!this.session || input.gameId !== this.gameId) return this.snapshot("Commande ignoree : cette partie a ete remplacee");
-      if (input.type === "RESET") this.reset(input.seed);
+      if (input.type === "RESET") this.reset(input.seed, input.radius ?? RULES.mapRadius);
       else {
         switch (input.command) {
           case "PAUSE":
@@ -99,8 +101,8 @@ export class SessionHost {
     this.session?.stop();
   }
 
-  private reset(seed: number) {
-    const replacement = new GameSession(seed);
+  private reset(seed: number, radius: number = RULES.mapRadius) {
+    const replacement = new GameSession(seed, { radius });
     this.session?.stop();
     this.session = replacement;
     this.gameId = `${this.instanceId}:${++this.gameNumber}`;

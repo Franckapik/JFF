@@ -43,7 +43,7 @@ stock supplementaire. La session peut finir normalement apres les derniers
 depots ou passer en `blocked` lorsqu'aucun objectif ou retour n'est faisable.
 Le blocage n'invente ni vainqueur ni perte de cargaison pour un vaisseau immobilise.
 
-Le snapshot est en `schemaVersion: 11` et transporte des evenements metier
+Le snapshot est en `schemaVersion: 13` et transporte des evenements metier
 structures pour le mode expert ; le protocole de commandes reste en version 1.
 Un onglet avec un ancien worker doit etre ferme avant reconnexion. L'export
 JSON est un diagnostic, pas une sauvegarde restaurable.
@@ -57,7 +57,7 @@ La CI lance `npm ci` puis `scripts/pre-commit.sh`, qui ajoute un audit des
 dependances. Les controles des vues sur le build servi doivent couvrir
 `/vue1`, `/vue2`, la connexion au worker et les commandes principales.
 
-`npm run benchmark` mesure les cartes de 37 et 217 cases, le temps des ticks,
+`npm run benchmark` mesure les cartes de 37, 91 et 217 cases, le temps des ticks,
 la taille des snapshots et la memoire sur la machine courante. Les anciennes
 mesures locales ne certifient pas d'autres navigateurs ou appareils. Un chunk
 3D superieur a 500 ko peut produire un avertissement Vite sans echec du build.

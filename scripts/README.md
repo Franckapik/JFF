@@ -26,7 +26,7 @@ npm run benchmark
 npm run benchmark -- --games=200 --output=report.session-performance.json
 ```
 
-Le benchmark mesure les ticks, snapshots et allocations sur cartes de 37 et
+Le benchmark mesure les ticks, snapshots et allocations sur cartes de 37, 91 et
 217 cases. Son rapport est local et ignore par Git ; un budget de temps est
 specifique a la machine qui l'execute. Pour le rendu en developpement, ouvrir
 `/vue1?profile` ou `/vue2?profile` et lire

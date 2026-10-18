@@ -29,7 +29,7 @@ try {
   };
   for (let seed = 0; seed < 5; seed++) play(seed);
   const timings = [];
-  for (const radius of [3, 8]) {
+  for (const radius of [3, 5, 8]) {
     const session = new GameSession(42, { world: generateWorld(42, radius) });
     const durations = [];
     let maxBytes = 0;

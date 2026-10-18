@@ -26,7 +26,7 @@ session et toutes les vues observent donc les memes reglages.
 | Capacite | `capacity.food` | 200 | Limite independante de nourriture transportee. |
 | Capacite | `capacity.debris` | 1 800 | Limite independante de debris transportes. |
 | Capacite | `capacity.special` | 3 | Limite independante de ressources speciales. |
-| Carte | `mapRadius` | 3 | Produit une carte hexagonale de 37 cases. |
+| Carte | `mapRadius` | 5 | Valeur par défaut : 91 cases. Le choix de 2 à 8 couronnes est transmis au moteur à chaque nouvelle partie. |
 | Exploration | `initialExplorationRadius` | 1 | Rayon initial du drone et rayon conserve autour du vaisseau apres sa destruction. |
 | Exploration | `maxExplorationRadius` | 3 | Rayon maximal du drone. |
 | Economie | `upgradePrices` | 50, puis 100 | Cout des passages aux rayons 2 et 3, a racheter apres chaque perte du drone. |
@@ -205,7 +205,11 @@ au total. Chaque plateau contient exactement dix ressources speciales. Ces
 mesures sont un point de controle reproductible, pas une garantie pour toutes
 les graines ; les issues individuelles ont change.
 
-## Pourquoi le carburant reste presque toujours eleve
+## Analyse historique du carburant sur la carte de rayon 3
+
+Les observations ci-dessous portent sur l'ancienne taille par défaut. Elles ne
+décrivent pas la carte de rayon 5, où la station de carburant est connue des
+deux bots dès l'initialisation.
 
 Le carburant participe bien aux decisions, mais plusieurs regles reduisent
 fortement son influence observable :

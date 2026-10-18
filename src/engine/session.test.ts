@@ -40,7 +40,7 @@ describe("resource transactions", () => {
 
 describe("offensive drone", () => {
   function scenario() {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) {
       tile.resources = emptyResources();
       if (tile.kind !== "base") {
@@ -359,7 +359,7 @@ describe("offensive drone", () => {
 
 describe("electric cloud", () => {
   function scanScenario(target: Coord, cloudCoord: Coord, expiresAt: number = RULES.cloudLifetime, seed = 42, dangerCoord?: Coord) {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) {
       tile.resources = emptyResources();
       if (tile.kind === "danger") tile.kind = "empty";
@@ -430,7 +430,7 @@ describe("electric cloud", () => {
   });
 
   function cloudMovesIntoFlight(target: Coord, nextMoveAt: number) {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) {
       tile.resources = emptyResources();
       if (tile.kind === "danger") tile.kind = "empty";
@@ -501,7 +501,7 @@ describe("electric cloud", () => {
 
   it("damages a ship on arrival at the cloud tile, but not beside it", () => {
     const makeSession = (cloudCoord: Coord) => {
-      const world = generateWorld(42);
+      const world = generateWorld(42, 3);
       for (const tile of Object.values(world)) tile.resources = emptyResources();
       world["1,0"].kind = "empty";
       world["1,0"].walkable = true;
@@ -529,7 +529,7 @@ describe("electric cloud", () => {
   });
 
   it("applies one hit when the cloud moves onto a stationary ship", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     world["-1,0"].kind = "resource";
     world["-1,0"].walkable = true;
@@ -615,7 +615,7 @@ describe("electric cloud", () => {
 
 describe("shared session", () => {
   it("shows an obstacle but hides terrain and scan targets behind it", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     world["1,0"].kind = "obstacle";
     world["1,0"].walkable = false;
     world["2,0"].kind = "resource";
@@ -650,7 +650,7 @@ describe("shared session", () => {
   });
 
   it("shows ground resource markers only on scanned targets still inside ship vision", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bot = createBot("bot-0", world, 42);
     const targets = world[bot.base].neighbors.slice(0, 2);
     for (const coord of targets) {
@@ -667,7 +667,7 @@ describe("shared session", () => {
   });
 
   it("reveals public services in view but keeps danger hidden until discovered", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const known = new Set(["-3,0"] as const);
     const scanned = new Set<`${number},${number}`>();
     const danger = world["-2,0"];
@@ -680,7 +680,7 @@ describe("shared session", () => {
   });
 
   it("plans around a danger only after this bot has discovered it", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     world["-1,0"].kind = "danger";
     world["-1,0"].walkable = true;
@@ -703,7 +703,7 @@ describe("shared session", () => {
   });
 
   it("keeps terrain memory separate for each bot after the ship leaves its radius", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].goal = { coord: "-1,0", reason: "explore" };
     const session = new GameSession(42, { world, bots });
@@ -724,7 +724,7 @@ describe("shared session", () => {
   });
 
   it("accumulates repeated harvests of one tile without counting it twice", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     world["-2,0"].kind = "resource";
     world["-2,0"].walkable = true;
@@ -746,7 +746,7 @@ describe("shared session", () => {
   });
 
   it.each([0, 10])("reports blocked objectives or final returns with %i resources without awarding a normal victory", remainingFood => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) {
       tile.resources = emptyResources();
       tile.walkable = true;
@@ -777,7 +777,7 @@ describe("shared session", () => {
   });
 
   it.each(["fuel", "repair", "base"] as const)("does not scan a public %s tile", kind => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     const target = Object.values(world).find(tile => tile.kind === kind && tile.owner !== "bot-0")!;
     const origin = target.neighbors.find(coord => world[coord].walkable)!;
@@ -797,27 +797,21 @@ describe("shared session", () => {
     session.stop();
   });
 
-  it("plans maintenance only toward a fuel station already seen by this bot", () => {
-    const world = generateWorld(42);
+  it("plans maintenance toward the public fuel station before exploring it", () => {
+    const world = generateWorld(42, 3);
     const fuel = Object.values(world).find(tile => tile.kind === "fuel")!;
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].fuel = RULES.fuelUrgencyThreshold;
     bots["bot-1"].damage = 100;
-    expect(bots["bot-0"].explored).not.toContain(fuel.coord);
-    const undiscovered = new GameSession(42, { world, bots });
-    undiscovered.advance(1);
-    expect(undiscovered.getSnapshot().bots["bot-0"].goal?.reason).not.toBe("fuel");
-    undiscovered.stop();
-
-    bots["bot-0"].explored.push(fuel.coord);
-    const discovered = new GameSession(42, { world, bots });
-    discovered.advance(1);
-    expect(discovered.getSnapshot().bots["bot-0"].goal).toEqual({ coord: fuel.coord, reason: "fuel" });
-    discovered.stop();
+    expect(bots["bot-0"].explored).toContain(fuel.coord);
+    const session = new GameSession(42, { world, bots });
+    session.advance(1);
+    expect(session.getSnapshot().bots["bot-0"].goal).toEqual({ coord: fuel.coord, reason: "fuel" });
+    session.stop();
   });
 
   it("does not count a contested and depleted tile as a collection attempt", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     world["-2,0"].kind = "resource";
     world["-2,0"].walkable = true;
@@ -856,10 +850,10 @@ describe("shared session", () => {
       } else expect(snapshot.winners, `seed ${seed}`).toEqual([]);
       session.stop();
     }
-  }, 30000);
+  }, 90000);
 
   it.each(["fuel", "repair"] as const)("performs only the %s service at its station", service => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     const station = Object.values(world).find(tile => tile.kind === service)!;
     Object.assign(bots["bot-0"], {
@@ -894,7 +888,7 @@ describe("shared session", () => {
   });
 
   it("deposits cargo at the base while keeping damage until the repair station", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     Object.assign(bots["bot-0"], { damage: 60, fuel: 30, cargo: { food: 20, debris: 30, special: 1 } });
     const session = new GameSession(42, { world, bots });
@@ -913,7 +907,7 @@ describe("shared session", () => {
   });
 
   it("credits provisions, debris and special to separate accounts", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].cargo = { food: 40, debris: 0, special: 2 };
     const session = new GameSession(42, { world, bots });
@@ -928,7 +922,7 @@ describe("shared session", () => {
   });
 
   it("does not repair without enough deposited debris", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     const station = Object.values(world).find(tile => tile.kind === "repair")!;
     Object.assign(bots["bot-0"], { coord: station.coord, damage: 70, budget: RULES.repairPrice - 1,
@@ -943,7 +937,7 @@ describe("shared session", () => {
   });
 
   it("prioritizes debris while short of funds and food once funded", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) {
       tile.resources = emptyResources();
       if (tile.kind !== "base") { tile.kind = "empty"; tile.walkable = true; }
@@ -970,7 +964,7 @@ describe("shared session", () => {
   });
 
   it("seeks a first special action before favoring provisions again", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) {
       tile.resources = emptyResources();
       if (tile.kind !== "base") { tile.kind = "empty"; tile.walkable = true; }
@@ -997,7 +991,7 @@ describe("shared session", () => {
   });
 
   it("does not plan base service for damage alone and heads to the known repair station", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     const station = Object.values(world).find(tile => tile.kind === "repair")!;
     bots["bot-0"].damage = 70;
@@ -1016,7 +1010,7 @@ describe("shared session", () => {
   });
 
   it("reduces effective radius at 50 damage and restores it after repair", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     const station = Object.values(world).find(tile => tile.kind === "repair")!;
     Object.assign(bots["bot-0"], { coord: station.coord, radius: 3, damage: 50, budget: RULES.repairPrice, score: RULES.repairPrice,
@@ -1032,7 +1026,7 @@ describe("shared session", () => {
   });
 
   it("doubles ship movement duration at 70 damage", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].damage = 70;
     bots["bot-0"].goal = { coord: "-2,0", reason: "explore" };
@@ -1047,7 +1041,7 @@ describe("shared session", () => {
   });
 
   it("waits for the repair station cooldown before starting service", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     const station = Object.values(world).find(tile => tile.kind === "repair")!;
     Object.assign(bots["bot-0"], { coord: station.coord, damage: 60, budget: RULES.repairPrice, score: RULES.repairPrice,
@@ -1064,7 +1058,7 @@ describe("shared session", () => {
   });
 
   it("takes a worthwhile known-danger shortcut to a resource tile", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) {
       tile.resources = emptyResources();
       tile.walkable = true;
@@ -1084,7 +1078,7 @@ describe("shared session", () => {
   });
 
   it("travels to a repair station before repairing", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     Object.assign(bots["bot-0"], { coord: "0,0", fuel: 40, damage: 70, budget: RULES.repairPrice, score: RULES.repairPrice,
       deposited: { food: RULES.repairPrice, debris: RULES.repairPrice, special: 0 } });
@@ -1107,7 +1101,7 @@ describe("shared session", () => {
   });
 
   it("replaces only a lost drone at its own base without reducing score", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     for (const bot of Object.values(bots)) Object.assign(bot, { score: 50, budget: 50, deposited: { food: 50, debris: 50, special: 0 } });
     bots["bot-0"].droneAvailable = false;
@@ -1123,7 +1117,7 @@ describe("shared session", () => {
   });
 
   it("buys radius three for 100 without ending the game", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     const bot = bots["bot-0"];
     Object.assign(bot, { radius: 2, score: 180, budget: 130, spent: 50, deposited: { food: 180, debris: 180, special: 0 } });
@@ -1142,7 +1136,7 @@ describe("shared session", () => {
   });
 
   it("scans from the mobile ship and keeps discoveries individual", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     world["2,0"].resources = { food: 20, debris: 0, special: 0 };
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
@@ -1177,7 +1171,7 @@ describe("shared session", () => {
   });
 
   it("sends a drone with insufficient scan fuel to a fuel station", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     world["0,0"].kind = "empty";
     world["0,0"].walkable = true;
@@ -1199,7 +1193,7 @@ describe("shared session", () => {
   });
 
   it.each([0, 1])("does not move or refuel a ship with %i fuel at its base", fuel => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].fuel = fuel;
     const session = new GameSession(42, { world, bots });
@@ -1212,7 +1206,7 @@ describe("shared session", () => {
   });
 
   it("applies danger damage once per arrival and charges every waypoint", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.walkable = axial(tile.coord)[1] === 0;
     world["-1,0"].kind = "danger";
     world["-1,0"].resources = emptyResources();
@@ -1242,7 +1236,7 @@ describe("shared session", () => {
   });
 
   it("deposits final cargo before awarding a tie", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     Object.assign(bots["bot-0"], { coord: "-2,0", cargo: { food: 10, debris: 0, special: 0 } });
@@ -1262,7 +1256,7 @@ describe("shared session", () => {
   });
 
   it("awards victory from provisions even when the rival has more debris and actions", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     Object.assign(bots["bot-0"], { score: 10, deposited: { food: 10, debris: 0, special: 0 } });
@@ -1369,7 +1363,7 @@ describe("shared session", () => {
   });
 
   it("immobilizes a ship at 100 damage while preserving its cargo and score", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     Object.assign(bots["bot-0"], {
@@ -1396,7 +1390,7 @@ describe("shared session", () => {
   });
 
   it("keeps cargo on the ship when a mine impact reaches 100 damage", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     world["-2,1"].walkable = true;
     world["-2,1"].kind = "empty";
     world["-2,1"].resources = emptyResources();
@@ -1455,7 +1449,7 @@ describe("shared session", () => {
   });
 
   it("rescues an out-of-fuel ship without adding cargo to the score", () => {
-    const world = generateWorld(1);
+    const world = generateWorld(1, 3);
     const bots = { "bot-0": createBot("bot-0", world, 1), "bot-1": createBot("bot-1", world, 1) };
     Object.assign(bots["bot-0"], { coord: "-2,0", fuel: 0, cargo: { food: 20, debris: 10, special: 1 } });
     const session = new GameSession(1, { world, bots });
@@ -1474,7 +1468,7 @@ describe("shared session", () => {
   });
 
   it("blocks a session when both ships are immobilized", () => {
-    const world = generateWorld(1);
+    const world = generateWorld(1, 3);
     const bots = { "bot-0": createBot("bot-0", world, 1), "bot-1": createBot("bot-1", world, 1) };
     bots["bot-0"].damage = 100;
     bots["bot-1"].damage = 100;
@@ -1488,7 +1482,7 @@ describe("shared session", () => {
   });
 
   it("serializes contested collection of stock larger than one compartment", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     world["-2,0"].kind = "resource";
     world["-2,0"].walkable = true;
@@ -1509,14 +1503,14 @@ describe("shared session", () => {
   });
 
   it("rejects an initial scenario with two bots on the same tile", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-1"].coord = bots["bot-0"].coord;
     expect(() => new GameSession(42, { world, bots })).toThrow("Bots cannot start on the same tile");
   });
 
   it("reserves a contested resource on the final step and releases the loser without spending fuel", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     world["-2,0"].kind = "resource";
     world["-2,0"].walkable = true;
@@ -1556,7 +1550,7 @@ describe("shared session", () => {
   });
 
   it("keeps an occupied intermediate waypoint flyable", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     for (const coord of ["-2,0", "-1,0"] as const) {
       world[coord].kind = "resource";
@@ -1583,7 +1577,7 @@ describe("shared session", () => {
   });
 
   it("queues for the fuel station without consuming fuel while waiting", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     const station = Object.values(world).find(tile => tile.kind === "fuel")!;
     const neighbors = station.neighbors.filter(coord => world[coord].walkable);
@@ -1619,7 +1613,7 @@ describe("shared session", () => {
   });
 
   it("lets two waiting bots exchange adjacent destinations in one airborne crossing", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
     world["-2,0"].kind = "resource";
     world["-2,0"].walkable = true;
@@ -1642,7 +1636,7 @@ describe("shared session", () => {
   });
 
   it("buys an individual radius upgrade without reducing the score", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     const bot = bots["bot-0"];
     bot.deposited = { food: 80, debris: 80, special: 0 };
@@ -1663,7 +1657,7 @@ describe("shared session", () => {
   });
 
   it("charges the last return step and deposits at the base without refueling", () => {
-    const world = generateWorld(42);
+    const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     Object.assign(bots["bot-0"], { coord: "-2,0", fuel: 30, cargo: { food: 20, debris: 10, special: 3 } });
     const session = new GameSession(42, { world, bots });
@@ -1712,7 +1706,7 @@ describe("session protocol", () => {
       expect(TestWorker.instances).toBe(1);
       emit(response);
       expect(useSessionStore.getState().status).toBe("connected");
-      expect(useSessionStore.getState().snapshot?.schemaVersion).toBe(12);
+      expect(useSessionStore.getState().snapshot?.schemaVersion).toBe(13);
       const initialEvents = response.snapshot!.events;
       const additionalEvent = { ...initialEvents[0], sequence: response.snapshot!.eventSequence + 1, time: 100 };
       const incremental = { ...response, snapshot: { ...response.snapshot!, eventSequence: additionalEvent.sequence, events: [additionalEvent] } };
@@ -1751,19 +1745,26 @@ describe("session protocol", () => {
   it("keeps initialization idempotent and rejects stale and malformed commands", () => {
     const host = new SessionHost("host", 0);
     const first = host.receive({ protocol: 1, type: "CONNECT" });
+    expect(first.snapshot!.mapRadius).toBe(5);
+    expect(Object.keys(first.snapshot!.world)).toHaveLength(91);
     host.advance(1000);
     const second = host.receive({ protocol: 1, type: "INIT" });
     expect(second.gameId).toBe(first.gameId);
     expect(second.snapshot!.elapsed).toBe(1000);
-    const reset = host.receive({ protocol: 1, type: "RESET", gameId: first.gameId, seed: 42 });
+    const reset = host.receive({ protocol: 1, type: "RESET", gameId: first.gameId, seed: 42, radius: 3 });
     expect(reset.gameId).not.toBe(first.gameId);
     expect(reset.snapshot!.seed).toBe(42);
+    expect(reset.snapshot!.mapRadius).toBe(3);
+    expect(Object.keys(reset.snapshot!.world)).toHaveLength(37);
     expect(reset.snapshot!.elapsed).toBe(0);
     const cursor = reset.snapshot!.eventSequence;
     expect(host.snapshot(null, cursor).snapshot!.events).toEqual([]);
     host.advance(1000);
     expect(host.snapshot(null, cursor).snapshot!.events.every(event => event.sequence > cursor)).toBe(true);
     expect(host.receive({ protocol: 1, type: "RESET", gameId: first.gameId, seed: 99 }).type).toBe("ERROR");
+    expect(host.receive({ protocol: 1, type: "RESET", gameId: reset.gameId, seed: 42, radius: 1 }).type).toBe("ERROR");
+    expect(host.receive({ protocol: 1, type: "RESET", gameId: reset.gameId, seed: 42, radius: 9 }).type).toBe("ERROR");
+    expect(host.snapshot().snapshot!.mapRadius).toBe(3);
     expect(host.receive({ protocol: 1, type: "CONTROL", gameId: reset.gameId, command: "SPEED", speed: "8" }).type).toBe("ERROR");
     expect(host.receive(null).type).toBe("ERROR");
     expect(host.receive({ protocol: 1, type: ["PING"] }).type).toBe("ERROR");
@@ -1774,12 +1775,26 @@ describe("session protocol", () => {
     expect(host.snapshot().snapshot!.elapsed).toBe(pausedElapsed);
     host.stop();
   });
+
+  it("shares a requested radius across the session and can reset it again", () => {
+    const host = new SessionHost("sizes", 42);
+    const initial = host.receive({ protocol: 1, type: "CONNECT" });
+    const large = host.receive({ protocol: 1, type: "RESET", gameId: initial.gameId, seed: 42, radius: 8 });
+    expect(large.snapshot!.mapRadius).toBe(8);
+    expect(Object.keys(large.snapshot!.world)).toHaveLength(217);
+    expect(large.snapshot!.bots["bot-0"].base).toBe("-8,0");
+    const small = host.receive({ protocol: 1, type: "RESET", gameId: large.gameId, seed: 42, radius: 2 });
+    expect(small.snapshot!.mapRadius).toBe(2);
+    expect(Object.keys(small.snapshot!.world)).toHaveLength(19);
+    expect(small.snapshot!.bots["bot-0"].base).toBe("-2,0");
+    host.stop();
+  });
 });
 
 describe("hexagonal world", () => {
   it("limits special action resources to ten in symmetric pairs", () => {
     for (let seed = 0; seed < 100; seed++) {
-      const world = generateWorld(seed);
+      const world = generateWorld(seed, 3);
       expect(Object.values(world).reduce((total, tile) => total + tile.resources.special, 0)).toBe(10);
       for (const tile of Object.values(world)) {
         const [column, row] = axial(tile.coord);
@@ -1791,7 +1806,7 @@ describe("hexagonal world", () => {
   it("varies the single shared stations while keeping both bases close to each service", () => {
     const layouts = new Set<string>();
     for (let seed = 0; seed < 64; seed++) {
-      const world = generateWorld(seed);
+      const world = generateWorld(seed, 3);
       const fuel = Object.values(world).find(tile => tile.kind === "fuel")!;
       const repair = Object.values(world).find(tile => tile.kind === "repair")!;
       layouts.add(`${fuel.coord}|${repair.coord}`);
@@ -1804,7 +1819,7 @@ describe("hexagonal world", () => {
     expect(layouts.size).toBeGreaterThan(1);
   });
 
-  it.each([2, 8])("supports generator radius %i with connected usable tiles", radius => {
+  it.each([2, 5, 8])("supports generator radius %i with connected usable tiles", radius => {
     const world = generateWorld(0, radius);
     expect(Object.keys(world)).toHaveLength(1 + 3 * radius * (radius + 1));
     expect(reachableCoords(world, `${-radius},0`)).toHaveLength(Object.values(world).filter(tile => tile.walkable).length);
@@ -1816,8 +1831,8 @@ describe("hexagonal world", () => {
   });
 
   it.each([0, 1, 42, 4294967295])("generates a balanced connected world for seed %i", seed => {
-    const world = generateWorld(seed);
-    expect(world).toEqual(generateWorld(seed));
+    const world = generateWorld(seed, 3);
+    expect(world).toEqual(generateWorld(seed, 3));
     expect(Object.keys(world)).toHaveLength(37);
     expect(reachableCoords(world, "-3,0")).toHaveLength(Object.values(world).filter(tile => tile.walkable).length);
     for (const kind of ["fuel", "repair"] as const) {
@@ -1838,8 +1853,17 @@ describe("hexagonal world", () => {
     }
   });
 
+  it("uses 91 tiles by default and makes the fuel station public to both bots", () => {
+    const world = generateWorld(42);
+    expect(Object.keys(world)).toHaveLength(91);
+    const fuel = Object.values(world).find(tile => tile.kind === "fuel")!.coord;
+    for (const id of ["bot-0", "bot-1"] as const) {
+      expect(createBot(id, world, 42).explored).toContain(fuel);
+    }
+  });
+
   it("gives all six neighbors the same logical and rendered distance", () => {
-    const world = generateWorld(0);
+    const world = generateWorld(0, 3);
     expect(world["0,0"].neighbors).toHaveLength(6);
     for (const coord of world["0,0"].neighbors) {
       expect(hexDistance("0,0", coord)).toBe(1);
@@ -1849,7 +1873,7 @@ describe("hexagonal world", () => {
   });
 
   it("does not manufacture a route to a missing or blocked tile", () => {
-    const world = generateWorld(0);
+    const world = generateWorld(0, 3);
     expect(pathBetween(world, "-3,0", "99,99")).toEqual([]);
     world["0,0"].walkable = false;
     expect(pathBetween(world, "0,0", "0,0")).toEqual([]);

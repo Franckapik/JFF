@@ -13,7 +13,7 @@ function variation(q: number, r: number): number {
 }
 
 /** A camera-following, world-aligned visual field. These hexes never enter the game world. */
-export default function EndlessSeabed() {
+export default function EndlessSeabed({ radius }: { radius: number }) {
   const face = useRef<InstancedMesh>(null);
   const rim = useRef<InstancedMesh>(null);
   const lastCenter = useRef('');
@@ -26,7 +26,7 @@ export default function EndlessSeabed() {
     if (!face.current || !rim.current) return;
     const centerR = Math.round(camera.position.z / 1.5);
     const centerQ = Math.round(camera.position.x / SQRT_THREE - centerR / 2);
-    const center = `${centerQ},${centerR}`;
+    const center = `${centerQ},${centerR}:${radius}`;
     if (center === lastCenter.current) return;
     lastCenter.current = center;
 
@@ -34,7 +34,7 @@ export default function EndlessSeabed() {
     for (let q = centerQ - RADIUS; q <= centerQ + RADIUS; q++) {
       for (let r = centerR - RADIUS; r <= centerR + RADIUS; r++) {
         // Keep the playable island distinct, even as the decorative field moves.
-        if (Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)) <= 3) continue;
+        if (Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)) <= radius) continue;
         const edgeDistance = Math.max(Math.abs(q - centerQ), Math.abs(r - centerR));
         const fade = Math.min(1, Math.max(0.0001, (RADIUS - edgeDistance) / 5));
         const irregularity = variation(q, r);

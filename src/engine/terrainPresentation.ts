@@ -11,7 +11,6 @@ export function terrainLevel(coord: Coord): number {
   const variation = (Math.abs(q * 7 + r * 11) + Math.abs(q * 3 - r * 5)) % 2;
   if (ring === 1) return 1 + variation;
   if (ring === 2) return variation;
-  if (r === 0 && Math.abs(q) === 3) return 1;
   return variation;
 }
 

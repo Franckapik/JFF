@@ -44,6 +44,7 @@ Fonctionnalité: Équité de la carte initiale générée
       | rayon | tuiles |
       | 2     | 19     |
       | 3     | 37     |
+      | 5     | 91     |
       | 8     | 217    |
 
   @FAIR-05

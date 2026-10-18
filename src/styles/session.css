@@ -171,6 +171,10 @@ h2 {
   font-variant-numeric: tabular-nums;
   font-size: 12px;
 }
+.seed-control select {
+  max-width: 118px;
+  font-size: 12px;
+}
 .error-banner {
   display: flex;
   justify-content: space-between;
@@ -324,6 +328,47 @@ h2 {
   height: calc(100dvh - 224px);
   width: 100%;
   background: #18262c;
+}
+.scene:fullscreen {
+  width: 100vw;
+  height: 100dvh;
+  min-height: 0;
+}
+.scene-fullscreen-button {
+  position: absolute;
+  z-index: 4;
+  right: 27px;
+  bottom: 118px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #9cb7ad;
+  border-radius: 4px;
+  background: #172d32e8;
+  color: #f1f4ed;
+  box-shadow: 0 3px 12px #09171a4d;
+  cursor: pointer;
+}
+.scene-fullscreen-button:hover {
+  background: #315f54;
+}
+.scene-fullscreen-button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.scene-fullscreen-error {
+  position: absolute;
+  z-index: 4;
+  right: 75px;
+  bottom: 126px;
+  padding: 6px 9px;
+  border-radius: 4px;
+  background: #172d32e8;
+  color: #f1f4ed;
+  font-size: 12px;
 }
 .map-cartouche {
   position: absolute;
@@ -1292,6 +1337,14 @@ thead {
   .map-cartouche {
     display: none;
   }
+  .scene-fullscreen-button {
+    right: 10px;
+    bottom: 10px;
+  }
+  .scene-fullscreen-error {
+    right: 56px;
+    bottom: 16px;
+  }
   .tile-inspector,
   .map-legend {
     padding-inline: 12px;
@@ -1346,6 +1399,18 @@ thead {
   .trust-hud-track { margin: 6px 0 4px; }
 }
 @media (max-width: 520px) {
+  .scene-fullscreen-button {
+    top: 10px;
+    bottom: auto;
+    left: 10px;
+    right: auto;
+  }
+  .scene-fullscreen-error {
+    top: 16px;
+    bottom: auto;
+    left: 56px;
+    right: auto;
+  }
   .trust-hud {
     width: min(160px, calc(100% - 20px));
     padding: 9px 10px;

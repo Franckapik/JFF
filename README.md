@@ -18,6 +18,11 @@ npm run dev
 - `npm run validate` : types, tests, scenarios Gherkin, lint et build.
 - `npm run preview -- --host 127.0.0.1` : servir le build.
 
+La barre de session permet de choisir de 2 à 8 couronnes avant de rejouer une
+graine ou de créer une nouvelle carte. Le choix par défaut est de 5 couronnes,
+soit 91 tuiles. La station de carburant est repérée dès le départ par les deux
+bots afin qu'ils puissent planifier leur retour malgré la taille du plateau.
+
 La vue Terrain présente une étude visuelle de la Tour des deux refuges :
 les hexagones ont plusieurs niveaux, une marée animée les submerge et deux
 nacelles sont suspendues à la tour centrale. « Voir la marée haute » permet
@@ -85,6 +90,7 @@ en plus du même coût de vol aller-retour que le drone d'exploration.
 - [Architecture et limites du socle](docs/SOCLE_ACTUEL.md)
 - [Direction graphique du plateau](docs/DIRECTION-GRAPHIQUE-PLATEAU.md)
 - [Audit du jeu et vision créative](docs/AUDIT-ET-VISION-JEU.md)
+- [Audit de l'agrandissement du plateau à deux couronnes](docs/AUDIT-AGRANDISSEMENT-PLATEAU.md)
 - [Contrat metier valide](docs/bot-spec/03-contrat-et-questions.md)
 - [Scenarios du socle](docs/bot-spec/scenarios/README.md)
 - [Audit de la visibilite et du gameplay](docs/bot-spec/05-audit-visibilite-gameplay.md)

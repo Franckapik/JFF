@@ -21,7 +21,7 @@ Fonctionnalité: Initialisation de la session partagée
     Et ses compteurs et son registre de collecte sont vides
     Et sa connaissance individuelle contient initialement sa propre base
     Et aucune cible n'est initialement enregistrée comme scannée par son drone
-    Et son souvenir initial du terrain couvre le rayon du vaisseau autour de sa base
+    Et son souvenir initial du terrain couvre le rayon du vaisseau autour de sa base et la station de carburant publique
     Et ses capacités sont définies indépendamment
       | ressource | capacité |
       | food      | 200      |

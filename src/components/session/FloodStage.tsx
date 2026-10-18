@@ -4,13 +4,14 @@ import { useMemo, useRef } from 'react';
 import { DoubleSide, Group, InstancedMesh, Mesh, Object3D, Quaternion, ShaderMaterial, Vector3 } from 'three';
 
 import { terrainDeckHeight } from '../../engine/terrainPresentation';
-import { BOT_IDS, worldPosition, type BotId, type Coord, type World } from '../../engine/world';
+import { BOT_IDS, worldPosition, worldRadius, type BotId, type Coord, type World } from '../../engine/world';
 
 import { BOT_COLORS } from './presentation';
 
 const TIDE_LOW = -0.12;
 const TIDE_HIGH = 0.82;
 const CENTER_TOP = terrainDeckHeight('0,0');
+const SQRT_THREE = Math.sqrt(3);
 
 const WATER_VERTEX = `
   uniform float uTime;
@@ -41,6 +42,7 @@ const WATER_VERTEX = `
 const WATER_FRAGMENT = `
   uniform float uTime;
   uniform float uLevel;
+  uniform float uCoastOffset;
   varying vec3 vWorldPosition;
   varying vec3 vWorldNormal;
   varying float vCrest;
@@ -70,7 +72,7 @@ const WATER_FRAGMENT = `
     float fresnel = pow(1.0 - max(dot(normal, viewDirection), 0.0), 2.4);
     float glint = pow(max(dot(reflect(-sunDirection, normal), viewDirection), 0.0), 86.0);
     float distanceFromIsland = length(p);
-    float openSea = smoothstep(3.5, 13.0, distanceFromIsland);
+    float openSea = smoothstep(3.5 + uCoastOffset, 13.0 + uCoastOffset, distanceFromIsland);
     vec3 shallow = vec3(0.16, 0.42, 0.47);
     vec3 deep = vec3(0.045, 0.22, 0.30);
     vec3 color = mix(shallow, deep, openSea * 0.67);
@@ -80,7 +82,7 @@ const WATER_FRAGMENT = `
     color += vec3(0.38, 0.48, 0.46) * glint * (0.15 + finerSurface * 0.23);
     float foam = smoothstep(0.68, 0.94, vCrest + (brokenSurface - 0.5) * 0.28);
     color = mix(color, vec3(0.65, 0.78, 0.75), foam * 0.14);
-    float farFromIsland = smoothstep(4.2, 8.5, distanceFromIsland);
+    float farFromIsland = smoothstep(4.2 + uCoastOffset, 8.5 + uCoastOffset, distanceFromIsland);
     float highWater = smoothstep(-0.12, 0.82, uLevel);
     float alpha = mix(0.48, 0.72, farFromIsland) + highWater * mix(0.12, 0.15, farFromIsland);
     gl_FragColor = vec4(color, alpha);
@@ -188,6 +190,7 @@ export default function FloodStage({ world, highTide, paused, onSelect }: { worl
   const shoreline = useRef<InstancedMesh>(null);
   const shorelineDummy = useMemo(() => new Object3D(), []);
   const coords = useMemo(() => Object.keys(world) as Coord[], [world]);
+  const coastOffset = (worldRadius(world) - 3) * SQRT_THREE;
   const phase = useRef(0.08);
   const level = useRef(TIDE_LOW);
   useFrame(({ camera }, delta) => {
@@ -223,7 +226,7 @@ export default function FloodStage({ world, highTide, paused, onSelect }: { worl
     <mesh ref={water} position={[0, TIDE_LOW, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={3} raycast={() => null}>
       <planeGeometry args={[128, 128, 160, 160]} />
       <shaderMaterial ref={material} vertexShader={WATER_VERTEX} fragmentShader={WATER_FRAGMENT}
-        uniforms={{ uTime: { value: 0 }, uLevel: { value: TIDE_LOW } }} transparent depthWrite={false} side={DoubleSide} />
+        uniforms={{ uTime: { value: 0 }, uLevel: { value: TIDE_LOW }, uCoastOffset: { value: coastOffset } }} transparent depthWrite={false} side={DoubleSide} />
     </mesh>
     <instancedMesh ref={shoreline} args={[undefined, undefined, coords.length]} renderOrder={4} raycast={() => null}>
       <ringGeometry args={[0.93, 0.98, 6]} />

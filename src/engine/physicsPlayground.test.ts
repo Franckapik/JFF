@@ -5,7 +5,7 @@ import { generateWorld, worldPosition, type Coord } from './world';
 
 describe('Rapier playground on the existing hex board', () => {
   it('keeps a stack on the board, then lets a projectile knock it over', async () => {
-    const tiles = generateWorld(42);
+    const tiles = generateWorld(42, 3);
     const coord: Coord = '0,0';
     const playground = await PhysicsPlaygroundWorld.create(tiles, coord);
     try {
@@ -30,7 +30,7 @@ describe('Rapier playground on the existing hex board', () => {
   });
 
   it('lets a moving bot push loose crates across its next tile', async () => {
-    const tiles = generateWorld(42);
+    const tiles = generateWorld(42, 3);
     const playground = await PhysicsPlaygroundWorld.create(tiles, '0,0');
     try {
       const from = worldPosition('-3,0');
