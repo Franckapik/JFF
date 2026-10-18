@@ -1,6 +1,6 @@
 import { OrbitControls } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Bot as BotIcon, SlidersHorizontal } from 'lucide-react';
+import { Bot as BotIcon, SlidersHorizontal, Waves } from 'lucide-react';
 import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Color, Group, InstancedMesh, Object3D, Vector3 } from 'three';
 
@@ -8,13 +8,16 @@ import type { BotView, ElectricCloud, MineReport } from '../../engine/model';
 import type { PhysicsBotPose } from '../../engine/physicsPlayground';
 import { RESOURCE_KINDS, type Resources } from '../../engine/resources';
 import { RULES } from '../../engine/rules';
+import { terrainDeckHeight, terrainPosition, TERRAIN_BOTTOM, TERRAIN_OBSTACLE_RISE } from '../../engine/terrainPresentation';
 import { activeCoords, depletedResourceCoords, isCloudVisible, resourceMarkerCoords, revealedTileKind } from '../../engine/visibility';
 import { BOT_IDS, hexDistance, hexLine, worldPosition, type BotId, type Coord, type World, type WorldTile } from '../../engine/world';
 import { useSessionStore } from '../../stores/useSessionStore';
 
 import BotPanel from './BotPanel';
 import { TileGlyphs } from './BoardArt';
+import EndlessSeabed from './EndlessSeabed';
 import ExpertBotView from './ExpertBotView';
+import FloodStage from './FloodStage';
 import { IncidentHud, IncidentPulses } from './IncidentFeedback';
 import type { PhysicsCommand } from './PhysicsPlayground';
 import { BOT_COLORS, cloudOpacity, DEPLETED_TILE_COLOR, MINED_TILE_COLOR, RESOURCE_LABELS, TILE_COLORS, TILE_LABELS } from './presentation';
@@ -24,7 +27,7 @@ import TrustHud from './TrustHud';
 import { sketchTileShader } from './boardShaders';
 
 type Perspective = BotId | 'developer';
-const VOID_COLOR = '#18262c';
+const VOID_COLOR = '#14313a';
 const PhysicsPlayground = lazy(() => import('./PhysicsPlayground'));
 
 function ScoreBackground({ gameId, score0, score1 }: { gameId: string | null; score0: number; score1: number }) {
@@ -39,7 +42,7 @@ function ScoreBackground({ gameId, score0, score1 }: { gameId: string | null; sc
     }
     if (score0 !== score1) leader.current = score0 > score1 ? 'bot-0' : 'bot-1';
     target.current.set(VOID_COLOR);
-    if (leader.current) target.current.lerp(new Color(BOT_COLORS[leader.current]), 0.22);
+    if (leader.current) target.current.lerp(new Color(BOT_COLORS[leader.current]), 0.08);
   }, [gameId, score0, score1]);
 
   useFrame(({ scene }, delta) => {
@@ -55,8 +58,8 @@ function BoardCamera() {
   const { camera, size } = useThree();
   useEffect(() => {
     const compactScale = size.width < 600 ? 1 + (600 - size.width) / 800 : 1;
-    camera.position.set(7 * compactScale, 10 * compactScale, 8 * compactScale);
-    camera.lookAt(0, 0, 0);
+    camera.position.set(6.4 * compactScale, 9.3 * compactScale, 7.8 * compactScale);
+    camera.lookAt(0, 0.85, 0);
   }, [camera, size.width]);
   return null;
 }
@@ -85,10 +88,14 @@ const Tiles = memo(function Tiles({ world, current, explored, scanned, known, de
       transform.position.set(...worldPosition(tile.coord));
       const visible = visibleCoords.has(tile.coord);
       const seen = exploredCoords.has(tile.coord) || visible;
-      transform.position.y = tile.coord === selected && seen ? 0.16 : tile.kind === 'obstacle' && seen ? 0.24 : 0;
-      transform.scale.set(1, tile.kind === 'obstacle' && seen ? 4 : 1, 1);
+      const raised = tile.coord === selected && seen ? 0.12 : 0;
+      const top = terrainDeckHeight(tile.coord) + (tile.kind === 'obstacle' && seen ? TERRAIN_OBSTACLE_RISE : 0);
+      const height = top - TERRAIN_BOTTOM;
+      transform.position.y = TERRAIN_BOTTOM + height / 2 + raised;
+      transform.scale.set(1, height, 1);
       transform.updateMatrix(); mesh.current!.setMatrixAt(index, transform.matrix);
-      transform.position.y -= tile.kind === 'obstacle' && seen ? 0.08 : 0.035;
+      transform.position.y -= 0.045;
+      transform.scale.y = height + 0.08;
       transform.updateMatrix(); ink.current!.setMatrixAt(index, transform.matrix);
       const revealed = revealedTileKind(tile, knownCoords, scannedCoords, visible, developer);
       const color = routeOwner && routeCoords.has(tile.coord) && visible ? BOT_COLORS[routeOwner] : tile.owner ? BOT_COLORS[tile.owner] : depletedCoords.has(tile.coord) ? DEPLETED_TILE_COLOR : revealed === 'terrain' ? TILE_COLORS.empty : TILE_COLORS[revealed];
@@ -100,11 +107,11 @@ const Tiles = memo(function Tiles({ world, current, explored, scanned, known, de
   }, [tiles, current, explored, scanned, known, depleted, developer, selected, route, routeOwner]);
   return <>
     <instancedMesh ref={ink} args={[undefined, undefined, tiles.length]} receiveShadow onClick={event => { event.stopPropagation(); if (event.instanceId !== undefined) select(tiles[event.instanceId].coord); }}>
-      <cylinderGeometry args={[1.015, 1.015, 0.15, 6]} />
+      <cylinderGeometry args={[1.015, 1.015, 1, 6]} />
       <meshBasicMaterial color="#303b3e" />
     </instancedMesh>
     <instancedMesh ref={mesh} args={[undefined, undefined, tiles.length]} receiveShadow onClick={event => { event.stopPropagation(); if (event.instanceId !== undefined) select(tiles[event.instanceId].coord); }}>
-      <cylinderGeometry args={[0.96, 0.96, 0.12, 6]} />
+      <cylinderGeometry args={[0.96, 0.96, 1, 6]} />
       {/* eslint-disable-next-line react/no-unknown-property -- React Three Fiber material hook */}
       <meshStandardMaterial roughness={1} metalness={0} onBeforeCompile={sketchTileShader} />
     </instancedMesh>
@@ -126,14 +133,14 @@ function ResourceTokens({ resources, y = 0.22 }: { resources: Resources; y?: num
 
 const GroundResources = memo(function GroundResources({ world, current, scanned }: { world: World; current: string; scanned: string }) {
   return <>{resourceMarkerCoords(world, current.split('|') as Coord[], scanned.split('|') as Coord[]).map(coord =>
-    <group key={coord} position={worldPosition(coord)}><ResourceTokens resources={world[coord].resources} /></group>
+    <group key={coord} position={terrainPosition(coord)}><ResourceTokens resources={world[coord].resources} /></group>
   )}</>;
 });
 
 function DeveloperRoutes({ bots }: { bots: BotView[] }) {
   return <>{bots.flatMap(bot => bot.route.map((coord, index) => {
     const [x, , z] = worldPosition(coord);
-    return <mesh key={`${bot.id}-${coord}-${index}`} position={[x + (bot.id === 'bot-0' ? -0.46 : 0.46), 0.18, z]}>
+    return <mesh key={`${bot.id}-${coord}-${index}`} position={[x + (bot.id === 'bot-0' ? -0.46 : 0.46), terrainDeckHeight(coord) + 0.18, z]}>
       <sphereGeometry args={[0.09, 8, 6]} /><meshBasicMaterial color={BOT_COLORS[bot.id]} />
     </mesh>;
   }))}</>;
@@ -143,7 +150,7 @@ function WaitingMarkers({ bots, visible }: { bots: BotView[]; visible: Coord[] }
   const seen = new Set(visible);
   return <>{bots.filter(bot => bot.operation?.kind === 'wait' && seen.has(bot.operation.target)).map(bot => {
     const [x, , z] = worldPosition(bot.operation!.target);
-    return <mesh key={bot.id} position={[x, 0.21, z]} rotation={[-Math.PI / 2, 0, 0]}>
+    return <mesh key={bot.id} position={[x, terrainDeckHeight(bot.operation!.target) + 0.21, z]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[0.7, 0.78, 24]} /><meshBasicMaterial color={BOT_COLORS[bot.id]} transparent opacity={0.8} />
     </mesh>;
   })}</>;
@@ -160,7 +167,7 @@ function MineMarkers({ world, bot, current, developer, elapsed }: { world: World
     const arming = certain && mine?.state === 'arming';
     const color = !certain ? '#8b7187' : arming ? '#e5ac49' : MINED_TILE_COLOR;
     const [x, , z] = worldPosition(coord);
-    return <group key={coord} position={[x, 0.25, z]}>
+    return <group key={coord} position={[x, terrainDeckHeight(coord) + 0.25, z]}>
       <mesh><octahedronGeometry args={[0.22]} /><meshStandardMaterial color={color} emissive={color} emissiveIntensity={arming ? 0.55 : 0.18} /></mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.35, 0.41, arming ? 12 : 6]} /><meshBasicMaterial color={color} /></mesh>
     </group>;
@@ -172,7 +179,7 @@ function MineReportMarkers({ world, report }: { world: World; report: MineReport
   const { center, nearestDistance } = report;
   return <>{Object.keys(world).filter(coord => hexDistance(center, coord as Coord) === nearestDistance).map(coord => {
     const [x, , z] = worldPosition(coord as Coord);
-    return <mesh key={coord} position={[x, 0.19, z]} rotation={[-Math.PI / 2, 0, 0]}>
+    return <mesh key={coord} position={[x, terrainDeckHeight(coord as Coord) + 0.19, z]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[0.68, 0.75, 6]} /><meshBasicMaterial color="#c2933d" transparent opacity={0.8} />
     </mesh>;
   })}</>;
@@ -190,11 +197,11 @@ function ElectricCloudView({ cloud, opacity, paused }: { cloud: ElectricCloud; o
     }
   });
   return <>
-    <mesh position={[x, 0.2, z]} rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh position={[x, terrainDeckHeight(cloud.coord) + 0.2, z]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[0.78, 0.85, 6]} />
       <meshBasicMaterial color="#65dbe9" transparent opacity={0.88 * opacity} />
     </mesh>
-    <group position={worldPosition(cloud.coord)}>
+    <group position={terrainPosition(cloud.coord)}>
       <group ref={body}>
         <mesh position={[-0.27, 0, 0]}><icosahedronGeometry args={[0.35, 1]} /><meshStandardMaterial color="#bad9df" emissive="#4ba3c3" emissiveIntensity={0.75} transparent opacity={0.86 * opacity} /></mesh>
         <mesh position={[0.2, 0.13, 0.15]}><icosahedronGeometry args={[0.4, 1]} /><meshStandardMaterial color="#9fcbd4" emissive="#3977ba" emissiveIntensity={0.8} transparent opacity={0.83 * opacity} /></mesh>
@@ -207,10 +214,10 @@ function ElectricCloudView({ cloud, opacity, paused }: { cloud: ElectricCloud; o
 
 function scanPosition(from: Coord, to: Coord, elapsed: number): Vector3 {
   const path = hexLine(from, to);
-  if (path.length === 1) return new Vector3(...worldPosition(from));
+  if (path.length === 1) return new Vector3(...terrainPosition(from));
   const progress = Math.max(0, Math.min(path.length - 1, elapsed / RULES.stepDuration));
   const index = Math.min(path.length - 2, Math.floor(progress));
-  return new Vector3(...worldPosition(path[index])).lerp(new Vector3(...worldPosition(path[index + 1])), progress - index);
+  return new Vector3(...terrainPosition(path[index])).lerp(new Vector3(...terrainPosition(path[index + 1])), progress - index);
 }
 
 function Vehicle({ bot, paused, speed, crossing, flyoverStart, flyoverEnd, onPose }: { bot: BotView; paused: boolean; speed: number; crossing: boolean; flyoverStart: boolean; flyoverEnd: boolean; onPose?: (id: BotId, position: Vector3, heading: number) => void }) {
@@ -220,8 +227,8 @@ function Vehicle({ bot, paused, speed, crossing, flyoverStart, flyoverEnd, onPos
   const offensiveDrone = useRef<Group>(null);
   const received = useRef(performance.now());
   useLayoutEffect(() => { received.current = performance.now(); }, [bot.operation?.remaining, bot.coord, paused, speed]);
-  const from = useMemo(() => new Vector3(...worldPosition(bot.coord)), [bot.coord]);
-  const to = useMemo(() => new Vector3(...worldPosition(bot.operation?.target ?? bot.coord)), [bot.operation?.target, bot.coord]);
+  const from = useMemo(() => new Vector3(...terrainPosition(bot.coord)), [bot.coord]);
+  const to = useMemo(() => new Vector3(...terrainPosition(bot.operation?.target ?? bot.coord)), [bot.operation?.target, bot.coord]);
   useFrame((_state, delta) => {
     const operation = bot.operation;
     const elapsed = operation ? operation.duration - operation.remaining + (paused ? 0 : Math.min(operation.remaining, (performance.now() - received.current) * speed)) : 0;
@@ -229,7 +236,7 @@ function Vehicle({ bot, paused, speed, crossing, flyoverStart, flyoverEnd, onPos
     if (ship.current) {
       ship.current.position.copy(from);
       if (operation?.kind === 'move' || operation?.kind === 'rescue') ship.current.position.lerp(to, progress);
-      ship.current.position.y = 0.28 + (operation?.kind === 'move'
+      ship.current.position.y += 0.28 + (operation?.kind === 'move'
         ? 0.32 * Math.sin(Math.PI * progress) + 0.56 * ((flyoverStart ? 1 - progress : 0) + (flyoverEnd ? progress : 0))
         : 0);
       if (crossing && operation?.kind === 'move') {
@@ -253,18 +260,18 @@ function Vehicle({ bot, paused, speed, crossing, flyoverStart, flyoverEnd, onPos
           if (elapsed <= detour.contactAt) drone.current.position.copy(scanPosition(bot.coord, detour.contact, elapsed));
           else if (elapsed <= detour.edgeAt) drone.current.position.copy(scanPosition(detour.contact, detour.edge, elapsed - detour.contactAt));
           else if (elapsed <= detour.destinationAt) drone.current.position.copy(scanPosition(detour.edge, detour.destination, elapsed - detour.edgeAt));
-          else if (elapsed <= detour.destinationAt + RULES.scanDuration) drone.current.position.set(...worldPosition(detour.destination));
+          else if (elapsed <= detour.destinationAt + RULES.scanDuration) drone.current.position.set(...terrainPosition(detour.destination));
           else drone.current.position.copy(scanPosition(detour.destination, bot.coord, elapsed - detour.destinationAt - RULES.scanDuration));
         } else {
           const target = operation.scanInitialTarget ?? operation.target;
           const travel = hexLine(bot.coord, target).length - 1;
           const arrival = travel * RULES.stepDuration;
           if (elapsed <= arrival) drone.current.position.copy(scanPosition(bot.coord, target, elapsed));
-          else if (elapsed <= arrival + RULES.scanDuration) drone.current.position.set(...worldPosition(target));
+          else if (elapsed <= arrival + RULES.scanDuration) drone.current.position.set(...terrainPosition(target));
           else drone.current.position.copy(scanPosition(target, bot.coord, elapsed - arrival - RULES.scanDuration));
         }
       } else if (ship.current) drone.current.position.copy(ship.current.position);
-      drone.current.position.y = operation?.kind === 'scan' ? 0.8 + 0.6 * flight : 0.8 + (ship.current?.position.y ?? 0.28) - 0.28;
+      drone.current.position.y += operation?.kind === 'scan' ? 0.8 + 0.6 * flight : 0.52;
       if (!paused && operation?.kind === 'scan') drone.current.rotation.y += delta * 5;
     }
     if (offensiveDrone.current) {
@@ -272,9 +279,9 @@ function Vehicle({ bot, paused, speed, crossing, flyoverStart, flyoverEnd, onPos
       if (operation?.kind === 'mine' || operation?.kind === 'mineScan' || operation?.kind === 'neutralize') {
         const travel = hexDistance(bot.coord, operation.target) * RULES.stepDuration;
         if (elapsed <= travel) offensiveDrone.current.position.copy(scanPosition(bot.coord, operation.target, elapsed));
-        else if (elapsed <= travel + RULES.scanDuration) offensiveDrone.current.position.set(...worldPosition(operation.target));
+        else if (elapsed <= travel + RULES.scanDuration) offensiveDrone.current.position.set(...terrainPosition(operation.target));
         else offensiveDrone.current.position.copy(scanPosition(operation.target, bot.coord, elapsed - travel - RULES.scanDuration));
-        offensiveDrone.current.position.y = 1.35;
+        offensiveDrone.current.position.y += 1.35;
         if (!paused) offensiveDrone.current.rotation.y += delta * 5;
       } else offensiveDrone.current.position.y = (ship.current?.position.y ?? 0.28) + 0.68;
       offensiveDrone.current.position.x += 0.32;
@@ -282,7 +289,7 @@ function Vehicle({ bot, paused, speed, crossing, flyoverStart, flyoverEnd, onPos
   });
   const color = bot.state === 'disabled' ? '#697772' : BOT_COLORS[bot.id];
   return <>
-    <group ref={ship} position={worldPosition(bot.coord)}>
+    <group ref={ship} position={terrainPosition(bot.coord)}>
       <mesh castShadow><boxGeometry args={[0.5, 0.2, 0.8]} /><meshStandardMaterial color={color} /></mesh>
       <mesh position={[0, 0.15, -0.1]} castShadow><boxGeometry args={[0.3, 0.18, 0.35]} /><meshStandardMaterial color="#f5f7f4" /></mesh>
       <mesh position={[0, 0.02, 0.5]} rotation={[Math.PI / 2, 0, 0]}><coneGeometry args={[0.22, 0.3, 4]} /><meshStandardMaterial color={color} /></mesh>
@@ -309,7 +316,8 @@ export default function GameView() {
   const [selected, setSelected] = useState<Coord | null>(null);
   const [expert, setExpert] = useState(false);
   const [expertBotId, setExpertBotId] = useState<BotId>('bot-0');
-  const [physicsEnabled, setPhysicsEnabled] = useState(true);
+  const [physicsEnabled, setPhysicsEnabled] = useState(false);
+  const [highTide, setHighTide] = useState(false);
   const [physicsStatus, setPhysicsStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
   const [physicsCommand, setPhysicsCommand] = useState<PhysicsCommand | null>(null);
   const [physicsImpacts, setPhysicsImpacts] = useState<Record<BotId, number>>({ 'bot-0': 0, 'bot-1': 0 });
@@ -358,7 +366,7 @@ export default function GameView() {
   }));
   return <main className={`game-layout${expert ? ' expert-open' : ''}`}>
     <section className="board-panel" aria-label="Terrain de la partie">
-      <div className="board-toolbar"><div className="board-title"><small>Carnet de terrain / 01</small><h1>Atlas d’exploration</h1></div><label>Vision <select value={perspective} onChange={event => setPerspective(event.target.value as Perspective)}><option value="bot-0">Bot 0</option><option value="bot-1">Bot 1</option><option value="developer">Développeur</option></select></label><button className="icon-button expert-toggle" aria-pressed={expert} onClick={() => setExpert(value => !value)} title={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'} aria-label={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'}><SlidersHorizontal size={18} /></button><span>{developer ? 'Carte complète' : `${viewedBot.explored.length} / ${allCoords.length} cases explorées`}</span>{viewedBot.mineWarning && <span className="cloud-alert">Mine ennemie à proximité</span>}{mineReport && <span title={`Relevé à ${Math.round(mineReport.time / 1000)} s`}>Scan {mineReport.center} : {mineReport.count} mine(s) / rayon {mineReport.radius} · plus proche {mineReport.nearestDistance ?? '—'} hex.</span>}{cloudVisible && <span className="cloud-alert">⚡ Nuage électrique détecté</span>}{viewedBot.operation?.scanDetour && <span className="cloud-alert">{!viewedBot.operation.scanEdgeReached ? 'Drone repoussé vers le bord' : !viewedBot.operation.scanArrived ? 'Drone vers une tuile aléatoire' : 'Drone en retour'}</span>}</div>
+      <div className="board-toolbar"><div className="board-title"><small>Étude visuelle / 01</small><h1>La Tour des deux refuges</h1></div><label>Vision <select value={perspective} onChange={event => setPerspective(event.target.value as Perspective)}><option value="bot-0">Bot 0</option><option value="bot-1">Bot 1</option><option value="developer">Développeur</option></select></label><button className="icon-button expert-toggle" aria-pressed={expert} onClick={() => setExpert(value => !value)} title={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'} aria-label={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'}><SlidersHorizontal size={18} /></button><button type="button" className="tide-preview-toggle" aria-pressed={highTide} onClick={() => setHighTide(value => !value)} title="Aperçu graphique uniquement : la marée ne modifie pas encore les règles"><Waves size={16} />{highTide ? 'Revenir à la marée animée' : 'Voir la marée haute'}</button><span>{developer ? 'Carte complète' : `${viewedBot.explored.length} / ${allCoords.length} cases explorées`}</span>{viewedBot.mineWarning && <span className="cloud-alert">Mine ennemie à proximité</span>}{mineReport && <span title={`Relevé à ${Math.round(mineReport.time / 1000)} s`}>Scan {mineReport.center} : {mineReport.count} mine(s) / rayon {mineReport.radius} · plus proche {mineReport.nearestDistance ?? '—'} hex.</span>}{cloudVisible && <span className="cloud-alert">⚡ Nuage électrique détecté</span>}{viewedBot.operation?.scanDetour && <span className="cloud-alert">{!viewedBot.operation.scanEdgeReached ? 'Drone repoussé vers le bord' : !viewedBot.operation.scanArrived ? 'Drone vers une tuile aléatoire' : 'Drone en retour'}</span>}</div>
       <div className="physics-controls" aria-label="Atelier physique Rapier 3D">
         <strong>Rapier 3D <span>· atelier physique</span></strong>
         <button type="button" aria-pressed={physicsEnabled} onClick={() => { setPhysicsEnabled(value => !value); setPhysicsCommand(null); setPhysicsStatus('loading'); }}>{physicsEnabled ? 'Masquer' : 'Afficher'}</button>
@@ -377,6 +385,8 @@ export default function GameView() {
           <BoardCamera />
           <ScoreBackground gameId={gameId} score0={snapshot.bots['bot-0'].score} score1={snapshot.bots['bot-1'].score} />
           <ambientLight intensity={0.95} /><directionalLight position={[5, 12, 6]} intensity={1.3} castShadow shadow-mapSize={[1024, 1024]} />
+          <EndlessSeabed />
+          <FloodStage key={gameId ?? 'preview'} world={snapshot.world} highTide={highTide} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} onSelect={setSelected} />
           <Tiles world={snapshot.world} current={current} explored={explored} scanned={scanned} known={viewedBot.known.join('|')} depleted={depleted} developer={developer} selected={selected} route={expert && !developer ? expertBot.route : []} routeOwner={expert && !developer ? expertBot.id : null} select={setSelected} />
           <TileGlyphs world={snapshot.world} current={current} explored={explored} scanned={scanned} known={viewedBot.known.join('|')} depleted={depleted} developer={developer} selected={selected} />
           <MineMarkers world={snapshot.world} bot={viewedBot} current={currentCoords} developer={developer} elapsed={snapshot.elapsed} />
@@ -397,7 +407,7 @@ export default function GameView() {
           {physicsEnabled && <Suspense fallback={null}><PhysicsPlayground key={physicsScope} scope={physicsScope} tiles={snapshot.world} initialCoord={physicsInitial} command={physicsCommand} botPoses={physicsBotPoses} visibleBots={visibleBots.map(bot => bot.id)} onStatus={setPhysicsStatus} onImpacts={setPhysicsImpacts} /></Suspense>}
           <OrbitControls makeDefault target={[0, 0, 0]} minDistance={8} maxDistance={26} minPolarAngle={0.1} maxPolarAngle={Math.PI / 2.1} />
         </Canvas>
-        <div className="map-cartouche" aria-hidden="true"><span>JFF · ATLAS DES BOTS</span><strong>Les territoires inconnus</strong><small>Relevé vivant · {allCoords.length} hexagones</small></div>
+        <div className="map-cartouche" aria-hidden="true"><span>JFF · ÉTUDE VISUELLE</span><strong>Les deux refuges</strong><small>L’eau monte autour de la tour</small></div>
         <TrustHud trust={snapshot.trust} lastChange={snapshot.lastTrustChange} perspective={perspective} onSelect={setSelected} />
         <IncidentHud alerts={alerts} bot={viewedBot} cloudVisible={cloudVisible} onSelect={setSelected} />
       </div>

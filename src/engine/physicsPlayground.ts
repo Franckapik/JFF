@@ -1,6 +1,7 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 
 import { BOT_IDS, worldPosition, type BotId, type Coord, type World } from './world';
+import { terrainDeckHeight, TERRAIN_BOTTOM, TERRAIN_OBSTACLE_RISE } from './terrainPresentation';
 
 export type PlaygroundShape = 'block' | 'ball';
 export interface PhysicsBotPose { x: number; y: number; z: number; heading: number }
@@ -46,9 +47,9 @@ export class PhysicsPlaygroundWorld {
     this.world.timestep = FIXED_STEP;
     for (const tile of Object.values(tiles)) {
       const [x, , z] = worldPosition(tile.coord);
-      const obstacle = tile.kind === 'obstacle';
-      const halfHeight = obstacle ? 0.24 : 0.08;
-      const centerY = obstacle ? 0.24 : -0.02;
+      const top = terrainDeckHeight(tile.coord) + (tile.kind === 'obstacle' ? TERRAIN_OBSTACLE_RISE : 0);
+      const halfHeight = (top - TERRAIN_BOTTOM) / 2;
+      const centerY = TERRAIN_BOTTOM + halfHeight;
       const floor = this.world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(x, centerY, z));
       this.world.createCollider(RAPIER.ColliderDesc.cylinder(halfHeight, 0.98).setFriction(0.9), floor);
     }
@@ -72,7 +73,7 @@ export class PhysicsPlaygroundWorld {
     this.clear();
     this.site = coord;
     const [x, , z] = worldPosition(coord);
-    const floorTop = tiles[coord].kind === 'obstacle' ? 0.48 : 0.06;
+    const floorTop = terrainDeckHeight(coord) + (tiles[coord].kind === 'obstacle' ? TERRAIN_OBSTACLE_RISE : 0);
     for (let index = 0; index < 6; index++) {
       const offset = index % 2 === 0 ? -0.025 : 0.025;
       const body = this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
@@ -88,7 +89,7 @@ export class PhysicsPlaygroundWorld {
   dropCrates(coord: Coord, tiles: World): void {
     if (this.disposed || !tiles[coord]) return;
     const [x, , z] = worldPosition(coord);
-    const floorTop = tiles[coord].kind === 'obstacle' ? 0.48 : 0.06;
+    const floorTop = terrainDeckHeight(coord) + (tiles[coord].kind === 'obstacle' ? TERRAIN_OBSTACLE_RISE : 0);
     const offsets = [[-0.34, -0.16], [0.28, -0.14], [0, 0.28]];
     for (const [dx, dz] of offsets) {
       const body = this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
@@ -127,7 +128,7 @@ export class PhysicsPlaygroundWorld {
     if (this.disposed) return;
     const [x, , z] = worldPosition(this.site);
     const ball = this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
-      .setTranslation(x - 3.2, 1.4, z - 0.35)
+      .setTranslation(x - 3.2, terrainDeckHeight(this.site) + 1.4, z - 0.35)
       .setLinvel(8.4, 0.1, 0.8)
       .setCcdEnabled(true).setLinearDamping(0.06));
     this.world.createCollider(RAPIER.ColliderDesc.ball(BALL_RADIUS)

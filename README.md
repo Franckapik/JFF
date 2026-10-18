@@ -18,8 +18,14 @@ npm run dev
 - `npm run validate` : types, tests, scenarios Gherkin, lint et build.
 - `npm run preview -- --host 127.0.0.1` : servir le build.
 
-La vue Terrain contient un atelier Rapier 3D indépendant des règles de la
-partie. Une pile de blocs apparaît près du bot affiché. Sélectionner une
+La vue Terrain présente une étude visuelle de la Tour des deux refuges :
+les hexagones ont plusieurs niveaux, une marée animée les submerge et deux
+nacelles sont suspendues à la tour centrale. « Voir la marée haute » permet
+d'inspecter immédiatement la scène inondée. Le relief, la marée et la tour
+ne changent pas encore les déplacements ni les conditions de victoire.
+
+La vue Terrain contient aussi un atelier Rapier 3D indépendant des règles de la
+partie, activable avec « Afficher ». Une pile de blocs apparaît près du bot affiché. Sélectionner une
 autre tuile puis cliquer « Empiler ici » déplace la pile ; « Lancer une bille »
 teste les collisions, « Onde de choc » la stabilité, et un clic direct sur un
 bloc le pousse. « Caisses sur trajet » place des corps mobiles devant le bot

@@ -237,6 +237,25 @@ h2 {
   gap: 7px;
   font-size: 12px;
 }
+.tide-preview-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 5px 10px;
+  border: 1px solid #79aaa9;
+  border-radius: 4px;
+  background: #e5f3f0;
+  color: #17515a;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tide-preview-toggle:hover,
+.tide-preview-toggle[aria-pressed="true"] {
+  border-color: #2d7785;
+  background: #c8e4e4;
+}
 .board-toolbar > span {
   margin-left: auto;
   font-size: 12px;
@@ -1327,6 +1346,15 @@ thead {
   .trust-hud-track { margin: 6px 0 4px; }
 }
 @media (max-width: 520px) {
+  .trust-hud {
+    width: min(160px, calc(100% - 20px));
+    padding: 9px 10px;
+  }
+  .trust-hud-heading span { display: none; }
+  .trust-hud-heading strong { font-size: 16px; }
+  .trust-hud-meta > span { font-size: 9px; }
+  .trust-hud-meta > strong { font-size: 19px; }
+  .trust-hud-caption em { display: none; }
   .toolbar-actions {
     margin-left: 0;
   }

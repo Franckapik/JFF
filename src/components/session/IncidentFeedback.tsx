@@ -6,6 +6,7 @@ import { Mesh, MeshBasicMaterial } from 'three';
 
 import type { BotView } from '../../engine/model';
 import { RULES } from '../../engine/rules';
+import { terrainDeckHeight } from '../../engine/terrainPresentation';
 import { worldPosition, type Coord } from '../../engine/world';
 
 import { clock } from './presentation';
@@ -24,7 +25,7 @@ function IncidentPulse({ alert }: { alert: ActiveIncident }) {
   });
   const color = alert.message.tone === 'electric' ? '#21b5d4' : alert.message.tone === 'recovery' ? '#2f9b71' : '#d74737';
   const [x, , z] = worldPosition(coord);
-  return <group position={[x, 0, z]}>
+  return <group position={[x, terrainDeckHeight(coord), z]}>
     <mesh ref={ring} position={[0, 0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[0.53, 0.68, 32]} />
       <meshBasicMaterial ref={material} color={color} transparent opacity={0.85} />

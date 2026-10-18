@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { CanvasTexture, SRGBColorSpace } from 'three';
 
 import { revealedTileKind } from '../../engine/visibility';
+import { terrainDeckHeight, TERRAIN_OBSTACLE_RISE } from '../../engine/terrainPresentation';
 import { worldPosition, type Coord, type TileKind, type World } from '../../engine/world';
 
 type GlyphKind = TileKind | 'depleted';
@@ -88,8 +89,7 @@ export function TileGlyphs({ world, current, explored, known, scanned, depleted,
     const revealed = revealedTileKind(tile, knownSet, scannedSet, visible, developer);
     const kind: GlyphKind = depletedSet.has(tile.coord) ? 'depleted' : revealed === 'terrain' ? 'empty' : revealed;
     const [x, , z] = worldPosition(tile.coord);
-    const height = tile.coord === selected ? 0.16 : tile.kind === 'obstacle' ? 0.24 : 0;
-    const top = height + (tile.kind === 'obstacle' ? 0.24 : 0.06);
+    const top = terrainDeckHeight(tile.coord) + (tile.kind === 'obstacle' && seen ? TERRAIN_OBSTACLE_RISE : 0) + (tile.coord === selected ? 0.12 : 0);
     return <mesh key={tile.coord} position={[x, top + 0.014, z]} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[0.94, 0.94]} />
       <meshBasicMaterial map={textures[kind]} transparent opacity={visible ? 0.8 : 0.46} depthWrite={false} polygonOffset polygonOffsetFactor={-1} />
