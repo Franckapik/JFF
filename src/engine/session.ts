@@ -8,6 +8,7 @@ import { activeCoords, effectiveRadius, hasLineOfSight, rememberTerrain } from "
 import {
     axial,
     BOT_IDS,
+    canStep,
     generateWorld,
     hexDistance,
     hexLine,
@@ -316,7 +317,7 @@ export class GameSession {
     const [previousColumn, previousRow] = axial(previous);
     const reverseColumn = previousColumn - column;
     const reverseRow = previousRow - row;
-    const edges = Object.values(this.world).filter(tile => tile.neighbors.length < 6 && tile.coord !== contact).map(tile => tile.coord);
+    const edges = Object.values(this.world).filter(tile => tile.kind !== "empty" && tile.neighbors.some(neighbor => this.world[neighbor].kind === "empty") && tile.coord !== contact).map(tile => tile.coord);
     edges.sort((left, right) => {
       const score = (coord: Coord) => {
         const [q, r] = axial(coord);
@@ -331,7 +332,7 @@ export class GameSession {
     });
     const edge = edges[0];
     if (!edge) return;
-    const coords = Object.keys(this.world) as Coord[];
+    const coords = Object.values(this.world).filter(tile => tile.kind !== "empty").map(tile => tile.coord);
     const destination = coords[Math.floor(this.random() * coords.length)];
     const contactAt = operation.duration - operation.remaining;
     const edgeAt = contactAt + hexDistance(contact, edge) * RULES.stepDuration;
@@ -571,11 +572,16 @@ export class GameSession {
         this.finishBot(bot, "Retour a la base impossible");
       return;
     }
+    const fuelPath = this.servicePath(bot, "fuel");
     if (bot.damage >= RULES.repairThreshold && bot.budget >= RULES.repairPrice) {
       const repair = this.servicePath(bot, "repair");
-      if (repair.length > 1 && this.move(bot, repair[repair.length - 1], "repair")) return;
+      const fuelAfterRepair = repair.length > 1
+        ? this.servicePath({ ...bot, coord: repair[repair.length - 1], damage: 0 }, "fuel")
+        : [];
+      const fuelNeeded = (repair.length + fuelAfterRepair.length - 2) * RULES.fuelPerStep + RULES.fuelReserve;
+      if (repair.length > 1 && fuelAfterRepair.length > 0 && bot.fuel >= fuelNeeded &&
+        this.move(bot, repair[repair.length - 1], "repair")) return;
     }
-    const fuelPath = this.servicePath(bot, "fuel");
     if (
       bot.fuel <= Math.max(RULES.fuelUrgencyThreshold, (fuelPath.length - 1) * RULES.fuelPerStep + RULES.fuelReserve) &&
       fuelPath.length > 1
@@ -594,7 +600,7 @@ export class GameSession {
       return;
     }
     const unknown = Object.values(this.world).filter(candidate =>
-      candidate.walkable && !bot.known.includes(candidate.coord) &&
+      candidate.walkable && candidate.kind !== "empty" && !bot.known.includes(candidate.coord) &&
       (!["base", "fuel", "repair"].includes(candidate.kind) || !bot.explored.includes(candidate.coord))
     );
     const price = RULES.upgradePrices[bot.radius];
@@ -636,7 +642,7 @@ export class GameSession {
       .sort((left, right) => right.value / right.path.length - left.value / left.path.length);
     const scans = bot.droneAvailable ? unknown.filter(candidate => {
       const distance = hexDistance(bot.coord, candidate.coord);
-      return ["resource", "empty", "danger"].includes(candidate.kind) && distance <= effectiveRadius(bot) && hasLineOfSight(this.world, bot.coord, candidate.coord) && 2 * distance * RULES.droneFuelPerHex <= bot.fuel;
+      return ["resource", "plain", "danger"].includes(candidate.kind) && distance <= effectiveRadius(bot) && hasLineOfSight(this.world, bot.coord, candidate.coord) && 2 * distance * RULES.droneFuelPerHex <= bot.fuel;
     }) : [];
     const opponent = this.bots().find(other => other.id !== bot.id && other.state !== "disabled" && other.state !== "finished");
     const opponentVisible = opponent && activeCoords(this.world, bot).includes(opponent.coord);
@@ -703,7 +709,7 @@ export class GameSession {
       case "wait":
         break;
       case "move": {
-        if (!this.world[bot.coord].neighbors.includes(operation.target) || !this.world[operation.target]?.walkable)
+        if (!canStep(this.world, bot.coord, operation.target))
           throw new Error("Invalid waypoint");
         const mineHit = this.world[operation.target].mine?.state === "armed";
         const dangerImpact = Math.min(100 - bot.damage, (this.world[operation.target].kind === "danger" ? RULES.dangerDamage : 0) + (mineHit ? RULES.mineDamage : 0));
@@ -1139,7 +1145,7 @@ export class GameSession {
 
   getSnapshot(afterEventSequence = 0): SessionSnapshot {
     return structuredClone({
-      schemaVersion: 13,
+      schemaVersion: 15,
       seed: this.seed,
       mapRadius: this.mapRadius,
       revision: this.revision,

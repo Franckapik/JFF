@@ -14,7 +14,7 @@ ne sont pas incluses dans cette cloture.
 - `src/engine/world.ts` genere une carte reproductible en coordonnees axiales,
   avec ressources symetriques et un service unique de chaque type place a
   distance de trajet presque egale des deux bases ; il calcule les trajets
-  adjacents par BFS.
+  adjacents par BFS en limitant chaque pas a un niveau de hauteur d'ecart.
 - `src/engine/resources.ts` applique les transferts par compartiment ;
   `src/engine/rules.ts` contient les valeurs reglementaires.
 - `src/workers/session-worker.ts` partage une seule `SessionHost` entre les
@@ -43,7 +43,7 @@ stock supplementaire. La session peut finir normalement apres les derniers
 depots ou passer en `blocked` lorsqu'aucun objectif ou retour n'est faisable.
 Le blocage n'invente ni vainqueur ni perte de cargaison pour un vaisseau immobilise.
 
-Le snapshot est en `schemaVersion: 13` et transporte des evenements metier
+Le snapshot est en `schemaVersion: 15` et transporte des evenements metier
 structures pour le mode expert ; le protocole de commandes reste en version 1.
 Un onglet avec un ancien worker doit etre ferme avant reconnexion. L'export
 JSON est un diagnostic, pas une sauvegarde restaurable.

@@ -7,21 +7,27 @@ export const DEPLETED_TILE_COLOR = "#829aac";
 export const MINED_TILE_COLOR = "#a84962";
 export const TILE_COLORS: Record<TileKind, string> = {
   resource: "#a8bda3",
-  empty: "#e0d7c1",
+  plain: "#c3bea8",
+  empty: "#35545b",
   obstacle: "#8f988e",
   danger: "#d58b72",
   base: "#dac7a5",
   fuel: "#dfbb75",
   repair: "#b5a8bc",
+  ramp: "#b0aa8b",
+  tower: "#e7d8b8",
 };
 export const TILE_LABELS: Record<TileKind, string> = {
   resource: "Ressources",
-  empty: "Vide",
+  plain: "Terrain nu",
+  empty: "Fond marin",
   obstacle: "Obstacle",
   danger: "Danger",
   base: "Base",
   fuel: "Carburant",
   repair: "Reparation",
+  ramp: "Rampe · niveau 2",
+  tower: "Tour · niveau 3",
 };
 export const RESOURCE_LABELS = { food: "Provisions", debris: "Débris", special: "Cartes action" };
 export const PHASE_LABELS: Record<BotPhase, string> = {

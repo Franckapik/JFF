@@ -1,24 +1,14 @@
-import { axial, hexDistance, worldPosition, type Coord } from './world';
+import { tileLevel, worldPosition, type Coord, type World } from './world';
 
-// Presentation-only relief. The shared game rules still use a flat hex graph.
 export const TERRAIN_BOTTOM = -0.22;
-export const TERRAIN_OBSTACLE_RISE = 0.24;
+export const TERRAIN_BASE_TOP = 0.08;
+export const TERRAIN_LEVEL_STEP = 0.31;
 
-export function terrainLevel(coord: Coord): number {
-  const [q, r] = axial(coord);
-  const ring = hexDistance('0,0', coord);
-  if (ring === 0) return 3;
-  const variation = (Math.abs(q * 7 + r * 11) + Math.abs(q * 3 - r * 5)) % 2;
-  if (ring === 1) return 1 + variation;
-  if (ring === 2) return variation;
-  return variation;
+export function terrainDeckHeight(world: World, coord: Coord): number {
+  return TERRAIN_BASE_TOP + tileLevel(world[coord]) * TERRAIN_LEVEL_STEP;
 }
 
-export function terrainDeckHeight(coord: Coord): number {
-  return 0.08 + terrainLevel(coord) * 0.31;
-}
-
-export function terrainPosition(coord: Coord): [number, number, number] {
+export function terrainPosition(world: World, coord: Coord): [number, number, number] {
   const [x, , z] = worldPosition(coord);
-  return [x, terrainDeckHeight(coord), z];
+  return [x, terrainDeckHeight(world, coord), z];
 }

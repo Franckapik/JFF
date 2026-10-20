@@ -4,7 +4,7 @@ import { MAX_MAP_RADIUS, MIN_MAP_RADIUS, RULES } from "./rules";
 export type Coord = `${number},${number}`;
 export type BotId = "bot-0" | "bot-1";
 export const BOT_IDS: BotId[] = ["bot-0", "bot-1"];
-export type TileKind = "resource" | "empty" | "obstacle" | "danger" | "base" | "fuel" | "repair";
+export type TileKind = "resource" | "plain" | "empty" | "obstacle" | "danger" | "base" | "fuel" | "repair" | "ramp" | "tower";
 export interface Mine {
   owner: BotId;
   state: "arming" | "armed";
@@ -20,6 +20,23 @@ export interface WorldTile {
   mine?: Mine;
 }
 export type World = Record<Coord, WorldTile>;
+
+export function tileLevel(tile: Pick<WorldTile, "kind">): number {
+  switch (tile.kind) {
+    case "empty": return 0;
+    case "obstacle":
+    case "ramp": return 2;
+    case "tower": return 3;
+    default: return 1;
+  }
+}
+
+export function canStep(world: World, from: Coord, to: Coord): boolean {
+  const origin = world[from];
+  const destination = world[to];
+  return !!origin?.walkable && origin.kind !== "empty" && !!destination?.walkable && destination.kind !== "empty" && origin.neighbors.includes(to) &&
+    Math.abs(tileLevel(origin) - tileLevel(destination)) <= 1;
+}
 
 const DIRECTIONS = [
   [1, 0],
@@ -80,7 +97,7 @@ export function nextRandom(state: number): { state: number; value: number } {
 }
 
 export function pathBetween(world: World, from: Coord, to: Coord): Coord[] {
-  if (!world[from]?.walkable || !world[to]?.walkable) return [];
+  if (!world[from]?.walkable || world[from].kind === "empty" || !world[to]?.walkable || world[to].kind === "empty") return [];
   const queue: Coord[] = [from];
   const parents = new Map<Coord, Coord | null>([[from, null]]);
   for (let head = 0; head < queue.length; head++) {
@@ -95,7 +112,7 @@ export function pathBetween(world: World, from: Coord, to: Coord): Coord[] {
       return path.reverse();
     }
     for (const neighbor of world[current].neighbors) {
-      if (world[neighbor]?.walkable && !parents.has(neighbor)) {
+      if (canStep(world, current, neighbor) && !parents.has(neighbor)) {
         parents.set(neighbor, current);
         queue.push(neighbor);
       }
@@ -105,12 +122,12 @@ export function pathBetween(world: World, from: Coord, to: Coord): Coord[] {
 }
 
 export function reachableCoords(world: World, from: Coord): Coord[] {
-  if (!world[from]?.walkable) return [];
+  if (!world[from]?.walkable || world[from].kind === "empty") return [];
   const queue: Coord[] = [from];
   const visited = new Set(queue);
   for (let head = 0; head < queue.length; head++) {
     for (const neighbor of world[queue[head]].neighbors) {
-      if (world[neighbor]?.walkable && !visited.has(neighbor)) {
+      if (canStep(world, queue[head], neighbor) && !visited.has(neighbor)) {
         visited.add(neighbor);
         queue.push(neighbor);
       }
@@ -131,7 +148,7 @@ function placeServices(world: World, fuel: Coord, repair: Coord): World {
     const [column, row] = axial(coord);
     const mirror: Coord = `${-column},${-row}`;
     if (mirror !== fuel && mirror !== repair) {
-      placed[mirror] = { ...placed[mirror], kind: "empty", walkable: true, resources: emptyResources() };
+      placed[mirror] = { ...placed[mirror], kind: "plain", walkable: true, resources: emptyResources() };
     }
   }
   placed[fuel] = { ...placed[fuel], kind: "fuel", walkable: true, resources: emptyResources() };
@@ -139,9 +156,24 @@ function placeServices(world: World, fuel: Coord, repair: Coord): World {
   return placed;
 }
 
+function validLand(world: World, bases: Coord[], radius: number): boolean {
+  if (reachableCoords(world, bases[0]).length !== Object.values(world).filter(tile => tile.walkable).length) return false;
+  return (["fuel", "repair"] as const).every(kind => {
+    const station = Object.values(world).find(tile => tile.kind === kind);
+    if (!station) return false;
+    const distances = bases.map(base => pathBetween(world, base, station.coord).length - 1);
+    return distances.every(distance => distance >= 0) && Math.abs(distances[0] - distances[1]) <= 1 &&
+      Math.max(...distances) <= radius + 2;
+  });
+}
+
 export function generateWorld(seed: number, radius: number = RULES.mapRadius): World {
   if (!Number.isSafeInteger(seed) || !Number.isInteger(radius) || radius < MIN_MAP_RADIUS || radius > MAX_MAP_RADIUS) throw new Error("Invalid map configuration");
-  let randomState = seed >>> 0;
+  return generateWorldAttempt(seed, radius, 0);
+}
+
+function generateWorldAttempt(seed: number, radius: number, attempt: number): World {
+  let randomState = ((seed >>> 0) + Math.imul(attempt, 0x9e3779b9)) >>> 0;
   const random = () => {
     const result = nextRandom(randomState);
     randomState = result.state;
@@ -166,6 +198,9 @@ export function generateWorld(seed: number, radius: number = RULES.mapRadius): W
     world[coord].kind = "base";
     world[coord].owner = BOT_IDS[index];
   });
+  world["0,0"].kind = "tower";
+  world["0,1"].kind = "ramp";
+  world["0,-1"].kind = "ramp";
   const processed = new Set<Coord>();
   const specialPriority = new Map<Coord, number>();
   for (const tile of Object.values(world)) {
@@ -183,7 +218,7 @@ export function generateWorld(seed: number, radius: number = RULES.mapRadius): W
         : roll < 0.2
           ? "danger"
           : roll < 0.3
-            ? "empty"
+          ? "plain"
             : "resource";
     const guaranteedDebris = tile.coord === `${-radius + 1},0` || mirror === `${-radius + 1},0`;
     let resources = emptyResources();
@@ -213,28 +248,33 @@ export function generateWorld(seed: number, radius: number = RULES.mapRadius): W
       reachableCoords(world, bases[0]).length !== Object.values(world).filter(candidate => candidate.walkable).length
     ) {
       for (const coord of [tile.coord, mirror]) {
-        world[coord].kind = "empty";
+        world[coord].kind = "plain";
         world[coord].walkable = true;
       }
     }
   }
   const candidates = Object.values(world).filter(tile => {
     const distances = bases.map(base => hexDistance(base, tile.coord));
-    return Math.min(...distances) > 1 && Math.max(...distances) <= radius + 1 && Math.abs(distances[0] - distances[1]) <= 1;
+    return tile.kind !== "tower" && tile.kind !== "ramp" && Math.min(...distances) > 1 &&
+      Math.max(...distances) <= radius + 1 && Math.abs(distances[0] - distances[1]) <= 1;
   });
   const layouts: World[] = [];
   for (const fuel of candidates.filter(tile => hexDistance(bases[0], tile.coord) === hexDistance(bases[1], tile.coord))) {
     for (const repair of candidates) {
       if (repair.coord === fuel.coord) continue;
       const placed = placeServices(world, fuel.coord, repair.coord);
-      const fair = [fuel.coord, repair.coord].every(coord => {
-        const distances = bases.map(base => pathBetween(placed, base, coord).length - 1);
-        return distances.every(distance => distance >= 0 && distance <= radius + 2) && Math.abs(distances[0] - distances[1]) <= 1;
-      });
-      if (fair) layouts.push(placed);
+      const serviceDistances = [fuel.coord, repair.coord].map(coord =>
+        bases.map(base => pathBetween(placed, base, coord).length - 1)
+      );
+      if (!serviceDistances.every(distances => distances.every(distance => distance >= 0) && Math.abs(distances[0] - distances[1]) <= 1)) continue;
+      const longestPath = Math.max(...serviceDistances.flat());
+      if (longestPath <= radius + 2) layouts.push(placed);
     }
   }
-  if (!layouts.length) throw new Error("No balanced service placement");
+  if (!layouts.length) {
+    if (attempt < 32) return generateWorldAttempt(seed, radius, attempt + 1);
+    throw new Error("No balanced service placement");
+  }
   const selected = layouts[Math.floor(random() * layouts.length)];
   const specialPairs = Object.values(selected)
     .filter(tile => {
@@ -250,12 +290,15 @@ export function generateWorld(seed: number, radius: number = RULES.mapRadius): W
         const [column, row] = axial(tile.coord);
         const mirror: Coord = `${-column},${-row}`;
         return tile.coord < mirror && selected[mirror]?.kind === tile.kind &&
-          !["resource", "base", "fuel", "repair"].includes(tile.kind);
+          !["resource", "base", "fuel", "repair", "ramp", "tower"].includes(tile.kind);
       })
       .map(tile => ({ tile, priority: random() }))
       .sort((left, right) => right.priority - left.priority)
       .slice(0, RULES.specialPairCount - specialPairs.length);
-    if (specialPairs.length + supplemental.length < RULES.specialPairCount) throw new Error("Insufficient special resource pairs");
+    if (specialPairs.length + supplemental.length < RULES.specialPairCount) {
+      if (attempt < 32) return generateWorldAttempt(seed, radius, attempt + 1);
+      throw new Error("Insufficient special resource pairs");
+    }
     for (const { tile } of supplemental) {
       const [column, row] = axial(tile.coord);
       const mirror: Coord = `${-column},${-row}`;
@@ -277,6 +320,46 @@ export function generateWorld(seed: number, radius: number = RULES.mapRadius): W
     const mirror: Coord = `${-column},${-row}`;
     selected[tile.coord].resources.special = 1;
     selected[mirror].resources.special = 1;
+  }
+  const coastPriority = new Map<Coord, number>();
+  for (const tile of Object.values(selected)) coastPriority.set(tile.coord, random());
+  const carve = (ring: number, limit: number) => {
+    let placed = 0;
+    while (placed < limit) {
+      const candidates = Object.values(selected).filter(tile => {
+        const [q, r] = axial(tile.coord);
+        const mirror: Coord = `${-q},${-r}`;
+        return tile.coord < mirror && hexDistance("0,0", tile.coord) === ring &&
+          tile.kind === selected[mirror]?.kind && !["base", "fuel", "repair", "ramp", "tower", "empty"].includes(tile.kind) &&
+          tile.resources.special === 0 && bases.every(base => hexDistance(base, tile.coord) > 1 && hexDistance(base, mirror) > 1) &&
+          (ring === radius || tile.neighbors.some(neighbor => selected[neighbor].kind === "empty"));
+      }).sort((left, right) => {
+        const score = (tile: WorldTile) => (coastPriority.get(tile.coord) ?? 0) +
+          tile.neighbors.filter(neighbor => selected[neighbor].kind === "empty").length * 0.7 -
+          (tile.kind === "resource" ? 2 : tile.kind === "danger" ? 0.3 : 0);
+        return score(right) - score(left);
+      });
+      let accepted = false;
+      for (const tile of candidates) {
+        const [q, r] = axial(tile.coord);
+        const mirror: Coord = `${-q},${-r}`;
+        const former = [selected[tile.coord], selected[mirror]].map(value => ({ ...value }));
+        for (const coord of [tile.coord, mirror]) {
+          selected[coord] = { ...selected[coord], kind: "empty", walkable: false, resources: emptyResources() };
+        }
+        if (validLand(selected, bases, radius)) { accepted = true; placed++; break; }
+        selected[tile.coord] = former[0];
+        selected[mirror] = former[1];
+      }
+      if (!accepted) break;
+    }
+    return placed;
+  };
+  const outerCoast = carve(radius, Math.max(1, Math.round(radius * 0.9)));
+  if (radius >= 5) carve(radius - 1, 1);
+  if (!outerCoast || !validLand(selected, bases, radius)) {
+    if (attempt < 32) return generateWorldAttempt(seed, radius, attempt + 1);
+    throw new Error("No connected balanced coastline");
   }
   return selected;
 }

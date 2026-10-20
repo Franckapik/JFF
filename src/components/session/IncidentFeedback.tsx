@@ -7,14 +7,14 @@ import { Mesh, MeshBasicMaterial } from 'three';
 import type { BotView } from '../../engine/model';
 import { RULES } from '../../engine/rules';
 import { terrainDeckHeight } from '../../engine/terrainPresentation';
-import { worldPosition, type Coord } from '../../engine/world';
+import { worldPosition, type Coord, type World } from '../../engine/world';
 
 import { clock } from './presentation';
 import type { ActiveIncident } from './useIncidentAlerts';
 
 const PULSE_DURATION = 2400;
 
-function IncidentPulse({ alert }: { alert: ActiveIncident }) {
+function IncidentPulse({ alert, world }: { alert: ActiveIncident; world: World }) {
   const ring = useRef<Mesh>(null);
   const material = useRef<MeshBasicMaterial>(null);
   const coord = alert.message.coord!;
@@ -25,7 +25,7 @@ function IncidentPulse({ alert }: { alert: ActiveIncident }) {
   });
   const color = alert.message.tone === 'electric' ? '#21b5d4' : alert.message.tone === 'recovery' ? '#2f9b71' : '#d74737';
   const [x, , z] = worldPosition(coord);
-  return <group position={[x, terrainDeckHeight(coord), z]}>
+  return <group position={[x, terrainDeckHeight(world, coord), z]}>
     <mesh ref={ring} position={[0, 0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[0.53, 0.68, 32]} />
       <meshBasicMaterial ref={material} color={color} transparent opacity={0.85} />
@@ -36,11 +36,11 @@ function IncidentPulse({ alert }: { alert: ActiveIncident }) {
   </group>;
 }
 
-export function IncidentPulses({ alerts }: { alerts: ActiveIncident[] }) {
+export function IncidentPulses({ alerts, world }: { alerts: ActiveIncident[]; world: World }) {
   const reducedMotion = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reducedMotion) return null;
   return <>{alerts.filter(alert => alert.message.coord && Date.now() - alert.receivedAt < PULSE_DURATION).map(alert =>
-    <IncidentPulse key={alert.event.sequence} alert={alert} />
+    <IncidentPulse key={alert.event.sequence} alert={alert} world={world} />
   )}</>;
 }
 

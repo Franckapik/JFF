@@ -8,7 +8,7 @@ import { addResources, emptyResources, resourceTotal, transferResources } from "
 import { RULES } from "./rules";
 import { createBot, GameSession } from "./session";
 import { activeCoords, effectiveRadius, hasLineOfSight, isCloudVisible, resourceMarkerCoords, revealedTileKind } from "./visibility";
-import { axial, generateWorld, hexDistance, hexLine, pathBetween, reachableCoords, worldPosition, type Coord } from "./world";
+import { axial, canStep, generateWorld, hexDistance, hexLine, pathBetween, reachableCoords, tileLevel, worldPosition, type Coord } from "./world";
 
 describe("resource transactions", () => {
   const capacity = { food: 200, debris: 1800, special: 3 };
@@ -44,7 +44,7 @@ describe("offensive drone", () => {
     for (const tile of Object.values(world)) {
       tile.resources = emptyResources();
       if (tile.kind !== "base") {
-        tile.kind = "empty";
+        tile.kind = "plain";
         tile.walkable = true;
       }
     }
@@ -362,10 +362,10 @@ describe("electric cloud", () => {
     const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) {
       tile.resources = emptyResources();
-      if (tile.kind === "danger") tile.kind = "empty";
+      if (tile.kind === "danger") tile.kind = "plain";
     }
     for (const coord of ["0,0", "1,0", "1,1", "2,0", target, cloudCoord] as Coord[]) {
-      world[coord].kind = "empty";
+      world[coord].kind = "plain";
       world[coord].walkable = true;
     }
     world["-3,1"].kind = "resource";
@@ -433,10 +433,10 @@ describe("electric cloud", () => {
     const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) {
       tile.resources = emptyResources();
-      if (tile.kind === "danger") tile.kind = "empty";
+      if (tile.kind === "danger") tile.kind = "plain";
     }
     for (const coord of ["0,0", "1,0", "1,1", "2,0", target] as Coord[]) {
-      world[coord].kind = "empty";
+      world[coord].kind = "plain";
       world[coord].walkable = true;
     }
     for (const neighbor of world["1,1"].neighbors) {
@@ -503,8 +503,9 @@ describe("electric cloud", () => {
     const makeSession = (cloudCoord: Coord) => {
       const world = generateWorld(42, 3);
       for (const tile of Object.values(world)) tile.resources = emptyResources();
-      world["1,0"].kind = "empty";
+      world["1,0"].kind = "plain";
       world["1,0"].walkable = true;
+      world["0,0"].kind = "resource";
       world["-3,1"].kind = "resource";
       world["-3,1"].resources.food = 20;
       const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
@@ -534,10 +535,10 @@ describe("electric cloud", () => {
     world["-1,0"].kind = "resource";
     world["-1,0"].walkable = true;
     world["-1,0"].resources.food = 20;
-    world["0,0"].kind = "empty";
+    world["0,0"].kind = "plain";
     world["0,0"].walkable = true;
     const cloudCoord: Coord = "1,0";
-    world[cloudCoord].kind = "empty";
+    world[cloudCoord].kind = "plain";
     world[cloudCoord].walkable = true;
     for (const neighbor of world[cloudCoord].neighbors) if (neighbor !== "0,0") world[neighbor].walkable = false;
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
@@ -940,7 +941,7 @@ describe("shared session", () => {
     const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) {
       tile.resources = emptyResources();
-      if (tile.kind !== "base") { tile.kind = "empty"; tile.walkable = true; }
+      if (tile.kind !== "base") { tile.kind = "plain"; tile.walkable = true; }
     }
     world["-2,0"].kind = "resource";
     world["-2,0"].resources.food = 100;
@@ -967,7 +968,7 @@ describe("shared session", () => {
     const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) {
       tile.resources = emptyResources();
-      if (tile.kind !== "base") { tile.kind = "empty"; tile.walkable = true; }
+      if (tile.kind !== "base") { tile.kind = "plain"; tile.walkable = true; }
     }
     world["-2,0"].kind = "resource";
     world["-2,0"].resources.food = 100;
@@ -1006,6 +1007,20 @@ describe("shared session", () => {
     expect(bot.damage).toBe(70);
     expect(bot.operation?.kind).toBe("move");
     expect(bot.goal).toEqual({ coord: station.coord, reason: "repair" });
+    session.stop();
+  });
+
+  it("refuels before a repair trip that would leave too little fuel to reach the station", () => {
+    const world = generateWorld(47, 5);
+    const bots = { "bot-0": createBot("bot-0", world, 47), "bot-1": createBot("bot-1", world, 47) };
+    Object.assign(bots["bot-0"], {
+      coord: "0,1", fuel: 10, damage: 75, budget: RULES.repairPrice, score: RULES.repairPrice,
+      deposited: { food: RULES.repairPrice, debris: RULES.repairPrice, special: 0 },
+      explored: [...bots["bot-0"].explored, "-1,2"],
+    });
+    const session = new GameSession(47, { world, bots });
+    session.advance(1);
+    expect(session.getSnapshot().bots["bot-0"].goal?.reason).toBe("fuel");
     session.stop();
   });
 
@@ -1062,7 +1077,7 @@ describe("shared session", () => {
     for (const tile of Object.values(world)) {
       tile.resources = emptyResources();
       tile.walkable = true;
-      if (tile.kind !== "base") tile.kind = "empty";
+      if (tile.kind !== "base") tile.kind = "plain";
     }
     world["-2,0"].kind = "danger";
     world["-1,0"].kind = "resource";
@@ -1080,19 +1095,19 @@ describe("shared session", () => {
   it("travels to a repair station before repairing", () => {
     const world = generateWorld(42, 3);
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
-    Object.assign(bots["bot-0"], { coord: "0,0", fuel: 40, damage: 70, budget: RULES.repairPrice, score: RULES.repairPrice,
+    Object.assign(bots["bot-0"], { coord: "0,0", fuel: 100, damage: 70, budget: RULES.repairPrice, score: RULES.repairPrice,
       deposited: { food: RULES.repairPrice, debris: RULES.repairPrice, special: 0 } });
-    world["0,0"].kind = "empty";
-    world["0,0"].walkable = true;
-    world["0,0"].resources = emptyResources();
+    const repairCoord = Object.values(world).find(tile => tile.kind === "repair")!.coord;
+    bots["bot-0"].explored.push(repairCoord);
+    const repairPath = pathBetween(world, "0,0", repairCoord);
     const session = new GameSession(42, { world, bots });
-    session.advance(2 * RULES.stepDuration - 1);
-    expect(session.getSnapshot().bots["bot-0"].coord).toBe("0,0");
+    session.advance((repairPath.length - 1) * 2 * RULES.stepDuration - 1);
+    expect(session.getSnapshot().bots["bot-0"].coord).toBe(repairPath[repairPath.length - 2]);
     expect(session.getSnapshot().bots["bot-0"].damage).toBe(70);
     session.advance(1);
     const arrived = session.getSnapshot().bots["bot-0"];
     expect(world[arrived.coord].kind).toBe("repair");
-    expect(arrived.fuel).toBe(38);
+    expect(arrived.fuel).toBe(100 - (repairPath.length - 1) * RULES.fuelPerStep);
     expect(arrived.damage).toBe(70);
     session.advance(RULES.serviceDuration);
     expect(session.getSnapshot().bots["bot-0"].damage).toBe(0);
@@ -1173,7 +1188,7 @@ describe("shared session", () => {
   it("sends a drone with insufficient scan fuel to a fuel station", () => {
     const world = generateWorld(42, 3);
     for (const tile of Object.values(world)) tile.resources = emptyResources();
-    world["0,0"].kind = "empty";
+    world["0,0"].kind = "plain";
     world["0,0"].walkable = true;
     world["0,1"].kind = "fuel";
     world["0,1"].walkable = true;
@@ -1392,7 +1407,7 @@ describe("shared session", () => {
   it("keeps cargo on the ship when a mine impact reaches 100 damage", () => {
     const world = generateWorld(42, 3);
     world["-2,1"].walkable = true;
-    world["-2,1"].kind = "empty";
+    world["-2,1"].kind = "plain";
     world["-2,1"].resources = emptyResources();
     world["-2,0"].mine = { owner: "bot-1", state: "armed", armsAt: 0 };
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
@@ -1706,7 +1721,7 @@ describe("session protocol", () => {
       expect(TestWorker.instances).toBe(1);
       emit(response);
       expect(useSessionStore.getState().status).toBe("connected");
-      expect(useSessionStore.getState().snapshot?.schemaVersion).toBe(13);
+      expect(useSessionStore.getState().snapshot?.schemaVersion).toBe(15);
       const initialEvents = response.snapshot!.events;
       const additionalEvent = { ...initialEvents[0], sequence: response.snapshot!.eventSequence + 1, time: 100 };
       const incremental = { ...response, snapshot: { ...response.snapshot!, eventSequence: additionalEvent.sequence, events: [additionalEvent] } };
@@ -1792,6 +1807,64 @@ describe("session protocol", () => {
 });
 
 describe("hexagonal world", () => {
+  it("carves a varying, symmetric coastline that stays outside the game", () => {
+    const silhouettes = new Set<string>();
+    for (let seed = 0; seed < 24; seed++) {
+      const world = generateWorld(seed, 5);
+      const coast = Object.values(world).filter(tile => tile.kind === "empty");
+      silhouettes.add(coast.map(tile => tile.coord).join("|"));
+      expect(coast.length).toBeGreaterThanOrEqual(2);
+      expect(reachableCoords(world, "-5,0")).toHaveLength(Object.values(world).filter(tile => tile.walkable).length);
+      for (const tile of coast) {
+        const [q, r] = axial(tile.coord);
+        const ring = hexDistance("0,0", tile.coord);
+        expect(ring).toBeGreaterThanOrEqual(4);
+        expect(world[`${-q},${-r}`].kind).toBe("empty");
+        expect(tile.walkable).toBe(false);
+        expect(resourceTotal(tile.resources)).toBe(0);
+        expect(pathBetween(world, "-5,0", tile.coord)).toEqual([]);
+        if (ring === 4) expect(tile.neighbors.some(neighbor => world[neighbor].kind === "empty" && hexDistance("0,0", neighbor) === 5)).toBe(true);
+        const landNeighbor = tile.neighbors.find(neighbor => world[neighbor].walkable);
+        if (landNeighbor) expect(activeCoords(world, { coord: landNeighbor, radius: 3 })).not.toContain(tile.coord);
+      }
+    }
+    expect(silhouettes.size).toBeGreaterThan(8);
+  });
+
+  it("starts with four readable levels and a reachable tower", () => {
+    for (const radius of [2, 5, 8]) {
+      const world = generateWorld(42, radius);
+      expect(new Set(Object.values(world).map(tileLevel))).toEqual(new Set([0, 1, 2, 3]));
+      expect(world["0,0"].kind).toBe("tower");
+      expect(world["0,1"].kind).toBe("ramp");
+      expect(world["0,-1"].kind).toBe("ramp");
+      for (const tile of Object.values(world)) {
+        expect(tileLevel(tile)).toBe(tile.kind === "empty" ? 0 : tile.kind === "tower" ? 3 :
+          tile.kind === "ramp" || tile.kind === "obstacle" ? 2 : 1);
+      }
+      for (const base of [`${-radius},0`, `${radius},0`] as Coord[]) {
+        const path = pathBetween(world, base, "0,0");
+        expect(path.length).toBeGreaterThan(1);
+        for (let index = 1; index < path.length; index++) expect(canStep(world, path[index - 1], path[index])).toBe(true);
+      }
+    }
+  });
+
+  it("rejects jumps over two levels even between adjacent walkable tiles", () => {
+    const world = generateWorld(42, 3);
+    for (const tile of Object.values(world)) { tile.kind = "plain"; tile.walkable = true; }
+    world["1,0"].kind = "tower";
+    expect(canStep(world, "0,0", "1,0")).toBe(false);
+    expect(pathBetween(world, "0,0", "1,0")).toEqual([]);
+    world["1,-1"].kind = "ramp";
+    expect(pathBetween(world, "0,0", "1,0")).toEqual(["0,0", "1,-1", "1,0"]);
+    world["1,-1"].walkable = false;
+    expect(pathBetween(world, "0,0", "1,0")).toEqual([]);
+    world["0,1"].kind = "empty";
+    expect(canStep(world, "0,0", "0,1")).toBe(false);
+    expect(pathBetween(world, "0,0", "0,1")).toEqual([]);
+  });
+
   it("limits special action resources to ten in symmetric pairs", () => {
     for (let seed = 0; seed < 100; seed++) {
       const world = generateWorld(seed, 3);
@@ -1828,6 +1901,32 @@ describe("hexagonal world", () => {
     expect(Object.values(world).filter(tile => tile.kind === "repair")).toHaveLength(1);
     expect(() => generateWorld(0, 1)).toThrow();
     expect(() => generateWorld(0, 9)).toThrow();
+  });
+
+  it.each([[7, 138], [8, 110]] as const)("regenerates radius %i seed %i when no balanced service layout exists", (radius, seed) => {
+    const world = generateWorld(seed, radius);
+    expect(world).toEqual(generateWorld(seed, radius));
+    const bases = [`${-radius},0`, `${radius},0`] as Coord[];
+    for (const kind of ["fuel", "repair"] as const) {
+      const station = Object.values(world).find(tile => tile.kind === kind)!;
+      const distances = bases.map(base => pathBetween(world, base, station.coord).length - 1);
+      expect(Math.abs(distances[0] - distances[1])).toBeLessThanOrEqual(1);
+      expect(Math.max(...distances)).toBeLessThanOrEqual(radius + 2);
+    }
+    expect(Object.values(world).reduce((total, tile) => total + tile.resources.special, 0)).toBe(10);
+  });
+
+  it("keeps ten special resources on compact radius-2 layouts", () => {
+    for (let seed = 0; seed < 50; seed++) {
+      const world = generateWorld(seed, 2);
+      expect(new Set(Object.values(world).map(tileLevel))).toEqual(new Set([0, 1, 2, 3]));
+      expect(Object.values(world).reduce((total, tile) => total + tile.resources.special, 0)).toBe(10);
+      expect(reachableCoords(world, "-2,0")).toHaveLength(Object.values(world).filter(tile => tile.walkable).length);
+      for (const tile of Object.values(world)) {
+        const [q, r] = axial(tile.coord);
+        expect(tile.resources.special).toBe(world[`${-q},${-r}`].resources.special);
+      }
+    }
   });
 
   it.each([0, 1, 42, 4294967295])("generates a balanced connected world for seed %i", seed => {

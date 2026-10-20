@@ -74,7 +74,7 @@ export const useSessionStore = create<SessionStore>((set, get) => {
             fail(data.error ?? "Connexion interrompue");
             return;
           }
-          if (!data || data.protocol !== 1 || data.snapshot?.schemaVersion !== 13) {
+          if (!data || data.protocol !== 1 || data.snapshot?.schemaVersion !== 15) {
             fail(data?.error ?? "Version du moteur incompatible. Fermez les anciens onglets du jeu, puis reconnectez-vous.");
             return;
           }

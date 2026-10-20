@@ -3,7 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { CanvasTexture, SRGBColorSpace } from 'three';
 
 import { revealedTileKind } from '../../engine/visibility';
-import { terrainDeckHeight, TERRAIN_OBSTACLE_RISE } from '../../engine/terrainPresentation';
+import { terrainDeckHeight } from '../../engine/terrainPresentation';
 import { worldPosition, type Coord, type TileKind, type World } from '../../engine/world';
 
 type GlyphKind = TileKind | 'depleted';
@@ -35,9 +35,18 @@ function drawGlyph(kind: GlyphKind): CanvasTexture {
     case 'depleted':
       path(37, 86, 91, 41); path(40, 41, 88, 87); circle(64, 64, 31);
       break;
+    case 'plain':
+      path(31, 76, 50, 68, 66, 71, 91, 60); path(39, 88, 79, 88);
+      break;
     case 'obstacle':
       path(28, 86, 53, 43, 66, 64, 75, 39, 101, 86, 28, 86);
       path(49, 51, 55, 68, 65, 72); path(81, 51, 75, 67); path(43, 79, 51, 70); path(78, 78, 84, 70);
+      break;
+    case 'ramp':
+      path(30, 91, 52, 70, 74, 70, 97, 44); path(43, 82, 62, 82, 82, 60);
+      break;
+    case 'tower':
+      path(39, 92, 45, 38, 83, 38, 89, 92); path(33, 92, 95, 92); path(64, 38, 64, 22); circle(64, 19, 5);
       break;
     case 'danger':
       path(64, 31, 72, 53, 96, 46, 83, 67, 99, 84, 73, 79, 64, 99, 55, 79, 29, 84, 45, 67, 32, 46, 56, 53, 64, 31);
@@ -73,7 +82,7 @@ export function TileGlyphs({ world, current, explored, known, scanned, depleted,
   depleted: string; developer: boolean; selected: Coord | null;
 }) {
   const textures = useMemo(() => Object.fromEntries(
-    (['resource', 'empty', 'obstacle', 'danger', 'base', 'fuel', 'repair', 'depleted'] as GlyphKind[])
+    (['resource', 'plain', 'empty', 'obstacle', 'danger', 'base', 'fuel', 'repair', 'ramp', 'tower', 'depleted'] as GlyphKind[])
       .map(kind => [kind, drawGlyph(kind)])
   ) as Record<GlyphKind, CanvasTexture>, []);
   useEffect(() => () => Object.values(textures).forEach(texture => texture.dispose()), [textures]);
@@ -83,13 +92,14 @@ export function TileGlyphs({ world, current, explored, known, scanned, depleted,
   const scannedSet = new Set(scanned.split('|') as Coord[]);
   const depletedSet = new Set(depleted.split('|') as Coord[]);
   return <>{Object.values(world).map(tile => {
+    if (tile.kind === 'empty') return null;
     const visible = currentSet.has(tile.coord);
     const seen = visible || exploredSet.has(tile.coord);
     if (!seen) return null;
     const revealed = revealedTileKind(tile, knownSet, scannedSet, visible, developer);
-    const kind: GlyphKind = depletedSet.has(tile.coord) ? 'depleted' : revealed === 'terrain' ? 'empty' : revealed;
+    const kind: GlyphKind = depletedSet.has(tile.coord) ? 'depleted' : revealed === 'terrain' ? 'plain' : revealed;
     const [x, , z] = worldPosition(tile.coord);
-    const top = terrainDeckHeight(tile.coord) + (tile.kind === 'obstacle' && seen ? TERRAIN_OBSTACLE_RISE : 0) + (tile.coord === selected ? 0.12 : 0);
+    const top = terrainDeckHeight(world, tile.coord) + (tile.coord === selected ? 0.12 : 0);
     return <mesh key={tile.coord} position={[x, top + 0.014, z]} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[0.94, 0.94]} />
       <meshBasicMaterial map={textures[kind]} transparent opacity={visible ? 0.8 : 0.46} depthWrite={false} polygonOffset polygonOffsetFactor={-1} />

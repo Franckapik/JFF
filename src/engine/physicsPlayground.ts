@@ -1,7 +1,7 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 
 import { BOT_IDS, worldPosition, type BotId, type Coord, type World } from './world';
-import { terrainDeckHeight, TERRAIN_BOTTOM, TERRAIN_OBSTACLE_RISE } from './terrainPresentation';
+import { terrainDeckHeight, TERRAIN_BOTTOM } from './terrainPresentation';
 
 export type PlaygroundShape = 'block' | 'ball';
 export interface PhysicsBotPose { x: number; y: number; z: number; heading: number }
@@ -42,12 +42,15 @@ export class PhysicsPlaygroundWorld {
   private readonly botActive = new Set<BotId>();
   private readonly routeColliders = new Set<number>();
   private readonly impacts: Record<BotId, number> = { 'bot-0': 0, 'bot-1': 0 };
+  private readonly tiles: World;
 
   private constructor(tiles: World, coord: Coord) {
+    this.tiles = tiles;
     this.world.timestep = FIXED_STEP;
     for (const tile of Object.values(tiles)) {
+      if (tile.kind === 'empty') continue;
       const [x, , z] = worldPosition(tile.coord);
-      const top = terrainDeckHeight(tile.coord) + (tile.kind === 'obstacle' ? TERRAIN_OBSTACLE_RISE : 0);
+      const top = terrainDeckHeight(tiles, tile.coord);
       const halfHeight = (top - TERRAIN_BOTTOM) / 2;
       const centerY = TERRAIN_BOTTOM + halfHeight;
       const floor = this.world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(x, centerY, z));
@@ -69,11 +72,11 @@ export class PhysicsPlaygroundWorld {
   get impactCounts(): Readonly<Record<BotId, number>> { return this.impacts; }
 
   stack(coord: Coord, tiles: World): void {
-    if (this.disposed || !tiles[coord]) return;
+    if (this.disposed || !tiles[coord] || tiles[coord].kind === 'empty') return;
     this.clear();
     this.site = coord;
     const [x, , z] = worldPosition(coord);
-    const floorTop = terrainDeckHeight(coord) + (tiles[coord].kind === 'obstacle' ? TERRAIN_OBSTACLE_RISE : 0);
+    const floorTop = terrainDeckHeight(tiles, coord);
     for (let index = 0; index < 6; index++) {
       const offset = index % 2 === 0 ? -0.025 : 0.025;
       const body = this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
@@ -87,9 +90,9 @@ export class PhysicsPlaygroundWorld {
   }
 
   dropCrates(coord: Coord, tiles: World): void {
-    if (this.disposed || !tiles[coord]) return;
+    if (this.disposed || !tiles[coord] || tiles[coord].kind === 'empty') return;
     const [x, , z] = worldPosition(coord);
-    const floorTop = terrainDeckHeight(coord) + (tiles[coord].kind === 'obstacle' ? TERRAIN_OBSTACLE_RISE : 0);
+    const floorTop = terrainDeckHeight(tiles, coord);
     const offsets = [[-0.34, -0.16], [0.28, -0.14], [0, 0.28]];
     for (const [dx, dz] of offsets) {
       const body = this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
@@ -128,7 +131,7 @@ export class PhysicsPlaygroundWorld {
     if (this.disposed) return;
     const [x, , z] = worldPosition(this.site);
     const ball = this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
-      .setTranslation(x - 3.2, terrainDeckHeight(this.site) + 1.4, z - 0.35)
+      .setTranslation(x - 3.2, terrainDeckHeight(this.tiles, this.site) + 1.4, z - 0.35)
       .setLinvel(8.4, 0.1, 0.8)
       .setCcdEnabled(true).setLinearDamping(0.06));
     this.world.createCollider(RAPIER.ColliderDesc.ball(BALL_RADIUS)

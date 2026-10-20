@@ -4,6 +4,10 @@ Le périmètre retenu est un hexagone de rayon **5** au lieu de **3** : **91 tui
 
 La mise en œuvre rend la station de carburant connue des deux bots dès le départ, adapte le cadrage, le fond sous-marin et la côte au rayon, et transmet la taille dans le snapshot partagé. Sur les mêmes 30 graines de rayon 5, les parties bloquées sont passées de **11 à 2** ; les deux restantes concernent le remorquage d'un vaisseau immobilisé, encore à définir. Le contenu des tuiles centrales n'est pas conservé lorsqu'on change le rayon d'une graine.
 
+Sur le plateau plat agrandi, **92 des 100 graines 0 à 99** au rayon 5 terminaient avec un vainqueur avant 1 000 000 ms logiques ; **8 restaient bloquées** : 7 par immobilisation à 100 dégâts, 1 après remorquage sans carburant à la base. Une réserve de carburant pour le trajet réparation → station a ensuite corrigé ce dernier cas sur la graine 47. L'ajout simultané de la tour et des rampes change les cartes pour ces mêmes graines : une nouvelle série de 100 parties donne **89 victoires et 11 blocages**, tous liés à l'immobilisation à 100 dégâts. Ces séries décrivent deux versions différentes du terrain et ne mesurent pas isolément l'effet de la réserve.
+
+La génération a été vérifiée sur **200 graines pour chacun des rayons 2 à 8** : nombre de tuiles, connexité, quatre niveaux de terrain, 10 ressources spéciales et accès équilibré aux deux stations sont valides dans tous ces cas. Les rampes sont conservées lors du complément de ressources au rayon 2. Les graines 138 au rayon 7 et 110 au rayon 8, qui échouaient auparavant faute de placement de stations, produisent maintenant une carte déterministe grâce à un nouveau tirage lorsque le premier est impossible.
+
 ## Résultat
 
 Changer uniquement `RULES.mapRadius` de 3 à 5 ne suffit pas. La génération et les calculs de distance acceptent déjà le rayon 5, mais le rendu masquerait une partie du plateau et l'équilibre actuel produit davantage de parties bloquées. Il faut traiter ensemble le cadrage, le fond décoratif, la présentation des bases, le ravitaillement et les contrats de test.
@@ -52,10 +56,10 @@ Le benchmark [`benchmark-session.mjs`](../scripts/benchmark-session.mjs) compare
 
 La session vit dans un `SharedWorker` partagé entre onglets. Une mise à jour du code ne redimensionne pas la partie déjà en cours : prévoir un reset ou une nouvelle session pour voir le nouveau rayon, et contrôler le cas d'onglets ouverts pendant la transition. Le format du snapshot reste identique si seule la taille du monde change ; une migration de sauvegarde n'est pas en jeu ici.
 
-## Plan issu de l'audit
+## État de mise en œuvre
 
-1. Décider si le nouveau plateau peut être régénéré entièrement ou doit conserver les 37 tuiles centrales. Définir si les 10 unités spéciales et l'unique station de chaque type restent souhaitées sur 91 tuiles.
-2. Passer la taille active au rayon 5, aligner la génération par défaut, puis protéger la géométrie, la symétrie, les services et les ressources avec des tests ciblés.
-3. Corriger le trou du fond décoratif, le relief des bases et le cadrage adaptatif ; vérifier le rendu et la sélection aux six extrémités du plateau, y compris sur mobile.
-4. Corriger ou rééquilibrer les décisions de carburant, puis comparer un lot de graines identiques avec le script de balance. Consigner séparément les blocages dus au carburant et ceux dus à l'immobilisation, puisque cette dernière mécanique reste à définir.
-5. Ajouter le rayon 5 au benchmark, mettre à jour les scénarios et la documentation de la taille active, lancer `npm run validate`, puis essayer `/vue1` et `/vue2` avec deux onglets et une nouvelle session.
+- Le menu « Couronnes » choisit 2 à 8 couronnes lors d'une nouvelle partie ou du rejeu d'une graine ; 5 couronnes (91 tuiles) sont proposées par défaut. Le rayon est transmis au moteur partagé et apparaît dans le snapshot.
+- Le générateur conserve 10 unités spéciales aux petites tailles et réessaie de façon déterministe si les stations ne peuvent pas être placées équitablement. Les stations, la connexité et les invariants de ressources sont couverts par des tests ciblés.
+- Le cadrage initial, le fond décoratif, la côte et le relief du plateau suivent le rayon actif. Le benchmark inclut le rayon 5.
+- `npm run validate` passe sur l'état actuel : typage, 121 tests, syntaxe des scénarios, lint et compilation de production. Le cadrage a un test de projection ; un contrôle visuel dans le navigateur, notamment sur mobile et avec deux onglets, reste à faire.
+- Les règles existantes laissent volontairement un bot sans carburant à sa base après remorquage et immobilisent un bot à 100 dégâts sans remorquage défini. Ces cas peuvent donc toujours bloquer une partie ; ils demandent une décision de jeu distincte du choix du rayon.

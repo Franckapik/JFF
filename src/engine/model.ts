@@ -170,7 +170,7 @@ export interface SessionEvent {
   trust?: TrustChange;
 }
 export interface SessionSnapshot {
-  schemaVersion: 13;
+  schemaVersion: 15;
   seed: number;
   mapRadius: number;
   revision: number;

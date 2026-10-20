@@ -3,14 +3,14 @@ import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { DoubleSide, Group, InstancedMesh, Mesh, Object3D, Quaternion, ShaderMaterial, Vector3 } from 'three';
 
-import { terrainDeckHeight } from '../../engine/terrainPresentation';
+import { terrainDeckHeight, TERRAIN_BASE_TOP, TERRAIN_LEVEL_STEP } from '../../engine/terrainPresentation';
 import { BOT_IDS, worldPosition, worldRadius, type BotId, type Coord, type World } from '../../engine/world';
 
 import { BOT_COLORS } from './presentation';
 
 const TIDE_LOW = -0.12;
 const TIDE_HIGH = 0.82;
-const CENTER_TOP = terrainDeckHeight('0,0');
+const CENTER_TOP = TERRAIN_BASE_TOP + 3 * TERRAIN_LEVEL_STEP;
 const SQRT_THREE = Math.sqrt(3);
 
 const WATER_VERTEX = `
@@ -189,7 +189,7 @@ export default function FloodStage({ world, highTide, paused, onSelect }: { worl
   const material = useRef<ShaderMaterial>(null);
   const shoreline = useRef<InstancedMesh>(null);
   const shorelineDummy = useMemo(() => new Object3D(), []);
-  const coords = useMemo(() => Object.keys(world) as Coord[], [world]);
+  const coords = useMemo(() => Object.values(world).filter(tile => tile.kind !== 'empty').map(tile => tile.coord), [world]);
   const coastOffset = (worldRadius(world) - 3) * SQRT_THREE;
   const phase = useRef(0.08);
   const level = useRef(TIDE_LOW);
@@ -207,7 +207,7 @@ export default function FloodStage({ world, highTide, paused, onSelect }: { worl
     if (shoreline.current) {
       coords.forEach((coord, index) => {
         const [x, , z] = worldPosition(coord);
-        const distance = Math.abs(terrainDeckHeight(coord) - level.current);
+        const distance = Math.abs(terrainDeckHeight(world, coord) - level.current);
         shorelineDummy.position.set(x, level.current + 0.025, z);
         shorelineDummy.rotation.set(-Math.PI / 2, 0, 0);
         shorelineDummy.scale.setScalar(distance < 0.13 ? 1 : 0.0001);

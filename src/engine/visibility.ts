@@ -38,7 +38,7 @@ export function effectiveRadius(ship: Pick<Bot, "radius"> & Partial<Pick<Bot, "d
 
 export function activeCoords(world: World, ship: Pick<Bot, "coord" | "radius"> & Partial<Pick<Bot, "damage">>): Coord[] {
   return Object.values(world)
-    .filter(tile => hexDistance(ship.coord, tile.coord) <= effectiveRadius(ship) && hasLineOfSight(world, ship.coord, tile.coord))
+    .filter(tile => tile.kind !== "empty" && hexDistance(ship.coord, tile.coord) <= effectiveRadius(ship) && hasLineOfSight(world, ship.coord, tile.coord))
     .map(tile => tile.coord);
 }
 

@@ -23,11 +23,16 @@ graine ou de créer une nouvelle carte. Le choix par défaut est de 5 couronnes,
 soit 91 tuiles. La station de carburant est repérée dès le départ par les deux
 bots afin qu'ils puissent planifier leur retour malgré la taille du plateau.
 
-La vue Terrain présente une étude visuelle de la Tour des deux refuges :
-les hexagones ont plusieurs niveaux, une marée animée les submerge et deux
-nacelles sont suspendues à la tour centrale. « Voir la marée haute » permet
-d'inspecter immédiatement la scène inondée. Le relief, la marée et la tour
-ne changent pas encore les déplacements ni les conditions de victoire.
+La vue Terrain présente la Tour des deux refuges sur quatre niveaux : creux
+côtiers vides au niveau 0, terrains courants au niveau 1, obstacles et rampes au
+niveau 2, tour au niveau 3. Les creux restent sous l'eau, ne sont jamais révélés
+et ne peuvent être traversés. Leur placement symétrique et variable creuse une
+côte moins géométrique. Les bots ne franchissent qu'un écart de hauteur de 1 par
+pas ; deux rampes opposées rendent la tour accessible. Les obstacles restent
+infranchissables. Une marée animée submerge les hexagones et deux nacelles sont
+suspendues à la tour. « Voir la marée haute » donne un aperçu visuel ; la marée
+et la tour ne changent pas encore les conditions de victoire. La proposition
+de mission associée figure dans [Relief et mission de la tour](docs/RELIEF-ET-MISSION.md).
 
 La vue Terrain contient aussi un atelier Rapier 3D indépendant des règles de la
 partie, activable avec « Afficher ». Une pile de blocs apparaît près du bot affiché. Sélectionner une
@@ -89,6 +94,7 @@ en plus du même coût de vol aller-retour que le drone d'exploration.
 
 - [Architecture et limites du socle](docs/SOCLE_ACTUEL.md)
 - [Direction graphique du plateau](docs/DIRECTION-GRAPHIQUE-PLATEAU.md)
+- [Relief et mission de la tour](docs/RELIEF-ET-MISSION.md)
 - [Audit du jeu et vision créative](docs/AUDIT-ET-VISION-JEU.md)
 - [Audit de l'agrandissement du plateau à deux couronnes](docs/AUDIT-AGRANDISSEMENT-PLATEAU.md)
 - [Contrat metier valide](docs/bot-spec/03-contrat-et-questions.md)

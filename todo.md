@@ -1,3 +1,14 @@
+Je souhaiterais 4 niveaux de hauteur au depart du jeu pour creer un relief attirant dès le debut du jeu :
+
+- les tuiles vides = niveau 0 .
+- les autres tuiles = niveau 1
+- les tuiles obstacles = niveau 2
+- la tuile de la tour niveau = 3.
+
+Je pense qu'il faudrait peut-etre encore plus de niveau mais je ne sais pas comment les ajouter sans introduire trop de complexité dans le jeu. Il faudrait que les chemins des bots prennent en compte ces niveaux en rendant possible le passage d'une tuile à l'autre selon un niveau -1 , 0 ou +1 seuelement.
+
+Je souhaiterais apporter désormais une forme générale du plateau moin géometrique. On pourrait alors placer des tuiles vides/niveau 0 de manière à ce qu'elles ne soient jamais révélées lors d'une partie. Je te laisse trouver le meilleurs placement de ces tuiles pour avoir une forme plus organiques, relief terrestre et trouver quel est l'intégration la plus judicieuse pour considérer ces tuiles sur lesquelle on ne peut jamais passer.
+
 Je pense que la premiere originalité pourrait résider sur une autonomie des pions et de leur déplacements. Le joueur reel sur le temps long, peut apporter des décisions, des choix, comme un jeu de roles avec une vision startegique plus large et managériale avec tout les comportements amusants liés aux bots qui peuvent etre induits.
 
 # Carnet creatif JFF

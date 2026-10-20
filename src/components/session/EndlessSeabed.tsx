@@ -3,6 +3,8 @@ import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { Color, InstancedMesh, Object3D } from 'three';
 
+import type { Coord, World } from '../../engine/world';
+
 const RADIUS = 29;
 const CAPACITY = (RADIUS * 2 + 1) ** 2;
 const SQRT_THREE = Math.sqrt(3);
@@ -13,7 +15,7 @@ function variation(q: number, r: number): number {
 }
 
 /** A camera-following, world-aligned visual field. These hexes never enter the game world. */
-export default function EndlessSeabed({ radius }: { radius: number }) {
+export default function EndlessSeabed({ radius, world }: { radius: number; world: World }) {
   const face = useRef<InstancedMesh>(null);
   const rim = useRef<InstancedMesh>(null);
   const lastCenter = useRef('');
@@ -21,12 +23,13 @@ export default function EndlessSeabed({ radius }: { radius: number }) {
   const baseColor = useMemo(() => new Color('#35545b'), []);
   const paleColor = useMemo(() => new Color('#48676c'), []);
   const tileColor = useMemo(() => new Color(), []);
+  const coast = useMemo(() => Object.values(world).filter(tile => tile.kind === 'empty').map(tile => tile.coord).join('|'), [world]);
 
   useFrame(({ camera }) => {
     if (!face.current || !rim.current) return;
     const centerR = Math.round(camera.position.z / 1.5);
     const centerQ = Math.round(camera.position.x / SQRT_THREE - centerR / 2);
-    const center = `${centerQ},${centerR}:${radius}`;
+    const center = `${centerQ},${centerR}:${radius}:${coast}`;
     if (center === lastCenter.current) return;
     lastCenter.current = center;
 
@@ -34,7 +37,8 @@ export default function EndlessSeabed({ radius }: { radius: number }) {
     for (let q = centerQ - RADIUS; q <= centerQ + RADIUS; q++) {
       for (let r = centerR - RADIUS; r <= centerR + RADIUS; r++) {
         // Keep the playable island distinct, even as the decorative field moves.
-        if (Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)) <= radius) continue;
+        const coord: Coord = `${q},${r}`;
+        if (Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)) <= radius && world[coord]?.kind !== 'empty') continue;
         const edgeDistance = Math.max(Math.abs(q - centerQ), Math.abs(r - centerR));
         const fade = Math.min(1, Math.max(0.0001, (RADIUS - edgeDistance) / 5));
         const irregularity = variation(q, r);
