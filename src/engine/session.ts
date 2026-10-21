@@ -4,6 +4,7 @@ import { botMachine } from "./botMachine";
 import type { Bot, BotPhase, BotView, ElectricCloud, GoalReason, OperationKind, SessionEvent, SessionLog, SessionSnapshot, TrustCause } from "./model";
 import { addResources, emptyResources, RESOURCE_KINDS, resourceTotal, transferResources, type Resources } from "./resources";
 import { RULES } from "./rules";
+import { tideLevel, timeUntilFlood } from "./tide";
 import { activeCoords, effectiveRadius, hasLineOfSight, rememberTerrain } from "./visibility";
 import {
     axial,
@@ -12,6 +13,7 @@ import {
     generateWorld,
     hexDistance,
     hexLine,
+    isSubmerged,
     nextRandom,
     pathBetween,
     reachableCoords,
@@ -92,8 +94,10 @@ export class GameSession {
   readonly seed: number;
   readonly mapRadius: number;
 
-  constructor(seed: number, scenario?: { world?: World; radius?: number; bots?: Record<BotId, Bot>; cloud?: ElectricCloud | null; repairAvailableAt?: number; trust?: Partial<Record<BotId, number>> }) {
+  constructor(seed: number, scenario?: { world?: World; radius?: number; bots?: Record<BotId, Bot>; cloud?: ElectricCloud | null; repairAvailableAt?: number; trust?: Partial<Record<BotId, number>>; elapsed?: number }) {
     if (!Number.isSafeInteger(seed)) throw new Error("Invalid seed");
+    if (scenario?.elapsed !== undefined && (!Number.isFinite(scenario.elapsed) || scenario.elapsed < 0)) throw new Error("Invalid initial time");
+    this.elapsed = scenario?.elapsed ?? 0;
     this.seed = seed >>> 0;
     this.cloudRandomState = (this.seed ^ 0xc10d1234) >>> 0;
     this.cloud = scenario?.cloud ? structuredClone(scenario.cloud) : null;
@@ -373,8 +377,8 @@ export class GameSession {
     const safeWorld = Object.fromEntries(
       Object.entries(this.world).map(([coord, tile]) => [coord, { ...tile, walkable: tile.walkable && !(dangerous(tile.coord) && coord !== bot.coord) }])
     ) as World;
-    const safe = pathBetween(safeWorld, bot.coord, target);
-    const direct = pathBetween(this.world, bot.coord, target);
+    const safe = pathBetween(safeWorld, bot.coord, target, tideLevel(this.elapsed));
+    const direct = pathBetween(this.world, bot.coord, target, tideLevel(this.elapsed));
     const worthwhileShortcut = allowResourceRisk && safe.length > direct.length &&
       this.world[target]?.kind === "resource" && this.available(bot, target) >= RULES.riskyResourceThreshold &&
       !direct.slice(1).some(coord => rememberedMines.has(coord));
@@ -426,7 +430,7 @@ export class GameSession {
   private move(bot: Bot, target: Coord, reason: GoalReason): boolean {
     if (bot.fuel < RULES.fuelPerStep) return false;
     const path = this.route(bot, target, reason === "collect");
-    const nextStep = path[1] ?? pathBetween(this.world, bot.coord, target)[1];
+    const nextStep = path[1] ?? pathBetween(this.world, bot.coord, target, tideLevel(this.elapsed))[1];
     if (!nextStep) return false;
     if ((bot.knownMines[nextStep] ?? 0) > this.elapsed && bot.offensiveDroneAvailable &&
       !(bot.known.includes(nextStep) && this.world[nextStep].kind === "danger") &&
@@ -483,6 +487,11 @@ export class GameSession {
   }
 
   private finishBot(bot: Bot, decision: string) {
+    if (bot.coord !== bot.base && timeUntilFlood(this.world[bot.coord], this.elapsed) < Infinity) {
+      this.launch({ ...bot, route: [], goal: null }, "rescue", bot.base, RULES.rescueDuration,
+        "Repli des basses terres : cargaison perdue");
+      return;
+    }
     this.actors.get(bot.id)!.send({ type: "FINISH", bot: { ...bot, decision, operation: null } });
     this.emit({ type: "bot.finished", category: "lifecycle", botId: bot.id, coord: bot.coord, reason: decision });
   }
@@ -539,7 +548,7 @@ export class GameSession {
       this.disable(bot, "Vaisseau immobilise : remorquage requis");
       return;
     }
-    if ((bot.goal?.reason === "collect" && this.available(bot, bot.goal.coord) === 0) ||
+    if ((bot.goal?.reason === "collect" && (this.available(bot, bot.goal.coord) === 0 || isSubmerged(this.world[bot.goal.coord], tideLevel(this.elapsed)))) ||
       (bot.goal?.reason === "repair" && bot.budget < RULES.repairPrice))
       bot = { ...bot, goal: null, route: [] };
     const isBase = bot.coord === bot.base;
@@ -631,7 +640,7 @@ export class GameSession {
       ? bot.damage >= RULES.repairThreshold ? RULES.urgentDebrisPriorityMultiplier : RULES.debrisPriorityMultiplier
       : 1;
     const collections = bot.known
-      .filter(coord => this.world[coord]?.kind === "resource" && this.available(bot, coord) > 0)
+      .filter(coord => this.world[coord]?.kind === "resource" && !isSubmerged(this.world[coord], tideLevel(this.elapsed)) && this.available(bot, coord) > 0)
       .map(coord => {
         const path = this.affordableRoute(bot, coord);
         const taken = transferResources(this.world[coord].resources, bot.cargo, RULES.capacity).taken;
@@ -665,7 +674,7 @@ export class GameSession {
     }
     let random = nextRandom(bot.randomState);
     bot = { ...bot, randomState: random.state };
-    const collectProbability = collections.length ? Math.min(0.9, 0.55 + collections[0].value / 1500 + cargoTotal / 5000) : 0;
+    const collectProbability = collections.length ? Math.min(0.9, 0.55 + collections[0].value / 15 + cargoTotal / 50) : 0;
     if (collections.length && (!scans.length || random.value < collectProbability)) {
       const target = collections[0].coord;
       if (target === bot.coord) this.launch(bot, "collect", target, RULES.collectDuration, `Collecte a ${target}`);
@@ -709,8 +718,11 @@ export class GameSession {
       case "wait":
         break;
       case "move": {
-        if (!canStep(this.world, bot.coord, operation.target))
-          throw new Error("Invalid waypoint");
+        if (!canStep(this.world, bot.coord, operation.target, tideLevel(this.elapsed))) {
+          this.log(bot.id, `Trajet annule : passage vers ${operation.target} submerge`);
+          next = { ...next, route: [], goal: null };
+          break;
+        }
         const mineHit = this.world[operation.target].mine?.state === "armed";
         const dangerImpact = Math.min(100 - bot.damage, (this.world[operation.target].kind === "danger" ? RULES.dangerDamage : 0) + (mineHit ? RULES.mineDamage : 0));
         if (mineHit) explodedMine = operation.target;
@@ -828,6 +840,10 @@ export class GameSession {
       case "collect": {
         if (bot.coord !== operation.target || this.world[bot.coord].kind !== "resource")
           throw new Error("Collection outside resource tile");
+        if (isSubmerged(this.world[bot.coord], tideLevel(this.elapsed))) {
+          this.log(bot.id, `Collecte annulee : tuile ${bot.coord} submergee`);
+          break;
+        }
         const transfer = transferResources(this.world[bot.coord].resources, bot.cargo, RULES.capacity);
         this.world[bot.coord] = { ...this.world[bot.coord], resources: transfer.remaining };
         this.worldRevision++;
@@ -949,7 +965,7 @@ export class GameSession {
       this.finish("Tous les bots sont immobilises");
       return;
     }
-    const reachable = new Set(alive.flatMap(bot => reachableCoords(this.world, bot.coord)));
+    const reachable = new Set(alive.flatMap(bot => reachableCoords(this.world, bot.coord, tideLevel(this.elapsed))));
     const hasResources = [...reachable].some(coord => resourceTotal(this.world[coord].resources) > 0);
     if (!hasResources && this.phase === "running") {
       this.phase = "returning";
@@ -963,7 +979,7 @@ export class GameSession {
   private finish(reason: string) {
     this.endReason = reason;
     const eligible = this.bots().filter(bot => bot.state !== "disabled");
-    const reachable = new Set(eligible.flatMap(bot => reachableCoords(this.world, bot.coord)));
+    const reachable = new Set(eligible.flatMap(bot => reachableCoords(this.world, bot.coord, tideLevel(this.elapsed))));
     const blocked =
       [...reachable].some(coord => resourceTotal(this.world[coord].resources) > 0) ||
       eligible.some(bot => bot.coord !== bot.base || resourceTotal(bot.cargo) > 0) ||
@@ -1066,6 +1082,24 @@ export class GameSession {
     this.syncMineKnowledge();
   }
 
+  private evacuateFloodedBots(): boolean {
+    let evacuated = false;
+    for (const bot of this.bots()) {
+      if (!isSubmerged(this.world[bot.coord], tideLevel(this.elapsed) + 1e-8)) continue;
+      if (bot.state === "finished") continue;
+      const cargo = bot.cargo;
+      this.lostResources = addResources(this.lostResources, cargo);
+      const next: Bot = { ...bot, coord: bot.base, cargo: emptyResources(), operation: null, route: [], goal: null,
+        statistics: { ...bot.statistics, rescues: bot.statistics.rescues + 1 } };
+      this.actors.get(bot.id)!.send({ type: bot.state === "deciding" || bot.state === "disabled" ? "TICK" : "COMPLETE", bot: next });
+      this.log(bot.id, `Repli d'urgence : ${bot.coord} submergee, cargaison perdue`);
+      this.emit({ type: "rescue.completed", category: "incident", botId: bot.id, coord: bot.coord, target: bot.base,
+        reason: "Submersion de la tuile", resources: cargo });
+      evacuated = true;
+    }
+    return evacuated;
+  }
+
   advance(milliseconds: number): void {
     if (!Number.isFinite(milliseconds) || milliseconds < 0) throw new Error("Invalid elapsed time");
     if (this.paused || this.finished || milliseconds === 0) return;
@@ -1080,7 +1114,9 @@ export class GameSession {
       const cloudEvent = this.cloud ? Math.min(this.cloud.nextMoveAt, this.cloud.expiresAt) - this.elapsed : Infinity;
       const mineEvent = Math.min(Infinity, ...Object.values(this.world)
         .filter(tile => tile.mine?.state === "arming").map(tile => tile.mine!.armsAt - this.elapsed));
-      const duration = Math.min(remaining, cloudEvent, mineEvent, ...working.map(bot => this.timeUntilBotEvent(bot)));
+      const floodEvent = Math.min(Infinity, ...Object.values(this.world)
+        .filter(tile => tile.walkable).map(tile => timeUntilFlood(tile, this.elapsed)).filter(time => time > 1e-6));
+      const duration = Math.min(remaining, cloudEvent, mineEvent, floodEvent, ...working.map(bot => this.timeUntilBotEvent(bot)));
       this.elapsed += duration;
       remaining -= duration;
       for (const bot of working) {
@@ -1093,6 +1129,7 @@ export class GameSession {
       }
       let completed = this.updateCloud();
       this.updateMines();
+      completed = this.evacuateFloodedBots() || completed;
       const order = this.turn % 2 === 0 ? BOT_IDS : [...BOT_IDS].reverse();
       for (const id of order) {
         const bot = this.bots().find(candidate => candidate.id === id)!;
@@ -1145,12 +1182,13 @@ export class GameSession {
 
   getSnapshot(afterEventSequence = 0): SessionSnapshot {
     return structuredClone({
-      schemaVersion: 15,
+      schemaVersion: 16,
       seed: this.seed,
       mapRadius: this.mapRadius,
       revision: this.revision,
       worldRevision: this.worldRevision,
       elapsed: this.elapsed,
+      waterLevel: tideLevel(this.elapsed),
       phase: this.phase,
       paused: this.paused,
       speed: this.speed,
@@ -1172,12 +1210,15 @@ export class GameSession {
   }
 
   assertInvariants() {
+    if (Object.values(this.world).some(tile => tile.level !== undefined && (!Number.isInteger(tile.level) || tile.level < 0 || tile.level > 5)))
+      throw new Error("Terrain level bounds failed");
     if (BOT_IDS.some(id => !Number.isInteger(this.trust[id]) || this.trust[id] < 0 || this.trust[id] > 100))
       throw new Error("Trust bounds failed");
     if (this.cloud && (!this.world[this.cloud.coord]?.walkable || this.cloud.expiresAt <= this.elapsed || this.cloud.nextMoveAt <= this.elapsed))
       throw new Error("Cloud bounds failed");
     let accounted = addResources(worldResources(this.world), this.lostResources);
     for (const bot of this.bots()) {
+      if (isSubmerged(this.world[bot.coord], tideLevel(this.elapsed))) throw new Error(`Bot submerged: ${bot.id} ${bot.coord} at ${this.elapsed} (${bot.state})`);
       transferResources(emptyResources(), bot.cargo, RULES.capacity);
       if (bot.score !== bot.deposited.food || bot.budget < 0 || bot.budget + bot.spent !== bot.deposited.debris ||
         bot.actions < 0 || bot.actions + bot.actionsSpent !== bot.deposited.special)

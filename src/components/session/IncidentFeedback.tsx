@@ -17,19 +17,28 @@ const PULSE_DURATION = 2400;
 function IncidentPulse({ alert, world }: { alert: ActiveIncident; world: World }) {
   const ring = useRef<Mesh>(null);
   const material = useRef<MeshBasicMaterial>(null);
+  const impactRing = useRef<Mesh>(null);
+  const impactMaterial = useRef<MeshBasicMaterial>(null);
   const coord = alert.message.coord!;
+  const cloudImpact = alert.event.type === 'cloud.impact';
   useFrame(() => {
     const progress = Math.min(1, Math.max(0, (Date.now() - alert.receivedAt) / PULSE_DURATION));
-    if (ring.current) ring.current.scale.setScalar(0.75 + progress * 1.5);
+    if (ring.current) ring.current.scale.setScalar(0.75 + progress * (cloudImpact ? 1.9 : 1.5));
     if (material.current) material.current.opacity = (1 - progress) * 0.85;
+    if (impactRing.current) impactRing.current.scale.setScalar(0.5 + progress * 1.15);
+    if (impactMaterial.current) impactMaterial.current.opacity = (1 - progress) * 0.95;
   });
-  const color = alert.message.tone === 'electric' ? '#21b5d4' : alert.message.tone === 'recovery' ? '#2f9b71' : '#d74737';
+  const color = cloudImpact ? '#ef5876' : alert.message.tone === 'electric' ? '#21b5d4' : alert.message.tone === 'recovery' ? '#2f9b71' : '#d74737';
   const [x, , z] = worldPosition(coord);
   return <group position={[x, terrainDeckHeight(world, coord), z]}>
     <mesh ref={ring} position={[0, 0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[0.53, 0.68, 32]} />
       <meshBasicMaterial ref={material} color={color} transparent opacity={0.85} />
     </mesh>
+    {cloudImpact && <mesh ref={impactRing} position={[0, 0.34, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[0.39, 0.47, 32]} />
+      <meshBasicMaterial ref={impactMaterial} color="#fff0aa" transparent opacity={0.95} />
+    </mesh>}
     {alert.event.trust && <Html center position={[0, 1.25, 0]} distanceFactor={12} className="trust-world-marker">
       <span className={alert.event.trust.delta > 0 ? 'positive' : 'negative'}>{alert.event.trust.delta > 0 ? '+' : ''}{alert.event.trust.delta} confiance</span>
     </Html>}

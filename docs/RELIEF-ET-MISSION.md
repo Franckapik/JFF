@@ -2,54 +2,49 @@
 
 ## Règle jouable aujourd'hui
 
-Le plateau démarre avec quatre niveaux logiques : creux côtier vide 0 ; terrain
-nu, ressource, danger, base et stations 1 ; obstacle et rampe 2 ; tour centrale
-3. Les creux sont des cases de fond marin, toujours cachées et infranchissables.
-Un obstacle bloque toujours les vaisseaux et la ligne de vue. Une rampe est traversable et relie
-les terrains de niveau 1 à la tour. Les deux rampes opposées préservent une
-approche pour chaque bot. Un pas est légal seulement entre voisins traversables
-dont les niveaux diffèrent de 0 ou 1. Le coût en carburant et la durée d'un pas
-restent ceux du socle ; la hauteur change les chemins, pas la comptabilité.
+Le plateau comporte six niveaux : fond marin 0, terres basses 1, terrasses 2 et
+3, rampes d'accès 4 et tour centrale 5. Les creux côtiers restent cachés et
+infranchissables. Les obstacles bloquent les vaisseaux et la ligne de vue. Un
+bot peut passer seulement entre deux voisins secs dont les niveaux diffèrent
+au plus de 1. Deux rampes opposées ménagent les derniers pas vers la tour.
 
-La génération vérifie l'accès aux deux stations et à toutes les tuiles
-traversables, garde dix ressources spéciales et garantit au moins une paire de
-creux côtiers même sur les cartes de deux couronnes. Sur les grandes cartes,
-quelques encoches s'avancent d'une case vers l'intérieur sans couper la terre.
-La marée reste une animation
-visuelle. Le score et la fin de partie restent ceux de la simulation libre.
+La mer monte de -0,12 à 0,78 unité de hauteur pendant les 180 premières
+secondes de temps de jeu. Les terres basses puis les terrasses de niveau 2
+disparaissent du réseau de déplacement. Une case dont la surface atteint le
+niveau de l'eau ne peut plus être parcourue ni collectée. Elle peut toujours
+être explorée par drone ; les ressources découvertes restent connues mais
+perdues pour la collecte. Un trajet déjà lancé est annulé si son prochain pas
+se retrouve sous l'eau. Si la marée rattrape un bot, un repli d'urgence le
+ramène à sa base et sa cargaison est perdue.
+
+Les bases, la tour et une dorsale reliant les deux refuges restent au-dessus
+de la marée finale. Les stations de carburant et de réparation y sont
+raccordées. La génération vérifie la connexion de toutes les cases praticables
+au départ, l'accès équilibré aux services et la présence de dix ressources
+spéciales. La carte se rétrécit ensuite : la partie s'achève lorsque les
+ressources encore accessibles sont épuisées et les cargaisons déposées. Les
+ressources sous l'eau restent comptées dans le stock initial, sans empêcher la
+fin normale de la partie.
 
 ## Proposition de gameplay : « Rallumer la tour »
 
-Je propose un mode mission court, distinct de la simulation libre actuelle.
-Les deux bots cherchent les mêmes trois ressources, mais alimentent un objectif
-commun : restaurer le phare de la tour avant la fin du temps. Leurs points
-personnels servent à désigner le bot le plus efficace si la mission réussit.
+Je propose de faire de cette marée un compte à rebours lisible pour une mission
+commune. Les deux bots restaurent la tour avant la disparition des terres
+basses. Leurs points personnels départagent leur contribution si la mission
+réussit.
 
-1. **Explorer les terres.** Les bots contournent les creux du niveau 0
-   pour récolter les ressources du niveau 1, puis les déposent aux bases. Une
-   livraison met à jour trois besoins visibles de la tour : provisions, débris
-   de réparation et cartes action. Les seuils sont calculés à partir du stock accessible de la carte au
-   départ, afin qu'une petite carte ne crée pas un objectif impossible.
-2. **Ouvrir l'accès au sommet.** Dès que les trois besoins sont couverts, chaque
-   base reçoit une charge lumineuse. Le bot doit l'acheminer jusqu'à la tour par
-   un trajet légal. Les rampes de niveau 2 deviennent donc des passages clés :
-   leur position détermine détour, carburant, exposition aux dangers et risque
-   de mine.
-3. **Allumer les deux nacelles.** Une charge posée à la tour active la nacelle
-   de son bot. Les deux charges allument le phare et gagnent la mission. Si le
-   temps expire, si les deux charges ne peuvent plus être apportées ou si les
-   bots sont immobilisés, la fin explique précisément ce qui manque. Le score
-   individuel départage la contribution des bots sans remplacer la réussite
-   commune.
+1. **Prélever sur les terres basses.** Les bots explorent et récoltent les
+   ressources des niveaux 1 et 2 tant qu'elles émergent, puis les déposent aux
+   bases. Les trois besoins de la tour — provisions, débris et cartes action —
+   sont visibles. Leurs seuils dépendent du stock accessible au départ.
+2. **Gagner les terrasses.** Une fois les besoins remplis, chaque base reçoit
+   une charge lumineuse. Un bot doit l'acheminer sur la dorsale de niveau 3,
+   franchir une rampe de niveau 4, puis atteindre la tour de niveau 5. Le
+   relief impose une route claire, alors que la marée supprime les raccourcis
+   bas. Les dangers, mines, détours et réserves de carburant gardent leur rôle.
+3. **Allumer les deux nacelles.** Chaque charge active la nacelle de son bot.
+   Les deux charges allument le phare. Si le temps expire ou si une charge ne
+   peut plus parvenir à la tour, la fin indique ce qui manque.
 
-Pour garder la lecture simple, je limiterais d'abord les **niveaux de jeu** à
-0–3. La tour, les falaises et les nacelles peuvent avoir davantage d'étages
-visuels sans ajouter de nouveaux paliers de déplacement. Un niveau 4 ne serait
-utile que s'il crée plus tard un choix nouveau, par exemple un refuge hors de
-portée de la marée, accessible par une rampe supplémentaire. La même règle de
-pas s'appliquerait alors, sans nouveau système de mouvement.
-
-Cette mission est une proposition de règle ; elle ne modifie pas encore la fin
-de partie actuelle. Son premier prototype devra montrer la progression commune,
-réserver les charges aux bons bots, et tester la faisabilité des seuils et du
-retour sur plusieurs graines et tailles de carte.
+Cette mission reste une proposition. La fin de partie actuelle conserve le
+score individuel et ne demande pas encore d'acheminer des charges à la tour.

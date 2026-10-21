@@ -15,32 +15,32 @@ Fonctionnalité: Collecte concurrente et compartiments indépendants
   Scénario: Respecter chaque compartiment séparément
     Étant donné les quantités suivantes avant transfert
       | ressource | stock | cargaison | capacité |
-      | food      | 50    | 200       | 200      |
-      | debris    | 500   | 1700      | 1800     |
-      | special   | 10    | 1         | 3        |
+      | food      | 2     | 8         | 8        |
+      | debris    | 2     | 7         | 8        |
+      | special   | 1     | 1         | 2        |
     Quand le chargement se termine
-    Alors le transfert vaut 0 nourriture, 100 débris et 2 spéciaux
-    Et le stock restant vaut 50 nourritures, 400 débris et 8 spéciaux
+    Alors le transfert vaut 0 nourriture, 1 débris et 1 spécial
+    Et le stock restant vaut 2 nourritures, 1 débris et 0 spécial
     Et aucun compartiment n'a empêché le remplissage d'un autre
 
   @COL-03
   Scénario: Arbitrer deux chargements sur le même stock
-    Étant donné deux bots sur une case contenant seulement 10 nourritures
+    Étant donné deux bots sur une case contenant seulement 2 nourritures
     Et deux chargements se terminant à la même échéance
     Quand la session applique les transactions dans son ordre déterministe
-    Alors le premier transfert prend 10 nourritures et le second 0
+    Alors le premier transfert prend 2 nourritures et le second 0
     Et aucun bot ne reçoit une copie du stock initial
     Et chacun compte une tentative, mais seul le premier compte une collecte non vide
     Et seul le premier enregistre cette tuile dans sa provenance
 
   @COL-04
   Scénario: Cumuler plusieurs prélèvements sur une même tuile
-    Étant donné un seul bot actif devant une tuile contenant 450 nourritures
-    Et sa capacité nourriture est de 200
+    Étant donné un seul bot actif devant une tuile de test contenant 18 nourritures
+    Et sa capacité nourriture est de 8
     Quand il effectue les chargements et dépôts nécessaires
-    Alors son score déposé atteint 450
+    Alors son score déposé atteint 18
     Et il compte 3 collectes non vides sur 1 tuile distincte
-    Et la provenance de cette tuile conserve 450 nourritures après les dépôts
+    Et la provenance de cette tuile conserve 18 nourritures après les dépôts
 
   @COL-05
   Scénario: Ne pas facturer de carburant pour le chargement
@@ -70,15 +70,22 @@ Fonctionnalité: Collecte concurrente et compartiments indépendants
     Et les achats et les réparations débitent le budget issu des débris, pas le score ni les dépôts cumulés
 
   @COL-08
-  Scénario: Représenter les ressources uniquement sur une cible scannée
+  Scénario: Représenter les ressources découvertes dans le champ de vision
     Étant donné deux tuiles ressources dans le rayon de vision du vaisseau
-    Et aucune de ces tuiles n'a été scannée par le drone de ce bot
+    Et aucune de ces tuiles n'a été scannée ou visitée par ce bot
     Alors aucun objet de ressource n'apparaît sur ces tuiles
     Quand le drone termine un scan sur la première tuile
-    Alors un objet 3D distinct par catégorie non vide apparaît uniquement sur cette cible
+    Alors un symbole 3D correspondant à son unique catégorie apparaît et tourne au-dessus de cette cible
     Et la seconde tuile garde l'apparence du terrain sans montrer ses quantités
     Et les objets de la cible disparaissent lorsque celle-ci sort du rayon du vaisseau
-    Et chaque catégorie prélevée disparaît de la tuile quand son stock atteint zéro
+    Et ce symbole disparaît de la tuile quand son stock atteint zéro
+
+  @COL-11
+  Scénario: Répartir les trouvailles avec une rareté lisible
+    Étant donné une nouvelle carte symétrique
+    Alors chaque tuile ressource contient une seule catégorie en quantité de 1 ou 2
+    Et les provisions sont plus fréquentes que les débris, eux-mêmes plus fréquents que les cartes action
+    Et une paire de débris est accessible près des bases
 
   @COL-09
   Scénario: Montrer l'acheminement jusqu'au dépôt
@@ -90,9 +97,9 @@ Fonctionnalité: Collecte concurrente et compartiments indépendants
     Alors ces objets disparaissent de la base et la cargaison devient vide
 
   @COL-10
-  Scénario: Distinguer arrivée du vaisseau et scan du drone
+  Scénario: Révéler une trouvaille à l'arrivée du vaisseau
     Étant donné une tuile ressource atteinte par le vaisseau sans scan préalable du drone
     Alors le bot peut connaître et collecter son stock selon les règles de déplacement et collecte
-    Mais aucun objet de ressource au sol n'apparaît sur cette tuile
+    Et son symbole 3D apparaît au-dessus de cette tuile pendant la collecte
     Quand le vaisseau repart avec la cargaison collectée
-    Alors les objets de cargaison suivent le vaisseau sans créer d'objets au sol sur cette tuile
+    Alors les objets de cargaison suivent le vaisseau et le symbole de la tuile épuisée disparaît

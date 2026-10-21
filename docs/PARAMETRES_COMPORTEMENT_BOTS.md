@@ -1,6 +1,6 @@
 # Parametres influencant le comportement des bots
 
-Date de l'analyse : 26 septembre 2026.
+Analyse initiale du 26 septembre 2026, paramètres actifs mis à jour le 21 octobre 2026.
 
 Ce document inventorie les valeurs qui influencent le comportement des bots
 dans le moteur actif. Il distingue les regles centralisees, les heuristiques
@@ -23,22 +23,22 @@ session et toutes les vues observent donc les memes reglages.
 
 | Domaine | Parametre | Valeur actuelle | Effet principal |
 | --- | --- | ---: | --- |
-| Capacite | `capacity.food` | 200 | Limite independante de nourriture transportee. |
-| Capacite | `capacity.debris` | 1 800 | Limite independante de debris transportes. |
-| Capacite | `capacity.special` | 3 | Limite independante de ressources speciales. |
+| Capacite | `capacity.food` | 8 | Limite independante de nourriture transportee. |
+| Capacite | `capacity.debris` | 8 | Limite independante de debris transportes. |
+| Capacite | `capacity.special` | 2 | Limite independante de ressources speciales. |
 | Carte | `mapRadius` | 5 | Valeur par défaut : 91 cases. Le choix de 2 à 8 couronnes est transmis au moteur à chaque nouvelle partie. |
 | Exploration | `initialExplorationRadius` | 1 | Rayon initial du drone et rayon conserve autour du vaisseau apres sa destruction. |
 | Exploration | `maxExplorationRadius` | 3 | Rayon maximal du drone. |
-| Economie | `upgradePrices` | 50, puis 100 | Cout des passages aux rayons 2 et 3, a racheter apres chaque perte du drone. |
-| Economie | `dronePrice` | 50 | Cout de remplacement d'un drone perdu. |
-| Economie | `repairPrice` | 30 | Debit de budget, alimente uniquement par les debris, pour une reparation. |
-| Economie | `specialPairCount` | 5 | Cinq paires symetriques d'une ressource speciale, soit dix actions potentielles sur le plateau initial. |
-| Economie | `firstSpecialPriorityValue` | 80 | Valeur de decision d'une ressource speciale si le bot n'a aucune action et n'en transporte pas deja une. |
+| Economie | `upgradePrices` | 3, puis 5 | Cout des passages aux rayons 2 et 3, a racheter apres chaque perte du drone. |
+| Economie | `dronePrice` | 4 | Cout de remplacement d'un drone perdu. |
+| Economie | `repairPrice` | 3 | Debit de budget, alimente uniquement par les debris, pour une reparation. |
+| Economie | `specialPairCount` | 2 au maximum | Deux paires symetriques sur la carte par défaut, une sur les cartes de rayon 2 et 3. |
+| Economie | `firstSpecialPriorityValue` | 6 | Valeur de decision d'une ressource speciale si le bot n'a aucune action et n'en transporte pas deja une. |
 | Economie | `mineActionCost` | 1 | Action debitee uniquement lorsqu'une mine est effectivement posee. |
-| Economie | `debrisTileChance` | 0,75 | Probabilite de debris sur une case de ressources hors paire garantie. |
-| Economie | `debrisMin`, `debrisMax` | 20, 75 | Quantite d'un gisement de debris non vide. |
-| Economie | `debrisPriorityMultiplier` | 4 | Valeur de decision d'un debris lorsque le prochain besoin n'est pas finance. |
-| Economie | `urgentDebrisPriorityMultiplier` | 6 | Valeur de decision d'un debris si une reparation est urgente et non financee. |
+| Economie | `debrisTileChance` | 0,24 | Probabilite de debris sur une case de ressources hors paire garantie. |
+| Economie | quantite par tuile | 1, parfois 2 | Une seule categorie ; les cartes action valent toujours 1. |
+| Economie | `debrisPriorityMultiplier` | 3 | Valeur de decision d'un debris lorsque le prochain besoin n'est pas finance. |
+| Economie | `urgentDebrisPriorityMultiplier` | 4 | Valeur de decision d'un debris si une reparation est urgente et non financee. |
 | Carburant | `fuelCapacity` | 100 | Reserve commune initiale du vaisseau et du drone ; niveau apres un plein. |
 | Carburant | `fuelPerStep` | 2 | Consommation du vaisseau par case parcourue, aller et retour. |
 | Carburant | `droneFuelPerHex` | 1 | Consommation du drone par hexagone parcouru, aller et retour. |
@@ -52,7 +52,7 @@ session et toutes les vues observent donc les memes reglages.
 | Reparation | `repairCooldown` | 40 000 ms | Indisponibilite de la station apres une reparation. |
 | Degats | `impairedVisionThreshold` | 50 | Rayon effectif diminue de un, sans descendre sous un hexagone. |
 | Degats | `slowMovementThreshold` | 70 | Duree de chaque pas du vaisseau doublee. |
-| Risque | `riskyResourceThreshold` | 200 | Valeur minimale d'une ressource pour envisager un raccourci dangereux plus court. |
+| Risque | `riskyResourceThreshold` | 2 | Valeur minimale d'une ressource pour envisager un raccourci dangereux plus court. |
 | Temps | `stepDuration` | 400 ms | Duree logique d'un pas du vaisseau. |
 | Temps | `scanDuration` | 800 ms | Duree fixe d'un scan, hors trajet du drone. |
 | Temps | `collectDuration` | 1 000 ms | Duree d'une collecte. |
@@ -70,7 +70,7 @@ Le planificateur examine les besoins dans cet ordre :
 2. remorquage si le carburant ne couvre pas un pas du vaisseau hors d'un point de ravitaillement ;
 3. depot si le bot a une cargaison a sa base, ou service dans une station pertinente ;
 4. retour final quand les ressources accessibles sont epuisees ;
-5. trajet vers une reparation a partir de 45 degats, si 30 de budget sont disponibles ;
+5. trajet vers une reparation a partir de 45 degats, si 3 de budget sont disponibles ;
 6. trajet vers un ravitaillement en cas de carburant urgent ;
 7. poursuite d'un objectif deja choisi ;
 8. remplacement du drone ou achat d'une extension a la base ;
@@ -109,9 +109,9 @@ $$
 
 Les cibles de collecte sont classees par valeur actuellement chargeable
 divisee par la longueur du chemin. Tant que le budget ne couvre pas le
-prochain besoin, chaque debris chargeable compte pour 4 dans cette valeur,
-ou pour 6 si une reparation est urgente. Sans action disponible ou en cargaison,
-une ressource speciale chargeable compte pour 80 ; des que le bot en possede
+prochain besoin, chaque debris chargeable compte pour 3 dans cette valeur,
+ou pour 4 si une reparation est urgente. Sans action disponible ou en cargaison,
+une ressource speciale chargeable compte pour 6 ; des que le bot en possede
 une, elle compte pour 1, comme les autres ressources non urgentes. Les
 ressources speciales ne peuvent servir a poser une mine qu'apres
 leur depot a la base. La probabilite de choisir la meilleure
@@ -119,11 +119,11 @@ collecte plutot qu'un scan est :
 
 $$
 P(collecte) = \min\left(0{,}9,
-0{,}55 + \frac{valeurChargeable}{1500}
-+ \frac{cargaison}{5000}\right)
+0{,}55 + \frac{valeurChargeable}{15}
++ \frac{cargaison}{50}\right)
 $$
 
-Les valeurs `0,9`, `0,55`, `1500` et `5000` sont codees directement dans
+Les valeurs `0,9`, `0,55`, `15` et `50` sont codees directement dans
 [`session.ts`](../src/engine/session.ts#L232). Elles devraient devenir des
 parametres nommes avant d'etre exposees dans l'interface.
 
@@ -134,14 +134,14 @@ faisable ne reste. Il revient aussi lorsqu'un compartiment est plein et que la
 meilleure action ne peut pas continuer sur la case actuelle. Un compartiment
 plein n'interdit pas de charger les autres ressources.
 
-La capacite de ressources speciales reste fixee a 3 ; leur rarete sur la carte
+La capacite de ressources speciales est fixee a 2 ; leur rarete sur la carte
 rend maintenant ce compartiment rarement plein. La base permet de deposer, mais le plein reste reserve a la
 station de carburant.
 
 ### Dangers
 
 Le calcul de route prefere un chemin ne traversant aucun danger. Un bot peut
-prendre un raccourci dangereux vers une ressource valant au moins 200 si ce
+prendre un raccourci dangereux vers une ressource valant au moins 2 si ce
 trajet est plus court et ne traverse pas une mine memorisee. Dans tous les cas,
 les degats connus projetes doivent rester strictement inferieurs a 100. La
 reparation devient prioritaire a partir de 45 degats si le budget le permet, avant l'urgence carburant.
@@ -152,9 +152,9 @@ de remorquage.
 
 ### Achats
 
-Le drone perdu est remplace a la base des que le budget atteint 50, avec une
+Le drone perdu est remplace a la base des que le budget atteint 4, avec une
 reserve de reparation s'il est endommage. Une extension est achetee lorsque
-le bot conserve 30 de budget apres l'achat, dispose de son drone,
+le bot conserve 3 de budget apres l'achat, dispose de son drone,
 n'a plus de case inconnue dans son rayon actuel et peut atteindre des cases au
 rayon suivant. Les achats et les reparations reduisent le budget, jamais le
 score depose. Seuls les debris deposes creditent le budget. Les bots valorisent
@@ -178,9 +178,9 @@ La generation reproductible est implementee dans
 | Dangers | 8 % |
 | Cases vides | 10 % |
 | Cases de ressources | 70 % |
-| Nourriture par case de ressources | 20 a 100 |
-| Debris par case de ressources | 0 ou 20 a 75 ; presents sur environ 75 % des cases de ressources |
-| Ressources speciales par case | 0 ou 1, sur cinq paires de cases miroirs |
+| Ressource par case de ressources | Une seule catégorie, 1 ou 2 unités |
+| Débris | Environ 24 % des paires non spéciales, plus la paire garantie près des bases |
+| Ressources spéciales | 1 unité sur chacune des deux paires de la carte par défaut |
 
 Les cases situees a une distance maximale de 1 d'une base restent des cases de
 ressources. Les deux bases, les stocks de ressources et l'accessibilite du
@@ -191,17 +191,20 @@ vers chaque service differe d'au plus un pas entre les bots. Les positions
 miroirs des services restent vides de ressources pour conserver l'equite des
 stocks.
 Une paire de cases adjacentes aux bases contient toujours des debris pour
-permettre un premier choix economique a chaque bot. Les dix ressources
+permettre un premier choix economique a chaque bot. Les quatre ressources
 speciales initiales sont distribuees symetriquement et ne se regenerent pas.
 
-Sur les graines 0 a 99, cette distribution donne en moyenne 846 debris sur le
+Les mesures historiques ci-dessous portent sur l'ancienne économie, avant la
+réduction des quantités et des coûts.
+
+Sur les graines 0 a 99, la distribution precedente donnait en moyenne 846 debris sur le
 plateau, contre 4 418 avant le changement. Une simulation de ces 100 parties
 avec une limite de 1 000 000 ms logiques a produit 95 parties terminees et 5
 bloquees, soit la meme repartition que les regles precedentes sur ces graines.
 Les reparations ont ete utilisees 130 fois contre 27 auparavant. Ces mesures
 precedent la nouvelle economie a trois comptes. Avec celle-ci, les graines
 0 a 99 donnent 93 parties terminees, 7 bloquees et 196 poses de mines
-au total. Chaque plateau contient exactement dix ressources speciales. Ces
+au total. Chaque plateau contenait exactement dix ressources speciales. Ces
 mesures sont un point de controle reproductible, pas une garantie pour toutes
 les graines ; les issues individuelles ont change.
 

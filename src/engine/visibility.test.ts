@@ -22,6 +22,7 @@ describe("depleted resource markers", () => {
 
     expect(depletedResourceCoords(world, bots, all, all)).toEqual(["0,0"]);
     expect(depletedResourceCoords(world, bots, all, [])).toEqual([]);
+    expect(depletedResourceCoords(world, bots, all, [], ["0,0"])).toEqual(["0,0"]);
     expect(depletedResourceCoords(world, bots, ["1,0"], all)).toEqual([]);
   });
 });

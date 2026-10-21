@@ -13,6 +13,7 @@ export interface Mine {
 export interface WorldTile {
   coord: Coord;
   kind: TileKind;
+  level?: number;
   walkable: boolean;
   neighbors: Coord[];
   resources: Resources;
@@ -21,7 +22,11 @@ export interface WorldTile {
 }
 export type World = Record<Coord, WorldTile>;
 
-export function tileLevel(tile: Pick<WorldTile, "kind">): number {
+export const TERRAIN_BASE_TOP = 0.08;
+export const TERRAIN_LEVEL_STEP = 0.31;
+
+export function tileLevel(tile: Pick<WorldTile, "kind" | "level">): number {
+  if (tile.level !== undefined) return tile.level;
   switch (tile.kind) {
     case "empty": return 0;
     case "obstacle":
@@ -31,10 +36,18 @@ export function tileLevel(tile: Pick<WorldTile, "kind">): number {
   }
 }
 
-export function canStep(world: World, from: Coord, to: Coord): boolean {
+export function tileSurfaceHeight(tile: Pick<WorldTile, "kind" | "level">): number {
+  return TERRAIN_BASE_TOP + tileLevel(tile) * TERRAIN_LEVEL_STEP;
+}
+
+export function isSubmerged(tile: WorldTile, waterLevel: number): boolean {
+  return tile.kind === "empty" || tileSurfaceHeight(tile) <= waterLevel;
+}
+
+export function canStep(world: World, from: Coord, to: Coord, waterLevel = -Infinity): boolean {
   const origin = world[from];
   const destination = world[to];
-  return !!origin?.walkable && origin.kind !== "empty" && !!destination?.walkable && destination.kind !== "empty" && origin.neighbors.includes(to) &&
+  return !!origin?.walkable && !isSubmerged(origin, waterLevel) && !!destination?.walkable && !isSubmerged(destination, waterLevel) && origin.neighbors.includes(to) &&
     Math.abs(tileLevel(origin) - tileLevel(destination)) <= 1;
 }
 
@@ -96,8 +109,8 @@ export function nextRandom(state: number): { state: number; value: number } {
   return { state: next, value: ((value ^ (value >>> 14)) >>> 0) / 4294967296 };
 }
 
-export function pathBetween(world: World, from: Coord, to: Coord): Coord[] {
-  if (!world[from]?.walkable || world[from].kind === "empty" || !world[to]?.walkable || world[to].kind === "empty") return [];
+export function pathBetween(world: World, from: Coord, to: Coord, waterLevel = -Infinity): Coord[] {
+  if (!world[from]?.walkable || isSubmerged(world[from], waterLevel) || !world[to]?.walkable || isSubmerged(world[to], waterLevel)) return [];
   const queue: Coord[] = [from];
   const parents = new Map<Coord, Coord | null>([[from, null]]);
   for (let head = 0; head < queue.length; head++) {
@@ -112,7 +125,7 @@ export function pathBetween(world: World, from: Coord, to: Coord): Coord[] {
       return path.reverse();
     }
     for (const neighbor of world[current].neighbors) {
-      if (canStep(world, current, neighbor) && !parents.has(neighbor)) {
+      if (canStep(world, current, neighbor, waterLevel) && !parents.has(neighbor)) {
         parents.set(neighbor, current);
         queue.push(neighbor);
       }
@@ -121,13 +134,13 @@ export function pathBetween(world: World, from: Coord, to: Coord): Coord[] {
   return [];
 }
 
-export function reachableCoords(world: World, from: Coord): Coord[] {
-  if (!world[from]?.walkable || world[from].kind === "empty") return [];
+export function reachableCoords(world: World, from: Coord, waterLevel = -Infinity): Coord[] {
+  if (!world[from]?.walkable || isSubmerged(world[from], waterLevel)) return [];
   const queue: Coord[] = [from];
   const visited = new Set(queue);
   for (let head = 0; head < queue.length; head++) {
     for (const neighbor of world[queue[head]].neighbors) {
-      if (canStep(world, queue[head], neighbor) && !visited.has(neighbor)) {
+      if (canStep(world, queue[head], neighbor, waterLevel) && !visited.has(neighbor)) {
         visited.add(neighbor);
         queue.push(neighbor);
       }
@@ -220,23 +233,14 @@ function generateWorldAttempt(seed: number, radius: number, attempt: number): Wo
           : roll < 0.3
           ? "plain"
             : "resource";
-    const guaranteedDebris = tile.coord === `${-radius + 1},0` || mirror === `${-radius + 1},0`;
-    let resources = emptyResources();
+    const resources = emptyResources();
     if (kind === "resource") {
-      const foodRoll = random();
-      const debrisRoll = random();
+      // Keep the terrain's seeded random sequence independent of drop balance.
+      random();
+      random();
       const specialRoll = random();
       specialPriority.set(tile.coord, specialRoll);
       specialPriority.set(mirror, specialRoll);
-      resources = {
-        food: 20 + Math.floor(foodRoll * 81),
-        debris: guaranteedDebris
-          ? RULES.debrisMin + Math.floor(debrisRoll * (RULES.debrisMax - RULES.debrisMin + 1))
-          : debrisRoll < RULES.debrisTileChance
-            ? RULES.debrisMin + Math.floor(debrisRoll / RULES.debrisTileChance * (RULES.debrisMax - RULES.debrisMin + 1))
-            : 0,
-        special: 0,
-      };
     }
     for (const coord of new Set([tile.coord, mirror])) {
       world[coord].kind = kind;
@@ -276,15 +280,17 @@ function generateWorldAttempt(seed: number, radius: number, attempt: number): Wo
     throw new Error("No balanced service placement");
   }
   const selected = layouts[Math.floor(random() * layouts.length)];
+  const specialPairCount = Math.min(RULES.specialPairCount, Math.max(1, Math.floor(radius / 2)));
   const specialPairs = Object.values(selected)
     .filter(tile => {
       const [column, row] = axial(tile.coord);
       const mirror: Coord = `${-column},${-row}`;
-      return tile.kind === "resource" && tile.coord < mirror && selected[mirror]?.kind === "resource";
+      return tile.kind === "resource" && tile.coord < mirror && selected[mirror]?.kind === "resource" &&
+        tile.coord !== `${-radius + 1},0` && mirror !== `${-radius + 1},0`;
     })
     .sort((left, right) => (specialPriority.get(right.coord) ?? 0) - (specialPriority.get(left.coord) ?? 0))
-    .slice(0, RULES.specialPairCount);
-  if (specialPairs.length < RULES.specialPairCount) {
+    .slice(0, specialPairCount);
+  if (specialPairs.length < specialPairCount) {
     const supplemental = Object.values(selected)
       .filter(tile => {
         const [column, row] = axial(tile.coord);
@@ -294,23 +300,18 @@ function generateWorldAttempt(seed: number, radius: number, attempt: number): Wo
       })
       .map(tile => ({ tile, priority: random() }))
       .sort((left, right) => right.priority - left.priority)
-      .slice(0, RULES.specialPairCount - specialPairs.length);
-    if (specialPairs.length + supplemental.length < RULES.specialPairCount) {
+      .slice(0, specialPairCount - specialPairs.length);
+    if (specialPairs.length + supplemental.length < specialPairCount) {
       if (attempt < 32) return generateWorldAttempt(seed, radius, attempt + 1);
       throw new Error("Insufficient special resource pairs");
     }
     for (const { tile } of supplemental) {
       const [column, row] = axial(tile.coord);
       const mirror: Coord = `${-column},${-row}`;
-      const resources = {
-        food: 20 + Math.floor(random() * 81),
-        debris: RULES.debrisMin + Math.floor(random() * (RULES.debrisMax - RULES.debrisMin + 1)),
-        special: 0,
-      };
       for (const coord of [tile.coord, mirror]) {
         selected[coord].kind = "resource";
         selected[coord].walkable = true;
-        selected[coord].resources = { ...resources };
+        selected[coord].resources = emptyResources();
       }
       specialPairs.push(tile);
     }
@@ -360,6 +361,55 @@ function generateWorldAttempt(seed: number, radius: number, attempt: number): Wo
   if (!outerCoast || !validLand(selected, bases, radius)) {
     if (attempt < 32) return generateWorldAttempt(seed, radius, attempt + 1);
     throw new Error("No connected balanced coastline");
+  }
+  for (const tile of Object.values(selected)) {
+    const [q, r] = axial(tile.coord);
+    if (r === 0 && q !== 0 && !tile.walkable) {
+      tile.kind = "plain";
+      tile.walkable = true;
+      tile.resources = emptyResources();
+    }
+  }
+  // A dry central spine keeps both refuges connected as the lowlands vanish.
+  // The two opposite ramps are the only legal final steps onto the tower.
+  for (const tile of Object.values(selected)) {
+    tile.level = tile.kind === "empty" ? 0 : tile.kind === "tower" ? 5 : tile.kind === "ramp" ? 4 :
+      tile.kind === "obstacle" ? 2 : (coastPriority.get(tile.coord) ?? 0) < 0.3 ? 2 : 1;
+    const [q, r] = axial(tile.coord);
+    if (tile.walkable && r === 0 && q !== 0) tile.level = 3;
+    if (["base", "fuel", "repair"].includes(tile.kind)) tile.level = 3;
+  }
+  const spine = Object.values(selected).filter(tile => tile.walkable && axial(tile.coord)[1] === 0 && tile.kind !== "tower");
+  const flatWorld = Object.fromEntries(Object.entries(selected).map(([coord, tile]) =>
+    [coord, { ...tile, level: tile.kind === "empty" ? 0 : 1, walkable: tile.walkable && tile.kind !== "tower" }])) as World;
+  for (const station of Object.values(selected).filter(tile => tile.kind === "fuel" || tile.kind === "repair")) {
+    const nearest = [...spine].sort((a, b) => hexDistance(station.coord, a.coord) - hexDistance(station.coord, b.coord))[0];
+    for (const coord of pathBetween(flatWorld, station.coord, nearest.coord))
+      if (selected[coord]?.walkable && selected[coord].kind !== "tower" && selected[coord].kind !== "ramp") selected[coord].level = 3;
+  }
+  for (let pass = 0; pass < 4; pass++) {
+    for (const tile of Object.values(selected)) {
+      if (!tile.walkable || tile.kind === "tower" || tile.kind === "ramp") continue;
+      tile.level = Math.max(tile.level ?? 1, ...tile.neighbors.filter(coord => selected[coord].walkable && selected[coord].kind !== "tower")
+        .map(coord => (selected[coord].level ?? 1) - 1));
+    }
+  }
+  if (!validLand(selected, bases, radius)) {
+    if (attempt < 32) return generateWorldAttempt(seed, radius, attempt + 1);
+    throw new Error("No connected elevated routes");
+  }
+  // One small find per resource tile; paired drops keep both bots' maps fair.
+  for (const tile of Object.values(selected)) {
+    const [column, row] = axial(tile.coord);
+    const mirror: Coord = `${-column},${-row}`;
+    if (tile.kind !== "resource" || tile.coord > mirror) continue;
+    const isSpecial = tile.resources.special > 0;
+    const isStartingDebris = tile.coord === `${-radius + 1},0` || mirror === `${-radius + 1},0`;
+    const kind = isSpecial ? "special" : isStartingDebris || random() < RULES.debrisTileChance ? "debris" : "food";
+    const amount = kind === "special" ? 1 : random() < 0.16 ? 2 : 1;
+    const resources = { ...emptyResources(), [kind]: amount };
+    selected[tile.coord].resources = { ...resources };
+    selected[mirror].resources = { ...resources };
   }
   return selected;
 }

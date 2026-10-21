@@ -6,7 +6,10 @@ memes snapshots. Le mode expert detaille les evenements et statistiques d'un bot
 
 ## Demarrer
 
-Node 22.12 ou plus recent est requis.
+Node 22.12 ou plus recent est requis. Le depot indique Node 22 dans `.nvmrc`.
+Avec `nvm`, lancer `nvm install && nvm use` avant `npm ci`. Les commandes `npm run`
+activent automatiquement la version du depot si `nvm` est installe, y compris
+dans un terminal non interactif. `npm ci` refuse une version incompatible.
 
 ```bash
 npm ci
@@ -23,16 +26,17 @@ graine ou de créer une nouvelle carte. Le choix par défaut est de 5 couronnes,
 soit 91 tuiles. La station de carburant est repérée dès le départ par les deux
 bots afin qu'ils puissent planifier leur retour malgré la taille du plateau.
 
-La vue Terrain présente la Tour des deux refuges sur quatre niveaux : creux
-côtiers vides au niveau 0, terrains courants au niveau 1, obstacles et rampes au
-niveau 2, tour au niveau 3. Les creux restent sous l'eau, ne sont jamais révélés
-et ne peuvent être traversés. Leur placement symétrique et variable creuse une
-côte moins géométrique. Les bots ne franchissent qu'un écart de hauteur de 1 par
-pas ; deux rampes opposées rendent la tour accessible. Les obstacles restent
-infranchissables. Une marée animée submerge les hexagones et deux nacelles sont
-suspendues à la tour. « Voir la marée haute » donne un aperçu visuel ; la marée
-et la tour ne changent pas encore les conditions de victoire. La proposition
-de mission associée figure dans [Relief et mission de la tour](docs/RELIEF-ET-MISSION.md).
+La vue Terrain présente six niveaux de relief : fond marin 0, terres basses 1,
+terrasses 2 et 3, rampes 4, tour 5. Les creux côtiers restent cachés et
+infranchissables. Leur placement symétrique et variable dessine une côte moins
+géométrique. Les bots ne franchissent qu'un niveau à la fois ; les deux rampes
+opposées donnent accès à la tour. Une dorsale au niveau 3 relie les bases et les
+stations. La mer monte réellement pendant la partie : les niveaux 1 puis 2
+deviennent impraticables et leurs ressources ne peuvent plus être collectées.
+Un drone peut encore les explorer. Un bot surpris par la submersion est ramené
+à sa base et perd sa cargaison. La tour ne change pas encore les conditions de
+victoire. La proposition de mission associée figure dans
+[Relief et mission de la tour](docs/RELIEF-ET-MISSION.md).
 
 La vue Terrain contient aussi un atelier Rapier 3D indépendant des règles de la
 partie, activable avec « Afficher ». Une pile de blocs apparaît près du bot affiché. Sélectionner une
@@ -70,14 +74,19 @@ Les trois compteurs du bot sont les points, le budget et les actions. Les
 « Provisions » (anciennement nourriture) déposées donnent les points de
 victoire. Les débris déposés créditent le budget des achats et réparations.
 Les ressources spéciales déposées donnent des actions ; la pose effective
-d'une mine consomme une action. Le plateau initial contient dix unités
-spéciales, réparties en cinq paires symétriques. Les dépôts cumulés restent
-dans le bilan interne, mais ne figurent pas parmi les compteurs courants.
+d'une mine consomme une action. Chaque tuile ressource contient une seule
+trouvaille de 1 unité, parfois 2 pour les provisions ou les débris. Les
+provisions sont courantes, les débris moins fréquents et les cartes action
+rares : sur la carte par défaut, ces dernières occupent deux paires
+symétriques. Après un scan ou une arrivée du vaisseau, un symbole 3D flotte et tourne au-dessus de la
+tuile ; il disparaît après la collecte. Les capacités sont de 8 provisions,
+8 débris et 2 cartes action. Les dépôts cumulés restent dans le bilan interne,
+mais ne figurent pas parmi les compteurs courants.
 
 Les dégâts réduisent le rayon effectif d'un hexagone dès 50 %, puis doublent
 la durée des pas du vaisseau dès 70 %. À 100 %, le vaisseau est immobilisé sur
 sa tuile avec sa cargaison : le remorquage de cette panne reste à définir. La
-réparation coûte 30 unités de budget, crédité uniquement par les débris déposés.
+réparation coûte 3 unités de budget, crédité uniquement par les débris déposés.
 Elle n'est possible que sur la station dédiée, qui doit attendre 40 s après
 chaque service avant de réparer à nouveau.
 
@@ -85,8 +94,8 @@ Le drone offensif peut aussi scanner une tuile : son rapport donne le nombre
 de mines ennemies dans un rayon de deux hexagones et la distance de la plus
 proche, sans révéler sa position exacte. Le joueur et le bot reçoivent le
 même rapport. Le souvenir d'une mine ennemie expire après 10 s ; le bot peut
-acheter à sa base deux améliorations de mémoire (20 puis 40 s, pour 50 puis
-100 points). Un avertissement signale une mine ennemie à un hexagone ou
+acheter à sa base deux améliorations de mémoire (20 puis 40 s, pour 3 puis
+5 débris). Un avertissement signale une mine ennemie à un hexagone ou
 moins. La pose coûte 4 unités de carburant, le scan et la neutralisation 2,
 en plus du même coût de vol aller-retour que le drone d'exploration.
 

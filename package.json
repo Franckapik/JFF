@@ -45,21 +45,21 @@
     "vitest": "^4.1.11"
   },
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "benchmark": "node --expose-gc scripts/benchmark-session.mjs",
-    "balance": "node scripts/balance-session.mjs",
-    "mines": "node scripts/mine-stats.mjs",
-    "scenarios:check": "node scripts/validate-scenarios.mjs",
-    "dev": "vite",
-    "log:server": "node scripts/log-server.mjs",
-    "dev:all": "npm-run-all -p log:server dev",
-    "build": "tsc && vite build",
-    "type-check": "tsc --noEmit",
-    "type-watch": "tsc --noEmit --watch",
-    "preview": "vite preview",
-    "lint": "eslint --max-warnings=0 src scripts/*.mjs",
-    "validate": "npm run type-check && npm test && npm run scenarios:check && npm run lint && npm run build"
+    "test": "bash scripts/with-node.sh vitest run",
+    "test:watch": "bash scripts/with-node.sh vitest",
+    "benchmark": "bash scripts/with-node.sh node --expose-gc scripts/benchmark-session.mjs",
+    "balance": "bash scripts/with-node.sh node scripts/balance-session.mjs",
+    "mines": "bash scripts/with-node.sh node scripts/mine-stats.mjs",
+    "scenarios:check": "bash scripts/with-node.sh node scripts/validate-scenarios.mjs",
+    "dev": "bash scripts/with-node.sh vite",
+    "log:server": "bash scripts/with-node.sh node scripts/log-server.mjs",
+    "dev:all": "bash scripts/with-node.sh npm-run-all -p log:server dev",
+    "build": "bash scripts/with-node.sh sh -c 'tsc && vite build'",
+    "type-check": "bash scripts/with-node.sh tsc --noEmit",
+    "type-watch": "bash scripts/with-node.sh tsc --noEmit --watch",
+    "preview": "bash scripts/with-node.sh vite preview",
+    "lint": "bash scripts/with-node.sh eslint --max-warnings=0 src scripts/*.mjs",
+    "validate": "bash scripts/with-node.sh sh -c 'npm run type-check && npm test && npm run scenarios:check && npm run lint && npm run build'"
   },
   "engines": {
     "node": ">=22.12.0"

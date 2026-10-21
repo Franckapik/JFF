@@ -1,16 +1,13 @@
 /* eslint-disable react/no-unknown-property -- Three.js props are supplied through React Three Fiber */
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
-import { DoubleSide, Group, InstancedMesh, Mesh, Object3D, Quaternion, ShaderMaterial, Vector3 } from 'three';
+import { DoubleSide, Group, InstancedMesh, Mesh, Object3D, ShaderMaterial } from 'three';
 
 import { terrainDeckHeight, TERRAIN_BASE_TOP, TERRAIN_LEVEL_STEP } from '../../engine/terrainPresentation';
-import { BOT_IDS, worldPosition, worldRadius, type BotId, type Coord, type World } from '../../engine/world';
+import { TIDE_LOW } from '../../engine/tide';
+import { worldPosition, worldRadius, type Coord, type World } from '../../engine/world';
 
-import { BOT_COLORS } from './presentation';
-
-const TIDE_LOW = -0.12;
-const TIDE_HIGH = 0.82;
-const CENTER_TOP = TERRAIN_BASE_TOP + 3 * TERRAIN_LEVEL_STEP;
+const CENTER_TOP = TERRAIN_BASE_TOP + 5 * TERRAIN_LEVEL_STEP;
 const SQRT_THREE = Math.sqrt(3);
 
 const WATER_VERTEX = `
@@ -89,101 +86,113 @@ const WATER_FRAGMENT = `
   }
 `;
 
-function Beam({ from, to, radius = 0.035, color = '#d3bb8b' }: {
-  from: [number, number, number]; to: [number, number, number]; radius?: number; color?: string;
-}) {
-  const start = new Vector3(...from);
-  const end = new Vector3(...to);
-  const direction = end.clone().sub(start);
-  const center = start.clone().add(end).multiplyScalar(0.5);
-  const quaternion = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), direction.clone().normalize());
-  return <mesh position={center} quaternion={quaternion} castShadow>
-    <cylinderGeometry args={[radius, radius, direction.length(), 8]} />
-    <meshStandardMaterial color={color} metalness={0.55} roughness={0.42} />
-  </mesh>;
-}
+const BEAM_VERTEX = `
+  varying vec3 vLocal;
+  void main() {
+    vLocal = position;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+const BEAM_FRAGMENT = `
+  varying vec3 vLocal;
+  void main() {
+    float reach = clamp((vLocal.x + 6.0) / 12.0, 0.0, 1.0);
+    float width = mix(0.16, 2.35, reach);
+    float feather = 1.0 - smoothstep(0.28, 1.0, abs(vLocal.y) / width);
+    float alpha = feather * (1.0 - smoothstep(0.12, 1.0, reach)) * 0.17;
+    gl_FragColor = vec4(1.0, 0.83, 0.55, alpha);
+  }
+`;
 
-function Nacelle({ id, x, y }: { id: BotId; x: number; y: number }) {
-  const color = BOT_COLORS[id];
-  return <group position={[x, y, 0]}>
-    <mesh position={[0, -0.18, 0]} castShadow>
-      <cylinderGeometry args={[0.28, 0.22, 0.18, 10]} />
-      <meshStandardMaterial color={color} metalness={0.42} roughness={0.3} emissive={color} emissiveIntensity={0.14} />
-    </mesh>
-    <mesh position={[0, 0.02, 0]} castShadow>
-      <sphereGeometry args={[0.27, 16, 12]} />
-      <meshStandardMaterial color="#dbe8e0" metalness={0.22} roughness={0.15} transparent opacity={0.57} />
-    </mesh>
-    <mesh position={[0, 0.02, 0]}>
-      <octahedronGeometry args={[0.13]} />
-      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1.3} />
-    </mesh>
-    <mesh position={[0, -0.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
-      <torusGeometry args={[0.29, 0.025, 7, 20]} />
-      <meshStandardMaterial color="#f5d9a0" metalness={0.55} roughness={0.33} />
-    </mesh>
-  </group>;
-}
-
-function RefugeTower({ paused, onSelect }: { paused: boolean; onSelect: (coord: Coord) => void }) {
-  const crown = useRef<Group>(null);
-  const beacon = useRef<Mesh>(null);
+function OldLighthouse({ paused, onSelect }: { paused: boolean; onSelect: (coord: Coord) => void }) {
+  const lantern = useRef<Group>(null);
+  const target = useMemo(() => new Object3D(), []);
   const time = useRef(0);
   useFrame((_, delta) => {
     if (!paused) time.current += delta;
-    if (crown.current) {
-      crown.current.rotation.z = Math.sin(time.current * 0.7) * 0.018;
-      crown.current.rotation.x = Math.sin(time.current * 0.47 + 1) * 0.012;
-    }
-    if (beacon.current) beacon.current.rotation.y = time.current * 0.38;
+    if (lantern.current) lantern.current.rotation.y = time.current * 0.16;
   });
 
-  const posts: [number, number][] = [[-0.37, -0.35], [0.37, -0.35], [-0.37, 0.35], [0.37, 0.35]];
-  return <group position={[0, CENTER_TOP, 0]} scale={[1.3, 1.26, 1.3]} onClick={event => { event.stopPropagation(); onSelect('0,0'); }}>
-    <mesh position={[0, 0.04, 0]} receiveShadow castShadow>
-      <cylinderGeometry args={[0.73, 0.83, 0.16, 6]} />
-      <meshStandardMaterial color="#e7d8b8" roughness={0.78} />
+  return <group position={[0, CENTER_TOP, 0]} onClick={event => { event.stopPropagation(); onSelect('0,0'); }}>
+    <mesh position={[0, 0.09, 0]} receiveShadow castShadow>
+      <cylinderGeometry args={[0.68, 0.76, 0.18, 10]} />
+      <meshStandardMaterial color="#a6a997" roughness={1} flatShading />
     </mesh>
-    <mesh position={[0, 0.14, 0]} rotation={[Math.PI / 2, 0, 0]}>
-      <torusGeometry args={[0.66, 0.035, 6, 6]} />
-      <meshStandardMaterial color="#b99061" metalness={0.42} roughness={0.48} />
+    <mesh position={[0, 1.29, 0]} castShadow receiveShadow>
+      <cylinderGeometry args={[0.34, 0.62, 2.35, 12]} />
+      <meshStandardMaterial color="#d7cdb2" roughness={0.95} flatShading />
     </mesh>
-    <group ref={crown}>
-      {posts.map(([x, z], index) => <Beam key={`post-${index}`} from={[x, 0.13, z]} to={[x * 0.86, 2.3, z * 0.86]} radius={0.052} />)}
-      {[-0.35, 0.35].map((z, index) => <group key={z}>
-        <Beam from={[-0.37, 0.26, z]} to={[0.34, 1.17, z * 0.9]} radius={0.024} color="#9eaa9a" />
-        <Beam from={[0.37, 0.26, z]} to={[-0.34, 1.17, z * 0.9]} radius={0.024} color="#9eaa9a" />
-        <Beam from={[-0.34, 1.2, z * 0.9]} to={[0.32, 2.12, z * 0.86]} radius={0.024} color="#9eaa9a" />
-        <Beam from={[0.34, 1.2, z * 0.9]} to={[-0.32, 2.12, z * 0.86]} radius={0.024} color="#9eaa9a" />
-        {index === 0 && <Beam from={[-1.28, 2.36, 0]} to={[1.28, 2.36, 0]} radius={0.07} color="#d9c297" />}
-      </group>)}
-      {[0.75, 1.48, 2.28].map((height, index) => <mesh key={height} position={[0, height, 0]} castShadow>
-        <cylinderGeometry args={[index === 2 ? 0.55 : 0.49, 0.54, 0.08, 6]} />
-        <meshStandardMaterial color={index === 2 ? '#e8d9b5' : '#849f98'} metalness={0.2} roughness={0.7} />
-      </mesh>)}
-      {BOT_IDS.map((id, index) => {
-        const x = index === 0 ? -0.94 : 0.94;
-        const y = index === 0 ? 1.76 : 1.56;
-        return <group key={id}>
-          <Beam from={[x, 2.36, 0]} to={[x, y + 0.27, 0]} radius={0.012} color="#e9d6b2" />
-          <Nacelle id={id} x={x} y={y} />
-          <mesh position={[x, 2.34, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[0.37, 0.025, 6, 24]} />
-            <meshBasicMaterial color={BOT_COLORS[id]} transparent opacity={0.75} />
-          </mesh>
-        </group>;
-      })}
-      <Beam from={[0, 2.3, 0]} to={[0, 2.8, 0]} radius={0.04} />
-      <mesh ref={beacon} position={[0, 2.9, 0]}>
-        <octahedronGeometry args={[0.22]} />
-        <meshStandardMaterial color="#fff0bd" emissive="#f7d080" emissiveIntensity={1.9} metalness={0.18} roughness={0.26} />
+    {[0.44, 1.08, 1.73, 2.38].map((height, index) => <mesh key={height} position={[0, height, 0]} castShadow>
+      <cylinderGeometry args={[0.61 - index * 0.074, 0.63 - index * 0.074, 0.11, 12]} />
+      <meshStandardMaterial color={index % 2 === 0 ? '#b6a88e' : '#8f9b91'} roughness={0.93} flatShading />
+    </mesh>)}
+    {[0, Math.PI * 2 / 3, Math.PI * 4 / 3].map((angle, index) => <group key={index} rotation={[0, angle, 0]}>
+      <mesh position={[0, 1.83, 0.395]}>
+        <boxGeometry args={[0.15, 0.29, 0.035]} />
+        <meshStandardMaterial color="#40595b" roughness={0.82} />
       </mesh>
-      <pointLight position={[0, 2.75, 0]} color="#e9c778" intensity={1.3} distance={4.5} decay={2} />
+      <mesh position={[0, 1.99, 0.4]} rotation={[0, 0, Math.PI / 2]}>
+        <torusGeometry args={[0.076, 0.018, 6, 10, Math.PI]} />
+        <meshStandardMaterial color="#d7c7a4" roughness={0.95} />
+      </mesh>
+    </group>)}
+    <mesh position={[0, 2.5, 0]} castShadow>
+      <cylinderGeometry args={[0.59, 0.45, 0.15, 12]} />
+      <meshStandardMaterial color="#788a84" metalness={0.35} roughness={0.69} />
+    </mesh>
+    <mesh position={[0, 2.61, 0]} rotation={[Math.PI / 2, 0, 0]}>
+      <torusGeometry args={[0.58, 0.025, 7, 24]} />
+      <meshStandardMaterial color="#665f50" metalness={0.35} roughness={0.75} />
+    </mesh>
+    {Array.from({ length: 10 }, (_, index) => {
+      const angle = index * Math.PI / 5;
+      return <mesh key={index} position={[Math.cos(angle) * 0.57, 2.78, Math.sin(angle) * 0.57]}>
+        <cylinderGeometry args={[0.015, 0.015, 0.35, 5]} />
+        <meshStandardMaterial color="#625d50" metalness={0.4} roughness={0.72} />
+      </mesh>;
+    })}
+    <mesh position={[0, 2.95, 0]} rotation={[Math.PI / 2, 0, 0]}>
+      <torusGeometry args={[0.57, 0.023, 7, 24]} />
+      <meshStandardMaterial color="#625d50" metalness={0.4} roughness={0.72} />
+    </mesh>
+    <mesh position={[0, 2.99, 0]}>
+      <cylinderGeometry args={[0.39, 0.39, 0.64, 12]} />
+      <meshStandardMaterial color="#afc1b6" metalness={0.1} roughness={0.32} transparent opacity={0.38} depthWrite={false} />
+    </mesh>
+    {Array.from({ length: 8 }, (_, index) => {
+      const angle = index * Math.PI / 4;
+      return <mesh key={index} position={[Math.cos(angle) * 0.39, 2.99, Math.sin(angle) * 0.39]}>
+        <cylinderGeometry args={[0.022, 0.022, 0.66, 6]} />
+        <meshStandardMaterial color="#5f6962" metalness={0.45} roughness={0.62} />
+      </mesh>;
+    })}
+    <mesh position={[0, 3.39, 0]} castShadow>
+      <coneGeometry args={[0.55, 0.33, 12]} />
+      <meshStandardMaterial color="#60736e" roughness={0.68} metalness={0.28} />
+    </mesh>
+    <mesh position={[0, 3.6, 0]}>
+      <sphereGeometry args={[0.065, 8, 6]} />
+      <meshStandardMaterial color="#b89e6f" metalness={0.65} roughness={0.4} />
+    </mesh>
+    <group ref={lantern} position={[0, 2.98, 0]}>
+      <primitive object={target} position={[12, -4, 0]} />
+      <mesh>
+        <sphereGeometry args={[0.19, 12, 8]} />
+        <meshBasicMaterial color="#fff0bc" toneMapped={false} />
+      </mesh>
+      <pointLight color="#ffdb8a" intensity={2.5} distance={5} decay={2} />
+      <spotLight color="#ffdf9a" intensity={48} distance={18} decay={1.5} angle={0.23} penumbra={0.8} target={target} />
+      <group rotation={[0, 0, -0.32]}>
+        {[0, -0.22].map((height, index) => <mesh key={index} position={[6, height, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={7 + index} raycast={() => null}>
+          <planeGeometry args={[12, 5]} />
+          <shaderMaterial vertexShader={BEAM_VERTEX} fragmentShader={BEAM_FRAGMENT} transparent depthWrite={false} side={DoubleSide} />
+        </mesh>)}
+      </group>
     </group>
   </group>;
 }
 
-export default function FloodStage({ world, highTide, paused, onSelect }: { world: World; highTide: boolean; paused: boolean; onSelect: (coord: Coord) => void }) {
+export default function FloodStage({ world, waterLevel, paused, onSelect }: { world: World; waterLevel: number; paused: boolean; onSelect: (coord: Coord) => void }) {
   const water = useRef<Mesh>(null);
   const seabed = useRef<Mesh>(null);
   const material = useRef<ShaderMaterial>(null);
@@ -191,13 +200,9 @@ export default function FloodStage({ world, highTide, paused, onSelect }: { worl
   const shorelineDummy = useMemo(() => new Object3D(), []);
   const coords = useMemo(() => Object.values(world).filter(tile => tile.kind !== 'empty').map(tile => tile.coord), [world]);
   const coastOffset = (worldRadius(world) - 3) * SQRT_THREE;
-  const phase = useRef(0.08);
-  const level = useRef(TIDE_LOW);
+  const level = useRef(waterLevel);
   useFrame(({ camera }, delta) => {
-    if (!paused && !highTide) phase.current += delta / 28;
-    const cycle = 0.5 - 0.5 * Math.cos(phase.current * Math.PI * 2);
-    const target = highTide ? TIDE_HIGH : TIDE_LOW + (TIDE_HIGH - TIDE_LOW) * cycle;
-    level.current += (target - level.current) * Math.min(1, delta * 2.5);
+    level.current = waterLevel;
     if (water.current) water.current.position.set(camera.position.x, level.current, camera.position.z);
     if (seabed.current) seabed.current.position.set(camera.position.x, -0.27, camera.position.z);
     if (material.current) {
@@ -232,6 +237,6 @@ export default function FloodStage({ world, highTide, paused, onSelect }: { worl
       <ringGeometry args={[0.93, 0.98, 6]} />
       <meshBasicMaterial color="#b9e9dc" transparent opacity={0.64} depthWrite={false} side={DoubleSide} />
     </instancedMesh>
-    <RefugeTower paused={paused} onSelect={onSelect} />
+    <OldLighthouse paused={paused} onSelect={onSelect} />
   </>;
 }

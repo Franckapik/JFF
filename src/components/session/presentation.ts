@@ -26,8 +26,8 @@ export const TILE_LABELS: Record<TileKind, string> = {
   base: "Base",
   fuel: "Carburant",
   repair: "Reparation",
-  ramp: "Rampe · niveau 2",
-  tower: "Tour · niveau 3",
+  ramp: "Rampe · niveau 4",
+  tower: "Phare · niveau 5",
 };
 export const RESOURCE_LABELS = { food: "Provisions", debris: "Débris", special: "Cartes action" };
 export const PHASE_LABELS: Record<BotPhase, string> = {
@@ -52,6 +52,14 @@ export function cloudOpacity(cloud: ElectricCloud, elapsed: number): number {
     (elapsed - cloud.appearedAt) / RULES.cloudFadeDuration,
     (cloud.expiresAt - elapsed) / RULES.cloudFadeDuration
   ));
+}
+
+export function cloudTravelProgress(cloud: ElectricCloud, elapsed: number): number {
+  if (!cloud.previousCoord) return 1;
+  const movedAt = cloud.nextMoveAt - RULES.cloudMoveDuration;
+  const duration = Math.min(900, RULES.cloudMoveDuration * 0.45);
+  const progress = Math.max(0, Math.min(1, (elapsed - movedAt) / duration));
+  return progress * progress * (3 - 2 * progress);
 }
 export function clock(milliseconds: number): string {
   const seconds = Math.floor(milliseconds / 1000);

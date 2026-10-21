@@ -24,9 +24,9 @@ Fonctionnalité: Initialisation de la session partagée
     Et son souvenir initial du terrain couvre le rayon du vaisseau autour de sa base et la station de carburant publique
     Et ses capacités sont définies indépendamment
       | ressource | capacité |
-      | food      | 200      |
-      | debris    | 1800     |
-      | special   | 3        |
+      | food      | 8        |
+      | debris    | 8        |
+      | special   | 2        |
 
   @INIT-03
   Scénario: Connecter un second onglet sans recréer le monde

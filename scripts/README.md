@@ -1,6 +1,8 @@
 # Commandes et mesures JFF
 
-Node >= 22.12 est requis. Installer avec `npm ci`, puis lancer `npm run dev`.
+Node >= 22.12 est requis. Avec `nvm`, lancer `nvm install && nvm use` avant
+`npm ci`, puis `npm run dev`. Les scripts npm activent Node 22 automatiquement
+si `nvm` est disponible dans le terminal non interactif.
 `/vue1` affiche le terrain et `/vue2` le diagnostic ; les onglets de meme
 origine partagent une session. `npm run preview -- --host 127.0.0.1` sert le
 build de production.

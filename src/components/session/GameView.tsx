@@ -2,15 +2,15 @@ import { OrbitControls } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Bot as BotIcon, Maximize2, Minimize2, SlidersHorizontal, Waves } from 'lucide-react';
 import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Color, Group, InstancedMesh, Object3D, Vector3 } from 'three';
+import { Color, Group, InstancedMesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
 
 import type { BotView, ElectricCloud, MineReport } from '../../engine/model';
 import type { PhysicsBotPose } from '../../engine/physicsPlayground';
-import { RESOURCE_KINDS, type Resources } from '../../engine/resources';
+import { RESOURCE_KINDS, type ResourceKind, type Resources } from '../../engine/resources';
 import { RULES } from '../../engine/rules';
 import { terrainDeckHeight, terrainPosition, TERRAIN_BOTTOM } from '../../engine/terrainPresentation';
 import { activeCoords, depletedResourceCoords, isCloudVisible, resourceMarkerCoords, revealedTileKind } from '../../engine/visibility';
-import { BOT_IDS, hexDistance, hexLine, tileLevel, worldPosition, type BotId, type Coord, type World, type WorldTile } from '../../engine/world';
+import { BOT_IDS, hexDistance, hexLine, isSubmerged, tileLevel, worldPosition, type BotId, type Coord, type World, type WorldTile } from '../../engine/world';
 import { useSessionStore } from '../../stores/useSessionStore';
 
 import BotPanel from './BotPanel';
@@ -21,11 +21,12 @@ import ExpertBotView from './ExpertBotView';
 import FloodStage from './FloodStage';
 import { IncidentHud, IncidentPulses } from './IncidentFeedback';
 import type { PhysicsCommand } from './PhysicsPlayground';
-import { BOT_COLORS, cloudOpacity, DEPLETED_TILE_COLOR, MINED_TILE_COLOR, RESOURCE_LABELS, TILE_COLORS, TILE_LABELS } from './presentation';
+import { BOT_COLORS, cloudOpacity, cloudTravelProgress, DEPLETED_TILE_COLOR, MINED_TILE_COLOR, RESOURCE_LABELS, TILE_COLORS, TILE_LABELS } from './presentation';
 import { useRenderCounter } from './renderMetrics';
 import { useIncidentAlerts } from './useIncidentAlerts';
 import TrustHud from './TrustHud';
 import { sketchTileShader } from './boardShaders';
+import VisionMist from './VisionMist';
 
 type Perspective = BotId | 'developer';
 const VOID_COLOR = '#14313a';
@@ -132,10 +133,47 @@ function ResourceTokens({ resources, y = 0.22 }: { resources: Resources; y?: num
   })}</>;
 }
 
-const GroundResources = memo(function GroundResources({ world, current, scanned }: { world: World; current: string; scanned: string }) {
-  return <>{resourceMarkerCoords(world, current.split('|') as Coord[], scanned.split('|') as Coord[]).map(coord =>
-    <group key={coord} position={terrainPosition(world, coord)}><ResourceTokens resources={world[coord].resources} /></group>
-  )}</>;
+function ResourceFind({ kind, coord, position, select }: { kind: ResourceKind; coord: Coord; position: [number, number, number]; select: (coord: Coord) => void }) {
+  const spinning = useRef<Group>(null);
+  const phase = useMemo(() => coord.split(',').map(Number).reduce((sum, value) => sum + value * 1.7, 0), [coord]);
+  useFrame(({ clock }) => {
+    if (!spinning.current) return;
+    const time = clock.getElapsedTime();
+    spinning.current.rotation.y = time * (kind === 'special' ? 1.25 : 0.82) + phase;
+    spinning.current.position.y = 0.48 + Math.sin(time * 2 + phase) * 0.055;
+  });
+  return <group position={position} onClick={event => { event.stopPropagation(); select(coord); }}>
+    <mesh position={[0, 0.08, 0]}>
+      <cylinderGeometry args={[0.22, 0.3, 0.16, 6]} />
+      <meshStandardMaterial color="#576e69" roughness={0.85} />
+    </mesh>
+    <mesh position={[0, 0.18, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <torusGeometry args={[0.23, 0.025, 6, 24]} />
+      <meshStandardMaterial color={RESOURCE_COLORS[kind]} emissive={RESOURCE_COLORS[kind]} emissiveIntensity={0.5} />
+    </mesh>
+    <group ref={spinning} position={[0, 0.48, 0]}>
+      {kind === 'food' && <>
+        <mesh castShadow><sphereGeometry args={[0.22, 12, 10]} /><meshStandardMaterial color="#7fca72" roughness={0.5} /></mesh>
+        <mesh position={[0, 0.24, 0]} rotation={[0, 0, -0.25]}><cylinderGeometry args={[0.026, 0.035, 0.17, 6]} /><meshStandardMaterial color="#5a6750" /></mesh>
+        <mesh position={[0.13, 0.3, 0]} rotation={[0, 0, -0.5]}><sphereGeometry args={[0.13, 0.035, 0.07, 8, 6]} /><meshStandardMaterial color="#a6dd82" /></mesh>
+      </>}
+      {kind === 'debris' && <>
+        <mesh castShadow rotation={[0.25, 0.4, 0.15]}><dodecahedronGeometry args={[0.25, 0]} /><meshStandardMaterial color="#e3a36d" metalness={0.35} roughness={0.55} /></mesh>
+        <mesh position={[0.09, 0.08, 0.21]} rotation={[0.25, 0.4, 0.15]}><boxGeometry args={[0.16, 0.045, 0.04]} /><meshStandardMaterial color="#ffe0a4" metalness={0.25} /></mesh>
+      </>}
+      {kind === 'special' && <>
+        <mesh castShadow><octahedronGeometry args={[0.28]} /><meshStandardMaterial color="#bba8ff" emissive="#7353bc" emissiveIntensity={0.4} metalness={0.2} roughness={0.3} /></mesh>
+        <mesh rotation={[Math.PI / 2.7, 0, 0]}><torusGeometry args={[0.37, 0.018, 6, 32]} /><meshStandardMaterial color="#ead9ff" emissive="#9c85e9" emissiveIntensity={0.5} /></mesh>
+      </>}
+    </group>
+  </group>;
+}
+
+const GroundResources = memo(function GroundResources({ world, current, scanned, known, select }: { world: World; current: string; scanned: string; known: string; select: (coord: Coord) => void }) {
+  return <>{resourceMarkerCoords(world, current.split('|') as Coord[], scanned.split('|') as Coord[], known.split('|') as Coord[]).map(coord => {
+    const kind = RESOURCE_KINDS.find(candidate => world[coord].resources[candidate] > 0);
+    return kind && <ResourceFind key={coord} kind={kind} coord={coord} position={terrainPosition(world, coord)} select={select} />;
+  })}</>;
 });
 
 function DeveloperRoutes({ bots, world }: { bots: BotView[]; world: World }) {
@@ -186,28 +224,72 @@ function MineReportMarkers({ world, report }: { world: World; report: MineReport
   })}</>;
 }
 
-function ElectricCloudView({ cloud, opacity, paused, world }: { cloud: ElectricCloud; opacity: number; paused: boolean; world: World }) {
+const CLOUD_BOLTS = [
+  [[-0.08, 0.05], [0.05, -0.25], [-0.13, -0.48], [0.04, -0.72], [-0.08, -0.94]],
+  [[0.2, 0.02], [0.32, -0.22], [0.12, -0.48], [0.25, -0.69], [0.12, -0.89]],
+  [[-0.23, -0.04], [-0.36, -0.3], [-0.17, -0.55], [-0.32, -0.79]],
+] as const;
+
+function CloudBolt({ points, opacity }: { points: readonly (readonly [number, number])[]; opacity: number }) {
+  return <>{points.slice(1).map(([x, y], index) => {
+    const [fromX, fromY] = points[index];
+    const dx = x - fromX;
+    const dy = y - fromY;
+    return <mesh key={index} position={[(x + fromX) / 2, (y + fromY) / 2, 0]} rotation={[0, 0, -Math.atan2(dx, dy)]}>
+      <cylinderGeometry args={[0.025, 0.043, Math.hypot(dx, dy), 5]} />
+      <meshBasicMaterial color="#fff1b0" transparent opacity={opacity} />
+    </mesh>;
+  })}</>;
+}
+
+function ElectricCloudView({ cloud, elapsed, opacity, paused, speed, world }: { cloud: ElectricCloud; elapsed: number; opacity: number; paused: boolean; speed: number; world: World }) {
+  const traveler = useRef<Group>(null);
   const body = useRef<Group>(null);
+  const warningRing = useRef<Group>(null);
+  const arcs = useRef<(Group | null)[]>([]);
+  const coreMaterial = useRef<MeshStandardMaterial>(null);
   const phase = useRef(0);
+  const received = useRef(performance.now());
+  const reducedMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  useLayoutEffect(() => { received.current = performance.now(); }, [elapsed, paused, speed]);
+  const destination = new Vector3(...terrainPosition(world, cloud.coord));
+  const origin = cloud.previousCoord ? new Vector3(...terrainPosition(world, cloud.previousCoord)) : destination;
+  const initialProgress = reducedMotion ? 1 : cloudTravelProgress(cloud, elapsed);
+  const initialPosition = origin.clone().lerp(destination, initialProgress);
   const [x, , z] = worldPosition(cloud.coord);
   useFrame((_, delta) => {
-    if (!paused) phase.current += delta;
+    if (!paused && !reducedMotion) phase.current += delta * Math.min(speed, 2);
+    const visualElapsed = elapsed + (paused ? 0 : Math.max(0, Math.min(cloud.nextMoveAt - elapsed, (performance.now() - received.current) * speed)));
+    const progress = reducedMotion ? 1 : cloudTravelProgress(cloud, visualElapsed);
+    traveler.current?.position.copy(origin).lerp(destination, progress);
     if (body.current) {
-      body.current.rotation.y = phase.current * 0.45;
-      body.current.position.y = 0.82 + Math.sin(phase.current * 2.3) * 0.1;
+      const surge = Math.pow(Math.max(0, Math.sin(phase.current * 5.1)), 12);
+      body.current.rotation.y = phase.current * 0.34;
+      body.current.position.y = 1.02 + (reducedMotion ? 0 : Math.sin(phase.current * 2.6) * 0.1);
+      body.current.scale.setScalar(1 + (reducedMotion ? 0 : 0.08 * Math.sin(phase.current * 3.2) + 0.1 * surge));
+      if (coreMaterial.current) coreMaterial.current.emissiveIntensity = 0.65 + surge * 1.7;
     }
+    if (warningRing.current) warningRing.current.scale.setScalar(reducedMotion ? 1 : 0.95 + 0.12 * Math.sin(phase.current * 3.2));
+    arcs.current.forEach((arc, index) => {
+      if (arc) arc.visible = reducedMotion ? index === 0 : Math.sin(phase.current * (4.3 + index * 0.31) + index * 2.2) > 0.7;
+    });
   });
   return <>
-    <mesh position={[x, terrainDeckHeight(world, cloud.coord) + 0.2, z]} rotation={[-Math.PI / 2, 0, 0]}>
-      <ringGeometry args={[0.78, 0.85, 6]} />
-      <meshBasicMaterial color="#65dbe9" transparent opacity={0.88 * opacity} />
-    </mesh>
-    <group position={terrainPosition(world, cloud.coord)}>
+    <group ref={warningRing} position={[x, terrainDeckHeight(world, cloud.coord) + 0.23, z]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh><ringGeometry args={[0.65, 0.72, 32]} /><meshBasicMaterial color="#f36b75" transparent opacity={0.88 * opacity} /></mesh>
+      <mesh><ringGeometry args={[0.83, 0.88, 32]} /><meshBasicMaterial color="#9d3c62" transparent opacity={0.67 * opacity} /></mesh>
+      <mesh><circleGeometry args={[0.61, 32]} /><meshBasicMaterial color="#ad415f" transparent opacity={0.2 * opacity} /></mesh>
+    </group>
+    <group ref={traveler} position={initialPosition}>
       <group ref={body}>
-        <mesh position={[-0.27, 0, 0]}><icosahedronGeometry args={[0.35, 1]} /><meshStandardMaterial color="#bad9df" emissive="#4ba3c3" emissiveIntensity={0.75} transparent opacity={0.86 * opacity} /></mesh>
-        <mesh position={[0.2, 0.13, 0.15]}><icosahedronGeometry args={[0.4, 1]} /><meshStandardMaterial color="#9fcbd4" emissive="#3977ba" emissiveIntensity={0.8} transparent opacity={0.83 * opacity} /></mesh>
-        <mesh position={[0.12, -0.12, -0.25]}><icosahedronGeometry args={[0.28, 1]} /><meshStandardMaterial color="#c5e5e8" emissive="#4ba3c3" emissiveIntensity={0.65} transparent opacity={0.85 * opacity} /></mesh>
-        <mesh rotation={[0.3, 0, 0.4]}><torusGeometry args={[0.51, 0.025, 4, 16]} /><meshBasicMaterial color="#f5e777" transparent opacity={opacity} /></mesh>
+        <mesh position={[-0.3, 0, 0]}><icosahedronGeometry args={[0.43, 1]} /><meshStandardMaterial color="#283c5a" emissive="#5963a2" emissiveIntensity={0.5} transparent opacity={0.93 * opacity} /></mesh>
+        <mesh position={[0.22, 0.12, 0.13]}><icosahedronGeometry args={[0.47, 1]} /><meshStandardMaterial color="#293451" emissive="#614e9e" emissiveIntensity={0.55} transparent opacity={0.94 * opacity} /></mesh>
+        <mesh position={[0.08, -0.11, -0.27]}><icosahedronGeometry args={[0.35, 1]} /><meshStandardMaterial color="#3d526b" emissive="#5377a6" emissiveIntensity={0.6} transparent opacity={0.92 * opacity} /></mesh>
+        <mesh position={[0.03, -0.08, 0.31]}><icosahedronGeometry args={[0.23, 1]} /><meshStandardMaterial ref={coreMaterial} color="#b6eff5" emissive="#7cecff" emissiveIntensity={0.65} transparent opacity={0.9 * opacity} /></mesh>
+        <mesh rotation={[0.3, 0, 0.4]}><torusGeometry args={[0.57, 0.033, 5, 24]} /><meshBasicMaterial color="#ffbc79" transparent opacity={0.95 * opacity} /></mesh>
+        {CLOUD_BOLTS.map((points, index) => <group key={index} ref={node => { arcs.current[index] = node; }} rotation={[0, index * 2.15, 0]}>
+          <CloudBolt points={points} opacity={opacity} />
+        </group>)}
       </group>
     </group>
   </>;
@@ -319,7 +401,6 @@ export default function GameView() {
   const [expert, setExpert] = useState(false);
   const [expertBotId, setExpertBotId] = useState<BotId>('bot-0');
   const [physicsEnabled, setPhysicsEnabled] = useState(false);
-  const [highTide, setHighTide] = useState(false);
   const [physicsStatus, setPhysicsStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
   const [physicsCommand, setPhysicsCommand] = useState<PhysicsCommand | null>(null);
   const [physicsImpacts, setPhysicsImpacts] = useState<Record<BotId, number>>({ 'bot-0': 0, 'bot-1': 0 });
@@ -358,11 +439,11 @@ export default function GameView() {
   const current = currentCoords.join('|');
   const explored = developer ? current : viewedBot.explored.join('|');
   const scanned = developer ? current : viewedBot.scanned.join('|');
-  const depleted = depletedResourceCoords(snapshot.world, Object.values(snapshot.bots), currentCoords, developer ? currentCoords : viewedBot.scanned).join('|');
+  const depleted = depletedResourceCoords(snapshot.world, Object.values(snapshot.bots), currentCoords, developer ? currentCoords : viewedBot.scanned, viewedBot.known).join('|');
   const tile = selected && snapshot.world[selected]?.kind !== 'empty' ? snapshot.world[selected] : null;
   const isCurrent = !!selected && currentCoords.includes(selected);
   const isExplored = isCurrent || !!selected && viewedBot.explored.includes(selected);
-  const isScanned = !!selected && (developer || viewedBot.scanned.includes(selected));
+  const isScanned = !!selected && (developer || viewedBot.scanned.includes(selected) || viewedBot.known.includes(selected));
   const revealedKind = tile && isExplored ? revealedTileKind(tile, new Set(viewedBot.known), new Set(viewedBot.scanned), isCurrent, developer) : null;
   const rememberedMine = !!selected && (viewedBot.knownMines[selected] ?? 0) > snapshot.elapsed;
   const visibleArmingMine = !!tile?.mine && tile.mine.state === 'arming' && isCurrent;
@@ -387,7 +468,7 @@ export default function GameView() {
   }));
   return <main className={`game-layout${expert ? ' expert-open' : ''}`}>
     <section className="board-panel" aria-label="Terrain de la partie">
-      <div className="board-toolbar"><div className="board-title"><small>Étude visuelle / 01</small><h1>La Tour des deux refuges</h1></div><label>Vision <select value={perspective} onChange={event => setPerspective(event.target.value as Perspective)}><option value="bot-0">Bot 0</option><option value="bot-1">Bot 1</option><option value="developer">Développeur</option></select></label><button className="icon-button expert-toggle" aria-pressed={expert} onClick={() => setExpert(value => !value)} title={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'} aria-label={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'}><SlidersHorizontal size={18} /></button><button type="button" className="tide-preview-toggle" aria-pressed={highTide} onClick={() => setHighTide(value => !value)} title="Aperçu graphique uniquement : la marée ne modifie pas encore les règles"><Waves size={16} />{highTide ? 'Revenir à la marée animée' : 'Voir la marée haute'}</button><span>{developer ? 'Carte complète' : `${viewedBot.explored.length} / ${allCoords.length} cases explorées`}</span>{viewedBot.mineWarning && <span className="cloud-alert">Mine ennemie à proximité</span>}{mineReport && <span title={`Relevé à ${Math.round(mineReport.time / 1000)} s`}>Scan {mineReport.center} : {mineReport.count} mine(s) / rayon {mineReport.radius} · plus proche {mineReport.nearestDistance ?? '—'} hex.</span>}{cloudVisible && <span className="cloud-alert">⚡ Nuage électrique détecté</span>}{viewedBot.operation?.scanDetour && <span className="cloud-alert">{!viewedBot.operation.scanEdgeReached ? 'Drone repoussé vers le bord' : !viewedBot.operation.scanArrived ? 'Drone vers une tuile aléatoire' : 'Drone en retour'}</span>}</div>
+      <div className="board-toolbar"><div className="board-title"><small>Étude visuelle / 01</small><h1>Le Phare des deux refuges</h1></div><label>Vision <select value={perspective} onChange={event => setPerspective(event.target.value as Perspective)}><option value="bot-0">Bot 0</option><option value="bot-1">Bot 1</option><option value="developer">Développeur</option></select></label><button className="icon-button expert-toggle" aria-pressed={expert} onClick={() => setExpert(value => !value)} title={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'} aria-label={expert ? 'Masquer le mode expert' : 'Afficher le mode expert'}><SlidersHorizontal size={18} /></button><span className="tide-preview-toggle" title="La marée monte pendant la partie et ferme les passages immergés"><Waves size={16} /> Marée {Math.round(snapshot.waterLevel * 100) / 100} m</span><span>{developer ? 'Carte complète' : `${viewedBot.explored.length} / ${allCoords.length} cases explorées`}</span>{viewedBot.mineWarning && <span className="cloud-alert">Mine ennemie à proximité</span>}{mineReport && <span title={`Relevé à ${Math.round(mineReport.time / 1000)} s`}>Scan {mineReport.center} : {mineReport.count} mine(s) / rayon {mineReport.radius} · plus proche {mineReport.nearestDistance ?? '—'} hex.</span>}{cloudVisible && <span className="cloud-alert">⚡ Nuage électrique détecté</span>}{viewedBot.operation?.scanDetour && <span className="cloud-alert">{!viewedBot.operation.scanEdgeReached ? 'Drone repoussé vers le bord' : !viewedBot.operation.scanArrived ? 'Drone vers une tuile aléatoire' : 'Drone en retour'}</span>}</div>
       <div className="physics-controls" aria-label="Atelier physique Rapier 3D">
         <strong>Rapier 3D <span>· atelier physique</span></strong>
         <button type="button" aria-pressed={physicsEnabled} onClick={() => { setPhysicsEnabled(value => !value); setPhysicsCommand(null); setPhysicsStatus('loading'); }}>{physicsEnabled ? 'Masquer' : 'Afficher'}</button>
@@ -406,16 +487,16 @@ export default function GameView() {
           <BoardCamera radius={snapshot.mapRadius} />
           <ScoreBackground gameId={gameId} score0={snapshot.bots['bot-0'].score} score1={snapshot.bots['bot-1'].score} />
           <ambientLight intensity={0.95} /><directionalLight position={[5, 12, 6]} intensity={1.3} castShadow shadow-mapSize={[1024, 1024]} />
-          <EndlessSeabed radius={snapshot.mapRadius} world={snapshot.world} />
-          <FloodStage key={gameId ?? 'preview'} world={snapshot.world} highTide={highTide} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} onSelect={setSelected} />
+          <EndlessSeabed radius={snapshot.mapRadius} world={snapshot.world} waterLevel={snapshot.waterLevel} />
+          <FloodStage key={gameId ?? 'preview'} world={snapshot.world} waterLevel={snapshot.waterLevel} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} onSelect={setSelected} />
           <Tiles world={snapshot.world} current={current} explored={explored} scanned={scanned} known={viewedBot.known.join('|')} depleted={depleted} developer={developer} selected={selected} route={expert && !developer ? expertBot.route : []} routeOwner={expert && !developer ? expertBot.id : null} select={setSelected} />
           <TileGlyphs world={snapshot.world} current={current} explored={explored} scanned={scanned} known={viewedBot.known.join('|')} depleted={depleted} developer={developer} selected={selected} />
           <MineMarkers world={snapshot.world} bot={viewedBot} current={currentCoords} developer={developer} elapsed={snapshot.elapsed} />
           <MineReportMarkers world={snapshot.world} report={mineReport} />
-          <GroundResources world={snapshot.world} current={current} scanned={scanned} />
+          <GroundResources world={snapshot.world} current={current} scanned={scanned} known={viewedBot.known.join('|')} select={setSelected} />
           {developer && <DeveloperRoutes bots={Object.values(snapshot.bots)} world={snapshot.world} />}
           <WaitingMarkers bots={Object.values(snapshot.bots)} visible={currentCoords} world={snapshot.world} />
-          {cloudVisible && snapshot.cloud && <ElectricCloudView cloud={snapshot.cloud} world={snapshot.world} opacity={opacity} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} />}
+          {cloudVisible && snapshot.cloud && <ElectricCloudView key={`${gameId}-${snapshot.cloud.appearedAt}`} cloud={snapshot.cloud} elapsed={snapshot.elapsed} world={snapshot.world} opacity={opacity} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} speed={snapshot.speed} />}
           <IncidentPulses alerts={alerts} world={snapshot.world} />
           {visibleBots.map(bot => {
             const other = snapshot.bots[bot.id === 'bot-0' ? 'bot-1' : 'bot-0'];
@@ -425,17 +506,18 @@ export default function GameView() {
             const flyoverEnd = bot.operation?.kind === 'move' && otherParked && bot.operation.target === other.coord && bot.goal?.coord !== other.coord;
             return <Vehicle key={bot.id} bot={bot} world={snapshot.world} crossing={crossing} flyoverStart={flyoverStart} flyoverEnd={flyoverEnd} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} speed={snapshot.speed} onPose={recordBotPose} />;
           })}
+          {!developer && <VisionMist bot={viewedBot} paused={snapshot.paused || snapshot.phase === 'finished' || snapshot.phase === 'blocked' || status !== 'connected'} />}
           {physicsEnabled && <Suspense fallback={null}><PhysicsPlayground key={physicsScope} scope={physicsScope} tiles={snapshot.world} initialCoord={physicsInitial} command={physicsCommand} botPoses={physicsBotPoses} visibleBots={visibleBots.map(bot => bot.id)} onStatus={setPhysicsStatus} onImpacts={setPhysicsImpacts} /></Suspense>}
           <OrbitControls makeDefault target={[0, 0.85, 0]} minDistance={8} maxDistance={Math.max(26, snapshot.mapRadius * 12)} minPolarAngle={0.1} maxPolarAngle={Math.PI / 2.1} />
         </Canvas>
         <button type="button" className="scene-fullscreen-button" onClick={toggleFullscreen} title={isFullscreen ? 'Quitter le plein écran' : 'Afficher la scène en plein écran'} aria-label={isFullscreen ? 'Quitter le plein écran' : 'Afficher la scène en plein écran'} aria-pressed={isFullscreen}>{isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}</button>
         {fullscreenError && <span className="scene-fullscreen-error" role="alert">Le plein écran est indisponible.</span>}
-        <div className="map-cartouche" aria-hidden="true"><span>JFF · ÉTUDE VISUELLE</span><strong>Les deux refuges</strong><small>L’eau monte autour de la tour</small></div>
+        <div className="map-cartouche" aria-hidden="true"><span>JFF · ÉTUDE VISUELLE</span><strong>Les deux refuges</strong><small>La lumière veille sur les îles</small></div>
         <TrustHud trust={snapshot.trust} lastChange={snapshot.lastTrustChange} perspective={perspective} onSelect={setSelected} />
         <IncidentHud alerts={alerts} bot={viewedBot} cloudVisible={cloudVisible} onSelect={setSelected} />
       </div>
-      <div className="tile-inspector"><label>Tuile <select aria-label="Tuile selectionnee" value={tile ? selected! : ''} onChange={event => setSelected(event.target.value ? event.target.value as Coord : null)}><option value="">Aucune</option>{allCoords.map(coord => <option key={coord} value={coord}>{coord}</option>)}</select></label><span>{tile ? !revealedKind ? 'Inconnue' : depleted.split('|').includes(tile.coord) ? 'Collectée et épuisée' : revealedKind === 'terrain' ? 'Terrain' : TILE_LABELS[revealedKind] : `${allCoords.length} hexagones`}</span>{tile && isExplored && <span>Niveau {tileLevel(tile)}</span>}{revealedKind === 'repair' && snapshot.repairAvailableAt > snapshot.elapsed && <span className="cloud-alert">Réparation disponible dans {Math.ceil((snapshot.repairAvailableAt - snapshot.elapsed) / 1000)} s</span>}{mineLabel && <span className="cloud-alert">{mineLabel}</span>}{selectedInCloud && <span className="cloud-alert">Nuage électrique : traversée dangereuse</span>}{tile && isCurrent && isScanned && tile.kind === 'resource' && <span>{RESOURCE_LABELS.food} {tile.resources.food} / {RESOURCE_LABELS.debris} {tile.resources.debris} / {RESOURCE_LABELS.special} {tile.resources.special}</span>}{tile && developer && <span>Bot 0 : {knowsTileKind(snapshot.bots['bot-0'], tile) ? 'nature connue' : 'nature inconnue'} · Bot 1 : {knowsTileKind(snapshot.bots['bot-1'], tile) ? 'nature connue' : 'nature inconnue'}</span>}</div>
-      <div className="map-legend"><span><i style={{ background: '#3b4c51' }} />Inconnue</span><span><i style={{ background: '#a49f8e' }} />Souvenir du terrain</span>{Object.entries(TILE_LABELS).map(([kind, label]) => <span key={kind}><i style={{ background: TILE_COLORS[kind as keyof typeof TILE_COLORS] }} />{label}</span>)}<span><i style={{ background: MINED_TILE_COLOR }} />Mine armée : dégâts au contact</span><span><i style={{ background: '#e5ac49' }} />Mine en armement : visible 800 ms</span><span><i style={{ background: '#8b7187' }} />Souvenir de mine : position incertaine</span><span><i style={{ background: '#65dbe9' }} />Nuage électrique : contact sur sa tuile</span><span><i style={{ background: DEPLETED_TILE_COLOR }} />Collectée et épuisée</span>{RESOURCE_KINDS.map(kind => <span key={kind}><i style={{ background: RESOURCE_COLORS[kind] }} />{RESOURCE_LABELS[kind]}</span>)}</div>
+      <div className="tile-inspector"><label>Tuile <select aria-label="Tuile selectionnee" value={tile ? selected! : ''} onChange={event => setSelected(event.target.value ? event.target.value as Coord : null)}><option value="">Aucune</option>{allCoords.map(coord => <option key={coord} value={coord}>{coord}</option>)}</select></label><span>{tile ? !revealedKind ? 'Inconnue' : depleted.split('|').includes(tile.coord) ? 'Collectée et épuisée' : revealedKind === 'terrain' ? 'Terrain' : TILE_LABELS[revealedKind] : `${allCoords.length} hexagones`}</span>{tile && isExplored && <span>Niveau {tileLevel(tile)}{isSubmerged(tile, snapshot.waterLevel) ? " · Submergée : drone seulement" : ""}</span>}{revealedKind === 'repair' && snapshot.repairAvailableAt > snapshot.elapsed && <span className="cloud-alert">Réparation disponible dans {Math.ceil((snapshot.repairAvailableAt - snapshot.elapsed) / 1000)} s</span>}{mineLabel && <span className="cloud-alert">{mineLabel}</span>}{selectedInCloud && <span className="cloud-alert">Nuage électrique : jusqu’à {RULES.cloudDamage} points de dégâts au contact</span>}{tile && isCurrent && isScanned && tile.kind === 'resource' && RESOURCE_KINDS.filter(kind => tile.resources[kind] > 0).map(kind => <span key={kind}>{RESOURCE_LABELS[kind]} +{tile.resources[kind]}</span>)}{tile && developer && <span>Bot 0 : {knowsTileKind(snapshot.bots['bot-0'], tile) ? 'nature connue' : 'nature inconnue'} · Bot 1 : {knowsTileKind(snapshot.bots['bot-1'], tile) ? 'nature connue' : 'nature inconnue'}</span>}</div>
+      <div className="map-legend"><span><i style={{ background: '#3b4c51' }} />Inconnue</span><span><i style={{ background: '#a49f8e' }} />Souvenir du terrain</span>{Object.entries(TILE_LABELS).map(([kind, label]) => <span key={kind}><i style={{ background: TILE_COLORS[kind as keyof typeof TILE_COLORS] }} />{label}</span>)}<span><i style={{ background: MINED_TILE_COLOR }} />Mine armée : dégâts au contact</span><span><i style={{ background: '#e5ac49' }} />Mine en armement : visible 800 ms</span><span><i style={{ background: '#8b7187' }} />Souvenir de mine : position incertaine</span><span><i style={{ background: '#f36b75' }} />Nuage électrique : jusqu’à {RULES.cloudDamage} dégâts au contact</span><span><i style={{ background: DEPLETED_TILE_COLOR }} />Collectée et épuisée</span>{RESOURCE_KINDS.map(kind => <span key={kind}><i style={{ background: RESOURCE_COLORS[kind] }} />{RESOURCE_LABELS[kind]}</span>)}</div>
     </section>
     <aside className="bot-sidebar" aria-label="Bots">
       {(snapshot.phase === 'finished' || snapshot.phase === 'blocked') && <section className="result"><h2>{snapshot.phase === 'blocked' ? 'Partie bloquee' : 'Partie terminee'}</h2><p>{snapshot.winners.length === 0 ? 'Aucun vainqueur' : snapshot.winners.length === 2 ? 'Egalite' : `Victoire du Bot ${snapshot.winners[0].slice(-1)}`}</p><small>{snapshot.endReason}</small></section>}

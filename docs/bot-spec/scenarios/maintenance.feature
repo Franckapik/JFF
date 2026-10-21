@@ -86,10 +86,10 @@ Fonctionnalité: Services locaux et achats individuels
   @MAINT-09
   Scénario: Racheter les extensions après remplacement du drone
     Étant donné un drone de rayon 3 détruit par un danger
-    Et un bot revenu à sa base avec assez de budget pour les achats et 30 de réserve après les extensions
-    Quand il achète un nouveau drone pour 50 de budget
+    Et un bot revenu à sa base avec assez de budget pour les achats et 3 de réserve après les extensions
+    Quand il achète un nouveau drone pour 4 de budget
     Alors son drone est disponible avec un rayon de 1
-    Quand il rachète successivement les extensions pour 50 puis 100 de budget
+    Quand il rachète successivement les extensions pour 3 puis 5 de budget
     Alors le rayon passe à 2 puis à 3 et chaque achat est débité
 
   @MAINT-10

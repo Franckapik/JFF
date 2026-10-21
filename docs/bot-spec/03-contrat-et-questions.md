@@ -48,13 +48,14 @@ sans certification sur telephone.
   et longueur de trajet. Un compartiment plein peut declencher un retour meme
   si les autres ont encore de la place.
 - Capacites independantes : nourriture (appelee Provisions dans l'interface)
-  200, debris 1 800, special 3. Une collecte peut etre partielle. Les
+  8, debris 8, special 2. Une collecte peut etre partielle. Les
   transactions du stock partage sont serialisees. Le depot a sa propre base
   credite trois comptes distincts : les Provisions donnent le score de
   victoire, les debris donnent le budget, les ressources speciales donnent
   des actions. Achats et reparations debitent le budget ; une mine effectivement
-  posee debite une action. Le plateau initial contient dix ressources speciales
-  sur cinq paires de cases miroirs.
+  posee debite une action. Une tuile ressource contient une seule catégorie,
+  en quantité de 1 ou parfois 2. La carte par défaut contient quatre ressources
+  speciales sur deux paires de cases miroirs.
 
 ## Deplacements, services et dangers
 
@@ -66,9 +67,9 @@ sans certification sur telephone.
 - Un scan consomme 1 carburant commun par hexagone parcouru par le drone a
   l'aller et au retour ; une cible dont l'aller-retour depasse la reserve
   commune est exclue.
-- Rayon initial du drone 1, extensions individuelles a 2 pour 50 puis 3 pour
-  100 de budget. Un drone perdu fait retomber le rayon de visibilite a 1 ; le
-  terrain deja explore reste en memoire. Son remplacement a la base coute 50
+- Rayon initial du drone 1, extensions individuelles a 2 pour 3 puis 3 pour
+  5 de budget. Un drone perdu fait retomber le rayon de visibilite a 1 ; le
+  terrain deja explore reste en memoire. Son remplacement a la base coute 4
   de budget et repart au rayon 1. Chaque extension doit etre rachetee pour
   regagner les rayons 2 et 3.
 - A sa base, un service gratuit de 1 200 ms depose la cargaison, sans
@@ -78,7 +79,7 @@ sans certification sur telephone.
   carburant urgent est a 20 ou sous le cout d'acces au service plus une
   reserve de 3 ; le service a une station carburant remplit toute reserve
   incomplete apres une duree egale a trois pas du vaisseau. La reparation devient
-  prioritaire a 45 degats si le bot dispose de 30 debris en budget ; entre deux besoins distants, elle est recherchee
+  prioritaire a 45 degats si le bot dispose de 3 debris en budget ; entre deux besoins distants, elle est recherchee
   avant le ravitaillement. Après chaque réparation, la station est indisponible
   pendant 40 000 ms logiques.
 - Une tuile d'arret accueille un seul bot actif a la fois. Le dernier pas vers
@@ -149,10 +150,10 @@ identifiants sont controles, mais leurs etapes ne sont pas executees.
 | Q07 | Decouverte possible par le vaisseau sans drone. |
 | Q08 | Heuristiques actuelles de collecte et de retour. |
 | Q09 | Seuils et priorites de maintenance ci-dessus. |
-| Q10 | Depot gratuit a sa base en 1 200 ms ; reparation pour 30 de budget issu des debris uniquement a la station dediee. |
+| Q10 | Depot gratuit a sa base en 1 200 ms ; reparation pour 3 de budget issu des debris uniquement a la station dediee. |
 | Q11 | Aucun carburant facture au chargement. |
 | Q12 | Perte du drone et decouverte du danger des l'arrivee. |
-| Q13 | Remplacement du drone a sa base pour 50 de budget. |
+| Q13 | Remplacement du drone a sa base pour 4 de budget. |
 | Q14 | Pause globale ; interruptions individuelles differees. |
 | Q15 | Blocage explicite sans vainqueur ou destruction artificielle. |
 | Q16 | Survivants seuls eligibles ; egalites partagees. |

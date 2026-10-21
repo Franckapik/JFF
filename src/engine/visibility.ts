@@ -53,21 +53,21 @@ export function isCloudVisible(cloud: ElectricCloud | null, current: readonly Co
 export function revealedTileKind(tile: WorldTile, known: ReadonlySet<Coord>, scanned: ReadonlySet<Coord>, visible: boolean, developer = false): TileKind | "terrain" {
   if (developer) return tile.kind;
   if (tile.kind === "danger" && !known.has(tile.coord)) return "terrain";
-  if (tile.kind === "resource" && (!visible || !scanned.has(tile.coord))) return "terrain";
+  if (tile.kind === "resource" && (!visible || (!scanned.has(tile.coord) && !known.has(tile.coord)))) return "terrain";
   return tile.kind;
 }
 
-export function resourceMarkerCoords(world: World, current: Iterable<Coord>, scanned: Iterable<Coord>): Coord[] {
+export function resourceMarkerCoords(world: World, current: Iterable<Coord>, scanned: Iterable<Coord>, known: Iterable<Coord> = []): Coord[] {
   const visibleCoords = new Set(current);
-  const scannedCoords = new Set(scanned);
+  const discoveredCoords = new Set([...scanned, ...known]);
   return Object.values(world)
-    .filter(tile => tile.kind === "resource" && resourceTotal(tile.resources) > 0 && visibleCoords.has(tile.coord) && scannedCoords.has(tile.coord))
+    .filter(tile => tile.kind === "resource" && resourceTotal(tile.resources) > 0 && visibleCoords.has(tile.coord) && discoveredCoords.has(tile.coord))
     .map(tile => tile.coord);
 }
 
-export function depletedResourceCoords(world: World, bots: Iterable<Pick<Bot, "harvested">>, current: Iterable<Coord>, scanned: Iterable<Coord>): Coord[] {
+export function depletedResourceCoords(world: World, bots: Iterable<Pick<Bot, "harvested">>, current: Iterable<Coord>, scanned: Iterable<Coord>, known: Iterable<Coord> = []): Coord[] {
   const visibleCoords = new Set(current);
-  const scannedCoords = new Set(scanned);
+  const discoveredCoords = new Set([...scanned, ...known]);
   const harvestedCoords = new Set<Coord>();
   for (const bot of bots) {
     for (const [coord, resources] of Object.entries(bot.harvested)) {
@@ -75,6 +75,6 @@ export function depletedResourceCoords(world: World, bots: Iterable<Pick<Bot, "h
     }
   }
   return Object.values(world)
-    .filter(tile => tile.kind === "resource" && resourceTotal(tile.resources) === 0 && harvestedCoords.has(tile.coord) && visibleCoords.has(tile.coord) && scannedCoords.has(tile.coord))
+    .filter(tile => tile.kind === "resource" && resourceTotal(tile.resources) === 0 && harvestedCoords.has(tile.coord) && visibleCoords.has(tile.coord) && discoveredCoords.has(tile.coord))
     .map(tile => tile.coord);
 }
