@@ -4,7 +4,7 @@ import { MAX_MAP_RADIUS, MIN_MAP_RADIUS, RULES } from "./rules";
 export type Coord = `${number},${number}`;
 export type BotId = "bot-0" | "bot-1";
 export const BOT_IDS: BotId[] = ["bot-0", "bot-1"];
-export type TileKind = "resource" | "plain" | "empty" | "obstacle" | "danger" | "base" | "fuel" | "repair" | "ramp" | "tower";
+export type TileKind = "resource" | "treasure" | "plain" | "empty" | "obstacle" | "danger" | "base" | "fuel" | "repair" | "ramp" | "tower";
 export interface Mine {
   owner: BotId;
   state: "arming" | "armed";

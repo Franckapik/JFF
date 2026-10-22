@@ -5,8 +5,17 @@ import type { BotId, TileKind } from "../../engine/world";
 export const BOT_COLORS: Record<BotId, string> = { "bot-0": "#287c79", "bot-1": "#be6249" };
 export const DEPLETED_TILE_COLOR = "#829aac";
 export const MINED_TILE_COLOR = "#a84962";
+export const VISION_COLORS = {
+  unknown: "#2c444b",
+  remembered: "#6c7d7e",
+  rememberedPreview: "#858c84",
+  visibleEdge: "#718b7f",
+  rememberedEdge: "#40565a",
+  unknownEdge: "#243a41",
+} as const;
 export const TILE_COLORS: Record<TileKind, string> = {
   resource: "#a8bda3",
+  treasure: "#d6bb75",
   plain: "#c3bea8",
   empty: "#35545b",
   obstacle: "#8f988e",
@@ -19,6 +28,7 @@ export const TILE_COLORS: Record<TileKind, string> = {
 };
 export const TILE_LABELS: Record<TileKind, string> = {
   resource: "Ressources",
+  treasure: "Trésor",
   plain: "Terrain nu",
   empty: "Fond marin",
   obstacle: "Obstacle",

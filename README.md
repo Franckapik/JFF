@@ -38,6 +38,28 @@ Un drone peut encore les explorer. Un bot surpris par la submersion est ramené
 victoire. La proposition de mission associée figure dans
 [Relief et mission de la tour](docs/RELIEF-ET-MISSION.md).
 
+Dans la vue Terrain, le panneau « Votre balise » permet de guider une fois par
+partie le bot dont la vision est affichée. Sélectionner une case visible, puis
+choisir « Explorer ici » pour une case encore inconnue située hors de la position du vaisseau ou « Collecter ici » pour
+une ressource déjà scannée par le drone. L'opération en cours se termine d'abord ; le bot
+essaie ensuite de suivre la balise après ses urgences de sécurité. Si la cible
+n'est plus faisable, le panneau indique que la balise est caduque. Une nouvelle
+partie rend une balise disponible. Cette interaction ne change pas la règle de
+victoire actuelle.
+
+Un seul trésor est caché sur une tuile spéciale, choisie parmi les anciennes
+tuiles ressources ; cette tuile ne contient aucune ressource ordinaire. Le placement privilégie une
+distance de trajet égale à une étape près depuis les deux bases ; sur les
+petites cartes où le phare et ses rampes occupent les positions centrales,
+la tuile initialement ressource la plus équilibrée disponible est retenue. Quand un drone
+atteint cette tuile, le trésor apparaît et le phare éclaire uniquement sa
+position. Le bot qui l'a découvert le charge par une collecte classique, le
+ramène à sa base et l'y conserve. Le coffre posé est un corps dynamique Rapier
+que l'on peut faire rebondir d'un clic ; son transport suit le vaisseau. Aucun bonus
+de score ou d'économie ne lui est encore attribué.
+La vue développeur montre le coffre et sa coordonnée dès le début, sans déclencher
+sa découverte ni l'éclairage du phare pour les bots.
+
 La vue Terrain contient aussi un atelier Rapier 3D indépendant des règles de la
 partie, activable avec « Afficher ». Une pile de blocs apparaît près du bot affiché. Sélectionner une
 autre tuile puis cliquer « Empiler ici » déplace la pile ; « Lancer une bille »
@@ -78,7 +100,7 @@ d'une mine consomme une action. Chaque tuile ressource contient une seule
 trouvaille de 1 unité, parfois 2 pour les provisions ou les débris. Les
 provisions sont courantes, les débris moins fréquents et les cartes action
 rares : sur la carte par défaut, ces dernières occupent deux paires
-symétriques. Après un scan ou une arrivée du vaisseau, un symbole 3D flotte et tourne au-dessus de la
+symétriques. Après un scan du drone, un symbole 3D flotte et tourne au-dessus de la
 tuile ; il disparaît après la collecte. Les capacités sont de 8 provisions,
 8 débris et 2 cartes action. Les dépôts cumulés restent dans le bilan interne,
 mais ne figurent pas parmi les compteurs courants.

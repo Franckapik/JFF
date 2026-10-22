@@ -43,8 +43,13 @@ stock supplementaire. La session peut finir normalement apres les derniers
 depots ou passer en `blocked` lorsqu'aucun objectif ou retour n'est faisable.
 Le blocage n'invente ni vainqueur ni perte de cargaison pour un vaisseau immobilise.
 
-Le snapshot est en `schemaVersion: 16` et transporte des evenements metier
+Le snapshot est en `schemaVersion: 19` et transporte des evenements metier
 structures pour le mode expert ; le protocole de commandes reste en version 1.
+Il inclut l'état du trésor unique (coordonnée de jeu masquée avant la découverte,
+coordonnée de diagnostic disponible pour la vue développeur),
+son découvreur et son dépôt persistant à la base. Le trésor ne compte pas dans
+les ressources ni dans la condition de victoire.
+Sa tuile est de type `treasure` et ne contient aucun stock ordinaire.
 Un onglet avec un ancien worker doit etre ferme avant reconnexion. L'export
 JSON est un diagnostic, pas une sauvegarde restaurable.
 

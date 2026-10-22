@@ -36,8 +36,8 @@ sans certification sur telephone.
   conserve son propre terrain explore et ses propres cibles scannees. Les objets
   3D de ressources au sol apparaissent seulement sur les cibles deja scannees par
   le drone de ce bot et encore dans le champ du vaisseau. Une arrivee du
-  vaisseau peut toujours identifier et collecter un stock sans creer ces objets
-  au sol. Les objets charges suivent le vaisseau et disparaissent quand le
+  vaisseau seule ne revele pas le stock et ne permet pas sa collecte.
+  Les objets charges suivent le vaisseau et disparaissent quand le
   depot a la base se termine.
   Les dangers dans le champ mais non encore decouverts apparaissent comme du
   terrain non identifie. Le bot ne tient compte dans ses trajets que des dangers

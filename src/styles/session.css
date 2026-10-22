@@ -402,6 +402,48 @@ h2 {
   display: block;
   touch-action: none;
 }
+.ship-gauges-anchor {
+  pointer-events: none;
+}
+.ship-gauges {
+  display: grid;
+  gap: 2px;
+  width: 44px;
+  padding: 2px;
+  border-radius: 3px;
+  background: #14282daa;
+  opacity: 0.78;
+}
+.ship-gauge {
+  height: 3px;
+}
+.ship-gauge-track {
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #07171aa8;
+}
+.ship-gauge-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #efc66e;
+  transition: width 550ms ease-out;
+}
+.ship-gauge--repair .ship-gauge-fill {
+  background: #f07870;
+}
+.ship-gauge.is-recharging {
+  box-shadow: 0 0 4px 1px #a9f5d1a8;
+  animation: ship-gauge-recharge 800ms ease-in-out infinite alternate;
+}
+.ship-gauge.is-recharging.is-paused {
+  animation-play-state: paused;
+}
+@keyframes ship-gauge-recharge {
+  to { box-shadow: 0 0 7px 2px #a9f5d1c9; }
+}
 .incident-feed {
   position: absolute;
   z-index: 2;
@@ -769,6 +811,35 @@ h2 {
   flex-direction: column;
   gap: 16px;
 }
+.beacon-panel {
+  padding: 12px;
+  border: 1px solid #a9b7ad;
+  border-radius: 6px;
+  background: #f4f7ee;
+}
+.beacon-panel h2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 7px;
+  font-size: 15px;
+}
+.beacon-panel p {
+  margin: 0 0 9px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.beacon-panel small { color: #52665d; }
+.beacon-actions { display: flex; gap: 7px; margin-bottom: 8px; }
+.beacon-actions button {
+  padding: 6px 9px;
+  border: 1px solid #507b69;
+  border-radius: 4px;
+  background: #dcece1;
+  color: #244735;
+  cursor: pointer;
+}
+.beacon-actions button:disabled { opacity: 0.48; cursor: default; }
 .expert-open .bot-sidebar {
   overflow-y: auto;
   max-height: calc(100dvh - 68px);

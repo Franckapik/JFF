@@ -69,13 +69,13 @@ self.onconnect = (event: MessageEvent) => {
         return;
       }
       ports.set(port, Date.now());
-      if (data.type === "CONTROL" || data.type === "RESET") advanceClock();
+      if (data.type === "CONTROL" || data.type === "RESET" || data.type === "BEACON") advanceClock();
       const response = host.receive(data);
       if (data.type === "RESET" && response.type !== "ERROR") {
         failed = false;
         lastTick = performance.now();
       }
-      if ((data.type === "RESET" || data.type === "CONTROL") && response.type !== "ERROR") broadcast(response);
+      if ((data.type === "RESET" || data.type === "CONTROL" || data.type === "BEACON") && response.type !== "ERROR") broadcast(response);
       else post(port, response);
     } catch (error) {
       post(port, host.snapshot(error instanceof Error ? error.message : "Commande impossible"));

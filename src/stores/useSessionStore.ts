@@ -1,8 +1,9 @@
 import { create } from "zustand";
 
-import type { SessionSnapshot } from "../engine/model";
+import type { BeaconKind, SessionSnapshot } from "../engine/model";
 import type { SessionRequest, SessionResponse } from "../engine/protocol";
 import { RULES } from "../engine/rules";
+import type { BotId, Coord } from "../engine/world";
 
 interface SessionStore {
   status: "disconnected" | "connecting" | "connected";
@@ -13,6 +14,7 @@ interface SessionStore {
   connect: () => void;
   disconnect: () => void;
   control: (command: "PAUSE" | "RESUME" | "STEP" | "SPEED", speed?: number) => void;
+  placeBeacon: (botId: BotId, coord: Coord, kind: BeaconKind) => void;
   reset: (seed?: number, radius?: number) => void;
   dismissError: () => void;
 }
@@ -59,7 +61,7 @@ export const useSessionStore = create<SessionStore>((set, get) => {
       if (port) return;
       set({ status: "connecting", error: null });
       try {
-        worker = new SharedWorker(new URL("../workers/session-worker.ts", import.meta.url), { type: "module", name: "jff-session-v6" });
+        worker = new SharedWorker(new URL("../workers/session-worker.ts", import.meta.url), { type: "module", name: "jff-session-v7" });
         const connection = worker.port;
         port = connection;
         worker.onerror = () => {
@@ -74,7 +76,7 @@ export const useSessionStore = create<SessionStore>((set, get) => {
             fail(data.error ?? "Connexion interrompue");
             return;
           }
-          if (!data || data.protocol !== 1 || data.snapshot?.schemaVersion !== 16) {
+          if (!data || data.protocol !== 1 || data.snapshot?.schemaVersion !== 19) {
             fail(data?.error ?? "Version du moteur incompatible. Fermez les anciens onglets du jeu, puis reconnectez-vous.");
             return;
           }
@@ -115,6 +117,11 @@ export const useSessionStore = create<SessionStore>((set, get) => {
       const state = get();
       if (state.status !== "connected" || !state.gameId) return;
       send({ protocol: 1, type: "CONTROL", gameId: state.gameId, command, speed });
+    },
+    placeBeacon: (botId, coord, kind) => {
+      const state = get();
+      if (state.status !== "connected" || !state.gameId) return;
+      send({ protocol: 1, type: "BEACON", gameId: state.gameId, botId, coord, kind });
     },
     reset: (seed = crypto.getRandomValues(new Uint32Array(1))[0], radius = get().snapshot?.mapRadius ?? RULES.mapRadius) => {
       const state = get();

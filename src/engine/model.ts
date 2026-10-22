@@ -19,6 +19,20 @@ export type BotPhase =
   | "disabled"
   | "finished";
 export type GoalReason = "collect" | "explore" | "base" | "fuel" | "repair";
+export type BeaconKind = "explore" | "collect";
+export interface Beacon {
+  botId: BotId;
+  coord: Coord;
+  kind: BeaconKind;
+  status: "pending" | "followed" | "expired";
+  reason: string | null;
+}
+export interface Treasure {
+  status: "hidden" | "revealed" | "carried" | "deposited";
+  coord: Coord | null;
+  developerCoord: Coord | null;
+  owner: BotId | null;
+}
 export interface Operation {
   kind: OperationKind;
   target: Coord;
@@ -152,7 +166,13 @@ export type SessionEventType =
   | "bot.finished"
   | "session.finished"
   | "session.blocked"
-  | "trust.changed";
+  | "trust.changed"
+  | "beacon.placed"
+  | "beacon.followed"
+  | "beacon.expired"
+  | "treasure.revealed"
+  | "treasure.collected"
+  | "treasure.deposited";
 export interface SessionEvent {
   sequence: number;
   time: number;
@@ -170,7 +190,7 @@ export interface SessionEvent {
   trust?: TrustChange;
 }
 export interface SessionSnapshot {
-  schemaVersion: 16;
+  schemaVersion: 19;
   seed: number;
   mapRadius: number;
   revision: number;
@@ -183,6 +203,8 @@ export interface SessionSnapshot {
   world: World;
   cloud: ElectricCloud | null;
   repairAvailableAt: number;
+  beacon: Beacon | null;
+  treasure: Treasure;
   bots: Record<BotId, BotView>;
   trust: Record<BotId, number>;
   lastTrustChange: Record<BotId, SessionEvent | null>;

@@ -6,7 +6,7 @@ Fonctionnalité: Collecte concurrente et compartiments indépendants
   Scénario: Sélectionner une collecte faisable
     Étant donné un bot sans besoin de maintenance prioritaire
     Quand il recherche une collecte
-    Alors la cible doit être connue, de type ressource et posséder un stock transférable
+    Alors la cible doit avoir été scannée par le drone, être de type ressource et posséder un stock transférable
     Et un chemin traversable et non mortel doit permettre de l'atteindre
     Et le carburant doit couvrir l'aller, l'accès ultérieur à un service et la réserve de 3
     Et une base, une station, un obstacle ou un danger n'est jamais une cible de collecte
@@ -72,7 +72,7 @@ Fonctionnalité: Collecte concurrente et compartiments indépendants
   @COL-08
   Scénario: Représenter les ressources découvertes dans le champ de vision
     Étant donné deux tuiles ressources dans le rayon de vision du vaisseau
-    Et aucune de ces tuiles n'a été scannée ou visitée par ce bot
+    Et aucune de ces tuiles n'a été scannée par le drone de ce bot
     Alors aucun objet de ressource n'apparaît sur ces tuiles
     Quand le drone termine un scan sur la première tuile
     Alors un symbole 3D correspondant à son unique catégorie apparaît et tourne au-dessus de cette cible
@@ -97,9 +97,9 @@ Fonctionnalité: Collecte concurrente et compartiments indépendants
     Alors ces objets disparaissent de la base et la cargaison devient vide
 
   @COL-10
-  Scénario: Révéler une trouvaille à l'arrivée du vaisseau
+  Scénario: Exiger un scan même après l'arrivée du vaisseau
     Étant donné une tuile ressource atteinte par le vaisseau sans scan préalable du drone
-    Alors le bot peut connaître et collecter son stock selon les règles de déplacement et collecte
-    Et son symbole 3D apparaît au-dessus de cette tuile pendant la collecte
-    Quand le vaisseau repart avec la cargaison collectée
-    Alors les objets de cargaison suivent le vaisseau et le symbole de la tuile épuisée disparaît
+    Alors le bot connaît le terrain mais ne peut ni voir ni collecter le stock
+    Quand le vaisseau se déplace sur une case voisine et que son drone scanne la tuile ressource
+    Alors le stock et son symbole 3D deviennent visibles dans le champ du vaisseau
+    Et le bot peut collecter le stock selon les règles de déplacement et de collecte

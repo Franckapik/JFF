@@ -80,6 +80,12 @@ const EVENT_LABELS: Record<SessionEventType, string> = {
   'session.finished': 'Session terminee',
   'session.blocked': 'Session bloquee',
   'trust.changed': 'Confiance modifiée',
+  'beacon.placed': 'Balise posée',
+  'beacon.followed': 'Balise suivie',
+  'beacon.expired': 'Balise caduque',
+  'treasure.revealed': 'Trésor découvert',
+  'treasure.collected': 'Trésor chargé',
+  'treasure.deposited': 'Trésor déposé',
 };
 
 const CATEGORY_ICONS: Record<SessionEventCategory, EventIcon> = {

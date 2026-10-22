@@ -1,10 +1,11 @@
 import { createActor, type ActorRefFrom } from "xstate";
 
 import { botMachine } from "./botMachine";
-import type { Bot, BotPhase, BotView, ElectricCloud, GoalReason, OperationKind, SessionEvent, SessionLog, SessionSnapshot, TrustCause } from "./model";
+import type { Beacon, BeaconKind, Bot, BotPhase, BotView, ElectricCloud, GoalReason, OperationKind, SessionEvent, SessionLog, SessionSnapshot, TrustCause } from "./model";
 import { addResources, emptyResources, RESOURCE_KINDS, resourceTotal, transferResources, type Resources } from "./resources";
 import { RULES } from "./rules";
 import { tideLevel, timeUntilFlood } from "./tide";
+import { chooseTreasureCoord } from "./treasure";
 import { activeCoords, effectiveRadius, hasLineOfSight, rememberTerrain } from "./visibility";
 import {
     axial,
@@ -87,6 +88,10 @@ export class GameSession {
   private endReason: string | null = null;
   private cloud: ElectricCloud | null = null;
   private repairAvailableAt = 0;
+  private beacon: Beacon | null = null;
+  private readonly treasureCoord: Coord | null;
+  private treasureStatus: "hidden" | "revealed" | "carried" | "deposited" = "hidden";
+  private treasureOwner: BotId | null = null;
   private readonly shipCloudContacts = new Set<BotId>();
   private cloudRandomState: number;
   private exploredSinceStart = 0;
@@ -94,7 +99,7 @@ export class GameSession {
   readonly seed: number;
   readonly mapRadius: number;
 
-  constructor(seed: number, scenario?: { world?: World; radius?: number; bots?: Record<BotId, Bot>; cloud?: ElectricCloud | null; repairAvailableAt?: number; trust?: Partial<Record<BotId, number>>; elapsed?: number }) {
+  constructor(seed: number, scenario?: { world?: World; radius?: number; bots?: Record<BotId, Bot>; cloud?: ElectricCloud | null; repairAvailableAt?: number; trust?: Partial<Record<BotId, number>>; elapsed?: number; treasureCoord?: Coord | null }) {
     if (!Number.isSafeInteger(seed)) throw new Error("Invalid seed");
     if (scenario?.elapsed !== undefined && (!Number.isFinite(scenario.elapsed) || scenario.elapsed < 0)) throw new Error("Invalid initial time");
     this.elapsed = scenario?.elapsed ?? 0;
@@ -114,6 +119,13 @@ export class GameSession {
     if (scenario?.radius !== undefined && scenario.radius !== this.mapRadius) throw new Error("Map radius does not match world");
     const startingBots = BOT_IDS.map(id => structuredClone(scenario?.bots?.[id] ?? createBot(id, this.world, this.seed)));
     if (startingBots[0].coord === startingBots[1].coord) throw new Error("Bots cannot start on the same tile");
+    this.treasureCoord = scenario?.treasureCoord === undefined
+      ? chooseTreasureCoord(this.world, [startingBots[0].base, startingBots[1].base], this.seed)
+      : scenario.treasureCoord;
+    if (this.treasureCoord && this.world[this.treasureCoord]?.kind !== "resource") throw new Error("Treasure must replace a resource tile");
+    if (this.treasureCoord) this.world[this.treasureCoord] = {
+      ...this.world[this.treasureCoord], kind: "treasure", resources: emptyResources(),
+    };
     for (const bot of startingBots) {
       bot.explored = rememberTerrain(bot.explored, activeCoords(this.world, bot));
       this.actors.set(bot.id, createActor(botMachine, { input: bot }).start());
@@ -380,7 +392,7 @@ export class GameSession {
     const safe = pathBetween(safeWorld, bot.coord, target, tideLevel(this.elapsed));
     const direct = pathBetween(this.world, bot.coord, target, tideLevel(this.elapsed));
     const worthwhileShortcut = allowResourceRisk && safe.length > direct.length &&
-      this.world[target]?.kind === "resource" && this.available(bot, target) >= RULES.riskyResourceThreshold &&
+      ["resource", "treasure"].includes(this.world[target]?.kind) && this.available(bot, target) >= RULES.riskyResourceThreshold &&
       !direct.slice(1).some(coord => rememberedMines.has(coord));
     const path = worthwhileShortcut ? direct : safe.length ? safe : direct;
     const damage = path.slice(1).reduce((total, coord) => total +
@@ -400,6 +412,7 @@ export class GameSession {
   }
 
   private launch(bot: Bot, kind: OperationKind, target: Coord, duration: number, decision: string) {
+    if (kind === "scan" && target === bot.coord) throw new Error("A drone cannot scan the ship's tile");
     this.actors.get(bot.id)!.send({ type: "PLAN", bot: { ...bot, decision, operation: {
       kind, target, duration, remaining: duration,
       ...(kind === "scan" ? { scanInitialTarget: target, scanCheckedSteps: 0, scanArrived: false } : {}),
@@ -478,6 +491,7 @@ export class GameSession {
 
   private disable(bot: Bot, reason: string) {
     if (this.bots().find(candidate => candidate.id === bot.id)?.state === "disabled") return;
+    if (this.beacon?.botId === bot.id) this.resolveBeacon("expired", "Balise caduque : bot immobilise");
     this.actors.get(bot.id)!.send({
       type: "DISABLE",
       bot: { ...bot, route: [], goal: null, operation: null, immobilizationReason: reason, decision: reason },
@@ -492,16 +506,89 @@ export class GameSession {
         "Repli des basses terres : cargaison perdue");
       return;
     }
+    if (this.beacon?.botId === bot.id) this.resolveBeacon("expired", "Balise caduque : bot termine");
     this.actors.get(bot.id)!.send({ type: "FINISH", bot: { ...bot, decision, operation: null } });
     this.emit({ type: "bot.finished", category: "lifecycle", botId: bot.id, coord: bot.coord, reason: decision });
   }
 
   private available(bot: Bot, coord: Coord): number {
-    return resourceTotal(transferResources(this.world[coord].resources, bot.cargo, RULES.capacity).taken);
+    if (!bot.scanned.includes(coord)) return 0;
+    return resourceTotal(transferResources(this.world[coord].resources, bot.cargo, RULES.capacity).taken) +
+      Number(this.treasureStatus === "revealed" && this.treasureOwner === bot.id && this.treasureCoord === coord);
+  }
+
+  private revealTreasure(botId: BotId, coord: Coord) {
+    if (this.treasureStatus !== "hidden" || this.treasureCoord !== coord) return;
+    this.treasureStatus = "revealed";
+    this.treasureOwner = botId;
+    this.log(botId, `Trésor découvert en ${coord}`);
+    this.emit({ type: "treasure.revealed", category: "resource", botId, coord });
+  }
+
+  placeBeacon(botId: BotId, coord: Coord, kind: BeaconKind) {
+    if (this.phase !== "running") throw new Error("La partie ne permet plus de poser une balise");
+    if (this.beacon) throw new Error("La balise de cette partie a deja ete utilisee");
+    const bot = this.bots().find(candidate => candidate.id === botId);
+    const tile = this.world[coord];
+    if (!bot || bot.state === "disabled" || bot.state === "finished" || !tile || tile.kind === "empty" ||
+      !activeCoords(this.world, bot).includes(coord)) throw new Error("Choisissez une case visible du bot actif");
+    if (kind === "explore") {
+      if (coord === bot.coord || (["resource", "treasure"].includes(tile.kind) ? bot.scanned.includes(coord) : bot.known.includes(coord)) ||
+        !bot.droneAvailable || !["resource", "treasure", "plain", "danger"].includes(tile.kind))
+        throw new Error("Cette case ne peut pas etre exploree par le drone");
+    } else if (kind === "collect") {
+      if (!["resource", "treasure"].includes(tile.kind) || !bot.scanned.includes(coord) || this.available(bot, coord) === 0 ||
+        isSubmerged(tile, tideLevel(this.elapsed))) throw new Error("Aucune ressource scannée et collectable sur cette case");
+    } else throw new Error("Type de balise inconnu");
+    this.beacon = { botId, coord, kind, status: "pending", reason: null };
+    this.log(botId, `Balise ${kind === "explore" ? "exploration" : "collecte"} posee en ${coord}`);
+    this.emit({ type: "beacon.placed", category: "decision", botId, coord, reason: kind });
+    this.revision++;
+  }
+
+  private resolveBeacon(status: "followed" | "expired", reason: string) {
+    if (!this.beacon || this.beacon.status !== "pending") return;
+    this.beacon = { ...this.beacon, status, reason };
+    this.log(this.beacon.botId, reason);
+    this.emit({ type: status === "followed" ? "beacon.followed" : "beacon.expired", category: "decision",
+      botId: this.beacon.botId, coord: this.beacon.coord, reason });
+  }
+
+  private planBeacon(bot: BotView): boolean {
+    const beacon = this.beacon;
+    if (!beacon || beacon.status !== "pending" || beacon.botId !== bot.id) return false;
+    const tile = this.world[beacon.coord];
+    if (beacon.kind === "explore") {
+      const distance = hexDistance(bot.coord, beacon.coord);
+      if (distance > 0 && !(["resource", "treasure"].includes(tile.kind) ? bot.scanned.includes(beacon.coord) : bot.known.includes(beacon.coord)) &&
+        bot.droneAvailable && ["resource", "treasure", "plain", "danger"].includes(tile.kind) &&
+        distance <= effectiveRadius(bot) && hasLineOfSight(this.world, bot.coord, beacon.coord) &&
+        2 * distance * RULES.droneFuelPerHex <= bot.fuel) {
+        this.resolveBeacon("followed", `Balise suivie : exploration de ${beacon.coord}`);
+        this.launch({ ...bot, goal: null, route: [] }, "scan", beacon.coord,
+          RULES.scanDuration + 2 * distance * RULES.stepDuration, `Exploration demandee en ${beacon.coord}`);
+        return true;
+      }
+    } else if (["resource", "treasure"].includes(tile.kind) && !isSubmerged(tile, tideLevel(this.elapsed)) &&
+      bot.scanned.includes(beacon.coord) && this.available(bot, beacon.coord) > 0 &&
+      this.affordableRoute(bot, beacon.coord).length > 0) {
+      if (beacon.coord === bot.coord) {
+        this.resolveBeacon("followed", `Balise suivie : collecte en ${beacon.coord}`);
+        this.launch({ ...bot, goal: null, route: [] }, "collect", beacon.coord, RULES.collectDuration,
+          `Collecte demandee en ${beacon.coord}`);
+        return true;
+      }
+      if (this.move({ ...bot, goal: null, route: [] }, beacon.coord, "collect")) {
+        this.resolveBeacon("followed", `Balise suivie : trajet vers ${beacon.coord}`);
+        return true;
+      }
+    }
+    this.resolveBeacon("expired", `Balise caduque : ${beacon.coord} n'est plus faisable`);
+    return false;
   }
 
   private affordableRoute(bot: Bot, coord: Coord): Coord[] {
-    const path = this.route(bot, coord, this.world[coord]?.kind === "resource");
+    const path = this.route(bot, coord, ["resource", "treasure"].includes(this.world[coord]?.kind));
     if (!path.length) return [];
     const fuelStationKnown = Object.values(this.world).some(tile => tile.kind === "fuel" && bot.explored.includes(tile.coord));
     const returnPath = fuelStationKnown ? this.servicePath({ ...bot, coord }, "fuel") : this.route({ ...bot, coord }, bot.base);
@@ -553,6 +640,10 @@ export class GameSession {
       bot = { ...bot, goal: null, route: [] };
     const isBase = bot.coord === bot.base;
     const atFuel = tile.kind === "fuel";
+    if (isBase && this.treasureStatus === "carried" && this.treasureOwner === bot.id && bot.fuel < RULES.fuelPerStep) {
+      this.launch(bot, "service", bot.base, RULES.serviceDuration, "Dépôt du trésor à la base");
+      return;
+    }
     if (bot.fuel < RULES.fuelPerStep && !atFuel) {
       if (isBase) {
         this.finishBot(bot, "Carburant insuffisant pour quitter la base");
@@ -563,7 +654,7 @@ export class GameSession {
       return;
     }
     if (
-      (isBase && resourceTotal(bot.cargo) > 0) ||
+      (isBase && (resourceTotal(bot.cargo) > 0 || this.treasureStatus === "carried" && this.treasureOwner === bot.id)) ||
       (tile.kind === "fuel" && bot.fuel < RULES.fuelCapacity) ||
       (tile.kind === "repair" && bot.damage > 0 && bot.budget >= RULES.repairPrice && (bot.goal?.reason === "repair" || bot.damage >= RULES.repairThreshold))
     ) {
@@ -576,6 +667,7 @@ export class GameSession {
       return;
     }
     if (this.phase === "returning") {
+      if (this.beacon?.botId === bot.id) this.resolveBeacon("expired", "Balise caduque : derniers retours aux bases");
       if (isBase) this.finishBot(bot, "Cargaison soldee");
       else if (!this.move(bot, bot.base, "base"))
         this.finishBot(bot, "Retour a la base impossible");
@@ -599,6 +691,7 @@ export class GameSession {
       return;
     }
     if (this.planMineDefense(bot)) return;
+    if (this.planBeacon(bot)) return;
     if (bot.goal && bot.coord !== bot.goal.coord) {
       if (this.move(bot, bot.goal.coord, bot.goal.reason)) return;
     }
@@ -609,7 +702,8 @@ export class GameSession {
       return;
     }
     const unknown = Object.values(this.world).filter(candidate =>
-      candidate.walkable && candidate.kind !== "empty" && !bot.known.includes(candidate.coord) &&
+      candidate.walkable && candidate.kind !== "empty" &&
+      !(["resource", "treasure"].includes(candidate.kind) ? bot.scanned.includes(candidate.coord) : bot.known.includes(candidate.coord)) &&
       (!["base", "fuel", "repair"].includes(candidate.kind) || !bot.explored.includes(candidate.coord))
     );
     const price = RULES.upgradePrices[bot.radius];
@@ -629,6 +723,7 @@ export class GameSession {
       this.launch(bot, "memoryUpgrade", bot.base, RULES.purchaseDuration, `Memoire des mines : niveau ${bot.mineMemoryLevel + 1}`);
       return;
     }
+    if (this.treasureStatus === "carried" && this.treasureOwner === bot.id && !isBase && this.move(bot, bot.base, "base")) return;
     if (bot.damage >= RULES.repairThreshold && bot.cargo.debris > 0 &&
       bot.budget + bot.cargo.debris >= RULES.repairPrice && !isBase && this.move(bot, bot.base, "base")) return;
     const debrisNeed = Math.max(
@@ -639,19 +734,20 @@ export class GameSession {
     const debrisWeight = bot.budget < debrisNeed
       ? bot.damage >= RULES.repairThreshold ? RULES.urgentDebrisPriorityMultiplier : RULES.debrisPriorityMultiplier
       : 1;
-    const collections = bot.known
-      .filter(coord => this.world[coord]?.kind === "resource" && !isSubmerged(this.world[coord], tideLevel(this.elapsed)) && this.available(bot, coord) > 0)
+    const collections = bot.scanned
+      .filter(coord => ["resource", "treasure"].includes(this.world[coord]?.kind) && !isSubmerged(this.world[coord], tideLevel(this.elapsed)) && this.available(bot, coord) > 0)
       .map(coord => {
         const path = this.affordableRoute(bot, coord);
         const taken = transferResources(this.world[coord].resources, bot.cargo, RULES.capacity).taken;
         const specialValue = bot.actions + bot.cargo.special === 0 ? RULES.firstSpecialPriorityValue : 1;
-        return { coord, path, value: taken.food + taken.special * specialValue + taken.debris * debrisWeight };
+        return { coord, path, value: taken.food + taken.special * specialValue + taken.debris * debrisWeight +
+          (this.treasureStatus === "revealed" && this.treasureOwner === bot.id && this.treasureCoord === coord ? 12 : 0) };
       })
       .filter(candidate => candidate.path.length > 0)
       .sort((left, right) => right.value / right.path.length - left.value / left.path.length);
     const scans = bot.droneAvailable ? unknown.filter(candidate => {
       const distance = hexDistance(bot.coord, candidate.coord);
-      return ["resource", "plain", "danger"].includes(candidate.kind) && distance <= effectiveRadius(bot) && hasLineOfSight(this.world, bot.coord, candidate.coord) && 2 * distance * RULES.droneFuelPerHex <= bot.fuel;
+      return distance > 0 && ["resource", "treasure", "plain", "danger"].includes(candidate.kind) && distance <= effectiveRadius(bot) && hasLineOfSight(this.world, bot.coord, candidate.coord) && 2 * distance * RULES.droneFuelPerHex <= bot.fuel;
     }) : [];
     const opponent = this.bots().find(other => other.id !== bot.id && other.state !== "disabled" && other.state !== "finished");
     const opponentVisible = opponent && activeCoords(this.world, bot).includes(opponent.coord);
@@ -701,12 +797,22 @@ export class GameSession {
       );
       if ((baseInterest || !bot.droneAvailable) && this.move(bot, bot.base, "base")) return;
     }
-    const frontiers = unknown
+    if (bot.droneAvailable && ["resource", "treasure"].includes(tile.kind) && !bot.scanned.includes(bot.coord)) {
+      const neighbor = tile.neighbors.find(coord => this.world[coord]?.walkable &&
+        this.affordableRoute(bot, coord).length > 1 && hasLineOfSight(this.world, coord, bot.coord) &&
+        bot.fuel >= RULES.fuelPerStep + 2 * RULES.droneFuelPerHex);
+      if (neighbor && this.move(bot, neighbor, "explore")) return;
+    }
+    const frontiers = unknown.filter(candidate => bot.droneAvailable || !["resource", "treasure"].includes(candidate.kind))
       .map(candidate => ({ coord: candidate.coord, path: this.affordableRoute(bot, candidate.coord) }))
       .filter(candidate => candidate.path.length > 1)
       .sort((left, right) => left.path.length - right.path.length);
     if (frontiers.length && this.move(bot, frontiers[0].coord, "explore")) return;
-    if (fuelPath.length > 1 && bot.fuel < RULES.fuelCapacity && this.move(bot, fuelPath[fuelPath.length - 1], "fuel")) return;
+    const hasKnownCollection = bot.scanned.some(coord => ["resource", "treasure"].includes(this.world[coord]?.kind) &&
+      !isSubmerged(this.world[coord], tideLevel(this.elapsed)) && this.available(bot, coord) > 0 &&
+      this.route(bot, coord, true).length > 0);
+    if (fuelPath.length > 1 && bot.fuel < RULES.fuelCapacity && (bot.droneAvailable || hasKnownCollection) &&
+      this.move(bot, fuelPath[fuelPath.length - 1], "fuel")) return;
     this.finishBot(bot, "Aucun objectif accessible");
   }
 
@@ -788,6 +894,7 @@ export class GameSession {
           statistics: { ...bot.statistics, scans: bot.statistics.scans + 1, fuelUsed: bot.statistics.fuelUsed + cost, droneLosses: bot.statistics.droneLosses + Number(destroyed) },
         };
         this.emit({ type: "scan.completed", category: "movement", botId: bot.id, operation: operation.kind, coord: bot.coord, target: operation.target, before: { fuel: bot.fuel }, delta: { fuel: -cost }, after: { fuel: next.fuel } });
+        if (!destroyed) this.revealTreasure(bot.id, operation.target);
         if (destroyed) {
           const mineHit = this.world[operation.target].mine?.state === "armed";
           if (mineHit) explodedMine = operation.target;
@@ -838,20 +945,32 @@ export class GameSession {
         break;
       }
       case "collect": {
-        if (bot.coord !== operation.target || this.world[bot.coord].kind !== "resource")
-          throw new Error("Collection outside resource tile");
+        if (bot.coord !== operation.target || !["resource", "treasure"].includes(this.world[bot.coord].kind))
+          throw new Error("Collection outside resource or treasure tile");
+        if (!bot.scanned.includes(bot.coord)) {
+          this.log(bot.id, `Collecte annulée : tuile ${bot.coord} non explorée par le drone`);
+          break;
+        }
         if (isSubmerged(this.world[bot.coord], tideLevel(this.elapsed))) {
           this.log(bot.id, `Collecte annulee : tuile ${bot.coord} submergee`);
           break;
         }
         const transfer = transferResources(this.world[bot.coord].resources, bot.cargo, RULES.capacity);
-        this.world[bot.coord] = { ...this.world[bot.coord], resources: transfer.remaining };
-        this.worldRevision++;
-        const collected = resourceTotal(transfer.taken) > 0;
+        const hasTreasure = this.treasureStatus === "revealed" && this.treasureOwner === bot.id && this.treasureCoord === bot.coord;
+        if (hasTreasure) {
+          this.treasureStatus = "carried";
+          this.log(bot.id, "Trésor chargé à bord");
+          this.emit({ type: "treasure.collected", category: "resource", botId: bot.id, coord: bot.coord });
+        }
+        if (resourceTotal(transfer.taken) > 0) {
+          this.world[bot.coord] = { ...this.world[bot.coord], resources: transfer.remaining };
+          this.worldRevision++;
+        }
+        const collected = resourceTotal(transfer.taken) > 0 || hasTreasure;
         next = {
           ...next,
           cargo: transfer.cargo,
-          harvested: collected
+          harvested: resourceTotal(transfer.taken) > 0
             ? { ...bot.harvested, [bot.coord]: addResources(bot.harvested[bot.coord] ?? emptyResources(), transfer.taken) }
             : bot.harvested,
           statistics: {
@@ -860,17 +979,17 @@ export class GameSession {
             collections: bot.statistics.collections + Number(collected),
           },
         };
-        this.log(bot.id, `${resourceTotal(transfer.taken)} ressources collectees`);
+        if (resourceTotal(transfer.taken) > 0) this.log(bot.id, `${resourceTotal(transfer.taken)} ressources collectees`);
         this.emit({
           type: "collection.completed",
           category: "resource",
           botId: bot.id,
           coord: bot.coord,
           target: operation.target,
-          reason: collected ? "transfert non vide" : "stock indisponible ou capacite atteinte",
+          reason: hasTreasure ? "trésor chargé" : collected ? "transfert non vide" : "stock indisponible ou capacite atteinte",
           resources: transfer.taken,
         });
-        if (collected && resourceTotal(transfer.remaining) === 0) {
+        if (resourceTotal(transfer.taken) > 0 && resourceTotal(transfer.remaining) === 0) {
           const rival = this.bots().find(candidate => candidate.id !== bot.id && candidate.goal?.reason === "collect" && candidate.goal.coord === bot.coord);
           if (rival) this.adjustTrust(rival.id, bot.id, -RULES.trustDepletionLoss, "depletion", bot.coord, `Bot ${bot.id.slice(-1)} a épuisé la réserve attendue`);
         }
@@ -880,6 +999,11 @@ export class GameSession {
         const tile = this.world[bot.coord];
         if (bot.coord === bot.base) {
           const amount = resourceTotal(bot.cargo);
+          if (this.treasureStatus === "carried" && this.treasureOwner === bot.id) {
+            this.treasureStatus = "deposited";
+            this.log(bot.id, "Trésor déposé à la base");
+            this.emit({ type: "treasure.deposited", category: "resource", botId: bot.id, coord: bot.base });
+          }
           next = {
             ...next,
             cargo: emptyResources(),
@@ -889,9 +1013,10 @@ export class GameSession {
             actions: bot.actions + bot.cargo.special,
             goal: null,
           };
-          this.log(bot.id, `${amount} ressources deposees`);
-          if (amount > 0)
+          if (amount > 0) {
+            this.log(bot.id, `${amount} ressources deposees`);
             this.emit({ type: "resources.deposited", category: "resource", botId: bot.id, coord: bot.coord, resources: bot.cargo, delta: { budget: bot.cargo.debris, actions: bot.cargo.special, score: bot.cargo.food }, after: { budget: next.budget, actions: next.actions, score: next.score } });
+          }
         } else if (tile.kind === "fuel") {
           next = { ...next, fuel: RULES.fuelCapacity, goal: null };
           this.emit({ type: "fuel.refueled", category: "maintenance", botId: bot.id, coord: bot.coord, before: { fuel: bot.fuel }, delta: { fuel: RULES.fuelCapacity - bot.fuel }, after: { fuel: RULES.fuelCapacity } });
@@ -966,7 +1091,11 @@ export class GameSession {
       return;
     }
     const reachable = new Set(alive.flatMap(bot => reachableCoords(this.world, bot.coord, tideLevel(this.elapsed))));
-    const hasResources = [...reachable].some(coord => resourceTotal(this.world[coord].resources) > 0);
+    const treasureBot = this.bots().find(bot => bot.id === this.treasureOwner && bot.state !== "disabled" && bot.state !== "finished");
+    const treasurePending = !!treasureBot && (this.treasureStatus === "carried" ||
+      (this.treasureStatus === "revealed" && !!this.treasureCoord &&
+        reachableCoords(this.world, treasureBot.coord, tideLevel(this.elapsed)).includes(this.treasureCoord)));
+    const hasResources = [...reachable].some(coord => resourceTotal(this.world[coord].resources) > 0) || treasurePending;
     if (!hasResources && this.phase === "running") {
       this.phase = "returning";
       this.log(null, "Ressources accessibles epuisees : derniers depots");
@@ -977,12 +1106,14 @@ export class GameSession {
   }
 
   private finish(reason: string) {
+    this.resolveBeacon("expired", "Balise caduque : partie terminee");
     this.endReason = reason;
     const eligible = this.bots().filter(bot => bot.state !== "disabled");
     const reachable = new Set(eligible.flatMap(bot => reachableCoords(this.world, bot.coord, tideLevel(this.elapsed))));
     const blocked =
       [...reachable].some(coord => resourceTotal(this.world[coord].resources) > 0) ||
       eligible.some(bot => bot.coord !== bot.base || resourceTotal(bot.cargo) > 0) ||
+      this.treasureStatus === "carried" ||
       this.bots().some(bot => bot.state === "disabled");
     this.phase = blocked ? "blocked" : "finished";
     if (blocked) this.endReason = this.bots().some(bot => bot.state === "disabled")
@@ -1051,6 +1182,7 @@ export class GameSession {
           return true;
         }
         this.actors.get(current.id)!.send({ type: "TICK", bot: { ...current, operation: { ...operation, scanArrived: true, scanCheckedSteps: 0 } } });
+        this.revealTreasure(current.id, segment.to);
         current = this.bots().find(candidate => candidate.id === current.id)!;
         continue;
       }
@@ -1182,7 +1314,7 @@ export class GameSession {
 
   getSnapshot(afterEventSequence = 0): SessionSnapshot {
     return structuredClone({
-      schemaVersion: 16,
+      schemaVersion: 19,
       seed: this.seed,
       mapRadius: this.mapRadius,
       revision: this.revision,
@@ -1195,6 +1327,9 @@ export class GameSession {
       world: this.world,
       cloud: this.cloud,
       repairAvailableAt: this.repairAvailableAt,
+      beacon: this.beacon,
+      treasure: { status: this.treasureStatus, coord: this.treasureStatus === "hidden" ? null : this.treasureCoord,
+        developerCoord: this.treasureCoord, owner: this.treasureOwner },
       bots: Object.fromEntries(this.bots().map(bot => [bot.id, bot])) as Record<BotId, BotView>,
       trust: this.trust,
       lastTrustChange: this.lastTrustChange,
@@ -1210,6 +1345,9 @@ export class GameSession {
   }
 
   assertInvariants() {
+    if (this.treasureCoord && (this.world[this.treasureCoord]?.kind !== "treasure" || resourceTotal(this.world[this.treasureCoord].resources) !== 0))
+      throw new Error("Treasure tile must have no ordinary resources");
+    if ((this.treasureStatus === "hidden") !== (this.treasureOwner === null)) throw new Error("Treasure ownership invariant failed");
     if (Object.values(this.world).some(tile => tile.level !== undefined && (!Number.isInteger(tile.level) || tile.level < 0 || tile.level > 5)))
       throw new Error("Terrain level bounds failed");
     if (BOT_IDS.some(id => !Number.isInteger(this.trust[id]) || this.trust[id] < 0 || this.trust[id] > 100))

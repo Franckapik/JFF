@@ -32,6 +32,10 @@ function drawGlyph(kind: GlyphKind): CanvasTexture {
       path(47, 72, 37, 62, 34, 49); path(77, 76, 87, 65, 92, 52);
       circle(62, 37, 6); circle(36, 39, 5); circle(90, 32, 5);
       break;
+    case 'treasure':
+      path(32, 52, 42, 36, 86, 36, 96, 52); path(32, 52, 96, 52, 91, 87, 37, 87, 32, 52);
+      path(64, 53, 64, 87); circle(64, 67, 6);
+      break;
     case 'depleted':
       path(37, 86, 91, 41); path(40, 41, 88, 87); circle(64, 64, 31);
       break;
@@ -83,7 +87,7 @@ export function TileGlyphs({ world, current, explored, known, scanned, depleted,
   depleted: string; developer: boolean; selected: Coord | null;
 }) {
   const textures = useMemo(() => Object.fromEntries(
-    (['resource', 'plain', 'empty', 'obstacle', 'danger', 'base', 'fuel', 'repair', 'ramp', 'tower', 'depleted'] as GlyphKind[])
+    (['resource', 'treasure', 'plain', 'empty', 'obstacle', 'danger', 'base', 'fuel', 'repair', 'ramp', 'tower', 'depleted'] as GlyphKind[])
       .map(kind => [kind, drawGlyph(kind)])
   ) as Record<GlyphKind, CanvasTexture>, []);
   useEffect(() => () => Object.values(textures).forEach(texture => texture.dispose()), [textures]);

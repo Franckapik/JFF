@@ -1,10 +1,12 @@
-import type { SessionSnapshot } from "./model";
+import type { BeaconKind, SessionSnapshot } from "./model";
 import { MAX_MAP_RADIUS, MIN_MAP_RADIUS, RULES } from "./rules";
 import { GameSession } from "./session";
+import type { BotId, Coord } from "./world";
 
 export type SessionRequest =
   | { protocol: 1; type: "CONNECT" | "INIT" | "REQUEST_STATE" | "PING" | "DISCONNECT" }
   | { protocol: 1; type: "RESET"; gameId: string | null; seed: number; radius?: number }
+  | { protocol: 1; type: "BEACON"; gameId: string; botId: BotId; coord: Coord; kind: BeaconKind }
   | { protocol: 1; type: "CONTROL"; gameId: string; command: "PAUSE" | "RESUME" | "STEP" | "SPEED"; speed?: number };
 
 export interface SessionResponse {
@@ -30,6 +32,10 @@ export function isSessionRequest(input: unknown): input is SessionRequest {
       message.seed <= 0xffffffff &&
       (message.radius === undefined || (typeof message.radius === "number" && Number.isInteger(message.radius) && message.radius >= MIN_MAP_RADIUS && message.radius <= MAX_MAP_RADIUS))
     );
+  if (message.type === "BEACON")
+    return typeof message.gameId === "string" && typeof message.botId === "string" && ["bot-0", "bot-1"].includes(message.botId) &&
+      typeof message.coord === "string" && /^-?\d+,-?\d+$/.test(message.coord) &&
+      typeof message.kind === "string" && ["explore", "collect"].includes(message.kind);
   return (
     message.type === "CONTROL" &&
     typeof message.gameId === "string" &&
@@ -66,10 +72,13 @@ export class SessionHost {
       if (!this.session) this.reset(this.initialSeed);
       return this.snapshot();
     }
-    if (input.type === "RESET" || input.type === "CONTROL") {
+    if (input.type === "RESET" || input.type === "CONTROL" || input.type === "BEACON") {
       if (!this.session || input.gameId !== this.gameId) return this.snapshot("Commande ignoree : cette partie a ete remplacee");
       if (input.type === "RESET") this.reset(input.seed, input.radius ?? RULES.mapRadius);
-      else {
+      else if (input.type === "BEACON") {
+        try { this.session.placeBeacon(input.botId, input.coord, input.kind); }
+        catch (error) { return this.snapshot(error instanceof Error ? error.message : "Balise impossible"); }
+      } else {
         switch (input.command) {
           case "PAUSE":
             this.session.setPaused(true);

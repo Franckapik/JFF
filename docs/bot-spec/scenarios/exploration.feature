@@ -7,7 +7,8 @@ Fonctionnalité: Exploration depuis le vaisseau mobile
     Étant donné un drone disponible
     Quand le bot recherche des cibles inconnues dans son rayon
     Alors seules les cases traversables de type ressource, vide ou danger sont candidates
-    Et les bases, stations, obstacles, cases connues, cases hors rayon et cases masquées par un obstacle sont exclues
+    Et les bases, stations, obstacles, terrains ordinaires et dangers déjà connus, ressources déjà scannées, cases hors rayon et cases masquées par un obstacle sont exclus
+    Et la case occupée par le vaisseau est exclue, même si elle contient une ressource non scannée
     Et les services publics ne nécessitent pas de scan pour être identifiés une fois dans le champ de vision
 
   @EXP-02

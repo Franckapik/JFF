@@ -6,10 +6,21 @@ import { cloudOpacity, cloudTravelProgress } from "../components/session/present
 import { SessionHost } from "./protocol";
 import { addResources, emptyResources, resourceTotal, transferResources } from "./resources";
 import { RULES } from "./rules";
-import { createBot, GameSession } from "./session";
+import { createBot, GameSession as CoreGameSession } from "./session";
 import { TIDE_HIGH, tideLevel, timeUntilFlood } from "./tide";
 import { activeCoords, effectiveRadius, hasLineOfSight, isCloudVisible, resourceMarkerCoords, revealedTileKind } from "./visibility";
 import { axial, canStep, generateWorld, hexDistance, hexLine, isSubmerged, pathBetween, reachableCoords, tileLevel, worldPosition, type Coord } from "./world";
+
+// Controlled worlds exercise one mechanic at a time; generated games keep the treasure enabled.
+class GameSession extends CoreGameSession {
+  constructor(seed: number, scenario?: ConstructorParameters<typeof CoreGameSession>[1]) {
+    super(seed, scenario?.world ? { ...scenario, treasureCoord: null } : scenario);
+  }
+}
+
+function markKnownResourcesScanned(world: ReturnType<typeof generateWorld>, ...bots: ReturnType<typeof createBot>[]) {
+  for (const bot of bots) bot.scanned = bot.known.filter(coord => world[coord]?.kind === "resource");
+}
 
 describe("rising tide", () => {
   it("floods low terraces while preserving a dry path between both refuges and the tower", () => {
@@ -44,6 +55,7 @@ describe("rising tide", () => {
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].coord = target.coord;
     bots["bot-0"].known = [target.coord];
+    markKnownResourcesScanned(world, bots["bot-0"]);
     bots["bot-0"].droneAvailable = false;
     bots["bot-1"].damage = 100;
     const session = new GameSession(42, { world, bots, elapsed: timeUntilFlood(target, 0) - 500 });
@@ -71,6 +83,7 @@ describe("rising tide", () => {
     bots["bot-0"].coord = anchor.coord;
     bots["bot-0"].radius = 3;
     bots["bot-0"].known = Object.values(world).map(tile => tile.coord).filter(coord => coord !== target.coord && coord !== "4,0");
+    markKnownResourcesScanned(world, bots["bot-0"]);
     const session = new GameSession(42, { world, bots, elapsed: 180_000 });
     session.advance(1);
     expect(session.getSnapshot().bots["bot-0"].operation).toMatchObject({ kind: "scan", target: target.coord });
@@ -84,6 +97,69 @@ describe("rising tide", () => {
 });
 
 describe("resource transactions", () => {
+  it("moves away before scanning a resource beneath its ship, then collects it", () => {
+    const world = generateWorld(42, 3);
+    for (const tile of Object.values(world)) tile.resources = emptyResources();
+    const target = "-2,0" as Coord;
+    world[target] = { ...world[target], kind: "resource", walkable: true, resources: { food: 2, debris: 0, special: 0 } };
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].coord = target;
+    bots["bot-0"].known = Object.keys(world) as Coord[];
+    markKnownResourcesScanned(world, bots["bot-0"]);
+    bots["bot-0"].scanned = bots["bot-0"].scanned.filter(coord => coord !== target);
+    bots["bot-1"].damage = 100;
+    const session = new GameSession(42, { world, bots });
+    expect(session.getSnapshot().bots["bot-0"].known).toContain(target);
+    expect(session.getSnapshot().bots["bot-0"].scanned).not.toContain(target);
+    expect(() => session.placeBeacon("bot-0", target, "collect")).toThrow();
+    expect(() => session.placeBeacon("bot-0", target, "explore")).toThrow();
+    session.advance(1);
+    const first = session.getSnapshot().bots["bot-0"].operation;
+    expect(first).toMatchObject({ kind: "move" });
+    expect(first?.target).not.toBe(target);
+    expect(session.getSnapshot().bots["bot-0"].cargo.food).toBe(0);
+    session.advance(first!.remaining);
+    const scanning = session.getSnapshot().bots["bot-0"];
+    expect(scanning.coord).not.toBe(target);
+    expect(scanning.operation).toMatchObject({ kind: "scan", target });
+    session.advance(scanning.operation!.remaining);
+    const returning = session.getSnapshot().bots["bot-0"];
+    expect(returning.scanned).toContain(target);
+    expect(returning.operation).toMatchObject({ kind: "move", target });
+    session.advance(returning.operation!.remaining);
+    const collecting = session.getSnapshot().bots["bot-0"];
+    expect(collecting.operation).toMatchObject({ kind: "collect", target });
+    session.advance(collecting.operation!.remaining);
+    const snapshot = session.getSnapshot();
+    expect(snapshot.bots["bot-0"].cargo.food).toBe(2);
+    expect(snapshot.world[target].resources.food).toBe(0);
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("cannot collect an unscanned resource after losing its drone", () => {
+    const world = generateWorld(42, 3);
+    for (const tile of Object.values(world)) tile.resources = emptyResources();
+    const target = "-2,0" as Coord;
+    world[target] = { ...world[target], kind: "resource", walkable: true, resources: { food: 2, debris: 0, special: 0 } };
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].coord = target;
+    bots["bot-0"].known = Object.keys(world) as Coord[];
+    markKnownResourcesScanned(world, bots["bot-0"]);
+    bots["bot-0"].scanned = bots["bot-0"].scanned.filter(coord => coord !== target);
+    bots["bot-0"].droneAvailable = false;
+    bots["bot-1"].damage = 100;
+    const session = new GameSession(42, { world, bots });
+    expect(() => session.placeBeacon("bot-0", target, "collect")).toThrow();
+    session.advance(10_000);
+    const snapshot = session.getSnapshot();
+    expect(snapshot.world[target].resources.food).toBe(2);
+    expect(snapshot.bots["bot-0"].cargo.food).toBe(0);
+    expect(snapshot.bots["bot-0"].statistics.collections).toBe(0);
+    session.assertInvariants();
+    session.stop();
+  });
+
   const capacity = { food: 200, debris: 1800, special: 3 };
 
   it("respects each compartment without blocking the others", () => {
@@ -230,6 +306,7 @@ describe("offensive drone", () => {
     bots["bot-0"].coord = "0,0";
     bots["bot-0"].offensiveDroneAvailable = false;
     bots["bot-0"].known = Object.values(world).filter(tile => !["1,0", "-4,1"].includes(tile.coord)).map(tile => tile.coord);
+    markKnownResourcesScanned(world, bots["bot-0"]);
     const session = new GameSession(42, { world, bots });
     session.advance(1);
     expect(session.getSnapshot().bots["bot-0"].operation).toMatchObject({ kind: "scan", target: "1,0" });
@@ -365,6 +442,7 @@ describe("offensive drone", () => {
       bots["bot-0"].droneAvailable = false;
       bots["bot-0"].offensiveDroneAvailable = false;
       bots["bot-0"].known.push("2,0");
+      markKnownResourcesScanned(world, bots["bot-0"]);
       bots["bot-0"].knownMines["1,0"] = expiresAt;
       return new GameSession(42, { world, bots });
     }
@@ -411,6 +489,7 @@ describe("offensive drone", () => {
     bots["bot-0"].coord = bots["bot-0"].base;
     bots["bot-0"].known = Object.keys(world) as Coord[];
     bots["bot-0"].mineMemoryLevel = before;
+    markKnownResourcesScanned(world, bots["bot-0"]);
     bots["bot-0"].budget = price + RULES.repairPrice;
     bots["bot-0"].score = price + RULES.repairPrice;
     bots["bot-0"].deposited.food = price + RULES.repairPrice;
@@ -454,6 +533,7 @@ describe("electric cloud", () => {
     bots["bot-0"].coord = "0,0";
     bots["bot-0"].radius = 2;
     bots["bot-0"].known = Object.values(world).map(tile => tile.coord).filter(coord => coord !== target && coord !== "-3,1");
+    markKnownResourcesScanned(world, bots["bot-0"]);
     bots["bot-1"].damage = 100;
     const cloud = { coord: cloudCoord, previousCoord: null, appearedAt: 0, nextMoveAt: RULES.cloudMoveDuration, expiresAt };
     return new GameSession(seed, { world, bots, cloud });
@@ -523,6 +603,7 @@ describe("electric cloud", () => {
     bots["bot-0"].coord = "0,0";
     bots["bot-0"].radius = 2;
     bots["bot-0"].known = Object.values(world).map(tile => tile.coord).filter(coord => coord !== target && coord !== "-3,1");
+    markKnownResourcesScanned(world, bots["bot-0"]);
     bots["bot-1"].damage = 100;
     const cloud = { coord: "1,1" as const, previousCoord: null, appearedAt: 0, nextMoveAt, expiresAt: RULES.cloudLifetime };
     return new GameSession(42, { world, bots, cloud });
@@ -719,6 +800,7 @@ describe("shared session", () => {
     bots["bot-0"].coord = "0,0";
     bots["bot-0"].radius = 2;
     bots["bot-0"].known = Object.values(world).map(tile => tile.coord).filter(coord => coord !== "2,0");
+    markKnownResourcesScanned(world, bots["bot-0"]);
     bots["bot-1"].damage = 100;
     const session = new GameSession(42, { world, bots });
     expect(session.getSnapshot().bots["bot-0"].explored).not.toContain("2,0");
@@ -734,7 +816,7 @@ describe("shared session", () => {
     clearViewSession.stop();
   });
 
-  it("shows ground resource markers on scanned or visited targets still inside ship vision", () => {
+  it("shows ground resource markers only on scanned targets still inside ship vision", () => {
     const world = generateWorld(42, 3);
     const bot = createBot("bot-0", world, 42);
     const targets = world[bot.base].neighbors.slice(0, 2);
@@ -746,7 +828,7 @@ describe("shared session", () => {
     expect(targets.every(coord => current.includes(coord))).toBe(true);
     expect(resourceMarkerCoords(world, current, [])).toEqual([]);
     expect(resourceMarkerCoords(world, current, [targets[0]])).toEqual([targets[0]]);
-    expect(resourceMarkerCoords(world, current, [], [targets[1]])).toEqual([targets[1]]);
+    expect(resourceMarkerCoords(world, current, [])).not.toContain(targets[1]);
     expect(resourceMarkerCoords(world, [bot.base], [targets[0]])).toEqual([]);
     world[targets[0]].resources = emptyResources();
     expect(resourceMarkerCoords(world, current, [targets[0]])).toEqual([]);
@@ -766,7 +848,8 @@ describe("shared session", () => {
     const resource = world["-2,1"];
     resource.kind = "resource";
     expect(revealedTileKind(resource, known, scanned, true)).toBe("terrain");
-    expect(revealedTileKind(resource, new Set([resource.coord]), scanned, true)).toBe("resource");
+    expect(revealedTileKind(resource, new Set([resource.coord]), scanned, true)).toBe("terrain");
+    expect(revealedTileKind(resource, known, new Set([resource.coord]), true)).toBe("resource");
   });
 
   it("plans around a danger only after this bot has discovered it", () => {
@@ -822,6 +905,7 @@ describe("shared session", () => {
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].coord = "-2,0";
     bots["bot-0"].known = Object.values(world).map(tile => tile.coord);
+    markKnownResourcesScanned(world, bots["bot-0"]);
     bots["bot-1"].fuel = 0;
     const session = new GameSession(42, { world, bots });
     session.advance(1000000);
@@ -848,6 +932,7 @@ describe("shared session", () => {
     bots["bot-0"].coord = "0,0";
     bots["bot-0"].damage = 90;
     bots["bot-0"].known = Object.values(world).map(tile => tile.coord);
+    markKnownResourcesScanned(world, bots["bot-0"]);
     bots["bot-0"].cargo.food = 5;
     bots["bot-1"].damage = 100;
     expect(pathBetween(world, "0,0", bots["bot-0"].base).length).toBeGreaterThan(1);
@@ -879,6 +964,7 @@ describe("shared session", () => {
     bots["bot-0"].known = Object.values(world)
       .filter(tile => tile.coord !== target.coord && tile.coord !== resource.coord)
       .map(tile => tile.coord);
+    markKnownResourcesScanned(world, bots["bot-0"]);
     const session = new GameSession(42, { world, bots });
     session.advance(1);
     expect(session.getSnapshot().bots["bot-0"].operation?.kind).toBe("move");
@@ -911,6 +997,7 @@ describe("shared session", () => {
     bots["bot-1"].coord = "-1,0";
     bots["bot-1"].goal = { coord: "-2,0", reason: "collect" };
     for (const bot of Object.values(bots)) bot.known = Object.values(world).map(tile => tile.coord);
+    markKnownResourcesScanned(world, ...Object.values(bots));
     const session = new GameSession(42, { world, bots });
     session.advance(RULES.collectDuration);
     const snapshot = session.getSnapshot();
@@ -1038,6 +1125,7 @@ describe("shared session", () => {
     world["-3,1"].resources.debris = 1;
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].known = Object.keys(world) as Coord[];
+    markKnownResourcesScanned(world, bots["bot-0"]);
     const short = new GameSession(42, { world, bots });
     short.advance(1);
     expect(short.getSnapshot().bots["bot-0"].operation).toMatchObject({ kind: "move", target: "-3,1" });
@@ -1066,6 +1154,7 @@ describe("shared session", () => {
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].known = Object.keys(world) as Coord[];
     bots["bot-0"].budget = 8;
+    markKnownResourcesScanned(world, bots["bot-0"]);
     bots["bot-0"].deposited.debris = 8;
     const seeking = new GameSession(42, { world, bots });
     seeking.advance(1);
@@ -1173,6 +1262,7 @@ describe("shared session", () => {
     world["-1,0"].resources = { food: 100, debris: 250, special: 3 };
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].known.push("-2,0", "-1,0");
+    markKnownResourcesScanned(world, bots["bot-0"]);
     bots["bot-0"].goal = { coord: "-1,0", reason: "collect" };
     bots["bot-1"].fuel = 0;
     const session = new GameSession(42, { world, bots });
@@ -1229,6 +1319,7 @@ describe("shared session", () => {
     bot.known = Object.values(world)
       .filter(tile => hexDistance(bot.base, tile.coord) <= 2)
       .map(tile => tile.coord);
+    markKnownResourcesScanned(world, bot);
     const session = new GameSession(42, { world, bots });
     session.advance(RULES.purchaseDuration);
     const snapshot = session.getSnapshot();
@@ -1250,6 +1341,7 @@ describe("shared session", () => {
     bots["bot-0"].known = Object.values(world)
       .filter(tile => tile.coord !== "2,0")
       .map(tile => tile.coord);
+    markKnownResourcesScanned(world, bots["bot-0"]);
     bots["bot-1"].coord = "-3,0";
     const session = new GameSession(42, { world, bots });
     session.advance(1);
@@ -1288,6 +1380,7 @@ describe("shared session", () => {
     bots["bot-0"].fuel = 3;
     bots["bot-0"].radius = 2;
     bots["bot-0"].known = Object.values(world).filter(tile => tile.coord !== "2,0").map(tile => tile.coord);
+    markKnownResourcesScanned(world, bots["bot-0"]);
     const session = new GameSession(42, { world, bots });
     session.advance(1);
     const bot = session.getSnapshot().bots["bot-0"];
@@ -1319,6 +1412,7 @@ describe("shared session", () => {
     world["0,0"].resources = { food: 20, debris: 0, special: 0 };
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     Object.assign(bots["bot-0"], { coord: "-2,0", fuel: 90, goal: { coord: "0,0", reason: "collect" } });
+    bots["bot-0"].scanned.push("0,0");
     const session = new GameSession(42, { world, bots });
     session.advance(RULES.stepDuration);
     expect(session.getSnapshot().bots["bot-0"].damage).toBe(RULES.dangerDamage);
@@ -1388,6 +1482,7 @@ describe("shared session", () => {
     bots["bot-0"].known = Object.values(world)
       .filter(tile => ![target, "-4,1"].includes(tile.coord))
       .map(tile => tile.coord);
+    markKnownResourcesScanned(world, bots["bot-0"]);
     const session = new GameSession(42, { world, bots });
     session.advance(distance * RULES.stepDuration - 1);
     expect(session.getSnapshot().bots["bot-0"].droneAvailable).toBe(true);
@@ -1434,6 +1529,7 @@ describe("shared session", () => {
       deposited: { food: 15, debris: 15, special: 0 },
     });
     bots["bot-0"].known = Object.values(world).map(tile => tile.coord).filter(coord => coord !== "-2,0" && coord !== "-2,1");
+    markKnownResourcesScanned(world, bots["bot-0"]);
     bots["bot-1"].damage = 100;
     const session = new GameSession(42, { world, bots });
     expect(activeCoords(world, session.getSnapshot().bots["bot-0"])).toContain("-2,0");
@@ -1597,6 +1693,7 @@ describe("shared session", () => {
     bots["bot-1"].coord = "-1,0";
     bots["bot-1"].goal = { coord: "-2,0", reason: "collect" };
     for (const bot of Object.values(bots)) bot.known = Object.values(world).map(tile => tile.coord);
+    markKnownResourcesScanned(world, ...Object.values(bots));
     const session = new GameSession(42, { world, bots });
     session.advance(3000);
     const snapshot = session.getSnapshot();
@@ -1625,6 +1722,7 @@ describe("shared session", () => {
     bots["bot-1"].coord = "-1,0";
     for (const bot of Object.values(bots)) {
       bot.known = ["-2,0"];
+      markKnownResourcesScanned(world, bot);
       bot.goal = { coord: "-2,0", reason: "collect" };
     }
     const session = new GameSession(42, { world, bots });
@@ -1664,9 +1762,11 @@ describe("shared session", () => {
     }
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-0"].known.push("-1,0");
+    markKnownResourcesScanned(world, bots["bot-0"]);
     bots["bot-0"].goal = { coord: "-1,0", reason: "collect" };
     bots["bot-1"].coord = "-2,0";
     bots["bot-1"].known.push("-2,0");
+    markKnownResourcesScanned(world, bots["bot-1"]);
     bots["bot-1"].droneAvailable = false;
     const session = new GameSession(42, { world, bots });
     session.advance(1);
@@ -1694,6 +1794,7 @@ describe("shared session", () => {
       bot.fuel = 10;
       bot.explored = Object.keys(world) as (typeof bot.coord)[];
       bot.known = Object.keys(world) as (typeof bot.coord)[];
+      markKnownResourcesScanned(world, bot);
       bot.droneAvailable = false;
       bot.goal = { coord: station.coord, reason: "fuel" };
     }
@@ -1726,6 +1827,7 @@ describe("shared session", () => {
     const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
     bots["bot-1"].coord = "-2,0";
     bots["bot-0"].goal = { coord: "-2,0", reason: "collect" };
+    bots["bot-0"].scanned.push("-2,0");
     bots["bot-1"].goal = { coord: "-3,0", reason: "explore" };
     const session = new GameSession(42, { world, bots });
     session.advance(1);
@@ -1750,6 +1852,7 @@ describe("shared session", () => {
     bot.known = Object.values(world)
       .filter(tile => hexDistance(bot.base, tile.coord) <= 1)
       .map(tile => tile.coord);
+    markKnownResourcesScanned(world, bot);
     const session = new GameSession(42, { world, bots });
     session.advance(1000);
     const snapshot = session.getSnapshot();
@@ -1783,7 +1886,83 @@ describe("shared session", () => {
   });
 });
 
+describe("player beacon", () => {
+  it("waits for the current operation, then follows a visible exploration request", () => {
+    const world = generateWorld(42, 3);
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].radius = 3;
+    const session = new GameSession(42, { world, bots });
+    session.advance(1);
+    const running = session.getSnapshot().bots["bot-0"].operation!;
+    const current = session.getSnapshot().bots["bot-0"];
+    const target = activeCoords(world, current).find(coord => coord !== running.target && !current.known.includes(coord) &&
+      ["resource", "plain", "danger"].includes(world[coord].kind))!;
+    expect(target).toBeDefined();
+    session.placeBeacon("bot-0", target, "explore");
+    expect(session.getSnapshot().bots["bot-0"].operation).toEqual(running);
+    expect(session.getSnapshot().beacon).toMatchObject({ status: "pending", coord: target });
+    session.advance(running.remaining);
+    const after = session.getSnapshot();
+    expect(after.beacon).toMatchObject({ status: "followed", coord: target });
+    expect(after.bots["bot-0"].operation).toMatchObject({ kind: "scan", target });
+    expect(after.events).toContainEqual(expect.objectContaining({ type: "beacon.followed", botId: "bot-0", coord: target }));
+    session.assertInvariants();
+    session.stop();
+  });
+
+  it("expires when the running scan has already explored the requested tile", () => {
+    const session = new GameSession(42, { radius: 3 });
+    session.advance(1);
+    const running = session.getSnapshot().bots["bot-0"].operation!;
+    expect(running.kind).toBe("scan");
+    session.placeBeacon("bot-0", running.target, "explore");
+    session.advance(running.remaining);
+    expect(session.getSnapshot().beacon).toMatchObject({ status: "expired", coord: running.target });
+    expect(session.getSnapshot().events).toContainEqual(expect.objectContaining({ type: "beacon.expired", botId: "bot-0" }));
+    session.stop();
+  });
+
+  it("routes a known resource request once and rejects a second beacon", () => {
+    const world = generateWorld(42, 3);
+    const base = "-3,0" as Coord;
+    const target = world[base].neighbors.find(coord => world[coord].walkable && canStep(world, base, coord, tideLevel(0)))!;
+    world[target] = { ...world[target], kind: "resource", resources: { food: 2, debris: 0, special: 0 } };
+    const bots = { "bot-0": createBot("bot-0", world, 42), "bot-1": createBot("bot-1", world, 42) };
+    bots["bot-0"].known.push(target);
+    markKnownResourcesScanned(world, bots["bot-0"]);
+    const session = new GameSession(42, { world, bots });
+    session.placeBeacon("bot-0", target, "collect");
+    expect(() => session.placeBeacon("bot-1", target, "collect")).toThrow(/deja ete utilisee/);
+    session.advance(1);
+    expect(session.getSnapshot().beacon?.status).toBe("followed");
+    expect(session.getSnapshot().bots["bot-0"].goal).toMatchObject({ coord: target, reason: "collect" });
+    session.advance(RULES.stepDuration + RULES.collectDuration);
+    expect(session.getSnapshot().bots["bot-0"].cargo.food).toBe(2);
+    session.assertInvariants();
+    session.stop();
+  });
+});
+
 describe("session protocol", () => {
+  it("validates beacon commands against the current game and resets their use", () => {
+    const host = new SessionHost("beacon-host", 42);
+    const start = host.receive({ protocol: 1, type: "CONNECT" });
+    const bot = start.snapshot!.bots["bot-0"];
+    const target = activeCoords(start.snapshot!.world, bot).find(coord => !bot.known.includes(coord) &&
+      ["resource", "plain", "danger"].includes(start.snapshot!.world[coord].kind))!;
+    expect(target).toBeDefined();
+    const command = { protocol: 1, type: "BEACON", gameId: start.gameId, botId: "bot-0", coord: target, kind: "explore" };
+    expect(host.receive({ ...command, coord: "999,999" }).type).toBe("ERROR");
+    expect(host.receive({ ...command, kind: "other" }).type).toBe("ERROR");
+    expect(host.receive(command).snapshot!.beacon).toMatchObject({ status: "pending", coord: target });
+    expect(host.receive(command).type).toBe("ERROR");
+    const reset = host.receive({ protocol: 1, type: "RESET", gameId: start.gameId, seed: 42 });
+    expect(reset.snapshot!.beacon).toBeNull();
+    expect(host.receive(command).type).toBe("ERROR");
+    expect(host.receive({ ...command, gameId: reset.gameId }).snapshot!.beacon).toMatchObject({ status: "pending" });
+    host.stop();
+  });
+
   it("disconnects an expired client immediately, reconnects and times out a missing handshake", () => {
     vi.useFakeTimers();
     const port = {
@@ -1811,7 +1990,7 @@ describe("session protocol", () => {
       expect(TestWorker.instances).toBe(1);
       emit(response);
       expect(useSessionStore.getState().status).toBe("connected");
-      expect(useSessionStore.getState().snapshot?.schemaVersion).toBe(16);
+      expect(useSessionStore.getState().snapshot?.schemaVersion).toBe(19);
       const initialEvents = response.snapshot!.events;
       const additionalEvent = { ...initialEvents[0], sequence: response.snapshot!.eventSequence + 1, time: 100 };
       const incremental = { ...response, snapshot: { ...response.snapshot!, eventSequence: additionalEvent.sequence, events: [additionalEvent] } };
